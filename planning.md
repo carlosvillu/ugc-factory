@@ -127,13 +127,13 @@ La fuente de verdad visual es el proyecto **«UGC Factory Design System» de Cla
 
 Decisiones del usuario (2026-07-07): la fase se ejecuta tras T0.1 y **antes** de continuar F0 (por eso T0.2 depende de TD.7) · los 5 componentes de producto se crean ya, como presentacionales puros · las primitivas que el DS no define se crean siguiendo sus foundations y se **suben** a Claude Design · obligatoriedad de uso = skill frontend + reglas ESLint. Las pantallas de `ui_kits/` quedan **fuera** de esta fase (el usuario las traspasará en su momento). Coste estimado de la fase: $0 (sin APIs de pago).
 
-#### TD.1 · Tokens del DS, fuentes Geist y showcase `/design-system`
+#### TD.1 · Tokens del DS, fuentes Geist y showcase `/design-system` [x] 2026-07-07 — PASS, ver docs/verifications/TD.1/
 - **Depende de**: T0.1
 - **Entrega**: `globals.css` con TODOS los tokens del espejo (`docs/design-system/tokens/*.css` + sombras/stripe de `colors.css`) volcados tal cual — hex y naming 1:1 (`--bg`, `--surface{,-2,-3}`, `--text{,-2,-3,-4}`, `--border*`, `--accent*`, semánticos fijos, `--violet*`, `--stripe`, `--shadow-*`, `--r-*`, motion, densidad `--ui-fs`), dark por defecto + `[data-theme="light"]` + acentos `[data-accent="emerald|amber|cyan"]`, mapeados en `@theme inline`; Geist y Geist Mono self-hosted (cierra la nota ⚠ de fuentes del readme del DS); página `/design-system` con specimens de fundaciones (colores, tipografía, spacing, radios, sombras, glifos) y switchers de tema/acento/densidad.
 - **Subtareas**:
-  - [ ] Volcado de los 5 ficheros de tokens a los 3 bloques canónicos de `globals.css`.
-  - [ ] Geist/Geist Mono self-hosted con variables `--font-sans`/`--font-mono`.
-  - [ ] Ruta `/design-system` con specimens y switchers funcionales (tema, acento, densidad).
+  - [x] Volcado de los 5 ficheros de tokens a los 3 bloques canónicos de `globals.css`.
+  - [x] Geist/Geist Mono self-hosted con variables `--font-sans`/`--font-mono`.
+  - [x] Ruta `/design-system` con specimens y switchers funcionales (tema, acento, densidad).
 - **Verificación**: en el navegador, `/design-system` muestra los specimens; los switchers cambian tema/acento/densidad en vivo; comparación visual CUA contra `docs/design-system/guidelines/*.card.html` sin desviaciones perceptibles.
 
 #### TD.2 · Primitivas core y formularios

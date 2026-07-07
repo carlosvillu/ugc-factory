@@ -1,3 +1,369 @@
-/* Tailwind v4 CSS-first (skill frontend): tokens del design system de Claude
-   Design se añadirán aquí (:root/.dark + @theme inline) cuando se traduzcan. */
+/* apps/web/src/app/globals.css — THE only file in the repo with visual values.
+   Design system source of truth: Claude Design, mirrored read-only in
+   docs/design-system/tokens/*.css. This file dumps those token files VERBATIM
+   (hex + naming 1:1) and maps them to Tailwind v4 via @theme inline.
+
+   Three blocks (skill frontend, references/design-system.md §2):
+     1) Raw values: :root (dark, default) + [data-theme=light] + [data-accent=…]
+        + [data-density=…]. Dumped verbatim from the mirror.
+     2) @theme inline: maps every token to a Tailwind utility (naming 1:1).
+     3) @layer base: minimal defaults (bg, text, font, ui font-size).
+
+   Fonts: Geist / Geist Mono are self-hosted via the `geist` npm package,
+   injected in layout.tsx (GeistSans.variable → --font-geist-sans,
+   GeistMono.variable → --font-geist-mono). This closes the ⚠ substitution
+   note in docs/design-system/readme.md §Fonts: the mirror's typography.css
+   loads Geist from Google Fonts as a PLACEHOLDER; we do NOT copy that @import
+   here — the package self-hosts the .woff2 files. The rest of typography.css
+   (--fs-*, --lh-*, --ls-*, --fw-*) is dumped verbatim below. */
+
 @import 'tailwindcss';
+
+/* light by attribute (the toggle writes data-theme on <html>); dark is DEFAULT.
+   The `light:` variant is only for the non-tokenizable (e.g. inverting a bitmap). */
+@custom-variant light (&:is([data-theme='light'] *));
+
+/* ══════════════════════════════════════════════════════════════════════════
+   1) RAW VALUES — verbatim from docs/design-system/tokens/*.css
+   ══════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* ── Surfaces & text (dark, default) — colors.css ───────────────────────── */
+  --bg: #0a0a0b;
+  --bg-subtle: #0f0f11;
+  --surface: #141416;
+  --surface-2: #1a1a1d;
+  --surface-3: #212126;
+
+  --border: #26262b;
+  --border-2: #33333a;
+  --border-strong: #46464f;
+
+  --text: #f4f4f5;
+  --text-2: #a1a1aa;
+  --text-3: #71717a;
+  --text-4: #52525b;
+  --text-on-accent: #ffffff;
+
+  --stripe: rgba(255, 255, 255, 0.045);
+
+  /* ── Elevation (dark) — colors.css ──────────────────────────────────────────
+     ONLY naming deviation from the mirror: the DS calls these --shadow-* but
+     that namespace is owned by @theme inline (var() would go circular), so they
+     are dumped as --elevation-* here and the resulting CLASSES keep the DS name
+     (shadow-sm/md/lg). Both themes must carry the pair. */
+  --elevation-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
+  --elevation-md: 0 6px 18px rgba(0, 0, 0, 0.55);
+  --elevation-lg: 0 18px 48px rgba(0, 0, 0, 0.6);
+
+  /* ── Accent: indigo (default) — colors.css ──────────────────────────────── */
+  --accent: #6366f1;
+  --accent-hover: #7c80f6;
+  --accent-soft: #6366f126;
+  --accent-border: #6366f159;
+  --ring: #6366f166;
+
+  /* ── Semantic status (FIXED across theme & accent) — colors.css ─────────── */
+  --success: #22c55e;
+  --success-soft: #22c55e1a;
+  --success-border: #22c55e40;
+  --success-on: #052e16;
+
+  --warning: #f59e0b;
+  --warning-soft: #f59e0b1a;
+  --warning-border: #f59e0b40;
+
+  --danger: #ef4444;
+  --danger-soft: #ef44441a;
+  --danger-border: #ef444440;
+
+  --info: #3b82f6;
+  --info-soft: #3b82f61a;
+  --info-border: #3b82f640;
+
+  /* ── Extra data-viz accents (tiers, confidence) — colors.css ────────────── */
+  --violet: #a78bfa;
+  --violet-soft: #a78bfa1a;
+  --violet-border: #a78bfa40;
+
+  /* ── Type scale — typography.css (px, matches the numbered scale 1:1) ─────
+     --font-sans / --font-mono are NOT dumped here: the geist package + the
+     @theme inline mapping below own them (closes the ⚠ fonts note). */
+  --fs-display: 42px;
+  --fs-h1: 30px;
+  --fs-h2: 22px;
+  --fs-h3: 17px;
+  --fs-body: 14px;
+  --fs-small: 12px;
+  --fs-micro: 11px;
+  --fs-mono: 13px;
+
+  --lh-tight: 1.08;
+  --lh-snug: 1.3;
+  --lh-normal: 1.5;
+  --lh-relaxed: 1.6;
+
+  --ls-display: -0.025em;
+  --ls-h1: -0.02em;
+  --ls-h2: -0.015em;
+  --ls-tight: -0.01em;
+  --ls-wide: 0.08em;
+  --ls-widest: 0.12em;
+
+  --fw-regular: 400;
+  --fw-medium: 500;
+  --fw-semibold: 600;
+  --fw-bold: 700;
+
+  /* ── Density — typography.css. One var, three steps.
+     The mirror comment tags 14px as "comfortable"; per the FD brief (which
+     outranks the mirror comment and sets the precedent for /settings, T0.14)
+     the three [data-density] steps below are the source of truth:
+       compact 13 · balanced 14 (default) · comfortable 15
+     [data-density] on <html> redefines --ui-fs; :root is the balanced default. */
+  --ui-fs: 14px;
+
+  /* ── Spacing — spacing.css (base 4px). The 4px scale IS Tailwind's default
+     scale (p-4, gap-2…); these tokens exist for layout-level values. ──────── */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 12px;
+  --space-lg: 16px;
+  --space-xl: 24px;
+  --space-2xl: 32px;
+  --space-3xl: 48px;
+  --space-4xl: 64px;
+
+  --content-max: 1180px;
+  --page-pad: 32px;
+
+  /* ── Corner radii — radii-shadows.css ───────────────────────────────────── */
+  --r-sm: 5px;
+  --r-md: 7px;
+  --r-lg: 10px;
+  --r-xl: 14px;
+  --r-2xl: 18px;
+  --r-full: 999px;
+}
+
+/* ── Theme: light — colors.css (complete override of surfaces/text/borders/
+   stripe/elevation; a theme token with no light pair is a dump bug) ────────── */
+[data-theme='light'] {
+  --bg: #fbfbfc;
+  --bg-subtle: #f4f4f6;
+  --surface: #ffffff;
+  --surface-2: #f7f7f9;
+  --surface-3: #eeeef1;
+
+  --border: #e5e5e9;
+  --border-2: #d6d6dc;
+  --border-strong: #b9b9c2;
+
+  --text: #18181b;
+  --text-2: #52525b;
+  --text-3: #71717a;
+  --text-4: #a1a1aa;
+
+  --stripe: rgba(0, 0, 0, 0.035);
+
+  --elevation-sm: 0 1px 2px rgba(0, 0, 0, 0.06);
+  --elevation-md: 0 6px 18px rgba(0, 0, 0, 0.08);
+  --elevation-lg: 0 18px 48px rgba(0, 0, 0, 0.12);
+}
+
+/* ── Accents (switchable, independent of theme) — colors.css ──────────────── */
+[data-accent='emerald'] {
+  --accent: #10b981;
+  --accent-hover: #34d399;
+  --accent-soft: #10b98126;
+  --accent-border: #10b98159;
+  --ring: #10b98166;
+}
+
+[data-accent='amber'] {
+  --accent: #f59e0b;
+  --accent-hover: #fbbf24;
+  --accent-soft: #f59e0b26;
+  --accent-border: #f59e0b59;
+  --ring: #f59e0b66;
+}
+
+[data-accent='cyan'] {
+  --accent: #06b6d4;
+  --accent-hover: #22d3ee;
+  --accent-soft: #06b6d426;
+  --accent-border: #06b6d459;
+  --ring: #06b6d466;
+}
+
+/* ── Density steps — see :root note above. compact 13 / balanced 14 / comfortable 15. */
+[data-density='compact'] {
+  --ui-fs: 13px;
+}
+[data-density='balanced'] {
+  --ui-fs: 14px;
+}
+[data-density='comfortable'] {
+  --ui-fs: 15px;
+}
+
+/* ── Motion keyframes — motion.css (verbatim names: ugc-spin / ugc-pulse-ring).
+   Kept as plain CSS (outside @theme) so they are always emitted; @theme inline
+   maps --animate-* to them. */
+@keyframes ugc-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes ugc-pulse-ring {
+  0% {
+    box-shadow: 0 0 0 0 var(--pulse-color, transparent);
+  }
+  70% {
+    box-shadow: 0 0 0 7px transparent;
+  }
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   2) @theme inline — map every token to Tailwind (naming 1:1 with the DS)
+   ══════════════════════════════════════════════════════════════════════════ */
+@theme inline {
+  /* colors */
+  --color-bg: var(--bg); /* → bg-bg */
+  --color-bg-subtle: var(--bg-subtle);
+  --color-surface: var(--surface); /* → bg-surface */
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-border: var(--border); /* → border-border */
+  --color-border-2: var(--border-2);
+  --color-border-strong: var(--border-strong);
+  --color-text: var(--text); /* → text-text */
+  --color-text-2: var(--text-2); /* → text-text-2 */
+  --color-text-3: var(--text-3);
+  --color-text-4: var(--text-4);
+  --color-text-on-accent: var(--text-on-accent);
+  --color-stripe: var(--stripe);
+  --color-accent: var(--accent); /* → bg-accent, text-accent */
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-border: var(--accent-border);
+  --color-ring: var(--ring);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-success-border: var(--success-border);
+  --color-success-on: var(--success-on);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-warning-border: var(--warning-border);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-danger-border: var(--danger-border);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
+  --color-info-border: var(--info-border);
+  --color-violet: var(--violet);
+  --color-violet-soft: var(--violet-soft);
+  --color-violet-border: var(--violet-border);
+
+  /* radii */
+  --radius-sm: var(--r-sm); /* → rounded-sm = 5px (chips, checkboxes) */
+  --radius-md: var(--r-md); /* → rounded-md = 7px (buttons, inputs) */
+  --radius-lg: var(--r-lg); /* → rounded-lg = 10px (cards, panels) */
+  --radius-xl: var(--r-xl); /* → rounded-xl = 14px (large containers) */
+  --radius-2xl: var(--r-2xl); /* → rounded-2xl = 18px */
+  --radius-full: var(--r-full); /* → rounded-full */
+
+  /* elevation → shadow-* (see naming note in :root) */
+  --shadow-sm: var(--elevation-sm);
+  --shadow-md: var(--elevation-md);
+  --shadow-lg: var(--elevation-lg);
+
+  /* fonts — self-hosted Geist via the `geist` package (layout.tsx). This
+     mapping is the ⚠ closure: no Google Fonts @import anywhere. */
+  --font-sans:
+    var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, 'SF Mono', 'Cascadia Code', monospace;
+
+  /* type scale → text-*, with matched line-heights / tracking baked in.
+     Lets specimens use `text-h1` etc. instead of arbitrary values (TD.6 lint). */
+  --text-display: var(--fs-display);
+  --text-display--line-height: var(--lh-tight);
+  --text-display--letter-spacing: var(--ls-display);
+  --text-h1: var(--fs-h1);
+  --text-h1--line-height: var(--lh-tight);
+  --text-h1--letter-spacing: var(--ls-h1);
+  --text-h2: var(--fs-h2);
+  --text-h2--line-height: var(--lh-snug);
+  --text-h2--letter-spacing: var(--ls-h2);
+  --text-h3: var(--fs-h3);
+  --text-h3--line-height: var(--lh-snug);
+  --text-body: var(--fs-body);
+  --text-body--line-height: var(--lh-normal);
+  --text-small: var(--fs-small);
+  --text-small--line-height: var(--lh-normal);
+  --text-micro: var(--fs-micro);
+  --text-micro--line-height: var(--lh-normal);
+  --text-mono: var(--fs-mono);
+  --text-mono--line-height: var(--lh-normal);
+
+  /* letter-spacing scale → tracking-* */
+  --tracking-display: var(--ls-display);
+  --tracking-h1: var(--ls-h1);
+  --tracking-h2: var(--ls-h2);
+  --tracking-tight: var(--ls-tight);
+  --tracking-wide: var(--ls-wide);
+  --tracking-widest: var(--ls-widest);
+
+  /* line-height scale → leading-* */
+  --leading-tight: var(--lh-tight);
+  --leading-snug: var(--lh-snug);
+  --leading-normal: var(--lh-normal);
+  --leading-relaxed: var(--lh-relaxed);
+
+  /* font weights → font-* */
+  --font-weight-regular: var(--fw-regular);
+  --font-weight-medium: var(--fw-medium);
+  --font-weight-semibold: var(--fw-semibold);
+  --font-weight-bold: var(--fw-bold);
+
+  /* spacing tokens (layout-level) → *-space-* */
+  --spacing-space-xs: var(--space-xs);
+  --spacing-space-sm: var(--space-sm);
+  --spacing-space-md: var(--space-md);
+  --spacing-space-lg: var(--space-lg);
+  --spacing-space-xl: var(--space-xl);
+  --spacing-space-2xl: var(--space-2xl);
+  --spacing-space-3xl: var(--space-3xl);
+  --spacing-space-4xl: var(--space-4xl);
+  --spacing-content-max: var(--content-max);
+  --spacing-page-pad: var(--page-pad);
+
+  /* motion → animate-* (mirror keyframe names) */
+  --animate-spin: ugc-spin 0.7s linear infinite;
+  --animate-pulse-ring: ugc-pulse-ring 2s ease-out infinite;
+}
+
+/* prefers-reduced-motion: the pulse is turned off; state stays visible via
+   color/badge. (skill frontend §2) */
+@media (prefers-reduced-motion: reduce) {
+  .animate-pulse-ring {
+    animation: none;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   3) BASE — minimal defaults
+   ══════════════════════════════════════════════════════════════════════════ */
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-bg text-text font-sans;
+    font-size: var(--ui-fs);
+  }
+}

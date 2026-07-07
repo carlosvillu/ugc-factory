@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@ugc/core": "workspace:*",
+    "geist": "^1.7.2",
     "next": "16.2.10",
     "react": "catalog:",
     "react-dom": "catalog:"

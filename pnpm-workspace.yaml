@@ -1,0 +1,39 @@
+# pnpm-workspace.yaml — workspaces y catalogs (backend/references/tooling.md §6)
+packages:
+  - apps/*
+  - packages/*
+
+# UNA versión por dependencia compartida para TODO el monorepo.
+# Dos versiones de zod = dos identidades de tipo para el mismo schema
+# y errores de asignabilidad absurdos entre core y web.
+# Entradas futuras ya decididas por tooling.md §6 (knip veta catalogs sin consumidor):
+#   drizzle-orm: ^0.44.0  → entra en T0.3 con packages/db
+#   pg-boss: ^12.0.0      → entra en T0.6 (v12: el adaptador fromDrizzle del encolado transaccional lo exige)
+catalog:
+  zod: ^4.1.0
+  pino: ^9.9.0
+  react: 19.2.0
+  react-dom: 19.2.0
+  typescript: ~5.9.0
+  # compartidas por ≥2 paquetes en T0.1:
+  vitest: ^4.1.10
+  '@types/node': ^24.10.1
+
+# Binarios nativos para AMBOS mundos de esta máquina (Apple Silicon con shells
+# bajo Rosetta: conviven node arm64 y x64 — el gate no puede depender de qué
+# node lo lanza) y para linux (runners de CI + VPS, glibc) con el MISMO lockfile.
+# Sin esto pnpm solo materializa el binding de la arquitectura del proceso de
+# install, y unrs-resolver/esbuild/oxide revientan bajo el otro node.
+supportedArchitectures:
+  os: [darwin, linux]
+  cpu: [x64, arm64]
+  libc: [glibc]
+
+# pnpm 10 bloquea build scripts por defecto; solo se aprueban los necesarios.
+onlyBuiltDependencies:
+  - esbuild
+  - lefthook
+  - msw
+  - sharp
+  - unrs-resolver
+  - '@tailwindcss/oxide'

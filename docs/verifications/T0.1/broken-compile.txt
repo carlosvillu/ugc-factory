@@ -1,0 +1,85 @@
+### pnpm typecheck con packages/core/src/contracts/health.ts roto (clave ok -> ok_BROKEN_T01_VERIFICATION) ###
+
+> ugc-factory@0.0.0 typecheck /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads
+> tsc --noEmit && pnpm -r --parallel typecheck
+
+Scope: 5 of 6 workspace projects
+apps/web typecheck$ tsc --noEmit
+apps/worker typecheck$ tsc --noEmit
+packages/core typecheck$ tsc --noEmit
+packages/db typecheck$ tsc --noEmit
+packages/test-utils typecheck$ tsc --noEmit
+packages/db typecheck: Done
+apps/worker typecheck: src/bootstrap.ts(18,20): error TS2353: Object literal may only specify known properties, and 'ok' does not exist in type '{ ok_BROKEN_T01_VERIFICATION: boolean; }'.
+apps/worker typecheck: src/bootstrap.ts(20,3): error TS2741: Property 'ok_BROKEN_T01_VERIFICATION' is missing in type '{ ok: boolean; }' but required in type '{ ok_BROKEN_T01_VERIFICATION: boolean; }'.
+apps/worker typecheck: Failed
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/worker:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @ugc/worker@0.0.0 typecheck: `tsc --noEmit`
+Exit status 2
+packages/test-utils typecheck: Done
+ ELIFECYCLE  Command failed with exit code 2.
+TYPECHECK_EXIT=2
+
+### pnpm --filter @ugc/web typecheck (aislado, mismo estado roto) ###
+
+> @ugc/web@0.0.0 typecheck /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/web
+> tsc --noEmit
+
+src/app/api/health/route.ts(17,20): error TS2353: Object literal may only specify known properties, and 'ok' does not exist in type '{ ok_BROKEN_T01_VERIFICATION: boolean; }'.
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/web:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @ugc/web@0.0.0 typecheck: `tsc --noEmit`
+Exit status 2
+WEB_TYPECHECK_EXIT=2
+
+### pnpm --filter @ugc/worker typecheck (aislado, mismo estado roto) ###
+
+> @ugc/worker@0.0.0 typecheck /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/worker
+> tsc --noEmit
+
+src/bootstrap.ts(18,20): error TS2353: Object literal may only specify known properties, and 'ok' does not exist in type '{ ok_BROKEN_T01_VERIFICATION: boolean; }'.
+src/bootstrap.ts(20,3): error TS2741: Property 'ok_BROKEN_T01_VERIFICATION' is missing in type '{ ok: boolean; }' but required in type '{ ok_BROKEN_T01_VERIFICATION: boolean; }'.
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/worker:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @ugc/worker@0.0.0 typecheck: `tsc --noEmit`
+Exit status 2
+WORKER_TYPECHECK_EXIT=2
+
+### pnpm build (mismo estado roto) ###
+
+> ugc-factory@0.0.0 build /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads
+> pnpm -r build
+
+Scope: 5 of 6 workspace projects
+apps/worker build$ tsup
+apps/web build$ next build
+apps/worker build: CLI Building entry: src/main.ts
+apps/worker build: CLI Using tsconfig: tsconfig.build.json
+apps/worker build: CLI tsup v8.5.1
+apps/worker build: CLI Using tsup config: /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/worker/tsup.config.ts
+apps/worker build: CLI Target: node24
+apps/worker build: CLI Cleaning output folder
+apps/worker build: ESM Build start
+apps/worker build: ESM dist/main.js     3.16 KB
+apps/worker build: ESM dist/main.js.map 9.54 KB
+apps/worker build: ESM ⚡️ Build success in 8ms
+apps/worker build: Done
+apps/web build: ▲ Next.js 16.2.10 (Turbopack)
+apps/web build:   Creating an optimized production build ...
+apps/web build: ✓ Compiled successfully in 1042ms
+apps/web build:   Running TypeScript ...
+apps/web build: Failed to type check.
+apps/web build: ./src/app/api/health/route.ts:17:20
+apps/web build: Type error: Object literal may only specify known properties, and 'ok' does not exist in type '{ ok_BROKEN_T01_VERIFICATION: boolean; }'.
+apps/web build:   [90m15 |[0m   [90m// un literal propio es trabajo muerto (el safeParse vive en las fronteras de[0m
+apps/web build:   [90m16 |[0m   [90m// ENTRADA, api.md). El campo `db` llega en T0.2 — no se anticipa.[0m
+apps/web build: [31m[1m>[0m [90m17 |[0m   [36mconst[0m health = { ok: [36mtrue[0m } satisfies [33mHealthStatus[0m;
+apps/web build:   [90m   |[0m                    [31m[1m^[0m
+apps/web build:   [90m18 |[0m   log.info({ health }, [32m'health check ok'[0m);
+apps/web build:   [90m19 |[0m
+apps/web build:   [90m20 |[0m   [36mreturn[0m [33mResponse[0m.json(health);
+apps/web build: Next.js build worker exited with code: 1 and signal: null
+apps/web build: Failed
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/web:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @ugc/web@0.0.0 build: `next build`
+Exit status 1
+ ELIFECYCLE  Command failed with exit code 1.
+BUILD_EXIT=1

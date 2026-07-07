@@ -1,0 +1,37 @@
+
+> ugc-factory@0.0.0 build /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads
+> pnpm -r build
+
+Scope: 5 of 6 workspace projects
+apps/web build$ next build
+apps/worker build$ tsup
+apps/worker build: CLI Building entry: src/main.ts
+apps/worker build: CLI Using tsconfig: tsconfig.build.json
+apps/worker build: CLI tsup v8.5.1
+apps/worker build: CLI Using tsup config: /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/worker/tsup.config.ts
+apps/worker build: CLI Target: node24
+apps/worker build: CLI Cleaning output folder
+apps/worker build: ESM Build start
+apps/worker build: ESM dist/main.js     3.16 KB
+apps/worker build: ESM dist/main.js.map 9.54 KB
+apps/worker build: ESM ⚡️ Build success in 11ms
+apps/worker build: Done
+apps/web build: ▲ Next.js 16.2.10 (Turbopack)
+apps/web build:   Creating an optimized production build ...
+apps/web build: ✓ Compiled successfully in 1221ms
+apps/web build:   Running TypeScript ...
+apps/web build:   Finished TypeScript in 1277ms ...
+apps/web build:   Collecting page data using 5 workers ...
+apps/web build:   Generating static pages using 5 workers (0/4) ...
+apps/web build:   Generating static pages using 5 workers (1/4) 
+apps/web build:   Generating static pages using 5 workers (2/4) 
+apps/web build:   Generating static pages using 5 workers (3/4) 
+apps/web build: ✓ Generating static pages using 5 workers (4/4) in 205ms
+apps/web build:   Finalizing page optimization ...
+apps/web build: Route (app)
+apps/web build: ┌ ○ /
+apps/web build: ├ ○ /_not-found
+apps/web build: └ ƒ /api/health
+apps/web build: ○  (Static)   prerendered as static content
+apps/web build: ƒ  (Dynamic)  server-rendered on demand
+apps/web build: Done

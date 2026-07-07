@@ -28,14 +28,14 @@
 
 El corazón de esta fase es el **orquestador** (§9.0): la máquina de estados transaccional del DAG. Todo lo demás del producto se cuelga de él. Al cerrar F0 no hay ninguna feature de negocio, pero el esqueleto completo (pipeline visual con checkpoints en el VPS) funciona con steps de demo.
 
-#### T0.1 · Monorepo y esqueleto de proyectos
+#### T0.1 · Monorepo y esqueleto de proyectos [x] 2026-07-07 — PASS, ver docs/verifications/T0.1/ (coste $0)
 - **Depende de**: —
 - **Entrega**: pnpm workspaces con `apps/web` (Next.js App Router + Tailwind), `apps/worker` (Node TS), `packages/core`, `packages/db`; tsconfig/eslint/prettier compartidos; **logging estructurado (pino)** con campos de correlación (`run_id`/`step_id`/`request_id`) desde el día 1; script `pnpm dev` levanta web y worker.
 - **Subtareas**:
-  - [ ] Inicializar workspaces y los 4 paquetes con sus builds.
-  - [ ] `packages/core`: carpeta `contracts/` con un primer schema Zod trivial compartido e importado desde web y worker.
-  - [ ] Logger pino compartido con serializers de correlación.
-  - [ ] Página raíz de Next con "UGC Factory" y healthcheck `/api/health`; el worker arranca y loggea "worker ready".
+  - [x] Inicializar workspaces y los 4 paquetes con sus builds.
+  - [x] `packages/core`: carpeta `contracts/` con un primer schema Zod trivial compartido e importado desde web y worker.
+  - [x] Logger pino compartido con serializers de correlación.
+  - [x] Página raíz de Next con "UGC Factory" y healthcheck `/api/health`; el worker arranca y loggea "worker ready".
 - **Verificación**: `pnpm build && pnpm dev` → `curl localhost:3000/api/health` devuelve `{ok:true}` y el log del worker muestra "worker ready" en JSON estructurado. Un cambio en un tipo de `packages/core` rompe la compilación de ambas apps (se comprueba a propósito).
 
 #### T0.2 · Docker Compose de desarrollo con Postgres

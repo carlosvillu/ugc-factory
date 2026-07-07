@@ -1,0 +1,54 @@
+# .github/workflows/ci.yml — testing/references/ci.md (estado T0.1: lint + unit + ci-ok)
+# Los jobs integration/e2e/seed-validators/media se añaden en las tareas que crean
+# lo que ejecutan (ci.md §9): un job que invoca scripts inexistentes entrena a
+# ignorar el rojo. Committeado sin remote (decisión 2026-07-07): el gate real es
+# local (`pnpm gate`) hasta que exista repo en GitHub.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Un push nuevo en la misma branch cancela el run anterior: el feedback debe ser
+# sobre el último commit, no sobre uno obsoleto. En main nunca se cancela: cada
+# commit de main queda con veredicto completo.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+jobs:
+  lint:
+    name: Lint + typecheck
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm format:check
+      - run: pnpm knip
+
+  unit:
+    name: Unit
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - run: pnpm test:unit
+
+  # Job agregador: el ÚNICO required status check en branch protection (ci.md §7).
+  # Todo job nuevo se añade a needs en el mismo PR que lo crea.
+  ci-ok:
+    name: CI OK (gate de merge)
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    needs: [lint, unit]
+    if: always()
+    steps:
+      - if: contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')
+        run: exit 1
+      - run: echo "all green"

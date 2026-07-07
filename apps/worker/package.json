@@ -1,0 +1,25 @@
+{
+  "name": "@ugc/worker",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/main.ts",
+    "build": "tsup",
+    "start": "node dist/main.js",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@ugc/core": "workspace:*",
+    "pino": "catalog:"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "@ugc/test-utils": "workspace:*",
+    "tsup": "^8.5.1",
+    "tsx": "^4.23.0",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

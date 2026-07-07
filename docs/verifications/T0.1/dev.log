@@ -1,0 +1,24 @@
+
+> ugc-factory@0.0.0 dev /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads
+> pnpm --parallel --filter @ugc/web --filter @ugc/worker dev
+
+Scope: 2 of 6 workspace projects
+apps/worker dev$ tsx watch src/main.ts
+apps/web dev$ next dev
+apps/worker dev: {"level":30,"time":1783432376006,"pid":934,"hostname":"MBP-de-Carlos","name":"worker","health":{"ok":true},"msg":"worker ready"}
+apps/web dev: ▲ Next.js 16.2.10 (Turbopack)
+apps/web dev: - Local:         http://localhost:3000
+apps/web dev: - Network:       http://192.168.1.132:3000
+apps/web dev: ✓ Ready in 295ms
+apps/web dev: {"level":30,"time":1783432389064,"pid":933,"hostname":"MBP-de-Carlos","name":"web","request_id":"06563244-5131-435d-8b76-2ad83cbcff6b","route":"/api/health","health":{"ok":true},"msg":"health check ok"}
+apps/web dev:  GET /api/health 200 in 122ms (next.js: 109ms, application-code: 14ms)
+apps/web dev: {"level":30,"time":1783432400594,"pid":933,"hostname":"MBP-de-Carlos","name":"web","request_id":"1bcf9834-3e01-4b84-b74a-5e0d2b991696","route":"/api/health","health":{"ok":true},"msg":"health check ok"}
+apps/web dev:  GET /api/health 200 in 7ms (next.js: 3ms, application-code: 4ms)
+apps/web dev: {"level":30,"time":1783432400657,"pid":933,"hostname":"MBP-de-Carlos","name":"web","request_id":"c54f2b61-8656-4d23-8370-0b2af2758e79","route":"/api/health","health":{"ok":true},"msg":"health check ok"}
+apps/web dev:  HEAD /api/health 200 in 4ms (next.js: 1454µs, application-code: 2ms)
+apps/web dev: {"level":30,"time":1783432601928,"pid":933,"hostname":"MBP-de-Carlos","name":"web","request_id":"86d5b8a7-a930-4333-9db0-f75324f08c43","route":"/api/health","health":{"ok":true},"msg":"health check ok"}
+apps/web dev:  GET /api/health 200 in 9ms (next.js: 4ms, application-code: 5ms)
+apps/worker dev: {"level":30,"time":1783432676016,"pid":934,"hostname":"MBP-de-Carlos","name":"worker","signal":"SIGTERM","msg":"worker shutting down"}
+apps/worker dev: Done
+apps/web dev: [?25h
+apps/web dev: Done

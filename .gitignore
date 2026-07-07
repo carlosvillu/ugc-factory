@@ -20,3 +20,6 @@ test-results/
 
 # sistema
 .DS_Store
+
+# artefactos locales de claude code
+.claude/scheduled_tasks.lock

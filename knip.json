@@ -1,0 +1,18 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "workspaces": {
+    ".": {},
+    "apps/web": {}, // los plugins de knip detectan Next (app router) y Vitest solos
+    "apps/worker": {
+      // pino no se importa directo (solo vía @ugc/core), pero el bundle de tsup
+      // lo deja external: el artefacto dist/ lo requiere en runtime.
+      "ignoreDependencies": ["pino"]
+    },
+    "packages/core": {
+      // pino-pretty solo se referencia como string de transport en makeLogger
+      // (observability.md §2): knip no puede verlo en el grafo de imports.
+      "ignoreDependencies": ["pino-pretty"]
+    },
+    "packages/*": {} // entry desde el exports map del package.json (architecture.md §7)
+  }
+}

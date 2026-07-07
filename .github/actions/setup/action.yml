@@ -1,0 +1,13 @@
+# .github/actions/setup/action.yml — testing/references/ci.md §4
+name: setup
+description: pnpm + Node del proyecto + deps con caché de store
+runs:
+  using: composite
+  steps:
+    - uses: pnpm/action-setup@v4 # lee la versión del campo packageManager
+    - uses: actions/setup-node@v4
+      with:
+        node-version-file: .nvmrc # UNA versión: la del proyecto (ci.md §5)
+        cache: pnpm # caché del pnpm store, keyed por lockfile
+    - run: pnpm install --frozen-lockfile
+      shell: bash

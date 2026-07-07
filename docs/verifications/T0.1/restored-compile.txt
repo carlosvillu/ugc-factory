@@ -1,0 +1,21 @@
+### pnpm typecheck tras restaurar health.ts (git restore --worktree contra el indice staged) ###
+
+> ugc-factory@0.0.0 typecheck /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads
+> tsc --noEmit && pnpm -r --parallel typecheck
+
+Scope: 5 of 6 workspace projects
+apps/web typecheck$ tsc --noEmit
+apps/worker typecheck$ tsc --noEmit
+packages/core typecheck$ tsc --noEmit
+packages/db typecheck$ tsc --noEmit
+packages/test-utils typecheck$ tsc --noEmit
+packages/db typecheck: Done
+packages/test-utils typecheck: Done
+packages/core typecheck: Done
+apps/worker typecheck: Done
+apps/web typecheck: Done
+TYPECHECK_EXIT=0
+
+### git status de health.ts tras restaurar ###
+A  packages/core/src/contracts/health.ts
+### git diff (unstaged) de health.ts: 0 lineas ###

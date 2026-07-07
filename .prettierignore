@@ -1,0 +1,21 @@
+# generado / artefactos (tooling.md §3)
+pnpm-lock.yaml
+packages/db/drizzle/
+dist
+.next
+coverage
+next-env.d.ts
+playwright-report
+test-results
+
+# documentos del proyecto, evidencia y skills: no los gobierna prettier
+# (planning.md y docs/verifications/ son intocables para el implementer)
+PRD.md
+planning.md
+CLAUDE.md
+UGC_deep_research.md
+research/
+docs/
+.claude/
+skills-lock.json
+.mcp.json

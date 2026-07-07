@@ -336,11 +336,13 @@ Registra `beforeAll/afterEach/afterAll` con un server msw (node) cargado con los
 
 ```ts
 // src/golden.ts — uso en unit-core.md
-export async function expectGolden(actual: string, goldenPath: string): Promise<void>; // async SIEMPRE
-// goldenPath relativo al fichero de test — internamente se resuelve contra el dir del
-// test que llama, o el caller pasa new URL(..., import.meta.url).pathname:
-// expectGolden(payload, new URL('./golden/kling-payload.json', import.meta.url).pathname)
-// Falla con diff si difiere; regeneración SOLO con UPDATE_GOLDEN=1 (reescribe el fichero y pasa).
+export async function expectGolden(actual: string, goldenPath: string | URL): Promise<void>; // async SIEMPRE
+// El caller pasa una URL relativa al fichero de test:
+// expectGolden(payload, new URL('./golden/kling-payload.json', import.meta.url))
+// Internamente se convierte con fileURLToPath — JAMÁS `.pathname` (percent-encoda
+// espacios/no-ASCII del path y produce ENOENT falsos; corregido 2026-07-07 en T0.1).
+// Falla con diff si difiere; solo ENOENT se reporta como "golden ausente" (el resto
+// de errores se relanza); regeneración SOLO con UPDATE_GOLDEN=1 (reescribe y pasa).
 ```
 
 ## 5. Playwright y msw

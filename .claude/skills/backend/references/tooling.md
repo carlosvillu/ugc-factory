@@ -50,9 +50,7 @@ import vitest from '@vitest/eslint-plugin';
 import playwright from 'eslint-plugin-playwright';
 import reactHooks from 'eslint-plugin-react-hooks';
 import prettier from 'eslint-config-prettier';
-import { FlatCompat } from '@eslint/eslintrc';
-
-const compat = new FlatCompat({ baseDirectory: import.meta.dirname });
+import nextCoreWebVitals from 'eslint-config-next/core-web-vitals';
 
 export default defineConfig(
   // ── 1. Ignores globales: lo generado no se lintea jamás ──────────────────
@@ -109,22 +107,26 @@ export default defineConfig(
     },
   },
 
-  // ── 5. apps/web: Next + React Hooks v6 (React Compiler) ─────────────────
-  ...compat
-    .config({ extends: ['next/core-web-vitals'] })
-    .map((cfg) => ({
-      ...cfg,
-      files: ['apps/web/**/*.{ts,tsx}'],
-      settings: { ...cfg.settings, next: { rootDir: 'apps/web/' } }, // monorepo: las reglas @next/next lo necesitan
-    })),
+  // ── 5. apps/web: Next + React Hooks (React Compiler) ─────────────────────
+  // eslint-config-next ≥16 exporta flat config NATIVO (array): se importa
+  // directo y se acota cada entrada a la zona web. NADA de FlatCompat aquí:
+  // con eslintrc revienta (sus plugins son objetos flat). [Actualizado
+  // 2026-07-07 en T0.1: el snippet anterior usaba FlatCompat, válido solo
+  // para eslint-config-next ≤15.]
+  ...nextCoreWebVitals.map((cfg) => ({
+    ...cfg,
+    files: ['apps/web/**/*.{ts,tsx}'],
+    settings: { ...cfg.settings, next: { rootDir: 'apps/web/' } }, // monorepo: las reglas @next/next lo necesitan
+  })),
   {
     files: ['apps/web/**/*.{ts,tsx}'],
     // CUIDADO — doble registro: eslint-config-next YA registra los plugins
     // react/react-hooks. Volver a declarar `plugins: { 'react-hooks': reactHooks }`
-    // revienta con "Cannot redefine plugin". Se toman SOLO las rules del preset v6
-    // ('recommended-latest': rules-of-hooks + exhaustive-deps + las reglas nuevas
-    // del React Compiler). Garantiza UNA sola versión (v6) de
-    // eslint-plugin-react-hooks vía catalog + pnpm overrides si next arrastra otra.
+    // revienta con "Cannot redefine plugin". Se toman SOLO las rules del preset
+    // 'recommended-latest' (rules-of-hooks + exhaustive-deps + las reglas del
+    // React Compiler; en eslint-plugin-react-hooks ≥7, la que arrastra next 16).
+    // Garantiza UNA sola versión del plugin: root devDep alineada con la de
+    // eslint-config-next (pnpm overrides si divergen).
     rules: { ...reactHooks.configs['recommended-latest'].rules },
   },
 

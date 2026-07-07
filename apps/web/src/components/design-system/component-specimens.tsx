@@ -6,12 +6,17 @@
 // dark AND light. Client component: the form-fields demo holds the interactive
 // state (switches, checkboxes, slider) the way the mirror card's <Demo> does.
 import { useState } from 'react';
+import { Alert } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { EmptyState } from '@/components/ui/empty-state';
 import { Input } from '@/components/ui/input';
+import { MetricsTable, type MetricsTableColumn } from '@/components/ui/metrics-table';
 import { Select } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
+import { Tabs } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import type { ReactNode } from 'react';
 
@@ -187,11 +192,132 @@ function FormFields() {
   );
 }
 
+// ── Badges & alerts — mirrors badges-alerts.card.html ───────────────────────
+function BadgesAndAlerts() {
+  return (
+    <Specimen
+      title="Badges y alertas"
+      subtitle="Pills de estado, tags de trazabilidad, alertas inline"
+    >
+      <div className="flex flex-col gap-3.5">
+        <div className="flex flex-wrap items-center gap-2">
+          <Badge tone="success">✓ extraído</Badge>
+          <Badge tone="violet">inferido · 0.82</Badge>
+          <Badge dashed mono>
+            est. $1.80
+          </Badge>
+          <Badge mono>real $2.14</Badge>
+          <Badge tone="warning" mono>
+            +19%
+          </Badge>
+          <Badge tone="accent">Standard</Badge>
+          <Badge mono>ES</Badge>
+          <Badge tone="success" dot>
+            Orgánico publicado
+          </Badge>
+          <Badge tone="warning" dot>
+            Ad borrador
+          </Badge>
+        </div>
+        <Alert tone="success">
+          Lote publicado. 3 variantes en TikTok orgánico con disclosure AIGC activado.
+        </Alert>
+        <Alert tone="warning">
+          El sonido trending seleccionado no es CML — este post no podrá promocionarse como Spark
+          Ad.
+        </Alert>
+        <Alert tone="danger">
+          Claim médico bloqueado por el linter. Sugerencia: &quot;ayuda a lucir la piel más
+          luminosa&quot;.
+        </Alert>
+        <Alert tone="info">
+          fal repricea con frecuencia. Ejecuta pnpm fal:verify para recalibrar recetas.
+        </Alert>
+      </div>
+    </Specimen>
+  );
+}
+
+// ── Empty state — mirrors empty-state.card.html ─────────────────────────────
+function EmptyStateSpecimen() {
+  return (
+    <Specimen
+      title="Estado vacío"
+      subtitle="Placeholder punteado usado en /library, /gallery, /personas"
+    >
+      <div className="max-w-md">
+        <EmptyState
+          title="Aún no hay lotes"
+          description="Pega una URL de producto o escribe una descripción para lanzar tu primer lote."
+          actionLabel="Nuevo lote"
+        />
+      </div>
+    </Specimen>
+  );
+}
+
+// ── Tabs — mirrors tabs.card.html ───────────────────────────────────────────
+function TabsSpecimen() {
+  return (
+    <Specimen title="Tabs" subtitle="Barra de tabs con subrayado — operable por teclado (←/→)">
+      <div className="max-w-md overflow-hidden rounded-lg border border-border bg-surface">
+        <Tabs tabs={['Brief', 'Guiones', 'Assets', 'Logs']} />
+        <div className="p-4.5 text-mono text-text-2">
+          Panel lateral del nodo con el artefacto completo.
+        </div>
+      </div>
+    </Specimen>
+  );
+}
+
+// ── Metrics table — mirrors metrics-table.card.html ─────────────────────────
+const metricsColumns: MetricsTableColumn[] = [
+  { key: 'variant', label: 'Variante', width: '2fr' },
+  { key: 'hookRate', label: 'Hook rate', align: 'right', mono: true },
+  { key: 'ctr', label: 'CTR', align: 'right', mono: true },
+  { key: 'rule', label: 'Regla', align: 'right' },
+];
+
+const metricsRows = [
+  { variant: 'Pain-point · H02', hookRate: '31.4%', ctr: '2.1%', rule: '↑ scale', tone: 'success' },
+  { variant: 'Confesión · H01', hookRate: '26.8%', ctr: '1.6%', rule: '— hold', tone: 'neutral' },
+  {
+    variant: 'Comparación · H04',
+    hookRate: '14.2%',
+    ctr: '0.7%',
+    rule: '✕ kill',
+    tone: 'danger',
+  },
+] as const;
+
+type MetricsTone = 'success' | 'neutral' | 'danger';
+
+function MetricsTableSpecimen() {
+  return (
+    <Specimen
+      title="Tabla de métricas"
+      subtitle="Kill/scale grid — numerales mono, alineados a la derecha"
+    >
+      <MetricsTable
+        columns={metricsColumns}
+        rows={metricsRows.map((r) => ({ ...r }))}
+        renderCell={(row, col) =>
+          col.key === 'rule' ? <Badge tone={row.tone as MetricsTone}>{row.rule}</Badge> : undefined
+        }
+      />
+    </Specimen>
+  );
+}
+
 export function ComponentSpecimens() {
   return (
     <div className="flex flex-col gap-10">
       <Buttons />
       <FormFields />
+      <BadgesAndAlerts />
+      <EmptyStateSpecimen />
+      <TabsSpecimen />
+      <MetricsTableSpecimen />
     </div>
   );
 }

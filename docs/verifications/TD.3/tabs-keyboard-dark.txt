@@ -1,0 +1,27 @@
+=== TABS KEYBOARD TEST (dark) — real key events via agent-browser press ===
+--- tablist role check ---
+"tablist role PRESENT"
+--- focus first tab (Brief) ---
+✓ Done
+STATE after focus:
+"[{\"label\":\"Brief\",\"role\":\"tab\",\"ariaSelected\":\"true\",\"tabindex\":\"0\",\"focused\":true,\"focusVisible\":true},{\"label\":\"Guiones\",\"role\":\"tab\",\"ariaSelected\":\"false\",\"tabindex\":\"-1\",\"focused\":false,\"focusVisible\":false},{\"label\":\"Assets\",\"role\":\"tab\",\"ariaSelected\":\"false\",\"tabindex\":\"-1\",\"focused\":false,\"focusVisible\":false},{\"label\":\"Logs\",\"role\":\"tab\",\"ariaSelected\":\"false\",\"tabindex\":\"-1\",\"focused\":false,\"focusVisible\":false}]"
+--- press ArrowRight ---
+✓ Done
+STATE:
+"[{\"label\":\"Brief\",\"role\":\"tab\",\"ariaSelected\":\"true\",\"tabindex\":\"-1\",\"focused\":false,\"focusVisible\":false},{\"label\":\"Guiones\",\"role\":\"tab\",\"ariaSelected\":\"false\",\"tabindex\":\"0\",\"focused\":true,\"focusVisible\":true},{\"label\":\"Assets\",\"role\":\"tab\",\"ariaSelected\":\"false\",\"tabindex\":\"-1\",\"focused\":false,\"focusVisible\":false},{\"label\":\"Logs\",\"role\":\"tab\",\"ariaSelected\":\"false\",\"tabindex\":\"-1\",\"focused\":false,\"focusVisible\":false}]"
+--- press ArrowRight ---
+✓ Done
+STATE:
+"[{\"label\":\"Brief\",\"role\":\"tab\",\"ariaSelected\":\"true\",\"tabindex\":\"-1\",\"focused\":false,\"focusVisible\":false},{\"label\":\"Guiones\",\"role\":\"tab\",\"ariaSelected\":\"false\",\"tabindex\":\"-1\",\"focused\":false,\"focusVisible\":false},{\"label\":\"Assets\",\"role\":\"tab\",\"ariaSelected\":\"false\",\"tabindex\":\"0\",\"focused\":true,\"focusVisible\":true},{\"label\":\"Logs\",\"role\":\"tab\",\"ariaSelected\":\"false\",\"tabindex\":\"-1\",\"focused\":false,\"focusVisible\":false}]"
+--- press ArrowLeft ---
+✓ Done
+STATE:
+"[{\"label\":\"Brief\",\"role\":\"tab\",\"ariaSelected\":\"true\",\"tabindex\":\"-1\",\"focused\":false,\"focusVisible\":false},{\"label\":\"Guiones\",\"role\":\"tab\",\"ariaSelected\":\"false\",\"tabindex\":\"0\",\"focused\":true,\"focusVisible\":true},{\"label\":\"Assets\",\"role\":\"tab\",\"ariaSelected\":\"false\",\"tabindex\":\"-1\",\"focused\":false,\"focusVisible\":false},{\"label\":\"Logs\",\"role\":\"tab\",\"ariaSelected\":\"false\",\"tabindex\":\"-1\",\"focused\":false,\"focusVisible\":false}]"
+--- press End ---
+✓ Done
+STATE:
+"[{\"label\":\"Brief\",\"role\":\"tab\",\"ariaSelected\":\"true\",\"tabindex\":\"-1\",\"focused\":false,\"focusVisible\":false},{\"label\":\"Guiones\",\"role\":\"tab\",\"ariaSelected\":\"false\",\"tabindex\":\"-1\",\"focused\":false,\"focusVisible\":false},{\"label\":\"Assets\",\"role\":\"tab\",\"ariaSelected\":\"false\",\"tabindex\":\"-1\",\"focused\":false,\"focusVisible\":false},{\"label\":\"Logs\",\"role\":\"tab\",\"ariaSelected\":\"false\",\"tabindex\":\"0\",\"focused\":true,\"focusVisible\":true}]"
+--- press Home ---
+✓ Done
+STATE:
+"[{\"label\":\"Brief\",\"role\":\"tab\",\"ariaSelected\":\"true\",\"tabindex\":\"0\",\"focused\":true,\"focusVisible\":true},{\"label\":\"Guiones\",\"role\":\"tab\",\"ariaSelected\":\"false\",\"tabindex\":\"-1\",\"focused\":false,\"focusVisible\":false},{\"label\":\"Assets\",\"role\":\"tab\",\"ariaSelected\":\"false\",\"tabindex\":\"-1\",\"focused\":false,\"focusVisible\":false},{\"label\":\"Logs\",\"role\":\"tab\",\"ariaSelected\":\"false\",\"tabindex\":\"-1\",\"focused\":false,\"focusVisible\":false}]"

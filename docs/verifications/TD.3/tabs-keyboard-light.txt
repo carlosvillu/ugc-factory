@@ -1,0 +1,14 @@
+=== TABS KEYBOARD (light) — proper focus via ref ===
+✓ Done
+focus Brief:
+"[{\"l\":\"Brief\",\"sel\":\"true\",\"ti\":\"0\",\"foc\":true,\"fv\":true},{\"l\":\"Guiones\",\"sel\":\"false\",\"ti\":\"-1\",\"foc\":false,\"fv\":false},{\"l\":\"Assets\",\"sel\":\"false\",\"ti\":\"-1\",\"foc\":false,\"fv\":false},{\"l\":\"Logs\",\"sel\":\"false\",\"ti\":\"-1\",\"foc\":false,\"fv\":false}]"
+ArrowRight (focus->Guiones):
+"[{\"l\":\"Brief\",\"sel\":\"false\",\"ti\":\"-1\",\"foc\":false,\"fv\":false},{\"l\":\"Guiones\",\"sel\":\"true\",\"ti\":\"0\",\"foc\":true,\"fv\":true},{\"l\":\"Assets\",\"sel\":\"false\",\"ti\":\"-1\",\"foc\":false,\"fv\":false},{\"l\":\"Logs\",\"sel\":\"false\",\"ti\":\"-1\",\"foc\":false,\"fv\":false}]"
+Enter (activate Guiones):
+"[{\"l\":\"Brief\",\"sel\":\"false\",\"ti\":\"-1\",\"foc\":false,\"fv\":false},{\"l\":\"Guiones\",\"sel\":\"true\",\"ti\":\"0\",\"foc\":true,\"fv\":true},{\"l\":\"Assets\",\"sel\":\"false\",\"ti\":\"-1\",\"foc\":false,\"fv\":false},{\"l\":\"Logs\",\"sel\":\"false\",\"ti\":\"-1\",\"foc\":false,\"fv\":false}]"
+ArrowLeft (focus->Brief):
+"[{\"l\":\"Brief\",\"sel\":\"true\",\"ti\":\"0\",\"foc\":true,\"fv\":true},{\"l\":\"Guiones\",\"sel\":\"false\",\"ti\":\"-1\",\"foc\":false,\"fv\":false},{\"l\":\"Assets\",\"sel\":\"false\",\"ti\":\"-1\",\"foc\":false,\"fv\":false},{\"l\":\"Logs\",\"sel\":\"false\",\"ti\":\"-1\",\"foc\":false,\"fv\":false}]"
+End (focus->Logs):
+"[{\"l\":\"Brief\",\"sel\":\"false\",\"ti\":\"-1\",\"foc\":false,\"fv\":false},{\"l\":\"Guiones\",\"sel\":\"false\",\"ti\":\"-1\",\"foc\":false,\"fv\":false},{\"l\":\"Assets\",\"sel\":\"false\",\"ti\":\"-1\",\"foc\":false,\"fv\":false},{\"l\":\"Logs\",\"sel\":\"true\",\"ti\":\"0\",\"foc\":true,\"fv\":true}]"
+focus ring on focused tab (light):
+"{\"focused\":\"Logs\",\"fv\":true,\"boxShadow\":\"rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(99, 102, 241, 0.4) 0px 0px 0px 3px, rgba(0, 0, 0, 0) 0px 0px 0px 0px\"}"

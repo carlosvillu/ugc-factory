@@ -142,7 +142,7 @@ Decisiones del usuario (2026-07-07): la fase se ejecuta tras T0.1 y **antes** de
 - **Verificación**: CUA compara las secciones con `buttons.card.html` y `form-fields.card.html` en dark Y light: variantes y estados hover/focus/disabled/loading fieles; todos los controles operables por rol y accessible name.
   - **Nota (cambio menor, 2026-07-07, regla 6)**: las `*.card.html` del espejo son **inejecutables** (cargan `../../_ds_bundle.js`, ausente del dump read-only → renderizan en blanco). En TD.2–TD.5 la comparación CUA se hace contra las **specs `.jsx`** que esas cards importan (misma fuente, mismo estado inicial) + **medición de dimensiones/estados en runtime**, no A/B pixel contra la card. Aplica a toda la fase FD (TD.1 topó con lo mismo).
 
-#### TD.3 · Feedback, navegación y datos
+#### TD.3 · Feedback, navegación y datos [x] 2026-07-07 — PASS, ver docs/verifications/TD.3/
 - **Depende de**: TD.2
 - **Entrega**: `badge`, `alert`, `empty-state`, `tabs`, `metrics-table` en `components/ui/`, fieles al espejo (`components/{feedback,navigation,data}/`); secciones en `/design-system`.
 - **Verificación**: CUA vs `badges-alerts.card.html`, `empty-state.card.html`, `tabs.card.html` y `metrics-table.card.html` (dark y light); tabs operables por teclado.

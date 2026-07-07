@@ -1,0 +1,1 @@
+"{\n  \"focused\": \"Brief\",\n  \"focusVisible\": true,\n  \"boxShadow\": \"rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(99, 102, 241, 0.4) 0px 0px 0px 3px, rgba(0, 0, 0, 0) 0px 0px 0px 0px\",\n  \"outline\": \"none 1px\",\n  \"ringVar\": \"#6366f166\"\n}"

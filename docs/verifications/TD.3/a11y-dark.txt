@@ -1,0 +1,66 @@
+    - heading "Badges y alertas" [level=2, ref=e35]
+    - paragraph
+      - StaticText "Pills de estado, tags de trazabilidad, alertas inline"
+    - StaticText "✓ extraído"
+    - StaticText "inferido · 0.82"
+    - StaticText "est. $1.80"
+    - StaticText "real $2.14"
+    - StaticText "+19%"
+    - StaticText "Standard"
+    - StaticText "ES"
+    - StaticText "Orgánico publicado"
+    - StaticText "Ad borrador"
+    - status
+      - StaticText "Lote publicado. 3 variantes en TikTok orgánico con disclosure AIGC activado."
+    - status
+      - StaticText "El sonido trending seleccionado no es CML — este post no podrá promocionarse como Spark Ad."
+    - alert
+      - StaticText "Claim médico bloqueado por el linter. Sugerencia: \"ayuda a lucir la piel más luminosa\"."
+    - status
+      - StaticText "fal repricea con frecuencia. Ejecuta pnpm fal:verify para recalibrar recetas."
+  - generic
+    - heading "Estado vacío" [level=2, ref=e36]
+    - paragraph
+      - StaticText "Placeholder punteado usado en /library, /gallery, /personas"
+    - heading "Aún no hay lotes" [level=3, ref=e37]
+    - paragraph
+      - StaticText "Pega una URL de producto o escribe una descripción para lanzar tu primer lote."
+    - button "Nuevo lote" [ref=e38]
+  - generic
+    - heading "Tabs" [level=2, ref=e39]
+    - paragraph
+      - StaticText "Barra de tabs con subrayado — operable por teclado (←/→)"
+    - tablist
+      - tab "Brief" [ref=e54]
+      - tab "Guiones" [ref=e55]
+      - tab "Assets" [ref=e56]
+      - tab "Logs" [selected, ref=e57]
+    - StaticText "Panel lateral del nodo con el artefacto completo."
+  - generic
+    - heading "Tabla de métricas" [level=2, ref=e40]
+    - paragraph
+      - StaticText "Kill/scale grid — numerales mono, alineados a la derecha"
+    - table
+      - rowgroup
+        - row
+          - columnheader "VARIANTE" [ref=e74]
+          - columnheader "HOOK RATE" [ref=e75]
+          - columnheader "CTR" [ref=e76]
+          - columnheader "REGLA" [ref=e77]
+      - row
+        - cell "Pain-point · H02" [ref=e58]
+        - cell "31.4%" [ref=e59]
+        - cell "2.1%" [ref=e60]
+        - cell "↑ scale" [ref=e61]
+      - row
+        - cell "Confesión · H01" [ref=e62]
+        - cell "26.8%" [ref=e63]
+        - cell "1.6%" [ref=e64]
+        - cell "— hold" [ref=e65]
+      - row
+        - cell "Comparación · H04" [ref=e66]
+        - cell "14.2%" [ref=e67]
+        - cell "0.7%" [ref=e68]
+        - cell "✕ kill" [ref=e69]
+  - generic
+    - heading "Superficies y texto" [level=2, ref=e41]

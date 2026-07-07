@@ -1,0 +1,15 @@
+=== ACTIVATION TEST: does ArrowRight then Enter/Space select? ===
+start: focus Brief
+✓ Done
+ArrowRight (focus -> Guiones):
+✓ Done
+"[{\"label\":\"Brief\",\"sel\":\"true\",\"ti\":\"-1\",\"foc\":false},{\"label\":\"Guiones\",\"sel\":\"false\",\"ti\":\"0\",\"foc\":true},{\"label\":\"Assets\",\"sel\":\"false\",\"ti\":\"-1\",\"foc\":false},{\"label\":\"Logs\",\"sel\":\"false\",\"ti\":\"-1\",\"foc\":false}]"
+press Enter:
+✓ Done
+"[{\"label\":\"Brief\",\"sel\":\"false\",\"ti\":\"-1\",\"foc\":false},{\"label\":\"Guiones\",\"sel\":\"true\",\"ti\":\"0\",\"foc\":true},{\"label\":\"Assets\",\"sel\":\"false\",\"ti\":\"-1\",\"foc\":false},{\"label\":\"Logs\",\"sel\":\"false\",\"ti\":\"-1\",\"foc\":false}]"
+ArrowRight (focus -> Assets):
+✓ Done
+"[{\"label\":\"Brief\",\"sel\":\"false\",\"ti\":\"-1\",\"foc\":false},{\"label\":\"Guiones\",\"sel\":\"true\",\"ti\":\"-1\",\"foc\":false},{\"label\":\"Assets\",\"sel\":\"false\",\"ti\":\"0\",\"foc\":true},{\"label\":\"Logs\",\"sel\":\"false\",\"ti\":\"-1\",\"foc\":false}]"
+press Space:
+✓ Done
+"[{\"label\":\"Brief\",\"sel\":\"false\",\"ti\":\"-1\",\"foc\":false},{\"label\":\"Guiones\",\"sel\":\"false\",\"ti\":\"-1\",\"foc\":false},{\"label\":\"Assets\",\"sel\":\"true\",\"ti\":\"0\",\"foc\":true},{\"label\":\"Logs\",\"sel\":\"false\",\"ti\":\"-1\",\"foc\":false}]"

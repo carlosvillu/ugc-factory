@@ -1,0 +1,60 @@
+<!-- @dsCard group="Components" viewport="700x520" name="Form fields" subtitle="Input, Textarea, Select, Switch, Checkbox, Slider" -->
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="stylesheet" href="../../styles.css">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<style>
+  body{margin:0;background:var(--bg);font-family:var(--font-sans);}
+  #root{padding:20px;}
+  .card{border:1px solid var(--border);border-radius:var(--r-lg);padding:20px;background:var(--surface);display:flex;flex-direction:column;gap:16px;max-width:340px;}
+  label.lbl{display:block;font-size:12px;font-weight:600;margin-bottom:6px;color:var(--text-2);}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { Input, Textarea, Select, Switch, Checkbox, Slider } = window.UGCFactoryDesignSystem_d126b2;
+function Demo(){
+  const [autopilot, setAutopilot] = React.useState(true);
+  const [c2pa, setC2pa] = React.useState(false);
+  const [tiktok, setTiktok] = React.useState(true);
+  const [reels, setReels] = React.useState(false);
+  const [conc, setConc] = React.useState(4);
+  return (
+    <div className="card">
+      <div>
+        <label className="lbl">URL de producto</label>
+        <Input mono defaultValue="https://mitienda.com/serum-vitamina-c" />
+      </div>
+      <div>
+        <label className="lbl">Descripción</label>
+        <Textarea rows={2} defaultValue="Sérum facial con 15% de vitamina C…" />
+      </div>
+      <div>
+        <label className="lbl">Objetivo del lote</label>
+        <Select value="Conversión estándar" options={["Hook testing / awareness","Conversión estándar","Storytelling / objeciones"]} />
+      </div>
+      <div style={{display:"flex", alignItems:"center", justifyContent:"space-between"}}>
+        <span style={{fontSize:"13px"}}>Autopilot</span>
+        <Switch checked={autopilot} onChange={setAutopilot} />
+      </div>
+      <div style={{display:"flex", alignItems:"center", justifyContent:"space-between"}}>
+        <span style={{fontSize:"13px", color:"var(--text-2)"}}>Firmar C2PA</span>
+        <Switch checked={c2pa} onChange={setC2pa} />
+      </div>
+      <div style={{display:"flex", gap:"18px"}}>
+        <Checkbox checked={tiktok} label="TikTok" onChange={setTiktok} />
+        <Checkbox checked={reels} label="Reels" onChange={setReels} />
+      </div>
+      <Slider label="Concurrencia de render" value={conc} min={1} max={8} onChange={setConc} />
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<Demo/>);
+</script>
+</body>
+</html>

@@ -1,0 +1,114 @@
+/* ============================================================
+   UGC Factory — Color tokens
+   Dark is the default theme. Light theme overrides live under
+   [data-theme="light"]. Accent is switchable independently under
+   [data-accent="…"]; indigo is the default accent (defined in :root).
+   Semantic status colors are FIXED across themes/accents.
+   ============================================================ */
+
+:root {
+  /* ---- Surfaces & text (dark, default) ---- */
+  --bg: #0a0a0b;
+  --bg-subtle: #0f0f11;
+  --surface: #141416;
+  --surface-2: #1a1a1d;
+  --surface-3: #212126;
+
+  --border: #26262b;
+  --border-2: #33333a;
+  --border-strong: #46464f;
+
+  --text: #f4f4f5;
+  --text-2: #a1a1aa;
+  --text-3: #71717a;
+  --text-4: #52525b;
+  --text-on-accent: #ffffff;
+
+  --stripe: rgba(255, 255, 255, 0.045);
+
+  /* ---- Elevation (dark) ---- */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 6px 18px rgba(0, 0, 0, 0.55);
+  --shadow-lg: 0 18px 48px rgba(0, 0, 0, 0.6);
+
+  /* ---- Accent: indigo (default) ---- */
+  --accent: #6366f1;
+  --accent-hover: #7c80f6;
+  --accent-soft: #6366f126;
+  --accent-border: #6366f159;
+  --ring: #6366f166;
+
+  /* ---- Semantic status (fixed) ---- */
+  --success: #22c55e;
+  --success-soft: #22c55e1a;
+  --success-border: #22c55e40;
+  --success-on: #052e16;
+
+  --warning: #f59e0b;
+  --warning-soft: #f59e0b1a;
+  --warning-border: #f59e0b40;
+
+  --danger: #ef4444;
+  --danger-soft: #ef44441a;
+  --danger-border: #ef444440;
+
+  --info: #3b82f6;
+  --info-soft: #3b82f61a;
+  --info-border: #3b82f640;
+
+  /* ---- Extra data-viz accents used sparingly (tiers, confidence) ---- */
+  --violet: #a78bfa;
+  --violet-soft: #a78bfa1a;
+  --violet-border: #a78bfa40;
+}
+
+/* ---- Theme: light ---- */
+[data-theme="light"] {
+  --bg: #fbfbfc;
+  --bg-subtle: #f4f4f6;
+  --surface: #ffffff;
+  --surface-2: #f7f7f9;
+  --surface-3: #eeeef1;
+
+  --border: #e5e5e9;
+  --border-2: #d6d6dc;
+  --border-strong: #b9b9c2;
+
+  --text: #18181b;
+  --text-2: #52525b;
+  --text-3: #71717a;
+  --text-4: #a1a1aa;
+
+  --stripe: rgba(0, 0, 0, 0.035);
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 6px 18px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 18px 48px rgba(0, 0, 0, 0.12);
+}
+
+/* ---- Accent: emerald ---- */
+[data-accent="emerald"] {
+  --accent: #10b981;
+  --accent-hover: #34d399;
+  --accent-soft: #10b98126;
+  --accent-border: #10b98159;
+  --ring: #10b98166;
+}
+
+/* ---- Accent: amber ---- */
+[data-accent="amber"] {
+  --accent: #f59e0b;
+  --accent-hover: #fbbf24;
+  --accent-soft: #f59e0b26;
+  --accent-border: #f59e0b59;
+  --ring: #f59e0b66;
+}
+
+/* ---- Accent: cyan ---- */
+[data-accent="cyan"] {
+  --accent: #06b6d4;
+  --accent-hover: #22d3ee;
+  --accent-soft: #06b6d426;
+  --accent-border: #06b6d459;
+  --ring: #06b6d466;
+}

@@ -7,9 +7,10 @@ Plataforma personal (mono-usuario, self-hosted) de generación de anuncios UGC c
 | Documento | Qué es |
 |---|---|
 | `PRD.md` | El producto completo (v1, aprobado 2026-07-06). §9.0 orquestador, §12 modelo de datos, Apéndice E API |
-| `planning.md` | **La fuente de verdad del estado del desarrollo**: fases F0–F8 → tareas con `Depende de` + Verificación observable. Las reglas de trabajo del final son vinculantes |
+| `planning.md` | **La fuente de verdad del estado del desarrollo**: fases F0–F8 + FD (design system) → tareas con `Depende de` + Verificación observable. Las reglas de trabajo del final son vinculantes |
 | `.claude/skills/{testing,backend,frontend}` | CÓMO se desarrolla y testea. Cada SKILL.md tiene una tabla de decisión → reference a leer ANTES de escribir código |
 | `research/` | Informes que respaldan el PRD (solo consulta, no editar) |
+| `docs/design-system/` | Espejo de solo-lectura del proyecto «UGC Factory Design System» de Claude Design (la fuente de verdad visual). Se regenera con la tool `DesignSync`; JAMÁS se edita a mano |
 | `docs/verifications/<TASK-ID>/` | Evidencia de cierre de cada tarea (report.md + capturas/outputs) |
 | `docs/dev-loop/journal.md` | Diario del bucle: qué se cerró/bloqueó, cuándo, coste, rarezas |
 

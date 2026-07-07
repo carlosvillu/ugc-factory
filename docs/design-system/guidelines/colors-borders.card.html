@@ -1,0 +1,17 @@
+<!-- @dsCard group="Colors" viewport="700x140" name="Borders" subtitle="border / border-2 / border-strong" -->
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="stylesheet" href="../styles.css">
+<style>
+  body{margin:0;background:var(--bg);font-family:var(--font-sans);padding:20px;display:flex;gap:16px;}
+  .box{flex:1;border-radius:var(--r-md);background:var(--surface);padding:16px;display:flex;flex-direction:column;gap:8px;align-items:center;justify-content:center;}
+  .name{font-size:11px;font-family:var(--font-mono);color:var(--text-2);}
+</style>
+</head>
+<body>
+  <div class="box" style="border:1px solid var(--border);"><span class="name">--border</span></div>
+  <div class="box" style="border:1px solid var(--border-2);"><span class="name">--border-2</span></div>
+  <div class="box" style="border:1px solid var(--border-strong);"><span class="name">--border-strong</span></div>
+</body>
+</html>

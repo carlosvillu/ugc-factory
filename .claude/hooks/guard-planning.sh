@@ -40,10 +40,10 @@ def main() -> int:
 
     project_dir = os.path.dirname(os.path.abspath(file_path))
     missing = []
-    # Solo headings de tarea (#### T0.1 · ...) con [x] literal. Las subtareas
-    # "- [x]" no exigen evidencia (se marcan durante el trabajo); las fechas
-    # tipo [2026-07-07] no matchean (regex estricta \[x\]).
-    for m in re.finditer(r"^####\s+(T\d+\.\d+[ab]?)\b.*\[x\]", new_text, re.M):
+    # Solo headings de tarea (#### T0.1 · ... / #### TD.1 · ...) con [x] literal.
+    # Las subtareas "- [x]" no exigen evidencia (se marcan durante el trabajo);
+    # las fechas tipo [2026-07-07] no matchean (regex estricta \[x\]).
+    for m in re.finditer(r"^####\s+(T\d+\.\d+[ab]?|TD\.\d+)\b.*\[x\]", new_text, re.M):
         task_id = m.group(1)
         report = os.path.join(project_dir, "docs", "verifications", task_id, "report.md")
         if not os.path.isfile(report):

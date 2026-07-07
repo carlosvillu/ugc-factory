@@ -292,7 +292,7 @@ Plan determinista que conecta guion (N5) → generaciones (N7) → segmentos de 
 /personas            Librería de personas (avatares): fichas, preview de voz, generación
 /metrics             Dashboard de performance: por variante/hook/ángulo/avatar, kill/scale
 /spend               Panel de gasto: ledger, por proyecto/lote/proveedor, alertas
-/settings            API keys, cuentas conectadas (TikTok/Meta), presets, idiomas, umbrales
+/settings            API keys, cuentas conectadas (TikTok/Meta), presets, idiomas, umbrales, apariencia (tema/acento/densidad del DS — añadido menor 2026-07-07, fase FD)
 ```
 
 ### 8.2 El canvas (`/runs/[id]`) — requisitos

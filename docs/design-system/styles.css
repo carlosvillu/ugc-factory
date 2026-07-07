@@ -1,0 +1,7 @@
+/* UGC Factory Design System — global stylesheet entry point.
+   List of imports only — do not add rules here. */
+@import "tokens/colors.css";
+@import "tokens/typography.css";
+@import "tokens/spacing.css";
+@import "tokens/radii-shadows.css";
+@import "tokens/motion.css";

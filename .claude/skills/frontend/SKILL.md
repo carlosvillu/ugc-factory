@@ -9,7 +9,7 @@ Esta skill define CÓMO se desarrolla todo el frontend del proyecto (`apps/web`)
 
 ## Principios
 
-1. **El design system vive en Claude Design y el código lo obedece.** La fuente de verdad visual es <https://claude.ai/design/p/d126b2f1-3ada-48c5-84fa-914e891fea6f>. En código, el DS se materializa como tokens CSS (`globals.css`) + componentes en `components/ui/` que son espejo 1:1 del inventario de Claude Design. Nadie inventa colores, radios ni espaciados: si no está en los tokens, se añade primero al DS. Detalle en `references/design-system.md`.
+1. **El design system vive en Claude Design y el código lo obedece.** La fuente de verdad visual es <https://claude.ai/design/p/d126b2f1-3ada-48c5-84fa-914e891fea6f>, espejada en solo-lectura en `docs/design-system/` (regenerable con la tool `DesignSync`). En código, el DS se materializa como tokens CSS (`globals.css`) + componentes en `components/ui/` que son espejo 1:1 del inventario de Claude Design (construidos en la fase FD del planning). **Usar el componente del DS es obligatorio**: si existe `components/ui/<x>`, escribir HTML crudo estilado equivalente es un error de review; si no existe, se crea siguiendo las foundations del DS (y se sube a Claude Design) antes de usarlo. Nadie inventa colores, radios ni espaciados: si no está en los tokens, se añade primero al DS. Detalle en `references/design-system.md`.
 2. **Todo dato entra y sale por la API REST propia.** Las páginas (server components) leen haciendo fetch a la API del Apéndice E del PRD, y toda mutación es un fetch a esos mismos route handlers — sin Server Actions y sin tocar la BD desde componentes. Una sola superficie de datos, la misma que usan worker y curl, la misma que testea `testing/references/api.md`. El cliente tipado vive en `lib/api-client.ts`.
 3. **Server Components por defecto; `'use client'` en las hojas.** Páginas y layouts nunca llevan `'use client'`; la frontera se pone en el componente interactivo más profundo (el canvas, un formulario). La lógica de transformación se extrae SIEMPRE a funciones puras — es lo que la skill de testing puede testear barato y lo que sobrevive a rediseños.
 4. **La accesibilidad es la API de test.** Los tests consultan por rol y accessible name (`getByRole('button', { name: /aprobar/i })`): un componente sin roles/labels correctos es un componente que no se puede testear NI usar. HTML semántico primero, label en todo input, aria-label en icon-only, role="status"/"alert" para feedback asíncrono. No es un extra: es contrato.
@@ -39,7 +39,7 @@ Si la pieza cruza varias filas (lo normal: un checkpoint = componente + formular
 apps/web/src/
 ├─ app/                  # SOLO routing: page/layout/loading/error delgados + app/api/ (route handlers → skill backend)
 ├─ components/
-│  ├─ ui/                # design system: shadcn/ui sobre Base UI, espejo de Claude Design (button.tsx, dialog.tsx…)
+│  ├─ ui/                # design system (fase FD): shadcn/ui sobre Base UI, espejo 1:1 de Claude Design — inventario en references/design-system.md §4
 │  ├─ run-canvas/        # dominio: canvas React Flow (run-canvas.tsx, steps-to-graph.ts, nodes/…)
 │  ├─ checkpoints/       # dominio: CP1–CP4 (brief-editor.tsx, matrix-panel.tsx, script-editor.tsx…)
 │  ├─ intake/ gallery/ personas/ library/ metrics/ spend/ settings/
@@ -55,7 +55,8 @@ Reglas de dependencia (unidireccionales, sin excepciones): `components/ui` no im
 
 - **Nombres**: ficheros y carpetas kebab-case (`brief-editor.tsx`), exports PascalCase (`BriefEditor`), hooks camelCase con `use`. Un componente por fichero; el fichero se llama como su export.
 - **React 19**: `ref` es una prop normal — `forwardRef` prohibido en código nuevo. Nada de `React.FC`. Function declarations con props tipadas. React Compiler activado: no escribas `useMemo`/`useCallback` preventivos (excepciones de React Flow en `references/canvas.md`).
-- **Tailwind v4 CSS-first**: no existe `tailwind.config.js`; tokens en `globals.css` (`:root`/`.dark` + `@theme inline`). Solo clases semánticas de token (`bg-background`); colores crudos prohibidos fuera del fichero de tokens.
+- **Tailwind v4 CSS-first**: no existe `tailwind.config.js`; tokens en `globals.css` (`:root` dark por defecto + `[data-theme="light"]` + `[data-accent=…]` + `@theme inline`), volcados VERBATIM del DS. Solo clases semánticas de token (`bg-surface`, `text-text-2`); colores crudos prohibidos fuera del fichero de tokens (lint de adherencia desde TD.6).
+- **Iconografía sin librerías**: el DS usa glifos Unicode (✓ ✕ ⚠ i ◆ ↺ ▼ +) y dots de estado; `lucide-react`/heroicons/icon fonts están prohibidos — sustituir los imports que genere shadcn. Emojis: nunca.
 - **Sin `'use cache'`**: la app es dinámica (datos vivos por SSE); todo fetch con `cache: 'no-store'` vía api-client.
 - **Imports de workspace**: `@ugc/core` para contratos y funciones puras; `@/` para `src/`. Prohibido importar `@ugc/db` desde componentes (la BD solo se toca en `app/api/` y `server/`, territorio de la skill backend).
 - **Docs actualizadas**: Base UI, React Flow y Tailwind evolucionan — consulta Context7 (MCP configurado en `.mcp.json`) o `reactflow.dev/llms.txt` antes de asumir una API de memoria.

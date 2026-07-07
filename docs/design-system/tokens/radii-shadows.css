@@ -1,0 +1,14 @@
+/* ============================================================
+   UGC Factory — Corner radii
+   Shadows/elevation tokens live in colors.css ( --shadow-sm/md/lg )
+   because their values change between the dark and light themes.
+   ============================================================ */
+
+:root {
+  --r-sm: 5px;
+  --r-md: 7px;
+  --r-lg: 10px;
+  --r-xl: 14px;
+  --r-2xl: 18px;
+  --r-full: 999px;
+}

@@ -1,0 +1,19 @@
+/* ============================================================
+   UGC Factory — Spacing scale
+   Base unit 4px. Used for padding/gaps/margins across components.
+   ============================================================ */
+
+:root {
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 12px;
+  --space-lg: 16px;
+  --space-xl: 24px;
+  --space-2xl: 32px;
+  --space-3xl: 48px;
+  --space-4xl: 64px;
+
+  /* Layout */
+  --content-max: 1180px;
+  --page-pad: 32px;
+}

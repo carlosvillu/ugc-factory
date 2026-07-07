@@ -35,7 +35,7 @@ CLAUDE.md                          ← orientación que carga toda sesión: mapa
 docs/
 ├─ dev-loop/journal.md             ← diario del bucle: memoria entre sesiones
 └─ verifications/<TASK-ID>/        ← evidencia de cada tarea cerrada (report.md + capturas/outputs)
-planning.md                        ← fuente de verdad del estado: fases F0–F8, tareas, deps, [x]
+planning.md                        ← fuente de verdad del estado: fases F0–F8 + FD (design system), tareas, deps, [x]
 PRD.md                             ← el producto (qué se construye)
 ```
 
@@ -137,4 +137,4 @@ Ejemplo real: `docs/verifications/T0.1/` (build.txt, dev.log, health.json, worke
 - **¿Puede gastar dinero sin que me entere?** No: la suite no gasta por diseño, `test:live` está desarmado hasta que exista el techo de gasto, y las verificaciones con coste tienen cap y paran para preguntarte si lo superan. Todo dólar queda anotado.
 - **¿Qué pasa si cierro la sesión a mitad de una tarea?** Nada grave: el trabajo no committeado queda en el árbol y el journal explica el estado; la siguiente sesión hace bootstrap (git status + planning + journal) y entiende dónde estaba.
 - **¿Dónde veo lo que se ha hecho?** `git log --oneline`, `planning.md` (marcas con fecha y puntero a evidencia), `docs/dev-loop/journal.md` (la narrativa) y `docs/verifications/` (las pruebas).
-- **¿Próxima tarea?** Mira el Estado global de `planning.md`; a fecha de este documento: T0.2 (Docker Compose + Postgres). Primera parada ⚠ prevista: T0.13 (VPS).
+- **¿Próxima tarea?** Mira el Estado global de `planning.md`; a fecha de este documento: TD.1 (tokens + showcase de la fase FD — design system; decisión 2026-07-07: FD entera antes de continuar F0). Después, T0.2 (Docker Compose + Postgres, requiere Docker arrancado). Primera parada ⚠ prevista: T0.13 (VPS).

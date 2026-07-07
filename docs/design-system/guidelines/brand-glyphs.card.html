@@ -1,0 +1,19 @@
+<!-- @dsCard group="Brand" viewport="700x150" name="Status glyphs & left-accent bar" subtitle="Plain Unicode glyphs — no icon font/library used" -->
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="stylesheet" href="../styles.css">
+<style>
+  body{margin:0;background:var(--bg);font-family:var(--font-sans);padding:18px;}
+  .row{display:flex;gap:16px;align-items:center;margin-bottom:14px;font-size:13px;color:var(--text-2);}
+  .g{font-size:16px;}
+  .node{display:flex;width:160px;border:1px solid var(--border-2);border-radius:var(--r-lg);overflow:hidden;background:var(--surface);}
+  .bar{width:4px;background:var(--success);}
+  .body{padding:8px 10px;font-size:12px;color:var(--text);}
+</style>
+</head>
+<body>
+  <div class="row"><span class="g" style="color:var(--success);">✓</span> aprobado <span class="g" style="color:var(--danger);">✕</span> rechazado <span class="g" style="color:var(--warning);">⚠</span> alerta <span class="g" style="color:var(--info);">i</span> info <span class="g" style="color:var(--warning);">◆</span> checkpoint <span class="g">↺</span> reintentar</div>
+  <div class="node"><div class="bar"></div><div class="body">N1 · Ingesta</div></div>
+</body>
+</html>

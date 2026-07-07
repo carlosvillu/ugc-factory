@@ -60,7 +60,7 @@ Solo con PASS:
 ### 8 · STOP-CHECK
 Para (informa al usuario con el resumen de lo hecho + estado + siguiente paso) si:
 - La siguiente tarea tiene **⚠** sin resolver, o su Verificación exige **juicio humano** ("revisión humana", "a juicio humano") — en ese caso prepara lo automatizable y pide el juicio.
-- Acabas de cerrar el **E2E de fase** (T1.10b, T2.6, T4.11, T5.9…) → resumen de fase y esperar OK.
+- Acabas de cerrar el **E2E de fase** (TD.7, T1.10b, T2.6, T4.11, T5.9…) → resumen de fase y esperar OK.
 - **Gasto**: la verificación de la siguiente tarea puede superar el cap (estimado del planning ×3, mín. $1) o no hay estimación y usará APIs de pago.
 - **Circuit breaker**: 2 FAIL consecutivos del verifier en la misma tarea, o 2 tareas seguidas sin poder cerrarse, o detectas que no hay progreso real entre ciclos (mismo error dos veces).
 - **Cambio de alcance mayor** (el PRD necesita un ajuste que altera decisiones de producto). Los menores se editan en la misma sesión y se anotan (regla 6).

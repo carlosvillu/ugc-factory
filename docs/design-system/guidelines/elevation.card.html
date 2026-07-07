@@ -1,0 +1,18 @@
+<!-- @dsCard group="Spacing" viewport="700x150" name="Elevation" subtitle="shadow-sm / md / lg — pure black, opacity only" -->
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="stylesheet" href="../styles.css">
+<style>
+  body{margin:0;background:var(--bg);font-family:var(--font-sans);padding:22px;display:flex;gap:28px;align-items:center;}
+  .box{width:70px;height:44px;background:var(--surface-3);border-radius:var(--r-md);}
+  .lbl{font-size:11px;font-family:var(--font-mono);color:var(--text-2);margin-top:10px;}
+  .col{display:flex;flex-direction:column;align-items:center;}
+</style>
+</head>
+<body>
+  <div class="col"><div class="box" style="box-shadow:var(--shadow-sm);"></div><span class="lbl">--shadow-sm</span></div>
+  <div class="col"><div class="box" style="box-shadow:var(--shadow-md);"></div><span class="lbl">--shadow-md</span></div>
+  <div class="col"><div class="box" style="box-shadow:var(--shadow-lg);"></div><span class="lbl">--shadow-lg</span></div>
+</body>
+</html>

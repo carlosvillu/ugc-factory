@@ -1,0 +1,25 @@
+<!-- @dsCard group="Colors" viewport="700x160" name="Light theme" subtitle="[data-theme=light] override — same tokens, inverted values" -->
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="stylesheet" href="../styles.css">
+<style>
+  body{margin:0;font-family:var(--font-sans);}
+  [data-theme="light"]{background:var(--bg);padding:18px;display:block;}
+  .row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+  .sw{border:1px solid var(--border);border-radius:var(--r-md);overflow:hidden;background:var(--surface);box-shadow:var(--shadow-sm);}
+  .fill{height:40px;border-bottom:1px solid var(--border);}
+  .lbl{padding:7px 9px;font-size:11px;font-family:var(--font-mono);color:var(--text-2);}
+</style>
+</head>
+<body>
+<div data-theme="light">
+  <div class="row">
+    <div class="sw"><div class="fill" style="background:var(--bg);"></div><div class="lbl">--bg</div></div>
+    <div class="sw"><div class="fill" style="background:var(--surface);"></div><div class="lbl">--surface</div></div>
+    <div class="sw"><div class="fill" style="background:var(--surface-3);"></div><div class="lbl">--surface-3</div></div>
+    <div class="sw"><div class="fill" style="background:var(--accent);"></div><div class="lbl">--accent</div></div>
+  </div>
+</div>
+</body>
+</html>

@@ -22,6 +22,7 @@ export default defineConfig(
     '**/playwright-report/**',
     '**/test-results/**',
     '**/next-env.d.ts', // generado por next dev/build
+    'docs/design-system/**', // espejo verbatim del DS de Claude Design (solo lectura, no es código nuestro)
   ]),
 
   // ── 2. Base typed para TODO el código TS ─────────────────────────────────

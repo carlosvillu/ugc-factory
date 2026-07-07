@@ -11,6 +11,7 @@
 | Fase | Nombre | Entrega observable al cerrar la fase | Estado |
 |---|---|---|---|
 | F0 | Fundaciones | Un DAG de demo corre en el canvas en el VPS con checkpoints, SSE, credenciales y gasto registrado | ☐ |
+| FD | Design system | `/design-system` muestra tokens y ~26 componentes fieles a Claude Design (dark/light, 4 acentos), lint de adherencia activo y skill frontend actualizada — se ejecuta tras T0.1, antes de continuar F0 | ☐ |
 | F1 | Análisis | URL real (o texto libre) → ProductBrief editable aprobado en CP1 | ☐ |
 | F2 | Estrategia y guiones (incluye Personas v1 y recetas) | Brief → matriz con coste estimado → guiones aprobados en CP3 | ☐ |
 | F3 | Galería y compilador | Templates facetados + compilador que produce `resolvedPrompt` auditables | ☐ |
@@ -39,7 +40,7 @@ El corazón de esta fase es el **orquestador** (§9.0): la máquina de estados t
 - **Verificación**: `pnpm build && pnpm dev` → `curl localhost:3000/api/health` devuelve `{ok:true}` y el log del worker muestra "worker ready" en JSON estructurado. Un cambio en un tipo de `packages/core` rompe la compilación de ambas apps (se comprueba a propósito).
 
 #### T0.2 · Docker Compose de desarrollo con Postgres
-- **Depende de**: T0.1
+- **Depende de**: T0.1, TD.7 *(dependencia de orden, no técnica: el usuario decidió el 2026-07-07 que la fase FD se construye entera antes de continuar F0)*
 - **Entrega**: `docker-compose.dev.yml` con `postgres:16` (volumen persistente) y variables de entorno de conexión.
 - **Subtareas**:
   - [ ] Compose + `.env.example` documentado.
@@ -115,8 +116,55 @@ El corazón de esta fase es el **orquestador** (§9.0): la máquina de estados t
 
 #### T0.14 · Credenciales cifradas y /settings
 - **Depende de**: T0.4
-- **Entrega**: módulo de secretos (§13.1/§19.2): API keys en `app_setting` cifradas at-rest (libsodium sealed box; la master key es la única credencial en env), bootstrap desde env en el primer arranque, y página `/settings` para editar keys, presets, idiomas y umbrales.
+- **Entrega**: módulo de secretos (§13.1/§19.2): API keys en `app_setting` cifradas at-rest (libsodium sealed box; la master key es la única credencial en env), bootstrap desde env en el primer arranque, y página `/settings` para editar keys, presets, idiomas, umbrales y apariencia del design system (tema/acento/densidad — añadido menor 2026-07-07 al crearse la fase FD; hasta entonces la app fija dark/indigo/balanced).
 - **Verificación**: guardar la key de fal desde `/settings` → reiniciar contenedores → la key sigue funcionando; en `psql`, el valor almacenado es un blob cifrado (no aparece la key en claro en ningún `SELECT`); borrar la env var tras el bootstrap no rompe nada.
+
+---
+
+## FD — Design system (la piedra angular de toda UI)
+
+La fuente de verdad visual es el proyecto **«UGC Factory Design System» de Claude Design** (<https://claude.ai/design/p/d126b2f1-3ada-48c5-84fa-914e891fea6f>), espejado en solo-lectura en `docs/design-system/` (regenerable con la tool `DesignSync`; el espejo JAMÁS se edita a mano). Esta fase lo materializa en código: tokens en `globals.css` + componentes en `apps/web/src/components/ui/` (shadcn/ui sobre Base UI + cva + Tailwind v4) fieles 1:1, showcase en `/design-system` y adherencia forzada por lint. Cómo se traduce lo gobierna la skill frontend (`references/design-system.md`).
+
+Decisiones del usuario (2026-07-07): la fase se ejecuta tras T0.1 y **antes** de continuar F0 (por eso T0.2 depende de TD.7) · los 5 componentes de producto se crean ya, como presentacionales puros · las primitivas que el DS no define se crean siguiendo sus foundations y se **suben** a Claude Design · obligatoriedad de uso = skill frontend + reglas ESLint. Las pantallas de `ui_kits/` quedan **fuera** de esta fase (el usuario las traspasará en su momento). Coste estimado de la fase: $0 (sin APIs de pago).
+
+#### TD.1 · Tokens del DS, fuentes Geist y showcase `/design-system`
+- **Depende de**: T0.1
+- **Entrega**: `globals.css` con TODOS los tokens del espejo (`docs/design-system/tokens/*.css` + sombras/stripe de `colors.css`) volcados tal cual — hex y naming 1:1 (`--bg`, `--surface{,-2,-3}`, `--text{,-2,-3,-4}`, `--border*`, `--accent*`, semánticos fijos, `--violet*`, `--stripe`, `--shadow-*`, `--r-*`, motion, densidad `--ui-fs`), dark por defecto + `[data-theme="light"]` + acentos `[data-accent="emerald|amber|cyan"]`, mapeados en `@theme inline`; Geist y Geist Mono self-hosted (cierra la nota ⚠ de fuentes del readme del DS); página `/design-system` con specimens de fundaciones (colores, tipografía, spacing, radios, sombras, glifos) y switchers de tema/acento/densidad.
+- **Subtareas**:
+  - [ ] Volcado de los 5 ficheros de tokens a los 3 bloques canónicos de `globals.css`.
+  - [ ] Geist/Geist Mono self-hosted con variables `--font-sans`/`--font-mono`.
+  - [ ] Ruta `/design-system` con specimens y switchers funcionales (tema, acento, densidad).
+- **Verificación**: en el navegador, `/design-system` muestra los specimens; los switchers cambian tema/acento/densidad en vivo; comparación visual CUA contra `docs/design-system/guidelines/*.card.html` sin desviaciones perceptibles.
+
+#### TD.2 · Primitivas core y formularios
+- **Depende de**: TD.1
+- **Entrega**: `button`, `input`, `textarea`, `select`, `checkbox`, `switch`, `slider` en `components/ui/` — generados con shadcn sobre Base UI y ajustados 1:1 al espejo (`components/{core,forms}/` — `.jsx` como spec de variantes, `.prompt.md` como intención): mismos nombres de variantes/tamaños/estados (Button: `primary|secondary|ghost|danger|danger-ghost` × `sm|md|lg` + `loading` + `icon`), glifos Unicode en lugar de lucide (el DS prohíbe librerías de iconos); secciones nuevas en `/design-system`.
+- **Verificación**: CUA compara las secciones con `buttons.card.html` y `form-fields.card.html` en dark Y light: variantes y estados hover/focus/disabled/loading fieles; todos los controles operables por rol y accessible name.
+
+#### TD.3 · Feedback, navegación y datos
+- **Depende de**: TD.2
+- **Entrega**: `badge`, `alert`, `empty-state`, `tabs`, `metrics-table` en `components/ui/`, fieles al espejo (`components/{feedback,navigation,data}/`); secciones en `/design-system`.
+- **Verificación**: CUA vs `badges-alerts.card.html`, `empty-state.card.html`, `tabs.card.html` y `metrics-table.card.html` (dark y light); tabs operables por teclado.
+
+#### TD.4 · Primitivas fuera del DS + subida a Claude Design
+- **Depende de**: TD.3
+- **Entrega**: `dialog`, `sheet`, `alert-dialog`, `toast`, `tooltip`, `skeleton`, `progress`, `card`, `separator` siguiendo las foundations del DS (hairlines 1 px, radios 5/7/10 px, focus ring único, sin glassmorphism ni gradientes, glifos Unicode); secciones en `/design-system`; subida de los 9 al proyecto de Claude Design en su formato (`.jsx` + `.d.ts` + `.prompt.md` + card) vía `DesignSync`, para que el DS siga siendo inventario completo (decisión 2026-07-07). Si el subagente no tiene acceso a `DesignSync`, la subida la ejecuta el bucle principal en el CLOSE.
+- **Verificación**: CUA revisa las secciones nuevas en dark y light (coherencia con las foundations); `DesignSync list_files` muestra los ficheros nuevos en el proyecto y el espejo local se regenera incluyéndolos.
+
+#### TD.5 · Componentes de producto (presentacionales puros)
+- **Depende de**: TD.3
+- **Entrega**: `pipeline-node`, `checkpoint-banner`, `variant-card`, `spend-ledger`, `safe-zone-overlay` en `components/ui/` como presentacionales PUROS (props planas; prohibido importar tipos de dominio de `@ugc/core` — las features de F0 los envolverán), fieles a `components/product/` del espejo, incl. `pulseRing` en estados activos y el hatch diagonal como placeholder 9:16; secciones en `/design-system`.
+- **Verificación**: CUA vs `pipeline-node.card.html` y `variant-spend-safezone.card.html` (dark y light); el pulso se apaga con `prefers-reduced-motion` sin perder el estado visible.
+
+#### TD.6 · Lint de adherencia al DS
+- **Depende de**: TD.5
+- **Entrega**: reglas ESLint (`eslint.config.ts`, scope `apps/web`) que prohíben: clases de paleta cruda de Tailwind (`bg-blue-500`…), colores/valores arbitrarios en `className` (`bg-[#…]`, `rounded-[10px]`) fuera de `globals.css`, e imports de `@radix-ui/*`, `lucide-react` o cualquier librería de iconos (adaptando las ideas de `_adherence.oxlintrc.json` del proyecto de Claude Design a nuestro flat config).
+- **Verificación**: un fichero de prueba con `bg-blue-500`, `text-[#fff]` e `import { X } from 'lucide-react'` hace fallar `pnpm lint` con mensajes que nombran la regla violada; al retirarlo, `pnpm gate` queda verde.
+
+#### TD.7 · Skill frontend cerrada contra la realidad + E2E de fase
+- **Depende de**: TD.4, TD.6
+- **Entrega**: skill `frontend` actualizada con el inventario definitivo de `components/ui/` (los ~26 con sus variantes reales) en `references/design-system.md`/`components.md`, obligatoriedad explícita («si existe el componente del DS, usarlo es obligatorio; HTML crudo estilado equivalente = error de review») y ajustes descubiertos durante la fase anotados en el journal.
+- **Verificación (E2E de fase)**: recorrido CUA completo de `/design-system` — dark, light y 2 acentos — con evidencia visual en `docs/verifications/TD.7/`; `pnpm gate` verde; y **revisión humana final del showcase** (parada de fin de fase: el usuario da el OK visual).
 
 ---
 

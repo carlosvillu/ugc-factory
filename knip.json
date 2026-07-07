@@ -1,5 +1,7 @@
 {
   "$schema": "https://unpkg.com/knip@6/schema.json",
+  // espejo verbatim del DS de Claude Design: no es código del grafo de imports
+  "ignore": ["docs/design-system/**"],
   "workspaces": {
     ".": {},
     "apps/web": {}, // los plugins de knip detectan Next (app router) y Vitest solos

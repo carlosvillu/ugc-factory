@@ -1,0 +1,33 @@
+<!-- @dsCard group="Components" viewport="700x260" name="Metrics table" subtitle="Kill/scale grid — mono numerals, right-aligned" -->
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="stylesheet" href="../../styles.css">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<style>body{margin:0;background:var(--bg);font-family:var(--font-sans);}#root{padding:20px;}</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { MetricsTable, Badge } = window.UGCFactoryDesignSystem_d126b2;
+const columns = [
+  { key: "variant", label: "Variante", width: "2fr" },
+  { key: "hookRate", label: "Hook rate", align: "right", mono: true },
+  { key: "ctr", label: "CTR", align: "right", mono: true },
+  { key: "rule", label: "Regla", align: "right" },
+];
+const rows = [
+  { variant: "Pain-point · H02", hookRate: "31.4%", ctr: "2.1%", rule: "↑ scale", tone: "success" },
+  { variant: "Confesión · H01", hookRate: "26.8%", ctr: "1.6%", rule: "— hold", tone: "neutral" },
+  { variant: "Comparación · H04", hookRate: "14.2%", ctr: "0.7%", rule: "✕ kill", tone: "danger" },
+];
+function Demo(){
+  return <MetricsTable columns={columns} rows={rows} renderCell={(row, col) => col.key === "rule" ? <Badge tone={row.tone}>{row.rule}</Badge> : undefined} />;
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<Demo/>);
+</script>
+</body>
+</html>

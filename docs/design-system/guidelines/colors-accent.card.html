@@ -1,0 +1,29 @@
+<!-- @dsCard group="Colors" viewport="700x220" name="Brand accent — 4 switchable options" subtitle="indigo (default) / emerald / amber / cyan" -->
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="stylesheet" href="../styles.css">
+<style>
+  body{margin:0;background:var(--bg);font-family:var(--font-sans);padding:16px;}
+  .row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+  .sw{border:1px solid var(--border);border-radius:var(--r-md);overflow:hidden;background:var(--surface);}
+  .fill{height:44px;}
+  .lbl{padding:8px 10px;font-size:11px;font-family:var(--font-mono);color:var(--text-2);}
+  .ring{margin-top:14px;display:flex;gap:10px;align-items:center;}
+  .pill{padding:4px 11px;border-radius:var(--r-full);font-size:12px;font-weight:600;background:var(--accent-soft);color:var(--accent);border:1px solid var(--accent-border);}
+</style>
+</head>
+<body>
+  <div class="row">
+    <div data-accent="indigo" class="sw"><div class="fill" style="background:var(--accent);"></div><div class="lbl">indigo</div></div>
+    <div data-accent="emerald" class="sw"><div class="fill" style="background:var(--accent);"></div><div class="lbl">emerald</div></div>
+    <div data-accent="amber" class="sw"><div class="fill" style="background:var(--accent);"></div><div class="lbl">amber</div></div>
+    <div data-accent="cyan" class="sw"><div class="fill" style="background:var(--accent);"></div><div class="lbl">cyan</div></div>
+  </div>
+  <div class="ring">
+    <span class="pill">accent-soft badge</span>
+    <span style="width:34px;height:34px;border-radius:50%;border:1px solid var(--accent);box-shadow:0 0 0 3px var(--ring);"></span>
+    <span style="font-size:11px;color:var(--text-3);font-family:var(--font-mono);">focus ring</span>
+  </div>
+</body>
+</html>

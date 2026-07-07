@@ -1,0 +1,32 @@
+<!-- @dsCard group="Components" viewport="700x360" name="Pipeline node & checkpoint" subtitle="Canvas step card + waiting_approval banner" -->
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="stylesheet" href="../../styles.css">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<style>body{margin:0;background:var(--bg-subtle);font-family:var(--font-sans);}#root{padding:20px;display:flex;flex-direction:column;gap:18px;}.row{display:flex;gap:12px;}</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { PipelineNode, CheckpointBanner } = window.UGCFactoryDesignSystem_d126b2;
+function Demo(){
+  return (
+    <React.Fragment>
+      <div className="row">
+        <PipelineNode code="N1" title="Ingesta" meta="shopify · 8 imágenes" time="0.9s" cost="$0.01" status="done" />
+        <PipelineNode code="N3 · CP1" title="ProductBrief" meta="esperando aprobación" cost="$0.09" status="checkpoint" width={180} />
+        <PipelineNode code="N7d" title="B-roll · escena 2" meta="Kling v3 Std" time="req_a9f2c1" cost="est. $0.76" status="running" width={180} />
+        <PipelineNode code="N4" title="Estrategia" meta="pendiente" time="—" cost="est. $0" status="pending" />
+      </div>
+      <CheckpointBanner title="CP1 · Brief listo para revisión" description="El pipeline está en pausa. Revisa el brief antes de continuar." />
+    </React.Fragment>
+  );
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<Demo/>);
+</script>
+</body>
+</html>

@@ -1,0 +1,26 @@
+<!-- @dsCard group="Colors" viewport="700x210" name="Surfaces & text" subtitle="Dark-first neutral scale, --bg through --surface-3" -->
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="stylesheet" href="../styles.css">
+<style>
+  body{margin:0;background:var(--bg);font-family:var(--font-sans);}
+  .wrap{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;padding:16px;}
+  .sw{border:1px solid var(--border);border-radius:var(--r-md);overflow:hidden;background:var(--surface);}
+  .fill{height:48px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:center;}
+  .lbl{padding:8px 10px;}
+  .name{font-size:11px;font-weight:600;font-family:var(--font-mono);color:var(--text);}
+  .desc{font-size:10px;color:var(--text-3);}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="sw"><div class="fill" style="background:var(--bg);"></div><div class="lbl"><div class="name">--bg</div><div class="desc">base</div></div></div>
+    <div class="sw"><div class="fill" style="background:var(--surface);"></div><div class="lbl"><div class="name">--surface</div><div class="desc">card / panel</div></div></div>
+    <div class="sw"><div class="fill" style="background:var(--surface-2);"></div><div class="lbl"><div class="name">--surface-2</div><div class="desc">input</div></div></div>
+    <div class="sw"><div class="fill" style="background:var(--surface-3);"></div><div class="lbl"><div class="name">--surface-3</div><div class="desc">elevado</div></div></div>
+    <div class="sw"><div class="fill" style="background:var(--surface);color:var(--text);font-size:18px;font-weight:600;">Aa</div><div class="lbl"><div class="name">--text</div><div class="desc">primario</div></div></div>
+    <div class="sw"><div class="fill" style="background:var(--surface);color:var(--text-3);font-size:18px;font-weight:600;">Aa</div><div class="lbl"><div class="name">--text-3</div><div class="desc">terciario</div></div></div>
+  </div>
+</body>
+</html>

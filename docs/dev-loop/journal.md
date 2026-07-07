@@ -19,3 +19,6 @@
 - Arnés: agentes implementer/verifier aún no registrados en la sesión que los creó (requieren reinicio) — fallback general-purpose con definición inlineada funcionó; desde la próxima sesión se usan directos.
 - Skills actualizadas deliberadamente: tooling.md §2 (eslint-config-next ≥16 flat nativo, sin FlatCompat; react-hooks ≥7) y stack-setup.md §4.5 (expectGolden con fileURLToPath, nunca .pathname). La skill externa pnpm no documenta supportedArchitectures (hueco conocido).
 - Deuda anotada: tsup no typechequea (la rotura del worker la caza pnpm typecheck del gate — comportamiento estándar); pnpm -r --parallel typecheck aborta al primer fallo (evidencia de fallos múltiples exige --filter aislado).
+
+## 2026-07-07 · arnés: review con effort proporcional al riesgo
+- Feedback del usuario tras el piloto (duración). El paso REVIEW del dev-loop ahora escala: low para diffs pequeños/mecánicos, medium por defecto, high solo en orquestador/dinero/seguridad. T0.1 fue el caso máximo (bootstrap de 60+ ficheros + primera vez del arnés); el régimen normal por tarea será sensiblemente más corto.

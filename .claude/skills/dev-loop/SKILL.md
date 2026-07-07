@@ -43,7 +43,7 @@ Lanza el subagente **`implementer`** (uno NUEVO por tarea, `run_in_background: f
 Desde la raíz: `pnpm gate` (= lint + typecheck + format:check + knip + test unit+integration; lo crea T0.1) y `pnpm test:e2e` si la tarea tocó superficie web. En rojo → devuelve el fallo al implementer vía SendMessage (mantiene su contexto). Sin CI remota, **este es el gate de merge** (decisión 2026-07-07).
 
 ### 5 · REVIEW
-Invoca la skill `code-review` (effort medium) sobre el diff de la tarea. Hallazgos de correctness confirmados → al implementer vía SendMessage; re-gate tras el fix. Hallazgos menores de estilo/simplificación: aplícalos solo si son triviales; si no, anótalos en el journal como deuda.
+Invoca la skill `code-review` sobre el diff de la tarea, con effort proporcional al riesgo: **low** para diffs pequeños/mecánicos (<~200 líneas sin lógica nueva), **medium** por defecto, **high** solo para el orquestador, dinero (spend/fal) y seguridad (auth/webhooks/cifrado). Hallazgos de correctness confirmados → al implementer vía SendMessage; re-gate tras el fix. Hallazgos menores de estilo/simplificación: aplícalos solo si son triviales; si no, anótalos en el journal como deuda.
 
 ### 6 · VERIFY
 Lanza el subagente **`verifier`** (contexto fresco, escéptico) con: el ID de la tarea, el texto LITERAL de su Verificación, el resumen del implementer y el diff (`git diff --stat`). El verifier ejecuta la Verificación de verdad contra el sistema levantado (protocolo en `testing/references/cua.md`), persiste la evidencia en `docs/verifications/<ID>/` y devuelve **PASS/FAIL + coste real**.

@@ -1,0 +1,22 @@
+# dependencias y builds
+node_modules/
+dist/
+.next/
+coverage/
+*.tsbuildinfo
+
+# entornos con secretos reales (los .env.test committeados llevan claves falsas)
+.env
+.env.local
+.env.*.local
+
+# datos y artefactos de runtime
+/data/
+playwright-report/
+test-results/
+
+# claude code — local de máquina, no del proyecto
+.claude/settings.local.json
+
+# sistema
+.DS_Store

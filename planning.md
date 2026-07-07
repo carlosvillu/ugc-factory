@@ -151,6 +151,7 @@ Decisiones del usuario (2026-07-07): la fase se ejecuta tras T0.1 y **antes** de
 - **Depende de**: TD.3
 - **Entrega**: `dialog`, `sheet`, `alert-dialog`, `toast`, `tooltip`, `skeleton`, `progress`, `card`, `separator` siguiendo las foundations del DS (hairlines 1 px, radios 5/7/10 px, focus ring único, sin glassmorphism ni gradientes, glifos Unicode); secciones en `/design-system`; subida de los 9 al proyecto de Claude Design en su formato (`.jsx` + `.d.ts` + `.prompt.md` + card) vía `DesignSync`, para que el DS siga siendo inventario completo (decisión 2026-07-07). Si el subagente no tiene acceso a `DesignSync`, la subida la ejecuta el bucle principal en el CLOSE.
 - **Verificación**: CUA revisa las secciones nuevas en dark y light (coherencia con las foundations); `DesignSync list_files` muestra los ficheros nuevos en el proyecto y el espejo local se regenera incluyéndolos.
+  - **Nota (clarificación menor 2026-07-07, regla 6)**: el warning dev-only de Base UI Toast (`flushSync` en `ToastRoot`, react-dom lo strippea en prod) NO bloquea el PASS de la cláusula CUA — deuda upstream, consola limpia confirmada contra `next build && next start`. Ver la excepción estrecha en `testing/references/cua.md` §Paso 3. La **cláusula 2 (upload a DesignSync + espejo regenerado)** se ejecuta al final de la fase FD, cuando el usuario autorice DesignSync con `/design-login` (decisión 2026-07-07): hasta entonces TD.4 permanece con la cláusula 1 verificada y la 2 pendiente.
 
 #### TD.5 · Componentes de producto (presentacionales puros)
 - **Depende de**: TD.3

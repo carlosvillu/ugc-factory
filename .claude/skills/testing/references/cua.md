@@ -107,6 +107,7 @@ Criterios de ejecución:
 - **Downloads**: cuando la Verificación pide "descargarlo" (T0.5, T5.7), usa `download <ref> <ruta-en-$EV>` y valida el fichero (checksum, `unzip -l`, schema del JSON) — el download que "llega" es el fichero íntegro en disco, no el click.
 - **Fallos provocados**: cuando la Verificación exige romper algo (T0.11: `fail_rate=1`; T0.14: key inválida), provoca el fallo de verdad y captura el estado de error observable (el visor de logs del nodo, el 401) antes de arreglarlo.
 - **Si algo inesperado aparece** (error en consola, estado raro, texto cortado), persíguelo: el CUA es exploratorio. Un PASS con un error rojo en la consola del navegador no es un PASS — como mínimo se anota en el report.
+  - **Excepción estrecha (clarificación 2026-07-07, regla 6)**: un warning que (a) proviene de una **dependencia de terceros fijada** (no de código del proyecto) Y (b) **desaparece en el build de producción** (react-dom strippea los warnings dev-only) NO bloquea el PASS. Se anota como deuda upstream y se confirma re-ejecutando el flujo contra `next build && next start`, donde la consola debe quedar limpia. Un `console.error`/warning de **código propio**, o que sobreviva a prod, sigue siendo FAIL. Discriminador: ¿el ruido es de dependencia y muere en prod? → deuda. ¿Es propio o sobrevive a prod? → FAIL. (Origen: TD.4, Base UI Toast `flushSync` dev-only en `ToastRoot`.)
 
 ### Paso 4 — Captura la evidencia
 

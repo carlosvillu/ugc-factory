@@ -47,6 +47,12 @@
 
   --stripe: rgba(255, 255, 255, 0.045);
 
+  /* Overlay scrim behind modal dialogs/sheets — pure black at the same opacity
+     the DS readme fixes for the video-preview dark overlay (rgba(0,0,0,0.34)).
+     Theme-independent (a scrim is black in both themes); new DS foundation
+     introduced in TD.4 — must also land on the DS tokens on upload. */
+  --overlay: rgba(0, 0, 0, 0.34);
+
   /* ── Elevation (dark) — colors.css ──────────────────────────────────────────
      ONLY naming deviation from the mirror: the DS calls these --shadow-* but
      that namespace is owned by @theme inline (var() would go circular), so they
@@ -165,6 +171,7 @@
   --text-4: #a1a1aa;
 
   --stripe: rgba(0, 0, 0, 0.035);
+  --overlay: rgba(0, 0, 0, 0.34);
 
   --elevation-sm: 0 1px 2px rgba(0, 0, 0, 0.06);
   --elevation-md: 0 6px 18px rgba(0, 0, 0, 0.08);
@@ -228,6 +235,31 @@
   }
 }
 
+/* Skeleton loading placeholder — a quiet opacity fade (NOT a gradient shimmer:
+   the DS bans gradients and decorative motion). New for TD.4. */
+@keyframes ugc-skeleton {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
+  }
+}
+
+/* Indeterminate progress — a short accent segment sliding across the track (no
+   known duration). Distinguishes "en curso" from a full/complete bar. New for
+   TD.4; turned off under reduced-motion (the bar then reads as a static partial
+   segment, still clearly not "complete"). */
+@keyframes ugc-progress-indeterminate {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(400%);
+  }
+}
+
 /* ══════════════════════════════════════════════════════════════════════════
    2) @theme inline — map every token to Tailwind (naming 1:1 with the DS)
    ══════════════════════════════════════════════════════════════════════════ */
@@ -247,6 +279,7 @@
   --color-text-4: var(--text-4);
   --color-text-on-accent: var(--text-on-accent);
   --color-stripe: var(--stripe);
+  --color-overlay: var(--overlay);
   --color-accent: var(--accent); /* → bg-accent, text-accent */
   --color-accent-hover: var(--accent-hover);
   --color-accent-soft: var(--accent-soft);
@@ -345,13 +378,31 @@
   /* motion → animate-* (mirror keyframe names) */
   --animate-spin: ugc-spin 0.7s linear infinite;
   --animate-pulse-ring: ugc-pulse-ring 2s ease-out infinite;
+  --animate-skeleton: ugc-skeleton 1.6s ease-in-out infinite;
+  --animate-progress-indeterminate: ugc-progress-indeterminate 1.4s ease-in-out infinite;
 }
 
-/* prefers-reduced-motion: the pulse is turned off; state stays visible via
-   color/badge. (skill frontend §2) */
+/* prefers-reduced-motion: turn off decorative/functional motion; state stays
+   visible via color/badge/position. (skill frontend §2)
+   - the node pulse and skeleton fade are silenced;
+   - the indeterminate progress slide is silenced (bar reads as a static
+     partial segment — still clearly not "complete");
+   - the dialog/sheet/alert-dialog popups drop their scale/slide transition and
+     translate offsets, so the panel simply appears in place rather than
+     zooming or sliding in from an edge. */
 @media (prefers-reduced-motion: reduce) {
-  .animate-pulse-ring {
+  .animate-pulse-ring,
+  .animate-skeleton {
     animation: none;
+  }
+  [data-slot='progress-indicator'] {
+    animation: none;
+  }
+  [data-slot='dialog-popup'],
+  [data-slot='alert-dialog-popup'],
+  [data-slot='sheet-popup'] {
+    transition: none;
+    transform: none;
   }
 }
 

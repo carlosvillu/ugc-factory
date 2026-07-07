@@ -1,0 +1,31 @@
+<!-- @dsCard group="Overlay" viewport="700x360" name="Toast" subtitle="Avisos transitorios apilados con barra de acento semántica" -->
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="stylesheet" href="../../styles.css">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<style>
+  body{margin:0;background:var(--bg);font-family:var(--font-sans);}
+  #root{padding:20px;display:flex;flex-direction:column;gap:10px;align-items:flex-end;}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { Toast } = window.UGCFactoryDesignSystem_d126b2;
+function Demo(){
+  return (
+    <React.Fragment>
+      <Toast tone="success" title="Lote publicado" description="3 variantes en TikTok orgánico con disclosure AIGC." />
+      <Toast tone="warning" title="Sonido no CML" description="Este post no podrá promocionarse como Spark Ad." />
+      <Toast tone="danger" title="Render fallido" description="fal devolvió 402 — saldo insuficiente." />
+    </React.Fragment>
+  );
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<Demo/>);
+</script>
+</body>
+</html>

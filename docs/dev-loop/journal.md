@@ -22,3 +22,6 @@
 
 ## 2026-07-07 · arnés: review con effort proporcional al riesgo
 - Feedback del usuario tras el piloto (duración). El paso REVIEW del dev-loop ahora escala: low para diffs pequeños/mecánicos, medium por defecto, high solo en orquestador/dinero/seguridad. T0.1 fue el caso máximo (bootstrap de 60+ ficheros + primera vez del arnés); el régimen normal por tarea será sensiblemente más corto.
+
+## 2026-07-07 · arnés: skill dev-help creada
+- Punto de entrada humano al arnés a petición del usuario: `/dev-help [pregunta]` explica piezas, comandos, flujos, paradas, presupuesto y cómo intervenir, fundándose en los ficheros reales. Manual completo en `.claude/skills/dev-help/references/tour.md`. Referenciada desde CLAUDE.md.

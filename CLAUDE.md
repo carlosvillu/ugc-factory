@@ -17,7 +17,7 @@ Plataforma personal (mono-usuario, self-hosted) de generación de anuncios UGC c
 
 ## El bucle de desarrollo
 
-El trabajo avanza tarea a tarea de `planning.md` vía la skill **`dev-loop`** (invócala con `/dev-loop` o cuando el usuario pida "sigue/continúa con el desarrollo"). No improvises un proceso alternativo: el protocolo (selección de tarea, subagentes implementer/verifier, gates, cierre) vive ahí.
+El trabajo avanza tarea a tarea de `planning.md` vía la skill **`dev-loop`** (invócala con `/dev-loop` o cuando el usuario pida "sigue/continúa con el desarrollo"). No improvises un proceso alternativo: el protocolo (selección de tarea, subagentes implementer/verifier, gates, cierre) vive ahí. Para preguntas sobre el arnés mismo (cómo funciona, comandos, por qué se paró, onboarding), la skill **`dev-help`** es el punto de entrada.
 
 ### Reglas de oro (resumen; el detalle en la skill)
 

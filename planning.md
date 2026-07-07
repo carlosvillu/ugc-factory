@@ -136,10 +136,11 @@ Decisiones del usuario (2026-07-07): la fase se ejecuta tras T0.1 y **antes** de
   - [x] Ruta `/design-system` con specimens y switchers funcionales (tema, acento, densidad).
 - **Verificación**: en el navegador, `/design-system` muestra los specimens; los switchers cambian tema/acento/densidad en vivo; comparación visual CUA contra `docs/design-system/guidelines/*.card.html` sin desviaciones perceptibles.
 
-#### TD.2 · Primitivas core y formularios
+#### TD.2 · Primitivas core y formularios [x] 2026-07-07 — PASS, ver docs/verifications/TD.2/
 - **Depende de**: TD.1
 - **Entrega**: `button`, `input`, `textarea`, `select`, `checkbox`, `switch`, `slider` en `components/ui/` — generados con shadcn sobre Base UI y ajustados 1:1 al espejo (`components/{core,forms}/` — `.jsx` como spec de variantes, `.prompt.md` como intención): mismos nombres de variantes/tamaños/estados (Button: `primary|secondary|ghost|danger|danger-ghost` × `sm|md|lg` + `loading` + `icon`), glifos Unicode en lugar de lucide (el DS prohíbe librerías de iconos); secciones nuevas en `/design-system`.
 - **Verificación**: CUA compara las secciones con `buttons.card.html` y `form-fields.card.html` en dark Y light: variantes y estados hover/focus/disabled/loading fieles; todos los controles operables por rol y accessible name.
+  - **Nota (cambio menor, 2026-07-07, regla 6)**: las `*.card.html` del espejo son **inejecutables** (cargan `../../_ds_bundle.js`, ausente del dump read-only → renderizan en blanco). En TD.2–TD.5 la comparación CUA se hace contra las **specs `.jsx`** que esas cards importan (misma fuente, mismo estado inicial) + **medición de dimensiones/estados en runtime**, no A/B pixel contra la card. Aplica a toda la fase FD (TD.1 topó con lo mismo).
 
 #### TD.3 · Feedback, navegación y datos
 - **Depende de**: TD.2

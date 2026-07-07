@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { AppearanceSwitchers } from '@/components/design-system/appearance-switchers';
+import { ComponentSpecimens } from '@/components/design-system/component-specimens';
 import { FoundationSpecimens } from '@/components/design-system/foundation-specimens';
 
 export const metadata: Metadata = {
@@ -24,6 +25,8 @@ export default function DesignSystemPage() {
       </header>
 
       <AppearanceSwitchers />
+
+      <ComponentSpecimens />
 
       <FoundationSpecimens />
     </main>

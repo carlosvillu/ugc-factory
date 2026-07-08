@@ -100,6 +100,12 @@ describe('pg-boss operativo en el worker (T0.6)', () => {
     expect(boss).toBeDefined();
     if (boss === undefined) throw new Error('pg-boss no arrancó pese a BD alcanzable');
 
+    // createBoss debe crear la cola `step.execute` del orquestador (T0.7a): sin
+    // ella, un `pending→queued` legal de transition() haría `boss.send` sobre una
+    // cola inexistente → LANZA. Guard contra regresión: si se borra la línea de
+    // createBoss, este assert (y no solo la Verificación) se pone rojo.
+    expect(await boss.getQueue('step.execute')).not.toBeNull();
+
     // Encolar por el puerto JobQueue REAL del worker (makeJobQueue → boss.send):
     // ejercita el `payload.parse` de la impl y el mismo camino que usará T0.7a,
     // no un `boss.send` crudo del test.

@@ -5,3 +5,4 @@
 // re-exportará aquí cuando lleguen las relational queries (db.md §7).
 export * from './project';
 export * from './ops';
+export * from './pipeline';

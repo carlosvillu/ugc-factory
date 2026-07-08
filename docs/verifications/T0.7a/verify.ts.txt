@@ -1,0 +1,279 @@
+// Script de VERIFICACIÓN T0.7a — corre contra la BD REAL (docker compose dev) y
+// el pg-boss REAL, ejercitando el `transition()` de producción vía los adaptadores
+// reales (makeWithTransaction). NO es un test ni un mock. Ejecuta:
+//   node --env-file=.env --import tsx docs/verifications/T0.7a/verify.ts
+//
+// Demuestra literalmente la Verificación del planning:
+//  - secuencia de transiciones LEGALES → estados/timestamps esperados + job encolado
+//    DENTRO de la tx (encolado transaccional).
+//  - resolución de depends_on (A succeed → B pasa a queued y se encola).
+//  - transición ILEGAL → lanza IllegalTransitionError SIN tocar la BD (fila intacta,
+//    cero jobs nuevos, cero NOTIFY).
+//  - una sesión que hace LISTEN pipeline_events ve UN notify por transición LEGAL
+//    committeada y NINGUNO por las ilegales (rollback), con payload == runId.
+import { Client } from 'pg';
+import { PgBoss } from 'pg-boss';
+import { stepExecuteJob } from '@ugc/core/jobs';
+import { IllegalTransitionError, transition } from '@ugc/core/orchestrator';
+import { createDb, ensureQueue, makeWithTransaction } from '@ugc/db';
+import { makePipelineRun, makeProject, makeStepRun } from '@ugc/test-utils';
+import { pipelineRun, project, stepRun } from '@ugc/db/schema';
+import { eq, sql } from 'drizzle-orm';
+
+const DATABASE_URL = process.env.DATABASE_URL;
+if (!DATABASE_URL) throw new Error('DATABASE_URL no definido (usa --env-file=.env)');
+
+const log = (...a: unknown[]) => console.log(...a);
+const section = (t: string) => log(`\n========== ${t} ==========`);
+
+let failures = 0;
+function check(desc: string, cond: boolean, detail?: unknown): void {
+  const mark = cond ? 'PASS' : 'FAIL';
+  if (!cond) failures++;
+  log(`  [${mark}] ${desc}${detail !== undefined ? ` :: ${JSON.stringify(detail)}` : ''}`);
+}
+
+async function main(): Promise<void> {
+  const db = createDb(DATABASE_URL!);
+  const boss = new PgBoss(DATABASE_URL!);
+  boss.on('error', () => {
+    /* errores operativos del poller irrelevantes aquí */
+  });
+  await boss.start();
+  // Cola step.execute igual que producción (sin consumer: queremos que los jobs se
+  // acumulen en pgboss.job para poder contarlos).
+  await ensureQueue(boss, stepExecuteJob);
+
+  const withTransaction = makeWithTransaction(db, boss);
+
+  // --- Sesión LISTEN (assertion determinista del NOTIFY) --------------------
+  const listener = new Client({ connectionString: DATABASE_URL });
+  await listener.connect();
+  const notifies: { payload: string; at: string }[] = [];
+  listener.on('notification', (msg) => {
+    notifies.push({ payload: msg.payload ?? '', at: new Date().toISOString() });
+    log(`  <<NOTIFY pipeline_events>> payload=${msg.payload} @${new Date().toISOString()}`);
+  });
+  await listener.query('LISTEN pipeline_events');
+  log('LISTEN pipeline_events activo (cliente pg dedicado).');
+
+  // Helpers de inspección directa (fuera de la tx del orquestador).
+  const countJobs = async (): Promise<number> => {
+    const { rows } = await db.execute<{ n: number }>(
+      sql`SELECT count(*)::int AS n FROM pgboss.job WHERE name = ${stepExecuteJob.name}`,
+    );
+    return Number(rows[0]!.n);
+  };
+  const jobsForStep = async (stepId: string): Promise<number> => {
+    const { rows } = await db.execute<{ n: number }>(
+      sql`SELECT count(*)::int AS n FROM pgboss.job WHERE name = ${stepExecuteJob.name} AND data->>'stepId' = ${stepId}`,
+    );
+    return Number(rows[0]!.n);
+  };
+  const row = async (id: string) =>
+    (await db.select().from(stepRun).where(eq(stepRun.id, id))).at(0)!;
+
+  // Pequeña espera para dar tiempo a que los NOTIFY committeados lleguen al listener.
+  const drain = () => new Promise((r) => setTimeout(r, 300));
+
+  // --- Seed: project + run + steps ------------------------------------------
+  const [p] = await db.insert(project).values(makeProject()).returning();
+  const [run] = await db
+    .insert(pipelineRun)
+    .values(makePipelineRun({ projectId: p!.id }))
+    .returning();
+  const runId = run!.id;
+  log(`\nSeed: project=${p!.id} run=${runId}`);
+
+  // Steps para el camino legal (A: pending) y para deps (B awaiting_deps depende de A2; A2 pending).
+  const [sPending] = await db
+    .insert(stepRun)
+    .values(makeStepRun({ runId, nodeKey: 'N0', status: 'pending' }))
+    .returning();
+  const stepA = sPending!.id;
+
+  // Grafo de deps: A2 (pending) → B (awaiting_deps, depends_on [A2]).
+  const [sA2] = await db
+    .insert(stepRun)
+    .values(makeStepRun({ runId, nodeKey: 'N1', status: 'pending' }))
+    .returning();
+  const [sB] = await db
+    .insert(stepRun)
+    .values(makeStepRun({ runId, nodeKey: 'N2', status: 'awaiting_deps', dependsOn: [sA2!.id] }))
+    .returning();
+
+  await drain(); // los INSERT no emiten NOTIFY; solo por limpieza temporal
+  const notifiesAfterSeed = notifies.length;
+  check('seed no emite NOTIFY', notifiesAfterSeed === 0, notifiesAfterSeed);
+
+  // ======================================================================
+  section('SECUENCIA LEGAL: pending → queued → running → succeeded');
+  // ----------------------------------------------------------------------
+  const before0 = await row(stepA);
+  check('estado inicial de A = pending', before0.status === 'pending', before0.status);
+
+  const notifyBaseLegal = notifies.length;
+
+  // 1) enqueue: pending → queued  (debe encolar job en la MISMA tx)
+  const jobsBefore = await countJobs();
+  await transition({ withTransaction }, stepA, 'enqueue');
+  await drain();
+  const rQueued = await row(stepA);
+  check('A: pending→queued', rQueued.status === 'queued', rQueued.status);
+  check('A: sin started_at aún', rQueued.startedAt === null, rQueued.startedAt);
+  check('A: sin finished_at aún', rQueued.finishedAt === null, rQueued.finishedAt);
+  check('encolado transaccional: +1 job step.execute para A', (await jobsForStep(stepA)) === 1, {
+    jobsForA: await jobsForStep(stepA),
+    totalDelta: (await countJobs()) - jobsBefore,
+  });
+  check('NOTIFY tras enqueue (+1)', notifies.length === notifyBaseLegal + 1, notifies.length);
+  check('payload del NOTIFY == runId', notifies.at(-1)?.payload === runId, notifies.at(-1)?.payload);
+
+  // 2) start: queued → running (fija started_at)
+  await transition({ withTransaction }, stepA, 'start');
+  await drain();
+  const rRunning = await row(stepA);
+  check('A: queued→running', rRunning.status === 'running', rRunning.status);
+  check('A: started_at fijado', rRunning.startedAt instanceof Date, rRunning.startedAt);
+  check('A: finished_at sigue null', rRunning.finishedAt === null, rRunning.finishedAt);
+  check('NOTIFY tras start (+1)', notifies.length === notifyBaseLegal + 2, notifies.length);
+
+  // 3) succeed: running → succeeded (fija finished_at)
+  await transition({ withTransaction }, stepA, 'succeed');
+  await drain();
+  const rSucceeded = await row(stepA);
+  check('A: running→succeeded', rSucceeded.status === 'succeeded', rSucceeded.status);
+  check('A: finished_at fijado', rSucceeded.finishedAt instanceof Date, rSucceeded.finishedAt);
+  check(
+    'A: finished_at >= started_at',
+    rSucceeded.finishedAt! >= rSucceeded.startedAt!,
+    { started: rSucceeded.startedAt, finished: rSucceeded.finishedAt },
+  );
+  check('NOTIFY tras succeed (+1)', notifies.length === notifyBaseLegal + 3, notifies.length);
+  check('3 NOTIFY legales, todos con payload==runId', notifies.slice(notifyBaseLegal).every((n) => n.payload === runId), notifies.slice(notifyBaseLegal).map((n) => n.payload));
+
+  // ======================================================================
+  section('RESOLUCIÓN DE DEPS: A2 succeed → B (awaiting_deps→queued) + encolado');
+  // ----------------------------------------------------------------------
+  // Preparar A2 a running (enqueue+start) — legales — luego succeed dispara la promoción de B.
+  await transition({ withTransaction }, sA2!.id, 'enqueue');
+  await transition({ withTransaction }, sA2!.id, 'start');
+  await drain();
+  const bBeforeDeps = await row(sB!.id);
+  check('B sigue awaiting_deps antes de que A2 complete', bBeforeDeps.status === 'awaiting_deps', bBeforeDeps.status);
+  const bJobsBefore = await jobsForStep(sB!.id);
+
+  const notifyBaseDeps = notifies.length;
+  await transition({ withTransaction }, sA2!.id, 'succeed');
+  await drain();
+  const a2After = await row(sA2!.id);
+  const bAfter = await row(sB!.id);
+  check('A2 succeeded', a2After.status === 'succeeded', a2After.status);
+  check('B promovido awaiting_deps→queued', bAfter.status === 'queued', bAfter.status);
+  check('B encolado (+1 job step.execute)', (await jobsForStep(sB!.id)) === bJobsBefore + 1, {
+    before: bJobsBefore,
+    after: await jobsForStep(sB!.id),
+  });
+  check('deps: transition(A2,succeed) emite exactamente 1 NOTIFY', notifies.length === notifyBaseDeps + 1, notifies.length - notifyBaseDeps);
+
+  // ======================================================================
+  section('TRANSICIÓN ILEGAL: queued → succeed (lanza, sin tocar BD)');
+  // ----------------------------------------------------------------------
+  // B está en queued. `succeed` solo es legal desde running → ILEGAL desde queued.
+  const bIntactBefore = await row(sB!.id);
+  const jobsAllBefore = await countJobs();
+  const notifiesBeforeIllegal = notifies.length;
+
+  let threw = false;
+  let errName = '';
+  try {
+    await transition({ withTransaction }, sB!.id, 'succeed');
+  } catch (e) {
+    threw = true;
+    errName = e instanceof IllegalTransitionError ? 'IllegalTransitionError' : (e as Error).name;
+  }
+  await drain();
+  const bIntactAfter = await row(sB!.id);
+  check('transición ilegal LANZA IllegalTransitionError', threw && errName === 'IllegalTransitionError', errName);
+  check('fila INTACTA: status igual', bIntactAfter.status === bIntactBefore.status, {
+    before: bIntactBefore.status,
+    after: bIntactAfter.status,
+  });
+  check('fila INTACTA: updated_at sin cambio (rollback)', +new Date(bIntactAfter.updatedAt) === +new Date(bIntactBefore.updatedAt), {
+    before: bIntactBefore.updatedAt,
+    after: bIntactAfter.updatedAt,
+  });
+  check('fila INTACTA: started_at/finished_at sin cambio', String(bIntactAfter.startedAt) === String(bIntactBefore.startedAt) && String(bIntactAfter.finishedAt) === String(bIntactBefore.finishedAt), {
+    before: [bIntactBefore.startedAt, bIntactBefore.finishedAt],
+    after: [bIntactAfter.startedAt, bIntactAfter.finishedAt],
+  });
+  check('cero jobs nuevos (rollback des-encola)', (await countJobs()) === jobsAllBefore, {
+    before: jobsAllBefore,
+    after: await countJobs(),
+  });
+  check('cero NOTIFY por la transición ilegal', notifies.length === notifiesBeforeIllegal, notifies.length - notifiesBeforeIllegal);
+
+  // ======================================================================
+  section('ILEGAL con ROLLBACK del ENCOLADO: pending→enqueue seguido de fallo forzado');
+  // Prueba que el job insertado en la tx NO sobrevive si la tx hace rollback.
+  // Usamos un step nuevo en pending y forzamos rollback lanzando desde el propio
+  // callback tras el encolado (via un enqueue legal cuya tx aborta).
+  // ----------------------------------------------------------------------
+  const [sRb] = await db
+    .insert(stepRun)
+    .values(makeStepRun({ runId, nodeKey: 'N3', status: 'pending' }))
+    .returning();
+  const jobsRbBefore = await countJobs();
+  const notifiesRbBefore = notifies.length;
+  let rbThrew = false;
+  try {
+    await withTransaction(async ({ steps, jobs, events }) => {
+      // Reproduce el encolado que hace transition() en pending→queued, y luego
+      // aborta la tx: el job insertado debe desaparecer.
+      await steps.update(sRb!.id, { status: 'queued' });
+      await jobs.enqueue({
+        job: stepExecuteJob,
+        payload: { runId, stepId: sRb!.id, nodeKey: 'N3' },
+        singletonKey: `${runId}:N3`,
+      });
+      await events.notify(runId);
+      throw new Error('abort forzado tras encolar (verificación de rollback)');
+    });
+  } catch {
+    rbThrew = true;
+  }
+  await drain();
+  const rbRow = await row(sRb!.id);
+  check('rollback: la tx abortó', rbThrew, rbThrew);
+  check('rollback: step sigue pending (UPDATE revertido)', rbRow.status === 'pending', rbRow.status);
+  check('rollback: cero jobs nuevos (encolado revertido)', (await countJobs()) === jobsRbBefore, {
+    before: jobsRbBefore,
+    after: await countJobs(),
+  });
+  check('rollback: cero NOTIFY (silenciado en rollback)', notifies.length === notifiesRbBefore, notifies.length - notifiesRbBefore);
+
+  // ======================================================================
+  section('RESUMEN NOTIFY');
+  log(`  Total NOTIFY recibidos: ${notifies.length}`);
+  log(`  Payloads: ${JSON.stringify(notifies.map((n) => n.payload))}`);
+  log(`  Todos == runId (${runId}): ${notifies.every((n) => n.payload === runId)}`);
+
+  // Cleanup
+  await listener.query('UNLISTEN pipeline_events');
+  await listener.end();
+  await boss.stop({ graceful: false });
+  await db.$client.end();
+
+  section('VEREDICTO SCRIPT');
+  if (failures === 0) {
+    log('  TODAS LAS ASERCIONES PASAN ✅');
+  } else {
+    log(`  ${failures} ASERCIÓN(ES) FALLARON ❌`);
+    process.exitCode = 1;
+  }
+}
+
+main().catch((e) => {
+  console.error('ERROR FATAL:', e);
+  process.exit(2);
+});

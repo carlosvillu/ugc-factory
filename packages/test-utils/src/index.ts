@@ -16,4 +16,4 @@ export { server, useHttpMocks } from './msw/index';
 // withDatabaseName, TEMPLATE_DB, DrizzleDb) las usan global-setup.ts y
 // create-test-database.ts vía imports relativos — no van al barrel.
 export { createTestDatabase, type TestDatabase } from './create-test-database';
-export { makeProject } from './factories';
+export { makeProject, makePipelineRun, makeStepRun } from './factories';

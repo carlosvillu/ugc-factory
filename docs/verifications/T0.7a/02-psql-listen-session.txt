@@ -1,0 +1,4 @@
+LISTEN
+Asynchronous notification "pipeline_events" with payload "01KX13FQYNR9HF182NKVBRSHRD" received from server process with PID 669.
+Asynchronous notification "pipeline_events" with payload "01KX13FQYNR9HF182NKVBRSHRD" received from server process with PID 669.
+Asynchronous notification "pipeline_events" with payload "01KX13FQYNR9HF182NKVBRSHRD" received from server process with PID 669.

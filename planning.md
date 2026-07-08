@@ -70,18 +70,19 @@ El corazón de esta fase es el **orquestador** (§9.0): la máquina de estados t
 - **Entrega**: pg-boss inicializado; job de demo `noop` con retries/backoff; helper `enqueue()` en `packages/core`.
 - **Verificación**: encolar 10 jobs `noop` con 30 % de fallo configurado → el log muestra ejecuciones y reintentos; la tabla de pg-boss muestra todos en `completed` al final.
 
-#### T0.7a · Máquina de estados transaccional
+#### T0.7a · Máquina de estados transaccional [x] 2026-07-08 — PASS, ver docs/verifications/T0.7a/ (coste $0)
 - **Depende de**: T0.6
 - **Entrega**: migración de `pipeline_run` + `step_run` completas (§12, incl. `supersedes_id` y enums de §7.1) y el núcleo del módulo `orchestrator` (§9.0): `transition(stepId, event)` transaccional (`SELECT … FOR UPDATE`), tabla de transiciones válidas, resolución de `depends_on` y encolado en pg-boss **dentro de la misma transacción**, y `NOTIFY pipeline_events`.
 - **Subtareas**:
-  - [ ] Migración + enums.
-  - [ ] `transition()` + tests unitarios exhaustivos (toda transición ilegal rechaza).
-  - [ ] Resolución de dependencias + encolado transaccional + NOTIFY.
+  - [x] Migración + enums.
+  - [x] `transition()` + tests unitarios exhaustivos (toda transición ilegal rechaza).
+  - [x] Resolución de dependencias + encolado transaccional + NOTIFY.
 - **Verificación**: script contra la BD real que ejecuta una secuencia de transiciones legales e ilegales: las legales dejan las filas con los estados/timestamps esperados, las ilegales lanzan error sin tocar la BD; en una sesión `psql` con `LISTEN pipeline_events` se ve el NOTIFY de cada transición.
 
 #### T0.7b · Runs, consumer genérico y executors de demo
 - **Depende de**: T0.7a
 - **Entrega**: creación de run desde una definición de DAG (nodos + depends_on; estados iniciales `awaiting_deps`/`pending`), endpoint `POST /api/runs`, consumer genérico de pg-boss que ejecuta el executor registrado por `node_key` y llama a `transition`, y **executors de demo con flags configurables** (`sleep_ms`, `fail_rate`, `hang` — necesarios para verificar timeouts y retries después).
+- **Deuda heredada de T0.7a (precondición de que los retries funcionen)**: la transición `failed→queued` (evento `retry`) es legal incondicionalmente en la tabla pura; §7.1 la condiciona a `retry_count<max_retries`. El consumer/executor de T0.7b es quien DEBE comprobar `retry_count<max_retries` antes de disparar `retry` (agotado ⇒ dejar el step en `failed` terminal) e INCREMENTAR `retry_count` en la misma tx (hoy `StepPatch` no expresa el incremento — extenderlo). Sin esto, un step que falla reintentaría para siempre.
 - **Verificación**: `POST /api/runs` con el DAG de demo → los 3 steps pasan `pending→queued→running→succeeded` en orden (filas con timestamps coherentes); 20 runs concurrentes completan sin interbloqueos ni estados corruptos (script de concurrencia).
 
 #### T0.8 · Checkpoints, aprobación, invalidación, skip y cancel

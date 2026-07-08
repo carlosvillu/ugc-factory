@@ -7,9 +7,11 @@ import { Pool } from 'pg';
 import * as schema from './schema';
 
 export type DbClient = NodePgDatabase<typeof schema>;
-// `DbTx` es interno: solo alimenta la unión `Db`. Se exportará (y entrará al
-// barrel) cuando un consumidor externo lo necesite (repos tx-scoped, T0.7a).
-type DbTx = Parameters<Parameters<DbClient['transaction']>[0]>[0];
+// `DbTx` lo consume el adaptador tx-scoped del orquestador (job-queue.ts, T0.7a):
+// `fromDrizzle` necesita la tx tipada. Interno al paquete (import relativo desde
+// los adaptadores); NO entra al barrel público hasta que un consumidor externo
+// lo pida.
+export type DbTx = Parameters<Parameters<DbClient['transaction']>[0]>[0];
 export type Db = DbClient | DbTx;
 
 /**

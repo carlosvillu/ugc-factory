@@ -9,3 +9,4 @@ export {
   type EnqueueRequest,
 } from './registry';
 export { noopJob, NoopJobSchema, type NoopJob } from './demo-noop';
+export { stepExecuteJob, StepExecuteJobSchema, type StepExecuteJob } from './step-execute';

@@ -1,0 +1,40 @@
+=== \dt (tablas public) ===
+           List of relations
+ Schema |     Name     | Type  | Owner 
+--------+--------------+-------+-------
+ public | app_setting  | table | ugc
+ public | audit_log    | table | ugc
+ public | pipeline_run | table | ugc
+ public | project      | table | ugc
+ public | step_run     | table | ugc
+(5 rows)
+
+
+=== step_status enum (esperado 13 valores §7.1) ===
+ n  |                                                            step_status                                                            
+----+-----------------------------------------------------------------------------------------------------------------------------------
+ 13 | {awaiting_deps,pending,queued,submitting,running,waiting_approval,succeeded,failed,rejected,skipped,cancelled,expired,superseded}
+(1 row)
+
+=== run_status enum (esperado 7) ===
+ n |                              run_status                               
+---+-----------------------------------------------------------------------
+ 7 | {pending,running,waiting_approval,succeeded,failed,cancelled,expired}
+(1 row)
+
+=== run_kind enum ===
+       run_kind       
+----------------------
+ {full,partial,regen}
+(1 row)
+
+=== \dT (tipos enum) ===
+          List of data types
+ Schema |      Name      | Description 
+--------+----------------+-------------
+ public | project_status | 
+ public | run_kind       | 
+ public | run_status     | 
+ public | step_status    | 
+(4 rows)
+

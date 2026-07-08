@@ -1,0 +1,57 @@
+LISTEN pipeline_events activo (cliente pg dedicado).
+
+Seed: project=01KX13D0FKEZHY76NDPEHNK5B7 run=01KX13D0FXD712JMSN3CT19JWQ
+  [PASS] seed no emite NOTIFY :: 0
+
+========== SECUENCIA LEGAL: pending → queued → running → succeeded ==========
+  [PASS] estado inicial de A = pending :: "pending"
+  <<NOTIFY pipeline_events>> payload=01KX13D0FXD712JMSN3CT19JWQ @2026-07-08T14:51:36.657Z
+  [PASS] A: pending→queued :: "queued"
+  [PASS] A: sin started_at aún :: null
+  [PASS] A: sin finished_at aún :: null
+  [PASS] encolado transaccional: +1 job step.execute para A :: {"jobsForA":1,"totalDelta":1}
+  [PASS] NOTIFY tras enqueue (+1) :: 1
+  [PASS] payload del NOTIFY == runId :: "01KX13D0FXD712JMSN3CT19JWQ"
+  <<NOTIFY pipeline_events>> payload=01KX13D0FXD712JMSN3CT19JWQ @2026-07-08T14:51:36.972Z
+  [PASS] A: queued→running :: "running"
+  [PASS] A: started_at fijado :: "2026-07-08T14:51:36.968Z"
+  [PASS] A: finished_at sigue null :: null
+  [PASS] NOTIFY tras start (+1) :: 2
+  <<NOTIFY pipeline_events>> payload=01KX13D0FXD712JMSN3CT19JWQ @2026-07-08T14:51:37.293Z
+  [PASS] A: running→succeeded :: "succeeded"
+  [PASS] A: finished_at fijado :: "2026-07-08T14:51:37.281Z"
+  [PASS] A: finished_at >= started_at :: {"started":"2026-07-08T14:51:36.968Z","finished":"2026-07-08T14:51:37.281Z"}
+  [PASS] NOTIFY tras succeed (+1) :: 3
+  [PASS] 3 NOTIFY legales, todos con payload==runId :: ["01KX13D0FXD712JMSN3CT19JWQ","01KX13D0FXD712JMSN3CT19JWQ","01KX13D0FXD712JMSN3CT19JWQ"]
+
+========== RESOLUCIÓN DE DEPS: A2 succeed → B (awaiting_deps→queued) + encolado ==========
+  <<NOTIFY pipeline_events>> payload=01KX13D0FXD712JMSN3CT19JWQ @2026-07-08T14:51:37.605Z
+  <<NOTIFY pipeline_events>> payload=01KX13D0FXD712JMSN3CT19JWQ @2026-07-08T14:51:37.610Z
+  [PASS] B sigue awaiting_deps antes de que A2 complete :: "awaiting_deps"
+  <<NOTIFY pipeline_events>> payload=01KX13D0FXD712JMSN3CT19JWQ @2026-07-08T14:51:37.929Z
+  [PASS] A2 succeeded :: "succeeded"
+  [PASS] B promovido awaiting_deps→queued :: "queued"
+  [PASS] B encolado (+1 job step.execute) :: {"before":0,"after":1}
+  [PASS] deps: transition(A2,succeed) emite exactamente 1 NOTIFY :: 1
+
+========== TRANSICIÓN ILEGAL: queued → succeed (lanza, sin tocar BD) ==========
+  [PASS] transición ilegal LANZA IllegalTransitionError :: "IllegalTransitionError"
+  [PASS] fila INTACTA: status igual :: {"before":"queued","after":"queued"}
+  [PASS] fila INTACTA: updated_at sin cambio (rollback) :: {"before":"2026-07-08T14:51:37.920Z","after":"2026-07-08T14:51:37.920Z"}
+  [PASS] fila INTACTA: started_at/finished_at sin cambio :: {"before":[null,null],"after":[null,null]}
+  [PASS] cero jobs nuevos (rollback des-encola) :: {"before":3,"after":3}
+  [PASS] cero NOTIFY por la transición ilegal :: 0
+
+========== ILEGAL con ROLLBACK del ENCOLADO: pending→enqueue seguido de fallo forzado ==========
+  [PASS] rollback: la tx abortó :: true
+  [PASS] rollback: step sigue pending (UPDATE revertido) :: "pending"
+  [PASS] rollback: cero jobs nuevos (encolado revertido) :: {"before":3,"after":3}
+  [PASS] rollback: cero NOTIFY (silenciado en rollback) :: 0
+
+========== RESUMEN NOTIFY ==========
+  Total NOTIFY recibidos: 6
+  Payloads: ["01KX13D0FXD712JMSN3CT19JWQ","01KX13D0FXD712JMSN3CT19JWQ","01KX13D0FXD712JMSN3CT19JWQ","01KX13D0FXD712JMSN3CT19JWQ","01KX13D0FXD712JMSN3CT19JWQ","01KX13D0FXD712JMSN3CT19JWQ"]
+  Todos == runId (01KX13D0FXD712JMSN3CT19JWQ): true
+
+========== VEREDICTO SCRIPT ==========
+  TODAS LAS ASERCIONES PASAN ✅

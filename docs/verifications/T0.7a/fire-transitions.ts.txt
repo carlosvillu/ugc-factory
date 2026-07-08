@@ -1,0 +1,56 @@
+// Dispara transiciones REALES (via transition() de producción) para que una sesión
+// psql externa con `LISTEN pipeline_events` observe el NOTIFY de cada transición
+// LEGAL y NINGUNO de la ILEGAL. Complementa a verify.ts: aquí el observador del
+// NOTIFY es psql (literal del planning), no un cliente pg del propio script.
+import { PgBoss } from 'pg-boss';
+import { stepExecuteJob } from '@ugc/core/jobs';
+import { transition } from '@ugc/core/orchestrator';
+import { createDb, ensureQueue, makeWithTransaction } from '@ugc/db';
+import { makePipelineRun, makeProject, makeStepRun } from '@ugc/test-utils';
+import { pipelineRun, project, stepRun } from '@ugc/db/schema';
+
+const DATABASE_URL = process.env.DATABASE_URL!;
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+async function main(): Promise<void> {
+  const db = createDb(DATABASE_URL);
+  const boss = new PgBoss(DATABASE_URL);
+  boss.on('error', () => {});
+  await boss.start();
+  await ensureQueue(boss, stepExecuteJob);
+  const withTransaction = makeWithTransaction(db, boss);
+
+  const [p] = await db.insert(project).values(makeProject()).returning();
+  const [run] = await db.insert(pipelineRun).values(makePipelineRun({ projectId: p!.id })).returning();
+  const runId = run!.id;
+  const [s] = await db.insert(stepRun).values(makeStepRun({ runId, nodeKey: 'N0', status: 'pending' })).returning();
+  console.log(`FIRE runId=${runId} stepId=${s!.id}`);
+
+  console.log('LEGAL enqueue (pending→queued) → espera NOTIFY');
+  await transition({ withTransaction }, s!.id, 'enqueue');
+  await sleep(1500);
+  console.log('LEGAL start (queued→running) → espera NOTIFY');
+  await transition({ withTransaction }, s!.id, 'start');
+  await sleep(1500);
+
+  console.log('ILEGAL enqueue (running→enqueue) → debe LANZAR y NO emitir NOTIFY');
+  try {
+    await transition({ withTransaction }, s!.id, 'enqueue');
+    console.log('  ¡ERROR! no lanzó');
+  } catch (e) {
+    console.log(`  lanzó ${(e as Error).name} (esperado, sin NOTIFY)`);
+  }
+  await sleep(1500);
+
+  console.log('LEGAL succeed (running→succeeded) → espera NOTIFY');
+  await transition({ withTransaction }, s!.id, 'succeed');
+  await sleep(1500);
+
+  console.log('DONE: 3 transiciones legales (3 NOTIFY), 1 ilegal (0 NOTIFY)');
+  await boss.stop({ graceful: false });
+  await db.$client.end();
+}
+main().catch((e) => {
+  console.error(e);
+  process.exit(2);
+});

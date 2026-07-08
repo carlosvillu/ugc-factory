@@ -1,5 +1,6 @@
-import { noopJob } from '@ugc/core/jobs';
+import { noopJob, stepExecuteJob } from '@ugc/core/jobs';
 import type { Logger } from '@ugc/core';
+import { ensureQueue } from '@ugc/db';
 import { PgBoss } from 'pg-boss';
 import { type FailDecider, registerNoopConsumer } from './consumers/demo-noop';
 
@@ -34,7 +35,13 @@ export async function createBoss(deps: CreateBossDeps): Promise<PgBoss> {
   // (createQueue/work) rechaza, hay que pararlo o se filtra un boss huérfano con
   // conexiones abiertas. Best-effort stop, sin tragar el error original.
   try {
-    await createNoopQueue(boss);
+    await ensureQueue(boss, noopJob);
+    // Cola `step.execute` del orquestador (T0.7a): `transition()` encola aquí
+    // cuando un step queda listo. Se crea ahora aunque su `work()` consumer sea
+    // T0.7b — una cola sin consumer solo acumula jobs, y SIN la cola creada
+    // `boss.send('step.execute')` LANZA en pg-boss v12. Su policy `short` es la
+    // que activa el índice único de `singleton_key`.
+    await ensureQueue(boss, stepExecuteJob);
     await registerNoopConsumer({
       boss,
       logger: deps.logger,
@@ -50,17 +57,4 @@ export async function createBoss(deps: CreateBossDeps): Promise<PgBoss> {
   }
 
   return boss;
-}
-
-/**
- * Crea la cola `demo.noop` y su DLQ de forma idempotente (guard `getQueue`,
- * patrón de los docs oficiales, jobs.md §3): la DLQ debe existir ANTES de
- * referenciarla. Las opciones de retry salen del registro de core.
- */
-async function createNoopQueue(boss: PgBoss): Promise<void> {
-  const dlq = `${noopJob.name}.dlq`;
-  if ((await boss.getQueue(dlq)) === null) await boss.createQueue(dlq);
-  if ((await boss.getQueue(noopJob.name)) === null) {
-    await boss.createQueue(noopJob.name, { ...noopJob.options, deadLetter: dlq });
-  }
 }

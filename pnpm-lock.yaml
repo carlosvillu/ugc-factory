@@ -239,6 +239,9 @@ importers:
       pg:
         specifier: 'catalog:'
         version: 8.22.0
+      pg-boss:
+        specifier: 'catalog:'
+        version: 12.25.1
     devDependencies:
       '@types/pg':
         specifier: ^8.20.0
@@ -264,6 +267,9 @@ importers:
       '@testcontainers/postgresql':
         specifier: ^12.0.0
         version: 12.0.4
+      '@ugc/core':
+        specifier: workspace:*
+        version: link:../core
       '@ugc/db':
         specifier: workspace:*
         version: link:../db

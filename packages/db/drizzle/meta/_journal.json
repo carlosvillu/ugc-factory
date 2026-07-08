@@ -8,6 +8,13 @@
       "when": 1783505922107,
       "tag": "0000_red_wild_child",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1783516769602,
+      "tag": "0001_curious_aqueduct",
+      "breakpoints": true
     }
   ]
 }

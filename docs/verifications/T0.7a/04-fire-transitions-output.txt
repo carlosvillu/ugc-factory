@@ -1,0 +1,7 @@
+FIRE runId=01KX13FQYNR9HF182NKVBRSHRD stepId=01KX13FQYSDSV9NF0DX8P21REX
+LEGAL enqueue (pending→queued) → espera NOTIFY
+LEGAL start (queued→running) → espera NOTIFY
+ILEGAL enqueue (running→enqueue) → debe LANZAR y NO emitir NOTIFY
+  lanzó IllegalTransitionError (esperado, sin NOTIFY)
+LEGAL succeed (running→succeeded) → espera NOTIFY
+DONE: 3 transiciones legales (3 NOTIFY), 1 ilegal (0 NOTIFY)

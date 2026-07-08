@@ -53,6 +53,12 @@
      introduced in TD.4 — must also land on the DS tokens on upload. */
   --overlay: rgba(0, 0, 0, 0.34);
 
+  /* Stronger black scrim for chips floated over a 9:16 preview (the duration
+     pill in VariantCard, mirror rgba(0,0,0,0.6)) — legibility of white mono over
+     an unpredictable frame. Theme-independent like --overlay; lands on the DS
+     tokens on upload. Raw value belongs here (TD.5). */
+  --overlay-strong: rgba(0, 0, 0, 0.6);
+
   /* ── Elevation (dark) — colors.css ──────────────────────────────────────────
      ONLY naming deviation from the mirror: the DS calls these --shadow-* but
      that namespace is owned by @theme inline (var() would go circular), so they
@@ -280,6 +286,7 @@
   --color-text-on-accent: var(--text-on-accent);
   --color-stripe: var(--stripe);
   --color-overlay: var(--overlay);
+  --color-overlay-strong: var(--overlay-strong);
   --color-accent: var(--accent); /* → bg-accent, text-accent */
   --color-accent-hover: var(--accent-hover);
   --color-accent-soft: var(--accent-soft);
@@ -417,4 +424,65 @@
     @apply bg-bg text-text font-sans;
     font-size: var(--ui-fs);
   }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   4) DS UTILITIES — tokenized mechanisms that can't be a single utility class
+      (raw values live HERE, the one file allowed them; components stay
+      bracket-free per TD.6). Product components (TD.5) consume these.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* Diagonal hatch — the ONLY sanctioned gradient (design-system.md §3.8): the
+   9:16 video-preview placeholder before a real render exists. A 135° repeating
+   stripe of --surface-3 over --stripe, both tokens, so it re-themes. Two pitches
+   because the two mirrors differ: VariantCard uses a 10px band (0 10px / 10px
+   20px), SafeZoneOverlay a 12px band (0 12px / 12px 24px). Kept as explicit
+   utilities rather than an arbitrary bg-[…] in the component. */
+@utility hatch-9x16 {
+  background-image: repeating-linear-gradient(
+    135deg,
+    var(--surface-3) 0 10px,
+    var(--stripe) 10px 20px
+  );
+}
+@utility hatch-9x16-wide {
+  background-image: repeating-linear-gradient(
+    135deg,
+    var(--surface-3) 0 12px,
+    var(--stripe) 12px 24px
+  );
+}
+
+/* Pipeline-node pulse ring color per status. The mirror sets --pulse-color
+   inline with raw hex (#f59e0b66 checkpoint, #3b82f655 running); those raw
+   values belong here, keyed off the data-status the component stamps (mirrors
+   the canvas data-status pattern, design-system.md §3.4). The `.animate-pulse-ring`
+   utility (from @theme --animate-pulse-ring) drives the ring and is silenced
+   under prefers-reduced-motion (block above) — so copying it as a CLASS, not an
+   inline animation, is what makes TD.5's reduced-motion requirement hold. */
+[data-slot='pipeline-node'][data-status='checkpoint'] {
+  --pulse-color: #f59e0b66;
+  --pulse-ring-static: #f59e0b22;
+}
+[data-slot='pipeline-node'][data-status='running'] {
+  --pulse-color: #3b82f655;
+  --pulse-ring-static: #3b82f622;
+}
+
+/* Static attention halo at rest for the active states (checkpoint/running):
+   the mirror (PipelineNode.jsx) paints a fixed box-shadow 0 0 0 3px <pulse>22
+   underneath, so the node keeps its ring even with prefers-reduced-motion (the
+   animation then simply doesn't run over it). --pulse-ring-static holds the
+   mirror's 3px-ring alpha (hex + "22"), raw values living here. The
+   `pulse-ring-static` utility applies it; the animate-pulse-ring class pulses on
+   top when motion is allowed. New DS foundation — lands on DS on upload. */
+@utility pulse-ring-static {
+  box-shadow: 0 0 0 3px var(--pulse-ring-static, transparent);
+}
+
+/* Legibility shadow for a mono caption placed directly over a 9:16 preview
+   (SafeZoneOverlay's preset label). Mirror value 0 1px 2px rgba(0,0,0,0.8);
+   raw value lives here rather than an arbitrary in the component. */
+@utility caption-shadow {
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
 }

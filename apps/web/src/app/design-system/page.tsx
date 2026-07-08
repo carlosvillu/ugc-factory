@@ -3,6 +3,7 @@ import { AppearanceSwitchers } from '@/components/design-system/appearance-switc
 import { ComponentSpecimens } from '@/components/design-system/component-specimens';
 import { FoundationSpecimens } from '@/components/design-system/foundation-specimens';
 import { OverlaySpecimens } from '@/components/design-system/overlay-specimens';
+import { ProductSpecimens } from '@/components/design-system/product-specimens';
 
 export const metadata: Metadata = {
   title: 'Design system · UGC Factory',
@@ -30,6 +31,8 @@ export default function DesignSystemPage() {
       <ComponentSpecimens />
 
       <OverlaySpecimens />
+
+      <ProductSpecimens />
 
       <FoundationSpecimens />
     </main>

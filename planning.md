@@ -153,7 +153,7 @@ Decisiones del usuario (2026-07-07): la fase se ejecuta tras T0.1 y **antes** de
 - **Verificación**: CUA revisa las secciones nuevas en dark y light (coherencia con las foundations); `DesignSync list_files` muestra los ficheros nuevos en el proyecto y el espejo local se regenera incluyéndolos.
   - **Nota (clarificación menor 2026-07-07, regla 6)**: el warning dev-only de Base UI Toast (`flushSync` en `ToastRoot`, react-dom lo strippea en prod) NO bloquea el PASS de la cláusula CUA — deuda upstream, consola limpia confirmada contra `next build && next start`. Ver la excepción estrecha en `testing/references/cua.md` §Paso 3. La **cláusula 2 (upload a DesignSync + espejo regenerado)** se ejecuta al final de la fase FD, cuando el usuario autorice DesignSync con `/design-login` (decisión 2026-07-07): hasta entonces TD.4 permanece con la cláusula 1 verificada y la 2 pendiente.
 
-#### TD.5 · Componentes de producto (presentacionales puros)
+#### TD.5 · Componentes de producto (presentacionales puros) [x] 2026-07-08 — PASS, ver docs/verifications/TD.5/
 - **Depende de**: TD.3
 - **Entrega**: `pipeline-node`, `checkpoint-banner`, `variant-card`, `spend-ledger`, `safe-zone-overlay` en `components/ui/` como presentacionales PUROS (props planas; prohibido importar tipos de dominio de `@ugc/core` — las features de F0 los envolverán), fieles a `components/product/` del espejo, incl. `pulseRing` en estados activos y el hatch diagonal como placeholder 9:16; secciones en `/design-system`.
 - **Verificación**: CUA vs `pipeline-node.card.html` y `variant-spend-safezone.card.html` (dark y light); el pulso se apaga con `prefers-reduced-motion` sin perder el estado visible.

@@ -18,11 +18,26 @@ import { cn } from '@/lib/utils';
 //     short accent segment that slides across the track via the DS keyframe
 //     (--animate-progress-indeterminate), so "en curso" is clearly distinct from
 //     "completado". The slide is silenced under prefers-reduced-motion (globals.css).
+//
+// SSR: Base UI builds aria-valuetext via Intl.NumberFormat(locale, {style:
+// 'percent'}). With no locale it falls back to the runtime default, which
+// differs between Node (server → "66 %", NBSP) and the browser (client →
+// "66%") → a hydration mismatch that logs a console.error even in production.
+// We pin a fixed locale ('en-US', deterministic and NBSP-free for percents) so
+// server and client produce the identical string. A caller can still override
+// it via props.
+const PROGRESS_LOCALE = 'en-US';
+
 type ProgressProps = React.ComponentProps<typeof BaseProgress.Root>;
 
-export function Progress({ className, value, ...props }: ProgressProps) {
+export function Progress({ className, value, locale, ...props }: ProgressProps) {
   return (
-    <BaseProgress.Root data-slot="progress" value={value} {...props}>
+    <BaseProgress.Root
+      data-slot="progress"
+      value={value}
+      locale={locale ?? PROGRESS_LOCALE}
+      {...props}
+    >
       <BaseProgress.Track
         data-slot="progress-track"
         className={cn(

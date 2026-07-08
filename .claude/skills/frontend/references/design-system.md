@@ -95,6 +95,12 @@ Tailwind v4 se configura en CSS (no existe `tailwind.config.js`). TODO valor vis
 [data-accent='amber']   { /* … */ }
 [data-accent='cyan']    { /* … */ }
 
+/* densidad por atributo (toggle escribe data-density en <html>); balanced es el
+   default en :root. Redefine --ui-fs → todo lo dimensionado en la escala reacciona. */
+[data-density='compact']     { --ui-fs: 13px; }
+[data-density='balanced']    { --ui-fs: 14px; }
+[data-density='comfortable'] { --ui-fs: 15px; }
+
 /* ── 2) Mapeo a Tailwind: naming 1:1 con el DS ──────────────────────────────── */
 @theme inline {
   --color-bg: var(--bg);                    /* → bg-bg */
@@ -156,7 +162,9 @@ Lo de arriba es el ESQUEMA con los valores dark ya reales; la lista completa y e
 
 ## 3. Reglas de uso
 
-1. **Solo clases semánticas de token.** `bg-surface`, `text-text-2`, `border-border-2`, `bg-accent-soft`, `rounded-md`, `shadow-sm`, `font-mono`. Prohibido fuera de `globals.css`: paletas crudas de Tailwind (`bg-blue-500`, `text-zinc-400`), hex/rgb inline (`bg-[#1e40af]`), píxeles mágicos (`rounded-[10px]`). Por qué: un color crudo se salta el DS, no reacciona a tema/acento y hace imposible el retheme. Desde TD.6 el lint lo bloquea.
+1. **Solo clases semánticas de token.** `bg-surface`, `text-text-2`, `border-border-2`, `bg-accent-soft`, `rounded-md`, `shadow-sm`, `font-mono`. Prohibido fuera de `globals.css`: paletas crudas de Tailwind (`bg-blue-500`, `text-zinc-400`), hex/rgb inline (`bg-[#1e40af]`), valores arbitrarios crudos con corchetes (`rounded-[10px]`, `[color:#fff]`, `[--gap:16px]`). Por qué: un color crudo se salta el DS, no reacciona a tema/acento y hace imposible el retheme. Desde TD.6 el lint lo bloquea.
+   - **Excepción sancionada (TD.6): inyectar un token vía var** — `[--pulse-color:var(--warning)]` está PERMITIDO (mete un token existente en una custom property que otra clase consume); lo que se veta es el VALOR crudo (`[--gap:16px]`, `[color:#fff]`). La distinción es "token-vía-var (ok)" vs "valor literal (error)".
+   - **Escape hatch para valores runtime/no-tokenizables: `style` inline, NO corchetes.** Anchos/porcentajes calculados en runtime (React Flow dimensiona el nodo; `width` de Progress; los insets `%` de SafeZoneOverlay/SpendLedger) y los pocos `border-width` sin token (`borderWidth: '1.5px'` en SafeZoneOverlay, `'3px'` en el spinner de VariantCard, fieles al espejo px-exacto) van por `style={{…}}` inline con los colores SIEMPRE tokenizados. Es el camino sancionado desde TD.5: Tailwind no puede emitir esos valores como clase y TD.6 prohíbe el corchete arbitrario, así que un `style` inline con un número/porcentaje runtime es correcto y el reviewer NO debe confundirlo con un color crudo. Un caller `style` siempre gana sobre el default.
 2. **Temas y acento por atributo, nunca por media query.** El toggle escribe `data-theme`/`data-accent` en `<html>`; los componentes NO usan prefijos `dark:`/`light:` para colores — los tokens cambian solos. `light:` queda para lo no tokenizable.
 3. **El acento JAMÁS significa estado.** `--accent` = marca/acción primaria (y es conmutable: indigo/emerald/amber/cyan). Los estados usan los semánticos FIJOS `success/warning/danger/info` (+ `violet`, reservado a «inferido»/«premium tier»). Un botón de éxito verde-accent o un error pintado con accent es un bug de DS.
 4. **Los estados del dominio se mapean a los semánticos en UNA función pura** (con test unitario — `testing/references/frontend.md` §1):
@@ -192,32 +200,68 @@ export function statusClass(status: StepStatus): string {
 
    Hay exactamente **dos mecanismos sancionados**, ambos sobre los MISMOS tokens semánticos: (a) `statusClass()` — la agrupación vive SOLO ahí; (b) el nodo del canvas, que estila varias propiedades por estado, usa `data-status={status}` + variantes literales `data-[status=…]:` (canvas.md §4). Un tercer mecanismo es un error de revisión.
 5. **Nunca construyas clases por concatenación** (`bg-${color}`): Tailwind no las ve. Strings literales completos, elegidos por lookup o condicional.
-6. **Espaciado**: la escala 4 px del DS ES la escala estándar de Tailwind (`p-4`, `gap-2`, `p-6` para el padding interno de cards). Un valor `[…px]` solo si Claude Design lo define, y entonces se tokeniza.
+6. **Espaciado**: la escala 4 px del DS ES la escala estándar de Tailwind (`p-4`, `gap-2`, `p-6` para el padding interno de cards). **El spacing FRACCIONARIO es el mecanismo de fidelidad al px, no el corchete arbitrario** (aprendido en TD.2, vetado el redondeo en TD.6): `size-4.5`=18px, `w-9.5`=38px, `size-8.5`=34px, `py-3.25`=13px, `w-57.5`=230px… usan el `--spacing` de 4px de Tailwind v4 (`n × 4px`), son lint-limpios y casan el px del espejo EXACTO. Regla dura: cuando el espejo pide un valor entre pasos enteros, se usa el paso fraccionario (`size-4.5`), NUNCA se redondea a la escala entera (`size-5`) NI se escribe un arbitrario (`size-[18px]`). Solo font-size sin paso fraccionario cercano se "snapea" al token nombrado más próximo (el glifo 15px de Alert → `text-body`, el "+" 20px de EmptyState → `text-h2`) — anotado en el propio componente.
 7. **Iconografía sin librerías.** El DS usa glifos Unicode en la fuente de UI (✓ ✕ ⚠ i ◆ ↺ ▼ +) y dots de estado (span redondo de 6–7 px). `lucide-react`, heroicons o cualquier icon font están PROHIBIDOS (lint TD.6). Ojo: el código que genera shadcn trae imports de `lucide-react` — sustituirlos por glifos es parte del ajuste (§6). Emojis: nunca.
 8. **Sin gradientes, blur, glassmorphism ni texturas.** Única excepción: el hatch diagonal (`repeating-linear-gradient` 45°, `--surface-3` + `--stripe`) como placeholder de vídeo 9:16 sin renderizar.
 9. **La barra izquierda de 4 px es el motivo de «estado de un vistazo»**: exclusiva de filas/cards con estado (nodos del pipeline, rows de lista). No es decoración genérica de cards.
 10. **El copy también es DS**: español, sentence case, sin emojis, datos siempre en `font-mono` (si un valor se puede pegar en un terminal o spreadsheet, es mono: costes, ids, timestamps, confianzas), y el patrón «extraído» (con cita) vs «inferido · 0.78» en toda superficie de output de IA. Detalle en `docs/design-system/readme.md`.
 
-## 4. components/ui como espejo del DS: inventario
+## 4. components/ui como espejo del DS: inventario (cerrado en TD.7)
 
-`apps/web/src/components/ui/` es el espejo 1:1 del inventario de Claude Design: un fichero kebab-case por componente. **Usar el componente del DS es obligatorio**: si existe `components/ui/<x>`, escribir HTML crudo estilado equivalente es un error de review.
+`apps/web/src/components/ui/` es el espejo 1:1 del inventario de Claude Design: un fichero kebab-case por componente. Son **26 componentes**, agrupados en las 8 familias del DS (core · forms · feedback · navigation · data · overlay · structure · product). Este inventario está **cerrado contra el código real committeado en TD.1–TD.6** (cada fila leída del `.tsx`, no del espejo — pueden diferir, y donde difieren gana el código + el espejo, señalado abajo). Si el código cambia, esta tabla se actualiza en la misma tarea; nunca en silencio.
 
-- **Origen**: `npx shadcn add <componente>` (shadcn/ui sobre **Base UI** — Radix es opt-in que NO usamos) y ajuste al DS: variantes `cva` con los MISMOS nombres que el DS, clases no semánticas sustituidas, imports de lucide sustituidos por glifos, `data-slot` conservado (selector estable para tests/CUA), a11y de la primitiva intacta.
-- **Los componentes de producto son presentacionales PUROS**: props planas, prohibido importar tipos de dominio de `@ugc/core` (regla de dependencia de SKILL.md). El wrapper de dominio (que conoce `StepRun` etc.) vive en su carpeta de dominio y se construye en la tarea de la feature.
+> **OBLIGATORIEDAD (vinculante, aplica a F0 y en adelante).** Si existe el componente del DS (`components/ui/<x>`), **usarlo es OBLIGATORIO**. Escribir HTML crudo estilado equivalente —un `<button>` con clases, un `<div role="dialog">` a mano, una tabla de `<div>`s en vez de `MetricsTable`, un `<input>` suelto en vez de `Input`— **es un error de review, y el reviewer DEBE rechazarlo**. No es una recomendación: la primitiva del DS ya trae los tokens correctos, la a11y de la primitiva Base UI y el `data-slot` que testing/CUA consultan; reimplementarla a mano rompe las tres cosas a la vez. Si el componente que necesitas NO existe, se crea siguiendo las foundations del DS y se sube a Claude Design (§1, §6) ANTES de usarlo — no se improvisa HTML crudo «provisional».
 
-Inventario (fase FD; espec en `docs/design-system/components/<grupo>/`):
+- **Origen `DS`**: existía en Claude Design; se genera con `npx shadcn add <x>` (shadcn/ui sobre **Base UI** — Radix es opt-in que NO usamos) o a mano para los que shadcn no trae, y se ajusta al DS (variantes `cva` con los MISMOS nombres del espejo, clases semánticas de token, glifos Unicode en vez de lucide, `data-slot` conservado, a11y de la primitiva intacta).
+- **Origen `TD.4`**: primitiva que el DS original NO definía (overlays + estructura); se creó desde las foundations del DS y se **subió a Claude Design** (grupos nuevos *overlay* y *structure*; upload cerrado en TD.4).
+- **Los componentes de producto y presentacionales son PUROS**: props planas, prohibido importar tipos de dominio de `@ugc/core` (regla de dependencia de SKILL.md). El wrapper de dominio (que conoce `StepRun`, `AdVariant`…) vive en su carpeta de dominio y se construye en la tarea de la feature (F0).
 
-| Fichero | Grupo DS | Origen | Notas |
-|---|---|---|---|
-| `button.tsx` | core | DS | `primary\|secondary\|ghost\|danger\|danger-ghost` × `sm\|md\|lg` + `loading` + `icon` |
-| `input.tsx` `textarea.tsx` `select.tsx` `checkbox.tsx` `switch.tsx` `slider.tsx` | forms | DS | nombres de estados/tamaños del espejo |
-| `badge.tsx` `alert.tsx` `empty-state.tsx` | feedback | DS | semánticos fijos; violet solo «inferido/premium» |
-| `tabs.tsx` | navigation | DS | operable por teclado |
-| `metrics-table.tsx` | data | DS | tabla genérica (la usan `/metrics` y `/spend`) |
-| `pipeline-node.tsx` `checkpoint-banner.tsx` `variant-card.tsx` `spend-ledger.tsx` `safe-zone-overlay.tsx` | product | DS | presentacionales puros (ver arriba); pulseRing + hatch 9:16 |
-| `dialog.tsx` `sheet.tsx` `alert-dialog.tsx` `toast.tsx` `tooltip.tsx` `skeleton.tsx` `progress.tsx` `card.tsx` `separator.tsx` | — | TD.4 | fuera del DS original: se crean con sus foundations y se SUBEN a Claude Design |
+Inventario definitivo (variantes/props LEÍDAS del `.tsx`; espec del espejo en `docs/design-system/components/<grupo>/`):
 
-Tras TD.7 esta tabla se cierra con las variantes reales implementadas; si diverge del código, gana el código committeado + espejo y hay que actualizarla (nunca en silencio).
+| Fichero | Familia | Origen | Variantes / props reales | Notas |
+|---|---|---|---|---|
+| `button.tsx` | core | DS | `variant: primary\|secondary\|ghost\|danger\|danger-ghost` · `size: sm\|md\|lg` · `icon` (cuadrado) · `loading` (spinner + `aria-busy`, deshabilita) | única primitiva de botón; `#fff`→`text-text-on-accent`; ring único `ring-3 ring-ring` |
+| `input.tsx` | forms | DS | `mono` (Geist Mono para datos) · `error` (borde+ring danger, `aria-invalid`) + props nativas | `<input>` nativo; el label lo asocia el caller (le da el accessible name) |
+| `textarea.tsx` | forms | DS | `error` · `rows` (@default 3) + props nativas — **sin `mono`** (a diferencia de Input) | `<textarea>` nativo, resize vertical; label del caller |
+| `select.tsx` | forms | DS | `error` + props nativas de `<select>` | **`<select>` NATIVO, no Base UI** — desviación deliberada del inventario original (ver abajo); caret glifo `▼`, `appearance-none` |
+| `checkbox.tsx` | forms | DS | `label?` + props de `BaseCheckbox.Root` | glifo `✓`; **etiquetado = un solo `<button role=checkbox>`** (`nativeButton`), el texto ES el accessible name; sin `label` = box desnudo (caller pone `aria-label`) |
+| `switch.tsx` | forms | DS | (sin variantes propias) props de `BaseSwitch.Root` | pill 38×22, accent al `data-[checked]`; sin texto propio → el caller da el accessible name (`aria-label`/label) |
+| `slider.tsx` | forms | DS | `label?` (fila label+valor mono) · `aria-label` + props de `BaseSlider.Root` | el accessible name se REENVÍA al Thumb (`getAriaLabel`), no a Root — Root es el grupo (ver abajo) |
+| `badge.tsx` | feedback | DS | `tone: neutral\|accent\|success\|warning\|danger\|info\|violet` · `dashed` (provisional/estimado) · `mono` · `dot` | pill; `violet` reservado a «inferido/premium»; `dashed` ≠ «disabled» |
+| `alert.tsx` | feedback | DS | `tone: success\|warning\|danger\|info` (@default info) | glifo Unicode `✓ ⚠ ✕ i` (aria-hidden); `role` por urgencia: `danger`→`alert`, resto→`status` |
+| `empty-state.tsx` | feedback | DS | props: `title` · `description?` · `actionLabel?` · `onAction?` | placeholder de listas vacías; compone `Button`; chip `+`; el `title` es `<h3>` |
+| `tabs.tsx` | navigation | DS | props: `tabs: string[]` · `defaultActive?` (índice, @default 0) · `onChange?(index)` | **bar-only, sin `Tabs.Panel`** (fiel al espejo); Base UI da roles tablist/tab + teclado (←/→, Home/End, aria-selected) |
+| `metrics-table.tsx` | data | DS | props: `columns[{key,label,align?,mono?,width?}]` · `rows` · `renderCell?` | **`<table>` semántica** (`th scope=col`), desviación deliberada del grid-of-divs del espejo (exigida por a11y); usada por `/metrics` y `/spend` |
+| `dialog.tsx` | overlay | TD.4 | compuesto: `Dialog`/`Trigger`/`Close`/`Title`/`Description`/`Footer`/`DialogPopup{hideClose?}` | Base UI Dialog: modal (fondo `inert`), focus trap+return, Escape, aria-labelledby/describedby; glifo `✕` de cierre |
+| `sheet.tsx` | overlay | TD.4 | compuesto igual que Dialog + `SheetPopup{side?: left\|right, hideClose?}` | drawer = Base UI Dialog pinchado a un borde (mismo contrato a11y); slide neutralizado en reduced-motion |
+| `alert-dialog.tsx` | overlay | TD.4 | compuesto: `Title`/`Description`/`Footer`/`AlertDialogPopup` (+ `Trigger`/`Close`) | `role="alertdialog"`, modal forzado, **NO se cierra por click fuera** (solo acción o Escape) y sin `✕` — decisión deliberada para confirmaciones destructivas |
+| `toast.tsx` | overlay | TD.4 | `useToast().add({title,description,type})` con `type: success\|warning\|danger\|info` · `ToastProvider` (montar 1) | Base UI Toast owns el aria-live; barra 4px por tono + glifo Unicode + `✕`. Deuda upstream conocida: warning dev-only `flushSync` (muere en prod) |
+| `tooltip.tsx` | overlay | TD.4 | props: `content` · `children` · `side?` (@default top) · `TooltipProvider` (montar 1) | hover Y foco de teclado; **cablea a mano** `role="tooltip"`+`id`+`aria-describedby` (Base UI RC no lo emitía — ver abajo); sin flecha |
+| `card.tsx` | structure | TD.4 | compuesto: `Card`/`CardHeader`/`CardTitle`/`CardBody`/`CardFooter` | contenedor plano: `border` 1px, `rounded-lg`, `bg-surface`, `shadow-sm`; sin gradiente/glass |
+| `separator.tsx` | structure | TD.4 | `orientation?: horizontal\|vertical` (@default horizontal) | hairline 1px `bg-border`; Base UI Separator (role="separator" + aria-orientation) |
+| `skeleton.tsx` | structure | TD.4 | (sin variantes) `React.ComponentProps<'div'>` | bloque de carga `bg-surface-3` con pulse (reduced-motion respetado); `aria-hidden` (la región contenedora owns el `role=status`) |
+| `progress.tsx` | structure | TD.4 | `value` (0..max, o `null` = indeterminado) · `locale?` (@default `en-US`) + props de `BaseProgress.Root` | Base UI da `role=progressbar`+aria; **fija `locale='en-US'`** para evitar hydration mismatch en SSR (ver abajo) |
+| `pipeline-node.tsx` | product | DS | `status: done\|checkpoint\|running\|pending` · props: `code` · `title` · `meta` · `time?` · `cost?` · `width?` (@default 168) | PURO; barra 4px + dot/spinner por estado; `pulse-ring-static` + `animate-pulse-ring` en checkpoint/running; `data-status` para el canvas |
+| `checkpoint-banner.tsx` | product | DS | props: `title` · `description` · `onApprove?` · `onEdit?` · `onReject?` | PURO; compone `Button` (secondary/danger-ghost + un «Aprobar» tintado con los tokens `success` FIJOS, no accent re-tintado); chip `◆` warning |
+| `variant-card.tsx` | product | DS | `status: approved\|composing\|failed` · props: `filenameCode` · `title` · `tags?` · `duration?` · `cost?` · `tier?` (@default STD) · `actionHref?` | PURO; preview 9:16 con `hatch-9x16`; compone `Badge`; glifo decorativo separado del label accesible |
+| `spend-ledger.tsx` | product | DS | props: `spent` · `budget` · `warnAt?` (@default 70) · `dangerAt?` (@default 90) · `note?` | PURO; barra de presupuesto con ticks; math en el helper puro `spendPct()` (unit-tested) |
+| `safe-zone-overlay.tsx` | product | DS | `preset?: universal\|tiktok\|meta\|off` (@default universal) · `width?` (@default 236) | PURO; guía safe-zone dashed sobre `hatch-9x16-wide` + scrim `--overlay`; insets `%` por preset vía `style` inline |
+
+**Desviaciones deliberadas del inventario ORIGINAL de la skill (código gana, jerarquía PRD/planning):**
+- **`select.tsx` es un `<select>` nativo**, no Base UI. El espejo especifica un select nativo estilado; el nativo es el 1:1 más fiel a la card y es accesible de serie (`role=combobox`, teclado, picker móvil) con el label del caller. Un listbox de Base UI portalizado divergiría visualmente y añadiría riesgo de posicionamiento sin ganancia de a11y. Flaggeado en el report de TD.2.
+- **`metrics-table.tsx` es una `<table>` semántica** (no el grid-of-divs del espejo): lo exige la propia Verificación de a11y de TD.3. `<th scope=col>` nombra las columnas para el lector.
+
+**Foundations nuevas creadas en la fase FD (`globals.css`)** — tokens/utilidades que estos componentes necesitaban y no existían; F0 las tiene disponibles:
+
+| Foundation | Para qué | Estado en el DS |
+|---|---|---|
+| `--overlay` | scrim de los overlays (Dialog/Sheet/AlertDialog/Toast backdrops, SafeZoneOverlay) | ✅ token subido (TD.4) |
+| `--overlay-strong` | scrim más opaco (chip de duración de VariantCard sobre el preview) | solo local — mecanismo, no contenido del DS (ver abajo) |
+| `pulse-ring-static` (`@utility`) + vars `--pulse-ring-static-*` por estado | halo de atención ESTÁTICO de PipelineNode (persiste bajo reduced-motion mientras `animate-pulse-ring` pulsa encima) | solo local — mecanismo |
+| `hatch-9x16` / `hatch-9x16-wide` (`@utility`) | placeholder de vídeo 9:16 sin renderizar (VariantCard / SafeZoneOverlay) — la ÚNICA excepción a la prohibición de gradientes (§3.8) | solo local — mecanismo |
+| `caption-shadow` | legibilidad de texto blanco sobre un frame arbitrario (label de SafeZoneOverlay) | solo local — mecanismo |
+
+`--overlay` es un **token** de color y llegó al DS en el upload de TD.4. Las otras cuatro **NO se suben al DS, a propósito** (verificado por grep 2026-07-08): son **mecanismos de compilación de nuestro código Tailwind** (`@utility` no existe en el CSS plano del DS) que reproducen patrones que las specs `.jsx` del DS **ya expresan inline** con primitivas existentes — SafeZoneOverlay/VariantCard escriben el `repeating-linear-gradient(var(--surface-3) … var(--stripe))` a mano (= el hatch); PipelineNode usa `animation: ugc-pulse-ring`/`ugc-spin` (keyframes ya en `motion.css` del DS); el border/shadow del spinner van inline. Ninguna spec del DS referencia `--overlay-strong`/`--pulse-ring-static`/`hatch-*`/`caption-shadow`. Subirlas inyectaría contenido muerto que el DS no puede consumir. No es deuda: el espejo local == remoto, y el principio «el DS manda» se respeta porque el DS ya contiene, en primitivas, todo lo que estas utilidades encapsulan en código.
 
 ## 5. Gotcha monorepo: @source
 

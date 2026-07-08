@@ -1,0 +1,10 @@
+# Consola del navegador — recorrido CUA /design-system (TD.7)
+# Capturada tras las 4 combinaciones (dark/light × indigo/emerald/amber) + apertura de overlays + N enqueues de toast.
+
+[error] flushSync was called from inside a lifecycle method. React cannot flush when React is already rendering. Consider moving this call to a scheduler task or micro task.  [8 veces]
+
+## Análisis
+- Único mensaje en toda la sesión. Se dispara SOLO al encolar un toast (botones Éxito/Aviso/Error/Info).
+- Origen: Base UI Toast (dependencia de terceros fijada) — mismo warning caracterizado en TD.4 (ToastRoot llama flushSync en un lifecycle en dev).
+- NO proviene de código propio. Cambiar tema/acento/densidad, abrir dialog/sheet/alert-dialog: consola limpia (0 mensajes).
+- Excepción cua.md §Paso 3: dev-only de dependencia que muere en prod build → deuda upstream, no bloquea PASS. Re-confirmado en next build && next start (ver prod-build-console.txt).

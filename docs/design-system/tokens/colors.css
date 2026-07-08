@@ -4,6 +4,9 @@
    [data-theme="light"]. Accent is switchable independently under
    [data-accent="…"]; indigo is the default accent (defined in :root).
    Semantic status colors are FIXED across themes/accents.
+
+   --text-on-accent is per-accent (WCAG AA): white on the darker indigo,
+   near-black on the bright emerald/amber/cyan accents where white would fail.
    ============================================================ */
 
 :root {
@@ -36,12 +39,13 @@
   --shadow-md: 0 6px 18px rgba(0, 0, 0, 0.55);
   --shadow-lg: 0 18px 48px rgba(0, 0, 0, 0.6);
 
-  /* ---- Accent: indigo (default) ---- */
-  --accent: #6366f1;
-  --accent-hover: #7c80f6;
-  --accent-soft: #6366f126;
-  --accent-border: #6366f159;
-  --ring: #6366f166;
+  /* ---- Accent: indigo (default) ----
+     Darkened from #6366f1 to #5457e5 so white text clears WCAG AA (5.42:1). */
+  --accent: #5457e5;
+  --accent-hover: #6d71ea;
+  --accent-soft: #5457e526;
+  --accent-border: #5457e559;
+  --ring: #5457e566;
 
   /* ---- Semantic status (fixed) ---- */
   --success: #22c55e;
@@ -101,6 +105,8 @@
   --accent-soft: #10b98126;
   --accent-border: #10b98159;
   --ring: #10b98166;
+  /* white on emerald is 2.54:1 (fails AA); near-black is 7.80:1. */
+  --text-on-accent: #0a0a0b;
 }
 
 /* ---- Accent: amber ---- */
@@ -110,6 +116,8 @@
   --accent-soft: #f59e0b26;
   --accent-border: #f59e0b59;
   --ring: #f59e0b66;
+  /* white on amber is 2.15:1 (fails AA); near-black is 9.21:1. */
+  --text-on-accent: #0a0a0b;
 }
 
 /* ---- Accent: cyan ---- */
@@ -119,4 +127,6 @@
   --accent-soft: #06b6d426;
   --accent-border: #06b6d459;
   --ring: #06b6d466;
+  /* white on cyan is 2.43:1 (fails AA); near-black is 8.15:1. */
+  --text-on-accent: #0a0a0b;
 }

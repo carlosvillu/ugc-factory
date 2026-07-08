@@ -1,0 +1,11 @@
+# Consola en BUILD DE PRODUCCIÓN (next build && next start, puerto 3100) — TD.7
+
+Build: pnpm --filter @ugc/web build → EXIT 0, /design-system prerenderizada como estática (ver prod-build.log).
+Servidor: next start en :3100 (PID confirmado escuchando).
+
+Acción: navegar a /design-system y encolar los 4 tipos de toast (Éxito/Aviso/Error/Info) x2 = 8 enqueues (igual que en dev).
+Resultado consola: <no console messages found>  ← LIMPIA.
+
+Conclusión: el warning flushSync de Base UI Toast es dev-only y React lo strippea en producción.
+Cumple la excepción estrecha de cua.md §Paso 3 (dependencia fijada + muere en prod) → deuda upstream, NO bloquea el PASS.
+Coincide con lo ya caracterizado en TD.4.

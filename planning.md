@@ -163,7 +163,7 @@ Decisiones del usuario (2026-07-07): la fase se ejecuta tras T0.1 y **antes** de
 - **Entrega**: reglas ESLint (`eslint.config.ts`, scope `apps/web`) que prohíben: clases de paleta cruda de Tailwind (`bg-blue-500`…), colores/valores arbitrarios en `className` (`bg-[#…]`, `rounded-[10px]`) fuera de `globals.css`, e imports de `@radix-ui/*`, `lucide-react` o cualquier librería de iconos (adaptando las ideas de `_adherence.oxlintrc.json` del proyecto de Claude Design a nuestro flat config).
 - **Verificación**: un fichero de prueba con `bg-blue-500`, `text-[#fff]` e `import { X } from 'lucide-react'` hace fallar `pnpm lint` con mensajes que nombran la regla violada; al retirarlo, `pnpm gate` queda verde.
 
-#### TD.7 · Skill frontend cerrada contra la realidad + E2E de fase
+#### TD.7 · Skill frontend cerrada contra la realidad + E2E de fase [x] 2026-07-08 — PASS (E2E automatizable + OK visual del usuario), ver docs/verifications/TD.7/
 - **Depende de**: TD.4, TD.6
 - **Entrega**: skill `frontend` actualizada con el inventario definitivo de `components/ui/` (los ~26 con sus variantes reales) en `references/design-system.md`/`components.md`, obligatoriedad explícita («si existe el componente del DS, usarlo es obligatorio; HTML crudo estilado equivalente = error de review») y ajustes descubiertos durante la fase anotados en el journal.
 - **Verificación (E2E de fase)**: recorrido CUA completo de `/design-system` — dark, light y 2 acentos — con evidencia visual en `docs/verifications/TD.7/`; `pnpm gate` verde; y **revisión humana final del showcase** (parada de fin de fase: el usuario da el OK visual).

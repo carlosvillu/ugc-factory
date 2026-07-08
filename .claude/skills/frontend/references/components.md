@@ -98,40 +98,58 @@ npx shadcn add button dialog select badge   # copia los ficheros a src/component
 
 **Editar el código copiado es lo esperado, no una herejía.** El componente generado es el punto de partida; se ajusta a los tokens y variantes del DS de Claude Design (ver `design-system.md`). Eso sí: cada edición debe mantener las primitivas Base UI y sus atributos aria intactos — se toca la piel, no el esqueleto.
 
-**Variantes con cva, con los MISMOS nombres de variante que el DS de Claude Design.** Si el DS llama a las variantes de Badge `default | success | warning | destructive`, el `cva` usa esos nombres literales — la traducción DS↔código es 1:1 o `/design-sync` no podrá reconciliarlos el día que exista:
+**Variantes con cva, con los MISMOS nombres de variante que el DS de Claude Design.** Los nombres de variante son literales del espejo — la traducción DS↔código es 1:1 o `/design-sync` no podrá reconciliarlos el día que exista. El Badge real usa `tone` (7 tonos) + los modificadores `dashed`/`mono`/`dot`, con tokens `-soft`/`-border`/fg (el inventario completo vive en `design-system.md` §4):
 
 ```tsx
-// apps/web/src/components/ui/badge.tsx (extracto)
+// apps/web/src/components/ui/badge.tsx (extracto real, TD.3)
 import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 
 const badgeVariants = cva(
-  'inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium',
+  'inline-flex items-center gap-1.25 whitespace-nowrap rounded-full border px-2.5 py-0.75 text-micro font-semibold',
   {
     variants: {
-      variant: {
-        default: 'bg-secondary text-secondary-foreground',
-        success: 'bg-success text-success-foreground',       // step succeeded
-        warning: 'bg-warning text-warning-foreground',       // waiting_approval
-        destructive: 'bg-destructive text-destructive-foreground', // failed
+      tone: {
+        neutral: 'border-border-2 bg-surface-3 text-text-2',
+        accent: 'border-accent-border bg-accent-soft text-accent',
+        success: 'border-success-border bg-success-soft text-success', // step succeeded
+        warning: 'border-warning-border bg-warning-soft text-warning', // waiting_approval
+        danger: 'border-danger-border bg-danger-soft text-danger',     // failed
+        info: 'border-info-border bg-info-soft text-info',
+        violet: 'border-violet-border bg-violet-soft text-violet',     // «inferido» / premium
       },
+      dashed: { true: 'border-dashed border-border-strong bg-transparent text-text-3', false: '' },
+      mono: { true: 'font-mono', false: 'font-sans' },
     },
-    defaultVariants: { variant: 'default' },
+    defaultVariants: { tone: 'neutral', dashed: false, mono: false },
   },
 );
 
-type BadgeProps = React.ComponentProps<'span'> & VariantProps<typeof badgeVariants>;
+type BadgeProps = Omit<React.ComponentProps<'span'>, 'color'> &
+  VariantProps<typeof badgeVariants> & { dot?: boolean };
 
-export function Badge({ className, variant, ...props }: BadgeProps) {
-  return <span data-slot="badge" className={cn(badgeVariants({ variant }), className)} {...props} />;
+export function Badge({ className, tone = 'neutral', dashed, mono, dot, children, ...props }: BadgeProps) {
+  return (
+    <span data-slot="badge" className={cn(badgeVariants({ tone, dashed, mono }), className)} {...props}>
+      {/* dot: span redondo aria-hidden tintado con el fg del tono */}
+      {children}
+    </span>
+  );
 }
 ```
 
-(Solo clases semánticas de token — `bg-success`, no `bg-green-500`; la lista de tokens vive en `design-system.md`.)
+(Solo clases semánticas de token — `bg-success-soft`, no `bg-green-500`; los estados usan los semánticos FIJOS, `accent` es la marca, NUNCA estado — `design-system.md` §3.3.)
 
 **`data-slot` para estilos internos.** Cada parte de un componente compuesto lleva `data-slot="card-header"`, `data-slot="dialog-footer"`… Permite que un padre estilice partes internas (`[&_[data-slot=badge]]:opacity-50`) sin añadir props de estilo al componente. Es el mecanismo estándar del código que genera shadcn: consérvalo al editar y añádelo en partes nuevas.
 
 **Componentes que shadcn no trae → Base UI directo.** Se crea el fichero en `components/ui/` a mano usando las primitivas de Base UI (mismo paquete que ya importan los ficheros generados — copia el import de cualquier componente existente). Dos avisos: Base UI compone con la prop `render` (no existe `asChild`, eso era Radix), y su API evoluciona — **consulta la doc actualizada vía Context7 MCP antes de escribir contra ella de memoria**.
+
+**Trampas de a11y de Base UI descubiertas en la fase FD (heredadas por los wrappers de dominio de F0):**
+
+1. **Una primitiva Base UI en esta RC puede NO cablear `role`/aria por sí sola** → cablearlo explícito y VERIFICAR en el árbol de accesibilidad, no asumirlo. El Tooltip necesitó `role="tooltip"` + un `id` en el popup + `aria-describedby` en el trigger a mano (Base UI no los emitía). Corolario: cuando envuelvas una primitiva, mira el árbol a11y real (CUA/testing) antes de dar por hecho que la semántica está.
+2. **El accessible name no «sube» de un ancestro a un descendiente.** El `role="slider"` del Slider vive en el `<input>` anidado en el Thumb, DESCENDIENTE de Root; un `aria-label` en Root (el grupo) NO nombra el control. El Slider reenvía el label al Thumb (`getAriaLabel`) y lo quita de Root. Mismo principio para cualquier primitiva donde el rol está en una parte interna.
+3. **Control etiquetado de Base UI = UN solo elemento interactivo, no un `<label>` envolviendo la Root.** El Checkbox etiquetado se renderiza como un único `<button role="checkbox">` (`nativeButton`) cuyo texto visible ES el accessible name. Envolver la Root en un `<label>` (o `Field.Label`) doble-dispara (el span togglea y el label re-activa el input oculto → net no-op: no togglea al click); y un `<label htmlFor>` hermano no puede apuntar al control porque Base UI pone el `for` en el input oculto. Patrón vinculante para cualquier control etiquetado de Base UI.
+4. **Componentes que usan `Intl` en SSR deben fijar un `locale` determinista** o hay hydration mismatch (que dispara `console.error` TAMBIÉN en prod, no solo en dev). Progress fija `locale='en-US'` porque Base UI construye `aria-valuetext` con `Intl.NumberFormat`: sin locale, Node (server, p.ej. `es-ES`→"66 %" con NBSP) y el navegador (client→"66%") producen strings distintos. **Regla para F0**: cualquier componente con fecha/número/`%`/moneda formateado en SSR fija locale explícito.
 
 ## 4. Cuándo extraer un hook (y cuándo no escribir un Effect)
 
@@ -177,7 +195,7 @@ Ejemplo con el envelope de error de la API (`{code, message, details}` — contr
 
 ```tsx
 {saveError ? (
-  <div role="alert" className="text-destructive">
+  <div role="alert" className="text-danger">
     {saveError.message}
     {saveError.details?.suggestion ? <p>{saveError.details.suggestion}</p> : null}
   </div>

@@ -279,6 +279,6 @@ Las credenciales (fal, Anthropic, Firecrawl…) viven cifradas en `app_setting` 
 
 - **Validación del lado servidor, `withRoute`, `AppError` y la construcción del envelope** → skill **backend**, `references/api.md`. Este documento solo consume el envelope.
 - **El store del run, el hook SSE y por qué `invalid_transition` se resuelve con re-sync** → `references/state-and-sse.md`.
-- **Los componentes visuales del form (Button, Input, Select de shadcn/Base UI), cva y tokens** → `references/components.md` y `references/design-system.md`.
+- **Los componentes visuales del form (`Button`, `Input`, `Textarea`, `Select` —nativo—, `Checkbox`, `Switch`, `Slider`), cva y tokens** → `references/components.md` y `references/design-system.md` (§4 el inventario con sus props reales).
 - **Cómo se testean estos formularios** (msw, `useHttpMocks`, FakeEventSource, asserts de loading/error) → `testing/references/frontend.md` §5–6, fuente de verdad. Aquí solo se garantiza que lo observable existe.
 - **El flujo completo en navegador** (URL → CP1 → CP2 → CP3) → `testing/references/e2e.md` y el gate CUA (`testing/references/cua.md`).

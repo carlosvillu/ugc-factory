@@ -26,6 +26,11 @@
 
   --stripe: rgba(255, 255, 255, 0.045);
 
+  /* ---- Overlay scrim behind modal dialogs/sheets/alert-dialogs (TD.4) ----
+     Pure black at the opacity the readme fixes for the video-preview overlay.
+     Theme-independent (a dark scrim in both themes). */
+  --overlay: rgba(0, 0, 0, 0.34);
+
   /* ---- Elevation (dark) ---- */
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
   --shadow-md: 0 6px 18px rgba(0, 0, 0, 0.55);
@@ -80,6 +85,9 @@
   --text-4: #a1a1aa;
 
   --stripe: rgba(0, 0, 0, 0.035);
+
+  /* Overlay scrim stays a dark tint over light surfaces (TD.4). */
+  --overlay: rgba(0, 0, 0, 0.34);
 
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.06);
   --shadow-md: 0 6px 18px rgba(0, 0, 0, 0.08);

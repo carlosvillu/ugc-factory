@@ -147,7 +147,7 @@ Decisiones del usuario (2026-07-07): la fase se ejecuta tras T0.1 y **antes** de
 - **Entrega**: `badge`, `alert`, `empty-state`, `tabs`, `metrics-table` en `components/ui/`, fieles al espejo (`components/{feedback,navigation,data}/`); secciones en `/design-system`.
 - **Verificación**: CUA vs `badges-alerts.card.html`, `empty-state.card.html`, `tabs.card.html` y `metrics-table.card.html` (dark y light); tabs operables por teclado.
 
-#### TD.4 · Primitivas fuera del DS + subida a Claude Design
+#### TD.4 · Primitivas fuera del DS + subida a Claude Design [x] 2026-07-08 — PASS (cláusula 1 verifier + cláusula 2/upload bucle), ver docs/verifications/TD.4/
 - **Depende de**: TD.3
 - **Entrega**: `dialog`, `sheet`, `alert-dialog`, `toast`, `tooltip`, `skeleton`, `progress`, `card`, `separator` siguiendo las foundations del DS (hairlines 1 px, radios 5/7/10 px, focus ring único, sin glassmorphism ni gradientes, glifos Unicode); secciones en `/design-system`; subida de los 9 al proyecto de Claude Design en su formato (`.jsx` + `.d.ts` + `.prompt.md` + card) vía `DesignSync`, para que el DS siga siendo inventario completo (decisión 2026-07-07). Si el subagente no tiene acceso a `DesignSync`, la subida la ejecuta el bucle principal en el CLOSE.
 - **Verificación**: CUA revisa las secciones nuevas en dark y light (coherencia con las foundations); `DesignSync list_files` muestra los ficheros nuevos en el proyecto y el espejo local se regenera incluyéndolos.

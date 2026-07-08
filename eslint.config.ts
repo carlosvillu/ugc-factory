@@ -102,6 +102,122 @@ export default defineConfig(
     rules: { ...reactHooks.configs['recommended-latest'].rules },
   },
 
+  // ── 5b. apps/web: adherencia al Design System (TD.6) ─────────────────────
+  // El código nuestro usa SOLO clases de token del DS (bg-surface, text-text-2,
+  // bg-accent…). Estas reglas bloquean las tres fugas que se saltan el DS y
+  // rompen tema/acento/retheme (frontend/references/design-system.md §3). Adapta
+  // las IDEAS de docs/design-system/_adherence.oxlintrc.json (pensado para
+  // inline styles del espejo) a NUESTRO flujo Tailwind-en-className. Los valores
+  // crudos SÍ son válidos en globals.css (es la fuente de tokens): esta regla no
+  // aplica a CSS (glob .ts/.tsx) y no toca ese fichero.
+  {
+    files: ['apps/web/**/*.{ts,tsx}'],
+    rules: {
+      // (a) className: paleta cruda de Tailwind y (b) valores arbitrarios.
+      // Se casan sobre string literals Y template literals (las clases viven en
+      // className="…", `…${x}…`, cva(…) y cn(…)); esquery no ve TemplateElement
+      // vía [value=…] (su value es un objeto) → hace falta el par de selectores.
+      // TRADE-OFF DELIBERADO: el selector casa CUALQUIER string/template literal, no
+      // solo el que es valor de className/cva/cn. Acotarlo a className reintroduciría
+      // un hueco real: cva()/cn() reciben las clases como string/template planos sin
+      // atributo JSX que anclar. Hoy 0 ocurrencias de estos patrones fuera de clases
+      // en apps/web → no rompe nada; el regex es específico (escala numérica, prefijo
+      // de utilidad, forma [prop:valor]) y no caza prosa normal.
+      'no-restricted-syntax': [
+        'error',
+        // (a) Paleta cruda: bg-blue-500, text-gray-700, border-red-400… El sufijo
+        // numérico \\d{2,3} es lo que salva los tokens semánticos del DS
+        // (bg-violet-soft, text-accent no llevan escala numérica).
+        {
+          selector:
+            'Literal[value=/\\b(bg|text|border|ring|from|to|via|fill|stroke|decoration|outline|shadow|accent|caret|divide|placeholder)-(slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose)-\\d{2,3}\\b/]',
+          message:
+            'Paleta cruda de Tailwind prohibida en className — usa una clase de token del DS (bg-surface, text-text-2, bg-accent…). frontend/references/design-system.md §3.',
+        },
+        {
+          selector:
+            'TemplateElement[value.raw=/\\b(bg|text|border|ring|from|to|via|fill|stroke|decoration|outline|shadow|accent|caret|divide|placeholder)-(slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose)-\\d{2,3}\\b/]',
+          message:
+            'Paleta cruda de Tailwind prohibida en className — usa una clase de token del DS (bg-surface, text-text-2, bg-accent…). frontend/references/design-system.md §3.',
+        },
+        // (b.1) Valor arbitrario en una UTILIDAD con prefijo: bg-[#fff],
+        // rounded-[10px], w-[38px], text-[14px], content-[''], bg-[url(...)],
+        // transition-[width]… Se ancla al prefijo de PROPIEDAD (w-, bg-, rounded-,
+        // transition-…): así distingue el valor arbitrario del SELECTOR DE VARIANTE
+        // (data-[checked]:, has-[…]:, aria-[…]:, group-[…]:, peer-[…]:,
+        // supports-[…]:, in-data-[…]:) — cuyos prefijos NO son utilidades y por eso
+        // no casan, incluso con corchetes anidados (has-[[data-slot=x]]:). El
+        // spacing fraccionario (size-4.5, w-17.5) no lleva corchetes → tampoco casa.
+        {
+          selector:
+            'Literal[value=/(?:^|[\\s"\'`:])-?(?:bg|text|border|ring|ring-offset|from|to|via|fill|stroke|decoration|outline|shadow|accent|caret|divide|placeholder|w|h|size|min-w|max-w|min-h|max-h|m|mx|my|mt|mb|ml|mr|p|px|py|pt|pb|pl|pr|gap|gap-x|gap-y|space-x|space-y|inset|top|bottom|left|right|translate-x|translate-y|rotate|scale|skew-x|skew-y|rounded|rounded-[a-z]+|leading|tracking|text-shadow|indent|basis|grid-cols|grid-rows|col-span|row-span|order|z|opacity|duration|delay|animate|content|aspect|columns|font|flex|grow|shrink|transition|will-change|bg-position)-\\[[^\\]]*\\]/]',
+          message:
+            'Valor arbitrario prohibido en className — usa un token/utilidad del DS o añádelo a globals.css. frontend/references/design-system.md §3.',
+        },
+        {
+          selector:
+            'TemplateElement[value.raw=/(?:^|[\\s"\'`:])-?(?:bg|text|border|ring|ring-offset|from|to|via|fill|stroke|decoration|outline|shadow|accent|caret|divide|placeholder|w|h|size|min-w|max-w|min-h|max-h|m|mx|my|mt|mb|ml|mr|p|px|py|pt|pb|pl|pr|gap|gap-x|gap-y|space-x|space-y|inset|top|bottom|left|right|translate-x|translate-y|rotate|scale|skew-x|skew-y|rounded|rounded-[a-z]+|leading|tracking|text-shadow|indent|basis|grid-cols|grid-rows|col-span|row-span|order|z|opacity|duration|delay|animate|content|aspect|columns|font|flex|grow|shrink|transition|will-change|bg-position)-\\[[^\\]]*\\]/]',
+          message:
+            'Valor arbitrario prohibido en className — usa un token/utilidad del DS o añádelo a globals.css. frontend/references/design-system.md §3.',
+        },
+        // (b.2) Propiedad arbitraria PURA sin prefijo de utilidad: [color:#fff],
+        // [--gap:16px], [mask-image:url(x)] — Tailwind v4 válido que inyecta valores
+        // crudos. Casa un token de clase que EMPIEZA por '[' con un ':' dentro. Dos
+        // exclusiones deliberadas para no dar falsos positivos sobre código legítimo:
+        //   • sin '&'/'@' dentro → NO caza la VARIANTE arbitraria [&_[data-slot=x]]:…
+        //     ni [@media…]: (checkbox/dialog las usan; terminan en ]: + utilidad).
+        //   • valor que NO es solo var(--token) → SÍ permite [--pulse-color:var(--…)]
+        //     (foundation-specimens: el mecanismo pulse-ring del DS referencia un
+        //     token, no un valor crudo). La regla bloquea el valor CRUDO, no el token.
+        {
+          selector:
+            'Literal[value=/(?:^|[\\s"\'`])\\[(?![^\\]]*[&@])[a-z-][a-z-]*:(?!\\s*var\\(--[^)]+\\)\\s*\\])[^\\]]+\\]/]',
+          message:
+            'Valor arbitrario prohibido en className — usa un token/utilidad del DS o añádelo a globals.css. frontend/references/design-system.md §3.',
+        },
+        {
+          selector:
+            'TemplateElement[value.raw=/(?:^|[\\s"\'`])\\[(?![^\\]]*[&@])[a-z-][a-z-]*:(?!\\s*var\\(--[^)]+\\)\\s*\\])[^\\]]+\\]/]',
+          message:
+            'Valor arbitrario prohibido en className — usa un token/utilidad del DS o añádelo a globals.css. frontend/references/design-system.md §3.',
+        },
+      ],
+      // (c) Librerías de iconos y primitivas crudas. Base UI
+      // (@base-ui-components/react) es NUESTRA base y SÍ está permitida; se
+      // prohíben Radix directo y toda icon font (el DS usa glifos Unicode, §3.7).
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: [
+                'lucide-react',
+                'lucide-react/*',
+                'react-icons',
+                'react-icons/*',
+                'react-feather',
+                '@fortawesome/*',
+                '@iconify/*',
+              ],
+              message:
+                'Librería de iconos prohibida — el DS usa glifos Unicode (✓ ✕ ⚠ ◆ ↺ ▼ +). frontend/references/design-system.md §3.7.',
+            },
+            {
+              group: ['@heroicons/*', '@tabler/icons*', '@phosphor-icons/*'],
+              message:
+                'Librería de iconos prohibida — el DS usa glifos Unicode (✓ ✕ ⚠ ◆ ↺ ▼ +). frontend/references/design-system.md §3.7.',
+            },
+            {
+              group: ['@radix-ui/*'],
+              message:
+                'Radix directo prohibido — usa la primitiva de Base UI (@base-ui-components/react) sobre la que vive el DS. frontend/references/design-system.md §4.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+
   // ── 6. packages/db + apps/worker: los que tocan la BD ───────────────────
   {
     files: ['packages/db/**/*.ts', 'apps/worker/**/*.ts'],

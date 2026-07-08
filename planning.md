@@ -158,7 +158,7 @@ Decisiones del usuario (2026-07-07): la fase se ejecuta tras T0.1 y **antes** de
 - **Entrega**: `pipeline-node`, `checkpoint-banner`, `variant-card`, `spend-ledger`, `safe-zone-overlay` en `components/ui/` como presentacionales PUROS (props planas; prohibido importar tipos de dominio de `@ugc/core` — las features de F0 los envolverán), fieles a `components/product/` del espejo, incl. `pulseRing` en estados activos y el hatch diagonal como placeholder 9:16; secciones en `/design-system`.
 - **Verificación**: CUA vs `pipeline-node.card.html` y `variant-spend-safezone.card.html` (dark y light); el pulso se apaga con `prefers-reduced-motion` sin perder el estado visible.
 
-#### TD.6 · Lint de adherencia al DS
+#### TD.6 · Lint de adherencia al DS [x] 2026-07-08 — PASS, ver docs/verifications/TD.6/
 - **Depende de**: TD.5
 - **Entrega**: reglas ESLint (`eslint.config.ts`, scope `apps/web`) que prohíben: clases de paleta cruda de Tailwind (`bg-blue-500`…), colores/valores arbitrarios en `className` (`bg-[#…]`, `rounded-[10px]`) fuera de `globals.css`, e imports de `@radix-ui/*`, `lucide-react` o cualquier librería de iconos (adaptando las ideas de `_adherence.oxlintrc.json` del proyecto de Claude Design a nuestro flat config).
 - **Verificación**: un fichero de prueba con `bg-blue-500`, `text-[#fff]` e `import { X } from 'lucide-react'` hace fallar `pnpm lint` con mensajes que nombran la regla violada; al retirarlo, `pnpm gate` queda verde.

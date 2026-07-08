@@ -1,0 +1,21 @@
+=== LEGIT (expect: only no-restricted-syntax/DS rules must NOT fire; import-x/no-unresolved on base-ui is env noise) ===
+
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/web/src/td6-probe-legit.tsx
+  1:1  warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-unused-vars')
+
+✖ 1 problem (0 errors, 1 warning)
+  0 errors and 1 warning potentially fixable with the `--fix` option.
+
+LEGIT_EXIT:
+
+=== BAD (expect: [color:#fff], transition-[width], @fortawesome all fire) ===
+
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/web/src/td6-probe-bad.tsx
+  1:1   error  '@fortawesome/free-solid-svg-icons' import is restricted from being used by a pattern. Librería de iconos prohibida — el DS usa glifos Unicode (✓ ✕ ⚠ ◆ ↺ ▼ +). frontend/references/design-system.md §3.7  no-restricted-imports
+  1:26  error  Unable to resolve path to module '@fortawesome/free-solid-svg-icons'                                                                                                                                       import-x/no-unresolved
+  4:13  error  Valor arbitrario prohibido en className — usa un token/utilidad del DS o añádelo a globals.css. frontend/references/design-system.md §3                                                                    no-restricted-syntax
+  5:13  error  Valor arbitrario prohibido en className — usa un token/utilidad del DS o añádelo a globals.css. frontend/references/design-system.md §3                                                                    no-restricted-syntax
+
+✖ 4 problems (4 errors, 0 warnings)
+
+BAD_EXIT:

@@ -348,7 +348,7 @@ function Elevation() {
       <div className="flex flex-wrap items-center gap-8">
         {cols.map((c) => (
           <div key={c.label} className="flex flex-col items-center">
-            <div className={`h-11 w-[70px] rounded-md bg-surface-3 ${c.klass}`} />
+            <div className={`h-11 w-17.5 rounded-md bg-surface-3 ${c.klass}`} />
             <span className="mt-2.5 font-mono text-micro text-text-2">{c.label}</span>
           </div>
         ))}

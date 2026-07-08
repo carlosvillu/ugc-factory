@@ -1,0 +1,9 @@
+
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/web/src/td6-probe.tsx
+  1:1   error  'lucide-react' import is restricted from being used by a pattern. Librería de iconos prohibida — el DS usa glifos Unicode (✓ ✕ ⚠ ◆ ↺ ▼ +). frontend/references/design-system.md §3.7  no-restricted-imports
+  1:19  error  Unable to resolve path to module 'lucide-react'                                                                                                                                       import-x/no-unresolved
+  5:20  error  Valor arbitrario prohibido en className — usa un token/utilidad del DS o añádelo a globals.css. frontend/references/design-system.md §3                                               no-restricted-syntax
+  5:20  error  Paleta cruda de Tailwind prohibida en className — usa una clase de token del DS (bg-surface, text-text-2, bg-accent…). frontend/references/design-system.md §3                        no-restricted-syntax
+
+✖ 4 problems (4 errors, 0 warnings)
+

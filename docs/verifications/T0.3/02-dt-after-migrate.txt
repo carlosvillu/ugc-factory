@@ -1,0 +1,8 @@
+          List of relations
+ Schema |    Name     | Type  | Owner 
+--------+-------------+-------+-------
+ public | app_setting | table | ugc
+ public | audit_log   | table | ugc
+ public | project     | table | ugc
+(3 rows)
+

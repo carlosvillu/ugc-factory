@@ -1,0 +1,13 @@
+                                   Table "public.project"
+     Column     |           Type           | Collation | Nullable |         Default          
+----------------+--------------------------+-----------+----------+--------------------------
+ id             | text                     |           | not null | 
+ name           | text                     |           | not null | 
+ default_locale | text                     |           | not null | 'es'::text
+ status         | project_status           |           | not null | 'active'::project_status
+ notes          | text                     |           |          | 
+ created_at     | timestamp with time zone |           | not null | now()
+ updated_at     | timestamp with time zone |           | not null | now()
+Indexes:
+    "project_pkey" PRIMARY KEY, btree (id)
+

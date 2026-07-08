@@ -4,19 +4,28 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./schema": "./src/schema/index.ts",
+    "./package.json": "./package.json"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "tsx --env-file-if-exists=../../.env scripts/migrate.ts",
+    "db:smoke": "tsx --env-file-if-exists=../../.env scripts/smoke-project.ts"
   },
   "devDependencies": {
     "@types/pg": "^8.20.0",
     "@ugc/test-utils": "workspace:*",
+    "drizzle-kit": "^0.31.0",
+    "tsx": "^4.23.0",
     "typescript": "catalog:",
     "vitest": "catalog:"
   },
   "dependencies": {
+    "@ugc/core": "workspace:*",
+    "drizzle-orm": "catalog:",
     "pg": "catalog:"
   }
 }

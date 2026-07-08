@@ -47,12 +47,12 @@ El corazón de esta fase es el **orquestador** (§9.0): la máquina de estados t
   - [x] Web y worker se conectan al arrancar (ping de conexión en el healthcheck).
 - **Verificación**: `docker compose -f docker-compose.dev.yml up -d` → `/api/health` devuelve `{ok:true, db:true}`; parar Postgres hace que devuelva `db:false` sin tumbar la app.
 
-#### T0.3 · Drizzle + primera migración
+#### T0.3 · Drizzle + primera migración [x] 2026-07-08 — PASS, ver docs/verifications/T0.3/ (coste $0)
 - **Depende de**: T0.2
 - **Entrega**: Drizzle configurado en `packages/db`; migración inicial con `project`, `app_setting`, `audit_log`; script `db:migrate` con lock en el arranque de web (§18.2).
 - **Subtareas**:
-  - [ ] Schema Drizzle + generación de migraciones + runner.
-  - [ ] Repos tipados mínimos (create/get project).
+  - [x] Schema Drizzle + generación de migraciones + runner.
+  - [x] Repos tipados mínimos (create/get project).
 - **Verificación**: `pnpm db:migrate` sobre BD vacía crea las tablas (visible con `psql \dt`); crear un project vía un script de smoke y leerlo de vuelta.
 
 #### T0.4 · Auth single-user

@@ -1,0 +1,11 @@
+
+> ugc-factory@0.0.0 db:smoke /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads
+> pnpm --filter @ugc/db db:smoke
+
+
+> @ugc/db@0.0.0 db:smoke /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/db
+> tsx --env-file-if-exists=../../.env scripts/smoke-project.ts
+
+db:smoke: created {"id":"01KX0NT3SW2VCD9T8KMBT7N2ZP","name":"Smoke ES","defaultLocale":"es","status":"active","notes":null,"createdAt":"2026-07-08T10:54:05.651Z","updatedAt":"2026-07-08T10:54:05.651Z"}
+db:smoke: fetched {"id":"01KX0NT3SW2VCD9T8KMBT7N2ZP","name":"Smoke ES","defaultLocale":"es","status":"active","notes":null,"createdAt":"2026-07-08T10:54:05.651Z","updatedAt":"2026-07-08T10:54:05.651Z"}
+db:smoke: roundtrip OK (create → get idéntico)

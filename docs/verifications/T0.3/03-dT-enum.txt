@@ -1,0 +1,7 @@
+                                          List of data types
+ Schema |      Name      | Internal name  | Size | Elements | Owner | Access privileges | Description 
+--------+----------------+----------------+------+----------+-------+-------------------+-------------
+ public | project_status | project_status | 4    | active  +| ugc   |                   | 
+        |                |                |      | archived |       |                   | 
+(1 row)
+

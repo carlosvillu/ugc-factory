@@ -23,6 +23,27 @@
       // (observability.md §2): knip no puede verlo en el grafo de imports.
       "ignoreDependencies": ["pino-pretty"]
     },
-    "packages/*": {} // entry desde el exports map del package.json (architecture.md §7)
+    "packages/test-utils": {
+      // Con includeEntryExports (packages/*), knip mira los exports del barrel.
+      // expectGolden (golden.ts) + server/useHttpMocks (msw/index.ts) son helpers
+      // de test de T0.1 SIN consumidor todavía pero de API inminente y no
+      // rastreable por el grafo de imports: expectGolden está cableado en la regla
+      // vitest/expect-expect de eslint.config.ts (assertFunctionNames), y
+      // server/useHttpMocks son el mock HTTP de msw que estrenan los clientes de
+      // F1 (Firecrawl/Anthropic). Ignore PUNTUAL de esos dos ficheros — nunca un
+      // ignore amplio del paquete, que re-ocultaría over-exports reales como los
+      // que includeEntryExports acaba de cazar en el barrel de db/test-utils.
+      // Quitar cuando F1 estrene su primer consumidor de msw.
+      "ignore": ["src/golden.ts", "src/msw/**"]
+    },
+    "packages/*": {
+      // entry desde el exports map del package.json (architecture.md §7).
+      // includeEntryExports: sin esto knip NO reporta exports sin consumidor en
+      // ficheros-entry (el barrel `src/index.ts` lo es), y un barrel que
+      // sobre-exporta símbolos "para más adelante" (viola "no anticipar") pasa el
+      // gate en silencio — ocurrió en T0.2 (finding 3) y reapareció en T0.3.
+      // Activarlo convierte esa clase de recurrente-solo-reviewer a cazada-por-gate.
+      "includeEntryExports": true
+    }
   }
 }

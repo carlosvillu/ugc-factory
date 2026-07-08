@@ -1,11 +1,17 @@
 // Ping de conexión COMPARTIDO por web (route /api/health) y worker (bootstrap).
-// Vive en @ugc/db porque es la pieza de conexión a Postgres, justo donde T0.3
-// extenderá el pool + Drizzle (architecture.md §1: db implementa la persistencia;
-// las apps solo cablean). En T0.2 es lo mínimo: un `SELECT 1` con timeouts
-// cortos cuyo ÚNICO resultado observable es un boolean — cualquier fallo de
-// conexión se traduce a `false`, nunca se propaga ni tumba la app.
+// Vive en @ugc/db, la pieza de conexión a Postgres (architecture.md §1: db
+// implementa la persistencia; las apps solo cablean). Es un `SELECT 1` con
+// timeouts cortos cuyo ÚNICO resultado observable es un boolean — cualquier
+// fallo se traduce a `false`, nunca se propaga ni tumba la app.
 //
-// NADA de drizzle/schema/migraciones aquí: eso es T0.3. Un ping no lo necesita.
+// DECISIÓN T0.3 (reconciliación con el pool de Drizzle): el ping se queda
+// STANDALONE — abre su propio `pg.Client` efímero, NO toma del pool de
+// `client.ts`. Es deliberado: el health check mide "¿Postgres responde AHORA,
+// rápido?"; sacar una conexión del pool no distingue "pool agotado" de "BD
+// caída" y hereda el timeout largo del pool, matando el `db:false` rápido que es
+// la razón de ser de T0.2. Los tres caminos de conexión de db (este ping, el
+// pool de datos, el `pg.Client` del runner de migraciones) leen el MISMO
+// DATABASE_URL — no divergen en parsing ni política, solo en propósito.
 import { Client } from 'pg';
 
 /**

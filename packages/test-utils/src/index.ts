@@ -7,3 +7,13 @@
 // aún vacía, y nadie lo consume antes.
 export { expectGolden } from './golden';
 export { server, useHttpMocks } from './msw/index';
+// Harness de integración con Postgres real (db-integration.md, llega en T0.3).
+// El barrel expone SOLO lo que consumen las suites de otros paquetes:
+// createTestDatabase + TestDatabase + makeProject (tests de integración de
+// @ugc/db). El globalSetup es un subpath export propio
+// (`@ugc/test-utils/global-setup`) que los vitest.config.integration.ts
+// declaran. Las piezas internas del harness (startPostgresContainer,
+// withDatabaseName, TEMPLATE_DB, DrizzleDb) las usan global-setup.ts y
+// create-test-database.ts vía imports relativos — no van al barrel.
+export { createTestDatabase, type TestDatabase } from './create-test-database';
+export { makeProject } from './factories';

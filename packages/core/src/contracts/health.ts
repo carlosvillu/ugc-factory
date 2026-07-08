@@ -6,9 +6,13 @@ import { z } from 'zod';
  * el canario del import cruzado core→web/worker (T0.1): cambiarlo debe romper
  * la compilación de ambas apps.
  *
- * El campo `db` llega en T0.2 con el healthcheck real de Postgres — no se anticipa.
+ * `db` (T0.2): resultado del ping a Postgres (`pingDb` de @ugc/db). `ok` es la
+ * disponibilidad del proceso; `db` es un sub-estado que puede degradar a `false`
+ * sin tumbar la app — de ahí que sean dos campos y no uno. La app puede estar
+ * `ok:true` con `db:false` cuando Postgres está caído (degradación observable).
  */
 export const HealthStatusSchema = z.object({
   ok: z.boolean(),
+  db: z.boolean(),
 });
 export type HealthStatus = z.infer<typeof HealthStatusSchema>;

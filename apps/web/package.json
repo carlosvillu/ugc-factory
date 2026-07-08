@@ -13,10 +13,12 @@
   "dependencies": {
     "@base-ui-components/react": "1.0.0-rc.0",
     "@ugc/core": "workspace:*",
+    "@ugc/db": "workspace:*",
     "class-variance-authority": "0.7.1",
     "clsx": "2.1.1",
     "geist": "^1.7.2",
     "next": "16.2.10",
+    "pg": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
     "tailwind-merge": "3.6.0"

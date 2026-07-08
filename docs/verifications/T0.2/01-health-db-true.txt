@@ -1,0 +1,5 @@
+=== STEP 1: db:true (Postgres arriba) ===
+-- body + http_code + time --
+{"ok":true,"db":true}
+HTTP_CODE=200
+TIME_TOTAL=0.030821s

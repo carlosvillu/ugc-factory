@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "tsx watch src/main.ts",
+    "dev": "tsx watch --env-file-if-exists=../../.env src/main.ts",
     "build": "tsup",
     "start": "node dist/main.js",
     "typecheck": "tsc --noEmit",
@@ -12,7 +12,9 @@
   },
   "dependencies": {
     "@ugc/core": "workspace:*",
-    "pino": "catalog:"
+    "@ugc/db": "workspace:*",
+    "pino": "catalog:",
+    "pg": "catalog:"
   },
   "devDependencies": {
     "@types/node": "catalog:",

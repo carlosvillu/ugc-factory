@@ -1,0 +1,11 @@
+=== STEP 3: recovery (start postgres, no app restart) ===
+ Container ugc-postgres-dev Starting 
+ Container ugc-postgres-dev Started 
+healthy after 6s
+-- curl tras recuperar (web PID debe seguir 63674) --
+{"ok":true,"db":true}
+HTTP_CODE=200
+TIME_TOTAL=0.028737s
+-- web proc still same PID (no restart) --
+  PID STAT COMMAND
+63674 S    next-server (v16.2.10) 

@@ -1,0 +1,1 @@
+apps/worker dev: {"level":30,"time":1783504236616,"pid":63680,"hostname":"MBP-de-Carlos","name":"worker","health":{"ok":true,"db":true},"msg":"worker ready"}

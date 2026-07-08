@@ -7,9 +7,16 @@
     ".": "./src/index.ts"
   },
   "scripts": {
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
   },
   "devDependencies": {
-    "typescript": "catalog:"
+    "@types/pg": "^8.20.0",
+    "@ugc/test-utils": "workspace:*",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  },
+  "dependencies": {
+    "pg": "catalog:"
   }
 }

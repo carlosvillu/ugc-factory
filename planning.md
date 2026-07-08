@@ -39,12 +39,12 @@ El corazón de esta fase es el **orquestador** (§9.0): la máquina de estados t
   - [x] Página raíz de Next con "UGC Factory" y healthcheck `/api/health`; el worker arranca y loggea "worker ready".
 - **Verificación**: `pnpm build && pnpm dev` → `curl localhost:3000/api/health` devuelve `{ok:true}` y el log del worker muestra "worker ready" en JSON estructurado. Un cambio en un tipo de `packages/core` rompe la compilación de ambas apps (se comprueba a propósito).
 
-#### T0.2 · Docker Compose de desarrollo con Postgres
+#### T0.2 · Docker Compose de desarrollo con Postgres [x] 2026-07-08 — PASS, ver docs/verifications/T0.2/ (coste $0)
 - **Depende de**: T0.1, TD.7 *(dependencia de orden, no técnica: el usuario decidió el 2026-07-07 que la fase FD se construye entera antes de continuar F0)*
 - **Entrega**: `docker-compose.dev.yml` con `postgres:16` (volumen persistente) y variables de entorno de conexión.
 - **Subtareas**:
-  - [ ] Compose + `.env.example` documentado.
-  - [ ] Web y worker se conectan al arrancar (ping de conexión en el healthcheck).
+  - [x] Compose + `.env.example` documentado.
+  - [x] Web y worker se conectan al arrancar (ping de conexión en el healthcheck).
 - **Verificación**: `docker compose -f docker-compose.dev.yml up -d` → `/api/health` devuelve `{ok:true, db:true}`; parar Postgres hace que devuelva `db:false` sin tumbar la app.
 
 #### T0.3 · Drizzle + primera migración

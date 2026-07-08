@@ -12,7 +12,10 @@ const logger = makeLogger({
   pretty: process.env.LOG_PRETTY === '1',
 });
 
-bootstrap({ logger });
+// bootstrap es async desde T0.2 (ping a Postgres). Top-level await en ESM: el
+// worker anuncia su estado antes de entrar en el keep-alive. no-floating-promises
+// (tooling §2) obliga a await aquí — un ping perdido dejaría el boot a medias.
+await bootstrap({ logger });
 
 // Daemon: el proceso queda residente hasta SIGINT/SIGTERM. pg-boss (T0.6)
 // sustituirá este keep-alive por sus workers reales.

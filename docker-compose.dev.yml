@@ -1,0 +1,48 @@
+# Docker Compose de DESARROLLO (T0.2). Solo Postgres 16: web y worker corren en
+# el host con `pnpm dev` y se conectan vía DATABASE_URL (ver .env.example). El
+# compose de producción (web/worker/caddy) es otra pieza (T0.13).
+#
+# Uso:
+#   cp .env.example .env            # ajusta credenciales si quieres
+#   docker compose -f docker-compose.dev.yml up -d
+#   curl localhost:3000/api/health  # → {"ok":true,"db":true}
+#
+# Parar Postgres (`docker compose -f docker-compose.dev.yml stop postgres`) hace
+# que /api/health devuelva {"ok":true,"db":false} sin tumbar la app: la mitad
+# "trampa" de la Verificación de T0.2.
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: ugc-postgres-dev
+    restart: unless-stopped
+    environment:
+      # Estos tres alimentan la DATABASE_URL de web/worker (.env.example).
+      POSTGRES_USER: ${POSTGRES_USER:-ugc}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ugc}
+      POSTGRES_DB: ${POSTGRES_DB:-ugc}
+      # El contenedor arranca en UTC: todo el sistema usa timestamptz y compara
+      # instantes, nunca strings con zona local (coherente con el harness de test).
+      TZ: UTC
+      PGTZ: UTC
+    ports:
+      # Expuesto al host para que `pnpm dev` (web + worker) conecte sin estar en
+      # la red de compose. 5432 por defecto; overríbelo si ya tienes un Postgres.
+      - '${POSTGRES_PORT:-5432}:5432'
+    volumes:
+      # Volumen persistente con nombre: los datos sobreviven a `down`/`up`.
+      # `down -v` es el borrado explícito.
+      - ugc-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      # Healthcheck del CONTENEDOR: marca postgres `healthy` cuando acepta
+      # conexiones. `restart` de web/worker (host) no depende de esto, pero es la
+      # señal para `depends_on: condition: service_healthy` en T0.13.
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-ugc} -d ${POSTGRES_DB:-ugc}']
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+
+volumes:
+  ugc-postgres-data:
+    name: ugc-postgres-data

@@ -18,6 +18,10 @@ catalog:
   # compartidas por ≥2 paquetes en T0.1:
   vitest: ^4.1.10
   '@types/node': ^24.10.1
+  # cliente Postgres del ping de conexión (T0.2): lo usa packages/db (helper) y
+  # lo declaran apps/worker y apps/web para que el bundler lo EXTERNALICE del
+  # bundle en vez de inlinear un módulo CJS en ESM (rompe con "Dynamic require").
+  pg: ^8.22.0
 
 # Binarios nativos para AMBOS mundos de esta máquina (Apple Silicon con shells
 # bajo Rosetta: conviven node arm64 y x64 — el gate no puede depender de qué

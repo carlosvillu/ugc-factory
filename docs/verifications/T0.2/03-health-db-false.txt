@@ -1,0 +1,17 @@
+=== Stopping postgres (app must stay up) ===
+ Container ugc-postgres-dev Stopping 
+ Container ugc-postgres-dev Stopped 
+
+-- curl con Postgres caído --
+{"ok":true,"db":false}
+HTTP_CODE=200
+TIME_TOTAL=0.008423s
+=== web/worker procs still alive? ===
+  PID STAT COMMAND
+63674 S    next-server (v16.2.10) 
+--- worker proc ---
+  PID STAT COMMAND
+63680 S    /Users/carlosvillu/.nvm/versions/node/v22.18.0/bin/node --require /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/tsx@4.23.0/node_modules/tsx/dist/preflight.cjs --import file:///Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/tsx@4.23.0/node_modules/tsx/dist/loader.mjs --env-file-if-exists=../../.env src/main.ts
+=== second request (app keeps serving) ===
+{"ok":true,"db":false} [HTTP 200, 0.006280s]
+root / HTTP 200

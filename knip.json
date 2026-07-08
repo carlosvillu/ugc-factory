@@ -4,11 +4,19 @@
   "ignore": ["docs/design-system/**"],
   "workspaces": {
     ".": {},
-    "apps/web": {}, // los plugins de knip detectan Next (app router) y Vitest solos
+    "apps/web": {
+      // los plugins de knip detectan Next (app router) y Vitest solos.
+      // pg no se importa directo (es transitiva de @ugc/db); se declara para que
+      // el bundler de next lo EXTERNALICE del server bundle en vez de inlinear un
+      // módulo CJS (rompe con "Dynamic require"). Mismo motivo que pino en worker.
+      "ignoreDependencies": ["pg"]
+    },
     "apps/worker": {
-      // pino no se importa directo (solo vía @ugc/core), pero el bundle de tsup
-      // lo deja external: el artefacto dist/ lo requiere en runtime.
-      "ignoreDependencies": ["pino"]
+      // pino y pg no se importan directo (pino vía @ugc/core; pg vía @ugc/db),
+      // pero el bundle de tsup los deja external: el artefacto dist/ los requiere
+      // en runtime. Declararlos como dependency es lo que fuerza esa
+      // externalización (sin ellos, tsup inlinea pg CJS en ESM y dist/ no arranca).
+      "ignoreDependencies": ["pino", "pg"]
     },
     "packages/core": {
       // pino-pretty solo se referencia como string de transport en makeLogger

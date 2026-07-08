@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mockup 8a — Panel de gasto · /spend</title>
+<!-- Mockup extraído de Variaciones-paginas.dc.html (proyecto Claude Design 1aa625b2).
+     Variante elegida por el usuario 2026-07-08. Construido con los tokens del Design System.
+     Renderiza en local vía el styles.css del espejo del DS (mismos tokens que globals.css). -->
+<link rel="stylesheet" href="../design-system/styles.css">
+<style>
+  html,body{margin:0;background:var(--bg-subtle);color:var(--text);font-family:var(--font-sans);-webkit-font-smoothing:antialiased}
+  body{padding:32px;display:flex;justify-content:center}
+
+  html,body{margin:0}
+  body{background:#08080a;color:var(--text);font-family:var(--font-sans);-webkit-font-smoothing:antialiased}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{color:var(--accent-hover)}
+  .dv-intro{padding:48px 56px 8px;max-width:1100px}
+  .dv-turn{padding:40px 56px 44px;border-top:1px solid var(--border)}
+  .dv-thd{display:flex;align-items:baseline;gap:12px;margin:0 0 6px}
+  .dv-tid{font:600 11px/1 var(--font-mono);padding:4px 8px;background:var(--accent);color:#fff;border-radius:6px}
+  .dv-tname{font:600 16px/1.2 var(--font-sans);letter-spacing:-0.01em;color:var(--text)}
+  .dv-tsub{font:400 13px/1.5 var(--font-sans);color:var(--text-3);margin:0 0 26px;max-width:720px}
+  .dv-opts{display:flex;flex-wrap:wrap;gap:34px;align-items:flex-start}
+  .dv-opt{flex:none;display:flex;flex-direction:column;gap:11px;scroll-margin-top:20px}
+  .dv-oid{font:600 11px/1 var(--font-mono);padding:4px 8px;background:var(--surface-3);color:var(--text-2);border-radius:6px;border:1px solid var(--border-2)}
+  .dv-olabel{display:flex;align-items:center;gap:10px;font:500 12.5px/1.3 var(--font-sans);color:var(--text-2)}
+  .dv-otag{font:400 12px/1.3 var(--font-sans);color:var(--text-4)}
+  .dv-opt:target .dv-oid{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .dv-frame{background:var(--bg);border:1px solid var(--border-2);border-radius:12px;overflow:hidden;box-shadow:var(--shadow-lg)}
+  .dv-winbar{display:flex;align-items:center;gap:14px;padding:9px 14px;background:var(--surface);border-bottom:1px solid var(--border)}
+  .dv-dots{display:flex;gap:6px}
+  .dv-dots span{width:10px;height:10px;border-radius:50%;background:var(--surface-3);border:1px solid var(--border-2)}
+  .dv-url{font:400 11px/1 var(--font-mono);color:var(--text-3);background:var(--bg-subtle);border:1px solid var(--border);border-radius:var(--r-full);padding:5px 12px}
+  .dv-next{margin:26px 0 0;font:400 12.5px/1.6 var(--font-sans);color:var(--text-3)}
+  .dv-next a{font-family:var(--font-mono);font-size:11.5px}
+  .navitem{padding:7px 12px;border-radius:var(--r-md);font:500 13px/1 var(--font-sans);color:var(--text-3);cursor:pointer;border:1px solid transparent}
+  .navitem.on{background:var(--surface-3);border-color:var(--border-2);color:var(--text);font-weight:600}
+  .railitem{display:flex;align-items:center;gap:10px;padding:8px 11px;border-radius:var(--r-md);font:500 13px/1 var(--font-sans);color:var(--text-3);cursor:pointer}
+  .railitem.on{background:var(--accent-soft);color:var(--accent);font-weight:600}
+  .railitem .g{width:16px;text-align:center;font-family:var(--font-mono);font-size:12px;opacity:.85}
+  .chip{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:var(--r-full);font:500 11px/1 var(--font-sans);background:var(--surface-3);border:1px solid var(--border-2);color:var(--text-2)}
+  .kpi{font:600 20px/1 var(--font-mono);letter-spacing:-0.02em;color:var(--text)}
+  .kpi-l{font:400 11px/1.2 var(--font-sans);color:var(--text-3);margin-top:5px}
+
+</style>
+</head>
+<body data-theme="" data-accent="">
+<div class="dv-opt" id="8a">
+      <div class="dv-olabel"><span class="dv-oid">8a</span> Presupuesto + ledger por proveedor</div>
+      <div class="dv-frame" style="width:1180px" data-screen-label="Gasto 8a">
+        <div class="dv-winbar"><div class="dv-dots"><span></span><span></span><span></span></div><div class="dv-url">ugcfactory.local/spend</div></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 20px;background:var(--surface);border-bottom:1px solid var(--border)">
+          <div style="display:flex;align-items:center;gap:22px"><div style="display:flex;align-items:center;gap:9px"><div style="width:24px;height:24px;border-radius:6px;background:var(--accent);display:flex;align-items:center;justify-content:center"><div style="width:9px;height:9px;border-radius:2px;background:#fff"></div></div><div style="font:600 13.5px/1 var(--font-sans)">UGC Factory</div></div><nav style="display:flex;gap:3px"><span class="navitem">Canvas</span><span class="navitem">Biblioteca</span><span class="navitem">Métricas</span><span class="navitem on">Gasto</span></nav></div>
+        </div>
+        <div style="padding:22px 24px;background:var(--bg);display:grid;grid-template-columns:1fr 1.4fr;gap:20px">
+          <div>
+            <div style="border:1px solid var(--border);border-radius:var(--r-lg);padding:22px;background:var(--surface)">
+              <div style="font:400 12px/1 var(--font-sans);color:var(--text-2);margin-bottom:8px">Presupuesto mensual</div>
+              <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:18px"><span style="font:600 30px/1 var(--font-mono);letter-spacing:-0.02em">$212.40</span><span style="font:400 14px/1 var(--font-mono);color:var(--text-3)">/ $400</span></div>
+              <div style="position:relative;height:9px;background:var(--surface-3);border-radius:var(--r-full);overflow:hidden;margin-bottom:6px"><span style="display:block;height:100%;width:53%;background:var(--accent);border-radius:var(--r-full)"></span><span style="position:absolute;top:-2px;left:70%;width:2px;height:13px;background:var(--warning)"></span><span style="position:absolute;top:-2px;left:90%;width:2px;height:13px;background:var(--danger)"></span></div>
+              <div style="display:flex;justify-content:space-between;font:400 10px/1 var(--font-mono);color:var(--text-3)"><span>0</span><span style="color:var(--warning)">70%</span><span style="color:var(--danger)">90%</span><span>100%</span></div>
+              <div style="margin-top:18px;padding:11px 13px;background:var(--info-soft);border:1px solid var(--info-border);border-radius:var(--r-md);font:400 12px/1.4 var(--font-sans);color:var(--text-2);display:flex;gap:9px"><span style="color:var(--info)">i</span><span>Vas al 53%. Alerta configurada al 70% — próxima.</span></div>
+            </div>
+            <div style="margin-top:16px;display:flex;flex-direction:column;gap:10px">
+              <div style="display:flex;justify-content:space-between;padding:13px 16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md)"><span style="font:400 12px/1 var(--font-sans);color:var(--text-2)">Coste medio / variante aprobada</span><span style="font:600 13px/1 var(--font-mono)">$4.52</span></div>
+              <div style="display:flex;justify-content:space-between;padding:13px 16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md)"><span style="font:400 12px/1 var(--font-sans);color:var(--text-2)">Desviación estimado vs real</span><span style="font:600 13px/1 var(--font-mono);color:var(--success)">−6.2%</span></div>
+            </div>
+          </div>
+          <div>
+            <div style="font:600 12px/1 var(--font-sans);color:var(--text-2);margin-bottom:12px">Gasto por proveedor · este mes</div>
+            <div style="border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;background:var(--surface)">
+              <div style="display:grid;grid-template-columns:1.4fr 1fr 1fr 0.9fr;padding:10px 16px;background:var(--surface-2);border-bottom:1px solid var(--border);font:600 9.5px/1 var(--font-mono);color:var(--text-3);text-transform:uppercase;letter-spacing:0.04em"><span>Proveedor</span><span style="text-align:right">Cantidad</span><span style="text-align:right">Unidad</span><span style="text-align:right">USD</span></div>
+              <div style="display:grid;grid-template-columns:1.4fr 1fr 1fr 0.9fr;padding:12px 16px;border-bottom:1px solid var(--border);align-items:center;font-size:12.5px"><span>fal.ai</span><span style="text-align:right;font-family:var(--font-mono);color:var(--text-2)">4 210</span><span style="text-align:right;font-family:var(--font-mono);color:var(--text-3)">s vídeo</span><span style="text-align:right;font-family:var(--font-mono)">$186.40</span></div>
+              <div style="display:grid;grid-template-columns:1.4fr 1fr 1fr 0.9fr;padding:12px 16px;border-bottom:1px solid var(--border);align-items:center;font-size:12.5px"><span>Anthropic</span><span style="text-align:right;font-family:var(--font-mono);color:var(--text-2)">2.1M</span><span style="text-align:right;font-family:var(--font-mono);color:var(--text-3)">tokens</span><span style="text-align:right;font-family:var(--font-mono)">$18.90</span></div>
+              <div style="display:grid;grid-template-columns:1.4fr 1fr 1fr 0.9fr;padding:12px 16px;border-bottom:1px solid var(--border);align-items:center;font-size:12.5px"><span>Firecrawl</span><span style="text-align:right;font-family:var(--font-mono);color:var(--text-2)">63</span><span style="text-align:right;font-family:var(--font-mono);color:var(--text-3)">créditos</span><span style="text-align:right;font-family:var(--font-mono)">$7.10</span></div>
+              <div style="display:grid;grid-template-columns:1.4fr 1fr 1fr 0.9fr;padding:12px 16px;align-items:center;font-size:12.5px;background:var(--surface-2)"><span style="font-weight:600">Total</span><span></span><span></span><span style="text-align:right;font-family:var(--font-mono);font-weight:600">$212.40</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+</body>
+</html>

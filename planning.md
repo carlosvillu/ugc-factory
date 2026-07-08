@@ -102,11 +102,13 @@ El corazón de esta fase es el **orquestador** (§9.0): la máquina de estados t
 #### T0.11 · Canvas React Flow v1
 - **Depende de**: T0.8, T0.9, T0.10
 - **Entrega**: página `/runs/[id]` con grafo (layout automático dagre/elkjs), nodos con estado/color/duración (y coste si existe), panel lateral al click con **visor de logs y errores del step** (§8.2), botones de checkpoint (aprobar/editar/rechazar), retry, skip, cancelar lote y toggle autopilot.
+- **Mockup**: `docs/mockups/runs-id.html` (variante 1b · cockpit denso). El layout parte de ese mockup; el reviewer rechaza una página que se desvíe sin acuerdo (ver `.claude/skills/frontend`).
 - **Verificación**: en el navegador, lanzar el run de demo y **ver los nodos cambiar de color en vivo**; aprobar el checkpoint desde el panel; provocar un fallo (`fail_rate=1`) y ver el error en el visor de logs del nodo; retry con éxito; cancelar otro run en curso desde el botón.
 
 #### T0.12 · Ledger de gasto (esqueleto)
 - **Depende de**: T0.7b
 - **Entrega**: tablas `cost_entry` y `budget`; helper `recordCost()`; página `/spend` v1 con totales por día/proveedor y alerta in-app al superar el presupuesto. (El panel completo — vistas por proyecto/lote/tier, freno, email — llega en T7.7.)
+- **Mockup**: `docs/mockups/spend.html` (variante 8a · presupuesto + ledger por proveedor). El layout parte de ese mockup; el reviewer rechaza una página que se desvíe sin acuerdo (ver `.claude/skills/frontend`).
 - **Verificación**: tras 3 runs de demo con coste ficticio, `/spend` muestra la suma exacta esperada; un presupuesto de prueba por debajo del gasto dispara la alerta in-app.
 
 #### T0.13 · Despliegue inicial en VPS
@@ -225,6 +227,7 @@ Decisiones del usuario (2026-07-07): la fase se ejecuta tras T0.1 y **antes** de
 #### T1.10b · CP1: editor de brief
 - **Depende de**: T1.10a
 - **Entrega**: panel de CP1 con el brief editable campo a campo, badges extraído/inferido (`evidence`/`confidence`), gestión de warnings (incl. petición bloqueante de imágenes o derivación a packshot-IA en modo manual), aprobación que persiste `product_brief` versionado + `edited_by_user`; endpoint standalone `GET/PATCH /api/briefs/:id` (editar un brief aprobado fuera de un run activo, Apéndice E).
+- **Mockup**: `docs/mockups/brief-editor.html` (variante 3a · formulario en tarjetas + rail de trazabilidad). El layout parte de ese mockup; el reviewer rechaza una página que se desvíe sin acuerdo (ver `.claude/skills/frontend`).
 - **Verificación (E2E de la fase, criterio O1)**: en el navegador — URL real → N1/N2/N3 → editar un beneficio y un hook en CP1 → aprobar → brief versionado (v1 IA, v2 editado) y el run avanza; pipeline <90 s (sin contar la edición) y <$0,15. Después, editar el brief aprobado vía `/api/briefs/:id` sin run activo crea v3.
 
 ---
@@ -236,6 +239,7 @@ Decisiones del usuario (2026-07-07): la fase se ejecuta tras T0.1 y **antes** de
 #### T2.0 · Personas v1 (modelo, CRUD y seed manual)
 - **Depende de**: T0.3, T0.5
 - **Entrega**: migración de `persona` (§12, con `voice_map {locale: {provider, voiceId}}`), página `/personas` con CRUD (demografía, personalidad, wardrobeNotes), upload manual de imágenes de referencia (validación ≥2K), endpoint de candidatas por `avatar_hint`; seed manual de 2 personas (es/en) con imágenes subidas a mano. (La generación IA de referencias y el preview de voz llegan en F4.)
+- **Mockup**: `docs/mockups/personas.html` (variante 6c · ficha inmersiva · refs grandes + voz por idioma). El layout parte de ese mockup; el reviewer rechaza una página que se desvíe sin acuerdo (ver `.claude/skills/frontend`).
 - **Verificación**: crear una persona con 2 imágenes ≥2K y voice_map es/en desde el navegador; el endpoint de candidatas devuelve la persona correcta para un `avatar_hint` compatible y ninguna para uno incompatible; una imagen <2K es rechazada con mensaje claro.
 
 #### T2.1 · Migraciones de lote + seeds de hooks, CTAs y recetas
@@ -310,6 +314,7 @@ Decisiones del usuario (2026-07-07): la fase se ejecuta tras T0.1 y **antes** de
 #### T3.8 · UI de galería
 - **Depende de**: T3.7
 - **Entrega**: `/gallery` con navegación facetada, ficha de template (body con slots resaltados, beats, guards, versiones con diff), editor con validación de slots en vivo, estados draft/review/published. (El botón "probar template" llega en T4.12 con FalClient.)
+- **Mockup**: `docs/mockups/gallery.html` (variante 5a · rejilla facetada + filtros). El layout parte de ese mockup; el reviewer rechaza una página que se desvíe sin acuerdo (ver `.claude/skills/frontend`).
 - **Verificación**: en navegador, filtrar por 2 facetas; editar un template introduciendo un slot inválido muestra el error en vivo; guardar crea `prompt_version` v2 con diff visible contra v1.
 
 ---
@@ -413,6 +418,7 @@ Decisiones del usuario (2026-07-07): la fase se ejecuta tras T0.1 y **antes** de
 #### T5.7 · Export bundle + biblioteca
 - **Depende de**: T5.5, T5.6
 - **Entrega**: bundle por variante aprobada (MP4 + JSON: `ad_caption` ≤100 chars sin @/#/links, `brand_name` ≤20, hook/ángulo/duración/objetivo/plataforma, flags AIGC, `audio_source` + checklist §15.4); **export dual con/sin bed** cuando el lote declara destino orgánico+paid (re-mux de audio, §14); `/library` con filtros, linaje completo y descarga.
+- **Mockup**: `docs/mockups/library.html` (variante 4c · foco de preview + linaje + safe zones). El layout de `/library` parte de ese mockup; el reviewer rechaza una página que se desvíe sin acuerdo (ver `.claude/skills/frontend`).
 - **Verificación**: descargar un bundle y validar el JSON contra su schema (caption dentro de límites — test); un lote destino "ambos" produce las dos versiones de audio del mismo master sin re-encode de vídeo (timestamps de ffmpeg lo confirman); el linaje en la UI llega del master hasta el hook line y el `template@version` exactos.
 
 #### T5.8 · Regeneración parcial optimizada
@@ -428,6 +434,7 @@ Decisiones del usuario (2026-07-07): la fase se ejecuta tras T0.1 y **antes** de
 #### T5.10 · Dashboard y vista de proyecto
 - **Depende de**: T5.7
 - **Entrega**: `/` (dashboard: proyectos, lotes activos, gasto del mes, alertas) y `/projects/[id]` (briefs, lotes, variantes y métricas del proyecto) + CRUD mínimo de proyectos (§8.1).
+- **Mockup**: `docs/mockups/dashboard.html` (variante 2a · resumen clásico · KPIs + lotes + panel lateral). El layout de `/` parte de ese mockup; el reviewer rechaza una página que se desvíe sin acuerdo (ver `.claude/skills/frontend`).
 - **Verificación**: crear un proyecto desde la UI, lanzar un lote en él → el dashboard muestra el lote activo y el gasto del mes del proyecto; `/projects/[id]` lista sus briefs y variantes con estados correctos.
 
 ---
@@ -488,6 +495,7 @@ Decisiones del usuario (2026-07-07): la fase se ejecuta tras T0.1 y **antes** de
 #### T7.3 · Métricas derivadas y dashboard
 - **Depende de**: T7.1, T7.2
 - **Entrega**: cálculo por plataforma (Meta hook rate 3s/impr; TikTok thumbstop 2s/impr y 6s-rate; hold rate) con la no-comparabilidad explícita (§9.9); `/metrics` por variante/hook/ángulo/persona con linaje clicable.
+- **Mockup**: `docs/mockups/metrics.html` (variante 7a · KPIs + tabla por variante). El layout de `/metrics` parte de ese mockup; el reviewer rechaza una página que se desvíe sin acuerdo (ver `.claude/skills/frontend`).
 - **Verificación**: los derivados de un snapshot conocido cuadran a mano; la vista "por hook" agrega correctamente las variantes que comparten `hook_line_id`.
 
 #### T7.4 · Reglas kill/scale
@@ -564,3 +572,4 @@ Decisiones del usuario (2026-07-07): la fase se ejecuta tras T0.1 y **antes** de
 4. **Los E2E de fase son sagrados**: T1.10b, T2.6, T4.11, T5.9 y los criterios de §22 del PRD son la vara de "funciona en el mundo real"; no se marcan por aproximación.
 5. **Costes**: toda tarea que llame a APIs de pago anota el coste real observado; si difiere >25 % del estimado, se recalibra la `recipe`/estimador en la misma tarea.
 6. **Cambios de alcance**: si una tarea revela que el PRD necesita ajuste (como ya pasó con Personas→F2 o el estado `scripted`), se edita el PRD en la misma sesión y se anota en ambos documentos.
+7. **Mockups de página**: cada página con pantalla propia tiene un mockup aprobado en `docs/mockups/` (catálogo en `docs/mockups/README.md`, elegido por el usuario 2026-07-08). La tarea que la desarrolla lo referencia con una línea `- **Mockup**: docs/mockups/<x>.html`, y su desarrollo **parte de ese mockup** (construido con los componentes `components/ui/` del DS, no reinventado). Una página que se desvíe del mockup sin acuerdo explícito es un error de review (obligatoriedad en `.claude/skills/frontend`). Páginas nuevas sin mockup: se acuerda el layout con el usuario antes de implementarlas.

@@ -42,8 +42,23 @@ Lanza el subagente **`implementer`** (uno NUEVO por tarea, `run_in_background: f
 ### 4 · GATE LOCAL
 Desde la raíz: `pnpm gate` (= lint + typecheck + format:check + knip + test unit+integration; lo crea T0.1) y `pnpm test:e2e` si la tarea tocó superficie web. En rojo → devuelve el fallo al implementer vía SendMessage (mantiene su contexto). Sin CI remota, **este es el gate de merge** (decisión 2026-07-07).
 
-### 5 · REVIEW
-Invoca la skill `code-review` sobre el diff de la tarea, con effort proporcional al riesgo: **low** para diffs pequeños/mecánicos (<~200 líneas sin lógica nueva), **medium** por defecto, **high** solo para el orquestador, dinero (spend/fal) y seguridad (auth/webhooks/cifrado). Hallazgos de correctness confirmados → al implementer vía SendMessage; re-gate tras el fix. Hallazgos menores de estilo/simplificación: aplícalos solo si son triviales; si no, anótalos en el journal como deuda.
+### 5 · REVIEW (dos pases obligatorios: `code-review` → `simplify`)
+
+**Solo si la tarea produjo diff de CÓDIGO.** En tareas de solo-docs/skill (sin superficie de runtime que revisar) se saltan ambos pases — espeja la condicionalidad de `test:e2e`. La edición del propio arnés y el trabajo de mockups son ejemplos que se saltan.
+
+Ambos pases MUTAN código (`simplify` auto-aplica; los fixes de `code-review` mutan), así que corren **antes de VERIFY y antes del commit**: el invariante duro es que *lo que VERIFY bendice == lo que se commitea*. Un `simplify` después de un PASS invalidaría la verificación en silencio. Secuencia:
+
+`Gate verde (4) → code-review → fix correctness → re-gate → simplify → re-gate (inspeccionar diff) → VERIFY (6)`
+
+**Cada comando se ejecuta UNA vez por cierre**, no a punto fijo: nada de bucle code-review↔simplify. Si un pase abre trabajo grande, es una decisión consciente, no una iteración automática.
+
+**5a · `code-review`** — sobre el diff de la tarea, con effort proporcional al riesgo: **low** para diffs pequeños/mecánicos (<~200 líneas sin lógica nueva), **medium** por defecto, **high** solo para el orquestador, dinero (spend/fal) y seguridad (auth/webhooks/cifrado). Caza bugs (correctness, robustez, seguridad). Hallazgos de correctness/robustez confirmados → tríalos: **arréglalos si están en alcance** (al implementer vía SendMessage; re-gate tras el fix); **deuda de journal solo si quedan fuera de alcance o son genuinamente diminutos**. `code-review` NO caza bugs por simplicidad — eso es 5b.
+
+**5b · `simplify`** — sobre el diff resultante (tras aplicar los fixes de 5a). Es **solo calidad** (reuso, simplificación, eficiencia, altitud); NO caza bugs. Sus cleanups se **auto-aplican**; aquí la deuda se INVIERTE respecto a 5a: lo aplicado se QUEDA si el re-gate sigue verde, y solo lo residual minúsculo que quede fuera va a deuda (no al revés).
+- **Re-gate tras `simplify` es no negociable, e INSPECCIONA su diff — no lo aceptes a ciegas.** El gate tiene huecos conocidos (no corre `build` — así se coló el bug del bundle del worker en T0.2) y el código tiene mecanismos load-bearing no obvios (p.ej. los 3 timeouts distintos del ping, `pingDb` standalone) que un pase de "calidad" puede fundir en un bug. Rechaza cualquier cambio de `simplify` que toque un mecanismo documentado como load-bearing.
+- Un cambio de `simplify` que ponga el gate en rojo se revierte o se arregla hacia delante — JAMÁS se acomoda debilitando un test (regla 5).
+
+Nota sobre la naturaleza de cada pase (para no dar forma equivocada a la regla): un hallazgo de reuso/simplificación lo absorbe `simplify`; un bug de robustez (p.ej. una fuga de conexión en una ruta de error) lo caza `code-review` y NO desaparece por pasar `simplify` — se arregla o se anota como deuda en 5a.
 
 ### 6 · VERIFY
 Lanza el subagente **`verifier`** (contexto fresco, escéptico) con: el ID de la tarea, el texto LITERAL de su Verificación, el resumen del implementer y el diff (`git diff --stat`). El verifier ejecuta la Verificación de verdad contra el sistema levantado (protocolo en `testing/references/cua.md`), persiste la evidencia en `docs/verifications/<ID>/` y devuelve **PASS/FAIL + coste real**.

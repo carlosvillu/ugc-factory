@@ -329,3 +329,10 @@
   5. Encolado de roots en bucle (K UPDATEs) en createRun: coste 0 hoy (1 root), aplazable.
 - **ARNÉS actualizado (mejora continua)**: los briefs de fixes de BOOT/runtime deben EXIGIR prueba en shell LIMPIO (`env -u <VAR>` o subshell con la var unset) — un env contaminado dio un falso PASS de implementer este ciclo. Pendiente de propagar a la skill dev-loop / definición del agente implementer en próxima edición deliberada del arnés (anotado para no perderlo).
 - **Commits de F0 hasta aquí**: T0.2 dd96330 · T0.3 c9fc1c2 · arnés a7e4e79 · T0.6 5b1e6e1 · T0.7a 4d0169b · T0.7b (este).
+
+## 2026-07-08 · arnés: 2 reglas al agente implementer (lecciones de T0.7b)
+- Petición del usuario: consolidar las mejoras del arnés que quedaron anotadas como pendientes en el ciclo de T0.7b.
+- Cambios en `.claude/agents/implementer.md`:
+  1. **Punto 2 (baby steps) — write-early**: "escribe pronto y persiste incrementalmente; no gastes el presupuesto en exploración pre-escritura". Motivación: 2 implementers de F0 (T0.7a y T0.7b) murieron por "Response stalled mid-stream" haciendo toda la exploración antes de escribir una línea. Ahora es regla del agente, no solo lección de journal.
+  2. **Punto 4 (verificación local) — prueba en shell limpio para fixes de boot/runtime**: si el fix depende de una env var o del arranque de un proceso, probarlo con `env -u VAR`/`unset VAR` para que un valor heredado del shell no dé un falso PASS. Motivación: en T0.7b el 1er fix de boot se reportó "verificado" pero fallaba — la var vivía en el shell del implementer, no la ponía el fix; el verifier lo destapó con prueba de aislamiento.
+- Esta edición del arnés es trabajo de solo-skill/docs → se salta code-review/simplify/verify y gate (sin superficie de runtime), coherente con la regla del propio arnés (paso 5 de dev-loop). Aplica desde la próxima tarea.

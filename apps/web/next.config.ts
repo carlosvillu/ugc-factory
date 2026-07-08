@@ -18,6 +18,15 @@ const rootEnv = fileURLToPath(new URL('../../.env', import.meta.url));
 if (process.env.NODE_ENV === 'development' && existsSync(rootEnv)) {
   process.loadEnvFile(rootEnv);
 }
+// La ruta absoluta de las migraciones (UGC_DB_MIGRATIONS_DIR) que el runner de
+// @ugc/db necesita bajo Turbopack NO se inyecta aquí: una asignación
+// `process.env.X = …` en next.config.ts NO llega al runtime nodejs que ejecuta
+// instrumentation.register() (Turbopack lo corre en un worker que no ve esa
+// mutación; probado). Se inyecta en el ENTORNO REAL del proceso `next dev` desde
+// el wrapper `scripts/dev.mjs`, único canal que llega al runtime. DATABASE_URL sí
+// llega desde aquí porque `loadEnvFile` alimenta el pipeline de env de Next, que
+// snapshotea `.env`; UGC_DB_MIGRATIONS_DIR no está en ningún `.env` (a propósito:
+// envenenaría el fallback require.resolve del CLI/tests) → ese canal no la lleva.
 
 const nextConfig: NextConfig = {
   // Los paquetes internos exportan TS fuente (JIT): Next los transpila

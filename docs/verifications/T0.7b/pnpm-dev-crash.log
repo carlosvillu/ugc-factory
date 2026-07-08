@@ -1,0 +1,30 @@
+
+> ugc-factory@0.0.0 dev /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads
+> pnpm --parallel --filter @ugc/web --filter @ugc/worker dev
+
+Scope: 2 of 6 workspace projects
+apps/web dev$ next dev
+apps/worker dev$ tsx watch --env-file-if-exists=../../.env src/main.ts
+apps/web dev: ▲ Next.js 16.2.10 (Turbopack)
+apps/web dev: - Local:         http://localhost:3000
+apps/web dev: - Network:       http://192.168.1.132:3000
+apps/web dev: ✓ Ready in 460ms
+apps/worker dev: {"level":30,"time":1783529597541,"pid":93098,"hostname":"MBP-de-Carlos","name":"worker","queue":"demo.noop","msg":"pg-boss arrancado: colas y consumers listos"}
+apps/worker dev: {"level":30,"time":1783529597542,"pid":93098,"hostname":"MBP-de-Carlos","name":"worker","health":{"ok":true,"db":true},"msg":"worker ready"}
+apps/web dev: {"level":30,"time":1783529598292,"pid":93097,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","msg":"running startup migrations"}
+apps/web dev: Error: An error occurred while loading instrumentation hook: Can't find meta/_journal.json file
+apps/web dev:     at runMigrations (../../packages/db/src/migrate.ts:50:20)
+apps/web dev:     at async Module.register (src/instrumentation.ts:35:3)
+apps/web dev:   48 |     await client.query('SELECT pg_advisory_lock($1)', [MIGRATION_LOCK_KEY]);
+apps/web dev:   49 |     try {
+apps/web dev: > 50 |       await migrate(drizzle(client), { migrationsFolder: migrationsFolder() });
+apps/web dev:      |                    ^
+apps/web dev:   51 |     } finally {
+apps/web dev:   52 |       await client.query('SELECT pg_advisory_unlock($1)', [MIGRATION_LOCK_KEY]);
+apps/web dev:   53 |     }
+apps/web dev: [?25h
+apps/web dev: Failed
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/web:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @ugc/web@0.0.0 dev: `next dev`
+Exit status 1
+ ELIFECYCLE  Command failed with exit code 1.

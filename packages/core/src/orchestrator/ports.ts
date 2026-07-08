@@ -31,6 +31,18 @@ export interface StepRow {
   nodeKey: string;
   status: StepStatus;
   dependsOn: string[];
+  // Contador de reintentos y su tope (§7.1). El consumer los lee BAJO el lock
+  // (vienen de findForUpdate) para gatear `retry_count < max_retries` antes de
+  // disparar el evento `retry` — agotado ⇒ el step queda `failed` terminal
+  // (T0.7b). Leerlos bajo el lock, no en una query aparte, es lo que hace la
+  // decisión coherente con la transición.
+  retryCount: number;
+  maxRetries: number;
+  // Config general per-step del nodo (T0.7b): parámetros del executor
+  // (`sleep_ms`, `fail_rate`, `hang` para los de demo). El consumer se la pasa al
+  // executor. `null` si el nodo no tiene parámetros. Shape opaco para core: lo
+  // interpreta cada executor.
+  config: unknown;
 }
 
 /**
@@ -49,6 +61,16 @@ export interface StepPatch {
   status: StepStatus;
   startedAt?: Date;
   finishedAt?: Date | null;
+  /**
+   * Incremento ATÓMICO de `retry_count` (T0.7b). El consumer, tras un fallo de
+   * executor y bajo el lock de la fila, decide reintentar (failed→queued vía
+   * `retry`) e incrementar el contador EN EL MISMO UPDATE. Es un `boolean`, no un
+   * número, a propósito: el adapter lo traduce a `retry_count = retry_count + 1`
+   * en SQL, de modo que el incremento ocurre en la BD bajo el lock (sin
+   * leer-en-JS-y-reescribir, que abriría una ventana de lost-update). `undefined`
+   * / `false` = no tocar el contador.
+   */
+  incrementRetryCount?: boolean;
 }
 
 /**
@@ -112,6 +134,35 @@ export interface TxStores {
   steps: StepStore;
   jobs: JobQueue;
   events: RunNotifier;
+  runs: RunStore;
+}
+
+/**
+ * Filas a insertar al crear un run (T0.7b). `RunStore` las persiste en la MISMA
+ * transacción que el encolado de los roots (createRun.ts), de modo que un crash
+ * entre el INSERT y el encolado no deja un run varado. Shapes mínimos: solo lo
+ * que el orquestador escribe; db mapea a sus columnas.
+ */
+export interface NewRunRow {
+  id: string;
+  projectId: string;
+}
+export interface NewStepRow {
+  id: string;
+  runId: string;
+  nodeKey: string;
+  status: StepStatus; // 'pending' (root) | 'awaiting_deps' (dependiente)
+  dependsOn: string[]; // ULIDs de los steps de los que depende (ya resueltos)
+  config: unknown; // parámetros del executor (step_run.config), o null
+}
+
+/**
+ * Persiste el run y sus steps al crear un run (T0.7b). Tx-scoped como el resto de
+ * stores: el INSERT comparte la transacción con el encolado atómico de los roots.
+ */
+export interface RunStore {
+  insertRun(run: NewRunRow): Promise<void>;
+  insertSteps(steps: NewStepRow[]): Promise<void>;
 }
 
 /**

@@ -1,0 +1,14 @@
+
+ RUN  v4.1.10 /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads
+
+ ✓ |web:integration| test/integration/api/runs.test.ts > POST /api/runs > DAG N0→N1→N2: 201, crea run + 3 steps y encola el root en la MISMA tx 31ms
+ ✓ |web:integration| test/integration/api/runs.test.ts > POST /api/runs > body que no cumple el schema ⇒ 400 validation_error con details 4ms
+ ✓ |web:integration| test/integration/api/runs.test.ts > POST /api/runs > DAG con ciclo ⇒ 400 validation_error, cero filas 4ms
+ ✓ |web:integration| test/integration/api/runs.test.ts > POST /api/runs > DAG con node_key duplicado (keys distintas) ⇒ 400 validation_error, cero filas 4ms
+ ✓ |web:integration| test/integration/api/runs.test.ts > POST /api/runs > body JSON malformado ⇒ 400 validation_error 4ms
+
+ Test Files  1 passed (1)
+      Tests  5 passed (5)
+   Start at  18:49:10
+   Duration  3.81s (transform 127ms, setup 8ms, import 756ms, tests 169ms, environment 0ms)
+

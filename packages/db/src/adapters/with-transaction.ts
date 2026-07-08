@@ -10,6 +10,7 @@ import type { WithTransaction } from '@ugc/core/orchestrator';
 import type { DbClient } from '../client';
 import { makeStepStore } from './step-store';
 import { makeTxJobQueue } from './job-queue';
+import { makeRunStore } from './run-store';
 
 export function makeWithTransaction(db: DbClient, boss: PgBoss): WithTransaction {
   return (fn) =>
@@ -17,6 +18,7 @@ export function makeWithTransaction(db: DbClient, boss: PgBoss): WithTransaction
       fn({
         steps: makeStepStore(tx),
         jobs: makeTxJobQueue(boss, tx), // INSERT del job pg-boss dentro de ESTA tx
+        runs: makeRunStore(tx), // INSERT run + steps en ESTA tx (T0.7b)
         events: {
           notify: async (runId) => {
             // pg_notify parametrizado (no NOTIFY a pelo): solo se ENTREGA en

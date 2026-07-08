@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "next dev",
+    "dev": "node scripts/dev.mjs",
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
@@ -19,9 +19,11 @@
     "geist": "^1.7.2",
     "next": "16.2.10",
     "pg": "catalog:",
+    "pg-boss": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
-    "tailwind-merge": "3.6.0"
+    "tailwind-merge": "3.6.0",
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.3.2",

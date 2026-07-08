@@ -8,13 +8,41 @@ export type {
   StepPatch,
   StepStore,
   RunNotifier,
+  RunStore,
+  NewRunRow,
+  NewStepRow,
   TxStores,
   WithTransaction,
 } from './ports';
 export { nextStatus, isLegalTransition, type StepStatus, type StepEvent } from './transitions';
 export {
   transition,
+  failStep,
+  type FailOutcome,
   IllegalTransitionError,
   StepNotFoundError,
   type TransitionDeps,
 } from './transition';
+// Creación de run desde un DAG (T0.7b): contrato de entrada, validación y servicio.
+export {
+  RunDefinitionSchema,
+  RunNodeSchema,
+  type RunDefinition,
+  type RunNode,
+  initialStatus,
+  validateDag,
+} from './run-definition';
+export {
+  createRun,
+  InvalidRunDefinitionError,
+  type CreateRunDeps,
+  type CreateRunResult,
+  type CreatedStep,
+} from './create-run';
+export {
+  DemoConfigSchema,
+  type DemoConfig,
+  type StepExecutor,
+  type ExecutorContext,
+} from './executor';
+export { demoRunDefinition } from './demo-dag';

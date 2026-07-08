@@ -1,0 +1,21 @@
+
+> @ugc/web@0.0.0 dev /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/web
+> next dev
+
+▲ Next.js 16.2.10 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.1.132:3000
+✓ Ready in 338ms
+{"level":30,"time":1783529804869,"pid":96949,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","msg":"running startup migrations"}
+Error: An error occurred while loading instrumentation hook: Can't find meta/_journal.json file
+    at runMigrations (../../packages/db/src/migrate.ts:50:20)
+    at async Module.register (src/instrumentation.ts:35:3)
+  48 |     await client.query('SELECT pg_advisory_lock($1)', [MIGRATION_LOCK_KEY]);
+  49 |     try {
+> 50 |       await migrate(drizzle(client), { migrationsFolder: migrationsFolder() });
+     |                    ^
+  51 |     } finally {
+  52 |       await client.query('SELECT pg_advisory_unlock($1)', [MIGRATION_LOCK_KEY]);
+  53 |     }
+[?25h
+ ELIFECYCLE  Command failed with exit code 1.

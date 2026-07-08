@@ -1,0 +1,19 @@
+
+ RUN  v4.1.10 /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads
+
+ ✓ |worker:integration| test/integration/step-execute.test.ts > createRun: estados iniciales + encolado atómico de roots > N0(root)→N1→N2: root queda queued+job, dependientes awaiting_deps, sin worker 76ms
+ ✓ |worker:integration| test/integration/step-execute.test.ts > createRun: estados iniciales + encolado atómico de roots > DAG inválido (dep colgante) ⇒ InvalidRunDefinitionError, cero filas 35ms
+ ✓ |worker:integration| test/integration/step-execute.test.ts > consumer: camino feliz end-to-end > los 3 steps encadenados llegan a succeeded EN ORDEN con timestamps coherentes 1663ms
+ ✓ |worker:integration| test/integration/step-execute.test.ts > consumer: retry_count agotándose (no bucle infinito) > un step demo.fail con fail_rate=1 agota max_retries y queda failed terminal 3209ms
+ ✓ |worker:integration| test/integration/demo-noop.test.ts > pg-boss operativo en el worker (T0.6) > encola 10 jobs demo.noop con fallo per-intento y todos convergen a completed con retries 6627ms
+ ✓ |worker:integration| test/integration/step-execute.test.ts > consumer: retry_count agotándose (no bucle infinito) > un step demo.fail que falla K<max veces converge a succeeded con retry_count=K 1664ms
+ ✓ |worker:integration| test/integration/step-execute.test.ts > consumer: idempotencia bajo at-least-once > un job duplicado para un step ya no-queued es un NO-OP seguro (no throw, no corrupción) 2130ms
+ ✓ |worker:integration| test/integration/step-execute.test.ts > consumer: executor desconocido (error de config permanente) > un node_key sin executor va a failed TERMINAL sin quemar retry_count 1608ms
+ ✓ |worker:integration| test/integration/step-execute.test.ts > estrés: 20 runs concurrentes (Verificación T0.7b) > 20 runs del DAG de demo completan sin interbloqueos ni estados corruptos 3294ms
+ ✓ |worker:integration| test/integration/step-execute.test.ts > consumer: éxito del executor + succeed que falla (FIX 1) > un succeed que falla por INFRA NO re-ejecuta el executor ni dispara failStep 2073ms
+
+ Test Files  2 passed (2)
+      Tests  10 passed (10)
+   Start at  18:48:49
+   Duration  19.66s (transform 238ms, setup 20ms, import 1.60s, tests 22.80s, environment 0ms)
+

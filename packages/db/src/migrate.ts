@@ -24,8 +24,19 @@ export const MIGRATION_LOCK_KEY = 724_100;
  * Carpeta con el SQL committeado, resuelta respecto al PAQUETE @ugc/db, nunca
  * `process.cwd()`: el CLI corre desde el dir del paquete, pero instrumentation
  * de web corre desde apps/web y el harness desde cada paquete de tests.
+ *
+ * Bajo Turbopack (apps/web), este módulo se BUNDLEA en `.next`: su
+ * `import.meta.url` conserva la ruta fuente pero `require.resolve('@ugc/db/...')`
+ * devuelve el sentinel virtual del bundler (`[project]/...`), no una ruta real en
+ * disco → drizzle no encuentra `meta/_journal.json`. Por eso, si el composition
+ * root de web inyecta `UGC_DB_MIGRATIONS_DIR` (ruta absoluta calculada FUERA del
+ * bundle, en next.config.ts que corre en el proceso padre), se prefiere esa ruta.
+ * El CLI y los tests no fijan la var → caen al `require.resolve`, que resuelve
+ * bien desde Node puro (rutas de invocación intactas).
  */
 function migrationsFolder(): string {
+  const fromEnv = process.env.UGC_DB_MIGRATIONS_DIR;
+  if (fromEnv) return fromEnv;
   const require = createRequire(import.meta.url);
   return path.join(path.dirname(require.resolve('@ugc/db/package.json')), 'drizzle');
 }

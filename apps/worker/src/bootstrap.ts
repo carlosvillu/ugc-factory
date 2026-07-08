@@ -5,6 +5,7 @@ import type { PgBoss } from 'pg-boss';
 import { noopJob } from '@ugc/core/jobs';
 import { createBoss } from './boss';
 import { type FailDecider, neverFail, randomFailRate } from './consumers/demo-noop';
+import type { DemoFailDecider } from './executors/demo';
 import { makeJobQueue } from './job-queue';
 
 export interface BootstrapDeps {
@@ -13,6 +14,8 @@ export interface BootstrapDeps {
   databaseUrl?: string;
   /** Decisor de fallo del consumer `demo.noop` (Verificación/tests). */
   noopShouldFail?: FailDecider;
+  /** Decisor de fallo de los executors de demo de `step.execute` (T0.7b tests). */
+  demoShouldFail?: DemoFailDecider;
 }
 
 export interface BootstrapResult {
@@ -38,6 +41,7 @@ export async function bootstrap({
   logger,
   databaseUrl = process.env.DATABASE_URL,
   noopShouldFail,
+  demoShouldFail,
 }: BootstrapDeps): Promise<BootstrapResult> {
   // Ping compartido con web vía @ugc/db (timeouts cortos, cualquier error →
   // false, nunca lanza).
@@ -60,6 +64,7 @@ export async function bootstrap({
       connectionString: databaseUrl,
       logger,
       noopShouldFail: shouldFail,
+      demoShouldFail,
     });
     logger.info({ queue: 'demo.noop' }, 'pg-boss arrancado: colas y consumers listos');
 

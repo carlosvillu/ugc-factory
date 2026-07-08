@@ -20,6 +20,9 @@ function toStepRow(row: {
   nodeKey: string;
   status: StepRow['status'];
   dependsOn: string[];
+  retryCount: number;
+  maxRetries: number;
+  config: unknown;
 }): StepRow {
   return {
     id: row.id,
@@ -27,8 +30,25 @@ function toStepRow(row: {
     nodeKey: row.nodeKey,
     status: row.status,
     dependsOn: row.dependsOn,
+    retryCount: row.retryCount,
+    maxRetries: row.maxRetries,
+    config: row.config,
   };
 }
+
+// Proyección compartida por los tres SELECT (findForUpdate/findDependents/…): la
+// forma de StepRow del puerto. Centralizada para que un campo nuevo se añada una
+// sola vez.
+const stepRowColumns = {
+  id: stepRun.id,
+  runId: stepRun.runId,
+  nodeKey: stepRun.nodeKey,
+  status: stepRun.status,
+  dependsOn: stepRun.dependsOn,
+  retryCount: stepRun.retryCount,
+  maxRetries: stepRun.maxRetries,
+  config: stepRun.config,
+} as const;
 
 /**
  * `SELECT … FOR UPDATE` sobre la fila del step: la bloquea hasta el commit y
@@ -36,16 +56,21 @@ function toStepRow(row: {
  */
 export async function findStepForUpdate(db: Db, id: string): Promise<StepRow | undefined> {
   const [row] = await db
-    .select({
-      id: stepRun.id,
-      runId: stepRun.runId,
-      nodeKey: stepRun.nodeKey,
-      status: stepRun.status,
-      dependsOn: stepRun.dependsOn,
-    })
+    .select(stepRowColumns)
     .from(stepRun)
     .where(eq(stepRun.id, id))
     .for('update');
+  return row ? toStepRow(row) : undefined;
+}
+
+/**
+ * Lectura simple (sin lock) de un step por id: `undefined` si no existe. La usa
+ * el consumer genérico (T0.7b) para obtener `config`/`retry_count`/`max_retries`
+ * tras arrancar el step — la revalidación bajo lock la hace `transition()`; esto
+ * solo lee datos para pasar al executor y decidir el retry.
+ */
+export async function findStep(db: Db, id: string): Promise<StepRow | undefined> {
+  const [row] = await db.select(stepRowColumns).from(stepRun).where(eq(stepRun.id, id));
   return row ? toStepRow(row) : undefined;
 }
 
@@ -60,6 +85,13 @@ export async function updateStep(db: Db, id: string, patch: StepPatch): Promise<
       // Date = escribirlo; null = poner la columna a NULL (retry). El guard
       // `!== undefined` deja pasar el null → Drizzle escribe NULL.
       ...(patch.finishedAt !== undefined && { finishedAt: patch.finishedAt }),
+      // Incremento ATÓMICO de retry_count (T0.7b): `retry_count = retry_count + 1`
+      // en el propio UPDATE, bajo el lock que ya tiene findForUpdate. No se lee en
+      // JS ni se reescribe un valor concreto → cero ventana de lost-update. El
+      // cast asegura que Drizzle acepte la expresión SQL en el `.set` tipado.
+      ...(patch.incrementRetryCount === true && {
+        retryCount: sql<number>`${stepRun.retryCount} + 1`,
+      }),
     })
     .where(eq(stepRun.id, id));
 }
@@ -73,13 +105,7 @@ export async function updateStep(db: Db, id: string, patch: StepPatch): Promise<
  */
 export async function findDependents(db: Db, stepId: string): Promise<StepRow[]> {
   const rows = await db
-    .select({
-      id: stepRun.id,
-      runId: stepRun.runId,
-      nodeKey: stepRun.nodeKey,
-      status: stepRun.status,
-      dependsOn: stepRun.dependsOn,
-    })
+    .select(stepRowColumns)
     .from(stepRun)
     // depends_on @> ARRAY[stepId]: la fila contiene stepId entre sus deps.
     .where(sql`${stepRun.dependsOn} @> ARRAY[${stepId}]::text[]`)

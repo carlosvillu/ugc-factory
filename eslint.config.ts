@@ -260,9 +260,26 @@ export default defineConfig(
   },
 
   // ── 8. JS plano (configs, scripts .mjs): sin type-checking ───────────────
+  // Estos ficheros no pasan por typed-lint (que apaga `no-undef` porque TS ya
+  // valida los símbolos), así que `no-undef` de js.recommended sigue activo:
+  // hay que declararles los globals de Node/ESM a mano (no hay paquete
+  // `globals` instalado). Los usa p.ej. apps/web/scripts/dev.mjs (wrapper de
+  // `next dev` que corre en Node puro).
   {
     files: ['**/*.{js,mjs,cjs}'],
     extends: [tseslint.configs.disableTypeChecked],
+    languageOptions: {
+      globals: {
+        process: 'readonly',
+        URL: 'readonly',
+        console: 'readonly',
+        __dirname: 'readonly',
+        __filename: 'readonly',
+        module: 'readonly',
+        require: 'readonly',
+        globalThis: 'readonly',
+      },
+    },
   },
 
   // ── 8b. eslint.config.ts: ruido de import-x sobre el patrón canónico ─────

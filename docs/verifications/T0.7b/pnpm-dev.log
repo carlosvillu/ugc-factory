@@ -1,0 +1,26 @@
+
+> ugc-factory@0.0.0 dev /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads
+> pnpm --parallel --filter @ugc/web --filter @ugc/worker dev
+
+Scope: 2 of 6 workspace projects
+apps/web dev$ node scripts/dev.mjs
+apps/worker dev$ tsx watch --env-file-if-exists=../../.env src/main.ts
+apps/web dev: ▲ Next.js 16.2.10 (Turbopack)
+apps/web dev: - Local:         http://localhost:3000
+apps/web dev: - Network:       http://192.168.1.132:3000
+apps/web dev: ✓ Ready in 373ms
+apps/worker dev: {"level":30,"time":1783534293320,"pid":86933,"hostname":"MBP-de-Carlos","name":"worker","queue":"demo.noop","msg":"pg-boss arrancado: colas y consumers listos"}
+apps/worker dev: {"level":30,"time":1783534293320,"pid":86933,"hostname":"MBP-de-Carlos","name":"worker","health":{"ok":true,"db":true},"msg":"worker ready"}
+apps/web dev: {"level":30,"time":1783534293967,"pid":86934,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","msg":"running startup migrations"}
+apps/web dev: {"level":30,"time":1783534294017,"pid":86934,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","msg":"startup migrations applied"}
+apps/web dev: {"level":30,"time":1783534301648,"pid":86934,"hostname":"MBP-de-Carlos","name":"web","request_id":"f0973754-28b1-4ae3-9975-0cd56023195d","route":"/api/health","health":{"ok":true,"db":true},"msg":"health check"}
+apps/web dev:  GET /api/health 200 in 619ms (next.js: 583ms, application-code: 35ms)
+apps/web dev: {"level":30,"time":1783534335449,"pid":86934,"hostname":"MBP-de-Carlos","name":"web","request_id":"c2381d2c-3ce0-4aa3-94fd-5df1e6ebb306","route":"/api/runs","run_id":"01KX1EWDDVAEK8J8BEV5149442","steps":3,"msg":"run creado"}
+apps/web dev:  POST /api/runs 201 in 230ms (next.js: 153ms, application-code: 76ms)
+apps/web dev:  GET /design-system 200 in 2.4s (next.js: 1684ms, application-code: 685ms)
+apps/web dev: {"level":30,"time":1783534426717,"pid":86934,"hostname":"MBP-de-Carlos","name":"web","request_id":"7e9e1768-d2db-4f39-8fc5-a09f186c0cca","route":"/api/runs","run_id":"01KX1EZ6HSW2DMP0VR7SQG0E38","steps":3,"msg":"run creado"}
+apps/web dev:  POST /api/runs 201 in 59ms (next.js: 11ms, application-code: 48ms)
+apps/worker dev: {"level":30,"time":1783534460883,"pid":86933,"hostname":"MBP-de-Carlos","name":"worker","signal":"SIGTERM","msg":"worker shutting down"}
+apps/worker dev: Done
+apps/web dev: [?25h
+apps/web dev: Done

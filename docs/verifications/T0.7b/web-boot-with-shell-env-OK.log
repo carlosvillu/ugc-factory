@@ -1,0 +1,14 @@
+
+> @ugc/web@0.0.0 dev /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/web
+> next dev
+
+▲ Next.js 16.2.10 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.1.132:3000
+✓ Ready in 369ms
+{"level":30,"time":1783532369021,"pid":45927,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","msg":"running startup migrations"}
+{"level":30,"time":1783532369093,"pid":45927,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","msg":"startup migrations applied"}
+
+{"level":30,"time":1783532369834,"pid":45927,"hostname":"MBP-de-Carlos","name":"web","request_id":"be36c9f2-190b-4359-ac20-f8ddb6f514ce","route":"/api/health","health":{"ok":true,"db":true},"msg":"health check"}
+ GET /api/health 200 in 589ms (next.js: 552ms, application-code: 37ms)
+[?25h

@@ -128,6 +128,9 @@ importers:
       pg:
         specifier: 'catalog:'
         version: 8.22.0
+      pg-boss:
+        specifier: 'catalog:'
+        version: 12.25.1
       react:
         specifier: 'catalog:'
         version: 19.2.0
@@ -137,6 +140,9 @@ importers:
       tailwind-merge:
         specifier: 3.6.0
         version: 3.6.0
+      zod:
+        specifier: 'catalog:'
+        version: 4.4.3
     devDependencies:
       '@tailwindcss/postcss':
         specifier: ^4.3.2

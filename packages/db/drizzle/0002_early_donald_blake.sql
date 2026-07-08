@@ -1,0 +1,1 @@
+ALTER TABLE "step_run" ADD COLUMN "config" jsonb;

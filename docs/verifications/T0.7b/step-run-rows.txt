@@ -1,0 +1,10 @@
+   node_key    |  status   | retry_count |         started_at         |        finished_at         
+---------------+-----------+-------------+----------------------------+----------------------------
+ demo.sleep.N0 | succeeded |           0 | 2026-07-08 18:12:15.465+00 | 2026-07-08 18:12:15.525+00
+ demo.sleep.N1 | succeeded |           0 | 2026-07-08 18:12:15.966+00 | 2026-07-08 18:12:16.024+00
+ demo.sleep.N2 | succeeded |           0 | 2026-07-08 18:12:16.46+00  | 2026-07-08 18:12:16.52+00
+(3 rows)
+
+demo.sleep.N0|succeeded|t|true
+demo.sleep.N1|succeeded|t|true
+demo.sleep.N2|succeeded|t|N/A(last)

@@ -97,6 +97,14 @@ export const stepRun = pgTable(
     inputRefs: jsonb('input_refs'),
     outputRefs: jsonb('output_refs'),
     error: jsonb('error'),
+    // Config GENERAL per-step del nodo (T0.7b): parámetros de ejecución del
+    // executor, poblados en la creación del run desde la definición del DAG. Los
+    // executors de demo la leen (`sleep_ms`, `fail_rate`, `hang`) para provocar
+    // fallos/cuelgues verificables; los nodos reales la usarán para su propia
+    // config. NO es `input_refs` (eso es "input artifacts" de F2) ni andamiaje a
+    // retirar: T0.9 la muta (p. ej. `fail_rate=1→0` al reintentar). Nullable: un
+    // nodo sin parámetros no necesita fila de config.
+    config: jsonb('config'),
     retryCount: integer('retry_count').notNull().default(0),
     maxRetries: integer('max_retries').notNull().default(3),
     // El sweeper (T0.9) compara contra now() de Postgres; nullable hasta que un

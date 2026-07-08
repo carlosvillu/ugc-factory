@@ -1,14 +1,21 @@
 import { noopJob, stepExecuteJob } from '@ugc/core/jobs';
 import type { Logger } from '@ugc/core';
-import { ensureQueue } from '@ugc/db';
+import type { TransitionDeps } from '@ugc/core/orchestrator';
+import { createDbPool, ensureQueue, makeWithTransaction } from '@ugc/db';
 import { PgBoss } from 'pg-boss';
 import { type FailDecider, registerNoopConsumer } from './consumers/demo-noop';
+import { registerStepConsumer } from './consumers/step-execute';
+import { type DemoFailDecider, randomDemoFail } from './executors/demo';
+import { makeExecutorRegistry } from './executors';
 
 export interface CreateBossDeps {
   connectionString: string;
   logger: Logger;
   /** Decisor de fallo del consumer `demo.noop`, ya resuelto por bootstrap. */
   noopShouldFail: FailDecider;
+  /** Decisor de fallo de los executors de demo de `step.execute` (T0.7b). Default:
+   *  aleatorio per-intento — la Verificación manual lo controla vía `fail_rate`. */
+  demoShouldFail?: DemoFailDecider;
 }
 
 /**
@@ -46,6 +53,29 @@ export async function createBoss(deps: CreateBossDeps): Promise<PgBoss> {
       boss,
       logger: deps.logger,
       shouldFail: deps.noopShouldFail,
+    });
+    // Consumer genérico de `step.execute` (T0.7b): el worker POSEE su propio pool
+    // de Drizzle (createDbPool) y comparte el boss con el encolado transaccional
+    // (makeWithTransaction). Los executors de demo se resuelven por node_key.
+    const { db, pool } = createDbPool(deps.connectionString);
+    // El pool es del worker: se cierra cuando pg-boss cierra físicamente (evento
+    // `stopped`), o sus conexiones quedan vivas tras el shutdown (y un DROP FORCE
+    // de la BD de test las mata con 57P01 sin listener). `once`: un solo cierre.
+    boss.once('stopped', () => {
+      void pool.end();
+    });
+    const transitionDeps: TransitionDeps = {
+      withTransaction: makeWithTransaction(db, boss),
+    };
+    const executors = makeExecutorRegistry({
+      demoShouldFail: deps.demoShouldFail ?? randomDemoFail,
+    });
+    await registerStepConsumer({
+      boss,
+      db,
+      transitionDeps,
+      executors,
+      logger: deps.logger,
     });
   } catch (err) {
     try {

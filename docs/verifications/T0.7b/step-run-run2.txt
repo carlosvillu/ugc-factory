@@ -1,0 +1,7 @@
+   node_key    |  status   | ok_within | ok_chain 
+---------------+-----------+-----------+----------
+ demo.sleep.N0 | succeeded | t         | true
+ demo.sleep.N1 | succeeded | t         | true
+ demo.sleep.N2 | succeeded | t         | last
+(3 rows)
+

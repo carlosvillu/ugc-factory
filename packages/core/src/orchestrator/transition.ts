@@ -16,7 +16,7 @@
 // Rollback des-encola el job y silencia el NOTIFY: la atomicidad es la propiedad
 // clave (jobs.md §5).
 import { stepExecuteJob } from '../jobs';
-import type { StepEvent } from './transitions';
+import type { StepEvent, StepStatus } from './transitions';
 import { nextStatus } from './transitions';
 import type { StepRow, StepStore, TxStores, WithTransaction } from './ports';
 
@@ -98,7 +98,10 @@ function clearsFinishedAt(event: StepEvent): boolean {
  * mecanismo: un belt que hoy protege un path inalcanzable (ver informe FIX 6). Se
  * mantiene por corrección del contrato, no porque el dedup sea load-bearing.
  */
-async function enqueueStep(jobs: TxStores['jobs'], step: StepRow): Promise<void> {
+export async function enqueueStep(
+  jobs: TxStores['jobs'],
+  step: Pick<StepRow, 'id' | 'runId' | 'nodeKey'>,
+): Promise<void> {
   await jobs.enqueue({
     job: stepExecuteJob,
     payload: { runId: step.runId, stepId: step.id, nodeKey: step.nodeKey },
@@ -141,8 +144,68 @@ async function resolveDownstream(
     // atajo interno del resolver, no una transición dirigible por evento. El
     // estado final es idéntico al de los dos saltos encadenados.
     await steps.update(dep.id, { status: 'queued' });
-    await enqueueStep(jobs, { ...dep, status: 'queued' });
+    await enqueueStep(jobs, dep);
   }
+}
+
+/**
+ * Aplica UNA transición sobre stores YA ligados a una tx abierta: lock, validación
+ * pura (§7.1), UPDATE + timestamps, encolado/resolución aguas abajo y NOTIFY. NO
+ * abre la transacción — la abre el llamante (`transition` para una sola, `failStep`
+ * para fail+retry en una tx coherente). Devuelve el estado destino aplicado.
+ */
+async function applyTransition(
+  { steps, jobs, events }: TxStores,
+  stepId: string,
+  event: StepEvent,
+): Promise<StepStatus> {
+  // 1) Lock de fila + estado BAJO el lock.
+  const step = await steps.findForUpdate(stepId);
+  if (!step) throw new StepNotFoundError(stepId);
+
+  // 2) Validar contra §7.1 (PURO). Ilegal ⇒ throw ⇒ ROLLBACK (nada tocado).
+  const to = nextStatus(step.status, event);
+  if (to === null) throw new IllegalTransitionError(stepId, step.status, event);
+
+  // 3) UPDATE del step + timestamps según la transición. El retry LIMPIA
+  //    finished_at (null explícito), el resto de terminales lo FIJAN.
+  await steps.update(stepId, {
+    status: to,
+    ...(setsStartedAt(event) && { startedAt: new Date() }),
+    ...(setsFinishedAt(event) && { finishedAt: new Date() }),
+    ...(clearsFinishedAt(event) && { finishedAt: null }),
+    // El `retry` (failed→queued) consume un intento: incrementa retry_count
+    // ATÓMICAMENTE en el mismo UPDATE, bajo el lock (T0.7b). El GATE
+    // `retry_count < max_retries` NO se decide aquí (la tabla pura de §7.1 no
+    // conoce el contador): lo evalúa `failStep`/el consumer bajo el lock ANTES de
+    // disparar `retry`; agotado ⇒ el step queda `failed` terminal sin retry. Así
+    // el step_run.status es la fuente de verdad del progreso.
+    ...(event === 'retry' && { incrementRetryCount: true }),
+  });
+
+  // Invalidación de sub-grafo (§7.1.b editar / §7.1.c superseder): EFECTO en
+  // T0.8. Aquí la transición a `succeeded`/`superseded` ya está aplicada; la
+  // creación del step_run nuevo con supersedes_id y el paso del sub-grafo a
+  // `superseded` son un no-op documentado hasta T0.8.
+  // invalidación sub-grafo: T0.8
+
+  // 4) ENCOLADO en la MISMA tx (rollback des-encola). Un step que alcanza
+  //    `queued` (evento `enqueue`: pending→queued) tiene, por definición de
+  //    §7.1, un job en la cola: se crea aquí.
+  if (to === 'queued') {
+    await enqueueStep(jobs, step);
+  }
+
+  // 5) Resolver deps aguas abajo SOLO cuando este step entró en `succeeded`:
+  //    es lo único que puede habilitar a un dependiente (§7.1.a). Los
+  //    dependientes listos pasan a `queued` y se encolan dentro de resolveDownstream.
+  if (to === 'succeeded') {
+    await resolveDownstream(steps, jobs, stepId);
+  }
+
+  // 6) NOTIFY pipeline_events, '<run_id>' — solo se entrega en COMMIT (db.md §6).
+  await events.notify(step.runId);
+  return to;
 }
 
 /**
@@ -156,45 +219,31 @@ export async function transition(
   stepId: string,
   event: StepEvent,
 ): Promise<void> {
-  await deps.withTransaction(async ({ steps, jobs, events }: TxStores) => {
-    // 1) Lock de fila + estado BAJO el lock.
-    const step = await steps.findForUpdate(stepId);
-    if (!step) throw new StepNotFoundError(stepId);
+  await deps.withTransaction((stores) => applyTransition(stores, stepId, event));
+}
 
-    // 2) Validar contra §7.1 (PURO). Ilegal ⇒ throw ⇒ ROLLBACK (nada tocado).
-    const to = nextStatus(step.status, event);
-    if (to === null) throw new IllegalTransitionError(stepId, step.status, event);
+/** Resultado de `failStep`: si tras el fallo el step se reencoló para reintentar
+ *  (`queued`) o quedó `failed` terminal (retries agotados). */
+export type FailOutcome = 'retried' | 'exhausted';
 
-    // 3) UPDATE del step + timestamps según la transición. El retry LIMPIA
-    //    finished_at (null explícito), el resto de terminales lo FIJAN.
-    await steps.update(stepId, {
-      status: to,
-      ...(setsStartedAt(event) && { startedAt: new Date() }),
-      ...(setsFinishedAt(event) && { finishedAt: new Date() }),
-      ...(clearsFinishedAt(event) && { finishedAt: null }),
-    });
-
-    // Invalidación de sub-grafo (§7.1.b editar / §7.1.c superseder): EFECTO en
-    // T0.8. Aquí la transición a `succeeded`/`superseded` ya está aplicada; la
-    // creación del step_run nuevo con supersedes_id y el paso del sub-grafo a
-    // `superseded` son un no-op documentado hasta T0.8.
-    // invalidación sub-grafo: T0.8
-
-    // 4) ENCOLADO en la MISMA tx (rollback des-encola). Un step que alcanza
-    //    `queued` (evento `enqueue`: pending→queued) tiene, por definición de
-    //    §7.1, un job en la cola: se crea aquí.
-    if (to === 'queued') {
-      await enqueueStep(jobs, { ...step, status: 'queued' });
-    }
-
-    // 5) Resolver deps aguas abajo SOLO cuando este step entró en `succeeded`:
-    //    es lo único que puede habilitar a un dependiente (§7.1.a). Los
-    //    dependientes listos pasan a `queued` y se encolan dentro de resolveDownstream.
-    if (to === 'succeeded') {
-      await resolveDownstream(steps, jobs, stepId);
-    }
-
-    // 6) NOTIFY pipeline_events, '<run_id>' — solo se entrega en COMMIT (db.md §6).
-    await events.notify(step.runId);
+/**
+ * Falla un step Y decide el reintento en UNA SOLA transacción coherente (T0.7b).
+ * El consumer llama a esto cuando el executor lanza: bajo el lock de la fila
+ * (aplicando `fail` primero) lee `retry_count`/`max_retries` y, si hay margen
+ * (`retry_count < max_retries`), aplica `retry` en la MISMA tx — failed→queued +
+ * incremento atómico de retry_count + re-encolado del job. Agotado ⇒ deja el step
+ * `failed` terminal. Un solo `withTransaction` = ningún otro proceso se cuela
+ * entre el fail y la decisión de retry (sin la ventana de dos txs separadas).
+ */
+export async function failStep(deps: TransitionDeps, stepId: string): Promise<FailOutcome> {
+  return deps.withTransaction(async (stores) => {
+    await applyTransition(stores, stepId, 'fail');
+    // Estado bajo el lock TRAS el fail (retry_count aún sin consumir por este
+    // intento). El gate compara contra max_retries.
+    const failed = await stores.steps.findForUpdate(stepId);
+    if (!failed) throw new StepNotFoundError(stepId);
+    if (failed.retryCount >= failed.maxRetries) return 'exhausted';
+    await applyTransition(stores, stepId, 'retry'); // failed→queued + increment + enqueue
+    return 'retried';
   });
 }

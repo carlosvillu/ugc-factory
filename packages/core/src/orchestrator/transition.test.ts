@@ -47,7 +47,12 @@ function makeWorld(rows: StepRow[]) {
           },
           update: (id: string, patch: StepPatch) => {
             const r = steps.get(id);
-            if (r) Object.assign(r, patch);
+            if (r) {
+              const { incrementRetryCount, ...rest } = patch;
+              Object.assign(r, rest);
+              // Simula el `retry_count = retry_count + 1` atómico del adapter real.
+              if (incrementRetryCount === true) r.retryCount += 1;
+            }
             return Promise.resolve();
           },
           findDependents: (stepId) =>
@@ -78,6 +83,14 @@ function makeWorld(rows: StepRow[]) {
             return Promise.resolve();
           },
         },
+        // `transition()` no usa `runs` (es de createRun), pero TxStores lo exige:
+        // stubs que lanzan si se invocaran por error.
+        runs: {
+          insertRun: () =>
+            Promise.reject(new Error('runs.insertRun no debe usarse en transition()')),
+          insertSteps: () =>
+            Promise.reject(new Error('runs.insertSteps no debe usarse en transition()')),
+        },
       };
       try {
         return await fn(stores);
@@ -101,6 +114,9 @@ function step(overrides: Partial<StepRow> & Pick<StepRow, 'id'>): StepRow {
     nodeKey: 'N0',
     status: 'pending',
     dependsOn: [],
+    retryCount: 0,
+    maxRetries: 3,
+    config: null,
     ...overrides,
   };
 }

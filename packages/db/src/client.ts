@@ -31,3 +31,25 @@ function makeDb(pool: Pool): DbClient {
 export function createDb(connectionString: string): DbClient {
   return makeDb(new Pool({ connectionString }));
 }
+
+/**
+ * Como `createDb` pero DEVUELVE también el `Pool` para que el dueño lo cierre
+ * (`pool.end()`) en su shutdown (architecture.md §6: el worker POSEE su pool). El
+ * consumer del worker (T0.7b) necesita cerrar su pool al parar pg-boss, o sus
+ * conexiones vivas reciben un 57P01 cuando la BD del test se dropea con FORCE.
+ */
+export function createDbPool(connectionString: string): { db: DbClient; pool: Pool } {
+  const pool = new Pool({ connectionString });
+  // Un `error` de Pool sin listener tumba el proceso. Cuando la BD se cae o se
+  // reinicia (57P01/57P03: admin shutdown), o —en tests— se dropea con FORCE
+  // mientras el pool aún cierra, las conexiones vivas emiten ese error de forma
+  // esperada: se absorbe. Cualquier OTRO error se re-lanza para no ocultar bugs.
+  // Paralelo (no idéntico) al pool de @ugc/test-utils, que absorbe solo 57P01: el
+  // pool de producción cubre además 57P03 (admin shutdown por reinicio de la BD),
+  // que test-utils no necesita. Si se unifican, conservar el superconjunto.
+  pool.on('error', (err: Error & { code?: string }) => {
+    if (err.code === '57P01' || err.code === '57P03') return;
+    throw err;
+  });
+  return { db: makeDb(pool), pool };
+}

@@ -11,7 +11,11 @@
 // @ugc/test-utils). makeDb, MIGRATION_LOCK_KEY, los alias Db/DbClient/DbTx y el
 // tipo Project son internos o se importan relativo — fuera del barrel.
 export { pingDb } from './health';
-export { createDb } from './client';
+export { createDb, createDbPool } from './client';
+// El tipo del cliente Drizzle: lo consumen los accessors lazy de web (getDb) y el
+// cableado de `makeWithTransaction` en el composition root (T0.7b). Solo el TIPO
+// sale al barrel; `makeDb`/los alias internos siguen sin exportarse.
+export type { DbClient } from './client';
 export { runMigrations } from './migrate';
 export { createProject, getProject } from './repos/project.repo';
 export type { NewProject } from './schema/project';
@@ -25,3 +29,7 @@ export type { NewPipelineRun, NewStepRun } from './schema/pipeline';
 // consumen el composition root del worker (createBoss) y los tests de
 // integración del orquestador (misma cola real que producción).
 export { ensureQueue } from './adapters/ensure-queue';
+// Lectura simple de un step (sin lock): la usa el consumer genérico del worker
+// (T0.7b) para obtener `config`/retry counters tras arrancar el step. La
+// revalidación bajo lock la hace `transition()`; esto solo lee datos.
+export { findStep } from './repos/steps.repo';

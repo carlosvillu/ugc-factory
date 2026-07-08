@@ -6,11 +6,13 @@ packages:
 # UNA versión por dependencia compartida para TODO el monorepo.
 # Dos versiones de zod = dos identidades de tipo para el mismo schema
 # y errores de asignabilidad absurdos entre core y web.
-# Entradas futuras ya decididas por tooling.md §6 (knip veta catalogs sin consumidor):
-#   pg-boss: ^12.0.0      → entra en T0.6 (v12: el adaptador fromDrizzle del encolado transaccional lo exige)
 catalog:
   zod: ^4.1.0
   pino: ^9.9.0
+  # Colas sobre Postgres (T0.6): lo importa apps/worker (instancia PgBoss +
+  # consumers) y en T0.7a apps/web (encolar desde transition()). v12: el
+  # adaptador fromDrizzle del encolado transaccional (T0.7a) lo exige.
+  pg-boss: ^12.21.0
   # ORM de persistencia (T0.3): lo importan packages/db (schema, client, migrator)
   # y packages/test-utils (harness Testcontainers). Compartido → catalog.
   drizzle-orm: ^0.44.0

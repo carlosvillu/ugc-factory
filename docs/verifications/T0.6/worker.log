@@ -1,0 +1,24 @@
+
+> @ugc/worker@0.0.0 dev /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/worker
+> tsx watch --env-file-if-exists=../../.env src/main.ts
+
+{"level":30,"time":1783513748749,"pid":69237,"hostname":"MBP-de-Carlos","name":"worker","queue":"demo.noop","msg":"pg-boss arrancado: colas y consumers listos"}
+{"level":40,"time":1783513748763,"pid":69237,"hostname":"MBP-de-Carlos","name":"worker","queue":"demo.noop","job_id":"c79f6ecf-c85c-4507-82f2-b2f13d717c36","msg":"demo.noop: fallo inyectado — reintentará"}
+{"level":30,"time":1783513748765,"pid":69237,"hostname":"MBP-de-Carlos","name":"worker","queue":"demo.noop","job_id":"c6f8d192-082b-45ff-93b0-da86580e2416","msg":"demo.noop: ejecutado"}
+{"level":30,"time":1783513748765,"pid":69237,"hostname":"MBP-de-Carlos","name":"worker","queue":"demo.noop","job_id":"e594a0c1-829d-4198-938e-d1245bb25fb2","msg":"demo.noop: ejecutado"}
+{"level":30,"time":1783513748776,"pid":69237,"hostname":"MBP-de-Carlos","name":"worker","queue":"demo.noop","seeded":10,"msg":"demo.noop: jobs de demo encolados"}
+{"level":30,"time":1783513748776,"pid":69237,"hostname":"MBP-de-Carlos","name":"worker","health":{"ok":true,"db":true},"msg":"worker ready"}
+{"level":30,"time":1783513749263,"pid":69237,"hostname":"MBP-de-Carlos","name":"worker","queue":"demo.noop","job_id":"40bee530-22ef-40e2-b4b2-86bd1f2eb03b","msg":"demo.noop: ejecutado"}
+{"level":30,"time":1783513749266,"pid":69237,"hostname":"MBP-de-Carlos","name":"worker","queue":"demo.noop","job_id":"dae3998e-f821-444e-a68f-9eec4b9bc14a","msg":"demo.noop: ejecutado"}
+{"level":30,"time":1783513749267,"pid":69237,"hostname":"MBP-de-Carlos","name":"worker","queue":"demo.noop","job_id":"e079e81b-e54d-4140-9e2a-979b438e958b","msg":"demo.noop: ejecutado"}
+{"level":30,"time":1783513749267,"pid":69237,"hostname":"MBP-de-Carlos","name":"worker","queue":"demo.noop","job_id":"06dde532-306b-4203-8033-442ceb0a4b85","msg":"demo.noop: ejecutado"}
+{"level":30,"time":1783513749267,"pid":69237,"hostname":"MBP-de-Carlos","name":"worker","queue":"demo.noop","job_id":"71864b96-dff4-4111-8e94-3a9217ddf2fa","msg":"demo.noop: ejecutado"}
+{"level":40,"time":1783513749267,"pid":69237,"hostname":"MBP-de-Carlos","name":"worker","queue":"demo.noop","job_id":"fb54eca4-46ea-4ec9-98a6-c72854387679","msg":"demo.noop: fallo inyectado — reintentará"}
+{"level":30,"time":1783513749268,"pid":69237,"hostname":"MBP-de-Carlos","name":"worker","queue":"demo.noop","job_id":"63164045-1ac2-47a3-aee7-50e1e0b12568","msg":"demo.noop: ejecutado"}
+{"level":40,"time":1783513750766,"pid":69237,"hostname":"MBP-de-Carlos","name":"worker","queue":"demo.noop","job_id":"c79f6ecf-c85c-4507-82f2-b2f13d717c36","msg":"demo.noop: fallo inyectado — reintentará"}
+{"level":30,"time":1783513751274,"pid":69237,"hostname":"MBP-de-Carlos","name":"worker","queue":"demo.noop","job_id":"fb54eca4-46ea-4ec9-98a6-c72854387679","msg":"demo.noop: ejecutado"}
+{"level":30,"time":1783513754281,"pid":69237,"hostname":"MBP-de-Carlos","name":"worker","queue":"demo.noop","job_id":"c79f6ecf-c85c-4507-82f2-b2f13d717c36","msg":"demo.noop: ejecutado"}
+{"level":30,"time":1783513813860,"pid":69237,"hostname":"MBP-de-Carlos","name":"worker","signal":"SIGTERM","msg":"worker shutting down"}
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/worker:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @ugc/worker@0.0.0 dev: `tsx watch --env-file-if-exists=../../.env src/main.ts`
+Exit status 15

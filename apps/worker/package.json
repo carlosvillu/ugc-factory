@@ -13,6 +13,7 @@
   "dependencies": {
     "@ugc/core": "workspace:*",
     "@ugc/db": "workspace:*",
+    "pg-boss": "catalog:",
     "pino": "catalog:",
     "pg": "catalog:"
   },

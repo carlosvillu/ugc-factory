@@ -1,22 +1,7 @@
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-
-/** Polling con timeout explícito — nada de sleeps fijos (skill testing, principio 7). */
-function waitFor(predicate: () => boolean, timeoutMs: number, what: string): Promise<void> {
-  return new Promise((resolve, reject) => {
-    const started = Date.now();
-    const timer = setInterval(() => {
-      if (predicate()) {
-        clearInterval(timer);
-        resolve();
-      } else if (Date.now() - started > timeoutMs) {
-        clearInterval(timer);
-        reject(new Error(`timeout (${String(timeoutMs)}ms) esperando: ${what}`));
-      }
-    }, 50);
-  });
-}
+import { waitFor } from '../test/helpers';
 
 // Contrato de proceso del worker (main.ts, composition root): anuncia ready,
 // y ante SIGTERM el último log NO se pierde (sin process.exit inmediato: el

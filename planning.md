@@ -65,7 +65,7 @@ El corazón de esta fase es el **orquestador** (§9.0): la máquina de estados t
 - **Entrega**: interfaz `StorageAdapter` (put/get/stat/delete) con implementación filesystem (`/data/assets`), tabla `asset` (subset mínimo: id, kind, storage_key, mime, bytes, checksum) y endpoint `GET /api/assets/:id/download` (streaming, autenticado, nunca ruta cruda; §19.2).
 - **Verificación**: subir un fichero con un script de smoke → aparece en `/data/assets` con su fila en `asset` → descargarlo por `/api/assets/:id/download` con checksum idéntico; sin sesión, el endpoint devuelve 401.
 
-#### T0.6 · pg-boss operativo en el worker
+#### T0.6 · pg-boss operativo en el worker [x] 2026-07-08 — PASS, ver docs/verifications/T0.6/ (coste $0)
 - **Depende de**: T0.3
 - **Entrega**: pg-boss inicializado; job de demo `noop` con retries/backoff; helper `enqueue()` en `packages/core`.
 - **Verificación**: encolar 10 jobs `noop` con 30 % de fallo configurado → el log muestra ejecuciones y reintentos; la tabla de pg-boss muestra todos en `completed` al final.

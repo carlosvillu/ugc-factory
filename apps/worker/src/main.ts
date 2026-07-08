@@ -15,25 +15,44 @@ const logger = makeLogger({
 // bootstrap es async desde T0.2 (ping a Postgres). Top-level await en ESM: el
 // worker anuncia su estado antes de entrar en el keep-alive. no-floating-promises
 // (tooling §2) obliga a await aquí — un ping perdido dejaría el boot a medias.
-await bootstrap({ logger });
+// Desde T0.6 devuelve el handle de pg-boss (undefined si la BD no está).
+const { boss } = await bootstrap({ logger });
 
-// Daemon: el proceso queda residente hasta SIGINT/SIGTERM. pg-boss (T0.6)
-// sustituirá este keep-alive por sus workers reales.
+// Daemon: el proceso queda residente hasta SIGINT/SIGTERM. Cuando pg-boss arranca
+// sus workers ya mantienen vivo el event loop; el timer cubre el modo degradado
+// (sin BD, sin boss) para que el proceso siga escuchando señales en vez de morir.
 const keepAlive = setInterval(() => {
   /* noop: mantiene vivo el event loop */
 }, 60_000);
 
-function shutdown(signal: NodeJS.Signals): void {
+// ≥ p99 del job más largo aceptable de perder; para T0.6 (solo demo.noop) es
+// holgado. boss.stop({ graceful }) deja de hacer polling y espera a los handlers
+// activos hasta el timeout (jobs.md §9).
+const SHUTDOWN_TIMEOUT_MS = 120_000;
+
+async function shutdown(signal: NodeJS.Signals): Promise<void> {
   logger.info({ signal }, 'worker shutting down');
   // Sin process.exit(): un exit inmediato compite con el flush de pino y pierde
-  // la última línea de forma intermitente. Se retira el único timer, el event
-  // loop se vacía y el proceso muere solo con exitCode 0 — plantilla del
-  // graceful shutdown real de T0.6 (boss.stop() → pool.end() → drain).
-  clearInterval(keepAlive);
-  process.exitCode = 0;
+  // la última línea. Se paran los recursos, se retira el timer, el event loop se
+  // vacía y el proceso muere solo con exitCode 0.
+  //
+  // El handler de señal es fire-and-forget (`void shutdown(...)`) y `boss.stop()`
+  // PUEDE rechazar (BD caída mid-shutdown, error de pool). Sin este try/finally un
+  // rechazo saltaría el cierre limpio y dejaría un exit-code impredecible: el
+  // `finally` garantiza el invariante de T0.1 (drenar el timer + exitCode 0
+  // SIEMPRE), y el `catch` deja rastro del fallo de drain en vez de tragarlo.
+  try {
+    await boss?.stop({ graceful: true, timeout: SHUTDOWN_TIMEOUT_MS });
+  } catch (err) {
+    logger.error({ err }, 'shutdown: boss.stop() falló; el proceso muere igual');
+  } finally {
+    clearInterval(keepAlive);
+    process.exitCode = 0;
+  }
 }
 
 // `once`: una segunda señal recupera el comportamiento por defecto del runtime
 // (kill inmediato) — escape hatch deliberado si el drain se atascara.
-process.once('SIGINT', shutdown);
-process.once('SIGTERM', shutdown);
+// `void shutdown(...)`: el handler de señal no puede ser async (no-misused-promises).
+process.once('SIGINT', (signal) => void shutdown(signal));
+process.once('SIGTERM', (signal) => void shutdown(signal));

@@ -44,9 +44,11 @@ describe('bootstrap del worker', () => {
   it("loggea 'worker ready' a nivel info con el health del contrato compartido (db:false sin BD)", async () => {
     const { logger, lines } = makeFakeLogger();
 
-    const health = await bootstrap({ logger });
+    const { health, boss } = await bootstrap({ logger });
 
     expect(health).toEqual({ ok: true, db: false });
+    // Sin BD alcanzable: pg-boss NO arranca (degradación de T0.2 preservada).
+    expect(boss).toBeUndefined();
     const ready = lines.find((l) => l.msg === 'worker ready');
     expect(ready).toBeDefined();
     expect(ready?.level).toBe('info');
@@ -57,8 +59,10 @@ describe('bootstrap del worker', () => {
     process.env.DATABASE_URL = 'postgres://ugc:ugc@127.0.0.1:59999/ugc';
     const { logger } = makeFakeLogger();
 
-    const health = await bootstrap({ logger });
+    const { health, boss } = await bootstrap({ logger });
 
     expect(health).toEqual({ ok: true, db: false });
+    // Puerto muerto → ping false → pg-boss no arranca (no cuelga el boot).
+    expect(boss).toBeUndefined();
   });
 });

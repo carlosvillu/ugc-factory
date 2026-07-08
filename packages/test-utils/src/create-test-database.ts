@@ -79,6 +79,21 @@ export async function createTestDatabase(opts?: {
     // conexión (db-integration.md §8).
     application_name: opts?.label ?? 'ugc-test-db',
   });
+  // Red de seguridad del teardown (cierra la deuda #3 de T0.3): el
+  // `DROP DATABASE … WITH (FORCE)` de abajo mata DELIBERADAMENTE cualquier sesión
+  // aún viva contra la BD del clon (p. ej. el pool propio de pg-boss que aún se
+  // está cerrando bajo carga paralela). Esa terminación administrativa hace que
+  // el cliente pg emita un evento `error` con SQLSTATE 57P01; sin listener, un
+  // `error` de Pool sin manejar tumba el proceso de vitest DESPUÉS de que los
+  // tests pasen (run verde, exit 1). Absorbemos SOLO 57P01 (terminación esperada
+  // por FORCE) — cualquier otro error se re-emite para no ocultar bugs reales.
+  // FORCE es la red, no el camino normal: el cierre limpio lo hace cada suite
+  // parando lo que posee (su pool + pg-boss vía su evento `stopped`) ANTES del
+  // DROP; esto solo cubre residuos inevitables de la carrera.
+  pool.on('error', (err: Error & { code?: string }) => {
+    if (err.code === '57P01') return;
+    throw err;
+  });
   const db = drizzle(pool, { schema });
 
   return {
@@ -86,11 +101,18 @@ export async function createTestDatabase(opts?: {
     pool,
     connectionString,
     close: async () => {
-      await pool.end(); // 1) soltar nuestras conexiones
-      // 2) WITH (FORCE) (PG13+) mata sesiones filtradas: un leak dentro de la
-      //    suite no bloquea la limpieza ni deja BDs zombis en el contenedor.
-      await admin.query(`DROP DATABASE IF EXISTS ${name} WITH (FORCE)`);
-      await admin.end();
+      // try/finally (deuda #3 de T0.3): si `pool.end()` rechaza, el DROP y
+      // `admin.end()` DEBEN correr igual — si no, se filtra la BD del clon en el
+      // contenedor y la conexión admin. El DROP con FORCE limpia la BD aunque el
+      // pool no cerrara del todo.
+      try {
+        await pool.end(); // 1) soltar nuestras conexiones
+      } finally {
+        // 2) WITH (FORCE) (PG13+) mata sesiones filtradas: un leak dentro de la
+        //    suite no bloquea la limpieza ni deja BDs zombis en el contenedor.
+        await admin.query(`DROP DATABASE IF EXISTS ${name} WITH (FORCE)`);
+        await admin.end();
+      }
     },
   };
 }

@@ -1,0 +1,3 @@
+{"level":30,"time":1783514094571,"pid":75036,"hostname":"MBP-de-Carlos","name":"worker","queue":"demo.noop","msg":"pg-boss arrancado: colas y consumers listos"}
+{"level":30,"time":1783514094571,"pid":75036,"hostname":"MBP-de-Carlos","name":"worker","health":{"ok":true,"db":true},"msg":"worker ready"}
+{"level":30,"time":1783514095362,"pid":75036,"hostname":"MBP-de-Carlos","name":"worker","signal":"SIGTERM","msg":"worker shutting down"}

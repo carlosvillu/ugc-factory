@@ -78,7 +78,12 @@ Composición canónica — auth por fuera (un 401 no debe ni parsear el body):
 // apps/web/src/app/api/steps/[id]/approve/route.ts
 import { z } from 'zod'
 import { StepRunSchema } from '@ugc/core/contracts'
-import { withAuth, withRoute, getContext } from '@/server'
+// `withRoute`/`getContext` salen del barrel `@/server`; `withAuth` se importa de su
+// path directo `@/server/with-auth` — knip veta reexportar por el barrel un símbolo
+// que nadie consume a través de él, y `withAuth` es la única superficie que compone
+// por fuera (no la usa el resto del barrel). Es intencional, no drift.
+import { withRoute, getContext } from '@/server'
+import { withAuth } from '@/server/with-auth'
 
 export const POST = withAuth(withRoute(async ({ params }) => {
   const { orchestrator } = getContext()

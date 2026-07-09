@@ -19,3 +19,8 @@ docs/
 .claude/
 skills-lock.json
 .mcp.json
+
+# artefactos de otros arneses de agentes (espejos locales, no del proyecto)
+.agents/
+.codex/
+AGENTS.md

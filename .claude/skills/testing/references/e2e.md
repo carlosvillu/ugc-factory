@@ -25,6 +25,7 @@ Esta capa prueba **recorridos de usuario reales** contra el sistema completo lev
 - Se ejecuta con `pnpm test:e2e` desde la raíz (delega en `playwright test` dentro de `apps/web`).
 - Solo Chromium. Es una herramienta personal mono-usuario: cross-browser multiplica tiempo de suite sin usuarios que lo justifiquen. Añade firefox/webkit solo si aparece un bug real de navegador.
 - Los E2E de fase mockeados viven en `apps/web/e2e/phases/` y son la traducción a suite de los E2E sagrados del planning (§10 de este documento).
+- Cada tarea de `planning.md` que añada o modifique comportamiento operable en navegador incluye una línea `Playwright permanente` con el path exacto y los comportamientos a conservar. Ese spec se crea o amplía en la misma tarea: el CUA de cierre no cuenta como sustituto ni como regresión automatizada.
 
 ## 2. Topología
 

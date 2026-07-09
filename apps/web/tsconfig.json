@@ -15,6 +15,7 @@
     "src",
     "test",
     "e2e",
+    "scripts/*.ts",
     "*.config.ts",
     "vitest.config.integration.ts",
     ".next/types/**/*.ts"

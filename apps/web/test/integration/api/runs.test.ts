@@ -12,7 +12,16 @@ import { PgBoss } from 'pg-boss';
 import { ensureQueue } from '@ugc/db';
 import { setDbForTests } from '@/server/db';
 import { setBossForTests } from '@/server/boss';
+import { createSessionValue, setMasterKeyForTests, SESSION_COOKIE } from '@/server/session';
 import { POST } from '@/app/api/runs/route';
+
+// `POST /api/runs` va envuelta en withAuth (T0.4): sin una cookie de sesión válida
+// devuelve 401 antes de tocar la BD. Estos tests inyectan una master key de test y
+// firman una cookie con ella; el 401 propio se cubre en el test de auth de runs.
+const TEST_MASTER_KEY = 'test-master-key-for-runs-suite';
+function sessionCookieHeader(): string {
+  return `${SESSION_COOKIE}=${createSessionValue().value}`;
+}
 
 interface StepRow {
   id: string;
@@ -27,9 +36,10 @@ function callPost(body: unknown): Promise<Response> {
   return POST(
     new Request('http://test.local/api/runs', {
       method: 'POST',
-      headers: { 'content-type': 'application/json' },
+      headers: { 'content-type': 'application/json', cookie: sessionCookieHeader() },
       body: JSON.stringify(body),
     }),
+    { params: Promise.resolve({}) }, // ctx de Next: la ruta ahora usa withRoute
   );
 }
 
@@ -72,6 +82,7 @@ async function countStepJobs(): Promise<number> {
 }
 
 beforeAll(async () => {
+  setMasterKeyForTests(TEST_MASTER_KEY);
   tdb = await createTestDatabase({ label: 'web:runs' });
   boss = new PgBoss(tdb.connectionString);
   boss.on('error', () => {
@@ -87,6 +98,7 @@ beforeAll(async () => {
 afterAll(async () => {
   setDbForTests(undefined);
   setBossForTests(undefined);
+  setMasterKeyForTests(undefined);
   const stopped = new Promise<void>((resolve) => {
     boss.once('stopped', () => {
       resolve();
@@ -187,9 +199,10 @@ describe('POST /api/runs', () => {
     const res = await POST(
       new Request('http://test.local/api/runs', {
         method: 'POST',
-        headers: { 'content-type': 'application/json' },
+        headers: { 'content-type': 'application/json', cookie: sessionCookieHeader() },
         body: '{ no json',
       }),
+      { params: Promise.resolve({}) },
     );
     expect(res.status).toBe(400);
     const body = (await res.json()) as { code: string };

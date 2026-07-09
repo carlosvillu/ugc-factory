@@ -5,11 +5,22 @@
   "workspaces": {
     ".": {},
     "apps/web": {
-      // los plugins de knip detectan Next (app router) y Vitest solos.
+      // los plugins de knip detectan Next (app router) y Vitest solos. El plugin
+      // de Playwright se activa con @playwright/test en devDependencies y toma
+      // playwright.config.ts + e2e/**/*.spec.ts como entries.
+      // Entries que knip no rastrea por sí solo:
+      //  - e2e-stack.ts: referenciado SOLO como string en webServer.command de
+      //    playwright.config.ts (si no, él y su import de startPostgresContainer
+      //    quedarían "unused").
+      //  - auth.setup.ts: el setup project de Playwright (testMatch por regex); el
+      //    plugin de knip solo toma *.spec.ts como entries, no el setup.
+      "entry": ["scripts/e2e-stack.ts", "e2e/auth.setup.ts"],
       // pg no se importa directo (es transitiva de @ugc/db); se declara para que
       // el bundler de next lo EXTERNALICE del server bundle en vez de inlinear un
       // módulo CJS (rompe con "Dynamic require"). Mismo motivo que pino en worker.
-      "ignoreDependencies": ["pg"]
+      // tsx: lo invoca el webServer del stack E2E como binario (`pnpm exec tsx
+      // scripts/e2e-stack.ts`), un string que knip no rastrea.
+      "ignoreDependencies": ["pg", "tsx"]
     },
     "apps/worker": {
       // pino y pg no se importan directo (pino vía @ugc/core; pg vía @ugc/db),

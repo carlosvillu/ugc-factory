@@ -20,7 +20,7 @@
     "test": "vitest run --project '*:unit' --project '*:integration'",
     "test:unit": "vitest run --project '*:unit'",
     "test:integration": "vitest run --project '*:integration'",
-    "test:e2e": "echo 'test:e2e DESHABILITADO hasta T0.4: @ugc/web aun no define test:e2e (Playwright llega con el login); sin este guard, pnpm --filter sale 0 en falso verde' && exit 1",
+    "test:e2e": "pnpm --filter @ugc/web test:e2e",
     "test:live": "echo 'test:live DESHABILITADO hasta T1.8: el tier live exige el guard de presupuesto @ugc/test-utils/live-budget (LIVE_BUDGET_USD) — desviacion deliberada de stack-setup.md §6 para no gastar dinero SIN limite' && exit 1",
     "test:media": "RUN_MEDIA=1 vitest run --project 'worker:media'",
     "test:watch": "vitest --project '*:unit'",

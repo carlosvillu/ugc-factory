@@ -15,6 +15,10 @@ coverage/
 playwright-report/
 test-results/
 
+# E2E Playwright: sesión persistida del setup + runtime del stack (efímeros)
+apps/web/e2e/.auth/
+apps/web/e2e/.runtime.json
+
 # claude code — local de máquina, no del proyecto
 .claude/settings.local.json
 
@@ -23,3 +27,8 @@ test-results/
 
 # artefactos locales de claude code
 .claude/scheduled_tasks.lock
+
+# artefactos de otros arneses de agentes (espejos locales de máquina, no del proyecto)
+.agents/
+.codex/
+AGENTS.md

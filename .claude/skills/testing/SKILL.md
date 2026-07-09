@@ -16,6 +16,7 @@ Esta skill define CÓMO se testea todo el proyecto. Es la fuente de verdad únic
 5. **Evidencia o no ocurrió.** Toda verificación de cierre de tarea deja rastro en `docs/verifications/<TASK-ID>/` (report.md + screenshots/outputs). Marcar `[x]` en planning.md sin carpeta de evidencia es un error de proceso.
 6. **Forma de trofeo, no pirámide clásica.** El grueso del valor está en integración (orquestador + API contra BD real) y en los E2E/CUA que prueban el sistema como bloque. Unit se reserva para lógica pura con sustancia (contratos, compilador, linters, validadores). No se escriben unit tests de pegamento trivial para inflar cobertura.
 7. **Determinismo antes que reintentos.** Un test flaky se arregla o se borra, no se reintenta hasta que pase. Nada de `sleep`/`waitForTimeout` fijos: polling con timeout explícito, esperas por condición observable.
+8. **CUA acepta; Playwright conserva.** Toda tarea que añada o modifique comportamiento operable en navegador declara en `planning.md` su `Playwright permanente` (fichero + comportamientos) y lo entrega en la misma tarea. La sesión CUA demuestra que la feature funciona en el mundo real al cerrarla, pero no sustituye el spec determinista que debe detectar regresiones futuras.
 
 ## Las seis suites
 
@@ -41,7 +42,7 @@ Localiza lo que estás construyendo y lee el reference indicado ANTES de escribi
 | Schema Drizzle, migraciones, repos, índices, constraints | Integración con Testcontainers (template database) | `references/db-integration.md` |
 | Máquina de estados, `transition()`, dependencias, checkpoints, invalidación, pg-boss, timeouts, executors, dedupe | Integración exhaustiva contra Postgres real + concurrencia | `references/orchestrator.md` |
 | API routes de Next (CRUD, mutaciones de checkpoint, SSE, webhooks, auth, downloads) | Handler-level contra BD real; server-level para SSE/auth/streaming | `references/api.md` |
-| Componentes React, hooks, canvas React Flow, editores de checkpoint, formularios | Testing Library + jsdom (solo si hay lógica; lo visual va a E2E/CUA) | `references/frontend.md` |
+| Componentes React, hooks, canvas React Flow, editores de checkpoint, formularios | Testing Library + jsdom si hay lógica; además el spec Playwright permanente declarado por la tarea para el comportamiento operable | `references/frontend.md` + `references/e2e.md` |
 | Un flujo de usuario completo, un E2E de fase (T1.10b, T2.6, T4.11, T5.9) | Playwright spec con seeds, auth fixture y esperas por SSE | `references/e2e.md` |
 | Tools MCP (T8.5: `analyze_url`, `create_batch`, `get_batch_status`…) | Integración handler-level de cada tool contra Postgres real + test del contrato long-poll; gate vía cliente MCP real (ver cua.md) | `references/api.md` + `references/cua.md` |
 | Cliente de fal/Anthropic/Firecrawl/TikTok/Meta, o cerrar una deuda `[verificar]` | Mocks msw + fixtures grabados; live test presupuestado si aplica | `references/external-apis.md` |
@@ -57,7 +58,7 @@ Una tarea se marca `[x]` solo cuando TODO esto es cierto:
 
 1. Subtareas implementadas y `pnpm test` en verde (unit + integración, incluyendo los tests nuevos de la tarea).
 2. Los tests nuevos cubren la "Entrega" de la tarea: cada comportamiento prometido tiene al menos un test que fallaría si se rompiera.
-3. `pnpm test:e2e` en verde si la tarea tocó superficie web.
+3. Si la tarea tocó superficie web, su línea `Playwright permanente` de `planning.md` está satisfecha: el fichero existe, cada comportamiento nombrado tiene un assert que fallaría al romperse y `pnpm test:e2e` queda en verde. Un CUA PASS sin este spec es FAIL de DoD.
 4. **La "Verificación" literal del planning ejecutada de verdad**:
    - Con superficie UI → sesión CUA con `agent-browser` siguiendo `references/cua.md`.
    - Solo backend → script/curl observable contra el sistema levantado (compose + pnpm dev), no contra mocks.
@@ -84,6 +85,7 @@ Un fallo en el paso 4 significa que la tarea NO está completa, aunque toda la s
 ## Convenciones núcleo (el detalle vive en los references)
 
 - **Ubicación**: unit co-locados `src/**/*.test.ts` · integración `test/integration/**/*.test.ts` por paquete · E2E `apps/web/e2e/**/*.spec.ts` · live `**/*.live.test.ts` · media `apps/worker/test/media/**/*.test.ts`.
+- **Contrato con planning**: cada tarea web nombra el spec exacto que crea o amplía y los comportamientos que quedan protegidos. Reusar un spec es válido cuando amplía el mismo flujo; una línea genérica como “añadir E2E” no lo es.
 - **Utilidades compartidas**: todo helper de test reutilizable vive en `packages/test-utils` (`@ugc/test-utils`) — `startPostgresContainer()`, `createTestDatabase()`, factories de dominio (`makeProject()`, `makeRun()`, `makeStep()`…), `seedFixtures()`. No dupliques harness por paquete.
 - **Factories, no fixtures de BD gigantes**: los datos de test se construyen con factories con defaults sensatos y overrides explícitos de lo que importa al caso.
 - **Golden files**: en `test/golden/` junto a su suite; se regeneran solo con `UPDATE_GOLDEN=1` y el diff se revisa a mano antes de commitear.

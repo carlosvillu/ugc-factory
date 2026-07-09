@@ -55,14 +55,17 @@ El corazón de esta fase es el **orquestador** (§9.0): la máquina de estados t
   - [x] Repos tipados mínimos (create/get project).
 - **Verificación**: `pnpm db:migrate` sobre BD vacía crea las tablas (visible con `psql \dt`); crear un project vía un script de smoke y leerlo de vuelta.
 
-#### T0.4 · Auth single-user
+#### T0.4 · Auth single-user [x] 2026-07-10 — PASS, ver docs/verifications/T0.4/ (coste $0)
 - **Depende de**: T0.3
 - **Entrega**: login con password (hash en `app_setting`), sesión con cookie httpOnly, middleware que protege todas las rutas salvo login/health/webhooks; rate limit de login.
+- **Mockup**: `docs/mockups/auth.html` (layout dos paneles). **Desviación acordada 2026-07-09** (README de mockups + journal): el mockup dibuja un producto multi-usuario (signup, correo, passkey, ¿olvidaste?, recordar sesión); UGC Factory es mono-usuario (PRD §19.2), así que `/login` reproduce **el layout** pero cablea **solo** password + Entrar + error/rate-limit. Signup/correo/passkey/recordar quedan FUERA de alcance por diseño — el reviewer no debe exigirlas.
+- **Playwright permanente**: esta tarea activa el harness (`apps/web/playwright.config.ts` + stack E2E) y deja `apps/web/e2e/auth.spec.ts` (redirect sin sesión, error/rate-limit, login y sesión tras reload) y `apps/web/e2e/design-system.spec.ts` (backfill de FD: `/design-system` abre y los switchers de tema/acento/densidad siguen operables) dentro de `pnpm test:e2e`.
 - **Verificación**: en navegador, acceder a `/` sin sesión redirige a login; password incorrecto 3 veces → rate limit visible; con password correcto se entra y la cookie sobrevive a un refresh.
 
 #### T0.5 · StorageAdapter local + download proxificado
 - **Depende de**: T0.3, T0.4 *(la Verificación exige 401 sin sesión: usa el middleware de auth de T0.4, no un check ad-hoc)*
 - **Entrega**: interfaz `StorageAdapter` (put/get/stat/delete) con implementación filesystem (`/data/assets`), tabla `asset` (subset mínimo: id, kind, storage_key, mime, bytes, checksum) y endpoint `GET /api/assets/:id/download` (streaming, autenticado, nunca ruta cruda; §19.2).
+- **Playwright permanente**: `apps/web/e2e/assets-download.spec.ts` prepara un asset real, descarga el stream autenticado y verifica checksum; sin `storageState`, el mismo endpoint devuelve 401 sin exponer la ruta de storage.
 - **Verificación**: subir un fichero con un script de smoke → aparece en `/data/assets` con su fila en `asset` → descargarlo por `/api/assets/:id/download` con checksum idéntico; sin sesión, el endpoint devuelve 401.
 
 #### T0.6 · pg-boss operativo en el worker [x] 2026-07-08 — PASS, ver docs/verifications/T0.6/ (coste $0)
@@ -104,22 +107,27 @@ El corazón de esta fase es el **orquestador** (§9.0): la máquina de estados t
 - **Depende de**: T0.8, T0.9, T0.10
 - **Entrega**: página `/runs/[id]` con grafo (layout automático dagre/elkjs), nodos con estado/color/duración (y coste si existe), panel lateral al click con **visor de logs, errores y output/artefacto JSON genérico del step** (§8.2), botones de checkpoint (aprobar/editar/rechazar), retry, skip, cancelar lote y toggle autopilot.
 - **Mockup**: `docs/mockups/runs-id.html` (variante 1b · cockpit denso). El layout parte de ese mockup; el reviewer rechaza una página que se desvíe sin acuerdo (ver `.claude/skills/frontend`).
+- **Playwright permanente**: `apps/web/e2e/runs-canvas.spec.ts` cubre cambios de estado por SSE sin reload, visor de output/error, approve/edit/reject, retry, skip, cancel y autopilot con override; usa executors de demo deterministas y estados observables, no colores CSS.
 - **Verificación**: en el navegador, lanzar el run de demo y **ver los nodos cambiar de color en vivo**; aprobar el checkpoint desde el panel; provocar un fallo (`fail_rate=1`) y ver el error en el visor de logs del nodo; retry con éxito; cancelar otro run en curso desde el botón; activar el toggle autopilot desde la cabecera y ver un run completar sin pausas (con el candado "parar siempre aquí" respetado); skip de un nodo skippable desde el panel — todo operado desde la UI, no vía API.
 
 #### T0.12 · Ledger de gasto (esqueleto)
 - **Depende de**: T0.7b
 - **Entrega**: tablas `cost_entry` y `budget`; helper `recordCost()`; página `/spend` v1 con totales por día/proveedor y alerta in-app al superar el presupuesto. (El panel completo — vistas por proyecto/lote/tier, freno, email — llega en T7.7.)
 - **Mockup**: `docs/mockups/spend.html` (variante 8a · presupuesto + ledger por proveedor). El layout parte de ese mockup; el reviewer rechaza una página que se desvíe sin acuerdo (ver `.claude/skills/frontend`).
+- **Playwright permanente**: `apps/web/e2e/spend.spec.ts` siembra importes propios del spec y comprueba totales por día/proveedor y alerta de presupuesto desde `/spend`.
 - **Verificación**: tras 3 runs de demo con costes ficticios **elegidos por el verifier** (no los fixtures del implementer), `/spend` muestra la suma exacta esperada; un presupuesto de prueba por debajo del gasto dispara la alerta in-app.
 
 #### T0.13 · Despliegue inicial en VPS ⚠
 - **Depende de**: T0.11, T0.4 *(la Verificación incluye "login funciona")*; ⚠ VPS contratado y dominio con DNS apuntando al VPS (los aporta el usuario)
 - **Entrega**: `docker-compose.prod.yml` (web standalone, worker, postgres, caddy con TLS y `flush_interval -1` en la ruta SSE; volumen `/data/assets` worker rw + web ro; §18), `DEPLOY.md`, deploy por `git pull && docker compose up -d --build`, cron de `pg_dump` diario.
+- **Deuda de T0.4 — trust boundary de `x-forwarded-for` (RESOLVER AQUÍ)**: el rate-limit del login (`clientIp` en `apps/web/src/server/rate-limit.ts`) usa la 1.ª IP de `x-forwarded-for`, que es **client-controllable** hasta que Caddy la reescriba. Sin trust boundary, un atacante rota el header y bombea el rate-limit (fuerza bruta ilimitada). Caddy debe **sobrescribir** (no *append*) `x-forwarded-for` con la IP real del socket, y la app debe confiar SOLO en el hop de Caddy (no en el header crudo del cliente). Sin esto, la protección de fuerza bruta del login mono-usuario queda hueca en cuanto el VPS es público. Verificarlo en la Verificación (ver abajo).
+- **Playwright permanente**: no añade comportamiento de producto nuevo; `auth.spec.ts` y `runs-canvas.spec.ts` conservan login/SSE localmente. TLS, Caddy, volúmenes y backup se protegen con smoke de despliegue reproducible y la Verificación externa, porque no caben honestamente en el stack Playwright efímero.
 - **Verificación**: desde fuera del VPS, `https://<dominio>` sirve la app con certificado válido; login funciona; un run de demo completo corre en el VPS con el canvas actualizándose en vivo (SSE atraviesa Caddy); forzar el cron de backup → aparece el dump fechado y `pg_restore --list` lo lee sin error.
 
 #### T0.14 · Credenciales cifradas y /settings ⚠
 - **Depende de**: T0.4; ⚠ API key real de fal para esta verificación (las de Anthropic y Firecrawl llegan con T1.7/T1.4) — las aporta el usuario
 - **Entrega**: módulo de secretos (§13.1/§19.2): API keys en `app_setting` cifradas at-rest (libsodium sealed box; la master key es la única credencial en env), bootstrap desde env en el primer arranque, y página `/settings` para editar keys, presets, idiomas, umbrales y apariencia del design system (tema/acento/densidad — añadido menor 2026-07-07 al crearse la fase FD; hasta entonces la app fija dark/indigo/balanced).
+- **Playwright permanente**: `apps/web/e2e/settings.spec.ts` usa claves dummy contra providers fake y cubre guardar/editar secretos enmascarados y persistencia tras reload de tema, acento y densidad; el cifrado at-rest queda en integración de BD, no se simula en navegador.
 - **Verificación**: guardar la key de fal desde `/settings` → reiniciar el contenedor de Postgres y los procesos web/worker → la key sigue funcionando; en `psql`, el valor almacenado es un blob cifrado (no aparece la key en claro en ningún `SELECT`); borrar la env var tras el bootstrap no rompe nada; cambiar tema/acento/densidad desde `/settings` se aplica en vivo y persiste tras un reload.
 
 ---
@@ -169,6 +177,7 @@ Decisiones del usuario (2026-07-07): la fase se ejecuta tras T0.1 y **antes** de
 #### TD.7 · Skill frontend cerrada contra la realidad + E2E de fase [x] 2026-07-08 — PASS (E2E automatizable + OK visual del usuario), ver docs/verifications/TD.7/
 - **Depende de**: TD.4, TD.6
 - **Entrega**: skill `frontend` actualizada con el inventario definitivo de `components/ui/` (los ~26 con sus variantes reales) en `references/design-system.md`/`components.md`, obligatoriedad explícita («si existe el componente del DS, usarlo es obligatorio; HTML crudo estilado equivalente = error de review») y ajustes descubiertos durante la fase anotados en el journal.
+- **Regresión Playwright posterior**: al aprobarse la regla de tests permanentes el 2026-07-10, T0.4 asume el backfill `apps/web/e2e/design-system.spec.ts`; no se reabre retroactivamente TD.7 ni se finge que el spec existía durante su PASS.
 - **Verificación (E2E de fase)**: recorrido CUA completo de `/design-system` — dark, light y 2 acentos — con evidencia visual en `docs/verifications/TD.7/`; `pnpm gate` verde; y **revisión humana final del showcase** (parada de fin de fase: el usuario da el OK visual).
 
 ---
@@ -205,6 +214,7 @@ Decisiones del usuario (2026-07-07): la fase se ejecuta tras T0.1 y **antes** de
 #### T1.6 · Entrada por texto libre
 - **Depende de**: T1.2, T0.5
 - **Entrega**: formulario de intake modo "texto libre" (descripción + upload opcional de imágenes), `RawContent` sintético (`source=manual`), caché por hash del texto (§7.4).
+- **Playwright permanente**: `apps/web/e2e/intake-manual.spec.ts` cubre envío de texto con y sin imágenes, validación visible del formulario y reutilización observable de una entrada repetida usando fixtures locales.
 - **Verificación**: crear un análisis solo con un párrafo y 2 imágenes → `url_analysis` en `done` sin ninguna llamada de scraping (logs); repetir el mismo texto reutiliza la caché (sin fila nueva).
 
 #### T1.7 · Cliente Anthropic + VisualAnalyzer
@@ -229,6 +239,7 @@ Decisiones del usuario (2026-07-07): la fase se ejecuta tras T0.1 y **antes** de
 - **Depende de**: T1.9, T0.11
 - **Entrega**: executors reales de N1 (ingesta con fast path/scrape/mini-crawl/texto libre y caché), N2 (visual, con skip) y N3 (síntesis + validación) registrados en el orquestador; definición del DAG de análisis; formulario de intake en modo URL (N0 mínimo: URL + config del lote) — página nueva sin mockup: layout a acordar con el usuario antes de implementarla (regla 7).
 - **Coste estimado**: ~$0,25
+- **Playwright permanente**: `apps/web/e2e/analysis-pipeline.spec.ts` usa Firecrawl/Anthropic fake y cubre intake URL → N1/N2/N3 en el canvas, output JSON de N3 y el camino de texto libre sin imágenes con N2 en `skipped`.
 - **Verificación**: pegar una URL real en el intake → los nodos N1→N2→N3 progresan en el canvas en vivo y el brief JSON aparece como output del nodo N3 en el panel genérico; con texto libre sin imágenes, N2 aparece `skipped` en el grafo.
 
 #### T1.10b · CP1: editor de brief
@@ -236,6 +247,7 @@ Decisiones del usuario (2026-07-07): la fase se ejecuta tras T0.1 y **antes** de
 - **Entrega**: panel de CP1 con el brief editable campo a campo, badges extraído/inferido (`evidence`/`confidence`), gestión de warnings (incl. petición bloqueante de imágenes o derivación a packshot-IA en modo manual), aprobación que persiste `product_brief` versionado + `edited_by_user`; endpoint standalone `GET/PATCH /api/briefs/:id` (editar un brief aprobado fuera de un run activo, Apéndice E).
 - **Mockup**: `docs/mockups/brief-editor.html` (variante 3a · formulario en tarjetas + rail de trazabilidad). El layout parte de ese mockup; el reviewer rechaza una página que se desvíe sin acuerdo (ver `.claude/skills/frontend`).
 - **Coste estimado**: ~$0,50
+- **Playwright permanente**: `apps/web/e2e/brief-editor.spec.ts` cubre badges/evidence, warnings, edición y versionado standalone; `apps/web/e2e/phases/f1-brief.spec.ts` conserva el journey mockeado intake → N1–N3 → CP1 → aprobar y avanzar. Ambos llevan `@f1`; el segundo además `@phase`.
 - **Verificación (E2E de la fase, criterio O1)**: en el navegador — URL real → N1/N2/N3 → editar un beneficio y un hook en CP1 → aprobar → brief versionado (v1 IA, v2 editado) y el run avanza; pipeline <90 s (sin contar la edición) y <$0,15. Después, editar el brief aprobado vía `/api/briefs/:id` sin run activo crea v3. Los badges extraído/inferido muestran su `evidence` (cita) en el editor; un análisis en modo manual sin imágenes muestra en CP1 la petición bloqueante de imágenes con la derivación a packshot-IA.
 
 ---
@@ -248,6 +260,7 @@ Decisiones del usuario (2026-07-07): la fase se ejecuta tras T0.1 y **antes** de
 - **Depende de**: T0.3, T0.5
 - **Entrega**: migración de `persona` (§12, con `voice_map {locale: {provider, voiceId}}`), página `/personas` con CRUD (demografía, personalidad, wardrobeNotes), upload manual de imágenes de referencia (validación ≥2K), endpoint de candidatas por `avatar_hint`; seed manual de 2 personas (es/en) con imágenes subidas a mano. (La generación IA de referencias y el preview de voz llegan en F4.)
 - **Mockup**: `docs/mockups/personas.html` (variante 6c · ficha inmersiva · refs grandes + voz por idioma). El layout parte de ese mockup; el reviewer rechaza una página que se desvíe sin acuerdo (ver `.claude/skills/frontend`).
+- **Playwright permanente**: `apps/web/e2e/personas.spec.ts` cubre CRUD, voice map es/en, upload ≥2K y rechazo visible de una imagen <2K; usa fixtures locales y no generación IA.
 - **Verificación**: crear una persona con 2 imágenes ≥2K y voice_map es/en desde el navegador; el endpoint de candidatas devuelve la persona correcta para un `avatar_hint` compatible y ninguna para uno incompatible; una imagen <2K es rechazada con mensaje claro.
 
 #### T2.1 · Migraciones de lote + seeds de hooks, CTAs y recetas
@@ -263,6 +276,7 @@ Decisiones del usuario (2026-07-07): la fase se ejecuta tras T0.1 y **antes** de
 #### T2.3 · CP2: UI de matriz y confirmación de gasto
 - **Depende de**: T2.2
 - **Entrega**: panel de CP2: selección de ángulos (cards con hooks del brief), **selector de personas sugeridas por `avatar_hint`** (T2.0), preset de duración/objetivo, tier, idiomas, coste total estimado en grande, confirmación que crea las `ad_variant` en `planned`.
+- **Playwright permanente**: `apps/web/e2e/batch-matrix.spec.ts` cubre selección de ángulos/persona/idiomas, recálculo al cambiar tier y confirmación con el número exacto de variantes visible tras crear el lote.
 - **Verificación**: en navegador, cambiar tier de Test a Standard actualiza el coste al vuelo; el selector muestra las personas compatibles con el segmento; aprobar crea exactamente las variantes de la matriz (filas con `filename_code` únicos y legibles).
 
 #### T2.4 · ScriptWriter (N5)
@@ -281,6 +295,7 @@ Decisiones del usuario (2026-07-07): la fase se ejecuta tras T0.1 y **antes** de
 - **Depende de**: T2.3, T2.4, T2.5
 - **Entrega**: panel de CP3: lista de variantes con su guion, edición por escena y de hook/CTA, re-lint al guardar, aprobación por variante o del lote.
 - **Coste estimado**: ~$0,50
+- **Playwright permanente**: `apps/web/e2e/script-editor.spec.ts` cubre edición, re-lint con bloqueo y aprobación individual/del lote; `apps/web/e2e/phases/f2-scripts.spec.ts` conserva el journey mockeado CP1 → CP2 → CP3 con seis variantes en `scripted`. Ambos llevan `@f2`; el segundo además `@phase`.
 - **Verificación (E2E de la fase)**: URL real → CP1 → CP2 (matriz 6 variantes) → CP3: editar el hook de una variante, aprobar todo → las 6 `ad_variant` quedan en estado **`scripted`** (valor literal en BD), con `ad_script` versionado (`edited_by_user` en la editada). Criterio O2: interacción total <5 min.
 
 ---
@@ -326,6 +341,7 @@ Decisiones del usuario (2026-07-07): la fase se ejecuta tras T0.1 y **antes** de
 - **Depende de**: T3.7
 - **Entrega**: `/gallery` con navegación facetada, ficha de template (body con slots resaltados, beats, guards, versiones con diff), editor con validación de slots en vivo, estados draft/review/published. (El botón "probar template" llega en T4.12 con FalClient.)
 - **Mockup**: `docs/mockups/gallery.html` (variante 5a · rejilla facetada + filtros). El layout parte de ese mockup; el reviewer rechaza una página que se desvíe sin acuerdo (ver `.claude/skills/frontend`).
+- **Playwright permanente**: `apps/web/e2e/gallery.spec.ts` cubre filtros combinados, ficha, slots resaltados, validación en vivo y creación de una versión con diff visible.
 - **Verificación**: en navegador, filtrar por 2 facetas; editar un template introduciendo un slot inválido muestra el error en vivo; guardar crea `prompt_version` v2 con diff visible contra v1.
 
 ---
@@ -366,6 +382,7 @@ Decisiones del usuario (2026-07-07): la fase se ejecuta tras T0.1 y **antes** de
 - **Depende de**: T4.5, T2.3, T2.6 *(el botón ▶ vive en los paneles de CP2/CP3)*
 - **Entrega**: muestras de voz por Persona/idioma (generadas una vez, cacheadas) escuchables en CP2/CP3 **antes** de gastar render (§8.3 — por eso esta tarea va antes que el resto de N7).
 - **Coste estimado**: ~$0,20 (muestras que quedan cacheadas)
+- **Playwright permanente**: `apps/web/e2e/voice-preview.spec.ts` usa audio fixture/provider fake y comprueba reproducción desde CP2 y CP3, cambio de idioma/Persona y reutilización de la muestra sin una segunda generación.
 - **Verificación**: botón ▶ junto a cada Persona reproduce su voz en el idioma de la variante; reproducirla 5 veces no añade coste (caché comprobada en `/spend`).
 
 #### T4.7 · N7c: clip de avatar
@@ -396,12 +413,14 @@ Decisiones del usuario (2026-07-07): la fase se ejecuta tras T0.1 y **antes** de
 - **Depende de**: T4.4, T4.6, T4.7, T4.8, T4.9, T4.10, T0.11
 - **Entrega**: nodo compuesto N7 por variante (expandible a N7a–N7e) con thumbnails/players por asset; N6 visible con su `resolvedPrompt`; coste estimado vs real por sub-step; retry granular.
 - **Coste estimado**: ~$6 (variante completa + retries)
+- **Playwright permanente**: `apps/web/e2e/phases/f4-generation.spec.ts` (`@f4 @phase`) usa fal fake y conserva expansión N7a–N7e, previews, `resolvedPrompt`, coste por sub-step, fallo determinista y retry granular sin reiniciar los hermanos sanos.
 - **Verificación (E2E de la fase)**: desde el canvas, una variante real completa N6→N7 con todos los assets reproducibles en el panel y el `resolvedPrompt` inspeccionable en N6; coste real del lote difiere <15 % del estimado de CP2; retry de un sub-step fallado funciona.
 
 #### T4.12 · Generación de Personas, thumbnails y "probar template"
 - **Depende de**: T4.1, T3.8, T2.0 *(T3.7 implícito vía T3.8; los thumbnails y el botón "probar template" viven en la UI de galería)*
 - **Entrega**: generación IA de imágenes de referencia de Personas (FLUX.2/NB2: mismo sujeto, 2–3 encuadres, ≥2K) con curación manual; seed hasta 10–20 Personas (es/en); job de thumbnails de galería que promociona templates `draft→published`; botón **"probar template"** en la ficha (`generation` con `step_run_id` NULL, coste registrado).
 - **Coste estimado**: ~$5 (referencias de 10–20 Personas + ~50 thumbnails + prueba de template)
+- **Playwright permanente**: `apps/web/e2e/gallery-generation.spec.ts` usa fal fake y cubre curación de referencias, thumbnails publicados y "probar template" con preview/coste visibles; la fidelidad de Personas reales queda en el gate CUA.
 - **Verificación**: 10 Personas activas con referencias consistentes (mismo sujeto a juicio humano); los ~50 templates quedan `published` con thumbnail en `/gallery` (ninguno publicado sin thumbnail); "probar template" genera un clip/imagen barata visible en la ficha con su coste en `/spend`.
 
 ---
@@ -437,30 +456,35 @@ Decisiones del usuario (2026-07-07): la fase se ejecuta tras T0.1 y **antes** de
 - **Depende de**: T5.5, T0.11
 - **Entrega**: panel de QA con player, overlay de safe zones conmutable (TikTok/Meta/Universal), resultados del QA, acciones aprobar/rechazar/regenerar (rechazo → `rejected`; regenerar → run `kind=regen`).
 - **Coste estimado**: ~$2 (la regeneración de guion re-genera assets)
+- **Playwright permanente**: `apps/web/e2e/variant-review.spec.ts` usa masters sintéticos y cubre player, overlays, QA, aprobar/rechazar y regenerar hasta mostrar un master nuevo.
 - **Verificación**: aprobar 2 variantes y rechazar 1 desde el navegador actualiza los estados de las `ad_variant` (query en BD; el reflejo en `/library` se verifica en T5.7); "regenerar guion" crea el run parcial que termina en un master nuevo pasando por QA otra vez.
 
 #### T5.7 · Export bundle + biblioteca
 - **Depende de**: T5.5, T5.6
 - **Entrega**: bundle por variante aprobada (MP4 + JSON: `ad_caption` ≤100 chars sin @/#/links, `brand_name` ≤20, hook/ángulo/duración/objetivo/plataforma, flags AIGC, `audio_source` + checklist §15.4); **export dual con/sin bed** cuando el lote declara destino orgánico+paid (re-mux de audio, §14); `/library` con filtros, linaje completo y descarga.
 - **Mockup**: `docs/mockups/library.html` (variante 4c · foco de preview + linaje + safe zones). El layout de `/library` parte de ese mockup; el reviewer rechaza una página que se desvíe sin acuerdo (ver `.claude/skills/frontend`).
+- **Playwright permanente**: `apps/web/e2e/library.spec.ts` cubre filtros, preview, linaje hasta hook/template y descarga del bundle verificando checksum; incluye el caso dual con/sin bed mediante fixtures media.
 - **Verificación**: descargar un bundle y validar el JSON contra su schema (caption dentro de límites — test); un lote destino "ambos" produce las dos versiones de audio del mismo master sin re-encode de vídeo (timestamps de ffmpeg lo confirman); el linaje en la UI llega del master hasta el hook line y el `template@version` exactos.
 
 #### T5.8 · Regeneración parcial optimizada
 - **Depende de**: T5.6, T4.10
 - **Entrega**: flujo CU4: clonar variante, regenerar solo el nodo cambiado + N8 + N9, reutilizando caché de normalizados y dedupe.
 - **Coste estimado**: ≤$0,50 (cota del propio criterio 22.4)
+- **Playwright permanente**: `apps/web/e2e/partial-regeneration.spec.ts` usa providers fake y cubre cambiar CTA desde una variante aprobada, progreso del run parcial, master nuevo y conservación visible de assets/nodos no afectados.
 - **Verificación (criterio 22.4)**: cambiar el CTA de una variante aprobada produce un master nuevo en <2 min de reloj y <$0,50 de coste registrado.
 
 #### T5.9 · E2E de la fase (criterios 22.1, 22.2 y 22.8)
 - **Depende de**: T5.7, T4.11 *(el E2E de F5 presupone el de F4 y arrastra CP2/CP3 vía T4.6)*
 - **Entrega**: prueba guiada completa documentada en `VERIFY.md` con los números reales obtenidos.
 - **Coste estimado**: ≤$15 (cota del propio criterio 22.1)
+- **Playwright permanente**: `apps/web/e2e/phases/f5-export.spec.ts` (`@f5 @phase`) conserva a coste cero el journey mockeado lote → generación → CP4 → QA → biblioteca → bundle íntegro, incluyendo texto libre sin imágenes y packshot sintético; coste/tiempo y naturalidad de voces se verifican solo en el cierre real.
 - **Verificación**: (a) URL real → ≥6 variantes aprobadas (2 ángulos × 3 hooks) de 15–30 s en es+en, captions karaoke correctas, C2PA firmado, coste del lote <$15 en tier Test, <45 min de reloj con checkpoints atendidos; (b) **texto libre con 0 imágenes**: párrafo → decisión packshot-IA en CP1 → al menos 1 variante aprobada con `synthetic_product=true`; (c) **criterio 22.8**: las voces de las variantes es y en son nativas y corresponden al `voice_map` de su Persona (revisión humana de 1 variante por idioma).
 
 #### T5.10 · Dashboard y vista de proyecto
 - **Depende de**: T5.7, T2.3 *("lanzar un lote" exige CP2)*
 - **Entrega**: `/` (dashboard: proyectos, lotes activos, gasto del mes, alertas) y `/projects/[id]` (briefs, lotes, variantes y métricas del proyecto) + CRUD mínimo de proyectos (§8.1).
 - **Mockup**: `docs/mockups/dashboard.html` (variante 2a · resumen clásico · KPIs + lotes + panel lateral). El layout de `/` parte de ese mockup; el reviewer rechaza una página que se desvíe sin acuerdo (ver `.claude/skills/frontend`).
+- **Playwright permanente**: `apps/web/e2e/dashboard.spec.ts` cubre CRUD mínimo de proyectos, lanzamiento de lote, lote activo/gasto del mes en `/` y briefs/variantes con estados correctos en `/projects/[id]`.
 - **Verificación**: crear un proyecto desde la UI, lanzar un lote en él → el dashboard muestra el lote activo y el gasto del mes del proyecto; `/projects/[id]` lista sus briefs y variantes con estados correctos.
 
 ---
@@ -472,36 +496,43 @@ Decisiones del usuario (2026-07-07): la fase se ejecuta tras T0.1 y **antes** de
 #### T6.1 · Conexión de cuentas (OAuth) ⚠
 - **Depende de**: T0.13, T0.14; ⚠ apps de developer TikTok y Meta + cuenta TikTok propia + cuenta Instagram Business vinculada a página de Facebook (todo lo aporta el usuario)
 - **Entrega**: flujos OAuth de TikTok y Meta/Instagram; `platform_account` con tokens cifrados, refresh automático y estado en `/settings`.
+- **Playwright permanente**: `apps/web/e2e/settings-connections.spec.ts` usa servidores OAuth fake y cubre conectar, callback, estado activo, refresh y revocación reflejada como error; la conexión a cuentas reales queda en la Verificación.
 - **Verificación**: conectar las cuentas reales desde `/settings` → activas con sus scopes; revocar desde la plataforma se refleja como `error` al siguiente uso.
 
 #### T6.2 · Checklist de publicación + CP5 + música propia
 - **Depende de**: T5.7
 - **Entrega**: checklist interactivo por plataforma generado del bundle (§15.4: toggle AIGC —con aviso de reset al duplicar campañas—, música según `audio_source`, Spark si aplica) + CP5 opcional; upload de pista propia licenciada (`audio_source=own_license`, asset `music_bed` seleccionable en la matriz).
+- **Playwright permanente**: `apps/web/e2e/publishing-checklist.spec.ts` cubre reglas Spark/AIGC por `audio_source`, upload y selección de música propia y pausa/reanudación de CP5 en modo degradado manual.
 - **Verificación**: el checklist de una variante con `audio_source=native_trending` **bloquea** la opción Spark con explicación; el de una con bed IA la permite; subir una pista propia y usarla en un lote produce el master con esa música y `own_license` persistido; con CP5 activado, el flujo de publicación (en el modo degradado manual de esta tarea) se pausa en el checkpoint y al confirmar se reanuda.
 
 #### T6.3 · Publicación orgánica TikTok
 - **Depende de**: T6.1, T6.2
 - **Entrega**: publicación vía Content Posting API (o flujo guiado paso a paso si la app no está audited), con caption y disclosure; `publication` con `external_post_id`.
+- **Playwright permanente**: `apps/web/e2e/publish-tiktok.spec.ts` usa TikTok fake y cubre publicar desde la app, caption/disclosure, estado e ID externo, además del flujo guiado degradado cuando la API se declara no auditada.
 - **Verificación**: una variante aprobada aparece publicada en el perfil real de TikTok con su caption; la fila `publication` guarda ID externo y estado.
 
 #### T6.4 · Publicación Reels (Instagram)
 - **Depende de**: T6.1, T6.2
 - **Entrega**: publicación de Reels vía Instagram Graph API en la cuenta Business propia.
+- **Playwright permanente**: `apps/web/e2e/publish-reels.spec.ts` usa Instagram fake y cubre publicación desde la app, progreso, resultado e ID externo persistido.
 - **Verificación**: el Reel aparece en la cuenta real con el caption esperado; `publication` registrada.
 
 #### T6.5 · Ads en borrador (TikTok Ads + Meta Marketing API) ⚠
 - **Depende de**: T6.1, T6.2; ⚠ cuenta de TikTok Ads Manager y cuenta publicitaria de Meta (Business Manager) creadas por el usuario
 - **Entrega**: upload de creative + creación de ad en borrador en ambas plataformas; **cierre de deuda `[verificar]`**: existencia del flag AIGC en cada API (si no existe, el checklist mantiene el paso manual obligatorio; resultado anotado también en PRD §13.3).
+- **Playwright permanente**: `apps/web/e2e/ad-drafts.spec.ts` usa TikTok/Meta fake y cubre creación de ambos borradores, creative correcto, estados/IDs visibles y el fallback de checklist para el flag AIGC según capability fixture.
 - **Verificación**: el borrador aparece en TikTok Ads Manager y en Meta Ads Manager vinculado al vídeo correcto; el resultado de la verificación del flag AIGC queda documentado.
 
 #### T6.6 · Trending Sound Advisor
 - **Depende de**: T6.2
 - **Entrega**: lectura de TikTok Creative Center (Popular Music) con filtro de disponibilidad comercial; sugerencias por mood; guía in-app del flujo "añadir sonido nativo al publicar" (restricción de cuentas Business documentada, §14); export con music headroom; **deuda `[verificar]`**: limitaciones de música en cuentas Business de Instagram.
+- **Playwright permanente**: `apps/web/e2e/sound-advisor.spec.ts` usa catálogo fake y cubre filtros comerciales, sugerencias por mood, selección, guía y bloqueo coherente de Spark para sonido no-CML.
 - **Verificación**: para una variante destino orgánico, el Advisor lista sonidos trending reales con su flag comercial; elegir uno no-CML marca `audio_source=native_trending` y el checklist bloquea Spark (coherencia con T6.2).
 
 #### T6.7 · Flujo Spark documentado
 - **Depende de**: T6.3
 - **Entrega**: guía interactiva del Spark code (ventanas 7/30/60/365; recomendación ventana ≥ campaña), captura de `spark_code` + `spark_auth_expires_at`, alerta de renovación a N días de expirar.
+- **Playwright permanente**: `apps/web/e2e/spark-guide.spec.ts` cubre selección de ventana, cálculo/persistencia de expiración y alerta con reloj controlado.
 - **Verificación**: registrar un spark code real de un post propio → la fecha de expiración se calcula bien y la alerta (fecha forzada) se dispara.
 
 ---
@@ -516,32 +547,38 @@ Decisiones del usuario (2026-07-07): la fase se ejecuta tras T0.1 y **antes** de
 #### T7.2 · Sync de métricas orgánicas + import CSV
 - **Depende de**: T6.3, T6.4
 - **Entrega**: TikTok Display API (`video.list` stats) e Instagram insights para posts orgánicos; import CSV manual con mapeo de columnas guiado.
+- **Playwright permanente**: `apps/web/e2e/metrics-import.spec.ts` usa APIs fake y un export CSV fixture para cubrir mapeo guiado, importación, errores de columnas y snapshots visibles sin duplicados.
 - **Verificación**: forzar el job de sync sobre los posts ya publicados en F6 → views/likes aparecen al momento y coinciden con la app de TikTok/IG; un CSV con el formato real de Ads Manager (fixture cuyo formato se contrasta con un export real cuando exista) importa sin errores y sus filas aparecen como snapshots; el schedule (≤24 h) queda registrado en pg-boss.
 
 #### T7.3 · Métricas derivadas y dashboard
 - **Depende de**: T7.1, T7.2
 - **Entrega**: cálculo por plataforma (Meta hook rate 3s/impr; TikTok thumbstop 2s/impr y 6s-rate; hold rate) con la no-comparabilidad explícita (§9.9); `/metrics` por variante/hook/ángulo/persona con linaje clicable.
 - **Mockup**: `docs/mockups/metrics.html` (variante 7a · KPIs + tabla por variante). El layout de `/metrics` parte de ese mockup; el reviewer rechaza una página que se desvíe sin acuerdo (ver `.claude/skills/frontend`).
+- **Playwright permanente**: `apps/web/e2e/metrics.spec.ts` siembra snapshots conocidos y cubre agregaciones por variante/hook/ángulo/persona, distinción explícita TikTok/Meta y navegación por linaje.
 - **Verificación**: los derivados de un snapshot conocido cuadran a mano; la vista "por hook" agrega correctamente las variantes que comparten `hook_line_id`.
 
 #### T7.4 · Reglas kill/scale ⚠
 - **Depende de**: T7.3; ⚠ modo auto: requiere un ad de prueba activo con presupuesto real bajo (lo crea el usuario)
 - **Entrega**: `experiment_rule` por lote (métrica correcta por plataforma, umbral, ventana 24–48 h, acción kill/scale/notify, modo manual/auto); evaluador cron; acciones ejecutables.
+- **Playwright permanente**: `apps/web/e2e/experiment-rules.spec.ts` usa snapshots y platform APIs fake para cubrir creación/edición de reglas, propuesta manual y ejecución auto visible; la pausa real con presupuesto queda en la Verificación.
 - **Verificación**: con snapshots inyectados, una variante bajo el umbral a las 48 h genera la propuesta de kill; en modo auto (ad de prueba de bajo presupuesto) la pausa se ejecuta de verdad en la plataforma.
 
 #### T7.5 · Flywheel: PerfStats y recomendador
 - **Depende de**: T7.3
 - **Entrega**: agregación periódica a `hook_line.perf`, `prompt_template.perf`, `persona.perf` y por framework; el recomendador de N4/CP2 ordena por score (con mínimo de muestra).
+- **Playwright permanente**: `apps/web/e2e/batch-matrix.spec.ts` se amplía para comprobar en CP2 el orden y score históricos de hooks, y que snapshots fixture que invierten el ranking cambian el orden visible.
 - **Verificación (criterio 22.6)**: tras un lote medido, CP2 del siguiente lote muestra los hooks reordenados con su hook rate histórico; el orden cambia si se inyecta un snapshot que invierte el ranking.
 
 #### T7.6 · Conciliación de gasto
 - **Depende de**: T0.12, T4.11 *(necesita gasto real acumulado; la conciliación completa llega con la actividad de F4/F5)*
 - **Entrega**: vista de conciliación en `/spend`: coste interno vs facturas reales (fal, Anthropic, Firecrawl) con captura manual mensual.
+- **Playwright permanente**: `apps/web/e2e/spend-reconciliation.spec.ts` cubre captura mensual, comparación por proveedor y desviación calculada con ledger/facturas fixture.
 - **Verificación (criterio 22.7)**: para un mes con actividad, la desviación ledger vs facturas es <10 % (documentado en la vista).
 
 #### T7.7 · Panel de gasto completo
 - **Depende de**: T5.10, T0.12
 - **Entrega**: vistas por proyecto/lote/tier, **coste medio por variante aprobada** (incluye descartes), alertas 70/90/100 % con email opcional, y **freno** que bloquea la creación de lotes nuevos al superar el presupuesto (§16.2, O9, D5).
+- **Playwright permanente**: `apps/web/e2e/spend-budget.spec.ts` cubre vistas y coste medio con datos conocidos, alertas por umbral, bloqueo de lote y override explícito; el envío se prueba contra mailer fake.
 - **Verificación**: con un presupuesto bajo forzado, intentar crear un lote muestra el bloqueo con mensaje y opción de override explícito; el email de alerta llega (o aparece en el log del mailer en modo dev); el coste medio por variante aprobada cuadra a mano con el ledger; las vistas por proyecto/lote/tier muestran cifras que cuadran con una query directa a `cost_entry`.
 
 ---
@@ -556,6 +593,7 @@ Decisiones del usuario (2026-07-07): la fase se ejecuta tras T0.1 y **antes** de
 #### T8.2 · Retención y monitor de disco
 - **Depende de**: T5.7
 - **Entrega**: política configurable (borrar intermedios de variantes rechazadas a los 30 días; conservar masters y linaje) + job de limpieza + alerta de disco >80 %.
+- **Playwright permanente**: `apps/web/e2e/settings-retention.spec.ts` cubre configuración/persistencia de la política y alerta visible con umbral forzado; la selección exacta de ficheros borrados queda en integración del job.
 - **Verificación**: forzar la política sobre datos de prueba borra exactamente lo esperado y nunca un master; la alerta se dispara con un umbral bajo forzado.
 
 #### T8.3 · Presets de export por plataforma
@@ -589,6 +627,7 @@ Decisiones del usuario (2026-07-07): la fase se ejecuta tras T0.1 y **antes** de
 #### T8.8 · Observabilidad completa
 - **Depende de**: T0.11, T0.14, T4.2, T7.2 *(webhook forjado ⇒ endpoint de T4.2; panel en `/settings` ⇒ T0.14; alerta de sync fallido ⇒ T7.2)*
 - **Entrega**: panel de métricas internas (duración por tipo de step, tasa de fallo por modelo/endpoint, discrepancia estimado-vs-real, profundidad de cola) en `/settings` y alertas operativas restantes (webhook con firma inválida, sync de métricas fallido) (§19.1).
+- **Playwright permanente**: `apps/web/e2e/settings-observability.spec.ts` siembra métricas/eventos conocidos y cubre estadísticas del panel y alertas por webhook inválido y sync fallido.
 - **Verificación**: enviar un webhook forjado → la alerta aparece; el panel muestra estadísticas reales calculadas desde las tablas (contrastadas a mano con una query).
 
 ---
@@ -604,3 +643,4 @@ Decisiones del usuario (2026-07-07): la fase se ejecuta tras T0.1 y **antes** de
 7. **Mockups de página**: cada página con pantalla propia tiene un mockup aprobado en `docs/mockups/` (catálogo en `docs/mockups/README.md`, elegido por el usuario 2026-07-08). La tarea que la desarrolla lo referencia con una línea `- **Mockup**: docs/mockups/<x>.html`, y su desarrollo **parte de ese mockup** (construido con los componentes `components/ui/` del DS, no reinventado). Una página que se desvíe del mockup sin acuerdo explícito es un error de review (obligatoriedad en `.claude/skills/frontend`). Páginas nuevas sin mockup: se acuerda el layout con el usuario antes de implementarlas.
 8. **Las cláusulas deterministas de una Verificación se quedan como tests** (auditoría DoD 2026-07-09): todo check automatizable y gratuito de un DoD (asserts de ffprobe, parsers de `.ass`, validadores de schema/seeds, linters, golden files) se codifica como test permanente dentro de `pnpm gate` en la misma tarea — así el "sin regresión" de la regla 2 es ejecutable y gratis para siempre. Las cláusulas con APIs de pago o juicio humano quedan one-shot con su evidencia en `docs/verifications/`.
 9. **Coste estimado por tarea** (auditoría DoD 2026-07-09): toda tarea cuya verificación consuma APIs de pago lleva una línea `- **Coste estimado**` — es la base del cap ×3 del bucle. Si una tarea sin estimado resulta necesitar APIs de pago, el bucle la trata como parada de gasto (no improvisa el presupuesto).
+10. **Playwright permanente por tarea web**: toda tarea cuya Entrega añada o modifique comportamiento operable en navegador declara una línea `- **Playwright permanente**` con el fichero exacto y los comportamientos protegidos. El spec se crea o actualiza en esa misma tarea, usa providers fake/fixtures para ser determinista y gratuito, y queda en `pnpm test:e2e`; el CUA puntual de cierre demuestra aceptación real, pero **no sustituye** esta regresión automatizada. Los E2E de fase viven además en `apps/web/e2e/phases/` con tags `@fN @phase`. Una excepción por infraestructura o proveedor real debe quedar escrita en la tarea junto con la capa permanente alternativa; nunca se omite en silencio.

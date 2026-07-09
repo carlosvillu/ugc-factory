@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/ugc-factory-design-system-d126b2f1-3ada-48c5-84fa-914e891fea6f/styles.css">
+<script src="_ds/ugc-factory-design-system-d126b2f1-3ada-48c5-84fa-914e891fea6f/_ds_bundle.js"></script>
+<style>
+  html,body{margin:0}
+  body{background:var(--bg);color:var(--text);font-family:var(--font-sans);-webkit-font-smoothing:antialiased}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{color:var(--accent-hover)}
+  ::selection{background:var(--accent-soft)}
+  @keyframes au-blink{0%,49%{opacity:1}50%,100%{opacity:0}}
+  .au-field{display:flex;flex-direction:column;gap:7px}
+  .au-label{font:500 12px/1 var(--font-sans);color:var(--text-2);letter-spacing:-0.005em}
+  .au-input{width:100%;box-sizing:border-box;background:var(--surface-2);border:1px solid var(--border-2);border-radius:var(--r-md);color:var(--text);font:400 14px/1.2 var(--font-sans);padding:11px 13px;outline:none;transition:border-color .15s,box-shadow .15s}
+  .au-input::placeholder{color:var(--text-4)}
+  .au-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--ring)}
+  .au-input.mono{font-family:var(--font-mono);font-size:13px}
+  .au-eye{position:absolute;right:6px;top:50%;transform:translateY(-50%);background:transparent;border:none;color:var(--text-3);font:500 11px/1 var(--font-mono);cursor:pointer;padding:6px 8px;border-radius:var(--r-sm)}
+  .au-eye:hover{color:var(--text-2);background:var(--surface-3)}
+  .au-eyebrow{font:600 10px/1 var(--font-mono);letter-spacing:0.18em;text-transform:uppercase;color:var(--accent)}
+</style>
+</helmet>
+
+<div data-theme="{{ themeAttr }}" data-accent="{{ accentAttr }}" style="min-height:100vh;background:var(--bg);color:var(--text);display:grid;grid-template-columns:1.05fr 0.95fr">
+
+  <!-- ============ LEFT · FORM PANEL ============ -->
+  <div style="display:flex;flex-direction:column;min-height:100vh;padding:40px 48px;box-sizing:border-box">
+
+    <!-- brand row -->
+    <div style="display:flex;align-items:center;gap:9px">
+      <span style="width:22px;height:22px;border-radius:6px;background:var(--accent);display:flex;align-items:center;justify-content:center"><span style="width:9px;height:9px;border-radius:2px;background:#fff"></span></span>
+      <span style="font:600 14px/1 var(--font-sans);letter-spacing:-0.01em">UGC Factory</span>
+      <span style="margin-left:auto;font:500 10px/1 var(--font-mono);color:var(--text-4);letter-spacing:0.08em">v0.9 · self-hosted</span>
+    </div>
+
+    <!-- centered form -->
+    <div style="flex:1;display:flex;flex-direction:column;justify-content:center;max-width:420px;width:100%;margin:0 auto">
+
+      <div class="au-eyebrow" style="margin-bottom:14px">{{ eyebrow }}</div>
+      <h1 style="font:600 30px/1.1 var(--font-sans);letter-spacing:-0.025em;margin:0 0 8px">{{ title }}</h1>
+      <p style="font:400 14px/1.55 var(--font-sans);color:var(--text-3);margin:0 0 26px">{{ subtitle }}</p>
+
+      <!-- segmented toggle -->
+      <div style="display:flex;gap:3px;padding:3px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-md);margin-bottom:26px">
+        <button onClick="{{ selLogin }}" style="{{ tabLoginStyle }}">Entrar</button>
+        <button onClick="{{ selSignup }}" style="{{ tabSignupStyle }}">Crear cuenta</button>
+      </div>
+
+      <form onSubmit="{{ onSubmit }}" style="display:flex;flex-direction:column;gap:16px">
+
+        <!-- name — signup only -->
+        <sc-if value="{{ isSignup }}" hint-placeholder-val="{{ false }}">
+        <div class="au-field">
+          <label class="au-label">Nombre del operador</label>
+          <input class="au-input" placeholder="Lucía Fernández" value="{{ nameVal }}" onInput="{{ onName }}" />
+        </div>
+        </sc-if>
+
+        <div class="au-field">
+          <label class="au-label">Correo</label>
+          <input class="au-input mono" type="email" placeholder="operador@dominio.co" value="{{ emailVal }}" onInput="{{ onEmail }}" />
+        </div>
+
+        <div class="au-field">
+          <div style="display:flex;align-items:baseline;justify-content:between;gap:12px">
+            <label class="au-label" style="flex:1">Contraseña</label>
+            <sc-if value="{{ isLogin }}" hint-placeholder-val="{{ true }}">
+              <a href="#" onClick="{{ noop }}" style="font:500 12px/1 var(--font-sans)">¿Olvidaste?</a>
+            </sc-if>
+          </div>
+          <div style="position:relative">
+            <input class="au-input mono" type="{{ pwType }}" placeholder="••••••••••••" value="{{ pwVal }}" onInput="{{ onPw }}" style="padding-right:56px" />
+            <button type="button" class="au-eye" onClick="{{ togglePw }}">{{ pwToggleLabel }}</button>
+          </div>
+          <sc-if value="{{ isSignup }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;align-items:center;gap:8px;margin-top:2px">
+              <div style="flex:1;height:4px;border-radius:var(--r-full);background:var(--surface-3);overflow:hidden"><span style="{{ strengthBarStyle }}"></span></div>
+              <span style="font:500 10px/1 var(--font-mono);color:{{ strengthColor }};min-width:52px;text-align:right">{{ strengthLabel }}</span>
+            </div>
+          </sc-if>
+        </div>
+
+        <!-- confirm — signup only -->
+        <sc-if value="{{ isSignup }}" hint-placeholder-val="{{ false }}">
+        <div class="au-field">
+          <label class="au-label">Confirmar contraseña</label>
+          <input class="au-input mono" type="{{ pwType }}" placeholder="••••••••••••" value="{{ pw2Val }}" onInput="{{ onPw2 }}" />
+        </div>
+        </sc-if>
+
+        <!-- remember / terms row -->
+        <div style="margin-top:2px">
+          <sc-if value="{{ isLogin }}" hint-placeholder-val="{{ true }}">
+            <x-import component-from-global-scope="UGCFactoryDesignSystem_d126b2.Checkbox" checked="{{ remember }}" on-change="{{ onRemember }}" label="Mantener sesión iniciada" hint-size="auto,20px"></x-import>
+          </sc-if>
+          <sc-if value="{{ isSignup }}" hint-placeholder-val="{{ false }}">
+            <x-import component-from-global-scope="UGCFactoryDesignSystem_d126b2.Checkbox" checked="{{ accept }}" on-change="{{ onAccept }}" label="Acepto la política de uso y de datos" hint-size="auto,20px"></x-import>
+          </sc-if>
+        </div>
+
+        <div style="margin-top:6px">
+          <x-import component-from-global-scope="UGCFactoryDesignSystem_d126b2.Button" variant="primary" size="lg" type="submit" style="{{ submitStyle }}" hint-size="100%,44px">{{ submitLabel }}</x-import>
+        </div>
+
+      </form>
+
+      <div style="display:flex;align-items:center;gap:12px;margin:26px 0">
+        <span style="flex:1;height:1px;background:var(--border)"></span>
+        <span style="font:500 10px/1 var(--font-mono);color:var(--text-4);letter-spacing:0.08em">O CON CLAVE DE ACCESO</span>
+        <span style="flex:1;height:1px;background:var(--border)"></span>
+      </div>
+
+      <x-import component-from-global-scope="UGCFactoryDesignSystem_d126b2.Button" variant="secondary" size="lg" style="width:100%" hint-size="100%,44px">◆ Passkey del dispositivo</x-import>
+
+      <p style="font:400 12.5px/1.5 var(--font-sans);color:var(--text-4);text-align:center;margin:24px 0 0">{{ switchText }} <a href="#" onClick="{{ toggleMode }}">{{ switchCta }}</a></p>
+    </div>
+
+    <div style="font:400 11px/1 var(--font-mono);color:var(--text-4);text-align:center">© 2026 · instancia personal · sin telemetría</div>
+  </div>
+
+  <!-- ============ RIGHT · TECHNICAL PANEL ============ -->
+  <div style="position:relative;background:var(--bg-subtle);border-left:1px solid var(--border);display:flex;flex-direction:column;justify-content:center;padding:56px;box-sizing:border-box;overflow:hidden">
+
+    <div class="au-eyebrow" style="margin-bottom:18px">Tu fábrica, tu servidor</div>
+    <h2 style="font:600 26px/1.2 var(--font-sans);letter-spacing:-0.02em;margin:0 0 12px;max-width:22ch">De una URL a doce anuncios UGC — con control total</h2>
+    <p style="font:400 14px/1.6 var(--font-sans);color:var(--text-3);margin:0 0 34px;max-width:44ch">12 nodos, 4 checkpoints y coste real por variante. Todo corre en tu instancia; nada sale sin que lo apruebes.</p>
+
+    <!-- run-log card -->
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--shadow-sm);overflow:hidden;max-width:440px">
+      <div style="display:flex;align-items:center;gap:7px;padding:11px 16px;border-bottom:1px solid var(--border);background:var(--surface-2)">
+        <span style="width:6px;height:6px;border-radius:50%;background:var(--danger);opacity:.5"></span>
+        <span style="width:6px;height:6px;border-radius:50%;background:var(--warning);opacity:.5"></span>
+        <span style="width:6px;height:6px;border-radius:50%;background:var(--success);opacity:.5"></span>
+        <span style="margin-left:auto;font:600 10px/1 var(--font-mono);color:var(--text-4);letter-spacing:0.06em">RUN · nuvela.co</span>
+      </div>
+      <div style="padding:16px;font:400 12.5px/1.9 var(--font-mono)">
+        <div style="color:var(--text-3)">$ ugc run nuvela.co/serum --tier std</div>
+        <div style="color:var(--text-2)">› N0–N2  ingesta y análisis <span style="color:var(--success)">✓ ok</span> <span style="color:var(--text-4)">$0.02</span></div>
+        <div style="color:var(--text-2)">› N3  ProductBrief <span style="color:var(--warning)">◆ CP1 pausa</span> <span style="color:var(--text-4)">$0.09</span></div>
+        <div style="color:var(--text-2)">› N4  matriz 12 var <span style="color:var(--text-4)">est. $38.40</span></div>
+        <div style="color:var(--success)">✓ listo para tu decisión<span style="display:inline-block;width:7px;height:14px;background:var(--accent);margin-left:4px;transform:translateY(2px);animation:au-blink 1.1s step-end infinite"></span></div>
+      </div>
+    </div>
+
+    <!-- mini stats -->
+    <div style="display:flex;gap:28px;margin-top:34px">
+      <div><div style="font:600 24px/1 var(--font-mono);letter-spacing:-0.02em">$3.20</div><div style="font:400 11.5px/1.3 var(--font-sans);color:var(--text-4);margin-top:6px">coste real / anuncio</div></div>
+      <div style="width:1px;background:var(--border)"></div>
+      <div><div style="font:600 24px/1 var(--font-mono);letter-spacing:-0.02em">63.2%</div><div style="font:400 11.5px/1.3 var(--font-sans);color:var(--text-4);margin-top:6px">thumbstop medio</div></div>
+      <div style="width:1px;background:var(--border)"></div>
+      <div><div style="font:600 24px/1 var(--font-mono);letter-spacing:-0.02em;color:var(--success)">4</div><div style="font:400 11.5px/1.3 var(--font-sans);color:var(--text-4);margin-top:6px">checkpoints</div></div>
+    </div>
+  </div>
+
+</div>
+</x-dc>
+</body>
+</html>

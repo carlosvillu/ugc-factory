@@ -31,8 +31,9 @@ Elige la tarea por el grafo `Depende de` (la numeración es orientativa — regl
 
 ### 2 · BRIEF
 Compón el brief del implementer (acotado — el agente lee lo que necesite, no le pegues el PRD):
-- Texto **literal** de la tarea de `planning.md` (Entrega, Subtareas, Verificación) + los `§` del PRD que la tarea cite.
-- Lista de references a leer ANTES de codificar, según las tablas de decisión de las skills `backend`/`frontend`/`testing` (p. ej. "vas a tocar tabla+repo → backend/references/db.md + testing/references/db-integration.md").
+- **Enumera TODOS los bullets de la entrada de la tarea en `planning.md`**, no solo Entrega/Subtareas/Verificación: también `Mockup`, `Playwright permanente` (regla 10 — DoD bloqueante), `Deuda heredada`, notas de desviación, etc. Un entregable declarado que se te escape del brief bloquea el cierre y obliga a completarlo tarde (pasó en T0.4: el brief omitió el harness+specs Playwright, afloró en CLOSE). Antes de escribir el brief, además: **grep de guards `hasta T<ID>` / `DESHABILITADO` en `package.json` y scripts** — señalan trabajo de infra que ESTA tarea debe activar (T0.4 tenía `test:e2e` = "DESHABILITADO hasta T0.4").
+- Texto **literal** de esos bullets + los `§` del PRD que la tarea cite.
+- Lista de references a leer ANTES de codificar, según las tablas de decisión de las skills `backend`/`frontend`/`testing` (p. ej. "vas a tocar tabla+repo → backend/references/db.md + testing/references/db-integration.md"; "deja spec Playwright → testing/references/e2e.md").
 - Contexto vivo: tail del journal si afecta, decisiones de tareas anteriores relevantes.
 - Recordatorio de sus reglas duras (están en su definición de agente, pero el brief las repite en 1 línea).
 

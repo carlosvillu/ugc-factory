@@ -27,7 +27,7 @@
 
 ## F0 — Fundaciones
 
-El corazón de esta fase es el **orquestador** (§9.0): la máquina de estados transaccional del DAG. Todo lo demás del producto se cuelga de él. Al cerrar F0 no hay ninguna feature de negocio, pero el esqueleto completo (pipeline visual con checkpoints en el VPS) funciona con steps de demo.
+El corazón de esta fase es el **orquestador** (§9.0): la máquina de estados transaccional del DAG. Todo lo demás del producto se cuelga de él. Al cerrar F0 no hay ninguna feature de negocio, pero el esqueleto completo (pipeline visual con checkpoints en el VPS) funciona con steps de demo. Nota transversal: desde que T0.4 esté cerrada, los scripts/curl de cualquier verificación se autentican primero (login + cookie de sesión).
 
 #### T0.1 · Monorepo y esqueleto de proyectos [x] 2026-07-07 — PASS, ver docs/verifications/T0.1/ (coste $0)
 - **Depende de**: —
@@ -61,7 +61,7 @@ El corazón de esta fase es el **orquestador** (§9.0): la máquina de estados t
 - **Verificación**: en navegador, acceder a `/` sin sesión redirige a login; password incorrecto 3 veces → rate limit visible; con password correcto se entra y la cookie sobrevive a un refresh.
 
 #### T0.5 · StorageAdapter local + download proxificado
-- **Depende de**: T0.3
+- **Depende de**: T0.3, T0.4 *(la Verificación exige 401 sin sesión: usa el middleware de auth de T0.4, no un check ad-hoc)*
 - **Entrega**: interfaz `StorageAdapter` (put/get/stat/delete) con implementación filesystem (`/data/assets`), tabla `asset` (subset mínimo: id, kind, storage_key, mime, bytes, checksum) y endpoint `GET /api/assets/:id/download` (streaming, autenticado, nunca ruta cruda; §19.2).
 - **Verificación**: subir un fichero con un script de smoke → aparece en `/data/assets` con su fila en `asset` → descargarlo por `/api/assets/:id/download` con checksum idéntico; sin sesión, el endpoint devuelve 401.
 
@@ -102,25 +102,25 @@ El corazón de esta fase es el **orquestador** (§9.0): la máquina de estados t
 
 #### T0.11 · Canvas React Flow v1
 - **Depende de**: T0.8, T0.9, T0.10
-- **Entrega**: página `/runs/[id]` con grafo (layout automático dagre/elkjs), nodos con estado/color/duración (y coste si existe), panel lateral al click con **visor de logs y errores del step** (§8.2), botones de checkpoint (aprobar/editar/rechazar), retry, skip, cancelar lote y toggle autopilot.
+- **Entrega**: página `/runs/[id]` con grafo (layout automático dagre/elkjs), nodos con estado/color/duración (y coste si existe), panel lateral al click con **visor de logs, errores y output/artefacto JSON genérico del step** (§8.2), botones de checkpoint (aprobar/editar/rechazar), retry, skip, cancelar lote y toggle autopilot.
 - **Mockup**: `docs/mockups/runs-id.html` (variante 1b · cockpit denso). El layout parte de ese mockup; el reviewer rechaza una página que se desvíe sin acuerdo (ver `.claude/skills/frontend`).
-- **Verificación**: en el navegador, lanzar el run de demo y **ver los nodos cambiar de color en vivo**; aprobar el checkpoint desde el panel; provocar un fallo (`fail_rate=1`) y ver el error en el visor de logs del nodo; retry con éxito; cancelar otro run en curso desde el botón.
+- **Verificación**: en el navegador, lanzar el run de demo y **ver los nodos cambiar de color en vivo**; aprobar el checkpoint desde el panel; provocar un fallo (`fail_rate=1`) y ver el error en el visor de logs del nodo; retry con éxito; cancelar otro run en curso desde el botón; activar el toggle autopilot desde la cabecera y ver un run completar sin pausas (con el candado "parar siempre aquí" respetado); skip de un nodo skippable desde el panel — todo operado desde la UI, no vía API.
 
 #### T0.12 · Ledger de gasto (esqueleto)
 - **Depende de**: T0.7b
 - **Entrega**: tablas `cost_entry` y `budget`; helper `recordCost()`; página `/spend` v1 con totales por día/proveedor y alerta in-app al superar el presupuesto. (El panel completo — vistas por proyecto/lote/tier, freno, email — llega en T7.7.)
 - **Mockup**: `docs/mockups/spend.html` (variante 8a · presupuesto + ledger por proveedor). El layout parte de ese mockup; el reviewer rechaza una página que se desvíe sin acuerdo (ver `.claude/skills/frontend`).
-- **Verificación**: tras 3 runs de demo con coste ficticio, `/spend` muestra la suma exacta esperada; un presupuesto de prueba por debajo del gasto dispara la alerta in-app.
+- **Verificación**: tras 3 runs de demo con costes ficticios **elegidos por el verifier** (no los fixtures del implementer), `/spend` muestra la suma exacta esperada; un presupuesto de prueba por debajo del gasto dispara la alerta in-app.
 
-#### T0.13 · Despliegue inicial en VPS
-- **Depende de**: T0.11
+#### T0.13 · Despliegue inicial en VPS ⚠
+- **Depende de**: T0.11, T0.4 *(la Verificación incluye "login funciona")*; ⚠ VPS contratado y dominio con DNS apuntando al VPS (los aporta el usuario)
 - **Entrega**: `docker-compose.prod.yml` (web standalone, worker, postgres, caddy con TLS y `flush_interval -1` en la ruta SSE; volumen `/data/assets` worker rw + web ro; §18), `DEPLOY.md`, deploy por `git pull && docker compose up -d --build`, cron de `pg_dump` diario.
 - **Verificación**: desde fuera del VPS, `https://<dominio>` sirve la app con certificado válido; login funciona; un run de demo completo corre en el VPS con el canvas actualizándose en vivo (SSE atraviesa Caddy); forzar el cron de backup → aparece el dump fechado y `pg_restore --list` lo lee sin error.
 
-#### T0.14 · Credenciales cifradas y /settings
-- **Depende de**: T0.4
+#### T0.14 · Credenciales cifradas y /settings ⚠
+- **Depende de**: T0.4; ⚠ API key real de fal para esta verificación (las de Anthropic y Firecrawl llegan con T1.7/T1.4) — las aporta el usuario
 - **Entrega**: módulo de secretos (§13.1/§19.2): API keys en `app_setting` cifradas at-rest (libsodium sealed box; la master key es la única credencial en env), bootstrap desde env en el primer arranque, y página `/settings` para editar keys, presets, idiomas, umbrales y apariencia del design system (tema/acento/densidad — añadido menor 2026-07-07 al crearse la fase FD; hasta entonces la app fija dark/indigo/balanced).
-- **Verificación**: guardar la key de fal desde `/settings` → reiniciar contenedores → la key sigue funcionando; en `psql`, el valor almacenado es un blob cifrado (no aparece la key en claro en ningún `SELECT`); borrar la env var tras el bootstrap no rompe nada.
+- **Verificación**: guardar la key de fal desde `/settings` → reiniciar el contenedor de Postgres y los procesos web/worker → la key sigue funcionando; en `psql`, el valor almacenado es un blob cifrado (no aparece la key en claro en ningún `SELECT`); borrar la env var tras el bootstrap no rompe nada; cambiar tema/acento/densidad desde `/settings` se aplica en vivo y persiste tras un reload.
 
 ---
 
@@ -188,16 +188,18 @@ Decisiones del usuario (2026-07-07): la fase se ejecuta tras T0.1 y **antes** de
 #### T1.3 · Fast path determinista de ingesta
 - **Depende de**: T1.2
 - **Entrega**: clasificador de URL (regex §7.2 N1), cliente Shopify `.json`, parsers JSON-LD (`Product/Offer/AggregateRating`) y OpenGraph, merge a `RawContent`; normalizador de URL + content_hash; manejo de 404/401 del `.json` con fallback transparente.
-- **Verificación**: contra 3 URLs reales (1 Shopify, 1 con JSON-LD, 1 solo-OG), el `RawContent` persistido contiene título/precio/imágenes correctos comprobados a mano contra la página.
+- **Verificación**: contra 3 URLs reales (1 Shopify, 1 con JSON-LD, 1 solo-OG), el `RawContent` persistido contiene título/precio/imágenes correctos comprobados a mano contra la página; una URL cuyo `{url}.json` responde 404/401 degrada al parser JSON-LD/OG de forma transparente (sin error visible ni fila rota).
 
 #### T1.4 · Cliente Firecrawl + fallback Jina
-- **Depende de**: T1.3, T0.12, T0.14
+- **Depende de**: T1.3, T0.5, T0.12, T0.14 *(el screenshot se persiste como `asset` y se descarga por el endpoint de T0.5)*; ⚠ API key de Firecrawl (la aporta el usuario)
 - **Entrega**: cliente `/v2/scrape` con `formats: [markdown, images, branding, product, screenshot]` + `onlyMainContent` + `proxy: auto`; fallback a Jina Reader si Firecrawl falla; screenshot persistido como `asset`; créditos registrados en `cost_entry`.
+- **Coste estimado**: ~$0,30 (créditos Firecrawl de varios scrapes de prueba)
 - **Verificación**: analizar una landing real JS-heavy → `url_analysis.raw_content` contiene markdown legible, ≥3 imágenes y branding con paleta; el screenshot se descarga por `GET /api/assets/:id/download` (T0.5) y coincide con la landing; con la key de Firecrawl inválida, Jina produce al menos el markdown; los créditos aparecen en `/spend`.
 
 #### T1.5 · Mini-crawl de páginas internas
 - **Depende de**: T1.4
 - **Entrega**: descubrimiento de hasta 3 URLs same-domain (`/reviews`, `/faq`, `/about` y variantes por idioma) + scrape ligero + anexión al `RawContent` (§9.1).
+- **Coste estimado**: ~$0,10
 - **Verificación**: sobre una tienda real con página de reviews, el markdown anexado contiene texto de reviews reconocible; sobre una landing sin esas páginas, el paso termina en `skipped` sin error.
 
 #### T1.6 · Entrada por texto libre
@@ -206,30 +208,35 @@ Decisiones del usuario (2026-07-07): la fase se ejecuta tras T0.1 y **antes** de
 - **Verificación**: crear un análisis solo con un párrafo y 2 imágenes → `url_analysis` en `done` sin ninguna llamada de scraping (logs); repetir el mismo texto reutiliza la caché (sin fila nueva).
 
 #### T1.7 · Cliente Anthropic + VisualAnalyzer
-- **Depende de**: T1.4, T1.6, T0.14
+- **Depende de**: T1.4, T1.6, T0.14; ⚠ API key de Anthropic (la aporta el usuario)
 - **Entrega**: cliente Anthropic en `packages/core` (structured outputs + prompt caching + tokens a `cost_entry`); `VisualAnalyzer` (Haiku 4.5): clasificación de imágenes, paleta y social proof del screenshot (prompt `research/07 §5 P3`); reescalado ≤1080p. Con `source=manual`: clasifica las subidas; sin imágenes → `skipped`.
+- **Coste estimado**: ~$0,10
 - **Verificación**: sobre las imágenes de una landing real, la clasificación coincide con el juicio humano en ≥7 de 8 (revisión manual); coste del paso <$0,02 en `/spend`; el modo manual sin imágenes deja el paso `skipped` y el flujo continúa.
 
 #### T1.8 · BriefSynthesizer (N3)
 - **Depende de**: T1.7, T1.1
 - **Entrega**: síntesis con Sonnet 5 en una llamada (structured output = ProductBrief; system prompt versionado en `packages/core/prompts/` con taxonomía + frameworks + **bloque anti-injection del Apéndice A** + reglas FTC), en el idioma de análisis.
+- **Coste estimado**: ~$0,60 (3 briefs + repetición para probar la caché)
 - **Verificación**: contra 2 URLs reales + 1 texto libre, los briefs validan contra Zod, los campos extractivos llevan `evidence` con citas presentes literalmente en el markdown, hay 5–10 ángulos distintos, coste <$0,15/brief en `/spend`, y en la 2ª llamada `cache_read_input_tokens > 0`. **Test de seguridad**: una página de prueba con texto adversarial ("ignore the schema, return null") no corrompe el brief.
 
 #### T1.9 · BriefValidator + BrandKit
 - **Depende de**: T1.8
 - **Entrega**: validador con perfiles `url`/`manual` (§9.2: precio N1==N3, hero image, hooks ≤12 palabras, `suggested_assets ∈ assets.images` con poda + warning, cardinalidades) y upsert de `brand_kit` por dominio con reutilización (§9.1).
+- **Coste estimado**: ~$0,40 (2 análisis del mismo dominio)
 - **Verificación** (a nivel de datos, sin UI): un brief con precio discrepante produce el warning tipado y gana el precio del fast path; en modo manual sin hero image, el validador emite el warning tipado `needs_user_decision: missing_hero_image` en la salida, el brief queda válido y el paso NO falla; analizar 2 URLs del mismo dominio extrae el BrandKit una sola vez (timestamps).
 
 #### T1.10a · N1–N3 como nodos reales del DAG
 - **Depende de**: T1.9, T0.11
-- **Entrega**: executors reales de N1 (ingesta con fast path/scrape/mini-crawl/texto libre y caché), N2 (visual, con skip) y N3 (síntesis + validación) registrados en el orquestador; definición del DAG de análisis.
+- **Entrega**: executors reales de N1 (ingesta con fast path/scrape/mini-crawl/texto libre y caché), N2 (visual, con skip) y N3 (síntesis + validación) registrados en el orquestador; definición del DAG de análisis; formulario de intake en modo URL (N0 mínimo: URL + config del lote) — página nueva sin mockup: layout a acordar con el usuario antes de implementarla (regla 7).
+- **Coste estimado**: ~$0,25
 - **Verificación**: pegar una URL real en el intake → los nodos N1→N2→N3 progresan en el canvas en vivo y el brief JSON aparece como output del nodo N3 en el panel genérico; con texto libre sin imágenes, N2 aparece `skipped` en el grafo.
 
 #### T1.10b · CP1: editor de brief
 - **Depende de**: T1.10a
 - **Entrega**: panel de CP1 con el brief editable campo a campo, badges extraído/inferido (`evidence`/`confidence`), gestión de warnings (incl. petición bloqueante de imágenes o derivación a packshot-IA en modo manual), aprobación que persiste `product_brief` versionado + `edited_by_user`; endpoint standalone `GET/PATCH /api/briefs/:id` (editar un brief aprobado fuera de un run activo, Apéndice E).
 - **Mockup**: `docs/mockups/brief-editor.html` (variante 3a · formulario en tarjetas + rail de trazabilidad). El layout parte de ese mockup; el reviewer rechaza una página que se desvíe sin acuerdo (ver `.claude/skills/frontend`).
-- **Verificación (E2E de la fase, criterio O1)**: en el navegador — URL real → N1/N2/N3 → editar un beneficio y un hook en CP1 → aprobar → brief versionado (v1 IA, v2 editado) y el run avanza; pipeline <90 s (sin contar la edición) y <$0,15. Después, editar el brief aprobado vía `/api/briefs/:id` sin run activo crea v3.
+- **Coste estimado**: ~$0,50
+- **Verificación (E2E de la fase, criterio O1)**: en el navegador — URL real → N1/N2/N3 → editar un beneficio y un hook en CP1 → aprobar → brief versionado (v1 IA, v2 editado) y el run avanza; pipeline <90 s (sin contar la edición) y <$0,15. Después, editar el brief aprobado vía `/api/briefs/:id` sin run activo crea v3. Los badges extraído/inferido muestran su `evidence` (cita) en el editor; un análisis en modo manual sin imágenes muestra en CP1 la petición bloqueante de imágenes con la derivación a packshot-IA.
 
 ---
 
@@ -245,8 +252,8 @@ Decisiones del usuario (2026-07-07): la fase se ejecuta tras T0.1 y **antes** de
 
 #### T2.1 · Migraciones de lote + seeds de hooks, CTAs y recetas
 - **Depende de**: T0.3
-- **Entrega**: tablas `hook_line`, `cta_line`, `ad_batch`, `ad_variant` (enum con estado **`scripted`** añadido tras `planned` — alineación anotada en PRD §12), `ad_script`, **`recipe`**; seed de ~40 hook lines y ~15 CTA lines por idioma (es/en, redacción propia) y **seed de las 3 recetas por tier con los costes del Apéndice B**; validador de seeds en CI.
-- **Verificación**: `pnpm seed` puebla librerías y recetas; el validador falla en CI con un fixture inválido (hook sin ángulo o >12 palabras; receta sin coste); `SELECT` de `recipe` muestra los 3 tiers con estimaciones que cuadran con el Apéndice B.
+- **Entrega**: tablas `hook_line`, `cta_line`, `ad_batch`, `ad_variant` (enum con estado **`scripted`** añadido tras `planned` — alineación anotada en PRD §12), `ad_script`, **`recipe`**; seed de ~40 hook lines y ~15 CTA lines por idioma (es/en, redacción propia) y **seed de las 3 recetas por tier con los costes del Apéndice B**; validador de seeds integrado en `pnpm gate` (no hay CI remota — decisión 2026-07-07).
+- **Verificación**: `pnpm seed` puebla librerías y recetas; el validador (dentro de `pnpm gate`) falla con un fixture inválido (hook sin ángulo o >12 palabras; receta sin coste); `SELECT` de `recipe` muestra los 3 tiers con estimaciones que cuadran con el Apéndice B.
 
 #### T2.2 · Compositor de matriz (N4) + estimador de coste
 - **Depende de**: T2.1, T2.0, T1.10b
@@ -261,16 +268,19 @@ Decisiones del usuario (2026-07-07): la fase se ejecuta tras T0.1 y **antes** de
 #### T2.4 · ScriptWriter (N5)
 - **Depende de**: T2.2
 - **Entrega**: generación de guiones con Sonnet 5 (sin sampling params; diversidad por prompt): modo normal (1 guion/variante) y modo hook-testing (1 body+CTA por ángulo + N hooks encajados, §9.4); `scenes[]` con timing duro (`word_count ÷ 2.5`), `subtitles[]`, CTA por objetivo, idioma destino nativo (§17).
+- **Coste estimado**: ~$0,50 (12 guiones + reintentos)
 - **Verificación**: para la matriz de T2.2, los 12 guiones validan contra Zod; los de es suenan nativos (revisión humana); en hook-testing los bodies de las variantes del mismo ángulo son **textualmente idénticos** (diff vacío); `est_seconds` ≤ duración objetivo en todos.
 
 #### T2.5 · Guardrails FTC + linter de claims
 - **Depende de**: T2.4
 - **Entrega**: reglas de §15.1 en el prompt (roles honestos, reformulación testimonial y founder) + linter determinista post-generación (claims de `banned_or_risky_claims`, primera persona de compra, afirmaciones founder) que **bloquea con explicación y sugerencia** (§15.2).
+- **Coste estimado**: ~$0,15
 - **Verificación**: pedir ángulo "testimonial" produce un guion creator-style demo sin "I bought this"; un claim médico prohibido inyectado a mano dispara el bloqueo con sugerencia compliant; el ángulo founder-origin llega reformulado en tercera persona.
 
 #### T2.6 · CP3: editor de guiones
 - **Depende de**: T2.3, T2.4, T2.5
 - **Entrega**: panel de CP3: lista de variantes con su guion, edición por escena y de hook/CTA, re-lint al guardar, aprobación por variante o del lote.
+- **Coste estimado**: ~$0,50
 - **Verificación (E2E de la fase)**: URL real → CP1 → CP2 (matriz 6 variantes) → CP3: editar el hook de una variante, aprobar todo → las 6 `ad_variant` quedan en estado **`scripted`** (valor literal en BD), con `ad_script` versionado (`edited_by_user` en la editada). Criterio O2: interacción total <5 min.
 
 ---
@@ -282,18 +292,18 @@ Decisiones del usuario (2026-07-07): la fase se ejecuta tras T0.1 y **antes** de
 - **Entrega**: tablas `prompt_template` (facetas GIN, `perf`, `usage_count`), `prompt_version`, `guard_pack` (con `key`, `vertical?`, `platform?`), `model_profile` (capabilities con refImages/refVideos/refAudios, `cost` multi-unidad) (§12).
 - **Verificación**: migración aplica (`psql \d`); con ≥1.000 filas sintéticas sembradas para el test (o `SET enable_seqscan=off`), una consulta por facetas combinadas muestra Bitmap Index Scan sobre el GIN en el EXPLAIN y devuelve exactamente las filas esperadas.
 
-#### T3.2 · Seed pipeline con validador en CI
+#### T3.2 · Seed pipeline con validador en el gate
 - **Depende de**: T3.1
-- **Entrega**: `packages/core/gallery-seed/*.json` + `pnpm seed:gallery` (upsert idempotente) + validador en CI (campos requeridos, slugs únicos, slots resolubles contra §10.4, `guardPackIds` existentes, `enumValues` para enums); los fixtures incluyen **2–3 templates mínimos de prueba** (los usará la verificación de T3.5).
-- **Verificación**: romper un fixture a propósito (slot inexistente `{producto.nombre}`) hace fallar el CI con mensaje claro; el seed corre dos veces sin duplicar filas.
+- **Entrega**: `packages/core/gallery-seed/*.json` + `pnpm seed:gallery` (upsert idempotente) + validador integrado en `pnpm gate` (campos requeridos, slugs únicos, slots resolubles contra §10.4, `guardPackIds` existentes, `enumValues` para enums; no hay CI remota); los fixtures incluyen **2–3 templates mínimos de prueba** (los usará la verificación de T3.5).
+- **Verificación**: romper un fixture a propósito (slot inexistente `{producto.nombre}`) hace fallar `pnpm gate` con mensaje claro; el seed corre dos veces sin duplicar filas.
 
 #### T3.3 · Guard packs (redacción propia)
 - **Depende de**: T3.2
 - **Entrega**: packs `general`, `fidelity`, `platform.{tiktok,reels}` y verticales (beauty, finance, health, apps, food, fashion) con líneas de redacción propia (§10.1) + regla de lookup (§9.5).
-- **Verificación**: el lookup para brief vertical beauty + plataforma tiktok devuelve exactamente {general, fidelity, vertical.beauty, platform.tiktok}; ninguna línea coincide textualmente con las de Cliprise (revisión manual del seed).
+- **Verificación**: el lookup para brief vertical beauty + plataforma tiktok devuelve exactamente {general, fidelity, vertical.beauty, platform.tiktok}; ninguna línea del seed coincide textualmente con las librerías de Cliprise: clonar los repos públicos (`cliprise/awesome-ai-ugc-video-prompts`, `cliprise/awesome-ai-video-ads-prompts`) y contrastar por n-gramas/grep, con el output del contraste en la evidencia.
 
 #### T3.4 · Model profiles seed + verificación de catálogo
-- **Depende de**: T3.1
+- **Depende de**: T3.1, T2.1 *(recalibra las `recipe` sembradas en T2.1)*
 - **Entrega**: seed de `model_profile` (catálogo §13.1: endpoints completos, capabilities, costes) y comando `pnpm fal:verify` que contrasta cada perfil contra la model page/`llms.txt` de fal (marca `verified_at`/desviaciones) y **recalibra los costes de las `recipe`** con los datos verificados (regla de trabajo 5).
 - **Verificación**: `pnpm fal:verify` corre contra fal.ai real y reporta OK o divergencia por perfil; introducir un precio falso en el seed hace que lo detecte; las recetas quedan recalculadas si hubo cambios.
 
@@ -305,12 +315,12 @@ Decisiones del usuario (2026-07-07): la fase se ejecuta tras T0.1 y **antes** de
 #### T3.6 · Model adapters
 - **Depende de**: T3.5, T3.4
 - **Entrega**: adapters por familia (Seedance `@image/@video/@audio`; Kling referencias y voice control; Veo/Wan; imagen Seedream/NB2 edit) que transforman prompt canónico + assets al payload del endpoint respetando `capabilities`.
-- **Verificación**: golden files de payloads por adapter; un template que excede `maxDuration` produce el troceo de escenas esperado (§7.5) en el plan de generación, no un error en runtime.
+- **Verificación**: golden files de payloads por adapter **más asserts semánticos** (los goldens solos son autorreferenciales): el payload de Kling incluye la imagen de referencia cuando `capabilities.refImages>0`, el de Seedance usa la sintaxis `@image/@video/@audio`, y aspect/duración usan los nombres y enums exactos del `model_profile`; un template que excede `maxDuration` produce el troceo de escenas esperado (§7.5) en el plan de generación, no un error en runtime.
 
 #### T3.7 · Seed inicial de templates (lote 1: ~50)
 - **Depende de**: T3.5
 - **Entrega**: ~50 templates propios (es/en) cubriendo formatos y ángulos de mayor uso, siguiendo la anatomía §10.3, en `draft` (pasan a `published` con thumbnail en T4.12). Ampliación a ~150 en T8.6.
-- **Verificación**: validador en verde; 5 templates al azar cumplen los 14 puntos de la anatomía §10.3 (checklist manual); la búsqueda facetada devuelve candidatos para cada ángulo del brief de prueba.
+- **Verificación**: validador en verde; 5 templates elegidos al azar **por el verifier** cumplen los 14 puntos de la anatomía §10.3 (checklist manual); la búsqueda facetada devuelve candidatos para cada ángulo del brief de prueba.
 
 #### T3.8 · UI de galería
 - **Depende de**: T3.7
@@ -323,63 +333,75 @@ Decisiones del usuario (2026-07-07): la fase se ejecuta tras T0.1 y **antes** de
 ## F4 — Generación fal.ai
 
 #### T4.1 · FalClient + upload de inputs con caché
-- **Depende de**: T0.7b, T3.4, T0.12, T0.14
+- **Depende de**: T0.7b, T0.5, T3.4, T0.12, T0.14 *(usa la tabla `asset` y el storage de T0.5)*
 - **Entrega**: cliente sobre `@fal-ai/client`: submit a `queue.fal.run` (persistencia `submitting`→`submitted` con `request_id`/`status_url`/`response_url`; §9.6), subida de inputs vía fal storage con caché `(asset_id, checksum)` → `asset.fal_url`, rate limiter (~8 concurrentes) y manejo de 429/`Retry-After`; tabla `generation` completa.
-- **Verificación**: generar una imagen barata real (FLUX.2 dev, <$0,05) end-to-end por polling → `generation` completa, coste real en `/spend`, PNG en storage propio; subir el mismo input dos veces reutiliza `fal_url` (un solo upload en logs).
+- **Coste estimado**: ~$0,15
+- **Verificación**: generar una imagen barata real (FLUX.2 dev, <$0,05) end-to-end por polling → `generation` completa, coste real en `/spend`, PNG en storage propio; subir el mismo input dos veces reutiliza `fal_url` (un solo upload: `asset.fal_uploaded_at` no cambia en la 2ª pasada, además de los logs).
 
 #### T4.2 · Webhook de fal con firma ED25519
 - **Depende de**: T4.1, T0.13
 - **Entrega**: `POST /api/webhooks/fal`: verificación ED25519 contra JWKS (caché ≤24 h) + timestamp ±5 min + idempotencia por `request_id`; el handler persiste el evento y delega en el orquestador; la **descarga del output se encola como job del worker** (§9.6).
+- **Coste estimado**: ~$0,15
 - **Verificación**: en el VPS (o local con cloudflared), una generación real completa vía webhook sin polling ("webhook verified" en logs); un POST forjado devuelve 401 sin tocar la BD; reenviar el mismo webhook no duplica nada.
 
 #### T4.3 · Polling fallback + reconciliación idempotente
 - **Depende de**: T4.1
 - **Entrega**: poller lazy en read-path + integración con el sweeper (reconciliar generations colgadas contra fal, expirar por tipo); executor idempotente (§6.3.9).
+- **Coste estimado**: ~$0,20
 - **Verificación**: con webhooks deshabilitados (dev local), una generación real completa vía polling; matar el worker durante una generación y reiniciar retoma el seguimiento **sin re-submit** (el billing de fal muestra 1 solo job).
 
 #### T4.4 · N7a: product shots con referencias reales
 - **Depende de**: T4.1, T3.6
 - **Entrega**: executor N7a: `fal-ai/bytedance/seedream/v4.5/edit` con fotos hero del brief como referencia (fallback `fal-ai/nano-banana-2/edit`), 2–3 shots 9:16; ruta packshot-IA si no hay fotos (decisión de CP1, marcada `synthetic_product=true`).
+- **Coste estimado**: ~$0,50 (shots por las dos rutas: referencias y packshot-IA)
 - **Verificación**: con fotos reales de un producto propio, los shots muestran **el producto real reconocible** (label/forma a juicio humano) en escenario UGC 9:16; el flujo sin fotos produce packshots razonables con el flag persistido.
 
 #### T4.5 · N7b: TTS + word timestamps
-- **Depende de**: T4.1, T2.0
+- **Depende de**: T4.1, T2.0, T2.4 *(usa guiones reales con `scenes[]` de T2.4)*
 - **Entrega**: executor TTS por escena según receta y `voice_map` de la Persona; **cierre de deuda `[verificar]`**: si los endpoints TTS devuelven word timestamps nativos; si no, ASR `fal-ai/elevenlabs/speech-to-text` encadenado; `word_timestamps` persistidos.
+- **Coste estimado**: ~$0,30 (TTS + ASR de 2 guiones)
 - **Verificación**: para un guion es y otro en, los audios suenan correctos en idioma y voz esperados; los word timestamps cubren el 100 % de las palabras y, medidos contra el onset visible en un editor de waveform (Audacity/`ffmpeg astats`) en 3 palabras concretas, difieren <±100 ms; resultado del `[verificar]` anotado en `model_profile` y en PRD §13.1.
 
 #### T4.6 · Preview de voz en CP2/CP3
-- **Depende de**: T4.5
+- **Depende de**: T4.5, T2.3, T2.6 *(el botón ▶ vive en los paneles de CP2/CP3)*
 - **Entrega**: muestras de voz por Persona/idioma (generadas una vez, cacheadas) escuchables en CP2/CP3 **antes** de gastar render (§8.3 — por eso esta tarea va antes que el resto de N7).
+- **Coste estimado**: ~$0,20 (muestras que quedan cacheadas)
 - **Verificación**: botón ▶ junto a cada Persona reproduce su voz en el idioma de la variante; reproducirla 5 veces no añade coste (caché comprobada en `/spend`).
 
 #### T4.7 · N7c: clip de avatar
 - **Depende de**: T4.5
 - **Entrega**: executor avatar por tier: Kling AI Avatar v2 Std (imagen de Persona + audio TTS del hook; duración = audio), VEED Avatars en Test (voz propia, timestamps vía ASR del clip; §7.5), OmniHuman en Premium (audio ≤30 s validado).
+- **Coste estimado**: ~$2 (clips es+en en los tres tiers de avatar)
 - **Verificación**: clip real de la Persona hablando el hook con lipsync aceptable a juicio humano (es y en); duración = audio ±0,3 s; en Test, el ASR produce timestamps del clip VEED.
 
 #### T4.8 · N7d: b-roll por escena
 - **Depende de**: T4.4, T3.6
 - **Entrega**: executor b-roll: 1 generación por escena (§7.5), i2v desde keyframes (Kling v3/Wan 2.6) o R2V (Seedance 2.0) si el producto aparece en escena; troceo de escenas > maxDuration; **cierre de deuda**: enums de `aspect_ratio` de cada modelo integrado.
+- **Coste estimado**: ~$4 (presupuesto §7.5 de una variante Standard)
 - **Verificación**: para una variante de conversión (21–34 s) se generan exactamente los clips del presupuesto §7.5 (1 avatar + 2 b-roll), 9:16 720p+, producto fiel en las escenas R2V; enums anotados en `model_profile`.
 
 #### T4.9 · N7e: bed musical IA
 - **Depende de**: T4.1
 - **Entrega**: executor música (ace-step) por mood/duración; **cierre de deuda**: precio real de ace-step.
-- **Verificación**: bed de 30 s con el mood pedido, coste registrado, `audio_source=ai_bed` en la variante.
+- **Coste estimado**: ~$0,30
+- **Verificación**: bed de 30 s con el mood pedido (a juicio humano), coste registrado, `audio_source=ai_bed` en la variante.
 
 #### T4.10 · Deduplicación de generación
 - **Depende de**: T4.5, T4.7, T4.8
 - **Entrega**: content-hash `(resolved_prompt, model_profile_id, inputs)` en `generation`; los executors consultan antes de submit y reutilizan assets completados (§9.6).
+- **Coste estimado**: ~$5
 - **Verificación**: lote hook-testing de 3 variantes del mismo ángulo → body y CTA se generan **una sola vez** (nº de generations = hooks + body + CTA + shots, no 3× todo); ahorro visible en `/spend`.
 
 #### T4.11 · Sub-DAG de N7 en el canvas + E2E de fase
 - **Depende de**: T4.4, T4.6, T4.7, T4.8, T4.9, T4.10, T0.11
 - **Entrega**: nodo compuesto N7 por variante (expandible a N7a–N7e) con thumbnails/players por asset; N6 visible con su `resolvedPrompt`; coste estimado vs real por sub-step; retry granular.
+- **Coste estimado**: ~$6 (variante completa + retries)
 - **Verificación (E2E de la fase)**: desde el canvas, una variante real completa N6→N7 con todos los assets reproducibles en el panel y el `resolvedPrompt` inspeccionable en N6; coste real del lote difiere <15 % del estimado de CP2; retry de un sub-step fallado funciona.
 
 #### T4.12 · Generación de Personas, thumbnails y "probar template"
-- **Depende de**: T4.1, T3.7, T2.0
+- **Depende de**: T4.1, T3.8, T2.0 *(T3.7 implícito vía T3.8; los thumbnails y el botón "probar template" viven en la UI de galería)*
 - **Entrega**: generación IA de imágenes de referencia de Personas (FLUX.2/NB2: mismo sujeto, 2–3 encuadres, ≥2K) con curación manual; seed hasta 10–20 Personas (es/en); job de thumbnails de galería que promociona templates `draft→published`; botón **"probar template"** en la ficha (`generation` con `step_run_id` NULL, coste registrado).
+- **Coste estimado**: ~$5 (referencias de 10–20 Personas + ~50 thumbnails + prueba de template)
 - **Verificación**: 10 Personas activas con referencias consistentes (mismo sujeto a juicio humano); los ~50 templates quedan `published` con thumbnail en `/gallery` (ninguno publicado sin thumbnail); "probar template" genera un clip/imagen barata visible en la ficha con su coste en `/spend`.
 
 ---
@@ -394,7 +416,7 @@ Decisiones del usuario (2026-07-07): la fase se ejecuta tras T0.1 y **antes** de
 #### T5.2 · Normalización canónica con caché (vídeo + audio)
 - **Depende de**: T5.1, T4.5, T4.7, T4.8
 - **Entrega**: normalizador por asset (1080×1920 scale-to-fill+crop, 30 fps, H.264 CRF 23 `yuv420p`, `setsar=1`, `-an`) + pista de audio canónica (AAC 48 kHz estéreo), extracción de voz de clips con audio embebido (VEED/voz nativa), `normalized_cache_key` = checksum + params (§9.7).
-- **Verificación**: normalizar los assets reales de una variante → ffprobe de cada salida cumple el perfil exacto (script de asserts); segunda ejecución = 100 % cache hits (0 trabajos ffmpeg en logs); un clip 16:9 de prueba queda crop-to-fill sin letterbox.
+- **Verificación**: normalizar los assets reales de una variante → ffprobe de cada salida cumple el perfil exacto (script de asserts); segunda ejecución = 100 % cache hits (0 trabajos ffmpeg en logs y mtime de los normalizados intacto); un clip 16:9 de prueba queda crop-to-fill sin letterbox.
 
 #### T5.3 · Concat + mezcla de audio
 - **Depende de**: T5.2
@@ -409,12 +431,13 @@ Decisiones del usuario (2026-07-07): la fase se ejecuta tras T0.1 y **antes** de
 #### T5.5 · Pase final, export master y QA automático
 - **Depende de**: T5.3, T5.4
 - **Entrega**: encode final único (mix + burn-in; `-c:a copy` si el audio no cambió) al preset master (Apéndice C) + thumbnail + firma **C2PA** + validador QA (ffprobe, duración, LUFS, tamaño, captions-in-safe-zone) → `qa_report`.
-- **Verificación** (a nivel de datos): la fila `qa_report` de una variante real contiene todos los checks en `pass` (query); `c2patool <master> --info` muestra el manifest con `trainedAlgorithmicMedia`; subir el fichero a mano a TikTok (borrador) no produce warnings de formato.
+- **Verificación** (a nivel de datos): la fila `qa_report` de una variante real contiene todos los checks en `pass` (query); `c2patool <master> --info` muestra el manifest con `trainedAlgorithmicMedia`; subir el fichero a mano a TikTok (borrador) no produce warnings de formato — paso manual del usuario (revisión humana): el bucle deja el master listo y pide este juicio.
 
 #### T5.6 · CP4: revisión de variantes
 - **Depende de**: T5.5, T0.11
 - **Entrega**: panel de QA con player, overlay de safe zones conmutable (TikTok/Meta/Universal), resultados del QA, acciones aprobar/rechazar/regenerar (rechazo → `rejected`; regenerar → run `kind=regen`).
-- **Verificación**: aprobar 2 variantes y rechazar 1 desde el navegador actualiza estados y biblioteca; "regenerar guion" crea el run parcial que termina en un master nuevo pasando por QA otra vez.
+- **Coste estimado**: ~$2 (la regeneración de guion re-genera assets)
+- **Verificación**: aprobar 2 variantes y rechazar 1 desde el navegador actualiza los estados de las `ad_variant` (query en BD; el reflejo en `/library` se verifica en T5.7); "regenerar guion" crea el run parcial que termina en un master nuevo pasando por QA otra vez.
 
 #### T5.7 · Export bundle + biblioteca
 - **Depende de**: T5.5, T5.6
@@ -425,15 +448,17 @@ Decisiones del usuario (2026-07-07): la fase se ejecuta tras T0.1 y **antes** de
 #### T5.8 · Regeneración parcial optimizada
 - **Depende de**: T5.6, T4.10
 - **Entrega**: flujo CU4: clonar variante, regenerar solo el nodo cambiado + N8 + N9, reutilizando caché de normalizados y dedupe.
+- **Coste estimado**: ≤$0,50 (cota del propio criterio 22.4)
 - **Verificación (criterio 22.4)**: cambiar el CTA de una variante aprobada produce un master nuevo en <2 min de reloj y <$0,50 de coste registrado.
 
 #### T5.9 · E2E de la fase (criterios 22.1, 22.2 y 22.8)
-- **Depende de**: T5.7
+- **Depende de**: T5.7, T4.11 *(el E2E de F5 presupone el de F4 y arrastra CP2/CP3 vía T4.6)*
 - **Entrega**: prueba guiada completa documentada en `VERIFY.md` con los números reales obtenidos.
-- **Verificación**: (a) URL real → ≥6 variantes aprobadas (2 ángulos × 3 hooks) de 15–30 s en es+en, captions karaoke correctas, C2PA firmado, coste del lote <$15 en tier Test, <45 min de reloj con checkpoints atendidos; (b) **texto libre con 0 imágenes**: párrafo → decisión packshot-IA en CP1 → al menos 1 variante aprobada con `synthetic_product=true`.
+- **Coste estimado**: ≤$15 (cota del propio criterio 22.1)
+- **Verificación**: (a) URL real → ≥6 variantes aprobadas (2 ángulos × 3 hooks) de 15–30 s en es+en, captions karaoke correctas, C2PA firmado, coste del lote <$15 en tier Test, <45 min de reloj con checkpoints atendidos; (b) **texto libre con 0 imágenes**: párrafo → decisión packshot-IA en CP1 → al menos 1 variante aprobada con `synthetic_product=true`; (c) **criterio 22.8**: las voces de las variantes es y en son nativas y corresponden al `voice_map` de su Persona (revisión humana de 1 variante por idioma).
 
 #### T5.10 · Dashboard y vista de proyecto
-- **Depende de**: T5.7
+- **Depende de**: T5.7, T2.3 *("lanzar un lote" exige CP2)*
 - **Entrega**: `/` (dashboard: proyectos, lotes activos, gasto del mes, alertas) y `/projects/[id]` (briefs, lotes, variantes y métricas del proyecto) + CRUD mínimo de proyectos (§8.1).
 - **Mockup**: `docs/mockups/dashboard.html` (variante 2a · resumen clásico · KPIs + lotes + panel lateral). El layout de `/` parte de ese mockup; el reviewer rechaza una página que se desvíe sin acuerdo (ver `.claude/skills/frontend`).
 - **Verificación**: crear un proyecto desde la UI, lanzar un lote en él → el dashboard muestra el lote activo y el gasto del mes del proyecto; `/projects/[id]` lista sus briefs y variantes con estados correctos.
@@ -445,14 +470,14 @@ Decisiones del usuario (2026-07-07): la fase se ejecuta tras T0.1 y **antes** de
 > Toda capacidad de F6 tiene modo degradado manual (export + checklist + guía) para no bloquear si las apps de developer están en revisión (§13.3).
 
 #### T6.1 · Conexión de cuentas (OAuth) ⚠
-- **Depende de**: T0.13, T0.14; ⚠ apps de developer TikTok y Meta creadas por el usuario
+- **Depende de**: T0.13, T0.14; ⚠ apps de developer TikTok y Meta + cuenta TikTok propia + cuenta Instagram Business vinculada a página de Facebook (todo lo aporta el usuario)
 - **Entrega**: flujos OAuth de TikTok y Meta/Instagram; `platform_account` con tokens cifrados, refresh automático y estado en `/settings`.
 - **Verificación**: conectar las cuentas reales desde `/settings` → activas con sus scopes; revocar desde la plataforma se refleja como `error` al siguiente uso.
 
 #### T6.2 · Checklist de publicación + CP5 + música propia
 - **Depende de**: T5.7
 - **Entrega**: checklist interactivo por plataforma generado del bundle (§15.4: toggle AIGC —con aviso de reset al duplicar campañas—, música según `audio_source`, Spark si aplica) + CP5 opcional; upload de pista propia licenciada (`audio_source=own_license`, asset `music_bed` seleccionable en la matriz).
-- **Verificación**: el checklist de una variante con `audio_source=native_trending` **bloquea** la opción Spark con explicación; el de una con bed IA la permite; subir una pista propia y usarla en un lote produce el master con esa música y `own_license` persistido.
+- **Verificación**: el checklist de una variante con `audio_source=native_trending` **bloquea** la opción Spark con explicación; el de una con bed IA la permite; subir una pista propia y usarla en un lote produce el master con esa música y `own_license` persistido; con CP5 activado, el flujo de publicación (en el modo degradado manual de esta tarea) se pausa en el checkpoint y al confirmar se reanuda.
 
 #### T6.3 · Publicación orgánica TikTok
 - **Depende de**: T6.1, T6.2
@@ -464,8 +489,8 @@ Decisiones del usuario (2026-07-07): la fase se ejecuta tras T0.1 y **antes** de
 - **Entrega**: publicación de Reels vía Instagram Graph API en la cuenta Business propia.
 - **Verificación**: el Reel aparece en la cuenta real con el caption esperado; `publication` registrada.
 
-#### T6.5 · Ads en borrador (TikTok Ads + Meta Marketing API)
-- **Depende de**: T6.1, T6.2
+#### T6.5 · Ads en borrador (TikTok Ads + Meta Marketing API) ⚠
+- **Depende de**: T6.1, T6.2; ⚠ cuenta de TikTok Ads Manager y cuenta publicitaria de Meta (Business Manager) creadas por el usuario
 - **Entrega**: upload de creative + creación de ad en borrador en ambas plataformas; **cierre de deuda `[verificar]`**: existencia del flag AIGC en cada API (si no existe, el checklist mantiene el paso manual obligatorio; resultado anotado también en PRD §13.3).
 - **Verificación**: el borrador aparece en TikTok Ads Manager y en Meta Ads Manager vinculado al vídeo correcto; el resultado de la verificación del flag AIGC queda documentado.
 
@@ -491,7 +516,7 @@ Decisiones del usuario (2026-07-07): la fase se ejecuta tras T0.1 y **antes** de
 #### T7.2 · Sync de métricas orgánicas + import CSV
 - **Depende de**: T6.3, T6.4
 - **Entrega**: TikTok Display API (`video.list` stats) e Instagram insights para posts orgánicos; import CSV manual con mapeo de columnas guiado.
-- **Verificación**: forzar el job de sync sobre los posts ya publicados en F6 → views/likes aparecen al momento y coinciden con la app de TikTok/IG; un CSV real de Ads Manager importa sin errores y sus filas aparecen como snapshots; el schedule (≤24 h) queda registrado en pg-boss.
+- **Verificación**: forzar el job de sync sobre los posts ya publicados en F6 → views/likes aparecen al momento y coinciden con la app de TikTok/IG; un CSV con el formato real de Ads Manager (fixture cuyo formato se contrasta con un export real cuando exista) importa sin errores y sus filas aparecen como snapshots; el schedule (≤24 h) queda registrado en pg-boss.
 
 #### T7.3 · Métricas derivadas y dashboard
 - **Depende de**: T7.1, T7.2
@@ -499,8 +524,8 @@ Decisiones del usuario (2026-07-07): la fase se ejecuta tras T0.1 y **antes** de
 - **Mockup**: `docs/mockups/metrics.html` (variante 7a · KPIs + tabla por variante). El layout de `/metrics` parte de ese mockup; el reviewer rechaza una página que se desvíe sin acuerdo (ver `.claude/skills/frontend`).
 - **Verificación**: los derivados de un snapshot conocido cuadran a mano; la vista "por hook" agrega correctamente las variantes que comparten `hook_line_id`.
 
-#### T7.4 · Reglas kill/scale
-- **Depende de**: T7.3
+#### T7.4 · Reglas kill/scale ⚠
+- **Depende de**: T7.3; ⚠ modo auto: requiere un ad de prueba activo con presupuesto real bajo (lo crea el usuario)
 - **Entrega**: `experiment_rule` por lote (métrica correcta por plataforma, umbral, ventana 24–48 h, acción kill/scale/notify, modo manual/auto); evaluador cron; acciones ejecutables.
 - **Verificación**: con snapshots inyectados, una variante bajo el umbral a las 48 h genera la propuesta de kill; en modo auto (ad de prueba de bajo presupuesto) la pausa se ejecuta de verdad en la plataforma.
 
@@ -510,21 +535,21 @@ Decisiones del usuario (2026-07-07): la fase se ejecuta tras T0.1 y **antes** de
 - **Verificación (criterio 22.6)**: tras un lote medido, CP2 del siguiente lote muestra los hooks reordenados con su hook rate histórico; el orden cambia si se inyecta un snapshot que invierte el ranking.
 
 #### T7.6 · Conciliación de gasto
-- **Depende de**: T0.12 (ejecutable desde el cierre de F4/F5)
+- **Depende de**: T0.12, T4.11 *(necesita gasto real acumulado; la conciliación completa llega con la actividad de F4/F5)*
 - **Entrega**: vista de conciliación en `/spend`: coste interno vs facturas reales (fal, Anthropic, Firecrawl) con captura manual mensual.
 - **Verificación (criterio 22.7)**: para un mes con actividad, la desviación ledger vs facturas es <10 % (documentado en la vista).
 
 #### T7.7 · Panel de gasto completo
 - **Depende de**: T5.10, T0.12
 - **Entrega**: vistas por proyecto/lote/tier, **coste medio por variante aprobada** (incluye descartes), alertas 70/90/100 % con email opcional, y **freno** que bloquea la creación de lotes nuevos al superar el presupuesto (§16.2, O9, D5).
-- **Verificación**: con un presupuesto bajo forzado, intentar crear un lote muestra el bloqueo con mensaje y opción de override explícito; el email de alerta llega (o aparece en el log del mailer en modo dev); el coste medio por variante aprobada cuadra a mano con el ledger.
+- **Verificación**: con un presupuesto bajo forzado, intentar crear un lote muestra el bloqueo con mensaje y opción de override explícito; el email de alerta llega (o aparece en el log del mailer en modo dev); el coste medio por variante aprobada cuadra a mano con el ledger; las vistas por proyecto/lote/tier muestran cifras que cuadran con una query directa a `cost_entry`.
 
 ---
 
 ## F8 — Operación y extensiones (backlog priorizado)
 
-#### T8.1 · Backups completos y restore ensayado
-- **Depende de**: T0.13
+#### T8.1 · Backups completos y restore ensayado ⚠
+- **Depende de**: T0.13; ⚠ destino externo de backups (bucket S3/B2 u otro host) contratado por el usuario
 - **Entrega**: `pg_dump` diario + restic de `/data/assets` (excluyendo regenerables) a destino externo; **ensayo de restore documentado**.
 - **Verificación**: restaurar el backup en un contenedor limpio y arrancar la app: proyectos, briefs y masters íntegros (checksum de 3 masters al azar).
 
@@ -541,16 +566,19 @@ Decisiones del usuario (2026-07-07): la fase se ejecuta tras T0.1 y **antes** de
 #### T8.4 · A/B de receta por idioma (lipsync)
 - **Depende de**: T5.9
 - **Entrega**: comparación sistemática TTS+avatar vs Kling 3.0 voice control para es (y siguientes locales); receta por defecto por locale fijada en BD (§17).
+- **Coste estimado**: ~$3 (3 pares de clips A/B)
 - **Verificación**: informe con 3 pares de clips comparados y decisión registrada en `recipe` por locale.
 
 #### T8.5 · Superficie MCP
 - **Depende de**: T5.9
 - **Entrega**: MCP server (patrón Prizmad, `research/04 §1`) con tools `analyze_url`, `create_batch`, `get_batch_status` (long-poll con progreso), `list_variants`, `get_download_url`.
+- **Coste estimado**: ~$0,50 (análisis + lote hasta CP2)
 - **Verificación**: desde Claude Code, `create_batch` sobre una URL real lanza un lote visible en el canvas y `get_batch_status(wait:true)` reporta el progreso por pasos.
 
 #### T8.6 · Ampliación de galería a ~150 templates + idiomas adicionales
 - **Depende de**: T4.12
 - **Entrega**: cobertura completa de la matriz formato × hook × vertical; hook/cta libraries en el siguiente idioma priorizado.
+- **Coste estimado**: ~$2 (thumbnails del lote nuevo)
 - **Verificación**: para cualquier combinación ángulo×formato del brief de prueba existe ≥1 template publicado; validador en verde.
 
 #### T8.7 · Remotion caption layer premium (opcional)
@@ -559,7 +587,7 @@ Decisiones del usuario (2026-07-07): la fase se ejecuta tras T0.1 y **antes** de
 - **Verificación**: decisión documentada; si se integra, un master con captions Remotion pasa el QA.
 
 #### T8.8 · Observabilidad completa
-- **Depende de**: T0.11
+- **Depende de**: T0.11, T0.14, T4.2, T7.2 *(webhook forjado ⇒ endpoint de T4.2; panel en `/settings` ⇒ T0.14; alerta de sync fallido ⇒ T7.2)*
 - **Entrega**: panel de métricas internas (duración por tipo de step, tasa de fallo por modelo/endpoint, discrepancia estimado-vs-real, profundidad de cola) en `/settings` y alertas operativas restantes (webhook con firma inválida, sync de métricas fallido) (§19.1).
 - **Verificación**: enviar un webhook forjado → la alerta aparece; el panel muestra estadísticas reales calculadas desde las tablas (contrastadas a mano con una query).
 
@@ -574,3 +602,5 @@ Decisiones del usuario (2026-07-07): la fase se ejecuta tras T0.1 y **antes** de
 5. **Costes**: toda tarea que llame a APIs de pago anota el coste real observado; si difiere >25 % del estimado, se recalibra la `recipe`/estimador en la misma tarea.
 6. **Cambios de alcance**: si una tarea revela que el PRD necesita ajuste (como ya pasó con Personas→F2 o el estado `scripted`), se edita el PRD en la misma sesión y se anota en ambos documentos.
 7. **Mockups de página**: cada página con pantalla propia tiene un mockup aprobado en `docs/mockups/` (catálogo en `docs/mockups/README.md`, elegido por el usuario 2026-07-08). La tarea que la desarrolla lo referencia con una línea `- **Mockup**: docs/mockups/<x>.html`, y su desarrollo **parte de ese mockup** (construido con los componentes `components/ui/` del DS, no reinventado). Una página que se desvíe del mockup sin acuerdo explícito es un error de review (obligatoriedad en `.claude/skills/frontend`). Páginas nuevas sin mockup: se acuerda el layout con el usuario antes de implementarlas.
+8. **Las cláusulas deterministas de una Verificación se quedan como tests** (auditoría DoD 2026-07-09): todo check automatizable y gratuito de un DoD (asserts de ffprobe, parsers de `.ass`, validadores de schema/seeds, linters, golden files) se codifica como test permanente dentro de `pnpm gate` en la misma tarea — así el "sin regresión" de la regla 2 es ejecutable y gratis para siempre. Las cláusulas con APIs de pago o juicio humano quedan one-shot con su evidencia en `docs/verifications/`.
+9. **Coste estimado por tarea** (auditoría DoD 2026-07-09): toda tarea cuya verificación consuma APIs de pago lleva una línea `- **Coste estimado**` — es la base del cap ×3 del bucle. Si una tarea sin estimado resulta necesitar APIs de pago, el bucle la trata como parada de gasto (no improvisa el presupuesto).

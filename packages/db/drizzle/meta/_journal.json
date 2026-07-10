@@ -36,6 +36,13 @@
       "when": 1783687205236,
       "tag": "0004_shallow_solo",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1783698023291,
+      "tag": "0005_tan_white_queen",
+      "breakpoints": true
     }
   ]
 }

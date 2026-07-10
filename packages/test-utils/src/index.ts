@@ -19,6 +19,9 @@ export { server, useHttpMocks } from './msw/index';
 // create-test-database.ts vía imports relativos — no van al barrel.
 export { createTestDatabase, type TestDatabase } from './create-test-database';
 export { makeProject, makePipelineRun, makeStepRun, makeAsset } from './factories';
+// Factories de FILAS del análisis (T1.2): rows de url_analysis/product_brief/brand_kit
+// que insertan los tests de integración de @ugc/db.
+export { makeUrlAnalysis, makeProductBrief, makeBrandKit } from './factories';
 // Factories de los contratos del análisis (T1.1): objetos válidos según su schema
 // Zod, base de los tests inválidos (mutación dirigida).
 export { makeAngle, makeBrief, makeRawContent, makeVisualAnalysis } from './factories';

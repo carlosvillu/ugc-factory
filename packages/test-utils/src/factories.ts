@@ -4,7 +4,15 @@
 // sus tablas).
 import { newUlid } from '@ugc/core/contracts';
 import type { Angle, ProductBrief, RawContent, VisualAnalysis } from '@ugc/core/contracts';
-import type { NewAsset, NewPipelineRun, NewProject, NewStepRun } from '@ugc/db';
+import type {
+  NewAsset,
+  NewBrandKit,
+  NewPipelineRun,
+  NewProductBrief,
+  NewProject,
+  NewStepRun,
+  NewUrlAnalysis,
+} from '@ugc/db';
 
 export function makeProject(overrides: Partial<NewProject> = {}): NewProject {
   return {
@@ -229,6 +237,68 @@ export function makeRawContent(overrides: Partial<RawContent> = {}): RawContent 
     screenshotRef: 'screenshots/serum.png',
   };
   return { ...base, ...overrides };
+}
+
+// ── Filas de BD del análisis (T1.2) ─────────────────────────────────────────
+// Estas devuelven FILAS de tabla (`New*` de @ugc/db), no contratos: los tests de
+// integración de packages/db las insertan con Drizzle. `makeBrief` (arriba)
+// devuelve el CONTRATO ProductBrief y se reutiliza como `data` jsonb del row.
+
+/**
+ * Fila válida de `url_analysis` con overrides. Requiere un `projectId` real (FK a
+ * project, NOT NULL): el test crea el project antes y lo pasa. `id` se genera aquí
+ * (ULID) para poder referenciarlo en `product_brief.urlAnalysisId` pre-insert.
+ */
+export function makeUrlAnalysis(
+  overrides: Partial<NewUrlAnalysis> & Pick<NewUrlAnalysis, 'projectId'>,
+): NewUrlAnalysis {
+  return {
+    id: newUlid(),
+    source: 'url',
+    platform: 'shopify',
+    status: 'pending',
+    // NOT NULL en §12: jsonb opaco. Contenido crudo mínimo del scraping.
+    rawContent: { markdown: '# Producto', images: [] },
+    ...overrides,
+  };
+}
+
+/**
+ * Fila válida de `product_brief` con overrides. Requiere un `urlAnalysisId` real
+ * (FK a url_analysis, NOT NULL). `data` es el contrato ProductBrief (jsonb opaco):
+ * por defecto el canónico de `makeBrief()`.
+ */
+export function makeProductBrief(
+  overrides: Partial<NewProductBrief> & Pick<NewProductBrief, 'urlAnalysisId'>,
+): NewProductBrief {
+  return {
+    id: newUlid(),
+    data: makeBrief(),
+    language: 'es',
+    version: 1,
+    editedByUser: false,
+    status: 'draft',
+    ...overrides,
+  };
+}
+
+/**
+ * Fila válida de `brand_kit` con overrides. `source` por defecto `manual` sin
+ * dominio (el modo que convive en N filas por el UNIQUE parcial); los tests del
+ * constraint sobrescriben `domain`/`source`. `projectId`/`logoAssetId` opcionales.
+ */
+export function makeBrandKit(overrides: Partial<NewBrandKit> = {}): NewBrandKit {
+  return {
+    id: newUlid(),
+    source: 'manual',
+    domain: null,
+    // NOT NULL en §12 (solo project_id/domain/logo_asset_id/typography son `?`).
+    palette: ['#F5E9E2', '#3A3A3A'],
+    toneOfVoice: 'cercana y experta',
+    aesthetic: 'premium minimal',
+    extractedAt: new Date('2026-07-10T12:00:00.000Z'),
+    ...overrides,
+  };
 }
 
 /** VisualAnalysis canónico VÁLIDO (salida del paso de visión, P3). */

@@ -1,0 +1,65 @@
+########## \d brand_kit ##########
+                         Table "public.brand_kit"
+    Column     |           Type           | Collation | Nullable | Default 
+---------------+--------------------------+-----------+----------+---------
+ id            | text                     |           | not null | 
+ project_id    | text                     |           |          | 
+ domain        | text                     |           |          | 
+ source        | brand_kit_source         |           | not null | 
+ logo_asset_id | text                     |           |          | 
+ palette       | jsonb                    |           | not null | 
+ typography    | text                     |           |          | 
+ tone_of_voice | text                     |           | not null | 
+ aesthetic     | text                     |           | not null | 
+ extracted_at  | timestamp with time zone |           | not null | 
+ created_at    | timestamp with time zone |           | not null | now()
+ updated_at    | timestamp with time zone |           | not null | now()
+Indexes:
+    "brand_kit_pkey" PRIMARY KEY, btree (id)
+    "brand_kit_domain_key" UNIQUE, btree (domain) WHERE domain IS NOT NULL
+Foreign-key constraints:
+    "brand_kit_logo_asset_id_asset_id_fk" FOREIGN KEY (logo_asset_id) REFERENCES asset(id) ON DELETE SET NULL
+    "brand_kit_project_id_project_id_fk" FOREIGN KEY (project_id) REFERENCES project(id) ON DELETE SET NULL
+
+
+########## \d url_analysis ##########
+                                    Table "public.url_analysis"
+     Column     |           Type           | Collation | Nullable |            Default             
+----------------+--------------------------+-----------+----------+--------------------------------
+ id             | text                     |           | not null | 
+ project_id     | text                     |           | not null | 
+ source         | url_analysis_source      |           | not null | 
+ url_normalized | text                     |           |          | 
+ content_hash   | text                     |           |          | 
+ platform       | url_analysis_platform    |           | not null | 
+ raw_content    | jsonb                    |           | not null | 
+ status         | url_analysis_status      |           | not null | 'pending'::url_analysis_status
+ warnings       | jsonb                    |           | not null | '[]'::jsonb
+ created_at     | timestamp with time zone |           | not null | now()
+ updated_at     | timestamp with time zone |           | not null | now()
+Indexes:
+    "url_analysis_pkey" PRIMARY KEY, btree (id)
+Foreign-key constraints:
+    "url_analysis_project_id_project_id_fk" FOREIGN KEY (project_id) REFERENCES project(id) ON DELETE CASCADE
+Referenced by:
+    TABLE "product_brief" CONSTRAINT "product_brief_url_analysis_id_url_analysis_id_fk" FOREIGN KEY (url_analysis_id) REFERENCES url_analysis(id) ON DELETE CASCADE
+
+
+########## \d product_brief ##########
+                                   Table "public.product_brief"
+     Column      |           Type           | Collation | Nullable |            Default            
+-----------------+--------------------------+-----------+----------+-------------------------------
+ id              | text                     |           | not null | 
+ url_analysis_id | text                     |           | not null | 
+ version         | integer                  |           | not null | 1
+ data            | jsonb                    |           | not null | 
+ edited_by_user  | boolean                  |           | not null | false
+ language        | text                     |           | not null | 
+ status          | product_brief_status     |           | not null | 'draft'::product_brief_status
+ created_at      | timestamp with time zone |           | not null | now()
+ updated_at      | timestamp with time zone |           | not null | now()
+Indexes:
+    "product_brief_pkey" PRIMARY KEY, btree (id)
+Foreign-key constraints:
+    "product_brief_url_analysis_id_url_analysis_id_fk" FOREIGN KEY (url_analysis_id) REFERENCES url_analysis(id) ON DELETE CASCADE
+

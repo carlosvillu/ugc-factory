@@ -1,0 +1,5 @@
+
+> @ugc/db@0.0.0 db:migrate /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/db
+> tsx --env-file-if-exists=../../.env scripts/migrate.ts
+
+db:migrate: migraciones aplicadas

@@ -189,7 +189,7 @@ Decisiones del usuario (2026-07-07): la fase se ejecuta tras T0.1 y **antes** de
 - **Entrega**: Zod schemas de `RawContent`, `VisualAnalysis` y `ProductBrief` (con las divergencias del Apéndice A: `platform=manual`, `source_url` nullable, cardinalidades en Zod) + espejo JSON Schema para `output_config` de Anthropic + fixtures de test.
 - **Verificación**: suite de tests con fixtures válidos e inválidos (brief sin ángulos, URL en modo manual, etc.) pasa; el JSON Schema generado se valida contra un validador draft 2020-12.
 
-#### T1.2 · Migraciones de análisis
+#### T1.2 · Migraciones de análisis [x] 2026-07-10 — PASS, ver docs/verifications/T1.2/ (coste $0)
 - **Depende de**: T1.1, T0.3
 - **Entrega**: tablas `url_analysis`, `product_brief`, `brand_kit` (§12, con `domain` nullable y `source`).
 - **Verificación**: migración aplica sobre BD limpia y `psql \d` muestra tablas/columnas/enums esperados; insertar 2 filas de `brand_kit` con `domain NULL` entra sin conflicto y 2 con el mismo dominio falla la segunda con error de constraint (UNIQUE parcial verificado).

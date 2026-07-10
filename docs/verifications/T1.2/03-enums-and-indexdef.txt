@@ -1,0 +1,49 @@
+########## enums (\dT+) ##########
+                                            List of data types
+ Schema |       Name       |  Internal name   | Size | Elements  | Owner | Access privileges | Description 
+--------+------------------+------------------+------+-----------+-------+-------------------+-------------
+ public | brand_kit_source | brand_kit_source | 4    | extracted+| ugc   |                   | 
+        |                  |                  |      | manual    |       |                   | 
+(1 row)
+
+                                                List of data types
+ Schema |         Name         |    Internal name     | Size | Elements | Owner | Access privileges | Description 
+--------+----------------------+----------------------+------+----------+-------+-------------------+-------------
+ public | product_brief_status | product_brief_status | 4    | draft   +| ugc   |                   | 
+        |                      |                      |      | approved |       |                   | 
+(1 row)
+
+                                                  List of data types
+ Schema |         Name          |     Internal name     | Size |  Elements   | Owner | Access privileges | Description 
+--------+-----------------------+-----------------------+------+-------------+-------+-------------------+-------------
+ public | url_analysis_platform | url_analysis_platform | 4    | shopify    +| ugc   |                   | 
+        |                       |                       |      | woocommerce+|       |                   | 
+        |                       |                       |      | custom     +|       |                   | 
+        |                       |                       |      | amazon     +|       |                   | 
+        |                       |                       |      | manual      |       |                   | 
+(1 row)
+
+                                               List of data types
+ Schema |        Name         |    Internal name    | Size | Elements | Owner | Access privileges | Description 
+--------+---------------------+---------------------+------+----------+-------+-------------------+-------------
+ public | url_analysis_source | url_analysis_source | 4    | url     +| ugc   |                   | 
+        |                     |                     |      | manual   |       |                   | 
+(1 row)
+
+                                               List of data types
+ Schema |        Name         |    Internal name    | Size | Elements  | Owner | Access privileges | Description 
+--------+---------------------+---------------------+------+-----------+-------+-------------------+-------------
+ public | url_analysis_status | url_analysis_status | 4    | pending  +| ugc   |                   | 
+        |                     |                     |      | scraping +|       |                   | 
+        |                     |                     |      | analyzing+|       |                   | 
+        |                     |                     |      | done     +|       |                   | 
+        |                     |                     |      | failed    |       |                   | 
+(1 row)
+
+
+########## indexdef (partiality proof) ##########
+                                                   indexdef                                                   
+--------------------------------------------------------------------------------------------------------------
+ CREATE UNIQUE INDEX brand_kit_domain_key ON public.brand_kit USING btree (domain) WHERE (domain IS NOT NULL)
+(1 row)
+

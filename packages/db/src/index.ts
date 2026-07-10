@@ -19,6 +19,11 @@ export type { DbClient } from './client';
 export { runMigrations } from './migrate';
 export { createProject, getProject } from './repos/project.repo';
 export type { NewProject } from './schema/project';
+// Tipos de fila de las tablas del análisis (T1.2): los consumen las factories
+// makeUrlAnalysis/makeProductBrief/makeBrandKit de @ugc/test-utils. Los repos de
+// caso de uso de estas tablas llegan con sus consumidores (T1.3+); aquí solo el
+// schema + los tipos que la factory necesita.
+export type { NewUrlAnalysis, NewProductBrief, NewBrandKit } from './schema/project';
 // El adaptador `WithTransaction` del orquestador (T0.7a): lo cablean el
 // composition root de web/worker (transition() sobre la BD real) y los tests de
 // integración. `makeStepStore`/`makeTxJobQueue` son piezas internas que este

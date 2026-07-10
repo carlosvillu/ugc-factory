@@ -1,0 +1,32 @@
+===== CASE A: two brand_kit with domain NULL -> both must succeed =====
+INSERT INTO brand_kit (id, project_id, domain, source, palette, tone_of_voice, aesthetic, extracted_at)
+VALUES ('vrf_null_1', NULL, NULL, 'manual', '{"primary":"#111"}'::jsonb, 'calm', 'clean', now());
+INSERT 0 1
+INSERT INTO brand_kit (id, project_id, domain, source, palette, tone_of_voice, aesthetic, extracted_at)
+VALUES ('vrf_null_2', NULL, NULL, 'manual', '{"primary":"#222"}'::jsonb, 'bold', 'retro', now());
+INSERT 0 1
+--- rows with domain NULL (expect 2) ---
+SELECT count(*) AS null_domain_rows FROM brand_kit WHERE domain IS NULL;
+ null_domain_rows 
+------------------
+                2
+(1 row)
+
+
+===== CASE B: two brand_kit with SAME non-null domain (miproducto.example) =====
+--- first insert (expect INSERT 0 1) ---
+INSERT INTO brand_kit (id, project_id, domain, source, palette, tone_of_voice, aesthetic, extracted_at)
+VALUES ('vrf_dom_1', NULL, 'miproducto.example', 'extracted', '{"primary":"#333"}'::jsonb, 'warm', 'lux', now());
+INSERT 0 1
+--- second insert SAME domain (expect ERROR 23505 brand_kit_domain_key) ---
+INSERT INTO brand_kit (id, project_id, domain, source, palette, tone_of_voice, aesthetic, extracted_at)
+VALUES ('vrf_dom_2', NULL, 'miproducto.example', 'extracted', '{"primary":"#444"}'::jsonb, 'warm', 'lux', now());
+psql:/tmp/inserts.sql:15: ERROR:  duplicate key value violates unique constraint "brand_kit_domain_key"
+DETAIL:  Key (domain)=(miproducto.example) already exists.
+--- final: only one miproducto.example row (expect 1) ---
+SELECT count(*) AS dup_domain_rows FROM brand_kit WHERE domain = 'miproducto.example';
+ dup_domain_rows 
+-----------------
+               1
+(1 row)
+

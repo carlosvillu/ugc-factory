@@ -53,6 +53,17 @@ export {
   type RawBranding,
   type RawProduct,
 } from './raw-content';
+// Contrato del intake manual (F1 N0, T1.6): rama de TEXTO LIBRE del intake. El
+// mismo schema valida en el cliente (RHF) y re-valida en el route handler.
+export {
+  ManualIntakeConfigSchema,
+  IntakeImageRefSchema,
+  MANUAL_FREE_TEXT_MIN,
+  MANUAL_FREE_TEXT_MAX,
+  MANUAL_IMAGE_REFS_MAX,
+  type ManualIntakeConfig,
+  type IntakeImageRef,
+} from './intake';
 export {
   VisualAnalysisSchema,
   ClassifiedImageSchema,

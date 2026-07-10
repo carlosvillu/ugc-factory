@@ -5,6 +5,9 @@
 // se importan por su ruta específica (p. ej. `@/server/with-auth` desde runs) no
 // pasan por aquí.
 export { withRoute } from './with-route';
+// El mapeo throw → envelope único. Lo usa el endpoint de upload (POST /api/assets),
+// que NO pasa por withRoute (body multipart, no JSON) y construye su try/catch.
+export { toErrorResponse } from './errors';
 export { getRequestLogger } from './request-context';
 export { createSessionCookie, verifyPassword } from './session';
 export { assertNotRateLimited, recordFailure, clearAttempts, clientIp } from './rate-limit';

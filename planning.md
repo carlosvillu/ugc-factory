@@ -211,7 +211,7 @@ Decisiones del usuario (2026-07-07): la fase se ejecuta tras T0.1 y **antes** de
 - **Coste estimado**: ~$0,10
 - **Verificación**: sobre una tienda real con página de reviews, el markdown anexado contiene texto de reviews reconocible; sobre una landing sin esas páginas, el paso termina en `skipped` sin error.
 
-#### T1.6 · Entrada por texto libre
+#### T1.6 · Entrada por texto libre [x] 2026-07-10 — PASS (CUA navegador + logs + psql), ver docs/verifications/T1.6/ (coste $0)
 - **Depende de**: T1.2, T0.5
 - **Entrega**: formulario de intake modo "texto libre" (descripción + upload opcional de imágenes), `RawContent` sintético (`source=manual`), caché por hash del texto (§7.4).
 - **Playwright permanente**: `apps/web/e2e/intake-manual.spec.ts` cubre envío de texto con y sin imágenes, validación visible del formulario y reutilización observable de una entrada repetida usando fixtures locales.

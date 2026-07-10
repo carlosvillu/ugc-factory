@@ -1,0 +1,5 @@
+             id             | source | platform | url_normalized | status | n_images |                           md_head                            
+----------------------------+--------+----------+----------------+--------+----------+--------------------------------------------------------------
+ 01KX6SPTJGYG6V00WBY23NVTYD | manual | manual   |                | done   |        2 | Producto de prueba para verificacion del intake manual. T1.6
+(1 row)
+

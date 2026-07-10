@@ -1,0 +1,3 @@
+{"level":30,"time":1783713589497,"pid":64432,"hostname":"MBP-de-Carlos","name":"web","request_id":"0d80dfde-57b9-44bc-b32d-f0073800ae24","analysis_id":"01KX6SPTJGYG6V00WBY23NVTYD","project_id":"01JQ0T0T0T0T0T0T0T0T0T0T0V","reused":true,"source":"manual","msg":"intake manual reutilizado (caché)"}
+ POST /api/analyses 200 in 29ms (next.js: 3ms, application-code: 26ms)
+ GET /analyses/01KX6SPTJGYG6V00WBY23NVTYD 200 in 47ms (next.js: 8ms, proxy.ts: 3ms, application-code: 36ms)

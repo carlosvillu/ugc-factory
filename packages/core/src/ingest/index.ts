@@ -15,3 +15,14 @@ export {
   type FastPathResult,
   type FastPathDeps,
 } from './fast-path';
+// Síntesis del RawContent en modo MANUAL (T1.6, §7.4): short-circuit puro que NO
+// pasa por el fast-path ingester — el intake manual no scrapea.
+export { synthManualRawContent, type SynthManualRawContentInput } from './manual';
+// Servicio del intake manual (T1.6): orquesta el short-circuit hash → caché → synth
+// + insert. Lo delega el route handler POST /api/analyses (modo manual).
+export {
+  runManualIntake,
+  type ManualIntakeStore,
+  type ManualIntakeResult,
+  type ManualAnalysisRow,
+} from './manual-intake';

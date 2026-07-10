@@ -1,0 +1,63 @@
+
+> @ugc/web@0.0.0 dev /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/web
+> node scripts/dev.mjs
+
+▲ Next.js 16.2.10 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.1.132:3000
+✓ Ready in 222ms
+{"level":30,"time":1783712168481,"pid":45892,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","msg":"running startup migrations"}
+{"level":30,"time":1783712168553,"pid":45892,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","msg":"startup migrations applied"}
+{"level":30,"time":1783712168606,"pid":45892,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","seeded":false,"msg":"auth.password_hash ya existía"}
+
+{"level":30,"time":1783712174822,"pid":45892,"hostname":"MBP-de-Carlos","name":"web","request_id":"559201bd-648f-458d-8e42-0e9973f8aa66","route":"/api/health","health":{"ok":true,"db":true},"msg":"health check"}
+ GET /api/health 200 in 543ms (next.js: 515ms, application-code: 28ms)
+{"level":30,"time":1783712174881,"pid":45892,"hostname":"MBP-de-Carlos","name":"web","request_id":"1358710e-ab7f-4914-8eca-98655ac3880e","route":"/api/health","health":{"ok":true,"db":true},"msg":"health check"}
+ GET /api/health 200 in 21ms (next.js: 1604µs, application-code: 20ms)
+ GET /login 200 in 1149ms (next.js: 1005ms, application-code: 144ms)
+ POST /api/login 200 in 287ms (next.js: 187ms, application-code: 100ms)
+ GET / 200 in 217ms (next.js: 156ms, proxy.ts: 39ms, application-code: 22ms)
+ GET /analyses/new 200 in 1287ms (next.js: 796ms, proxy.ts: 5ms, application-code: 486ms)
+[browser] ⨯ unhandledRejection: TypeError: Failed to fetch
+    at apiFetch (src/lib/api-client.ts:34:21)
+    at Object.postForm (src/lib/api-client.ts:74:5)
+    at onFilesSelected (src/components/intake/intake-form.tsx:82:33)
+    at onChange (src/components/intake/intake-form.tsx:163:18)
+  32 | ): Promise<z.infer<S>> {
+  33 |   const { baseUrl, ...rest } = init;
+> 34 |   const res = await fetch(`${baseUrl ?? base()}${path}`, { ...rest, cache: 'no-store' });
+     |                     ^
+  35 |
+  36 |   if (!res.ok) {
+  37 |     const body: unknown = await res.json().catch(() => null);
+[browser] ⨯ unhandledRejection: TypeError: Failed to fetch
+    at apiFetch (src/lib/api-client.ts:34:21)
+    at Object.postForm (src/lib/api-client.ts:74:5)
+    at onFilesSelected (src/components/intake/intake-form.tsx:82:33)
+    at onChange (src/components/intake/intake-form.tsx:163:18)
+  32 | ): Promise<z.infer<S>> {
+  33 |   const { baseUrl, ...rest } = init;
+> 34 |   const res = await fetch(`${baseUrl ?? base()}${path}`, { ...rest, cache: 'no-store' });
+     |                     ^
+  35 |
+  36 |   if (!res.ok) {
+  37 |     const body: unknown = await res.json().catch(() => null);
+ GET /analyses/new 200 in 76ms (next.js: 4ms, proxy.ts: 7ms, application-code: 65ms)
+[browser] ⨯ unhandledRejection: TypeError: Failed to fetch
+    at apiFetch (src/lib/api-client.ts:34:21)
+    at Object.postForm (src/lib/api-client.ts:74:5)
+    at onFilesSelected (src/components/intake/intake-form.tsx:82:33)
+    at onChange (src/components/intake/intake-form.tsx:163:18)
+  32 | ): Promise<z.infer<S>> {
+  33 |   const { baseUrl, ...rest } = init;
+> 34 |   const res = await fetch(`${baseUrl ?? base()}${path}`, { ...rest, cache: 'no-store' });
+     |                     ^
+  35 |
+  36 |   if (!res.ok) {
+  37 |     const body: unknown = await res.json().catch(() => null);
+ POST /api/auth/login 404 in 190ms (next.js: 163ms, application-code: 26ms)
+ POST /api/assets 401 in 140ms (next.js: 136ms, application-code: 4ms)
+ POST /api/login 200 in 63ms (next.js: 2ms, application-code: 60ms)
+{"level":50,"time":1783712512626,"pid":45892,"hostname":"MBP-de-Carlos","name":"web","err":{"type":"Error","message":"ENOENT: no such file or directory, mkdir '/data'","stack":"Error: ENOENT: no such file or directory, mkdir '/data'\n    at async mkdir (node:internal/fs/promises:858:10)\n    at async Object.put (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/web/.next/dev/server/chunks/[root-of-the-server]__05-ayme._.js:2394:13)\n    at async /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/web/.next/dev/server/chunks/[root-of-the-server]__1yfs3vt._.js:3823:21\n    at async AppRouteRouteModule.do (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/next@16.2.10_@babel+core@7.29.7_@playwright+test@1.61.1_react-dom@19.2.0_react@19.2.0__react@19.2.0/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:5:40131)\n    at async AppRouteRouteModule.handle (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/next@16.2.10_@babel+core@7.29.7_@playwright+test@1.61.1_react-dom@19.2.0_react@19.2.0__react@19.2.0/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:5:47411)\n    at async responseGenerator (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/web/.next/dev/server/chunks/011t_next_dist_0-0hnas._.js:10505:38)\n    at async AppRouteRouteModule.handleResponse (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/next@16.2.10_@babel+core@7.29.7_@playwright+test@1.61.1_react-dom@19.2.0_react@19.2.0__react@19.2.0/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:1:228552)\n    at async handleResponse (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/web/.next/dev/server/chunks/011t_next_dist_0-0hnas._.js:10568:32)\n    at async Module.handler (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/web/.next/dev/server/chunks/011t_next_dist_0-0hnas._.js:10622:13)\n    at async DevServer.renderToResponseWithComponentsImpl (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/next@16.2.10_@babel+core@7.29.7_@playwright+test@1.61.1_react-dom@19.2.0_react@19.2.0__react@19.2.0/node_modules/next/dist/server/base-server.js:1462:9)\n    at async DevServer.renderPageComponent (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/next@16.2.10_@babel+core@7.29.7_@playwright+test@1.61.1_react-dom@19.2.0_react@19.2.0__react@19.2.0/node_modules/next/dist/server/base-server.js:1514:24)\n    at async DevServer.renderToResponseImpl (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/next@16.2.10_@babel+core@7.29.7_@playwright+test@1.61.1_react-dom@19.2.0_react@19.2.0__react@19.2.0/node_modules/next/dist/server/base-server.js:1564:32)\n    at async DevServer.pipeImpl (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/next@16.2.10_@babel+core@7.29.7_@playwright+test@1.61.1_react-dom@19.2.0_react@19.2.0__react@19.2.0/node_modules/next/dist/server/base-server.js:1044:25)\n    at async NextNodeServer.handleCatchallRenderRequest (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/next@16.2.10_@babel+core@7.29.7_@playwright+test@1.61.1_react-dom@19.2.0_react@19.2.0__react@19.2.0/node_modules/next/dist/server/next-server.js:338:17)\n    at async DevServer.handleRequestImpl (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/next@16.2.10_@babel+core@7.29.7_@playwright+test@1.61.1_react-dom@19.2.0_react@19.2.0__react@19.2.0/node_modules/next/dist/server/base-server.js:935:17)\n    at async /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/next@16.2.10_@babel+core@7.29.7_@playwright+test@1.61.1_react-dom@19.2.0_react@19.2.0__react@19.2.0/node_modules/next/dist/server/dev/next-dev-server.js:394:20\n    at async Span.traceAsyncFn (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/next@16.2.10_@babel+core@7.29.7_@playwright+test@1.61.1_react-dom@19.2.0_react@19.2.0__react@19.2.0/node_modules/next/dist/trace/trace.js:164:20)\n    at async DevServer.handleRequest (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/next@16.2.10_@babel+core@7.29.7_@playwright+test@1.61.1_react-dom@19.2.0_react@19.2.0__react@19.2.0/node_modules/next/dist/server/dev/next-dev-server.js:390:24)\n    at async invokeRender (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/next@16.2.10_@babel+core@7.29.7_@playwright+test@1.61.1_react-dom@19.2.0_react@19.2.0__react@19.2.0/node_modules/next/dist/server/lib/router-server.js:266:21)\n    at async handleRequest (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/next@16.2.10_@babel+core@7.29.7_@playwright+test@1.61.1_react-dom@19.2.0_react@19.2.0__react@19.2.0/node_modules/next/dist/server/lib/router-server.js:465:24)\n    at async requestHandlerImpl (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/next@16.2.10_@babel+core@7.29.7_@playwright+test@1.61.1_react-dom@19.2.0_react@19.2.0__react@19.2.0/node_modules/next/dist/server/lib/router-server.js:514:13)\n    at async Server.requestListener (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/next@16.2.10_@babel+core@7.29.7_@playwright+test@1.61.1_react-dom@19.2.0_react@19.2.0__react@19.2.0/node_modules/next/dist/server/lib/start-server.js:225:13)","errno":-2,"code":"ENOENT","syscall":"mkdir","path":"/data"},"msg":"unhandled_route_error"}
+ POST /api/assets 500 in 10ms (next.js: 1520µs, application-code: 9ms)
+[?25h

@@ -1,0 +1,1 @@
+  37 |     const body: unknown = await res.json().catch(() => null);

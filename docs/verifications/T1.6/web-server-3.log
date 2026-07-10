@@ -1,0 +1,49 @@
+
+> @ugc/web@0.0.0 dev /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/web
+> node scripts/dev.mjs
+
+▲ Next.js 16.2.10 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.1.132:3000
+✓ Ready in 231ms
+{"level":30,"time":1783713110862,"pid":64432,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","msg":"running startup migrations"}
+{"level":30,"time":1783713110931,"pid":64432,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","msg":"startup migrations applied"}
+{"level":30,"time":1783713110994,"pid":64432,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","seeded":false,"msg":"auth.password_hash ya existía"}
+
+ GET /analyses/new 200 in 719ms (next.js: 91ms, proxy.ts: 83ms, application-code: 545ms)
+{"level":30,"time":1783713116876,"pid":64432,"hostname":"MBP-de-Carlos","name":"web","request_id":"c70d54bb-2f30-41c6-a877-e99e4be43f5e","route":"/api/health","health":{"ok":true,"db":true},"msg":"health check"}
+ GET /api/health 200 in 138ms (next.js: 103ms, application-code: 35ms)
+ POST /api/login 200 in 102ms (next.js: 17ms, application-code: 85ms)
+ GET /analyses/new 200 in 32ms (next.js: 1603µs, proxy.ts: 2ms, application-code: 28ms)
+ GET /analyses/new 200 in 45ms (next.js: 1845µs, proxy.ts: 3ms, application-code: 40ms)
+[browser] ⨯ unhandledRejection: TypeError: Failed to fetch
+    at apiFetch (src/lib/api-client.ts:34:21)
+    at Object.postForm (src/lib/api-client.ts:74:5)
+    at onFilesSelected (src/components/intake/intake-form.tsx:82:33)
+    at onChange (src/components/intake/intake-form.tsx:163:18)
+  32 | ): Promise<z.infer<S>> {
+  33 |   const { baseUrl, ...rest } = init;
+> 34 |   const res = await fetch(`${baseUrl ?? base()}${path}`, { ...rest, cache: 'no-store' });
+     |                     ^
+  35 |
+  36 |   if (!res.ok) {
+  37 |     const body: unknown = await res.json().catch(() => null);
+ GET /login 200 in 125ms (next.js: 57ms, application-code: 68ms)
+ POST /api/login 200 in 62ms (next.js: 3ms, application-code: 58ms)
+ GET / 200 in 48ms (next.js: 21ms, proxy.ts: 4ms, application-code: 23ms)
+ GET /analyses/new 200 in 67ms (next.js: 3ms, proxy.ts: 3ms, application-code: 60ms)
+ POST /api/assets 201 in 82ms (next.js: 38ms, application-code: 43ms)
+ POST /api/assets 201 in 46ms (next.js: 2ms, application-code: 43ms)
+{"level":30,"time":1783713458784,"pid":64432,"hostname":"MBP-de-Carlos","name":"web","request_id":"9dc4a1cd-6271-49a0-af49-e413380f9be0","analysis_id":"01KX6SPTJGYG6V00WBY23NVTYD","project_id":"01JQ0T0T0T0T0T0T0T0T0T0T0V","reused":false,"source":"manual","msg":"intake manual creado"}
+ POST /api/analyses 201 in 580ms (next.js: 536ms, application-code: 44ms)
+ GET /analyses/01KX6SPTJGYG6V00WBY23NVTYD 200 in 988ms (next.js: 939ms, proxy.ts: 4ms, application-code: 45ms)
+ GET /analyses/new 200 in 80ms (next.js: 5ms, proxy.ts: 5ms, application-code: 71ms)
+ POST /api/assets 201 in 41ms (next.js: 4ms, application-code: 37ms)
+ POST /api/assets 201 in 12ms (next.js: 1784µs, application-code: 10ms)
+{"level":30,"time":1783713589497,"pid":64432,"hostname":"MBP-de-Carlos","name":"web","request_id":"0d80dfde-57b9-44bc-b32d-f0073800ae24","analysis_id":"01KX6SPTJGYG6V00WBY23NVTYD","project_id":"01JQ0T0T0T0T0T0T0T0T0T0T0V","reused":true,"source":"manual","msg":"intake manual reutilizado (caché)"}
+ POST /api/analyses 200 in 29ms (next.js: 3ms, application-code: 26ms)
+ GET /analyses/01KX6SPTJGYG6V00WBY23NVTYD 200 in 47ms (next.js: 8ms, proxy.ts: 3ms, application-code: 36ms)
+ GET /analyses/new 200 in 77ms (next.js: 7ms, proxy.ts: 4ms, application-code: 67ms)
+{"level":30,"time":1783713641727,"pid":64432,"hostname":"MBP-de-Carlos","name":"web","request_id":"4b5157a9-c8a2-416e-9950-6cdfe0c54525","analysis_id":"01KX6SWD7HPW1EET1C6CXWWX01","project_id":"01JQ0T0T0T0T0T0T0T0T0T0T0V","reused":false,"source":"manual","msg":"intake manual creado"}
+ POST /api/analyses 201 in 45ms (next.js: 3ms, application-code: 42ms)
+ GET /analyses/01KX6SWD7HPW1EET1C6CXWWX01 200 in 42ms (next.js: 8ms, proxy.ts: 1892µs, application-code: 33ms)

@@ -61,12 +61,17 @@ const jsonInit = (body: unknown, method: string): RequestInit => ({
 // respuesta sin `ok` es un contrato roto).
 const OkSchema = z.object({ ok: z.literal(true) }).loose();
 
-const api = {
+export const api = {
   get: <S extends z.ZodType>(path: string, schema: S) => apiFetch(path, schema),
   post: <S extends z.ZodType>(path: string, schema: S, body?: unknown) =>
     apiFetch(path, schema, jsonInit(body ?? {}, 'POST')),
   patch: <S extends z.ZodType>(path: string, schema: S, body: unknown) =>
     apiFetch(path, schema, jsonInit(body, 'PATCH')),
+  // Upload multipart (T1.6, POST /api/assets): NO se fija `content-type` — el
+  // navegador añade el `multipart/form-data; boundary=…` correcto a partir del
+  // `FormData`. Misma validación de respuesta y traducción de error que el resto.
+  postForm: <S extends z.ZodType>(path: string, schema: S, form: FormData) =>
+    apiFetch(path, schema, { method: 'POST', body: form }),
 };
 
 // ── Acciones del run/step del canvas (T0.11) ─────────────────────────────────

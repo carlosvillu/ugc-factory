@@ -43,6 +43,13 @@
       "when": 1783698023291,
       "tag": "0005_tan_white_queen",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1783710494414,
+      "tag": "0006_flashy_hardball",
+      "breakpoints": true
     }
   ]
 }

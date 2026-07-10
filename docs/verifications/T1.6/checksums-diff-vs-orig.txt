@@ -1,0 +1,2 @@
+MD5 (docs/verifications/T1.6/diff-img-c.png) = ee76702403cd15dbc71587365494cbe5
+MD5 (packages/test-utils/fixtures/media/intake-ref-a.png) = bbf3da4bd4d919b2bc77e9a2a59bc7c8

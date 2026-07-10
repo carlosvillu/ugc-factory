@@ -7,7 +7,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { sql } from 'drizzle-orm';
 import { createTestDatabase, makeProject, type TestDatabase } from '@ugc/test-utils';
-import { createProject, getProject } from '../../src/repos/project.repo';
+import { createProject, ensureDefaultProject, getProject } from '../../src/repos/project.repo';
 
 let tdb: TestDatabase;
 
@@ -57,6 +57,24 @@ describe('project repo', () => {
   it('getProject devuelve undefined para un id inexistente', async () => {
     // ULID sintáctico válido pero sin fila: el SELECT no encuentra nada.
     expect(await getProject(tdb.db, '00000000000000000000000000')).toBeUndefined();
+  });
+
+  it('ensureDefaultProject crea un proyecto si no hay ninguno, y lo reutiliza si ya existe (T1.6)', async () => {
+    // BD dedicada: sin filas de los tests de arriba, ensure DEBE crear.
+    const fresh = await createTestDatabase({ label: 'project-repo-ensure' });
+    try {
+      const created = await ensureDefaultProject(fresh.db);
+      expect(created.id).toHaveLength(26);
+      // Segunda llamada: NO crea otra fila, devuelve la misma (el más antiguo por id).
+      const again = await ensureDefaultProject(fresh.db);
+      expect(again.id).toBe(created.id);
+      const { rows } = await fresh.pool.query<{ n: number }>(
+        'SELECT count(*)::int AS n FROM project',
+      );
+      expect(rows[0]!.n).toBe(1);
+    } finally {
+      await fresh.close();
+    }
   });
 
   it('el enum project_status rechaza un valor fuera del dominio', async () => {

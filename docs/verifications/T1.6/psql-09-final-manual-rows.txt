@@ -1,0 +1,6 @@
+             id             | source | platform | url_normalized | status | n_imgs |                           content_hash                           
+----------------------------+--------+----------+----------------+--------+--------+------------------------------------------------------------------
+ 01KX6SPTJGYG6V00WBY23NVTYD | manual | manual   |                | done   |      2 | 31ba39af4a9eab0f9efd59f2f53224014bec5ebbf6e648c0d4e44bf70a3e0b58
+ 01KX6SWD7HPW1EET1C6CXWWX01 | manual | manual   |                | done   |      0 | 8da015a2811f9c7c90f0cc093c59f140f7ed49e4e5baff829f47f841b39c263f
+(2 rows)
+

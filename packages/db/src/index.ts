@@ -17,7 +17,7 @@ export { createDb, createDbPool } from './client';
 // sale al barrel; `makeDb`/los alias internos siguen sin exportarse.
 export type { DbClient } from './client';
 export { runMigrations } from './migrate';
-export { createProject, getProject } from './repos/project.repo';
+export { createProject, getProject, ensureDefaultProject } from './repos/project.repo';
 export type { NewProject } from './schema/project';
 // Tipos de fila de las tablas del análisis (T1.2): los consumen las factories
 // makeUrlAnalysis/makeProductBrief/makeBrandKit de @ugc/test-utils. Los repos de
@@ -82,3 +82,12 @@ export { recordCost, getSpendSummary, seedMonthlyBudgetIfAbsent } from './repos/
 // todavía: solo la usan los tests de integración (import relativo), sin consumidor de
 // runtime aún — knip vetaría el export sin consumidor.
 export { createUrlAnalysis } from './repos/url-analysis.repo';
+// Modo MANUAL (T1.6, §7.4): la caché lookup-then-insert del intake por texto libre.
+// `findManualUrlAnalysisByHash` (lookup por (project_id, content_hash, source='manual'))
+// + `createManualUrlAnalysis` (insert source='manual', status='done') los compone el
+// servicio de intake manual de core; el route handler los cablea vía web.
+export {
+  insertManualUrlAnalysisIfAbsent,
+  findManualUrlAnalysisByHash,
+  getUrlAnalysis,
+} from './repos/url-analysis.repo';

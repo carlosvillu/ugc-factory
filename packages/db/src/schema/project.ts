@@ -71,30 +71,46 @@ export const productBriefStatus = pgEnum('product_brief_status', ['draft', 'appr
 // `brand_kit.source`: el kit se extrae del sitio scrapeado o se define a mano (§12).
 export const brandKitSource = pgEnum('brand_kit_source', ['extracted', 'manual']);
 
-export const urlAnalysis = pgTable('url_analysis', {
-  id: ulidPk(),
-  projectId: text('project_id')
-    .notNull()
-    .references(() => project.id, { onDelete: 'cascade' }),
-  source: urlAnalysisSource('source').notNull(),
-  // Nullable: en modo manual no hay URL que normalizar (§12).
-  urlNormalized: text('url_normalized'),
-  // Hash del contenido scrapeado para dedupe/caché del fast-path (T1.3); nullable
-  // hasta que hay contenido.
-  contentHash: text('content_hash'),
-  platform: urlAnalysisPlatform('platform').notNull(),
-  // Contenido crudo del scraping (RawContent de T1.1); jsonb opaco en la BD. §12
-  // lo marca sin `?` ⇒ NOT NULL: una fila de url_analysis se crea con su contenido
-  // (el fast-path de T1.3 escribe raw_content al persistir el análisis).
-  rawContent: jsonb('raw_content').notNull(),
-  status: urlAnalysisStatus('status').notNull().default('pending'),
-  // Avisos del scraping/síntesis (p. ej. campos faltantes); jsonb opaco. §12 sin
-  // `?` ⇒ NOT NULL; default `[]` para el caso sin avisos (lista vacía, no null).
-  warnings: jsonb('warnings')
-    .notNull()
-    .default(sql`'[]'::jsonb`),
-  ...timestamps,
-});
+export const urlAnalysis = pgTable(
+  'url_analysis',
+  {
+    id: ulidPk(),
+    projectId: text('project_id')
+      .notNull()
+      .references(() => project.id, { onDelete: 'cascade' }),
+    source: urlAnalysisSource('source').notNull(),
+    // Nullable: en modo manual no hay URL que normalizar (§12).
+    urlNormalized: text('url_normalized'),
+    // Hash del contenido scrapeado para dedupe/caché del fast-path (T1.3); nullable
+    // hasta que hay contenido.
+    contentHash: text('content_hash'),
+    platform: urlAnalysisPlatform('platform').notNull(),
+    // Contenido crudo del scraping (RawContent de T1.1); jsonb opaco en la BD. §12
+    // lo marca sin `?` ⇒ NOT NULL: una fila de url_analysis se crea con su contenido
+    // (el fast-path de T1.3 escribe raw_content al persistir el análisis).
+    rawContent: jsonb('raw_content').notNull(),
+    status: urlAnalysisStatus('status').notNull().default('pending'),
+    // Avisos del scraping/síntesis (p. ej. campos faltantes); jsonb opaco. §12 sin
+    // `?` ⇒ NOT NULL; default `[]` para el caso sin avisos (lista vacía, no null).
+    warnings: jsonb('warnings')
+      .notNull()
+      .default(sql`'[]'::jsonb`),
+    ...timestamps,
+  },
+  (t) => [
+    // UNIQUE PARCIAL de la caché del intake MANUAL (T1.6, §7.4): un único análisis
+    // manual por (project_id, content_hash). Es la BARRERA estructural de la carrera
+    // lookup-then-insert (dos requests concurrentes con el mismo texto NO pueden crear
+    // dos filas: la segunda choca 23505 → ON CONFLICT DO NOTHING → re-SELECT → reuse).
+    // PARCIAL sobre `source='manual'`: los análisis de URL (T1.3+) NO entran en esta
+    // dedupe (su clave de caché es url_normalizada+hash, otra tarea). Mismo patrón que
+    // `brand_kit_domain_key` de T1.2. Seguro sobre datos previos: prod vacía y las BD
+    // de test son clones efímeros del template migrado.
+    uniqueIndex('url_analysis_manual_cache_key')
+      .on(t.projectId, t.contentHash)
+      .where(sql`${t.source} = 'manual'`),
+  ],
+);
 
 export const productBrief = pgTable('product_brief', {
   id: ulidPk(),

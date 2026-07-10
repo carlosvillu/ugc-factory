@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX "url_analysis_manual_cache_key" ON "url_analysis" USING btree ("project_id","content_hash") WHERE "url_analysis"."source" = 'manual';

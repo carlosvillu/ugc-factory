@@ -1,0 +1,58 @@
+
+> @ugc/web@0.0.0 dev /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/web
+> node scripts/dev.mjs
+
+▲ Next.js 16.2.10 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.1.132:3000
+✓ Ready in 315ms
+{"level":30,"time":1783712758143,"pid":55550,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","msg":"running startup migrations"}
+{"level":30,"time":1783712758201,"pid":55550,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","msg":"startup migrations applied"}
+{"level":30,"time":1783712758259,"pid":55550,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","seeded":false,"msg":"auth.password_hash ya existía"}
+
+{"level":30,"time":1783712763151,"pid":55550,"hostname":"MBP-de-Carlos","name":"web","request_id":"a9b1fe51-b74c-44c6-818b-3bff7dff702c","route":"/api/health","health":{"ok":true,"db":true},"msg":"health check"}
+ GET /api/health 200 in 196ms (next.js: 167ms, application-code: 29ms)
+ POST /api/login 200 in 115ms (next.js: 21ms, application-code: 94ms)
+ POST /api/assets 201 in 47ms (next.js: 24ms, application-code: 22ms)
+ GET /login 200 in 202ms (next.js: 66ms, application-code: 136ms)
+ POST /api/login 200 in 68ms (next.js: 3ms, application-code: 65ms)
+ GET / 200 in 84ms (next.js: 19ms, proxy.ts: 41ms, application-code: 25ms)
+ GET /analyses/new 200 in 580ms (next.js: 76ms, proxy.ts: 3ms, application-code: 501ms)
+[browser] ⨯ unhandledRejection: TypeError: Failed to fetch
+    at apiFetch (src/lib/api-client.ts:34:21)
+    at Object.postForm (src/lib/api-client.ts:74:5)
+    at onFilesSelected (src/components/intake/intake-form.tsx:82:33)
+    at onChange (src/components/intake/intake-form.tsx:163:18)
+  32 | ): Promise<z.infer<S>> {
+  33 |   const { baseUrl, ...rest } = init;
+> 34 |   const res = await fetch(`${baseUrl ?? base()}${path}`, { ...rest, cache: 'no-store' });
+     |                     ^
+  35 |
+  36 |   if (!res.ok) {
+  37 |     const body: unknown = await res.json().catch(() => null);
+[browser] ⨯ unhandledRejection: TypeError: Failed to fetch
+    at apiFetch (src/lib/api-client.ts:34:21)
+    at Object.postForm (src/lib/api-client.ts:74:5)
+    at onFilesSelected (src/components/intake/intake-form.tsx:82:33)
+    at onChange (src/components/intake/intake-form.tsx:163:18)
+  32 | ): Promise<z.infer<S>> {
+  33 |   const { baseUrl, ...rest } = init;
+> 34 |   const res = await fetch(`${baseUrl ?? base()}${path}`, { ...rest, cache: 'no-store' });
+     |                     ^
+  35 |
+  36 |   if (!res.ok) {
+  37 |     const body: unknown = await res.json().catch(() => null);
+[browser] ⨯ unhandledRejection: TypeError: Failed to fetch
+    at apiFetch (src/lib/api-client.ts:34:21)
+    at Object.postForm (src/lib/api-client.ts:74:5)
+    at onFilesSelected (src/components/intake/intake-form.tsx:82:33)
+    at onChange (src/components/intake/intake-form.tsx:163:18)
+  32 | ): Promise<z.infer<S>> {
+  33 |   const { baseUrl, ...rest } = init;
+> 34 |   const res = await fetch(`${baseUrl ?? base()}${path}`, { ...rest, cache: 'no-store' });
+     |                     ^
+  35 |
+  36 |   if (!res.ok) {
+  37 |     const body: unknown = await res.json().catch(() => null);
+ POST /api/assets 201 in 69ms (next.js: 4ms, application-code: 66ms)
+ POST /api/assets 201 in 15ms (next.js: 3ms, application-code: 13ms)

@@ -80,3 +80,12 @@ export {
 // Retry MANUAL de un step fallido (T0.9): failed→queued + reset de retry_count +
 // patch opcional de config. Lo cablea `POST /api/steps/:id/retry`.
 export { retryStep, type RetryStepDeps, type RetryStepInput } from './retry';
+// Contrato de eventos del stream SSE (§9.0, T0.10): discriminated union Zod
+// (snapshot | step_changed | heartbeat) que emite el route handler y consume el
+// hook del frontend (T0.11). Vive en core: contrato único compartido.
+export {
+  RunEventSchema,
+  type RunEvent,
+  type StepChangedEvent,
+  type StepSnapshot,
+} from './run-events';

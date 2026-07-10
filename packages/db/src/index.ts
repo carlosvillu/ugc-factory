@@ -37,6 +37,10 @@ export { findStep } from './repos/steps.repo';
 // (`status='running' AND timeout_at < now()`). La consumen el composition root
 // del worker (setInterval del sweep) y los tests de integración del orquestador.
 export { findExpiredRunningStepIds } from './repos/steps.repo';
+// Lecturas del stream SSE (T0.10): la foto completa del run (`snapshot`) y los
+// deltas por step (`step_changed`). Las consume el route handler
+// `GET /api/runs/:id/events` de web. Proyección observable, no la fila entera.
+export { readRunSnapshot, readChangedSteps } from './repos/steps.repo';
 // Lectura simple del `autopilot` del run (T0.8): la usa el consumer genérico del
 // worker para decidir si un checkpoint pausa (`shouldPause`). Inmutable tras la
 // creación del run ⇒ sin lock.

@@ -1,0 +1,92 @@
+id: 1
+event: snapshot
+data: {"event":"snapshot","runId":"01KX5Q8YWRQFDZKXHNKCSAATZ0","steps":[{"id":"01KX5Q8YWMP07AJ9QRJFZ1E5ZP","nodeKey":"demo.sleep.N0","status":"succeeded","cost":null,"outputExcerpt":null},{"id":"01KX5Q8YWPCVDW8GASEZKHH5CZ","nodeKey":"demo.sleep.N1","status":"running","cost":null,"outputExcerpt":null},{"id":"01KX5Q8YWQG59T64AHZM23WDGD","nodeKey":"demo.sleep.N2","status":"awaiting_deps","cost":null,"outputExcerpt":null}]}
+
+id: 2
+event: heartbeat
+data: {"event":"heartbeat","ts":1783677365467}
+
+id: 3
+event: heartbeat
+data: {"event":"heartbeat","ts":1783677366968}
+
+id: 4
+event: step_changed
+data: {"event":"step_changed","stepId":"01KX5Q8YWMP07AJ9QRJFZ1E5ZP","nodeKey":"demo.sleep.N0","status":"succeeded","cost":null,"outputExcerpt":null}
+
+id: 5
+event: step_changed
+data: {"event":"step_changed","stepId":"01KX5Q8YWPCVDW8GASEZKHH5CZ","nodeKey":"demo.sleep.N1","status":"succeeded","cost":null,"outputExcerpt":null}
+
+id: 6
+event: step_changed
+data: {"event":"step_changed","stepId":"01KX5Q8YWQG59T64AHZM23WDGD","nodeKey":"demo.sleep.N2","status":"queued","cost":null,"outputExcerpt":null}
+
+id: 7
+event: step_changed
+data: {"event":"step_changed","stepId":"01KX5Q8YWMP07AJ9QRJFZ1E5ZP","nodeKey":"demo.sleep.N0","status":"succeeded","cost":null,"outputExcerpt":null}
+
+id: 8
+event: step_changed
+data: {"event":"step_changed","stepId":"01KX5Q8YWPCVDW8GASEZKHH5CZ","nodeKey":"demo.sleep.N1","status":"succeeded","cost":null,"outputExcerpt":null}
+
+id: 9
+event: step_changed
+data: {"event":"step_changed","stepId":"01KX5Q8YWQG59T64AHZM23WDGD","nodeKey":"demo.sleep.N2","status":"running","cost":null,"outputExcerpt":null}
+
+id: 10
+event: heartbeat
+data: {"event":"heartbeat","ts":1783677368469}
+
+id: 11
+event: heartbeat
+data: {"event":"heartbeat","ts":1783677369969}
+
+id: 12
+event: heartbeat
+data: {"event":"heartbeat","ts":1783677371470}
+
+id: 13
+event: heartbeat
+data: {"event":"heartbeat","ts":1783677372972}
+
+id: 14
+event: heartbeat
+data: {"event":"heartbeat","ts":1783677374473}
+
+id: 15
+event: step_changed
+data: {"event":"step_changed","stepId":"01KX5Q8YWMP07AJ9QRJFZ1E5ZP","nodeKey":"demo.sleep.N0","status":"succeeded","cost":null,"outputExcerpt":null}
+
+id: 16
+event: step_changed
+data: {"event":"step_changed","stepId":"01KX5Q8YWPCVDW8GASEZKHH5CZ","nodeKey":"demo.sleep.N1","status":"succeeded","cost":null,"outputExcerpt":null}
+
+id: 17
+event: step_changed
+data: {"event":"step_changed","stepId":"01KX5Q8YWQG59T64AHZM23WDGD","nodeKey":"demo.sleep.N2","status":"succeeded","cost":null,"outputExcerpt":null}
+
+id: 18
+event: heartbeat
+data: {"event":"heartbeat","ts":1783677375974}
+
+id: 19
+event: heartbeat
+data: {"event":"heartbeat","ts":1783677377475}
+
+id: 20
+event: heartbeat
+data: {"event":"heartbeat","ts":1783677378975}
+
+id: 21
+event: heartbeat
+data: {"event":"heartbeat","ts":1783677380477}
+
+id: 22
+event: heartbeat
+data: {"event":"heartbeat","ts":1783677381979}
+
+id: 23
+event: heartbeat
+data: {"event":"heartbeat","ts":1783677383481}
+

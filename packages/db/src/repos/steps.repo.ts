@@ -6,7 +6,13 @@
 import { and, eq, inArray, sql } from 'drizzle-orm';
 import type { Db } from '../client';
 import { stepRun } from '../schema/pipeline';
-import type { StepRow, StepPatch, NewSupersedingStepRow } from '@ugc/core/orchestrator';
+import type {
+  StepRow,
+  StepPatch,
+  NewSupersedingStepRow,
+  StepSnapshot,
+  StepChangedEvent,
+} from '@ugc/core/orchestrator';
 
 // Proyección mínima que el orquestador consume (StepRow del puerto). Se mapea
 // aquí, no en core: db traduce su fila al contrato (db.md §5). El `status` se tipa
@@ -271,5 +277,101 @@ export async function insertSuperseding(db: Db, row: NewSupersedingStepRow): Pro
     config: row.config,
     isCheckpoint: row.isCheckpoint,
     checkpointConfig: row.checkpointConfig,
+  });
+}
+
+// ── Lecturas para el stream SSE (T0.10, §9.0) ────────────────────────────────
+// El snapshot y los deltas leen la MISMA proyección observable de un step (la
+// forma `StepSnapshot`/`StepChangedEvent` de core): identidad + estado + coste +
+// un excerpt del output. NO es la fila entera de persistencia (`output_refs` puede
+// ser un jsonb enorme; no viaja por SSE). Columnas mínimas → índice
+// `step_run_run_id_idx` sirve la query.
+
+// Longitud máxima del excerpt de output que viaja por el stream: un recorte, no el
+// jsonb entero (un vídeo de cientos de MB reventaría el frame SSE). El cliente usa
+// el excerpt solo como señal "hay output"; el artefacto completo se sirve por el
+// endpoint de download.
+const OUTPUT_EXCERPT_MAX = 200;
+
+const sseColumns = {
+  id: stepRun.id,
+  nodeKey: stepRun.nodeKey,
+  status: stepRun.status,
+  costActual: stepRun.costActual,
+  costEstimated: stepRun.costEstimated,
+  outputRefs: stepRun.outputRefs,
+} as const;
+
+interface SseRow {
+  id: string;
+  nodeKey: string;
+  status: StepSnapshot['status'];
+  costActual: number | null;
+  costEstimated: number | null;
+  outputRefs: unknown;
+}
+
+// `cost` observable = coste REAL si ya se conoce, si no el ESTIMADO (céntimos,
+// entero). `null` cuando no hay ninguno (step aún sin ejecutar). Un solo criterio,
+// compartido por snapshot y delta.
+function costOf(row: SseRow): number | null {
+  return row.costActual ?? row.costEstimated ?? null;
+}
+
+// Recorte estable de `output_refs`: serializa a JSON y trunca. `null` cuando no hay
+// output. NO intenta interpretar el shape (opaco hasta F2): solo da al cliente una
+// señal "hay artefacto" sin arrastrar el jsonb completo por el stream.
+function excerptOf(refs: unknown): string | null {
+  if (refs == null) return null;
+  const s = typeof refs === 'string' ? refs : JSON.stringify(refs);
+  return s.length > OUTPUT_EXCERPT_MAX ? s.slice(0, OUTPUT_EXCERPT_MAX) : s;
+}
+
+function toStepSnapshot(row: SseRow): StepSnapshot {
+  return {
+    id: row.id,
+    nodeKey: row.nodeKey,
+    status: row.status,
+    cost: costOf(row),
+    outputExcerpt: excerptOf(row.outputRefs),
+  };
+}
+
+async function readSseRows(db: Db, runId: string): Promise<SseRow[]> {
+  return db.select(sseColumns).from(stepRun).where(eq(stepRun.runId, runId)).orderBy(stepRun.id);
+}
+
+/**
+ * Foto COMPLETA del run para el evento `snapshot` (T0.10): TODOS sus steps en la
+ * forma observable, ordenados por id. Se emite al conectar y en cada reconexión con
+ * `Last-Event-ID` (re-snapshot del estado ACTUAL). NO computa `run.status` derivado
+ * (deuda diferida de T0.8): la verdad son los estados de STEP.
+ */
+export async function readRunSnapshot(
+  db: Db,
+  runId: string,
+): Promise<{ runId: string; steps: StepSnapshot[] }> {
+  const rows = await readSseRows(db, runId);
+  return { runId, steps: rows.map(toStepSnapshot) };
+}
+
+/**
+ * Deltas `step_changed` para el stream (T0.10). El NOTIFY solo transporta `run_id`
+ * (§9.0) — NO dice qué step cambió. Decisión deliberada de F0 (simplest-correct):
+ * RELEE todos los steps del run y emite el estado ACTUAL de cada uno; el cliente
+ * aplica idempotentemente sobre el mapa sembrado por el snapshot. No se construye un
+ * diff contra un estado previo en el closure (sería estado mutable frágil por
+ * conexión); el re-envío del estado presente es correcto porque el delta describe el
+ * AHORA, no una transición.
+ */
+export async function readChangedSteps(db: Db, runId: string): Promise<StepChangedEvent[]> {
+  const rows = await readSseRows(db, runId);
+  // Reusa la proyección observable de `toStepSnapshot` (un solo sitio que define la
+  // forma de un step en el stream) y solo re-etiqueta `id`→`stepId` + añade el
+  // discriminante. Sin esto, un campo nuevo en el snapshot se caería del delta y el
+  // mapa del cliente divergiría entre la foto sembrada y los deltas aplicados.
+  return rows.map((row) => {
+    const { id, ...rest } = toStepSnapshot(row);
+    return { event: 'step_changed' as const, stepId: id, ...rest };
   });
 }

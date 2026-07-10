@@ -1,0 +1,12 @@
+id: 11
+event: snapshot
+data: {"event":"snapshot","runId":"01KX5QB57BXBMHX9BTY8R8VR0J","steps":[{"id":"01KX5QB577M36VAV4MDVY6GKHN","nodeKey":"demo.sleep.N0","status":"succeeded","cost":null,"outputExcerpt":null},{"id":"01KX5QB579WG066PM71XK8X95V","nodeKey":"demo.sleep.N1","status":"succeeded","cost":null,"outputExcerpt":null},{"id":"01KX5QB57AC77Q94MMNR5SSV3R","nodeKey":"demo.sleep.N2","status":"succeeded","cost":null,"outputExcerpt":null}]}
+
+id: 12
+event: heartbeat
+data: {"event":"heartbeat","ts":1783677479100}
+
+id: 13
+event: heartbeat
+data: {"event":"heartbeat","ts":1783677480601}
+

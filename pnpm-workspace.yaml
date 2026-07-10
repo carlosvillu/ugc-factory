@@ -26,6 +26,9 @@ catalog:
   # lo declaran apps/worker y apps/web para que el bundler lo EXTERNALICE del
   # bundle en vez de inlinear un módulo CJS en ESM (rompe con "Dynamic require").
   pg: ^8.22.0
+  # Tipos de pg: los usa packages/db (Client/Pool) y apps/web (T0.10, el Client
+  # dedicado del stream SSE). Catalog → una sola versión de tipos en el monorepo.
+  '@types/pg': ^8.20.0
 
 # Binarios nativos para AMBOS mundos de esta máquina (Apple Silicon con shells
 # bajo Rosetta: conviven node arm64 y x64 — el gate no puede depender de qué

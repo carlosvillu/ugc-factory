@@ -1,0 +1,40 @@
+id: 1
+event: snapshot
+data: {"event":"snapshot","runId":"01KX5QB57BXBMHX9BTY8R8VR0J","steps":[{"id":"01KX5QB577M36VAV4MDVY6GKHN","nodeKey":"demo.sleep.N0","status":"succeeded","cost":null,"outputExcerpt":null},{"id":"01KX5QB579WG066PM71XK8X95V","nodeKey":"demo.sleep.N1","status":"running","cost":null,"outputExcerpt":null},{"id":"01KX5QB57AC77Q94MMNR5SSV3R","nodeKey":"demo.sleep.N2","status":"awaiting_deps","cost":null,"outputExcerpt":null}]}
+
+id: 2
+event: heartbeat
+data: {"event":"heartbeat","ts":1783677438134}
+
+id: 3
+event: heartbeat
+data: {"event":"heartbeat","ts":1783677439636}
+
+id: 4
+event: heartbeat
+data: {"event":"heartbeat","ts":1783677441137}
+
+id: 5
+event: step_changed
+data: {"event":"step_changed","stepId":"01KX5QB577M36VAV4MDVY6GKHN","nodeKey":"demo.sleep.N0","status":"succeeded","cost":null,"outputExcerpt":null}
+
+id: 6
+event: step_changed
+data: {"event":"step_changed","stepId":"01KX5QB579WG066PM71XK8X95V","nodeKey":"demo.sleep.N1","status":"succeeded","cost":null,"outputExcerpt":null}
+
+id: 7
+event: step_changed
+data: {"event":"step_changed","stepId":"01KX5QB57AC77Q94MMNR5SSV3R","nodeKey":"demo.sleep.N2","status":"queued","cost":null,"outputExcerpt":null}
+
+id: 8
+event: step_changed
+data: {"event":"step_changed","stepId":"01KX5QB577M36VAV4MDVY6GKHN","nodeKey":"demo.sleep.N0","status":"succeeded","cost":null,"outputExcerpt":null}
+
+id: 9
+event: step_changed
+data: {"event":"step_changed","stepId":"01KX5QB579WG066PM71XK8X95V","nodeKey":"demo.sleep.N1","status":"succeeded","cost":null,"outputExcerpt":null}
+
+id: 10
+event: step_changed
+data: {"event":"step_changed","stepId":"01KX5QB57AC77Q94MMNR5SSV3R","nodeKey":"demo.sleep.N2","status":"running","cost":null,"outputExcerpt":null}
+

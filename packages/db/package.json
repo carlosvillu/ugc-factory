@@ -16,7 +16,7 @@
     "db:smoke": "tsx --env-file-if-exists=../../.env scripts/smoke-project.ts"
   },
   "devDependencies": {
-    "@types/pg": "^8.20.0",
+    "@types/pg": "catalog:",
     "@ugc/test-utils": "workspace:*",
     "drizzle-kit": "^0.31.0",
     "tsx": "^4.23.0",

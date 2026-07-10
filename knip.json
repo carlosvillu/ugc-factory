@@ -15,14 +15,13 @@
       //    quedarían "unused").
       //  - auth.setup.ts: el setup project de Playwright (testMatch por regex); el
       //    plugin de knip solo toma *.spec.ts como entries, no el setup.
-      "entry": ["scripts/e2e-stack.ts", "e2e/auth.setup.ts"],
-      // pg no se importa directo (es transitiva de @ugc/db); se declara para que
-      // el bundler de next lo EXTERNALICE del server bundle en vez de inlinear un
-      // módulo CJS (rompe con "Dynamic require"). Mismo motivo que pino en worker.
-      // tsx ya NO se ignora: el script `smoke:assets` lo invoca en package.json y
-      // knip lo detecta como dependency usada (el webServer E2E lo usa además vía
-      // `pnpm exec tsx scripts/e2e-stack.ts`).
-      "ignoreDependencies": ["pg"]
+      "entry": ["scripts/e2e-stack.ts", "e2e/auth.setup.ts"]
+      // pg ya NO se ignora: desde T0.10 el route handler del stream SSE
+      // (runs/[id]/events) importa `Client` de 'pg' DIRECTO (conexión dedicada en
+      // LISTEN), así que knip lo ve como dependency usada. Antes solo se declaraba
+      // para forzar su externalización del server bundle (transitiva de @ugc/db);
+      // ese motivo sigue vigente, pero ahora hay además un import directo que lo
+      // justifica sin ignore. tsx tampoco se ignora: `smoke:assets` lo invoca.
     },
     "apps/worker": {
       // pino y pg no se importan directo (pino vía @ugc/core; pg vía @ugc/db),

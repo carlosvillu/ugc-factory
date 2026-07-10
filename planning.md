@@ -98,7 +98,7 @@ El corazón de esta fase es el **orquestador** (§9.0): la máquina de estados t
 - **Entrega**: `timeout_at` por step (por tipo de nodo), ~~cron pg-boss~~ **barrido por `setInterval` en el worker (5 s)** que expira steps colgados (`expired`), retry manual (`POST /api/steps/:id/retry`) y automático hasta `max_retries`. *(Desviación deliberada del literal "cron pg-boss" — regla 6, 2026-07-10: el cron de pg-boss tiene precisión de minuto (schedules evaluadas cada ~30 s) y no cumpliría el `<40 s` de la Verificación con timeout de 10 s; el barrido va como timer del worker. Mismo gate que pg-boss: solo corre con BD alcanzable, se limpia en `boss.stop`.)*
 - **Verificación**: un executor de demo con `hang=true` y timeout de 10 s → el step pasa a `expired` en <40 s sin intervención; `retry` sobre un step con `fail_rate=1` forzado a 0 lo re-ejecuta y completa.
 
-#### T0.10 · SSE sobre LISTEN/NOTIFY
+#### T0.10 · SSE sobre LISTEN/NOTIFY [x] 2026-07-10 — PASS, ver docs/verifications/T0.10/ (coste $0)
 - **Depende de**: T0.7b
 - **Entrega**: `GET /api/runs/:id/events` (route handler Node streaming): evento `snapshot` al conectar, deltas `step_changed` vía LISTEN/NOTIFY, `heartbeat` cada 25 s, `id:` monotónico + re-snapshot con `Last-Event-ID` (§9.0); contrato de eventos en `packages/core`.
 - **Verificación**: `curl -N /api/runs/:id/events` durante un run de demo → snapshot, deltas por transición y heartbeats visibles; matar y reabrir el curl con `Last-Event-ID` re-sincroniza sin perder el estado final.

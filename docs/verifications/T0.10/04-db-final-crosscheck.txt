@@ -1,0 +1,7 @@
+   node_key    |  status   
+---------------+-----------
+ demo.sleep.N0 | succeeded
+ demo.sleep.N1 | succeeded
+ demo.sleep.N2 | succeeded
+(3 rows)
+

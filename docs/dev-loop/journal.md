@@ -605,3 +605,9 @@
 - **ACCIÓN PARA EL USUARIO (setup, NO defecto)**: el `.env` del usuario NO define `ASSETS_DIR` → el server cae al default prod `/data/assets` y todo upload falla con ENOENT mkdir '/data' (500). `.env.example` documenta `ASSETS_DIR=/tmp/ugc-assets-dev` (var de T0.5). **Añadir ASSETS_DIR al .env** para que el upload funcione en dev.
 - **Rareza de proceso**: el implementer murió 1× por API error (Response stalled) durante el reconocimiento; reanudado por SendMessage. 8.º stall. Descubrió y arregló él mismo la carrera de ensureDefaultProject bajo fullyParallel (bien).
 - **Dependencias instaladas** (necesarias, no presentes): react-hook-form, @hookform/resolvers (forms.md), @testing-library/user-event, msw (dev).
+
+## 2026-07-10 · PARADA del bucle — núcleo gratuito de F1 agotado (prerequisitos del usuario)
+- Cerradas esta sesión (10 tareas + arnés, TODAS PASS a la primera del verifier, coste $0): T0.9, T0.10, T0.11, T0.12, T1.1, T1.2, T1.3, T1.6 + arnés (verifier report.md + flake docs).
+- **No quedan tareas elegibles sin ⚠**: F0 → T0.13 (⚠ VPS+dominio), T0.14 (⚠ fal key). F1 → T1.4 (⚠ Firecrawl key + T0.14), T1.7 (⚠ Anthropic key + T0.14); T1.5/T1.8/T1.9/T1.10a/T1.10b encadenadas detrás de T1.4/T1.7. Todo el resto de F1 depende de las API keys de pago que aporta el usuario + T0.14.
+- **Decisiones del usuario PENDIENTES** (acumuladas, no bloquean nada ya hecho): (1) contraste WCAG del token --danger del DS (T0.11); (2) decimales de SpendLedger (T0.12); (3) ASSETS_DIR en el .env para uploads en dev (T1.6, setup); (4) divergencias mockup 8a de spend (T0.12, anotadas como acordadas). Para retomar: aportar VPS+dominio (T0.13) o las API keys (T0.14→T1.4/T1.7).
+- **Deuda de arnés pendiente** (para un pase entre sesiones, NO durante un cierre): consolidar los 2 flakes (57P01 teardown de integración + canvas-cancel e2e runs-canvas:147) con causa raíz (regla 5).

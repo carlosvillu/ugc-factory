@@ -1,0 +1,41 @@
+=== CLAUSE 3 AFTER edit — full step table ===
+   node_key    |   status   |             id             |       supersedes_id        
+---------------+------------+----------------------------+----------------------------
+ demo.sleep.N0 | succeeded  | 01KX5F8ZYKZ5EPV9NNMM374E9S | 
+ demo.sleep.N1 | succeeded  | 01KX5F8ZYMYQBBB6R8H5EZWXY1 | 
+ demo.sleep.N2 | superseded | 01KX5F8ZYNEDY0K0GM9VFP9YHQ | 
+ demo.sleep.N2 | succeeded  | 01KX5F929VMT1PDDKW4A69050V | 01KX5F8ZYNEDY0K0GM9VFP9YHQ
+ demo.sleep.N3 | superseded | 01KX5F8ZYPXTZE13E1QPFR1GZN | 
+ demo.sleep.N3 | failed     | 01KX5F929XF64KMCFQT5REWYM3 | 01KX5F8ZYPXTZE13E1QPFR1GZN
+(6 rows)
+
+
+=== N1 checkpoint row: status + outputRefs (edited artifact persisted?) ===
+   node_key    |  status   |                              output_refs                              
+---------------+-----------+-----------------------------------------------------------------------
+ demo.sleep.N1 | succeeded | {"note": "human override T0.8", "value": 42, "verifier_edited": true}
+(1 row)
+
+
+=== Old downstream rows must be superseded ===
+   node_key    |   status   
+---------------+------------
+ demo.sleep.N2 | superseded
+ demo.sleep.N3 | superseded
+(2 rows)
+
+
+=== New downstream rows: node_key | status | supersedes_id (must point to old ids) ===
+   node_key    |  status   |             id             |       supersedes_id        
+---------------+-----------+----------------------------+----------------------------
+ demo.sleep.N2 | succeeded | 01KX5F929VMT1PDDKW4A69050V | 01KX5F8ZYNEDY0K0GM9VFP9YHQ
+ demo.sleep.N3 | failed    | 01KX5F929XF64KMCFQT5REWYM3 | 01KX5F8ZYPXTZE13E1QPFR1GZN
+(2 rows)
+
+
+=== audit_log for the edit (actor/action/entity/entity_id/diff) ===
+ actor | action |  entity  |         entity_id          |                                             diff                                              
+-------+--------+----------+----------------------------+-----------------------------------------------------------------------------------------------
+ user  | edit   | step_run | 01KX5F8ZYMYQBBB6R8H5EZWXY1 | {"ai": null, "edited": {"note": "human override T0.8", "value": 42, "verifier_edited": true}}
+(1 row)
+

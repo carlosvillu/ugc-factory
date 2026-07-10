@@ -111,15 +111,18 @@ export async function enqueueStep(
 
 /**
  * Dentro de la tx, resuelve los dependientes de `step` (aguas abajo) cuyas deps
- * YA están todas en `succeeded`: los promueve `awaiting_deps → pending → queued`
+ * YA están todas RESUELTAS: los promueve `awaiting_deps → pending → queued`
  * (§7.1.a: satisfecho ⇒ pending; y como está listo, se encola de inmediato) y
  * crea su job. Devuelve los steps encolados. Recorridos en orden por id
  * (findDependents ya lockea FOR UPDATE en ese orden) para evitar deadlock 40P01
  * (db.md §6) y el lost-wakeup de dos deps completando a la vez (ver el contrato
  * de StepStore.findDependents).
  *
- * SOLO se ejecuta cuando el propio step acaba de entrar en `succeeded`: es la
- * única transición que puede satisfacer una dependencia aguas abajo.
+ * Se ejecuta cuando el propio step acaba de RESOLVERSE — entrar en `succeeded` o
+ * `skipped` (T0.8): ambos satisfacen una dependencia aguas abajo. Un nodo saltado
+ * cuenta como dep cumplida (`resolvedStatus` = succeeded OR skipped), o sus
+ * dependientes quedarían varados en `awaiting_deps` para siempre y el run no
+ * completaría (Verificación T0.8: "skip lo salta y el run completa").
  */
 async function resolveDownstream(
   steps: StepStore,
@@ -129,10 +132,11 @@ async function resolveDownstream(
   const dependents = await steps.findDependents(stepId);
   for (const dep of dependents) {
     if (dep.status !== 'awaiting_deps') continue; // ya avanzó o no aplica
-    // ¿Están TODAS las deps de este dependiente en succeeded? (incluida la que
-    // acabamos de completar). succeededStatus lee bajo la misma tx; el dependiente
-    // ya está lockeado (findDependents FOR UPDATE), así que la lectura es coherente.
-    const statuses = await steps.succeededStatus(dep.dependsOn);
+    // ¿Están TODAS las deps de este dependiente RESUELTAS (succeeded o skipped)?
+    // (incluida la que acabamos de completar). resolvedStatus lee bajo la misma tx;
+    // el dependiente ya está lockeado (findDependents FOR UPDATE), así que la
+    // lectura es coherente.
+    const statuses = await steps.resolvedStatus(dep.dependsOn);
     const allSatisfied = dep.dependsOn.every((id) => statuses[id] === true);
     if (!allSatisfied) continue;
     // awaiting_deps satisfecho ⇒ el step queda listo: pasa directo a `queued`
@@ -154,7 +158,7 @@ async function resolveDownstream(
  * abre la transacción — la abre el llamante (`transition` para una sola, `failStep`
  * para fail+retry en una tx coherente). Devuelve el estado destino aplicado.
  */
-async function applyTransition(
+export async function applyTransition(
   { steps, jobs, events }: TxStores,
   stepId: string,
   event: StepEvent,
@@ -196,10 +200,17 @@ async function applyTransition(
     await enqueueStep(jobs, step);
   }
 
-  // 5) Resolver deps aguas abajo SOLO cuando este step entró en `succeeded`:
-  //    es lo único que puede habilitar a un dependiente (§7.1.a). Los
-  //    dependientes listos pasan a `queued` y se encolan dentro de resolveDownstream.
-  if (to === 'succeeded') {
+  // 5) Resolver deps aguas abajo cuando este step se RESUELVE y habilita a sus
+  //    dependientes (§7.1.a). Se gatea por EVENTO, no solo por estado destino:
+  //    - `succeed`/`approve`: running/waiting_approval → succeeded ⇒ resolver.
+  //    - `skip`: → skipped ⇒ resolver (un nodo saltado satisface la dep, T0.8).
+  //    - `approve_edited`: → succeeded PERO se EXCLUYE a propósito. La invalidación
+  //      de sub-grafo (editStep) es el ÚNICO manejador aguas abajo del path de
+  //      edición: crea filas NUEVAS con supersedes_id y las encola ella misma. Si
+  //      además resolviéramos aquí, promoveríamos la fila ANTIGUA del dependiente
+  //      (que luego superseremos) y encolaríamos su job con el mismo singletonKey
+  //      que la nueva → la nueva quedaría `queued` SIN job, varada para siempre.
+  if (event === 'succeed' || event === 'approve' || event === 'skip') {
     await resolveDownstream(steps, jobs, stepId);
   }
 

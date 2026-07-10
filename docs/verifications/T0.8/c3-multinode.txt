@@ -1,0 +1,22 @@
+=== CLAUSE 3 (multi-node closure, ALL registered): N0 -> N1(cp) -> N2 -> N3(demo.fail, no failRate) ; closure={N2,N3} ===
+runId=01KX5FPXY76WJ2YQPZBMS6P1S4
+OK demo.sleep.N1=waiting_approval (2s)
+--- edit N1 (closure {N2,N3}) ---
+{"ok":true}
+OK demo.fail=succeeded (2s)
+--- AFTER edit: both downstream nodes superseded+new, run completes ---
+   node_key    |   status   |             id             |       supersedes_id        
+---------------+------------+----------------------------+----------------------------
+ demo.fail     | superseded | 01KX5FPXY6HNHR2ZMRRF2S7MAK | 
+ demo.fail     | succeeded  | 01KX5FPZEKFVQBTVE9R3TS5M3J | 01KX5FPXY6HNHR2ZMRRF2S7MAK
+ demo.sleep.N0 | succeeded  | 01KX5FPXXZA9VG7VJYT3BA7NC5 | 
+ demo.sleep.N1 | succeeded  | 01KX5FPXY3J8VGMAN1D0RZ27TK | 
+ demo.sleep.N2 | superseded | 01KX5FPXY4GHVPXX9EQ0MHJ2AK | 
+ demo.sleep.N2 | succeeded  | 01KX5FPZEJ6R6K8DYWJ1XA006F | 01KX5FPXY4GHVPXX9EQ0MHJ2AK
+(6 rows)
+
+--- states ---
+succeeded|4
+superseded|2
+--- nonterminal (0 = completa) ---
+nonterminal=0

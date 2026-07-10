@@ -62,10 +62,23 @@ function makeWorld(rows: StepRow[]) {
                 .sort((a, b) => (a.id < b.id ? -1 : 1))
                 .map((r) => ({ ...r })),
             ),
-          succeededStatus: (ids) =>
+          resolvedStatus: (ids) =>
             Promise.resolve(
-              Object.fromEntries(ids.map((id) => [id, steps.get(id)?.status === 'succeeded'])),
+              Object.fromEntries(
+                ids.map((id) => {
+                  const s = steps.get(id)?.status;
+                  return [id, s === 'succeeded' || s === 'skipped'];
+                }),
+              ),
             ),
+          findStepAndClosureForUpdate: () =>
+            Promise.reject(
+              new Error('findStepAndClosureForUpdate no debe usarse en transition() puro'),
+            ),
+          findCancellableByRun: () =>
+            Promise.reject(new Error('findCancellableByRun no debe usarse en transition() puro')),
+          insertSuperseding: () =>
+            Promise.reject(new Error('insertSuperseding no debe usarse en transition() puro')),
         },
         jobs: {
           enqueue: (req) => {
@@ -90,6 +103,9 @@ function makeWorld(rows: StepRow[]) {
             Promise.reject(new Error('runs.insertRun no debe usarse en transition()')),
           insertSteps: () =>
             Promise.reject(new Error('runs.insertSteps no debe usarse en transition()')),
+        },
+        audit: {
+          write: () => Promise.reject(new Error('audit.write no debe usarse en transition()')),
         },
       };
       try {
@@ -117,6 +133,9 @@ function step(overrides: Partial<StepRow> & Pick<StepRow, 'id'>): StepRow {
     retryCount: 0,
     maxRetries: 3,
     config: null,
+    isCheckpoint: false,
+    checkpointConfig: null,
+    outputRefs: null,
     ...overrides,
   };
 }

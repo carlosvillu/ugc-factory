@@ -1,0 +1,29 @@
+=== CLAUSE 6a: autopilot=true + normal checkpoint => NO pause, run completes ===
+runId(6a)=01KX5FD9F58BRY5HCJDE019G40  (autopilot=true, N1 checkpoint, NO alwaysPause)
+OK demo.sleep.N2=succeeded (3s)
+--- 6a final states (expect all succeeded, NO waiting_approval ever) ---
+succeeded|3
+--- 6a: verify N1 never sat in waiting_approval (went straight to succeeded) ---
+   node_key    |  status   | is_checkpoint 
+---------------+-----------+---------------
+ demo.sleep.N0 | succeeded | f
+ demo.sleep.N1 | succeeded | t
+ demo.sleep.N2 | succeeded | f
+(3 rows)
+
+
+=== CLAUSE 6b: autopilot=true + alwaysPause override => PAUSES at N1 ===
+runId(6b)=01KX5FDC0613HZRS6CRBD3BEC2  (autopilot=true, N1 checkpoint WITH alwaysPause=true)
+OK demo.sleep.N1=waiting_approval (2s)
+--- 6b: confirm STAYS paused 6s despite autopilot ---
+t+2s N1=waiting_approval N2=awaiting_deps
+t+4s N1=waiting_approval N2=awaiting_deps
+t+6s N1=waiting_approval N2=awaiting_deps
+--- 6b states + checkpoint_config ---
+   node_key    |      status      | is_checkpoint |   checkpoint_config   
+---------------+------------------+---------------+-----------------------
+ demo.sleep.N0 | succeeded        | f             | 
+ demo.sleep.N1 | waiting_approval | t             | {"alwaysPause": true}
+ demo.sleep.N2 | awaiting_deps    | f             | 
+(3 rows)
+

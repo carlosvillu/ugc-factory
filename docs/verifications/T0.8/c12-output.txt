@@ -1,0 +1,13 @@
+=== CLAUSE 1: STAYS paused (run 01KX5F7FCVH1JXBVZGKAGD2QJX) — 8s stability window ===
+t+2s  N1=waiting_approval  N2=awaiting_deps
+t+4s  N1=waiting_approval  N2=awaiting_deps
+t+6s  N1=waiting_approval  N2=awaiting_deps
+t+8s  N1=waiting_approval  N2=awaiting_deps
+
+=== CLAUSE 2: approve the checkpoint step ===
+checkpoint step id=01KX5F7FCS5PJY0D1BVZ334NDT
+approve response: {"ok":true}
+OK demo.sleep.N1=succeeded (1s)
+OK demo.sleep.N2=succeeded (2s)
+--- CLAUSE 2 final states (expect all succeeded => run progressed/completed) ---
+succeeded|3

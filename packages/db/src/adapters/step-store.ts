@@ -11,6 +11,9 @@ export function makeStepStore(db: Db): StepStore {
     findForUpdate: async (id) => (await steps.findStepForUpdate(db, id)) ?? null,
     update: (id, patch) => steps.updateStep(db, id, patch),
     findDependents: (stepId) => steps.findDependents(db, stepId),
-    succeededStatus: (ids) => steps.succeededStatus(db, ids),
+    resolvedStatus: (ids) => steps.resolvedStatus(db, ids),
+    findStepAndClosureForUpdate: (stepId) => steps.findStepAndClosureForUpdate(db, stepId),
+    findCancellableByRun: (runId) => steps.findCancellableByRun(db, runId),
+    insertSuperseding: (row) => steps.insertSuperseding(db, row),
   };
 }

@@ -18,10 +18,11 @@ import {
   type StepExecutor,
   type TransitionDeps,
   failStep,
+  shouldPause,
   transition,
 } from '@ugc/core/orchestrator';
 import type { Logger } from '@ugc/core';
-import { findStep } from '@ugc/db';
+import { findRunAutopilot, findStep } from '@ugc/db';
 import type { DbClient } from '@ugc/db';
 import type { PgBoss } from 'pg-boss';
 
@@ -129,16 +130,29 @@ export async function registerStepConsumer({
         return;
       }
 
-      // Executor OK ⇒ running→succeeded (resuelve deps aguas abajo). Su fallo es de
-      // INFRAESTRUCTURA/transición, no del trabajo: NUNCA dispara failStep.
+      // Executor OK ⇒ decidir la transición de cierre (T0.8): si el step es un
+      // checkpoint que debe PAUSAR (según su config + autopilot del run),
+      // `reach_checkpoint` (running→waiting_approval); si no, `succeed`
+      // (running→succeeded, resuelve deps aguas abajo). La decisión es PURA
+      // (shouldPause) sobre banderas INMUTABLES post-creación (is_checkpoint,
+      // checkpoint_config, autopilot) ⇒ leerlas sin lock es seguro; la transición
+      // re-valida bajo el lock. Su fallo es de INFRAESTRUCTURA/transición, no del
+      // trabajo: NUNCA dispara failStep.
+      const autopilot = (await findRunAutopilot(db, runId)) ?? false;
+      const pause = shouldPause({
+        isCheckpoint: step?.isCheckpoint ?? false,
+        checkpointConfig: step?.checkpointConfig ?? null,
+        autopilot,
+      });
+      const closingEvent = pause ? 'reach_checkpoint' : 'succeed';
       try {
-        await transition(transitionDeps, stepId, 'succeed');
+        await transition(transitionDeps, stepId, closingEvent);
       } catch (err) {
         if (err instanceof IllegalTransitionError) {
           // Carrera: el step ya no está `running` (p. ej. cancel/supersede en T0.8,
           // o un redelivery que ya lo cerró). No-op idempotente — el trabajo está
           // hecho, no hay nada que rehacer.
-          log.info({}, 'step.execute: succeed sobre step ya no-running: no-op idempotente');
+          log.info({}, 'step.execute: cierre sobre step ya no-running: no-op idempotente');
           return;
         }
         // Infra (BD caída en el commit del succeed): propaga. HONESTO: con

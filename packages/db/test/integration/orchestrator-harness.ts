@@ -23,6 +23,11 @@ export interface SeedStep {
   nodeKey?: string;
   status?: NewStepRun['status'];
   dependsOn?: string[];
+  // T0.8: banderas de checkpoint + artefactos, para sembrar escenarios de
+  // approve/edit/skip/cancel sin pasar por el worker.
+  isCheckpoint?: boolean;
+  checkpointConfig?: unknown;
+  outputRefs?: unknown;
 }
 
 /**
@@ -71,7 +76,7 @@ export class OrchestratorEnv {
 
   /** beforeEach: tablas limpias + sin jobs residuales de `step.execute`. */
   async reset(): Promise<void> {
-    await this.tdb.pool.query('TRUNCATE step_run, pipeline_run, project CASCADE');
+    await this.tdb.pool.query('TRUNCATE step_run, pipeline_run, project, audit_log CASCADE');
     await this.tdb.pool.query(`DELETE FROM pgboss.job WHERE name = $1`, [stepExecuteJob.name]);
   }
 
@@ -90,12 +95,16 @@ export class OrchestratorEnv {
   }
 
   /** Inserta project + run + steps; devuelve el runId y los ids en orden. Donde
-   *  solo se necesita runId, se descarta stepIds. */
-  async seed(steps: SeedStep[]): Promise<{ runId: string; stepIds: string[] }> {
+   *  solo se necesita runId, se descarta stepIds. `runOverrides` permite fijar
+   *  `autopilot` (T0.8). Los campos de checkpoint del SeedStep se pasan a la fila. */
+  async seed(
+    steps: SeedStep[],
+    runOverrides: { autopilot?: boolean } = {},
+  ): Promise<{ runId: string; stepIds: string[] }> {
     const [p] = await this.tdb.db.insert(project).values(makeProject()).returning();
     const [run] = await this.tdb.db
       .insert(pipelineRun)
-      .values(makePipelineRun({ projectId: p!.id }))
+      .values(makePipelineRun({ projectId: p!.id, ...runOverrides }))
       .returning();
     const rows = steps.map((s) => makeStepRun({ runId: run!.id, ...s }));
     const inserted = await this.tdb.db.insert(stepRun).values(rows).returning();

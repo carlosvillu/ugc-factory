@@ -11,6 +11,9 @@ export type {
   RunStore,
   NewRunRow,
   NewStepRow,
+  NewSupersedingStepRow,
+  AuditStore,
+  AuditEntry,
   TxStores,
   WithTransaction,
 } from './ports';
@@ -28,7 +31,9 @@ export {
   RunDefinitionSchema,
   RunNodeSchema,
   type RunDefinition,
+  type RunDefinitionInput,
   type RunNode,
+  type RunNodeInput,
   initialStatus,
   validateDag,
 } from './run-definition';
@@ -45,4 +50,18 @@ export {
   type StepExecutor,
   type ExecutorContext,
 } from './executor';
-export { demoRunDefinition } from './demo-dag';
+export { demoRunDefinition, demoCheckpointRunDefinition } from './demo-dag';
+export {
+  shouldPause,
+  CheckpointConfigSchema,
+  type CheckpointConfig,
+  type ShouldPauseInput,
+} from './checkpoint';
+export {
+  approveStep,
+  editStep,
+  rejectStep,
+  skipStep,
+  cancelRun,
+  type CheckpointOpsDeps,
+} from './checkpoint-ops';

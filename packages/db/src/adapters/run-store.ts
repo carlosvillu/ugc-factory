@@ -10,7 +10,10 @@ import { pipelineRun, stepRun } from '../schema/pipeline';
 export function makeRunStore(db: Db): RunStore {
   return {
     async insertRun(run: NewRunRow): Promise<void> {
-      await db.insert(pipelineRun).values({ id: run.id, projectId: run.projectId });
+      // `autopilot` (T0.8): la define POST /api/runs; default false.
+      await db
+        .insert(pipelineRun)
+        .values({ id: run.id, projectId: run.projectId, autopilot: run.autopilot });
     },
     async insertSteps(steps: NewStepRow[]): Promise<void> {
       if (steps.length === 0) return;
@@ -24,6 +27,9 @@ export function makeRunStore(db: Db): RunStore {
           // `config` es jsonb nullable; core pasa `null` cuando el nodo no lleva
           // parámetros. Drizzle serializa el objeto tal cual.
           config: s.config,
+          // §7.1.b (T0.8): banderas de checkpoint tomadas de la definición del DAG.
+          isCheckpoint: s.isCheckpoint,
+          checkpointConfig: s.checkpointConfig,
         })),
       );
     },

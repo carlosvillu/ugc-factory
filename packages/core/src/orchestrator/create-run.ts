@@ -10,7 +10,7 @@
 // completar un root) NO es cosa de aquí: la hace `transition()` en el `succeed`.
 import { newUlid } from '../contracts';
 import { enqueueStep } from './transition';
-import type { RunDefinition } from './run-definition';
+import type { RunDefinitionInput } from './run-definition';
 import { initialStatus, validateDag } from './run-definition';
 import type { NewStepRow, WithTransaction } from './ports';
 
@@ -45,7 +45,10 @@ export interface CreateRunResult {
  * INSERT run + steps, luego encolado de los roots (update a `queued` + job en la
  * misma tx). El NOTIFY inicial se emite tras encolar los roots.
  */
-export async function createRun(deps: CreateRunDeps, def: RunDefinition): Promise<CreateRunResult> {
+export async function createRun(
+  deps: CreateRunDeps,
+  def: RunDefinitionInput,
+): Promise<CreateRunResult> {
   const invalid = validateDag(def);
   if (invalid) throw new InvalidRunDefinitionError(invalid);
 
@@ -70,14 +73,23 @@ export async function createRun(deps: CreateRunDeps, def: RunDefinition): Promis
       runId,
       nodeKey: node.nodeKey,
       status: initialStatus(node),
-      dependsOn: node.dependsOn.map(idOf),
+      dependsOn: (node.dependsOn ?? []).map(idOf),
       config: node.config ?? null,
+      // §7.1.b (T0.8): banderas de checkpoint de la definición del DAG. Como `def`
+      // es el tipo de ENTRADA (defaults opcionales), se coalescen aquí igual que el
+      // schema Zod los normalizaría (isCheckpoint→false, checkpointConfig→null).
+      isCheckpoint: node.isCheckpoint ?? false,
+      checkpointConfig: node.checkpointConfig ?? null,
     } satisfies NewStepRow,
   }));
   const stepRows: NewStepRow[] = planned.map((p) => p.row);
 
   await deps.withTransaction(async ({ runs, steps, jobs, events }) => {
-    await runs.insertRun({ id: runId, projectId: def.projectId });
+    await runs.insertRun({
+      id: runId,
+      projectId: def.projectId,
+      autopilot: def.autopilot ?? false,
+    });
     await runs.insertSteps(stepRows);
 
     // Encolado atómico de los roots: los steps sin deps (`pending`) pasan a

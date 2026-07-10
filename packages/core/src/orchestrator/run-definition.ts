@@ -28,8 +28,25 @@ export const RunNodeSchema = z.strictObject({
   // Parámetros del executor (opaco para core). Nullable/omitible: un nodo sin
   // parámetros no lleva config.
   config: z.unknown().optional(),
+  // §7.1.b (T0.8): el nodo es un CHECKPOINT — al terminar su ejecución NO pasa a
+  // `succeeded` sino a `waiting_approval` (pausa esperando aprobación humana). El
+  // consumer lo decide vía `shouldPause` leyendo esta bandera + autopilot del run.
+  isCheckpoint: z.boolean().default(false),
+  // Override per-nodo (T0.8): configuración del checkpoint. `alwaysPause: true` es
+  // el override "parar SIEMPRE aquí" que GANA sobre `autopilot=true` del run (un
+  // checkpoint marcado así pausa aunque el run esté en autopilot). Opaco por lo
+  // demás; se persiste tal cual en `step_run.checkpoint_config`.
+  checkpointConfig: z.looseObject({ alwaysPause: z.boolean().optional() }).nullish(),
 });
 export type RunNode = z.infer<typeof RunNodeSchema>;
+/**
+ * Tipo de ENTRADA de un nodo (`z.input`): con los defaults (`isCheckpoint`,
+ * `dependsOn`) como OPCIONALES. Es lo que un caller construye a mano (demo-dag,
+ * tests) antes de `parse`; la validación estructural (`validateDag`,
+ * `initialStatus`) opera sobre este shape para no exigir campos que el schema
+ * rellena. `RunNode` (output) es asignable a `RunNodeInput`.
+ */
+export type RunNodeInput = z.input<typeof RunNodeSchema>;
 
 /**
  * Definición completa de un run: el project al que pertenece y los nodos del DAG.
@@ -38,16 +55,22 @@ export type RunNode = z.infer<typeof RunNodeSchema>;
 export const RunDefinitionSchema = z.strictObject({
   projectId: z.string().min(1),
   nodes: z.array(RunNodeSchema).min(1),
+  // §7.1.b (T0.8): el run arranca en autopilot (sin pausas en checkpoints salvo
+  // el override per-nodo `checkpointConfig.alwaysPause`). Default false.
+  autopilot: z.boolean().default(false),
 });
 export type RunDefinition = z.infer<typeof RunDefinitionSchema>;
+/** Entrada de una definición (`z.input`): defaults opcionales. La construyen a
+ *  mano demo-dag y los tests; `RunDefinition` (output) es asignable a ella. */
+export type RunDefinitionInput = z.input<typeof RunDefinitionSchema>;
 
 /**
  * Estado inicial de un nodo (§7.1): sin dependencias ⇒ `pending` (root listo para
  * encolar); con dependencias ⇒ `awaiting_deps` (espera a que completen). Función
  * PURA: la usa `createRun` para fijar el status de cada `step_run` en el INSERT.
  */
-export function initialStatus(node: RunNode): 'pending' | 'awaiting_deps' {
-  return node.dependsOn.length === 0 ? 'pending' : 'awaiting_deps';
+export function initialStatus(node: RunNodeInput): 'pending' | 'awaiting_deps' {
+  return (node.dependsOn ?? []).length === 0 ? 'pending' : 'awaiting_deps';
 }
 
 /**
@@ -61,7 +84,7 @@ export function initialStatus(node: RunNode): 'pending' | 'awaiting_deps' {
  * devuelve el mensaje (no se lanza) para que el llamante lo mapee al error de su
  * frontera (`validation_error` en el route handler).
  */
-export function validateDag(def: RunDefinition): string | null {
+export function validateDag(def: RunDefinitionInput): string | null {
   const keys = new Set<string>();
   for (const node of def.nodes) {
     if (keys.has(node.key)) return `clave de nodo duplicada: ${node.key}`;
@@ -79,11 +102,11 @@ export function validateDag(def: RunDefinition): string | null {
     nodeKeys.add(node.nodeKey);
   }
   for (const node of def.nodes) {
-    for (const dep of node.dependsOn) {
+    for (const dep of node.dependsOn ?? []) {
       if (!keys.has(dep)) return `nodo ${node.key} depende de una clave inexistente: ${dep}`;
     }
   }
-  const roots = def.nodes.filter((n) => n.dependsOn.length === 0);
+  const roots = def.nodes.filter((n) => (n.dependsOn ?? []).length === 0);
   if (roots.length === 0)
     return 'el DAG no tiene ningún nodo raíz (todos con dependencias): no arrancaría';
   if (hasCycle(def.nodes)) return 'el DAG contiene un ciclo de dependencias';
@@ -91,7 +114,7 @@ export function validateDag(def: RunDefinition): string | null {
 }
 
 /** Detección de ciclos por DFS con marcado tri-estado sobre las `key`s. */
-function hasCycle(nodes: RunNode[]): boolean {
+function hasCycle(nodes: RunNodeInput[]): boolean {
   const byKey = new Map(nodes.map((n) => [n.key, n]));
   const state = new Map<string, 'visiting' | 'done'>();
   const visit = (key: string): boolean => {

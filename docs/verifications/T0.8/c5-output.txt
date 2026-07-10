@@ -1,0 +1,26 @@
+=== CLAUSE 5: cancel a run in progress -> ALL non-terminal steps cancelled ===
+DAG N0(sleep 30s, will be running) -> N1 -> N2 (awaiting_deps). Cancel mid-flight.
+runId=01KX5FCJYJSBJPEDN9EDEF2BA8
+OK demo.sleep.N0=running (1s)
+--- BEFORE cancel: mixed non-terminal states (N0 running, N1/N2 awaiting_deps) ---
+   node_key    |    status     |             id             | supersedes_id 
+---------------+---------------+----------------------------+---------------
+ demo.sleep.N0 | running       | 01KX5FCJYEDJF73R6Z3NYJ81FY | 
+ demo.sleep.N1 | awaiting_deps | 01KX5FCJYGYVVJQY5C599ZKYCZ | 
+ demo.sleep.N2 | awaiting_deps | 01KX5FCJYHK12633FSR2F6FRKR | 
+(3 rows)
+
+--- CANCEL run ---
+{"ok":true,"cancelled":3}
+--- AFTER cancel: all steps ---
+   node_key    |  status   |             id             | supersedes_id 
+---------------+-----------+----------------------------+---------------
+ demo.sleep.N0 | cancelled | 01KX5FCJYEDJF73R6Z3NYJ81FY | 
+ demo.sleep.N1 | cancelled | 01KX5FCJYGYVVJQY5C599ZKYCZ | 
+ demo.sleep.N2 | cancelled | 01KX5FCJYHK12633FSR2F6FRKR | 
+(3 rows)
+
+--- states by count ---
+cancelled|3
+--- CRITICAL non-terminal count (must be 0) ---
+nonterminal=0

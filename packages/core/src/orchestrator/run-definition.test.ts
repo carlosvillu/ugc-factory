@@ -2,7 +2,7 @@
 // estructural. Sin BD — es lógica pura (unit-core.md).
 import { describe, expect, it } from 'vitest';
 import { initialStatus, validateDag } from './run-definition';
-import type { RunDefinition } from './run-definition';
+import type { RunDefinitionInput } from './run-definition';
 
 describe('initialStatus', () => {
   it('root (sin deps) ⇒ pending', () => {
@@ -16,7 +16,10 @@ describe('initialStatus', () => {
 });
 
 describe('validateDag', () => {
-  const base = (nodes: RunDefinition['nodes']): RunDefinition => ({ projectId: 'p', nodes });
+  const base = (nodes: RunDefinitionInput['nodes']): RunDefinitionInput => ({
+    projectId: 'p',
+    nodes,
+  });
 
   it('cadena válida N0→N1→N2 ⇒ null', () => {
     expect(

@@ -1,0 +1,27 @@
+=== CLAUSE 3 (clean, registered executors): N0 -> N1(checkpoint) -> N2 ; closure={N2} ===
+runId=01KX5FB4BEHA60SNXSASG03BMQ
+OK demo.sleep.N1=waiting_approval (2s)
+N1(checkpoint)=01KX5FB4BCX2XH2WDX9Z4WSA4R  OLD_N2=01KX5FB4BDSEVKETEEWY5NDE1Y
+--- edit with distinct payload ---
+{"ok":true}
+OK demo.sleep.N2=succeeded (2s)
+--- AFTER edit: step table (old N2 superseded, new N2 succeeded w/ supersedes_id) ---
+   node_key    |   status   |             id             |       supersedes_id        
+---------------+------------+----------------------------+----------------------------
+ demo.sleep.N0 | succeeded  | 01KX5FB4BB1TKXKSHX9XFYBPRC | 
+ demo.sleep.N1 | succeeded  | 01KX5FB4BCX2XH2WDX9Z4WSA4R | 
+ demo.sleep.N2 | superseded | 01KX5FB4BDSEVKETEEWY5NDE1Y | 
+ demo.sleep.N2 | succeeded  | 01KX5FB5XS43APDP99X3EX28SV | 01KX5FB4BDSEVKETEEWY5NDE1Y
+(4 rows)
+
+--- run completes? states ---
+succeeded|3
+superseded|1
+--- old N2 status ---
+superseded
+--- audit_log edit row ---
+ actor | action |  entity  |         entity_id          |                               diff                               
+-------+--------+----------+----------------------------+------------------------------------------------------------------
+ user  | edit   | step_run | 01KX5FB4BCX2XH2WDX9Z4WSA4R | {"ai": null, "edited": {"clean": true, "edited_by": "verifier"}}
+(1 row)
+

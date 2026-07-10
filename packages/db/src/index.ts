@@ -33,6 +33,10 @@ export { ensureQueue } from './adapters/ensure-queue';
 // (T0.7b) para obtener `config`/retry counters tras arrancar el step. La
 // revalidación bajo lock la hace `transition()`; esto solo lee datos.
 export { findStep } from './repos/steps.repo';
+// Lectura simple del `autopilot` del run (T0.8): la usa el consumer genérico del
+// worker para decidir si un checkpoint pausa (`shouldPause`). Inmutable tras la
+// creación del run ⇒ sin lock.
+export { findRunAutopilot } from './repos/runs.repo';
 // Auth single-user (T0.4): lectura/seed idempotente del hash de password en
 // `app_setting`. Los consume web (route de login + seeding en instrumentation).
 export { getPasswordHash, seedPasswordHashIfAbsent } from './repos/auth.repo';

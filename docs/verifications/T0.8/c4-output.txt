@@ -1,0 +1,16 @@
+=== CLAUSE 4: skip a skippable node with a dependent, run must COMPLETE ===
+DAG N0(sleep 8s) -> N1 -> N2. Skip N1 while awaiting_deps; N2 must advance via skipped-as-resolved-dep.
+runId=01KX5FBTG761EMZSA25CA8Q7TB
+--- N1 state before skip (expect awaiting_deps) ---
+N1=awaiting_deps
+--- SKIP N1 (id=01KX5FBTG48C3DZTHP52JSS3NX) ---
+{"ok":true}
+OK demo.sleep.N1=skipped (1s)
+--- now wait for N0 to finish and run to complete (all terminal) ---
+OK demo.sleep.N0=succeeded (7s)
+OK demo.sleep.N2=succeeded (1s)
+--- CLAUSE 4 final states (CRITICAL: nothing stranded in awaiting_deps) ---
+succeeded|2
+skipped|1
+--- non-terminal count (must be 0 = run completed) ---
+nonterminal=0

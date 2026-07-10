@@ -1,0 +1,17 @@
+=== CLAUSE 3: edit + subgraph invalidation + audit_log ===
+DAG: N0 -> N1(checkpoint) -> N2 -> N3  (downstream closure of N1 = {N2,N3})
+runId=01KX5F8ZYQA3MKCE7WJ91Z3HP6
+OK demo.sleep.N1=waiting_approval (2s)
+--- BEFORE edit: full step table ---
+   node_key    |      status      |             id             | supersedes_id 
+---------------+------------------+----------------------------+---------------
+ demo.sleep.N0 | succeeded        | 01KX5F8ZYKZ5EPV9NNMM374E9S | 
+ demo.sleep.N1 | waiting_approval | 01KX5F8ZYMYQBBB6R8H5EZWXY1 | 
+ demo.sleep.N2 | awaiting_deps    | 01KX5F8ZYNEDY0K0GM9VFP9YHQ | 
+ demo.sleep.N3 | awaiting_deps    | 01KX5F8ZYPXTZE13E1QPFR1GZN | 
+(4 rows)
+
+checkpoint(N1)=01KX5F8ZYMYQBBB6R8H5EZWXY1  OLD_N2=01KX5F8ZYNEDY0K0GM9VFP9YHQ  OLD_N3=01KX5F8ZYPXTZE13E1QPFR1GZN
+
+--- EDIT N1 with a DISTINCT edited payload ---
+{"ok":true}

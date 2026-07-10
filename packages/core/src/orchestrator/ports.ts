@@ -43,6 +43,13 @@ export interface StepRow {
   // executor. `null` si el nodo no tiene parámetros. Shape opaco para core: lo
   // interpreta cada executor.
   config: unknown;
+  // §7.1.b (T0.8): banderas de checkpoint. Al superseder un sub-grafo, la fila
+  // nueva copia estas del step original para re-ejecutar idéntico.
+  isCheckpoint: boolean;
+  checkpointConfig: unknown;
+  // Artefactos de salida del step (`output_refs`, jsonb). El diff de auditoría
+  // (§19.1) compara el output_refs de la IA (el original) contra el editado.
+  outputRefs: unknown;
 }
 
 /**
@@ -61,6 +68,12 @@ export interface StepPatch {
   status: StepStatus;
   startedAt?: Date;
   finishedAt?: Date | null;
+  /**
+   * `output_refs` editado (T0.8): un `edit` en checkpoint reemplaza los artefactos
+   * de la IA por los del usuario. `undefined` = no tocar; cualquier valor
+   * (incluido `null`) se escribe. Solo el path de edición lo usa.
+   */
+  outputRefs?: unknown;
   /**
    * Incremento ATÓMICO de `retry_count` (T0.7b). El consumer, tras un fallo de
    * executor y bajo el lock de la fila, decide reintentar (failed→queued vía
@@ -108,10 +121,78 @@ export interface StepStore {
    */
   findDependents(stepId: string): Promise<StepRow[]>;
   /**
-   * Para cada id, ¿está el step en `succeeded`? Resuelve si las OTRAS deps de un
-   * dependiente ya están satisfechas antes de promoverlo a `pending`.
+   * Para cada id, ¿está el step RESUELTO (dep satisfecha)? Una dep se satisface con
+   * `succeeded` O con `skipped` (T0.8): un nodo saltado cuenta como dep cumplida a
+   * efectos de habilitar a sus dependientes — si no, un dependiente de un nodo
+   * skippeado quedaría varado en `awaiting_deps` para siempre y el run no
+   * completaría. Devuelve un mapa id→bool; ids ausentes ⇒ false.
    */
-  succeededStatus(ids: string[]): Promise<Record<string, boolean>>;
+  resolvedStatus(ids: string[]): Promise<Record<string, boolean>>;
+  /**
+   * Bloquea `{stepId} ∪ (cierre transitivo aguas abajo)` en UNA query, `FOR UPDATE`
+   * en orden por id (T0.8). Es la adquisición de locks de `editStep` ANTES de
+   * cualquier transición: lockear E junto a su cierre en orden de id monótono evita
+   * el deadlock 40P01 con `cancelRun` (que lockea el run entero por id). Incluye a
+   * `stepId`.
+   */
+  findStepAndClosureForUpdate(stepId: string): Promise<StepRow[]>;
+  /**
+   * Todos los steps NO-terminales del run `runId` (T0.8, cancel): los que admiten
+   * `cancel` (awaiting_deps/pending/queued/submitting/running/waiting_approval/
+   * failed). LOCKEADOS con `FOR UPDATE` en orden por id. Es el barrido que `cancelRun`
+   * aplica para detener un run entero de forma atómica.
+   */
+  findCancellableByRun(runId: string): Promise<StepRow[]>;
+  /**
+   * Invalidación (§7.1.c): inserta una fila NUEVA de step_run que SUPERSEDE a otra.
+   * `supersedesId` apunta a la fila anterior; JAMÁS se resetea la antigua (eso lo
+   * hace el evento `supersede` por separado). Devuelve el id de la nueva fila.
+   */
+  insertSuperseding(row: NewSupersedingStepRow): Promise<void>;
+}
+
+/**
+ * Fila nueva creada por la invalidación de sub-grafo (T0.8). Mismo `node_key` que
+ * la anterior, `supersedesId` apuntando a ella, `dependsOn` YA remapeado a los
+ * nuevos ids del sub-grafo (o a los ids originales para deps fuera del cierre), y
+ * el estado inicial recalculado (`pending` si todas sus deps ya están resueltas,
+ * `awaiting_deps` si no). Copia `config`/`isCheckpoint`/`checkpointConfig` del
+ * step original para que la re-ejecución sea idéntica.
+ */
+export interface NewSupersedingStepRow {
+  id: string;
+  runId: string;
+  nodeKey: string;
+  status: StepStatus; // 'pending' | 'awaiting_deps'
+  dependsOn: string[];
+  supersedesId: string;
+  config: unknown;
+  isCheckpoint: boolean;
+  checkpointConfig: unknown;
+}
+
+/**
+ * Lo que la invalidación / los endpoints de checkpoint escriben en `audit_log`
+ * (§19.1): el diff artefacto-IA vs artefacto-editado en cada edit/approve/reject.
+ * Tx-scoped como el resto de stores: la fila de auditoría se escribe en la MISMA
+ * transacción que la transición, o no se escribe (rollback).
+ */
+export interface AuditEntry {
+  /** Quién actuó. Mono-usuario ⇒ valor fijo (`'user'`). */
+  actor: string;
+  /** Qué acción (`edit` | `approve` | `reject`). */
+  action: string;
+  /** Entidad afectada (`'step_run'`). */
+  entity: string;
+  /** Id de la entidad (el step). */
+  entityId: string;
+  /** Diff en JSONB: el antes (output_refs de la IA) vs el después (editado). */
+  diff: unknown;
+}
+
+/** Writer de `audit_log` (§19.1): primer writer de la tabla (T0.8). */
+export interface AuditStore {
+  write(entry: AuditEntry): Promise<void>;
 }
 
 /**
@@ -135,6 +216,8 @@ export interface TxStores {
   jobs: JobQueue;
   events: RunNotifier;
   runs: RunStore;
+  /** Writer de audit_log (§19.1, T0.8): diff artefacto-IA vs editado en checkpoints. */
+  audit: AuditStore;
 }
 
 /**
@@ -146,6 +229,9 @@ export interface TxStores {
 export interface NewRunRow {
   id: string;
   projectId: string;
+  // §7.1.b (T0.8): el run arranca en autopilot (sin pausas en checkpoints salvo
+  // override per-nodo). Default false. La define `POST /api/runs`.
+  autopilot: boolean;
 }
 export interface NewStepRow {
   id: string;
@@ -154,6 +240,9 @@ export interface NewStepRow {
   status: StepStatus; // 'pending' (root) | 'awaiting_deps' (dependiente)
   dependsOn: string[]; // ULIDs de los steps de los que depende (ya resueltos)
   config: unknown; // parámetros del executor (step_run.config), o null
+  // §7.1.b (T0.8): banderas de checkpoint tomadas de la definición del DAG.
+  isCheckpoint: boolean;
+  checkpointConfig: unknown;
 }
 
 /**

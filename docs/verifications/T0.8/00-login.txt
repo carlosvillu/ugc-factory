@@ -1,0 +1,10 @@
+HTTP/1.1 200 OK
+vary: rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch
+content-type: application/json
+set-cookie: ugc_session=<REDACTED>; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=2592000
+Date: Fri, 10 Jul 2026 07:33:04 GMT
+Connection: keep-alive
+Keep-Alive: timeout=5
+Transfer-Encoding: chunked
+
+{"ok":true}

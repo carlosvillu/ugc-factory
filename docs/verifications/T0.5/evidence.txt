@@ -1,0 +1,86 @@
+SRC_HASH (system sha256sum of input)  = 51365c2c1bd994309862f3ed438c62eaf591b0d26b2c32202332a7d0bbb06f6d
+
+=== CLAUSE 1a: file physically in storage root (real ls/stat, not a log) ===
+-rw-r--r--  1 carlosvillu  staff  7777 10 jul 08:10 /var/folders/qc/t8rlm6jd03v2j58mynvkgrz00000gn/T/ugc-e2e-assets-jF7r0i/verifier/01KX5AC81R24CS1MAKWCZ1JGCA.mp4
+DISK_HASH  = 51365c2c1bd994309862f3ed438c62eaf591b0d26b2c32202332a7d0bbb06f6d
+DISK_BYTES = 7777
+
+=== CLAUSE 1b: row in table asset (real psql, not a log) ===
+(eval):21: command not found: psql
+(eval):22: command not found: psql
+DB_MIME= DB_BYTES= DB_CHECKSUM=
+=== CLAUSE 1b: table asset exists + the row (real psql inside container) ===
+                          Table "public.asset"
+   Column    |           Type           | Collation | Nullable | Default 
+-------------+--------------------------+-----------+----------+---------
+ id          | text                     |           | not null | 
+ kind        | asset_kind               |           | not null | 
+ storage_key | text                     |           | not null | 
+ mime        | text                     |           | not null | 
+ bytes       | integer                  |           | not null | 
+ checksum    | text                     |           | not null | 
+ created_at  | timestamp with time zone |           | not null | now()
+ updated_at  | timestamp with time zone |           | not null | now()
+Indexes:
+    "asset_pkey" PRIMARY KEY, btree (id)
+
+-[ RECORD 1 ]-----------------------------------------------------------------
+id          | 01KX5AC81YAYSVA21N0S09EWZE
+kind        | final_video
+storage_key | verifier/01KX5AC81R24CS1MAKWCZ1JGCA.mp4
+mime        | video/mp4
+bytes       | 7777
+checksum    | 51365c2c1bd994309862f3ed438c62eaf591b0d26b2c32202332a7d0bbb06f6d
+
+=== login (seeded password e2e-password) ===
+HTTP/1.1 200 OK
+set-cookie: ugc_session=1786255886801.LSMsWoe8dzWu6sS0klMYEDIidWU_pdAivh1E7U8KS9w; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=2592000
+cookie captured: ugc_session=1786255886...(redacted)
+
+=== CLAUSE 2: authed download → 200 + headers coherent w/ row + checksum ===
+--- response headers ---
+HTTP/1.1 200 OK
+vary: rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch
+cache-control: private, no-store
+content-disposition: attachment; filename="01KX5AC81YAYSVA21N0S09EWZE"
+content-length: 7777
+content-type: video/mp4
+Date: Fri, 10 Jul 2026 06:11:28 GMT
+Connection: keep-alive
+Keep-Alive: timeout=5
+
+DOWNLOADED_HASH  = 51365c2c1bd994309862f3ed438c62eaf591b0d26b2c32202332a7d0bbb06f6d
+DOWNLOADED_BYTES = 7777
+SRC_HASH         = 51365c2c1bd994309862f3ed438c62eaf591b0d26b2c32202332a7d0bbb06f6d
+CHECKSUM MATCH: YES (4-way: src=disk=db=download)
+
+=== CLAUSE 3: anon (no cookie) on a VALID id → 401, no storage path leak ===
+--- anon response headers ---
+HTTP/1.1 401 Unauthorized
+vary: rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch
+content-type: application/json
+Date: Fri, 10 Jul 2026 06:11:28 GMT
+Connection: keep-alive
+Keep-Alive: timeout=5
+Transfer-Encoding: chunked
+
+--- anon body ---
+{"code":"unauthorized","message":"sesión requerida"}
+leak check (storage_key 'verifier/01KX5AC81R24CS1MAKWCZ1JGCA.mp4' or ASSETS_DIR in headers+body?):
+  NO LEAK (neither storage_key nor storage root appear)
+=== byte-identical diff: input vs downloaded ===
+cmp: files are byte-identical
+=== next dev server log tail (any errors during requests?) ===
+▲ Next.js 16.2.10 (Turbopack)
+- Local:         http://localhost:3100
+- Network:       http://192.168.1.143:3100
+✓ Ready in 369ms
+{"level":30,"time":1783663705402,"pid":15054,"hostname":"MacBook-Pro-de-Carlos.local","name":"web","phase":"startup","msg":"running startup migrations"}
+{"level":30,"time":1783663705483,"pid":15054,"hostname":"MacBook-Pro-de-Carlos.local","name":"web","phase":"startup","msg":"startup migrations applied"}
+{"level":30,"time":1783663705545,"pid":15054,"hostname":"MacBook-Pro-de-Carlos.local","name":"web","phase":"startup","seeded":true,"msg":"auth.password_hash sembrado (first boot)"}
+
+{"level":30,"time":1783663737603,"pid":15054,"hostname":"MacBook-Pro-de-Carlos.local","name":"web","request_id":"247a5dae-9c9d-46cc-bf5b-0ae3f1d1eb34","route":"/api/health","health":{"ok":true,"db":true},"msg":"health check"}
+ GET /api/health 200 in 269ms (next.js: 226ms, application-code: 44ms)
+ POST /api/login 200 in 162ms (next.js: 53ms, application-code: 109ms)
+ GET /api/assets/01KX5AC81YAYSVA21N0S09EWZE/download 200 in 1015ms (next.js: 989ms, application-code: 26ms)
+ GET /api/assets/01KX5AC81YAYSVA21N0S09EWZE/download 401 in 7ms (next.js: 4ms, application-code: 3ms)

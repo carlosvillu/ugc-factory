@@ -3,7 +3,7 @@
 // factory y no cincuenta tests. Crece tarea a tarea (makeBrief, makeVariant… con
 // sus tablas).
 import { newUlid } from '@ugc/core/contracts';
-import type { NewPipelineRun, NewProject, NewStepRun } from '@ugc/db';
+import type { NewAsset, NewPipelineRun, NewProject, NewStepRun } from '@ugc/db';
 
 export function makeProject(overrides: Partial<NewProject> = {}): NewProject {
   return {
@@ -42,6 +42,25 @@ export function makeStepRun(
     nodeKey: 'N0',
     status: 'pending',
     dependsOn: [],
+    ...overrides,
+  };
+}
+
+/**
+ * Fila válida de `asset` con overrides (T0.5). `id` se genera aquí (ULID) para que
+ * el test/seed pueda referenciarlo (p. ej. como storage_key) antes del INSERT. Los
+ * valores por defecto describen un asset trivial; el test real que sube un fichero
+ * sobrescribe `bytes`/`checksum` con lo que devuelve `StorageAdapter.put`.
+ */
+export function makeAsset(overrides: Partial<NewAsset> = {}): NewAsset {
+  const id = overrides.id ?? newUlid();
+  return {
+    id,
+    kind: 'other',
+    storageKey: `${id}.bin`,
+    mime: 'application/octet-stream',
+    bytes: 0,
+    checksum: '',
     ...overrides,
   };
 }

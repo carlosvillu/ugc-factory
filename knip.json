@@ -1,7 +1,8 @@
 {
   "$schema": "https://unpkg.com/knip@6/schema.json",
-  // espejo verbatim del DS de Claude Design: no es código del grafo de imports
-  "ignore": ["docs/design-system/**"],
+  // espejo verbatim del DS de Claude Design + evidencia de cierre de tareas (incl.
+  // scripts .ts del verifier): artefactos, no código del grafo de imports
+  "ignore": ["docs/design-system/**", "docs/verifications/**"],
   "workspaces": {
     ".": {},
     "apps/web": {
@@ -18,9 +19,10 @@
       // pg no se importa directo (es transitiva de @ugc/db); se declara para que
       // el bundler de next lo EXTERNALICE del server bundle en vez de inlinear un
       // módulo CJS (rompe con "Dynamic require"). Mismo motivo que pino en worker.
-      // tsx: lo invoca el webServer del stack E2E como binario (`pnpm exec tsx
-      // scripts/e2e-stack.ts`), un string que knip no rastrea.
-      "ignoreDependencies": ["pg", "tsx"]
+      // tsx ya NO se ignora: el script `smoke:assets` lo invoca en package.json y
+      // knip lo detecta como dependency usada (el webServer E2E lo usa además vía
+      // `pnpm exec tsx scripts/e2e-stack.ts`).
+      "ignoreDependencies": ["pg"]
     },
     "apps/worker": {
       // pino y pg no se importan directo (pino vía @ugc/core; pg vía @ugc/db),

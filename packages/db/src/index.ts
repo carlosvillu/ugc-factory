@@ -36,3 +36,13 @@ export { findStep } from './repos/steps.repo';
 // Auth single-user (T0.4): lectura/seed idempotente del hash de password en
 // `app_setting`. Los consume web (route de login + seeding en instrumentation).
 export { getPasswordHash, seedPasswordHashIfAbsent } from './repos/auth.repo';
+// Storage local (T0.5): implementación filesystem del puerto StorageAdapter de
+// core. La cablean el accessor lazy de web (getStorage) y el bootstrap del worker.
+// `LocalStorageOptions` no sale al barrel: los callers pasan `{ root }` inline
+// (knip veta el type export sin consumidor).
+export { makeLocalStorageAdapter } from './adapters/local-storage';
+// Repo del agregado `asset` (T0.5): create/get tipados. Los consume el endpoint de
+// download (web) y el smoke/seed de assets. `NewAsset` lo consume la factory
+// makeAsset de test-utils; `Asset` no se importa por nombre (se infiere).
+export { createAsset, getAsset } from './repos/asset.repo';
+export type { NewAsset } from './schema/generation';

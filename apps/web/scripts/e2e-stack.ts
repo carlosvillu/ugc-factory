@@ -12,7 +12,9 @@
 // Si algo falla: exit != 0 y Playwright aborta mostrando el log (stdio 'inherit').
 import { spawn, type ChildProcess } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { writeFileSync } from 'node:fs';
+import { mkdtempSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
 import { startPostgresContainer, createTestDatabase } from '@ugc/test-utils';
 
 const PORT = 3100;
@@ -36,11 +38,22 @@ const { connectionString } = await createTestDatabase({
 const migrationsDir = fileURLToPath(new URL('../../../packages/db/drizzle', import.meta.url));
 const nextBin = fileURLToPath(new URL('../node_modules/.bin/next', import.meta.url));
 
+// Raíz de assets del StorageAdapter (T0.5): un tmpdir fresco, SIEMPRE fijado por el
+// stack (no heredado del shell — el default de prod `/data/assets` no existe/no es
+// escribible en dev). El spec de download escribe su asset aquí (mismo dir que lee
+// web) e inserta la fila en la BD del stack. Se publica en .runtime.json.
+const assetsDir = mkdtempSync(path.join(tmpdir(), 'ugc-e2e-assets-'));
+
 const env: NodeJS.ProcessEnv = {
   ...process.env,
   PORT: String(PORT),
   DATABASE_URL: connectionString,
   UGC_DB_MIGRATIONS_DIR: migrationsDir,
+  // StorageAdapter local (T0.5): web sirve /api/assets/:id/download desde aquí.
+  // Fijado incondicionalmente (no `?? process.env.ASSETS_DIR`): un shell limpio
+  // (`env -u ASSETS_DIR`) debe pasar igual — el fix no puede depender del entorno
+  // del que lanza la suite.
+  ASSETS_DIR: assetsDir,
   // Fail-fast de boot (T0.4): APP_MASTER_KEY firma las sesiones; sin ella web
   // revienta en instrumentation.register. Valor de test (no es un secreto).
   APP_MASTER_KEY: process.env.APP_MASTER_KEY ?? 'e2e-app-master-key-not-a-secret',
@@ -59,7 +72,7 @@ const env: NodeJS.ProcessEnv = {
 // Los specs corren en OTRO proceso: publica el runtime en un fichero conocido.
 writeFileSync(
   fileURLToPath(new URL('../e2e/.runtime.json', import.meta.url)),
-  JSON.stringify({ databaseUrl: connectionString }),
+  JSON.stringify({ databaseUrl: connectionString, assetsDir }),
 );
 
 const web: ChildProcess = spawn(nextBin, ['dev', '--port', String(PORT)], {

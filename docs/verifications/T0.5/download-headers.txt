@@ -1,0 +1,10 @@
+HTTP/1.1 200 OK
+vary: rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch
+cache-control: private, no-store
+content-disposition: attachment; filename="01KX5AC81YAYSVA21N0S09EWZE"
+content-length: 7777
+content-type: video/mp4
+Date: Fri, 10 Jul 2026 06:11:28 GMT
+Connection: keep-alive
+Keep-Alive: timeout=5
+

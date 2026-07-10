@@ -16,7 +16,7 @@ export { server, useHttpMocks } from './msw/index';
 // withDatabaseName, TEMPLATE_DB, DrizzleDb) las usan global-setup.ts y
 // create-test-database.ts vía imports relativos — no van al barrel.
 export { createTestDatabase, type TestDatabase } from './create-test-database';
-export { makeProject, makePipelineRun, makeStepRun } from './factories';
+export { makeProject, makePipelineRun, makeStepRun, makeAsset } from './factories';
 // Arranque del contenedor Postgres + template migrada, para scripts FUERA de
 // vitest (el webServer del stack E2E, e2e.md §2): un run de vitest lo hace el
 // globalSetup, pero el stack script de Playwright es un proceso normal y necesita

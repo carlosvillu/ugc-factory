@@ -62,7 +62,7 @@ El corazón de esta fase es el **orquestador** (§9.0): la máquina de estados t
 - **Playwright permanente**: esta tarea activa el harness (`apps/web/playwright.config.ts` + stack E2E) y deja `apps/web/e2e/auth.spec.ts` (redirect sin sesión, error/rate-limit, login y sesión tras reload) y `apps/web/e2e/design-system.spec.ts` (backfill de FD: `/design-system` abre y los switchers de tema/acento/densidad siguen operables) dentro de `pnpm test:e2e`.
 - **Verificación**: en navegador, acceder a `/` sin sesión redirige a login; password incorrecto 3 veces → rate limit visible; con password correcto se entra y la cookie sobrevive a un refresh.
 
-#### T0.5 · StorageAdapter local + download proxificado
+#### T0.5 · StorageAdapter local + download proxificado [x] 2026-07-10 — PASS, ver docs/verifications/T0.5/ (coste $0)
 - **Depende de**: T0.3, T0.4 *(la Verificación exige 401 sin sesión: usa el middleware de auth de T0.4, no un check ad-hoc)*
 - **Entrega**: interfaz `StorageAdapter` (put/get/stat/delete) con implementación filesystem (`/data/assets`), tabla `asset` (subset mínimo: id, kind, storage_key, mime, bytes, checksum) y endpoint `GET /api/assets/:id/download` (streaming, autenticado, nunca ruta cruda; §19.2).
 - **Playwright permanente**: `apps/web/e2e/assets-download.spec.ts` prepara un asset real, descarga el stream autenticado y verifica checksum; sin `storageState`, el mismo endpoint devuelve 401 sin exponer la ruta de storage.

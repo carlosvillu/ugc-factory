@@ -23,6 +23,7 @@ export default defineConfig(
     '**/test-results/**',
     '**/next-env.d.ts', // generado por next dev/build
     'docs/design-system/**', // espejo verbatim del DS de Claude Design (solo lectura, no es código nuestro)
+    'docs/verifications/**', // evidencia de cierre de tareas (incl. scripts .ts del verifier): artefactos, no código del proyecto ni en tsconfig
   ]),
 
   // ── 2. Base typed para TODO el código TS ─────────────────────────────────

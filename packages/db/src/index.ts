@@ -63,3 +63,10 @@ export { makeLocalStorageAdapter } from './adapters/local-storage';
 // makeAsset de test-utils; `Asset` no se importa por nombre (se infiere).
 export { createAsset, getAsset } from './repos/asset.repo';
 export type { NewAsset } from './schema/generation';
+// Ledger de gasto (T0.12): `recordCost` (efecto de escritura, lo llama el executor
+// de demo config-injectable y, en fases reales, cada nodo que gasta), el resumen
+// del panel /spend (`getSpendSummary`: totales por día/proveedor + presupuesto +
+// alerta over-limit) y el seed idempotente del presupuesto mensual (lo llama el
+// arranque de web desde BUDGET_MONTHLY_LIMIT_CENTS). `RecordCostInput`/`SpendSummary`
+// son los shapes públicos (los consumen el executor de demo y el route handler).
+export { recordCost, getSpendSummary, seedMonthlyBudgetIfAbsent } from './repos/spend.repo';

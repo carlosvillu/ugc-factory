@@ -1,7 +1,7 @@
 import { noopJob, stepExecuteJob } from '@ugc/core/jobs';
 import type { Logger } from '@ugc/core';
 import type { TransitionDeps } from '@ugc/core/orchestrator';
-import { createDbPool, ensureQueue, makeWithTransaction } from '@ugc/db';
+import { createDbPool, ensureQueue, makeWithTransaction, recordCost } from '@ugc/db';
 import { PgBoss } from 'pg-boss';
 import { type FailDecider, registerNoopConsumer } from './consumers/demo-noop';
 import { registerStepConsumer } from './consumers/step-execute';
@@ -72,6 +72,10 @@ export async function createBoss(deps: CreateBossDeps): Promise<PgBoss> {
     };
     const executors = makeExecutorRegistry({
       demoShouldFail: deps.demoShouldFail ?? randomDemoFail,
+      // Coste inyectado (T0.12): el executor de demo registra en `cost_entry` del
+      // pool de Drizzle del worker cuando su config lleva `costCents`. Sin refs
+      // (step/project): el ExecutorContext no las expone — quedan null en F0.
+      demoRecordCost: (input) => recordCost(db, input),
     });
     await registerStepConsumer({
       boss,

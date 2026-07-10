@@ -3,11 +3,13 @@
 // (una única implementación parametrizada por config); N1…N11 y N7a…N7e se añaden
 // por fase con sus tareas.
 import type { StepExecutor } from '@ugc/core/orchestrator';
-import { type DemoFailDecider, makeDemoExecutor } from './demo';
+import { type DemoCostRecorder, type DemoFailDecider, makeDemoExecutor } from './demo';
 
 export interface ExecutorRegistryDeps {
   /** Decisor de fallo de los executors de demo, resuelto por bootstrap. */
   demoShouldFail: DemoFailDecider;
+  /** Registrador de coste de los executors de demo (T0.12), cableado por createBoss. */
+  demoRecordCost: DemoCostRecorder;
 }
 
 /**
@@ -19,8 +21,9 @@ export interface ExecutorRegistryDeps {
  */
 export function makeExecutorRegistry({
   demoShouldFail,
+  demoRecordCost,
 }: ExecutorRegistryDeps): Record<string, StepExecutor> {
-  const demo = makeDemoExecutor({ shouldFail: demoShouldFail });
+  const demo = makeDemoExecutor({ shouldFail: demoShouldFail, recordCost: demoRecordCost });
   return {
     'demo.sleep': demo,
     'demo.fail': demo,

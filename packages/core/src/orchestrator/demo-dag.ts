@@ -32,6 +32,48 @@ export function demoRunDefinition(projectId: string, sleepMs = 0): RunDefinition
 }
 
 /**
+ * DAG de demo de COSTE (T0.12): un único nodo `demo.sleep.N0` que registra un cargo
+ * en `cost_entry` al terminar (su config lleva `costCents`/`costProvider`). Es el
+ * reachability gate del ledger de gasto: el verifier lanza N runs de éste con SUS
+ * importes elegidos y `/spend` los suma. Sin checkpoint ni fallo — succeeda y factura
+ * exactamente una vez.
+ *
+ * `costCents` en céntimos ENTEROS (coherente con el modelo de dinero del proyecto).
+ * `provider` etiqueta el proveedor (default 'other'). `quantity`/`unit` describen la
+ * facturación (opcionales, para el ledger por proveedor del panel).
+ */
+export function demoCostRunDefinition(
+  projectId: string,
+  opts: {
+    costCents: number;
+    provider?: 'fal' | 'anthropic' | 'firecrawl' | 'other';
+    quantity?: number;
+    unit?: string;
+    sleepMs?: number;
+  },
+): RunDefinitionInput {
+  const { costCents, provider = 'other', quantity, unit, sleepMs = 0 } = opts;
+  return {
+    projectId,
+    autopilot: true, // sin checkpoints: autopilot para que succeeda sin intervención
+    nodes: [
+      {
+        key: 'N0',
+        nodeKey: 'demo.sleep.N0',
+        dependsOn: [],
+        config: {
+          sleepMs,
+          costCents,
+          costProvider: provider,
+          costQuantity: quantity,
+          costUnit: unit,
+        },
+      },
+    ],
+  };
+}
+
+/**
  * DAG de demo CON CHECKPOINT (T0.8): la misma cadena N0→N1→N2, pero N1 es un
  * checkpoint. Al terminar el trabajo de N1, el step NO pasa a `succeeded` sino a
  * `waiting_approval` (pausa esperando aprobación), a menos que el run esté en

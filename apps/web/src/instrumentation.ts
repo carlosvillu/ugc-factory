@@ -38,7 +38,7 @@ export async function register(): Promise<void> {
   // Los cuatro módulos son independientes entre sí: se cargan en paralelo para no
   // serializar la resolución en el arranque.
   const [
-    { runMigrations, seedPasswordHashIfAbsent },
+    { runMigrations, seedPasswordHashIfAbsent, seedMonthlyBudgetIfAbsent },
     { getRootLogger },
     { getDb },
     { hashPassword },
@@ -76,5 +76,25 @@ export async function register(): Promise<void> {
       {},
       'AUTH_BOOTSTRAP_PASSWORD ausente: no se sembró password (login fallará hasta sembrarlo)',
     );
+  }
+
+  // Seed first-boot del presupuesto mensual (T0.12): `BUDGET_MONTHLY_LIMIT_CENTS`
+  // (céntimos enteros) siembra un `budget` scope=monthly SOLO si no existe ya uno
+  // (idempotente, JAMÁS sobrescribe — mismo criterio que el hash de password). Es
+  // el ÚNICO camino para fijar un presupuesto en F0 (el panel de settings es T7.7):
+  // así el verifier pone un límite POR DEBAJO del gasto y `/spend` dispara la alerta
+  // over-limit. Ausente ⇒ ningún presupuesto ⇒ /spend sin alerta (gasto sin límite).
+  const budgetRaw = process.env.BUDGET_MONTHLY_LIMIT_CENTS;
+  if (budgetRaw !== undefined) {
+    const limitCents = Number(budgetRaw);
+    if (Number.isInteger(limitCents) && limitCents >= 0) {
+      const b = await seedMonthlyBudgetIfAbsent(getDb(), limitCents);
+      log.info({ limitCents: b.limitCents }, 'budget mensual sembrado o ya existente (first boot)');
+    } else {
+      log.warn(
+        { budgetRaw },
+        'BUDGET_MONTHLY_LIMIT_CENTS inválido (no es un entero >= 0): no se sembró presupuesto',
+      );
+    }
   }
 }

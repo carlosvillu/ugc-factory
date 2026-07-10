@@ -543,13 +543,15 @@ experiment_rule    id, batch_id, metric, threshold, window_hours, action ENUM(ki
 
 ── Operación ─────────────────────────────────────────────────────────
 cost_entry         id, provider ENUM(fal|anthropic|firecrawl|other), step_run_id?, generation_id?,
-                   project_id?, amount_usd, quantity, unit, occurred_at
-budget             id, scope ENUM(monthly|batch), limit_usd, alert_thresholds int[]
+                   project_id?, amount_cents, quantity, unit, occurred_at
+budget             id, scope ENUM(monthly|batch), limit_cents, alert_thresholds int[]
 app_setting        key, value jsonb   (API keys cifradas, defaults, umbrales kill/scale)
 audit_log          id, actor, action, entity, entity_id, diff jsonb, at
 ```
 
 Índices clave: `generation.fal_request_id` UNIQUE (idempotencia webhook); GIN sobre facetas de `prompt_template`; `metric_snapshot(publication_id, date)` UNIQUE; `asset.normalized_cache_key` (caché de render); `cost_entry(occurred_at)` para el panel de gasto.
+
+> Nota de implementación (T0.12, 2026-07-10): el dinero se persiste en **céntimos enteros** (`amount_cents`/`limit_cents`), no en `_usd` — coherente con las demás superficies de dinero del proyecto (`step_run.cost_*`, contrato SSE) y para garantizar la suma exacta (float rompería el equality). Sub-céntimo (costes reales de APIs) diferido a F4, cuando se revisite el tipo de columna.
 
 ---
 

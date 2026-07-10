@@ -1,0 +1,34 @@
+=== cost_entry (mis 3 importes elegidos) ===
+ provider  | amount_cents |          occurred_at          
+-----------+--------------+-------------------------------
+ fal       |          377 | 2026-07-10 14:02:45.566614+00
+ firecrawl |          842 | 2026-07-10 14:02:45.575165+00
+ anthropic |         1288 | 2026-07-10 14:02:45.572653+00
+(3 rows)
+
+=== total ===
+ total_cents 
+-------------
+        2507
+(1 row)
+
+=== por proveedor (orden gasto desc, como /spend) ===
+ provider  | cents 
+-----------+-------
+ anthropic |  1288
+ firecrawl |   842
+ fal       |   377
+(3 rows)
+
+=== por dia UTC ===
+    day     | cents 
+------------+-------
+ 2026-07-10 |  2507
+(1 row)
+
+=== budget (control final = 3000) ===
+  scope  | limit_cents 
+---------+-------------
+ monthly |        3000
+(1 row)
+

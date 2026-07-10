@@ -54,6 +54,7 @@ export {
   demoRunDefinition,
   demoCheckpointRunDefinition,
   demoCanvasRunDefinition,
+  demoCostRunDefinition,
 } from './demo-dag';
 export {
   shouldPause,

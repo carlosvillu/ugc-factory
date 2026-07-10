@@ -87,11 +87,12 @@ export const statusLabel: Record<StepStatus, string> = {
   superseded: 'reemplazado',
 };
 
-// Formatea un coste en céntimos (entero) a "$X.XX". `null`/undefined ⇒ "—".
-export function formatCost(cents: number | null | undefined): string {
-  if (cents == null) return '—';
-  return `$${(cents / 100).toFixed(2)}`;
-}
+// `formatCost` vive en `@/lib/money` (formateador de dinero compartido web-wide); se
+// re-exporta aquí para no tocar los consumidores del canvas que ya lo importan de
+// `./status` (step-node, step-panel vía formatCostSplit, run-shell). El import además
+// lo trae al scope de este módulo para que `formatCostSplit` lo use.
+import { formatCost } from '@/lib/money';
+export { formatCost };
 
 // Coste observable del step: el REAL si ya se conoce, si no el ESTIMADO con prefijo
 // "est.". Compartido por la card del nodo y el panel (misma verdad en ambos).

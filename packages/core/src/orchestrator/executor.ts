@@ -37,6 +37,17 @@ export const DemoConfigSchema = z.strictObject({
   sleepMs: z.number().int().nonnegative().optional(),
   failRate: z.number().min(0).max(1).optional(),
   hang: z.boolean().optional(),
+  // Coste INYECTABLE (T0.12): si un step de demo lleva `costCents` en su config, el
+  // executor registra ese cargo en `cost_entry` al terminar con éxito (mismo patrón
+  // config-injectable que `failRate`/`sleepMs`). Es el reachability gate del ledger:
+  // el verifier lanza 3 runs de demo con SUS importes y `/spend` los suma. `costCents`
+  // en céntimos ENTEROS (coherente con el modelo de dinero del proyecto). `costProvider`
+  // etiqueta el proveedor (default 'other'); `costQuantity`/`costUnit` describen la
+  // facturación (opcionales). El coste se registra SOLO en el path de éxito.
+  costCents: z.number().int().nonnegative().optional(),
+  costProvider: z.enum(['fal', 'anthropic', 'firecrawl', 'other']).optional(),
+  costQuantity: z.number().int().nonnegative().optional(),
+  costUnit: z.string().optional(),
   // `timeout_ms` (T0.9): NO es un flag del executor de demo — es el override de
   // timeout que lee el orquestador (timeout.ts) para fijar `timeout_at`. Se
   // declara aquí (ignorado por el executor) para que un step de demo pueda llevar

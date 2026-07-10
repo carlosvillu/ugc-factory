@@ -1,0 +1,20 @@
+T0.12 — importes elegidos por el verifier (NO son fixtures del implementer)
+
+Fixtures del implementer (evitados): 250, 500, 99, 100, 4321, 1, 1000, 1234, 300, 600, 750, 599, 18640, 640
+
+Mis 3 runs de demo (nodeKey demo.sleep.N0, sleepMs:0):
+  Run 1: costProvider=fal        costCents=377
+  Run 2: costProvider=anthropic  costCents=1288
+  Run 3: costProvider=firecrawl  costCents=842
+
+Suma total esperada = 377 + 1288 + 842 = 2507 cents = $25.07
+
+Todos los runs caen en el mismo día UTC → la tabla por día debe tener 1 fila = $25.07.
+
+Presupuesto (alerta): BUDGET_MONTHLY_LIMIT_CENTS=2000 (=$20.00) < 2507 → alerta over-limit DEBE aparecer.
+Control (no alerta): límite 3000 (=$30.00) > 2507 → alerta NO debe aparecer.
+
+Desglose por proveedor esperado en /spend (orden por gasto desc):
+  Anthropic  $12.88
+  Firecrawl  $8.42
+  fal.ai     $3.77

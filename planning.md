@@ -110,7 +110,7 @@ El corazón de esta fase es el **orquestador** (§9.0): la máquina de estados t
 - **Playwright permanente**: `apps/web/e2e/runs-canvas.spec.ts` cubre cambios de estado por SSE sin reload, visor de output/error, approve/edit/reject, retry, skip, cancel y autopilot con override; usa executors de demo deterministas y estados observables, no colores CSS.
 - **Verificación**: en el navegador, lanzar el run de demo y **ver los nodos cambiar de color en vivo**; aprobar el checkpoint desde el panel; provocar un fallo (`fail_rate=1`) y ver el error en el visor de logs del nodo; retry con éxito; cancelar otro run en curso desde el botón; activar el toggle autopilot desde la cabecera y ver un run completar sin pausas (con el candado "parar siempre aquí" respetado); skip de un nodo skippable desde el panel — todo operado desde la UI, no vía API.
 
-#### T0.12 · Ledger de gasto (esqueleto)
+#### T0.12 · Ledger de gasto (esqueleto) [x] 2026-07-10 — PASS, ver docs/verifications/T0.12/ (coste $0)
 - **Depende de**: T0.7b
 - **Entrega**: tablas `cost_entry` y `budget`; helper `recordCost()`; página `/spend` v1 con totales por día/proveedor y alerta in-app al superar el presupuesto. (El panel completo — vistas por proyecto/lote/tier, freno, email — llega en T7.7.)
 - **Mockup**: `docs/mockups/spend.html` (variante 8a · presupuesto + ledger por proveedor). El layout parte de ese mockup; el reviewer rechaza una página que se desvíe sin acuerdo (ver `.claude/skills/frontend`).

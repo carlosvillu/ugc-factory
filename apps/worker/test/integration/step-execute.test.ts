@@ -523,6 +523,56 @@ describe('consumer: éxito del executor + succeed que falla (FIX 1)', () => {
   });
 });
 
+describe('sweeper de timeouts (T0.9): expira un step COLGADO sin intervención', () => {
+  it('un demo.hang con timeout corto pasa a expired por el sweep del worker', async () => {
+    // El executor demo.hang NO retorna nunca → el step queda `running` con su
+    // `timeout_at` fijado en el `start` (now + config.timeout_ms). El setInterval
+    // del sweeper (arrancado por createBoss) lo detecta vencido y lo lleva a
+    // `expired` — la propiedad end-to-end de la Verificación de T0.9 (expired sin
+    // intervención), aquí como regresión permanente con un timeout muy corto.
+    await startWorker();
+    const { deps, cleanup } = await makeDeps();
+    try {
+      const projectId = await seedProject();
+      const { runId } = await createRun(deps, {
+        projectId,
+        // timeout_ms corto (500 ms) para no esperar el default del mapa; el sweep
+        // corre cada 5 s (DEFAULT_SWEEP_INTERVAL_MS) → expira en la primera pasada
+        // tras el vencimiento.
+        nodes: [
+          {
+            key: 'H',
+            nodeKey: 'demo.hang',
+            dependsOn: [],
+            config: { hang: true, timeout_ms: 500 },
+          },
+        ],
+      });
+
+      // Primero llega a running (el executor se cuelga).
+      await waitFor(
+        async () => (await fetchSteps(runId))[0]?.status === 'running',
+        15_000,
+        'el step colgado llega a running',
+        100,
+      );
+      // Y el sweeper lo expira sin que nadie intervenga.
+      await waitFor(
+        async () => (await fetchSteps(runId))[0]?.status === 'expired',
+        20_000,
+        'el sweeper lleva el step colgado a expired',
+        200,
+      );
+
+      const [s] = await fetchSteps(runId);
+      expect(s!.status).toBe('expired');
+      expect(s!.finishedAt).not.toBeNull(); // expired es terminal
+    } finally {
+      await cleanup();
+    }
+  });
+});
+
 async function stopBossAndWait(instance: PgBoss): Promise<void> {
   const stopped = new Promise<void>((resolve) => {
     instance.once('stopped', () => {

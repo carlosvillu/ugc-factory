@@ -93,9 +93,9 @@ El corazón de esta fase es el **orquestador** (§9.0): la máquina de estados t
 - **Entrega**: soporte `is_checkpoint` (estado `waiting_approval`), endpoints `approve/edit/reject` + `POST /api/steps/:id/skip` y `POST /api/runs/:id/cancel` (transiciones `skipped`/`cancelled`), invalidación de sub-grafo con `supersedes_id` (nunca reset de filas), flag `autopilot` con override por nodo, y **escritura en `audit_log` del diff artefacto-IA vs artefacto-editado** en cada edit/approve/reject (§19.1).
 - **Verificación**: run de demo con checkpoint → se pausa; `approve` reanuda; `edit` crea nueva fila del step aguas abajo con `supersedes_id` (la antigua queda `superseded`) y el diff aparece en `audit_log` (query); `skip` sobre un nodo skippable lo salta y el run completa; `cancel` detiene un run en curso; con `autopilot=true` no hay pausas y el override "parar siempre aquí" gana.
 
-#### T0.9 · Timeouts, retries y cron de barrido
+#### T0.9 · Timeouts, retries y cron de barrido [x] 2026-07-10 — PASS, ver docs/verifications/T0.9/ (coste $0)
 - **Depende de**: T0.7b
-- **Entrega**: `timeout_at` por step (por tipo de nodo), cron pg-boss que expira steps colgados (`expired`), retry manual (`POST /api/steps/:id/retry`) y automático hasta `max_retries`.
+- **Entrega**: `timeout_at` por step (por tipo de nodo), ~~cron pg-boss~~ **barrido por `setInterval` en el worker (5 s)** que expira steps colgados (`expired`), retry manual (`POST /api/steps/:id/retry`) y automático hasta `max_retries`. *(Desviación deliberada del literal "cron pg-boss" — regla 6, 2026-07-10: el cron de pg-boss tiene precisión de minuto (schedules evaluadas cada ~30 s) y no cumpliría el `<40 s` de la Verificación con timeout de 10 s; el barrido va como timer del worker. Mismo gate que pg-boss: solo corre con BD alcanzable, se limpia en `boss.stop`.)*
 - **Verificación**: un executor de demo con `hang=true` y timeout de 10 s → el step pasa a `expired` en <40 s sin intervención; `retry` sobre un step con `fail_rate=1` forzado a 0 lo re-ejecuta y completa.
 
 #### T0.10 · SSE sobre LISTEN/NOTIFY

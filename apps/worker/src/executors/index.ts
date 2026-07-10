@@ -24,6 +24,10 @@ export function makeExecutorRegistry({
   return {
     'demo.sleep': demo,
     'demo.fail': demo,
+    // `demo.hang` (T0.9): el executor no retorna nunca (espera al abort) — es el
+    // andamiaje que la Verificación del sweeper necesita para provocar un step
+    // colgado en `running` que `timeout_at` + el sweep llevan a `expired`.
+    'demo.hang': demo,
     // node_keys del DAG de demo (demo-dag.ts): distintos por nodo para que el
     // singletonKey `${runId}:${nodeKey}` no colisione dentro de un run. Los tres
     // usan el mismo executor (el comportamiento lo fija la config del step).

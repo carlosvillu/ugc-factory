@@ -94,6 +94,10 @@ export async function updateStep(db: Db, id: string, patch: StepPatch): Promise<
       // Date = escribirlo; null = poner la columna a NULL (retry). El guard
       // `!== undefined` deja pasar el null → Drizzle escribe NULL.
       ...(patch.finishedAt !== undefined && { finishedAt: patch.finishedAt }),
+      // `timeout_at` (T0.9): se fija en el `start` (queued→running). `undefined` =
+      // no tocar; un Date se escribe. El sweeper (claimExpirableSteps) lo compara
+      // contra now() de Postgres.
+      ...(patch.timeoutAt !== undefined && { timeoutAt: patch.timeoutAt }),
       // Incremento ATÓMICO de retry_count (T0.7b): `retry_count = retry_count + 1`
       // en el propio UPDATE, bajo el lock que ya tiene findForUpdate. No se lee en
       // JS ni se reescribe un valor concreto → cero ventana de lost-update. El
@@ -101,6 +105,14 @@ export async function updateStep(db: Db, id: string, patch: StepPatch): Promise<
       ...(patch.incrementRetryCount === true && {
         retryCount: sql<number>`${stepRun.retryCount} + 1`,
       }),
+      // Reset de retry_count a 0 (T0.9, retry MANUAL): un intento nuevo aunque los
+      // automáticos estuvieran agotados. Mutuamente excluyente con el incremento
+      // (el orquestador nunca fija ambos en el mismo patch).
+      ...(patch.resetRetryCount === true && { retryCount: 0 }),
+      // Patch de `config` (T0.9, retry manual): mergea/reemplaza la config antes de
+      // re-encolar (p. ej. fail_rate 1→0). undefined = no tocar; cualquier valor
+      // (incluido null) se escribe.
+      ...(patch.config !== undefined && { config: patch.config }),
       // `outputRefs` editado en un checkpoint (T0.8): `undefined` = no tocar;
       // cualquier otro valor (incluido null) se escribe. Mismo criterio que
       // finishedAt.
@@ -208,6 +220,38 @@ export async function findCancellableByRun(db: Db, runId: string): Promise<StepR
     .orderBy(stepRun.id)
     .for('update');
   return rows.map(toStepRow);
+}
+
+/**
+ * Ids de los steps COLGADOS que el sweeper debe expirar (T0.9, jobs.md §8):
+ * `status='running' AND timeout_at IS NOT NULL AND timeout_at < now()`.
+ *
+ * El filtro `status='running'` es LOAD-BEARING: un `waiting_approval` (checkpoint
+ * esperando decisión humana) conserva el `timeout_at` que fijó su `start` y NO
+ * debe expirar — solo se barren los `running`. La comparación usa el `now()` de
+ * Postgres (el mismo reloj que la BD, coherente con el `new Date()` que fijó
+ * `timeout_at` en el host self-hosted).
+ *
+ * Solo devuelve ids (no lockea): el lock real lo toma `transition('expire')` por
+ * fila vía `findForUpdate`. `ORDER BY id` da orden determinista de proceso — el
+ * caller aplica las transiciones en ese orden (previene deadlock 40P01, db.md §6).
+ * El índice parcial `step_run_sweep_idx` (sobre `timeout_at IS NOT NULL`) sirve
+ * esta query.
+ */
+export async function findExpiredRunningStepIds(db: Db, limit = 100): Promise<string[]> {
+  const rows = await db
+    .select({ id: stepRun.id })
+    .from(stepRun)
+    .where(
+      and(
+        eq(stepRun.status, 'running'),
+        sql`${stepRun.timeoutAt} IS NOT NULL`,
+        sql`${stepRun.timeoutAt} < now()`,
+      ),
+    )
+    .orderBy(stepRun.id)
+    .limit(limit);
+  return rows.map((r) => r.id);
 }
 
 /**

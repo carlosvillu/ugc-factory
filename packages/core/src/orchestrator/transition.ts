@@ -18,6 +18,7 @@
 import { stepExecuteJob } from '../jobs';
 import type { StepEvent, StepStatus } from './transitions';
 import { nextStatus } from './transitions';
+import { timeoutAtFor } from './timeout';
 import type { StepRow, StepStore, TxStores, WithTransaction } from './ports';
 
 /**
@@ -172,11 +173,19 @@ export async function applyTransition(
   if (to === null) throw new IllegalTransitionError(stepId, step.status, event);
 
   // 3) UPDATE del step + timestamps según la transición. El retry LIMPIA
-  //    finished_at (null explícito), el resto de terminales lo FIJAN.
+  //    finished_at (null explícito), el resto de terminales lo FIJAN. El `start`
+  //    (queued→running) fija además `timeout_at = now + timeoutFor(nodeKey,config)`
+  //    (T0.9): el reloj es el de la app (`new Date()`), coherente con el reloj del
+  //    host; el sweeper compara `timeout_at` contra el now() de Postgres (mismo
+  //    host en el despliegue self-hosted). El override `config.timeout_ms` gana
+  //    sobre el mapa por node_key (timeout.ts) — así la Verificación de T0.9
+  //    fuerza un timeout de 10 s vía la config del step de demo.
+  const now = new Date();
   await steps.update(stepId, {
     status: to,
-    ...(setsStartedAt(event) && { startedAt: new Date() }),
-    ...(setsFinishedAt(event) && { finishedAt: new Date() }),
+    ...(setsStartedAt(event) && { startedAt: now }),
+    ...(setsStartedAt(event) && { timeoutAt: timeoutAtFor(step.nodeKey, step.config, now) }),
+    ...(setsFinishedAt(event) && { finishedAt: now }),
     ...(clearsFinishedAt(event) && { finishedAt: null }),
     // El `retry` (failed→queued) consume un intento: incrementa retry_count
     // ATÓMICAMENTE en el mismo UPDATE, bajo el lock (T0.7b). El GATE

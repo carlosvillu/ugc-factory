@@ -1,0 +1,11 @@
+=== final row + config persisted ===
+             id             | status  |               config                |         started_at         |         timeout_at         |        finished_at         | running_to_expired_s 
+----------------------------+---------+-------------------------------------+----------------------------+----------------------------+----------------------------+----------------------
+ 01KX5KNEYDAA18R4CAY6VB13SF | expired | {"hang": true, "timeout_ms": 10000} | 2026-07-10 08:52:48.514+00 | 2026-07-10 08:52:58.514+00 | 2026-07-10 08:53:00.325+00 |            11.811000
+(1 row)
+
+=== sweeper log evidence (expired this step, no human) ===
+apps/worker dev: {"level":30,"time":1783673580332,"pid":41026,"hostname":"MacBook-Pro-de-Carlos.local","name":"worker","step_id":"01KX5KNEYDAA18R4CAY6VB13SF","msg":"sweep: step colgado expirado"}
+--- generic sweep completion lines around now ---
+apps/worker dev: {"level":30,"time":1783673580332,"pid":41026,"hostname":"MacBook-Pro-de-Carlos.local","name":"worker","step_id":"01KX5KNEYDAA18R4CAY6VB13SF","msg":"sweep: step colgado expirado"}
+apps/worker dev: {"level":30,"time":1783673580332,"pid":41026,"hostname":"MacBook-Pro-de-Carlos.local","name":"worker","expired":1,"skipped":0,"msg":"sweep: barrido de timeouts completado"}

@@ -28,6 +28,13 @@ export interface SeedStep {
   isCheckpoint?: boolean;
   checkpointConfig?: unknown;
   outputRefs?: unknown;
+  // T0.9: config del executor (p. ej. `timeout_ms`, `fail_rate`), contadores de
+  // retry y `timeout_at` explícito para sembrar escenarios de sweeper/retry sin
+  // pasar por el worker.
+  config?: unknown;
+  retryCount?: number;
+  maxRetries?: number;
+  timeoutAt?: Date | null;
 }
 
 /**

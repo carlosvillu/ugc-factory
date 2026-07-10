@@ -69,6 +69,15 @@ export interface StepPatch {
   startedAt?: Date;
   finishedAt?: Date | null;
   /**
+   * `timeout_at` del step (T0.9): el instante tras el cual el sweeper lo lleva a
+   * `expired` si sigue `running`. Se fija en el `start` (queued→running) a
+   * `now + timeoutFor(nodeKey, config)` (timeout.ts). `undefined` = no tocar la
+   * columna; un `Date` = escribirlo. No se limpia en los terminales: un step
+   * `expired`/`succeeded` conserva su `timeout_at` histórico, y el sweeper solo
+   * mira los `running` (el filtro de estado es load-bearing, jobs.md §8).
+   */
+  timeoutAt?: Date;
+  /**
    * `output_refs` editado (T0.8): un `edit` en checkpoint reemplaza los artefactos
    * de la IA por los del usuario. `undefined` = no tocar; cualquier valor
    * (incluido `null`) se escribe. Solo el path de edición lo usa.
@@ -84,6 +93,25 @@ export interface StepPatch {
    * / `false` = no tocar el contador.
    */
   incrementRetryCount?: boolean;
+  /**
+   * Resetea `retry_count` a 0 (T0.9, retry MANUAL). Un retry disparado por un
+   * humano (`POST /api/steps/:id/retry`) concede un intento nuevo aunque los
+   * automáticos estuvieran agotados (`retry_count >= max_retries`): la
+   * intervención humana suele ir acompañada de un arreglo (cambio de `config`,
+   * etc.). El reset ocurre EN EL MISMO UPDATE que el `retry`, bajo el lock. Se
+   * excluye mutuamente con `incrementRetryCount` (un UPDATE no hace las dos). `undefined`/`false` = no tocar.
+   */
+  resetRetryCount?: boolean;
+  /**
+   * `config` per-step (T0.9): el retry manual admite un patch de `config` en el
+   * body (p. ej. `fail_rate` de 1→0 para que la re-ejecución complete). REEMPLAZA
+   * la config completa (NO hace merge sobre la jsonb existente): los schemas de
+   * config reales no existen hasta F2+, y un merge sobre jsonb opaco sería
+   * prematuro. Se escribe en la MISMA tx que el `retry`, antes de re-encolar, de
+   * modo que el executor re-lee la config nueva. `undefined` = no tocar; cualquier
+   * valor (incluido `null`) reemplaza la config.
+   */
+  config?: unknown;
 }
 
 /**

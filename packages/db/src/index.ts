@@ -33,6 +33,10 @@ export { ensureQueue } from './adapters/ensure-queue';
 // (T0.7b) para obtener `config`/retry counters tras arrancar el step. La
 // revalidación bajo lock la hace `transition()`; esto solo lee datos.
 export { findStep } from './repos/steps.repo';
+// Ids de los steps colgados que el sweeper de T0.9 debe expirar
+// (`status='running' AND timeout_at < now()`). La consumen el composition root
+// del worker (setInterval del sweep) y los tests de integración del orquestador.
+export { findExpiredRunningStepIds } from './repos/steps.repo';
 // Lectura simple del `autopilot` del run (T0.8): la usa el consumer genérico del
 // worker para decidir si un checkpoint pausa (`shouldPause`). Inmutable tras la
 // creación del run ⇒ sin lock.

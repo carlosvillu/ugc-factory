@@ -1,0 +1,26 @@
+=== CLAUSE 2: create demo.fail run (failRate=1) ===
+create response: {"runId":"01KX5KPTJ87VJNENEWAF55HJH7","steps":[{"key":"F0","stepId":"01KX5KPTJ61N5NDGB41DMA97A5","nodeKey":"demo.fail","status":"queued"}]}
+STEPID=01KX5KPTJ61N5NDGB41DMA97A5
+--- poll until failed TERMINAL (retries exhausted) ---
+t=1s | queued|0|3
+t=2s | failed|3|3
+>>> failed terminal with retry_count=3 (auto-retries exhausted) at t=2s
+=== state BEFORE retry ===
+             id             | status | retry_count |     config      
+----------------------------+--------+-------------+-----------------
+ 01KX5KPTJ61N5NDGB41DMA97A5 | failed |           3 | {"failRate": 1}
+(1 row)
+
+=== POST /api/steps/01KX5KPTJ61N5NDGB41DMA97A5/retry  body {config:{failRate:0}} (authenticated) ===
+{"ok":true}
+HTTP 200
+--- poll until succeeded ---
+t=1s | queued|0|{"failRate": 0}|
+t=2s | succeeded|0|{"failRate": 0}|2026-07-10 08:53:51.183+00
+>>> re-executed and SUCCEEDED at t=2s
+=== final row ===
+             id             |  status   | retry_count |     config      |         started_at         |        finished_at         
+----------------------------+-----------+-------------+-----------------+----------------------------+----------------------------
+ 01KX5KPTJ61N5NDGB41DMA97A5 | succeeded |           0 | {"failRate": 0} | 2026-07-10 08:53:51.167+00 | 2026-07-10 08:53:51.183+00
+(1 row)
+

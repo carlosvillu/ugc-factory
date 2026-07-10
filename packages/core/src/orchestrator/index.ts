@@ -57,6 +57,18 @@ export {
   type CheckpointConfig,
   type ShouldPauseInput,
 } from './checkpoint';
+// Timeouts por tipo de nodo (T0.9): mapa + override `config.timeout_ms` + cálculo
+// del instante de expiración. PURO (lo consume transition() y sus tests).
+export { timeoutMsFor, timeoutAtFor, TIMEOUT_BY_NODE_MS, DEFAULT_TIMEOUT_MS } from './timeout';
+// Barrido de steps colgados (T0.9): expira los `running` con `timeout_at < now()`.
+// Lo dispara un setInterval del worker (NO cron pg-boss, jobs.md §8). La query de
+// ids vive en @ugc/db y se inyecta.
+export {
+  sweepExpiredSteps,
+  type SweepDeps,
+  type SweepResult,
+  type ListExpiredStepIds,
+} from './sweep';
 export {
   approveStep,
   editStep,
@@ -65,3 +77,6 @@ export {
   cancelRun,
   type CheckpointOpsDeps,
 } from './checkpoint-ops';
+// Retry MANUAL de un step fallido (T0.9): failed→queued + reset de retry_count +
+// patch opcional de config. Lo cablea `POST /api/steps/:id/retry`.
+export { retryStep, type RetryStepDeps, type RetryStepInput } from './retry';

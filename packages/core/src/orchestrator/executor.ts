@@ -37,5 +37,11 @@ export const DemoConfigSchema = z.strictObject({
   sleepMs: z.number().int().nonnegative().optional(),
   failRate: z.number().min(0).max(1).optional(),
   hang: z.boolean().optional(),
+  // `timeout_ms` (T0.9): NO es un flag del executor de demo — es el override de
+  // timeout que lee el orquestador (timeout.ts) para fijar `timeout_at`. Se
+  // declara aquí (ignorado por el executor) para que un step de demo pueda llevar
+  // AMBAS cosas en su `config` sin que el strictObject lo rechace: la Verificación
+  // de T0.9 configura `demo.hang` con `{ hang: true, timeout_ms: 10000 }`.
+  timeout_ms: z.number().int().positive().optional(),
 });
 export type DemoConfig = z.infer<typeof DemoConfigSchema>;

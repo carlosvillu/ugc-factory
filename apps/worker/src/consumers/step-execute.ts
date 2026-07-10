@@ -77,9 +77,12 @@ export async function registerStepConsumer({
       //
       //    Otras excepciones (infra: BD caída en el commit del `start`) SÍ propagan.
       //    OJO (honesto): con `retryLimit:0` un throw NO se re-entrega — el job va a
-      //    la DLQ y el step queda VARADO en `queued`. Es deuda conocida: el
-      //    reconciler de huérfanos (barrido de steps varados) es T0.9; aquí solo
-      //    dejamos rastro en la DLQ para autopsia, no fingimos recuperación.
+      //    la DLQ y el step queda VARADO en `queued` SIN `timeout_at` (el UPDATE del
+      //    `start`, que es quien fija `timeout_at`, no llegó a commitear). El sweeper
+      //    de T0.9 SOLO barre los `running` con `timeout_at < now()`, así que NO
+      //    rescata estos `queued` varados: quedan como DEUDA CONOCIDA (un reconciler
+      //    de `queued` huérfanos está fuera del alcance de T0.9). Aquí solo dejamos
+      //    rastro en la DLQ para autopsia, no fingimos recuperación.
       try {
         await transition(transitionDeps, stepId, 'start');
       } catch (err) {
@@ -122,11 +125,29 @@ export async function registerStepConsumer({
         // reintento (retryLimit 0 + nuestro re-encolado). El job queda `completed`:
         // su trabajo (delegar en la máquina de estados) terminó bien.
         log.warn({ err }, 'step.execute: executor falló; evaluando retry');
-        const outcome = await failStep(transitionDeps, stepId);
-        log.info(
-          { outcome },
-          `step.execute: ${outcome === 'retried' ? 'reencolado para reintento' : 'reintentos agotados, failed terminal'}`,
-        );
+        // failStep aplica `fail` bajo el lock. CARRERA esperada con el sweeper de
+        // T0.9: éste puede haber expirado el step (running→expired, terminal)
+        // mientras el executor seguía corriendo; el `fail` sobre un step ya
+        // `expired` es una transición ilegal → IllegalTransitionError. Es benigno
+        // (el step ya está terminal, no hay retry que aplicar): NO-OP idempotente,
+        // simétrico con el path de éxito (ver el cierre más abajo). Cualquier otro
+        // error (infra: BD caída) SÍ propaga.
+        try {
+          const outcome = await failStep(transitionDeps, stepId);
+          log.info(
+            { outcome },
+            `step.execute: ${outcome === 'retried' ? 'reencolado para reintento' : 'reintentos agotados, failed terminal'}`,
+          );
+        } catch (failErr) {
+          if (failErr instanceof IllegalTransitionError) {
+            log.info(
+              {},
+              'step.execute: fallo sobre step ya no-running (p.ej. expirado por el sweeper): no-op idempotente',
+            );
+            return;
+          }
+          throw failErr;
+        }
         return;
       }
 
@@ -157,12 +178,15 @@ export async function registerStepConsumer({
         }
         // Infra (BD caída en el commit del succeed): propaga. HONESTO: con
         // `retryLimit:0` el job va a la DLQ SIN re-entrega y el step queda VARADO en
-        // `running` con su trabajo YA hecho. Rescatarlo (reconciler de huérfanos) es
-        // T0.9; aquí NO fingimos recuperación ni re-ejecutamos — dejamos rastro para
-        // autopsia. Crítico: NO pasa por failStep (el trabajo se completó).
+        // `running` con su trabajo YA hecho. Como sigue `running` y CONSERVA el
+        // `timeout_at` que fijó el `start`, el sweeper de T0.9 lo llevará a `expired`
+        // cuando venza — no es una recuperación (el trabajo se pierde) pero SÍ lo
+        // saca del limbo `running` sin intervención. Aquí NO fingimos recuperación ni
+        // re-ejecutamos — dejamos rastro para autopsia. Crítico: NO pasa por failStep
+        // (el trabajo se completó).
         log.error(
           { err },
-          'step.execute: succeed falló por infra; step varado en running (T0.9 reconcilia)',
+          'step.execute: succeed falló por infra; step varado en running (el sweeper de T0.9 lo expira al vencer timeout_at)',
         );
         throw err;
       }

@@ -184,7 +184,7 @@ Decisiones del usuario (2026-07-07): la fase se ejecuta tras T0.1 y **antes** de
 
 ## F1 — Análisis (URL/texto → ProductBrief)
 
-#### T1.1 · Contratos del análisis en `packages/core`
+#### T1.1 · Contratos del análisis en `packages/core` [x] 2026-07-10 — PASS, ver docs/verifications/T1.1/ (coste $0)
 - **Depende de**: T0.1
 - **Entrega**: Zod schemas de `RawContent`, `VisualAnalysis` y `ProductBrief` (con las divergencias del Apéndice A: `platform=manual`, `source_url` nullable, cardinalidades en Zod) + espejo JSON Schema para `output_config` de Anthropic + fixtures de test.
 - **Verificación**: suite de tests con fixtures válidos e inválidos (brief sin ángulos, URL en modo manual, etc.) pasa; el JSON Schema generado se valida contra un validador draft 2020-12.

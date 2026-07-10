@@ -1,0 +1,25 @@
+== CLÁUSULA 1: fixtures válidos/inválidos (mis propios valores) ==
+  OK   brief canónico válido → success true
+  OK   angles: [] (sin ángulos) → false
+  OK   4 ángulos (< 5) → false
+  OK   11 ángulos (> 10) → false
+  OK   5 ángulos (límite inferior) → true
+  OK   10 ángulos (límite superior) → true
+  OK   platform=manual + source_url="https://otro.example.org" → false
+  OK   platform=manual + source_url=null → true
+  OK   platform=shopify + source_url=null → false
+  OK   clave extra en brief válido → sigue true (Zod hace strip, no rechaza)
+  OK   RawContent source=manual + url no-null → false
+  OK   RawContent source=manual + url=null + platform=manual → true
+
+== CLÁUSULA 2: espejo JSON Schema draft 2020-12 ==
+  OK   Ajv2020.compile(espejo) compila sin lanzar (es draft 2020-12 válido)
+  OK   $schema === draft 2020-12
+  (nodos type:object: 17; keywords prohibidos hallados: ninguno)
+  OK   hay al menos un nodo type:object
+  OK   TODO type:object lleva additionalProperties:false
+  OK   NINGÚN nodo lleva minItems/maxItems/minimum/maximum/... (el espejo no miente)
+  OK   divergencia: 11 ángulos PASAN el espejo (Anthropic no frena cardinalidad)
+  OK   divergencia: los mismos 11 ángulos los RECHAZA Zod
+
+== RESUMEN: 19 OK / 0 FAIL ==

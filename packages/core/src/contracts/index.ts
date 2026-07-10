@@ -18,3 +18,48 @@ export {
   type DayTotal,
   type CostProvider,
 } from './spend';
+// Contratos del análisis (F1, T1.1): la columna vertebral del pipeline
+// `IntakeConfig → RawContent → VisualAnalysis → ProductBrief` (§7.4). El ProductBrief
+// es el contrato central (Apéndice A) con las 3 divergencias del Apéndice A, y su
+// espejo JSON Schema para el `output_config` de Anthropic.
+export {
+  ProductBriefSchema,
+  BriefMetaSchema,
+  BriefProductSchema,
+  BriefAudienceSchema,
+  BriefSocialProofSchema,
+  BriefBrandSchema,
+  BriefPricingSchema,
+  BriefAssetsSchema,
+  AngleSchema,
+  PlatformSchema,
+  AwarenessLevelSchema,
+  AdToneSchema,
+  type ProductBrief,
+  type BriefMeta,
+  type Angle,
+  type Platform,
+  type AwarenessLevel,
+  type AdTone,
+} from './product-brief';
+export { toAnthropicJsonSchema, productBriefJsonSchema } from './product-brief.json-schema';
+export {
+  RawContentSchema,
+  RawImageSchema,
+  RawBrandingSchema,
+  RawProductSchema,
+  type RawContent,
+  type RawImage,
+  type RawBranding,
+  type RawProduct,
+} from './raw-content';
+export {
+  VisualAnalysisSchema,
+  ClassifiedImageSchema,
+  VisualBrandStyleSchema,
+  RenderedSocialProofSchema,
+  type VisualAnalysis,
+  type ClassifiedImage,
+  type VisualBrandStyle,
+  type RenderedSocialProof,
+} from './visual-analysis';

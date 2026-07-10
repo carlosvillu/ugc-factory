@@ -103,7 +103,7 @@ El corazón de esta fase es el **orquestador** (§9.0): la máquina de estados t
 - **Entrega**: `GET /api/runs/:id/events` (route handler Node streaming): evento `snapshot` al conectar, deltas `step_changed` vía LISTEN/NOTIFY, `heartbeat` cada 25 s, `id:` monotónico + re-snapshot con `Last-Event-ID` (§9.0); contrato de eventos en `packages/core`.
 - **Verificación**: `curl -N /api/runs/:id/events` durante un run de demo → snapshot, deltas por transición y heartbeats visibles; matar y reabrir el curl con `Last-Event-ID` re-sincroniza sin perder el estado final.
 
-#### T0.11 · Canvas React Flow v1
+#### T0.11 · Canvas React Flow v1 [x] 2026-07-10 — PASS (7/7 comportamientos CUA en navegador), ver docs/verifications/T0.11/ (coste $0)
 - **Depende de**: T0.8, T0.9, T0.10
 - **Entrega**: página `/runs/[id]` con grafo (layout automático dagre/elkjs), nodos con estado/color/duración (y coste si existe), panel lateral al click con **visor de logs, errores y output/artefacto JSON genérico del step** (§8.2), botones de checkpoint (aprobar/editar/rechazar), retry, skip, cancelar lote y toggle autopilot.
 - **Mockup**: `docs/mockups/runs-id.html` (variante 1b · cockpit denso). El layout parte de ese mockup; el reviewer rechaza una página que se desvíe sin acuerdo (ver `.claude/skills/frontend`).

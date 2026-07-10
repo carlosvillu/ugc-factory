@@ -123,6 +123,10 @@ export async function updateStep(db: Db, id: string, patch: StepPatch): Promise<
       // cualquier otro valor (incluido null) se escribe. Mismo criterio que
       // finishedAt.
       ...(patch.outputRefs !== undefined && { outputRefs: patch.outputRefs }),
+      // `error` del step (T0.11): el `fail` lo escribe (mensaje del executor), el
+      // `retry` lo limpia a null. `undefined` = no tocar; cualquier valor (incluido
+      // null) se escribe. Mismo criterio de tres-estados que outputRefs/finishedAt.
+      ...(patch.error !== undefined && { error: patch.error }),
     })
     .where(eq(stepRun.id, id));
 }
@@ -293,22 +297,36 @@ export async function insertSuperseding(db: Db, row: NewSupersedingStepRow): Pro
 // endpoint de download.
 const OUTPUT_EXCERPT_MAX = 200;
 
+// Columnas de la proyección SSE. ENRIQUECIDAS en T0.11: el canvas React Flow
+// necesita `dependsOn` (edges), `isCheckpoint` (pulso) y `startedAt`/`finishedAt`
+// (duración) además del coste split. Todas YA existen en `step_run` (T0.7a/T0.9);
+// solo se proyectan aquí. El índice `step_run_run_id_idx` sigue sirviendo la query.
 const sseColumns = {
   id: stepRun.id,
   nodeKey: stepRun.nodeKey,
   status: stepRun.status,
+  dependsOn: stepRun.dependsOn,
+  isCheckpoint: stepRun.isCheckpoint,
   costActual: stepRun.costActual,
   costEstimated: stepRun.costEstimated,
+  startedAt: stepRun.startedAt,
+  finishedAt: stepRun.finishedAt,
   outputRefs: stepRun.outputRefs,
+  error: stepRun.error,
 } as const;
 
 interface SseRow {
   id: string;
   nodeKey: string;
   status: StepSnapshot['status'];
+  dependsOn: string[];
+  isCheckpoint: boolean;
   costActual: number | null;
   costEstimated: number | null;
+  startedAt: Date | null;
+  finishedAt: Date | null;
   outputRefs: unknown;
+  error: unknown;
 }
 
 // `cost` observable = coste REAL si ya se conoce, si no el ESTIMADO (céntimos,
@@ -316,6 +334,18 @@ interface SseRow {
 // compartido por snapshot y delta.
 function costOf(row: SseRow): number | null {
   return row.costActual ?? row.costEstimated ?? null;
+}
+
+// Duración observable en ms (T0.11): un step ya terminado da `finished - started`;
+// uno EN CURSO (started sin finished) da `now - started` (la duración crece en cada
+// re-lectura → el nodo la ve avanzar en vivo). `null` si el step no ha arrancado.
+// El reloj es el del proceso web (mismo host self-hosted que fijó started_at); en
+// F0 mono-host no hay skew relevante.
+function durationOf(row: SseRow): number | null {
+  if (row.startedAt === null) return null;
+  const end = row.finishedAt ?? new Date();
+  const ms = end.getTime() - row.startedAt.getTime();
+  return ms >= 0 ? ms : 0;
 }
 
 // Recorte estable de `output_refs`: serializa a JSON y trunca. `null` cuando no hay
@@ -327,6 +357,20 @@ function excerptOf(refs: unknown): string | null {
   return s.length > OUTPUT_EXCERPT_MAX ? s.slice(0, OUTPUT_EXCERPT_MAX) : s;
 }
 
+// Recorte del `step_run.error` para el visor de logs del panel (T0.11). El error se
+// persiste como `{ message: string }` (consumer, step-execute.ts): extrae el mensaje
+// PELADO para que el visor muestre "demo executor: fallo inyectado" y no
+// `{"message":"…"}` con llaves JSON (la Verificación pide "ver el error"). Si el
+// shape no es el esperado, cae al serializado genérico de `excerptOf`.
+function errorExcerptOf(error: unknown): string | null {
+  if (error == null) return null;
+  if (typeof error === 'object' && 'message' in error && typeof error.message === 'string') {
+    const msg = error.message;
+    return msg.length > OUTPUT_EXCERPT_MAX ? msg.slice(0, OUTPUT_EXCERPT_MAX) : msg;
+  }
+  return excerptOf(error);
+}
+
 function toStepSnapshot(row: SseRow): StepSnapshot {
   return {
     id: row.id,
@@ -334,6 +378,12 @@ function toStepSnapshot(row: SseRow): StepSnapshot {
     status: row.status,
     cost: costOf(row),
     outputExcerpt: excerptOf(row.outputRefs),
+    dependsOn: row.dependsOn,
+    isCheckpoint: row.isCheckpoint,
+    costEstimated: row.costEstimated,
+    costActual: row.costActual,
+    durationMs: durationOf(row),
+    errorExcerpt: errorExcerptOf(row.error),
   };
 }
 

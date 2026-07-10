@@ -163,6 +163,11 @@ export async function applyTransition(
   { steps, jobs, events }: TxStores,
   stepId: string,
   event: StepEvent,
+  // T0.11: contexto opcional del error para el evento `fail`. El consumer pasa el
+  // mensaje del throw del executor; se persiste en `step_run.error` para el visor de
+  // logs del panel del canvas. Ignorado en cualquier otro evento (solo `fail` lo
+  // escribe; el `retry` lo LIMPIA a null aparte).
+  opts: { error?: unknown } = {},
 ): Promise<StepStatus> {
   // 1) Lock de fila + estado BAJO el lock.
   const step = await steps.findForUpdate(stepId);
@@ -194,6 +199,11 @@ export async function applyTransition(
     // disparar `retry`; agotado ⇒ el step queda `failed` terminal sin retry. Así
     // el step_run.status es la fuente de verdad del progreso.
     ...(event === 'retry' && { incrementRetryCount: true }),
+    // T0.11: persistir el error del executor en el `fail` (para el visor del panel);
+    // LIMPIARLO (null) en el `retry`, para que un reintento no arrastre el error
+    // viejo del intento anterior. Ambos escriben la columna `error`.
+    ...(event === 'fail' && { error: opts.error ?? null }),
+    ...(event === 'retry' && { error: null }),
   });
 
   // Invalidación de sub-grafo (§7.1.b editar / §7.1.c superseder): EFECTO en
@@ -238,8 +248,11 @@ export async function transition(
   deps: TransitionDeps,
   stepId: string,
   event: StepEvent,
+  // T0.11: contexto opcional del error para el evento `fail` (persiste en
+  // `step_run.error` para el visor del panel). Ignorado en otros eventos.
+  opts: { error?: unknown } = {},
 ): Promise<void> {
-  await deps.withTransaction((stores) => applyTransition(stores, stepId, event));
+  await deps.withTransaction((stores) => applyTransition(stores, stepId, event, opts));
 }
 
 /** Resultado de `failStep`: si tras el fallo el step se reencoló para reintentar
@@ -255,9 +268,14 @@ export type FailOutcome = 'retried' | 'exhausted';
  * `failed` terminal. Un solo `withTransaction` = ningún otro proceso se cuela
  * entre el fail y la decisión de retry (sin la ventana de dos txs separadas).
  */
-export async function failStep(deps: TransitionDeps, stepId: string): Promise<FailOutcome> {
+export async function failStep(
+  deps: TransitionDeps,
+  stepId: string,
+  // T0.11: el error del executor a persistir en el `fail` (para el visor del panel).
+  opts: { error?: unknown } = {},
+): Promise<FailOutcome> {
   return deps.withTransaction(async (stores) => {
-    await applyTransition(stores, stepId, 'fail');
+    await applyTransition(stores, stepId, 'fail', { error: opts.error });
     // Estado bajo el lock TRAS el fail (retry_count aún sin consumir por este
     // intento). El gate compara contra max_retries.
     const failed = await stores.steps.findForUpdate(stepId);

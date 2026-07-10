@@ -34,5 +34,15 @@ export function makeExecutorRegistry({
     'demo.sleep.N0': demo,
     'demo.sleep.N1': demo,
     'demo.sleep.N2': demo,
+    // node_keys del DAG de demo del canvas (T0.11, demoCanvasRunDefinition):
+    // N0→N1(checkpoint)→N2→N3(alwaysPause)→N4(failRate=1)→N5(skippable). Todos
+    // usan el mismo executor de demo; el comportamiento lo fija la config del step
+    // (sleepMs, failRate). Distintos por nodo para no colisionar en el singletonKey.
+    'demo.canvas.N0': demo,
+    'demo.canvas.N1': demo,
+    'demo.canvas.N2': demo,
+    'demo.canvas.N3': demo,
+    'demo.canvas.N4': demo,
+    'demo.canvas.N5': demo,
   };
 }

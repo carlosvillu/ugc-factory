@@ -45,6 +45,11 @@ export { readRunSnapshot, readChangedSteps } from './repos/steps.repo';
 // worker para decidir si un checkpoint pausa (`shouldPause`). Inmutable tras la
 // creación del run ⇒ sin lock.
 export { findRunAutopilot } from './repos/runs.repo';
+// Lectura del objeto run (`findRun`) y mutación del `autopilot` (`updateRunAutopilot`)
+// para la página `/runs/[id]` (T0.11): el REST alimenta el run (autopilot/kind/id),
+// el SSE alimenta los steps. El toggle de cabecera muta autopilot en vivo (ya no es
+// inmutable tras la creación); `shouldPause` lo relee en cada checkpoint.
+export { findRun, updateRunAutopilot } from './repos/runs.repo';
 // Auth single-user (T0.4): lectura/seed idempotente del hash de password en
 // `app_setting`. Los consume web (route de login + seeding en instrumentation).
 export { getPasswordHash, seedPasswordHashIfAbsent } from './repos/auth.repo';

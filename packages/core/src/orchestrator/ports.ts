@@ -112,6 +112,15 @@ export interface StepPatch {
    * valor (incluido `null`) reemplaza la config.
    */
   config?: unknown;
+  /**
+   * `error` del step (T0.11): el mensaje/detalle del fallo del executor, escrito en
+   * el `fail` (running→failed) para que el panel del canvas lo muestre en su visor
+   * de logs (Verificación T0.11: "provocar un fallo y ver el error en el visor de
+   * logs del nodo"). jsonb opaco (típicamente `{ message: string }`). `undefined` =
+   * no tocar; cualquier valor (incluido `null`) se escribe. El `retry` posterior lo
+   * limpia (null) para que un reintento exitoso no arrastre el error viejo.
+   */
+  error?: unknown;
 }
 
 /**

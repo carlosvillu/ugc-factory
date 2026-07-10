@@ -65,3 +65,64 @@ export function demoCheckpointRunDefinition(
     ],
   };
 }
+
+/**
+ * DAG de demo del CANVAS (T0.11): la cadena N0→N1→N2→N3→N4→N5, diseñada para que
+ * los 7 comportamientos de la Verificación de T0.11 sean TODOS alcanzables desde la
+ * UI en un solo run:
+ *  - **N0** (root, sleep): arranca solo → se ve el paso running→succeeded en vivo.
+ *  - **N1** (checkpoint NORMAL): pausa en `waiting_approval` esperando approve/
+ *    edit/reject desde el panel. Con autopilot ON, este NO pausa (bypass).
+ *  - **N2** (sleep): un nodo intermedio más para que el grafo tenga cuerpo.
+ *  - **N3** (checkpoint con `alwaysPause`): el candado "parar SIEMPRE aquí" — pausa
+ *    AUNQUE autopilot esté ON. Es el par de N1 que prueba "autopilot respeta el
+ *    candado": con autopilot, N1 se salta pero N3 pausa.
+ *  - **N4** (`failRate=1`): FALLA siempre en el 1er intento → error en el visor de
+ *    logs → retry (con patch `failRate=0`) → succeeded.
+ *  - **N5** (skippable): depende de N4; mientras N4 no succeeda, N5 está en
+ *    `awaiting_deps` (skip es legal desde ahí, transitions.ts) → skip desde el panel.
+ *
+ * `sleepMs` configurable (default 0) para verificación observable (sleeps largos
+ * dan tiempo a ver `running`) o tests deterministas (0). `autopilot` arranca el run
+ * en autopilot (N1 se salta, N3 respeta el candado). `maxRetries` per-nodo se deja
+ * al default (3): el retry manual resetea el contador igual.
+ */
+export function demoCanvasRunDefinition(
+  projectId: string,
+  opts: { sleepMs?: number; autopilot?: boolean } = {},
+): RunDefinitionInput {
+  const { sleepMs = 0, autopilot = false } = opts;
+  return {
+    projectId,
+    autopilot,
+    nodes: [
+      { key: 'N0', nodeKey: 'demo.canvas.N0', dependsOn: [], config: { sleepMs } },
+      {
+        key: 'N1',
+        nodeKey: 'demo.canvas.N1',
+        dependsOn: ['N0'],
+        config: { sleepMs },
+        isCheckpoint: true,
+        checkpointConfig: null, // checkpoint normal: pausa salvo autopilot
+      },
+      { key: 'N2', nodeKey: 'demo.canvas.N2', dependsOn: ['N1'], config: { sleepMs } },
+      {
+        key: 'N3',
+        nodeKey: 'demo.canvas.N3',
+        dependsOn: ['N2'],
+        config: { sleepMs },
+        isCheckpoint: true,
+        checkpointConfig: { alwaysPause: true }, // el candado: pausa AUNQUE autopilot
+      },
+      {
+        key: 'N4',
+        nodeKey: 'demo.canvas.N4',
+        dependsOn: ['N3'],
+        config: { sleepMs, failRate: 1 }, // falla siempre → error + retry
+      },
+      // N5 depende de N4: mientras N4 no succeeda, N5 está en `awaiting_deps`
+      // (skippable desde el panel, transitions.ts). Es el nodo skippable.
+      { key: 'N5', nodeKey: 'demo.canvas.N5', dependsOn: ['N4'], config: { sleepMs } },
+    ],
+  };
+}

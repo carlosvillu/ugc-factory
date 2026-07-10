@@ -1,0 +1,33 @@
+=== CONSOLE ===
+[info] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[log] [HMR] connected
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 203ms
+[log] [Fast Refresh] rebuilding
+[info] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[log] [HMR] connected
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 164ms
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 900ms
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 150ms
+[info] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[log] [HMR] connected
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 136ms
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 149ms
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 152ms
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 149ms
+[info] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[log] [HMR] connected
+[info] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[log] [HMR] connected
+[info] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[log] [HMR] connected
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 180ms
+=== ERRORS ===

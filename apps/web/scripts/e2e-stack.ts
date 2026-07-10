@@ -3,11 +3,13 @@
 // @ugc/test-utils, que se consume como TypeScript sin build (Node plano falla con
 // ERR_UNKNOWN_FILE_EXTENSION).
 //
-// Orden: Postgres (testcontainer) → clon aislado desde la template migrada → web
-// (que en su arranque migra idempotente + SIEMBRA el hash de password desde
-// AUTH_BOOTSTRAP_PASSWORD vía instrumentation.register). En F0 NO hace falta ni el
-// worker ni las fake APIs ni seedFixtures: los specs de auth y /design-system no
-// tocan el pipeline (e2e.md §4: "Para specs de F0 no necesitas ni el fake").
+// Orden: Postgres (testcontainer) → clon aislado desde la template migrada → worker
+// (T0.11: procesa los steps de demo del canvas — sin él los nodos nunca cambian de
+// estado y el spec de canvas cuelga) → web (que en su arranque migra idempotente +
+// SIEMBRA el hash de password desde AUTH_BOOTSTRAP_PASSWORD vía
+// instrumentation.register). El worker usa los executors de demo (sleep_ms/fail_rate)
+// — NO hace falta ni fake APIs ni seedFixtures (e2e.md §4/§136: los specs de F0
+// ejercitan orquestador + SSE + canvas con executors de demo, sin API externa).
 //
 // Si algo falla: exit != 0 y Playwright aborta mostrando el log (stdio 'inherit').
 import { spawn, type ChildProcess } from 'node:child_process';
@@ -54,6 +56,11 @@ const env: NodeJS.ProcessEnv = {
   // (`env -u ASSETS_DIR`) debe pasar igual — el fix no puede depender del entorno
   // del que lanza la suite.
   ASSETS_DIR: assetsDir,
+  // Base interna que usa api-server (RSC): el web se llama A SÍ MISMO. Por defecto
+  // api-server apunta a :3000, pero el stack corre en :3100 → sin esto el fetch del
+  // RSC `/runs/[id]` iría a un puerto muerto y la página daría 500 (T0.11). Fijado
+  // al puerto del stack.
+  INTERNAL_API_URL: `http://localhost:${String(PORT)}`,
   // Fail-fast de boot (T0.4): APP_MASTER_KEY firma las sesiones; sin ella web
   // revienta en instrumentation.register. Valor de test (no es un secreto).
   APP_MASTER_KEY: process.env.APP_MASTER_KEY ?? 'e2e-app-master-key-not-a-secret',
@@ -75,18 +82,31 @@ writeFileSync(
   JSON.stringify({ databaseUrl: connectionString, assetsDir }),
 );
 
+// Worker (T0.11): procesa los jobs `step.execute` de pg-boss con los executors de
+// demo. Se lanza vía tsx (mismo motivo que este script: consume @ugc/test-utils/
+// @ugc/core como TS sin build). Comparte el mismo DATABASE_URL → ve el mismo Postgres
+// que web y el orquestador. Sin él, los steps quedan `queued` para siempre y el
+// canvas nunca cambia de color.
+const workerEntry = fileURLToPath(new URL('../../worker/src/main.ts', import.meta.url));
+const tsxBin = fileURLToPath(new URL('../node_modules/.bin/tsx', import.meta.url));
+const worker: ChildProcess = spawn(tsxBin, [workerEntry], {
+  env,
+  stdio: 'inherit',
+});
+
 const web: ChildProcess = spawn(nextBin, ['dev', '--port', String(PORT)], {
   env,
   stdio: 'inherit',
 });
 
 // Apagado ordenado: al recibir la señal de Playwright (fin de suite) o un fallo,
-// mata web y para el contenedor. Sin esto el contenedor quedaría huérfano.
+// mata web + worker y para el contenedor. Sin esto quedarían huérfanos.
 let shuttingDown = false;
 async function shutdown(code = 0): Promise<void> {
   if (shuttingDown) return;
   shuttingDown = true;
   web.kill('SIGTERM');
+  worker.kill('SIGTERM');
   await pg.stop().catch(() => undefined);
   process.exit(code);
 }
@@ -95,3 +115,4 @@ for (const signal of ['SIGINT', 'SIGTERM'] as const) {
   process.on(signal, () => void shutdown(0));
 }
 web.on('exit', (code) => void shutdown(code ?? 0));
+worker.on('exit', (code) => void shutdown(code ?? 0));

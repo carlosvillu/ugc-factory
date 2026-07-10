@@ -35,16 +35,41 @@ const StepStatusSchema = z.enum([
 ]);
 
 // El estado de UN step tal como viaja por el stream: la identidad + lo que la UI
-// pinta (estado, coste, un excerpt del output). Es la proyección observable, NO la
-// fila completa de persistencia — `cost` es `cost_actual ?? cost_estimated` (en
-// céntimos, entero) y `outputExcerpt` es un recorte de `output_refs`, no el jsonb
-// entero (un vídeo de cientos de MB no viaja por SSE). `null` cuando no hay dato.
+// pinta (estado, coste, timing, estructura del grafo). Es la proyección observable,
+// NO la fila completa de persistencia — `outputExcerpt` es un recorte de
+// `output_refs`, no el jsonb entero (un vídeo de cientos de MB no viaja por SSE).
+// `null` cuando no hay dato.
+//
+// ENRIQUECIDO en T0.11 (el canvas React Flow necesita más que la proyección delgada
+// de T0.10). Como el snapshot SUSTITUYE el estado (§9.0), una reconexión SIN estos
+// campos borraría la estructura del grafo (edges, checkpoints). Campos añadidos:
+//   - `dependsOn`: ULIDs de los steps de los que depende → EDGES del grafo. Sin
+//     esto no hay aristas y el canvas es una lista de nodos sueltos.
+//   - `isCheckpoint`: marca el nodo que pulsa esperando aprobación.
+//   - `costEstimated`/`costActual`: el nodo muestra estimado Y real por separado
+//     (canvas.md §StepNodeData). Se mantiene `cost` (= actual ?? estimated) por
+//     compatibilidad con el contrato de T0.10, pero el canvas lee el split.
+//   - `durationMs`: duración derivada (finished-started, o now-started si corre) →
+//     el nodo muestra el tiempo. `null` si el step no arrancó.
+// Los tres primeros son ESTRUCTURA (no cambian en la vida del step); coste y
+// duración SÍ cambian → el delta step_changed también los porta (misma proyección
+// `toStepSnapshot` alimenta ambos frames) para que el nodo se actualice en vivo sin
+// esperar un re-snapshot.
 const StepSnapshotSchema = z.object({
   id: z.string(),
   nodeKey: z.string(),
   status: StepStatusSchema,
   cost: z.number().int().nullable(),
   outputExcerpt: z.string().nullable(),
+  dependsOn: z.array(z.string()),
+  isCheckpoint: z.boolean(),
+  costEstimated: z.number().int().nullable(),
+  costActual: z.number().int().nullable(),
+  durationMs: z.number().int().nullable(),
+  // Recorte del `step_run.error` (T0.11): el mensaje/detalle del fallo del executor,
+  // que el panel del canvas muestra en su visor de logs. `null` si el step no ha
+  // fallado. Recortado como `outputExcerpt` (no arrastra un jsonb enorme por SSE).
+  errorExcerpt: z.string().nullable(),
 });
 export type StepSnapshot = z.infer<typeof StepSnapshotSchema>;
 
@@ -58,6 +83,14 @@ const RunSnapshotEventSchema = z.object({
   runId: z.string(),
   steps: z.array(StepSnapshotSchema),
 });
+// El PAYLOAD del snapshot sin el discriminante `event`: la forma que devuelve
+// `readRunSnapshot` (db) y que la página `/runs/[id]` usa para sembrar el store
+// (T0.11). El frame SSE es este payload + `event: 'snapshot'`.
+export const RunSnapshotSchema = z.object({
+  runId: z.string(),
+  steps: z.array(StepSnapshotSchema),
+});
+export type RunSnapshot = z.infer<typeof RunSnapshotSchema>;
 
 // `step_changed`: un delta. Comparte `status/cost/outputExcerpt` con la foto pero
 // direcciona por `stepId` (no `id`): el cliente lo localiza en el mapa sembrado por
@@ -71,6 +104,18 @@ const StepChangedEventSchema = z.object({
   status: StepStatusSchema,
   cost: z.number().int().nullable(),
   outputExcerpt: z.string().nullable(),
+  // Enriquecido en T0.11 (misma proyección que el snapshot): el delta porta la
+  // estructura (dependsOn/isCheckpoint — invariante, pero se re-emite por
+  // consistencia) y los campos que CAMBIAN en vivo (costActual, durationMs). Sin
+  // ellos el nodo no actualizaría coste/duración hasta un re-snapshot.
+  dependsOn: z.array(z.string()),
+  isCheckpoint: z.boolean(),
+  costEstimated: z.number().int().nullable(),
+  costActual: z.number().int().nullable(),
+  durationMs: z.number().int().nullable(),
+  // Error del step (T0.11): CAMBIA en vivo (aparece al fallar, desaparece al retry),
+  // así que el delta lo porta para que el visor se actualice sin re-snapshot.
+  errorExcerpt: z.string().nullable(),
 });
 export type StepChangedEvent = z.infer<typeof StepChangedEventSchema>;
 
@@ -90,3 +135,9 @@ export const RunEventSchema = z.discriminatedUnion('event', [
   HeartbeatEventSchema,
 ]);
 export type RunEvent = z.infer<typeof RunEventSchema>;
+
+// Los nombres de evento con nombre del stream SSE ("event: snapshot" …). El hook
+// del frontend (T0.11) los pasa a `addEventListener` — los eventos SSE con nombre
+// NO llegan por `onmessage`, hay que suscribirse a cada tipo. Derivados de los
+// literales del union: si se añade una variante, este array debe crecer con ella.
+export const RUN_EVENT_TYPES = ['snapshot', 'step_changed', 'heartbeat'] as const;

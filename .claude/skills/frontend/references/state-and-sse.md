@@ -2,6 +2,17 @@
 
 Cómo se modela el estado en vivo del run en `apps/web` (Zustand con factory + provider) y cómo entran los eventos SSE del orquestador (§9.0 del PRD) hasta el canvas. Los tests de todo lo de aquí los define `testing/references/frontend.md` (especialmente §4).
 
+> **⚠ Contrato REAL (T0.10/T0.11 shipped) — los bloques de código de abajo son PATRÓN, no contrato literal.** Este doc se escribió antes de T0.10; el contrato entregado difiere. Importa los exports REALES de `@ugc/core/orchestrator` y construye contra ellos. Diferencias que MANDAN sobre lo escrito aquí:
+> 1. El contrato vive en **`packages/core/src/orchestrator/run-events.ts`** (NO en `contracts/run-events.ts`).
+> 2. El discriminador del union es **`event`**, NO `type`.
+> 3. El frame `data:` porta el **evento COMPLETO** (con su `event`) → se valida entero con `RunEventSchema.safeParse(JSON.parse(data))`, NO `{type, data}`.
+> 4. El `snapshot` es **`{ event:'snapshot', runId, steps: StepSnapshot[] }`** — NO hay objeto `run` en el SSE. El `run` (autopilot/kind/id) llega por **REST** (`GET /api/runs/:id`); el SSE alimenta solo los steps.
+> 5. `StepSnapshot` real (enriquecido en T0.11): `{ id, nodeKey, status, cost, outputExcerpt, dependsOn, isCheckpoint, costEstimated, costActual, durationMs, errorExcerpt }` — el canvas necesita `dependsOn`/`isCheckpoint`/coste split/`durationMs` para construir el grafo.
+> 6. **NO existe `isTerminalRunStatus`** ni `run.status` derivado (deuda diferida de T0.8). El hook SSE va **SIEMPRE `enabled`** en F0 (un run terminado deja de emitir); IGNORA el gate `enabled: !isTerminalRunStatus(...)` de §5.
+> 7. `RUN_EVENT_TYPES` existe en core (los tres literales de `event`). El store `initial` es `{ run: RunResponse, steps? }`.
+> 8. El fichero del store es **`run-store.tsx`** (contiene JSX del Provider), no `.ts`.
+> 9. El `ResizeObserverMock` de `frontend.md §2` necesita `contentRect` para `@xyflow/system` (si no, revienta con "Cannot read properties of undefined (reading 'width')").
+
 ## Índice
 
 1. [Decisión: Zustand sí, TanStack Query no (v1)](#1-decisión-zustand-sí-tanstack-query-no-v1)

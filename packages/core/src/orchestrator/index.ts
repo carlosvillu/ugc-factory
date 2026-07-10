@@ -50,7 +50,11 @@ export {
   type StepExecutor,
   type ExecutorContext,
 } from './executor';
-export { demoRunDefinition, demoCheckpointRunDefinition } from './demo-dag';
+export {
+  demoRunDefinition,
+  demoCheckpointRunDefinition,
+  demoCanvasRunDefinition,
+} from './demo-dag';
 export {
   shouldPause,
   CheckpointConfigSchema,
@@ -85,7 +89,10 @@ export { retryStep, type RetryStepDeps, type RetryStepInput } from './retry';
 // hook del frontend (T0.11). Vive en core: contrato único compartido.
 export {
   RunEventSchema,
+  RunSnapshotSchema,
+  RUN_EVENT_TYPES,
   type RunEvent,
+  type RunSnapshot,
   type StepChangedEvent,
   type StepSnapshot,
 } from './run-events';

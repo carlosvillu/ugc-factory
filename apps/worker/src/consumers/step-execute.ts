@@ -102,7 +102,9 @@ export async function registerStepConsumer({
       const executor = executors[nodeKey];
       if (executor === undefined) {
         log.error({}, 'step.execute: executor desconocido');
-        await transition(transitionDeps, stepId, 'fail');
+        await transition(transitionDeps, stepId, 'fail', {
+          error: { message: `executor desconocido para node_key ${nodeKey}` },
+        });
         throw new Error(`executor desconocido para node_key ${nodeKey}`);
       }
 
@@ -133,7 +135,11 @@ export async function registerStepConsumer({
         // simétrico con el path de éxito (ver el cierre más abajo). Cualquier otro
         // error (infra: BD caída) SÍ propaga.
         try {
-          const outcome = await failStep(transitionDeps, stepId);
+          // T0.11: persistir el mensaje del throw del executor en `step_run.error`
+          // para el visor de logs del panel del canvas. Solo el `message` (un jsonb
+          // pequeño); el stack no viaja por SSE.
+          const errorInfo = { message: err instanceof Error ? err.message : String(err) };
+          const outcome = await failStep(transitionDeps, stepId, { error: errorInfo });
           log.info(
             { outcome },
             `step.execute: ${outcome === 'retried' ? 'reencolado para reintento' : 'reintentos agotados, failed terminal'}`,

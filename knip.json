@@ -37,16 +37,16 @@
     },
     "packages/test-utils": {
       // Con includeEntryExports (packages/*), knip mira los exports del barrel.
-      // expectGolden (golden.ts) + server/useHttpMocks (msw/index.ts) son helpers
-      // de test de T0.1 SIN consumidor todavía pero de API inminente y no
-      // rastreable por el grafo de imports: expectGolden está cableado en la regla
-      // vitest/expect-expect de eslint.config.ts (assertFunctionNames), y
-      // server/useHttpMocks son el mock HTTP de msw que estrenan los clientes de
-      // F1 (Firecrawl/Anthropic). Ignore PUNTUAL de esos dos ficheros — nunca un
-      // ignore amplio del paquete, que re-ocultaría over-exports reales como los
-      // que includeEntryExports acaba de cazar en el barrel de db/test-utils.
-      // Quitar cuando F1 estrene su primer consumidor de msw.
-      "ignore": ["src/golden.ts", "src/msw/**"]
+      // expectGolden (golden.ts) es un helper de test de T0.1 SIN consumidor
+      // todavía pero de API inminente y no rastreable por el grafo de imports:
+      // está cableado en la regla vitest/expect-expect de eslint.config.ts
+      // (assertFunctionNames). Ignore PUNTUAL de ese fichero — nunca un ignore
+      // amplio del paquete, que re-ocultaría over-exports reales como los que
+      // includeEntryExports caza en el barrel de db/test-utils.
+      // `src/msw/**` YA NO se ignora: T1.3 (fast path) estrena el primer consumidor
+      // de `server`/`useHttpMocks` (test del fallback transparente en @ugc/core),
+      // así que knip los ve usados por el grafo de imports.
+      "ignore": ["src/golden.ts"]
     },
     "packages/*": {
       // entry desde el exports map del package.json (architecture.md §7).

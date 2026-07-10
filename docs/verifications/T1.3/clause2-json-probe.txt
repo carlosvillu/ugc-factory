@@ -1,0 +1,7 @@
+=== Clause 2 evidence: {url}.json returns non-200 for the two non-Shopify URLs → fallback fires ===
+-- Shopify (allbirds): .json SHOULD be 200 (fast path uses it) --
+allbirds .json = 200
+-- JSON-LD (woocommerce.com): .json non-200 → degrade to JSON-LD --
+woocommerce.com .json = 404
+-- solo-OG (bellroy): .json 404 → degrade to OG --
+bellroy .json = 404

@@ -19,6 +19,7 @@
     "@types/pg": "catalog:",
     "@ugc/test-utils": "workspace:*",
     "drizzle-kit": "^0.31.0",
+    "msw": "^2.14.6",
     "tsx": "^4.23.0",
     "typescript": "catalog:",
     "vitest": "catalog:"

@@ -1,0 +1,5 @@
+id|source|platform|status|url_normalized|content_hash|warnings|title|price|currency|n_images|first_image
+01KX6GAK8CZJCDBK0MX34RN38Y|url|shopify|done|https://www.allbirds.com/products/mens-cruiser-shadow-blue-natural-white-sole|a74b41e97c88ff471c545bca95fa62f09e48cc9957735b692059a29bb2bfb380|[]|Men's Cruiser - Shadow Blue (Natural White Sole)|105.00|USD|5|https://cdn.shopify.com/s/files/1/1104/4168/files/All-birds_0010.png?v=1783535519
+01KX6GAWZRFAG8KRSG79HTZNVT|url|shopify|done|https://woocommerce.com/products/woocommerce-bookings|132cc6d31c52f62795b0f3e33e31ee21d4c2c6a844cb521acf8ed4756de02ac1|[]|WooCommerce Bookings|221.00|EUR|1|https://woocommerce.com/wp-content/uploads/2014/05/Bookings_icon-marketplace-160x160-1.png
+01KX6GBPFAP15XER2EK86TS12P|url|shopify|done|https://bellroy.com/products/hide-and-seek-wallet|6e45f851773ae571bd8f36fd19719614be6b8ae7d376340f36df415a8faf7554|[]|Hide & Seek: Wallet With Hidden Pocket | Bellroy|||1|https://bellroy-product-images.imgix.net//bellroy_dot_com_gallery_image/USD/WHSD-CAR-301/0
+(3 rows)

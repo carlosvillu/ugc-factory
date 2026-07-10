@@ -194,7 +194,7 @@ Decisiones del usuario (2026-07-07): la fase se ejecuta tras T0.1 y **antes** de
 - **Entrega**: tablas `url_analysis`, `product_brief`, `brand_kit` (§12, con `domain` nullable y `source`).
 - **Verificación**: migración aplica sobre BD limpia y `psql \d` muestra tablas/columnas/enums esperados; insertar 2 filas de `brand_kit` con `domain NULL` entra sin conflicto y 2 con el mismo dominio falla la segunda con error de constraint (UNIQUE parcial verificado).
 
-#### T1.3 · Fast path determinista de ingesta
+#### T1.3 · Fast path determinista de ingesta [x] 2026-07-10 — PASS (3 URLs reales + fallback), ver docs/verifications/T1.3/ (coste $0)
 - **Depende de**: T1.2
 - **Entrega**: clasificador de URL (regex §7.2 N1), cliente Shopify `.json`, parsers JSON-LD (`Product/Offer/AggregateRating`) y OpenGraph, merge a `RawContent`; normalizador de URL + content_hash; manejo de 404/401 del `.json` con fallback transparente.
 - **Verificación**: contra 3 URLs reales (1 Shopify, 1 con JSON-LD, 1 solo-OG), el `RawContent` persistido contiene título/precio/imágenes correctos comprobados a mano contra la página; una URL cuyo `{url}.json` responde 404/401 degrada al parser JSON-LD/OG de forma transparente (sin error visible ni fila rota).

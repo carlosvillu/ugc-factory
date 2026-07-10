@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:e2e": "playwright test",
-    "smoke:assets": "tsx --env-file-if-exists=../../.env scripts/smoke-assets.ts"
+    "smoke:assets": "tsx --env-file-if-exists=../../.env scripts/smoke-assets.ts",
+    "smoke:ingest": "tsx --env-file-if-exists=../../.env scripts/smoke-ingest.ts"
   },
   "dependencies": {
     "@base-ui-components/react": "1.0.0-rc.0",

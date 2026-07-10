@@ -75,3 +75,10 @@ export type { NewAsset } from './schema/generation';
 // arranque de web desde BUDGET_MONTHLY_LIMIT_CENTS). `RecordCostInput`/`SpendSummary`
 // son los shapes públicos (los consumen el executor de demo y el route handler).
 export { recordCost, getSpendSummary, seedMonthlyBudgetIfAbsent } from './repos/spend.repo';
+// Escritura del análisis de URL (T1.3): el fast path de ingesta persiste el
+// RawContent + campos derivados (platform, url_normalized, content_hash) en
+// `url_analysis`. Lo consume el smoke de ingesta (`pnpm smoke:ingest`) y, en tareas
+// posteriores, el endpoint de N1. `getUrlAnalysis` (lectura por id) no sale al barrel
+// todavía: solo la usan los tests de integración (import relativo), sin consumidor de
+// runtime aún — knip vetaría el export sin consumidor.
+export { createUrlAnalysis } from './repos/url-analysis.repo';

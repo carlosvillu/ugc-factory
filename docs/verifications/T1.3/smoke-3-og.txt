@@ -1,0 +1,18 @@
+
+> @ugc/web@0.0.0 smoke:ingest /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/web
+> tsx --env-file-if-exists=../../.env scripts/smoke-ingest.ts
+
+smoke:ingest: proyecto 01KX6GBNA1PP5D26MV15QWBQXY creado
+smoke:ingest: URL           = https://bellroy.com/products/hide-and-seek-wallet
+smoke:ingest: platform      = shopify
+smoke:ingest: urlNormalized = https://bellroy.com/products/hide-and-seek-wallet
+smoke:ingest: contentHash   = 6e45f851773ae571bd8f36fd19719614be6b8ae7d376340f36df415a8faf7554
+smoke:ingest: warnings      = []
+smoke:ingest: --- RawContent extraído (comprobar a mano vs la página) ---
+smoke:ingest: title    = "Hide & Seek: Wallet With Hidden Pocket | Bellroy"
+smoke:ingest: price    = null
+smoke:ingest: currency = null
+smoke:ingest: images   = 1 imagen(es)
+smoke:ingest:   - https://bellroy-product-images.imgix.net//bellroy_dot_com_gallery_image/USD/WHSD-CAR-301/0
+smoke:ingest: PERSISTIDO url_analysis 01KX6GBPFAP15XER2EK86TS12P (status=done, platform=shopify)
+smoke:ingest: OK ✓ — inspecciona la fila arriba contra la página real

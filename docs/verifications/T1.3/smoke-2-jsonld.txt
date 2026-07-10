@@ -1,0 +1,18 @@
+
+> @ugc/web@0.0.0 smoke:ingest /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/web
+> tsx --env-file-if-exists=../../.env scripts/smoke-ingest.ts
+
+smoke:ingest: proyecto 01KX6GAW0HAG8V3PJ7CJKMD4KY creado
+smoke:ingest: URL           = https://woocommerce.com/products/woocommerce-bookings/
+smoke:ingest: platform      = shopify
+smoke:ingest: urlNormalized = https://woocommerce.com/products/woocommerce-bookings
+smoke:ingest: contentHash   = 132cc6d31c52f62795b0f3e33e31ee21d4c2c6a844cb521acf8ed4756de02ac1
+smoke:ingest: warnings      = []
+smoke:ingest: --- RawContent extraído (comprobar a mano vs la página) ---
+smoke:ingest: title    = "WooCommerce Bookings"
+smoke:ingest: price    = "221.00"
+smoke:ingest: currency = "EUR"
+smoke:ingest: images   = 1 imagen(es)
+smoke:ingest:   - https://woocommerce.com/wp-content/uploads/2014/05/Bookings_icon-marketplace-160x160-1.png
+smoke:ingest: PERSISTIDO url_analysis 01KX6GAWZRFAG8KRSG79HTZNVT (status=done, platform=shopify)
+smoke:ingest: OK ✓ — inspecciona la fila arriba contra la página real

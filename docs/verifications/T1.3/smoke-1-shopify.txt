@@ -1,0 +1,22 @@
+
+> @ugc/web@0.0.0 smoke:ingest /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/web
+> tsx --env-file-if-exists=../../.env scripts/smoke-ingest.ts
+
+smoke:ingest: proyecto 01KX6GAJF71NP7S1PV846XDFFW creado
+smoke:ingest: URL           = https://www.allbirds.com/products/mens-cruiser-shadow-blue-natural-white-sole
+smoke:ingest: platform      = shopify
+smoke:ingest: urlNormalized = https://www.allbirds.com/products/mens-cruiser-shadow-blue-natural-white-sole
+smoke:ingest: contentHash   = a74b41e97c88ff471c545bca95fa62f09e48cc9957735b692059a29bb2bfb380
+smoke:ingest: warnings      = []
+smoke:ingest: --- RawContent extraído (comprobar a mano vs la página) ---
+smoke:ingest: title    = "Men's Cruiser - Shadow Blue (Natural White Sole)"
+smoke:ingest: price    = "105.00"
+smoke:ingest: currency = "USD"
+smoke:ingest: images   = 5 imagen(es)
+smoke:ingest:   - https://cdn.shopify.com/s/files/1/1104/4168/files/All-birds_0010.png?v=1783535519
+smoke:ingest:   - https://cdn.shopify.com/s/files/1/1104/4168/files/All-birds_0017.png?v=1783535524
+smoke:ingest:   - https://cdn.shopify.com/s/files/1/1104/4168/files/All-birds_0029.png?v=1783535534
+smoke:ingest:   - https://cdn.shopify.com/s/files/1/1104/4168/files/All-birds_0014_e70e39f1-8894-4050-bd34-c34dd5348523.png?v=1783535552
+smoke:ingest:   - https://cdn.shopify.com/s/files/1/1104/4168/files/All-birds_0028.png?v=1783535556
+smoke:ingest: PERSISTIDO url_analysis 01KX6GAK8CZJCDBK0MX34RN38Y (status=done, platform=shopify)
+smoke:ingest: OK ✓ — inspecciona la fila arriba contra la página real

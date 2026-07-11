@@ -112,3 +112,58 @@ export function anthropicMalformedResponse(): Record<string, unknown> {
     },
   };
 }
+
+// ── Fixtures del BriefSynthesizer (T1.8, P4) ────────────────────────────────────────────────
+// El structured output de la síntesis es el ProductBrief COMPLETO (contrato T1.1). El fixture
+// feliz se construye con `makeBrief()` (misma factory que usan los tests de contrato: un solo
+// sitio donde vive un brief válido). Aquí solo viven los ENVOLTORIOS de respuesta Messages API y
+// las variantes INVÁLIDAS a propósito, que son las que prueban la red de seguridad Zod.
+
+/** Cuerpo de respuesta Messages API para la síntesis. `model` = claude-sonnet-5 (T1.8). Los
+ *  `usage` por defecto son realistas de una síntesis: input grande (markdown + system cacheado),
+ *  output de unos miles de tokens (el brief). */
+export function anthropicBriefResponse(
+  brief: unknown,
+  usage: Partial<{
+    input_tokens: number;
+    output_tokens: number;
+    cache_creation_input_tokens: number;
+    cache_read_input_tokens: number;
+  }> = {},
+): Record<string, unknown> {
+  return {
+    id: 'msg_test_brief_0001',
+    type: 'message',
+    role: 'assistant',
+    model: 'claude-sonnet-5',
+    content: [{ type: 'text', text: JSON.stringify(brief) }],
+    stop_reason: 'end_turn',
+    stop_sequence: null,
+    usage: {
+      input_tokens: usage.input_tokens ?? 9000,
+      output_tokens: usage.output_tokens ?? 3200,
+      cache_creation_input_tokens: usage.cache_creation_input_tokens ?? 0,
+      cache_read_input_tokens: usage.cache_read_input_tokens ?? 0,
+    },
+  };
+}
+
+/** Refusal del sintetizador: `stop_reason='refusal'`, content vacío ⇒ parsed_output=null. El
+ *  synthesizer lo maneja TIPADO (status='refused') y el coste SÍ se registra (se pagó el input). */
+export function anthropicBriefRefusalResponse(): Record<string, unknown> {
+  return {
+    id: 'msg_test_brief_refusal',
+    type: 'message',
+    role: 'assistant',
+    model: 'claude-sonnet-5',
+    content: [],
+    stop_reason: 'refusal',
+    stop_sequence: null,
+    usage: {
+      input_tokens: 8800,
+      output_tokens: 0,
+      cache_creation_input_tokens: 0,
+      cache_read_input_tokens: 0,
+    },
+  };
+}

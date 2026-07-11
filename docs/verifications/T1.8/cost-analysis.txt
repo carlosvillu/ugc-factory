@@ -1,0 +1,19 @@
+entrada                         in  c_write  c_read    out     $USD  cts BD  bound<15cts
+------------------------------------------------------------------------------------------
+URL_1 (FRÍA)                 20443    15154       0   8862 $ 0.2511     25c  EXCEDE
+URL_2 (CALIENTE)             63280        0   15154  11386 $ 0.3652     37c  EXCEDE
+TEXTO LIBRE (CALIENTE)         467        0   15154   5681 $ 0.0912      9c  OK
+ADVERSARIAL (CALIENTE)         807        0   15154   5783 $ 0.0937      9c  OK
+
+Los 2 briefs de URL REAL (lo que la Verificación exige) EXCEDEN el bound.
+Los 2 baratos son inputs SINTÉTICOS diminutos (467 y 807 tokens de input).
+
+Descomposición del brief CALIENTE de URL_2 (el caso que la Verificación mide):
+  input NO cacheado (markdown real):  63280 tok x $3/M       = $0.1898
+  cache_read (system):                15154 tok x $0.30/M    = $0.0045
+  output (el brief):                  11386 tok x $15/M      = $0.1708
+                                                      TOTAL = $0.3652
+
+=> La caché del system FUNCIONA (cache_read=15154, cuesta solo $0.0045).
+=> El coste NO lo domina el system: lo dominan el MARKDOWN REAL ($0.19) y el OUTPUT ($0.17).
+=> Ninguna de las dos palancas la toca el ajuste #1 (que solo neutraliza el cache_write).

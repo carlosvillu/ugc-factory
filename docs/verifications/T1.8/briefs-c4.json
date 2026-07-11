@@ -1,0 +1,12 @@
+{
+  "projectId": "01KX97XBYYM27EKJTZ32NDSAPB",
+  "latencyMs": 427,
+  "result": {
+    "brief": null,
+    "status": "api_error",
+    "usage": null,
+    "warnings": [
+      "brief_synthesis_api_error_400: 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"Your credit balance is too low to access the Anthropic API. Please go to Plans & Billing to upgrade or purchase credits.\"},\"request_id\":\"req_011CcvmHzPYkkP7Xw49CDS1X\"}"
+    ]
+  }
+}

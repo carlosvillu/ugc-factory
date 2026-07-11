@@ -1,0 +1,6 @@
+ provider  | count | sum 
+-----------+-------+-----
+ firecrawl |    11 |   2
+ anthropic |     5 |  81
+(2 rows)
+

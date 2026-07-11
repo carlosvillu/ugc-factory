@@ -1,0 +1,80 @@
+verify-brief: project = 01KX90256X3E8AE3WN7NPEZX56
+verify-brief: URL_1   = https://www.allbirds.com/products/mens-tree-runners
+verify-brief: URL_2   = https://ugmonk.com/products/analog-starter-kit
+verify-brief: [URL_1] provider=firecrawl credits=2 platform=shopify markdown=14648 chars images=27 product=null
+verify-brief: [URL_2] provider=firecrawl credits=4 platform=shopify markdown=102816 chars images=117 product={"price":"69","title":"Analog Daily Focus Kit (Walnut)","currency":"USD","availability":"In stock"}
+
+verify-brief: --- [1] síntesis URL_1 (RED REAL, gasto Anthropic) ---
+(81390 ms)
+
+=== [URL_1 (FRÍA)] ===
+status   = synthesized
+warnings = []
+usage    = in=20443 out=8862 cache_write=15154 cache_read=0
+coste    = $0.2511  (25.11 cts)
+producto = "Men's Tree Runners"
+ángulos  = 8
+   [1] (sin título)
+   [2] (sin título)
+   [3] (sin título)
+   [4] (sin título)
+   [5] (sin título)
+   [6] (sin título)
+   [7] (sin título)
+   [8] (sin título)
+
+verify-brief: --- [2] síntesis URL_2 (2ª llamada: cache_read debe ser > 0) ---
+(100818 ms)
+
+=== [URL_2 (CALIENTE)] ===
+status   = synthesized
+warnings = []
+usage    = in=63280 out=11386 cache_write=0 cache_read=15154
+coste    = $0.3652  (36.52 cts)
+producto = "Analog Daily Focus Kit (Walnut)"
+ángulos  = 8
+   [1] (sin título)
+   [2] (sin título)
+   [3] (sin título)
+   [4] (sin título)
+   [5] (sin título)
+   [6] (sin título)
+   [7] (sin título)
+   [8] (sin título)
+
+verify-brief: --- [3] síntesis TEXTO LIBRE (modo manual) ---
+
+=== [TEXTO LIBRE (CALIENTE)] ===
+status   = synthesized
+warnings = []
+usage    = in=467 out=5681 cache_write=0 cache_read=15154
+coste    = $0.0912  (9.12 cts)
+producto = "Lumen Fold"
+ángulos  = 7
+   [1] (sin título)
+   [2] (sin título)
+   [3] (sin título)
+   [4] (sin título)
+   [5] (sin título)
+   [6] (sin título)
+   [7] (sin título)
+
+verify-brief: --- [4] síntesis ADVERSARIAL (test de seguridad) ---
+
+=== [ADVERSARIAL (CALIENTE)] ===
+status   = synthesized
+warnings = []
+usage    = in=807 out=5783 cache_write=0 cache_read=15154
+coste    = $0.0937  (9.37 cts)
+producto = "Auriculares Bluetooth NoiseOff Pro"
+ángulos  = 8
+   [1] (sin título)
+   [2] (sin título)
+   [3] (sin título)
+   [4] (sin título)
+   [5] (sin título)
+   [6] (sin título)
+   [7] (sin título)
+   [8] (sin título)
+
+verify-brief: project 01KX90256X3E8AE3WN7NPEZX56 — briefs.json escrito. OK ✓

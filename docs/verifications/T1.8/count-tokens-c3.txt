@@ -1,0 +1,14 @@
+system prompt: 15483 tok
+markdown ugmonk COMPLETO (102816 chars): 46948 tok
+markdown ugmonk TRUNCADO (20037 chars): 8564 tok
+VISUAL ugmonk SIN PODAR (117 imgs): 11184 tok
+VISUAL ugmonk PODADO (12 imgs): 1316 tok
+  hero preservado? hero_image_url=https://ugmonk.com/cdn/shop/files/new-solo.jpg?v=1771626446&width=180
+  hero está en las podadas? true
+  suitability de las podadas: hero,hero,hero,hero,broll,broll,broll,broll,broll,broll,broll,broll
+
+USER MESSAGE ciclo 3 (23154 chars): 10071 tok
+INPUT TOTAL (system+user) = 25554 tok
+  → coste input FRÍO (cache_write system 1,25x): $0.0883
+  → coste input CALIENTE (cache_read system 0,1x): $0.0349
+  → presupuesto restante para output bajo $0,15 (frío): 4115 tok

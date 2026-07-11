@@ -16,8 +16,10 @@ export default defineConfig({
           include: process.env.RUN_LIVE ? ['**/*.live.test.ts'] : [],
           exclude: ['**/node_modules/**'],
           setupFiles: ['@ugc/test-utils/setup-env'],
-          // globalSetup '@ugc/test-utils/live-budget' (ledger LIVE_BUDGET_USD)
-          // llega con el tier live en T1.8 (external-apis.md).
+          // globalSetup del guard de presupuesto (T1.8, external-apis.md §8): crea el ledger
+          // que `spendBudget()` consulta antes de CADA llamada de pago. Sin él, los tests live
+          // abortan fail-closed (no se gasta un céntimo sin techo declarado).
+          globalSetup: ['@ugc/test-utils/live-budget'],
           testTimeout: 300_000,
         },
       },

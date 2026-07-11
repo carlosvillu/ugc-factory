@@ -81,7 +81,7 @@ Este producto no compite en el mercado SaaS: es la máquina de growth personal d
 
 | # | Objetivo | Medible por |
 |---|---|---|
-| O1 | Analizar una URL de producto (o texto libre) y producir un **ProductBrief** multifaceta editable con trazabilidad extraído-vs-inferido | Brief completo conforme a schema en <90 s, coste <$0,15 |
+| O1 | Analizar una URL de producto (o texto libre) y producir un **ProductBrief** multifaceta editable con trazabilidad extraído-vs-inferido | Brief completo conforme a schema en <90 s, coste **<$0,25** (revisado en T1.8 — ver nota) |
 | O2 | Generar una **matriz de variantes** (ángulos × hooks × avatares × duraciones) con guiones editables | Lote de 10 variantes definido en <5 min de interacción |
 | O3 | Renderizar anuncios 9:16 completos (avatar + voz + b-roll + subtítulos karaoke + música) vía fal.ai + worker FFmpeg | Vídeo master válido (ffprobe + QA checks) en <8 min/variante; COGS según tier |
 | O4 | **Pipeline visual** tipo grafo con estado en vivo, checkpoints editables y autopilot conmutable por lote | Cada nodo muestra estado/coste/output; pausar-editar-reanudar funciona en todos los checkpoints |
@@ -90,6 +90,16 @@ Este producto no compite en el mercado SaaS: es la máquina de growth personal d
 | O7 | **Medir y realimentar**: ingesta de hook rate, thumbstop, CTR, spend por variante; reglas kill/scale a 24–48 h; scoring que realimenta galería de prompts, hooks y avatares | Dashboard por variante con linaje completo hook→métrica; recomendaciones de siguiente lote |
 | O8 | **Multi-idioma desde el día 1**: guiones, voces y hooks localizables por mercado | Un lote puede generar la misma matriz en N idiomas |
 | O9 | **Panel de gasto**: ledger de coste real por generación/lote/proyecto, con alertas configurables | Coste visible antes (estimado) y después (real) de cada nodo |
+
+> **Nota sobre el coste de O1: el bound sube de $0,15 a $0,25** (decisión del usuario, 2026-07-11, tras tres ciclos de verificación de T1.8 con medición real).
+>
+> **Por qué**: el $0,15 original era una estimación *a priori* que resultó incompatible con las otras dos decisiones del propio PRD. Medido: con la entrada ya optimizada al máximo, el presupuesto de salida bajo $0,15 es de **4.115 tokens**, y el brief más austero que el sistema sabe escribir (5 ángulos, sin relleno) pesa **6.884–8.076 tokens** — **1,7× el presupuesto**. No es un problema de implementación: **$0,15 + Sonnet 5 ($15/MTok de salida) + el tamaño del contrato ProductBrief (Apéndice A) no caben juntos**; solo se pueden tener dos de los tres. Se elige mantener Sonnet 5 (la síntesis es la pieza más inteligente del pipeline: ángulos, objeciones, inferencias defendibles) y el contrato íntegro, y ceder en el número.
+>
+> **Coste real medido de N3** (landing DTC real, entrada ya optimizada): **19 cts en llamada fría, 16 cts en caliente**. Nota: la caché *ephemeral* de Anthropic dura ~5 min, así que en producción **la mayoría de análisis pagan la escritura fría**. La rama de **reintento** (ver planning T1.8 nota 4) llega a **32–38 cts**: es el techo excepcional, no el caso normal.
+>
+> **Optimizaciones que SÍ se aplicaron** (y que bajaron el coste de 37 → 16-19 cts): poda del bloque de análisis visual (era el 38 % del input: 117 imágenes clasificadas → solo las útiles para vídeo, −88 %), techo de markdown, y 5–6 ángulos. La escritura de caché del system, en cambio, es solo el 1 % del coste — irrelevante como palanca.
+>
+> **Contexto económico**: el brief se produce **una vez por producto/URL** y alimenta un lote entero de variantes, así que su coste se prorratea entre todos los vídeos del lote. El COGS del vídeo (§16, Apéndice B) es el que gobierna el gasto real.
 
 ### 3.2 No-objetivos (explícitamente fuera)
 

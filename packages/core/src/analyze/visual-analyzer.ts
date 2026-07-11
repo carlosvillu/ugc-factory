@@ -26,6 +26,13 @@ import {
   VideoSuitabilitySchema,
 } from '../contracts/product-brief';
 import type { VisualAnalysis } from '../contracts/visual-analysis';
+import {
+  makeAnthropicClient,
+  toAnthropicUsage,
+  DEFAULT_ANTHROPIC_TIMEOUT_MS,
+  type AnthropicDeps,
+  type AnthropicUsage,
+} from './anthropic-client';
 import { rescaleImage, type ImageBytes } from './rescale';
 
 /** Modelo de visión: Haiku 4.5 ($1/$5 por M). OVERRIDE del default "opus" de la skill
@@ -42,10 +49,6 @@ const MAX_TOKENS = 2048;
  *  imagen (coste) y evita mandar galerías enormes. El screenshot NO cuenta contra este tope
  *  (es una entrada aparte, la del tono de marca). */
 const MAX_PRODUCT_IMAGES = 8;
-
-/** Timeout duro de la llamada (ms). Una request de visión colgada dejaría el paso sin señal;
- *  el SDK ya reintenta 429/5xx internamente. 60s es holgado para Haiku + varias imágenes. */
-const DEFAULT_TIMEOUT_MS = 60_000;
 
 // ── Prompt P3 (research/07 §5 P3, líneas ~506-530) ───────────────────────────────
 // System cacheado (cache_control ephemeral). OJO: el mínimo cacheable de Haiku 4.5 es 4096
@@ -106,15 +109,10 @@ const P3ResponseSchema = z.object({
 });
 type P3Response = z.infer<typeof P3ResponseSchema>;
 
-/** Uso de tokens de la llamada, tal cual lo reporta `response.usage`. El caller (servicio de
- *  web) lo convierte a `cost_entry` (provider='anthropic'). Se exponen los 4 campos que
- *  importan para el coste con prompt caching (skill claude-api, usage §). */
-export interface VisualAnalyzerUsage {
-  inputTokens: number;
-  outputTokens: number;
-  cacheCreationInputTokens: number;
-  cacheReadInputTokens: number;
-}
+/** Uso de tokens de la llamada. Alias del contrato COMPARTIDO `AnthropicUsage` (T1.8 lo extrajo
+ *  a `anthropic-client.ts` para que VisualAnalyzer y BriefSynthesizer no dupliquen el mapeo). El
+ *  nombre se conserva porque es el que consume el servicio de web de T1.7. */
+export type VisualAnalyzerUsage = AnthropicUsage;
 
 /** Estado del paso de visión (observable, para logs/tests y para que el servicio decida):
  *  - 'analyzed': llamada OK, VisualAnalysis poblado desde la respuesta del VLM.
@@ -165,19 +163,10 @@ export interface VisualAnalyzeInput {
   productImages?: VisualAnalyzerImageInput[];
 }
 
-/** Deps del VisualAnalyzer. Espeja `FirecrawlDeps`: `apiKey` en claro (el caller la descifra
- *  de secretos T0.14 — core NUNCA lee env/BD), `fetch`/`baseURL` inyectables para msw en
- *  tests, `timeoutMs` override. */
-export interface VisualAnalyzerDeps {
-  apiKey: string;
-  /** `fetch` inyectable. El SDK lo captura AL CONSTRUIR el cliente; por eso el cliente se
-   *  construye EN CADA `analyze()` (no al hacer la factory), para que msw —que reemplaza el
-   *  global tras construir la factory— intercepte (mismo razonamiento perezoso que T1.3/T1.4). */
-  fetch?: typeof globalThis.fetch;
-  /** Override del base URL de la API (tests legibles con msw). */
-  baseURL?: string;
-  timeoutMs?: number;
-}
+/** Deps del VisualAnalyzer. Alias de `AnthropicDeps` (contrato COMPARTIDO con el
+ *  BriefSynthesizer, extraído en T1.8): `apiKey` en claro (el caller la descifra de secretos
+ *  T0.14 — core NUNCA lee env/BD), `fetch`/`baseURL` inyectables para msw, `timeoutMs` override. */
+export type VisualAnalyzerDeps = AnthropicDeps;
 
 /** Un color de la paleta VLM saneado: hex no vacío. */
 function cleanStrings(values: string[]): string[] {
@@ -257,7 +246,8 @@ function toBase64Source(bytes: ImageBytes): Anthropic.Base64ImageSource {
 }
 
 export function makeVisualAnalyzer(deps: VisualAnalyzerDeps) {
-  const timeoutMs = deps.timeoutMs ?? DEFAULT_TIMEOUT_MS;
+  // 60s es holgado para Haiku + varias imágenes; el SDK ya reintenta 429/5xx internamente.
+  const timeoutMs = deps.timeoutMs ?? DEFAULT_ANTHROPIC_TIMEOUT_MS;
 
   /**
    * Ejecuta el análisis visual. Si NO hay imágenes (ni screenshot ni productos) → 'skipped'
@@ -283,14 +273,9 @@ export function makeVisualAnalyzer(deps: VisualAnalyzerDeps) {
     }
 
     // Construir el cliente EN CADA llamada (no en la factory): el SDK captura `fetch` al
-    // construir, y msw reemplaza el global tras crear la factory. `baseURL`/`timeout`
-    // inyectables. `maxRetries` default (2) — reintenta 429/5xx.
-    const client = new Anthropic({
-      apiKey: deps.apiKey,
-      ...(deps.baseURL !== undefined ? { baseURL: deps.baseURL } : {}),
-      ...(deps.fetch !== undefined ? { fetch: deps.fetch } : {}),
-      timeout: timeoutMs,
-    });
+    // construir, y msw reemplaza el global tras crear la factory. Helper COMPARTIDO con el
+    // BriefSynthesizer (T1.8). `maxRetries` default (2) — reintenta 429/5xx.
+    const client = makeAnthropicClient({ ...deps, timeoutMs });
 
     // Bloques de contenido del user message: instrucción + screenshot (rescatado) + imágenes.
     const content: Anthropic.ContentBlockParam[] = [{ type: 'text', text: USER_INSTRUCTION }];
@@ -351,15 +336,9 @@ export function makeVisualAnalyzer(deps: VisualAnalyzerDeps) {
       };
     }
 
-    // `cache_*` pueden venir null en el tipo del SDK (respuestas sin caching): se colapsan a 0
-    // para mantener el contrato entero de `cost_entry`. `input_tokens`/`output_tokens` son
-    // siempre número en el tipo del mensaje parseado.
-    const usage: VisualAnalyzerUsage = {
-      inputTokens: response.usage.input_tokens,
-      outputTokens: response.usage.output_tokens,
-      cacheCreationInputTokens: response.usage.cache_creation_input_tokens ?? 0,
-      cacheReadInputTokens: response.usage.cache_read_input_tokens ?? 0,
-    };
+    // Mapeo COMPARTIDO (`toAnthropicUsage`): los `cache_*` pueden venir null en el tipo del SDK
+    // (respuestas sin caching) y se colapsan a 0 para mantener el contrato entero de `cost_entry`.
+    const usage: VisualAnalyzerUsage = toAnthropicUsage(response.usage);
 
     // parsed_output===null ⇒ refusal o respuesta sin bloque de texto (skill claude-api: la
     // primera llamada LLM puede volver null). Manejo TIPADO — se registra el coste (se pagaron

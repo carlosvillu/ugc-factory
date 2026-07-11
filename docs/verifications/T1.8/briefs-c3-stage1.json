@@ -1,0 +1,776 @@
+{
+  "projectId": "01KX9A5H7DZA7BZCETZ2SX3X2M",
+  "results": [
+    {
+      "label": "URL_1 allbirds (FRÍA, visual 27)",
+      "status": "synthesized",
+      "usage": {
+        "inputTokens": 10025,
+        "outputTokens": 7759,
+        "cacheCreationInputTokens": 15491,
+        "cacheReadInputTokens": 0
+      },
+      "warnings": [],
+      "brief": {
+        "meta": {
+          "source_url": "https://www.allbirds.com/products/mens-tree-runners",
+          "platform": "shopify",
+          "language": "es",
+          "extracted_at": "2026-07-11T19:23:46.848Z",
+          "extraction_confidence": "low",
+          "warnings": [
+            "La URL objetivo era 'mens-tree-runners' pero la página cargada fue la home de Allbirds; no se encontró contenido específico del producto Tree Runners (precio, tallas, materiales exactos de ese modelo).",
+            "Los datos estructurados de producto vienen vacíos (product: null, branding: null); todo el precio y features se ha inferido de otros productos listados en la home (Runner NZ, Cruiser) como referencia de categoría y rango de precio, no del Tree Runner específico.",
+            "El markdown contiene múltiples bloques 'This page has been blocked by an extension' que son ruido técnico de la página, no contenido real; se han ignorado.",
+            "No hay reviews textuales en el markdown de la página; las citas de prueba social provienen únicamente del bloque de análisis visual (rendered_social_proof).",
+            "Sin FAQ, garantías o política de devoluciones visibles en el contenido proporcionado; los contraargumentos de objeciones son inferidos, no extraídos de la página."
+          ]
+        },
+        "product": {
+          "name": "Allbirds Tree Runners (Hombre)",
+          "brand_name": "Allbirds",
+          "category": "Calzado",
+          "subcategory": "Zapatillas deportivas casuales",
+          "one_liner": "Zapatillas ligeras y transpirables hechas con fibra de eucalipto, pensadas para llevarlas todo el día.",
+          "description": "Los Tree Runners de Allbirds forman parte de la gama de calzado casual de la marca, construida con materiales de origen natural como fibra de árbol, lana y espuma de caña de azúcar. La página de producto específica no cargó, por lo que la descripción se apoya en el posicionamiento general de la marca visible en la home: comodidad para todo el día y materiales sostenibles.",
+          "features": [
+            {
+              "feature": "Calzado ligero y con amortiguación (bouncy)",
+              "evidence": "Lightweight, bouncy, and wildly comfortable, Allbirds shoes make any outing feel effortless."
+            },
+            {
+              "feature": "Materiales de origen natural (lana, fibra de árbol, caña de azúcar)",
+              "evidence": "We replace petroleum-based synthetics with natural alternatives wherever we can. Like using wool, tree fiber, and sugarcane."
+            },
+            {
+              "feature": "Enfoque de sostenibilidad y reducción de huella de carbono",
+              "evidence": "From materials to transport, we’re working to reduce our carbon footprint to near zero."
+            },
+            {
+              "feature": "Distintos formatos de calzado disponibles: lace-up, slip-on",
+              "evidence": "Slip in, lace up, or slide them on and enjoy the comfy support."
+            }
+          ],
+          "how_it_works": null,
+          "variants": []
+        },
+        "benefits": [
+          {
+            "benefit": "Comodidad todo el día sin fricción",
+            "linked_feature": "Calzado ligero y con amortiguación (bouncy)",
+            "emotional_outcome": "Te olvidas de los pies al final del día, sin cansancio ni molestias",
+            "type": "functional"
+          },
+          {
+            "benefit": "Materiales naturales en lugar de sintéticos derivados del petróleo",
+            "linked_feature": "Materiales de origen natural (lana, fibra de árbol, caña de azúcar)",
+            "emotional_outcome": "Sientes que tu elección de compra tiene sentido, sin cargo de conciencia",
+            "type": "emotional"
+          },
+          {
+            "benefit": "Marca con compromiso medioambiental verificable",
+            "linked_feature": "Enfoque de sostenibilidad y reducción de huella de carbono",
+            "emotional_outcome": "Proyectas ante otros una imagen de persona consciente y con criterio",
+            "type": "social"
+          },
+          {
+            "benefit": "Fácil de poner y quitar según el formato",
+            "linked_feature": "Distintos formatos de calzado disponibles: lace-up, slip-on",
+            "emotional_outcome": "Ganas minutos cada mañana sin complicarte con cordones si no quieres",
+            "type": "functional"
+          }
+        ],
+        "audience": {
+          "primary_segment": "Profesional urbano activo, 28-45 años",
+          "segments": [
+            {
+              "name": "Profesional urbano activo, 28-45 años",
+              "demographics": "Hombres de 28 a 45 años, con trabajo de oficina o remoto, poder adquisitivo medio-alto, en ciudades",
+              "psychographics": "Valora la comodidad práctica por encima de la moda ostentosa, le importa el impacto ambiental de lo que compra, busca calzado versátil para caminar, ir al trabajo o viajar",
+              "awareness_level": "solution_aware",
+              "usage_context": "Uso diario en ciudad, desplazamientos, viajes cortos, oficina casual",
+              "avatar_hint": "Hombre de unos 30-35 años, tono relajado y cercano, grabando en su casa o de camino a la calle con las zapatillas puestas"
+            },
+            {
+              "name": "Consumidor consciente con el medioambiente",
+              "demographics": "Adultos de 25 a 40 años, urbanos, con estudios superiores",
+              "psychographics": "Prioriza marcas con compromiso de sostenibilidad, dispuesto a pagar algo más por materiales de origen natural, escéptico ante el 'greenwashing'",
+              "awareness_level": "problem_aware",
+              "usage_context": "Compra reflexiva, investiga materiales y marca antes de decidir",
+              "avatar_hint": "Persona de estilo natural/minimalista, tono calmado y algo educativo, mostrando el zapato de cerca"
+            },
+            {
+              "name": "Viajero frecuente que busca calzado versátil",
+              "demographics": "Adultos de 25 a 50 años que viajan por trabajo o placer varias veces al año",
+              "psychographics": "Busca una sola zapatilla que sirva para caminar mucho, sea cómoda en avión y no ocupe espacio ni pese en la maleta",
+              "awareness_level": "product_aware",
+              "usage_context": "Viajes, aeropuertos, turismo urbano, caminatas largas",
+              "avatar_hint": "Persona con mochila o maleta de cabina, energía práctica, probándose o enseñando el zapato en un entorno de viaje"
+            }
+          ],
+          "not_for": "No es la opción indicada para quien busca calzado técnico de alto rendimiento deportivo (running competitivo, trail) ni para quien prioriza estética de lujo o diseño maximalista por encima de la comodidad y la sostenibilidad."
+        },
+        "pain_points": [
+          {
+            "pain": "Zapatillas del día a día que aprietan o cansan los pies tras varias horas de uso",
+            "severity": "medium",
+            "current_alternative": "Zapatillas deportivas convencionales de materiales sintéticos",
+            "evidence": null
+          },
+          {
+            "pain": "Sensación de contradicción entre comprar ropa/calzado y cuidar el medioambiente",
+            "severity": "medium",
+            "current_alternative": "Marcas de moda rápida sin compromiso ambiental declarado",
+            "evidence": "From materials to transport, we’re working to reduce our carbon footprint to near zero."
+          },
+          {
+            "pain": "Necesidad de llevar varios pares de zapatos distintos según la ocasión (viaje, oficina, calle)",
+            "severity": "low",
+            "current_alternative": "Combinar varios pares de calzado especializado",
+            "evidence": null
+          }
+        ],
+        "objections": [
+          {
+            "objection": "¿Merece la pena pagar más por unas zapatillas 'sostenibles' frente a una marca genérica más barata?",
+            "type": "price",
+            "counter": "El coste extra se traduce en materiales naturales (lana, fibra de árbol, caña de azúcar) en lugar de sintéticos derivados del petróleo, y en un compromiso medible de reducción de huella de carbono, no solo en una etiqueta de marketing.",
+            "counter_source": "inferred"
+          },
+          {
+            "objection": "¿De verdad son tan cómodas como dicen o es solo el copy de la marca?",
+            "type": "skepticism",
+            "counter": "La valoración media de 4.7 sobre 2.108 reseñas y comentarios como 'the most comfortable shoes I have ever owned' respaldan la comodidad más allá del discurso de marca.",
+            "counter_source": "on_page"
+          },
+          {
+            "objection": "No sé si el modelo Tree Runner es lace-up o slip-on, o qué tallaje elegir sin probarlo",
+            "type": "friction",
+            "counter": "Allbirds ofrece distintos formatos (con cordones o slip-on) dentro de su gama, así que hay opción según preferencia; se recomienda consultar la guía de tallas de la página de producto antes de comprar.",
+            "counter_source": "inferred"
+          },
+          {
+            "objection": "¿Y si no me sirven o no me gustan al recibirlas?",
+            "type": "risk",
+            "counter": "Al no encontrarse una política de devoluciones explícita en el contenido disponible, se recomienda verificar en la web las condiciones de cambio y devolución antes de asegurar este punto en el anuncio.",
+            "counter_source": "inferred"
+          }
+        ],
+        "social_proof": {
+          "rating": 4.7,
+          "review_count": 2108,
+          "quotes": [
+            {
+              "quote": "The most comfortable shoes I have ever owned, I wear them every single day.",
+              "author": null
+            },
+            {
+              "quote": "Bought a second pair within a week. Worth every penny.",
+              "author": null
+            }
+          ],
+          "badges": [],
+          "stats": []
+        },
+        "brand": {
+          "tone_of_voice": "Cercano, natural y con orientación de sostenibilidad; discurso sencillo centrado en el bienestar cotidiano más que en la performance técnica",
+          "recommended_ad_tone": "authentic",
+          "visual_style": {
+            "palette": [
+              "#F5F0E8",
+              "#2E2E2E",
+              "#7BA05B",
+              "#FFFFFF"
+            ],
+            "aesthetic": "earthy minimal",
+            "photography_style": "fotografía de producto natural con luz suave y fondos neutros"
+          },
+          "banned_or_risky_claims": []
+        },
+        "pricing": {
+          "price": null,
+          "currency": null,
+          "compare_at_price": null,
+          "active_offer": "Envío gratis a partir de $100",
+          "guarantee": null,
+          "shipping": "Free ground shipping on orders over $100",
+          "positioning": "mid-range"
+        },
+        "assets": {
+          "hero_image_url": "https://www.allbirds.com/cdn/shop/files/SKU-SOCKS-GLOBAL-ANKLE-BLIZZARD-1_Resize_0002_SKU-SOCKS-GLOBAL-NOSHOW-BLIZZARD-1-min.png?v=1761253089&width=180",
+          "images": [
+            {
+              "url": "https://www.allbirds.com/cdn/shop/files/SKU-SOCKS-GLOBAL-ANKLE-BLIZZARD-1_Resize_0002_SKU-SOCKS-GLOBAL-NOSHOW-BLIZZARD-1-min.png?v=1761253089&width=180",
+              "kind": "packshot",
+              "has_overlay_text": true,
+              "background": "clean",
+              "video_suitability": "hero"
+            },
+            {
+              "url": "https://www.allbirds.com/cdn/shop/files/SKU-SOCKS-GLOBAL-ANKLE-BLIZZARD-1_Resize_0006_Layer-1-min.png?v=1761253065&width=180",
+              "kind": "lifestyle",
+              "has_overlay_text": false,
+              "background": "busy",
+              "video_suitability": "hero"
+            },
+            {
+              "url": "https://www.allbirds.com/cdn/shop/products/STIUWE_SOCKS_WHEAT_FRONT_Resize_0001_SKU-SOCKS-GLOBAL-CREW-NATURAL-BLACK-1-min.png?v=1676567942&width=180",
+              "kind": "detail",
+              "has_overlay_text": false,
+              "background": "transparent",
+              "video_suitability": "hero"
+            },
+            {
+              "url": "https://www.allbirds.com/cdn/shop/files/A12729-front-2400x2400_2.png?v=1770422106&width=180",
+              "kind": "infographic",
+              "has_overlay_text": false,
+              "background": "unknown",
+              "video_suitability": "hero"
+            },
+            {
+              "url": "https://www.allbirds.com/cdn/shop/files/26Q1_DasherNZ_Site_Homepage_Hero_Mobile_9x16_2.jpg?v=1779316979&width=180",
+              "kind": "other",
+              "has_overlay_text": true,
+              "background": "busy",
+              "video_suitability": "broll"
+            },
+            {
+              "url": "https://www.allbirds.com/cdn/shop/files/A12622_26Q1_Runner-NZ-Slip-On-Mushroom-Mushroom_PDP_LEFT.png?v=1768951251&width=180",
+              "kind": "other",
+              "has_overlay_text": false,
+              "background": "unknown",
+              "video_suitability": "broll"
+            },
+            {
+              "url": "https://www.allbirds.com/cdn/shop/files/A12386_26Q1_Runner-NZ-Slip-On-Anthracite-Dark-Anthr-Sole_PDP_LEFT.png?v=1768951111&width=180",
+              "kind": "packshot",
+              "has_overlay_text": false,
+              "background": "clean",
+              "video_suitability": "broll"
+            },
+            {
+              "url": "https://www.allbirds.com/cdn/shop/files/A11559_25Q3_Cruiser_Dark_Navy_Blizzard_PDP_LEFT-2000x2000_9f5ba943-6b25-4f75-9c74-edd67a6a0aa7.png?v=1751900449&width=180",
+              "kind": "detail",
+              "has_overlay_text": false,
+              "background": "transparent",
+              "video_suitability": "broll"
+            }
+          ],
+          "video_urls": []
+        },
+        "angles": [
+          {
+            "name": "Comodidad real, todo el día",
+            "framework": "pain_point",
+            "target_segment": "Profesional urbano activo, 28-45 años",
+            "awareness_level": "solution_aware",
+            "hook_examples": [
+              "Llevo estas puestas desde las 7 de la mañana y aún no me duelen los pies.",
+              "¿Sabes esa sensación de quitarte los zapatos aliviado? Con estas no la tienes.",
+              "Ocho horas de pie y sigo sin notar las zapatillas."
+            ],
+            "key_message": "Las Tree Runners están diseñadas para llevarse todo el día sin la fatiga habitual del calzado convencional, gracias a su ligereza y amortiguación.",
+            "objection_addressed": "¿De verdad son tan cómodas como dicen o es solo el copy de la marca?",
+            "social_proof_used": "The most comfortable shoes I have ever owned, I wear them every single day.",
+            "cta": "Descubre las Tree Runners y siente la diferencia desde el primer paso.",
+            "suggested_tone": "authentic",
+            "suggested_assets": [
+              "https://www.allbirds.com/cdn/shop/files/SKU-SOCKS-GLOBAL-ANKLE-BLIZZARD-1_Resize_0002_SKU-SOCKS-GLOBAL-NOSHOW-BLIZZARD-1-min.png?v=1761253089&width=180",
+              "https://www.allbirds.com/cdn/shop/files/A12386_26Q1_Runner-NZ-Slip-On-Anthracite-Dark-Anthr-Sole_PDP_LEFT.png?v=1768951111&width=180"
+            ]
+          },
+          {
+            "name": "Materiales naturales frente a lo sintético de siempre",
+            "framework": "us_vs_them",
+            "target_segment": "Consumidor consciente con el medioambiente",
+            "awareness_level": "problem_aware",
+            "hook_examples": [
+              "Casi todas las zapatillas que has tenido están hechas de plástico derivado del petróleo.",
+              "Esto no es lana normal, es lana pensada para sustituir sintéticos.",
+              "¿Sabías que la caña de azúcar puede acabar en la suela de un zapato?"
+            ],
+            "key_message": "En lugar de sintéticos derivados del petróleo, la marca usa materiales de origen natural como lana, fibra de árbol y caña de azúcar, sin renunciar a la comodidad.",
+            "objection_addressed": "¿Merece la pena pagar más por unas zapatillas 'sostenibles' frente a una marca genérica más barata?",
+            "social_proof_used": null,
+            "cta": "Cambia de material sin cambiar de comodidad: prueba las Tree Runners.",
+            "suggested_tone": "friendly",
+            "suggested_assets": [
+              "https://www.allbirds.com/cdn/shop/products/STIUWE_SOCKS_WHEAT_FRONT_Resize_0001_SKU-SOCKS-GLOBAL-CREW-NATURAL-BLACK-1-min.png?v=1676567942&width=180",
+              "https://www.allbirds.com/cdn/shop/files/A11559_25Q3_Cruiser_Dark_Navy_Blizzard_PDP_LEFT-2000x2000_9f5ba943-6b25-4f75-9c74-edd67a6a0aa7.png?v=1751900449&width=180"
+            ]
+          },
+          {
+            "name": "El zapato que se lleva en la maleta y en la ciudad",
+            "framework": "identity",
+            "target_segment": "Viajero frecuente que busca calzado versátil",
+            "awareness_level": "product_aware",
+            "hook_examples": [
+              "Este es el único par que meto en la maleta de cabina.",
+              "Si viajas con una mochila, sabes lo que pesa cada par extra de zapatos.",
+              "De la sala de embarque a caminar toda la tarde, sin cambiarme de calzado."
+            ],
+            "key_message": "Las Tree Runners funcionan igual de bien para caminar por la ciudad que para un vuelo largo, por lo que se convierten en el único par necesario en el equipaje.",
+            "objection_addressed": "No sé si el modelo Tree Runner es lace-up o slip-on, o qué tallaje elegir sin probarlo",
+            "social_proof_used": null,
+            "cta": "Haz que sea tu único par de viaje: consíguelas ahora.",
+            "suggested_tone": "friendly",
+            "suggested_assets": [
+              "https://www.allbirds.com/cdn/shop/files/A12622_26Q1_Runner-NZ-Slip-On-Mushroom-Mushroom_PDP_LEFT.png?v=1768951251&width=180"
+            ]
+          },
+          {
+            "name": "Lo que dicen 2.108 personas",
+            "framework": "social_proof",
+            "target_segment": "Profesional urbano activo, 28-45 años",
+            "awareness_level": "most_aware",
+            "hook_examples": [
+              "Más de dos mil personas han valorado esto con casi la nota máxima.",
+              "Hay gente que se compró un segundo par en la misma semana.",
+              "4.7 sobre 5 no es casualidad: mira por qué."
+            ],
+            "key_message": "La valoración media de 4.7 con más de 2.000 reseñas, y comentarios de recompra en la misma semana, respaldan que la comodidad prometida se sostiene en el uso real.",
+            "objection_addressed": "¿De verdad son tan cómodas como dicen o es solo el copy de la marca?",
+            "social_proof_used": "Bought a second pair within a week. Worth every penny.",
+            "cta": "Únete a los miles que ya no se quitan sus Allbirds.",
+            "suggested_tone": "energetic",
+            "suggested_assets": [
+              "https://www.allbirds.com/cdn/shop/files/SKU-SOCKS-GLOBAL-ANKLE-BLIZZARD-1_Resize_0006_Layer-1-min.png?v=1761253065&width=180"
+            ]
+          },
+          {
+            "name": "Ponte el zapato y mira cómo se comporta",
+            "framework": "unboxing_demo",
+            "target_segment": "Consumidor consciente con el medioambiente",
+            "awareness_level": "problem_aware",
+            "hook_examples": [
+              "Mira cómo se dobla la suela cuando lo aprieto con la mano.",
+              "Voy a enseñarte de qué está hecho este zapato por dentro.",
+              "Esto es lo primero que noto al ponérmelo."
+            ],
+            "key_message": "Mostrar en cámara la flexibilidad, el tacto de los materiales naturales y la ligereza del zapato para que la audiencia lo vea antes de creerlo.",
+            "objection_addressed": "No sé si el modelo Tree Runner es lace-up o slip-on, o qué tallaje elegir sin probarlo",
+            "social_proof_used": null,
+            "cta": "Pídelas y compruébalo tú mismo en tus pies.",
+            "suggested_tone": "authentic",
+            "suggested_assets": [
+              "https://www.allbirds.com/cdn/shop/files/A12729-front-2400x2400_2.png?v=1770422106&width=180"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "label": "URL_2 ugmonk (CALIENTE, visual 117)",
+      "status": "synthesized",
+      "usage": {
+        "inputTokens": 10071,
+        "outputTokens": 7708,
+        "cacheCreationInputTokens": 0,
+        "cacheReadInputTokens": 15491
+      },
+      "warnings": [
+        "markdown_truncated"
+      ],
+      "brief": {
+        "meta": {
+          "source_url": "https://ugmonk.com/products/analog-starter-kit",
+          "platform": "shopify",
+          "language": "es",
+          "extracted_at": "2026-07-11T19:24:58.596Z",
+          "extraction_confidence": "high",
+          "warnings": [
+            "El precio estructurado ($99.00) difiere del precio real de esta variante en la página ($69 para Daily Focus Kit Walnut); se usa el precio de la página del producto principal ($69) porque los datos estructurados parecen corresponder a un kit distinto (Annual/Starter combinado) y el markdown confirma consistentemente $69 para esta variante concreta.",
+            "La página incluye muchas imágenes repetidas en distintos tamaños; se ha seleccionado solo un subconjunto útil para rodaje según el análisis visual."
+          ]
+        },
+        "product": {
+          "name": "Analog Daily Focus Kit (Walnut)",
+          "brand_name": "Ugmonk",
+          "category": "Productividad / Papelería",
+          "subcategory": "Sistema de gestión de tareas analógico",
+          "one_liner": "Un sistema físico de tarjetas y soporte de madera para priorizar tus tareas más importantes cada día.",
+          "description": "Analog es un sistema de productividad analógico que funciona como complemento físico de tus herramientas digitales. El kit incluye un soporte de madera de nogal americano y tarjetas de tareas mensuales organizadas en Today, Next y Someday, ayudando a enfocarte en lo esencial sin depender de la pantalla.",
+          "features": [
+            {
+              "feature": "1 mes de tarjetas de tareas Analog (30 Today, 2 Next, 1 Someday)",
+              "evidence": "1 Month of Analog Task Cards (30 Today, 2 Next, 1 Someday)"
+            },
+            {
+              "feature": "Soporte de tarjetas de madera de nogal americano macizo",
+              "evidence": "American walnut card holder"
+            },
+            {
+              "feature": "Logo Ugmonk grabado con láser",
+              "evidence": "Laser-engraved Ugmonk logo"
+            },
+            {
+              "feature": "Pies de goma antideslizantes",
+              "evidence": "Non-slip rubber feet"
+            },
+            {
+              "feature": "Divisor de tarjetas con pestaña para separar tarjetas nuevas y completadas",
+              "evidence": "The included tabbed divider gives you an easy way to separate your new and completed cards"
+            },
+            {
+              "feature": "Tarjetas impresas en papel liso sin recubrimiento de 100#",
+              "evidence": "Printed on 100# smooth uncoated paper"
+            },
+            {
+              "feature": "Patrón de cuadrícula de puntos en el reverso de las tarjetas",
+              "evidence": "Dot grid pattern on back"
+            },
+            {
+              "feature": "Dimensiones del soporte: 6.25\" x 3.55\" x 1.15\"",
+              "evidence": "Card Holder Dimensions: 6.25\" x 3.55\" x 1.15\""
+            }
+          ],
+          "how_it_works": "El soporte de madera mantiene visible tu tarjeta 'Today' en la parte frontal, mientras el espacio trasero abierto guarda las tarjetas completadas; el divisor con pestaña separa las tarjetas 'Next' y 'Someday' sobre él para un acceso intuitivo.",
+          "variants": [
+            "Walnut",
+            "Silver aluminum",
+            "Black aluminum",
+            "Daily Focus ($69)",
+            "Daily Focus + 3 Refills ($89)",
+            "Daily Focus + 6 Refills ($99)",
+            "Annual ($249)"
+          ]
+        },
+        "benefits": [
+          {
+            "benefit": "Mantienes visible solo la tarea de hoy, sin distracciones de listas infinitas",
+            "linked_feature": "El soporte de madera mantiene visible tu tarjeta 'Today' en la parte frontal",
+            "emotional_outcome": "Sientes claridad mental y control sobre tu jornada en lugar de agobio",
+            "type": "emotional"
+          },
+          {
+            "benefit": "Separas lo urgente de lo que puede esperar con las tarjetas Next y Someday",
+            "linked_feature": "Divisor de tarjetas con pestaña para separar tarjetas nuevas y completadas",
+            "emotional_outcome": "Dejas de sentir que todo es urgente y respiras con más calma",
+            "type": "functional"
+          },
+          {
+            "benefit": "Un objeto de madera maciza en tu escritorio que se ve bien incluso cuando no lo usas",
+            "linked_feature": "Soporte de tarjetas de madera de nogal americano macizo",
+            "emotional_outcome": "Tu espacio de trabajo transmite orden y buen gusto ante compañeros y visitas",
+            "type": "social"
+          },
+          {
+            "benefit": "Un mes completo de tarjetas incluido, listo para empezar sin comprar nada más",
+            "linked_feature": "1 mes de tarjetas de tareas Analog (30 Today, 2 Next, 1 Someday)",
+            "emotional_outcome": "Empiezas el hábito hoy mismo sin fricción ni excusas",
+            "type": "economic"
+          },
+          {
+            "benefit": "Un sistema físico que te aleja de la pantalla para organizar tu día",
+            "linked_feature": null,
+            "emotional_outcome": "Reduces la ansiedad de la sobreestimulación digital y trabajas con más foco",
+            "type": "emotional"
+          }
+        ],
+        "audience": {
+          "primary_segment": "Profesionales de escritorio saturados de apps de productividad",
+          "segments": [
+            {
+              "name": "Profesionales de escritorio saturados de apps de productividad",
+              "demographics": "25-45 años, trabajo de oficina o remoto, nivel adquisitivo medio-alto",
+              "psychographics": "Ha probado varias apps de to-do list y siente que ninguna le funciona; valora el diseño minimalista y los objetos físicos bien hechos",
+              "awareness_level": "solution_aware",
+              "usage_context": "Escritorio de casa u oficina, uso diario al empezar la jornada",
+              "avatar_hint": "Persona de unos 30 años, aspecto tranquilo y ordenado, grabada en un escritorio minimalista de madera clara"
+            },
+            {
+              "name": "Amantes de la papelería y objetos de diseño",
+              "demographics": "20-40 años, interesados en diseño, estética 'desk setup', consumidores de contenido de productividad en redes",
+              "psychographics": "Disfruta coleccionar objetos bonitos y funcionales, sigue cuentas de diseño y minimalismo",
+              "awareness_level": "product_aware",
+              "usage_context": "Muestra su escritorio en redes, usa el producto como parte de su estética personal",
+              "avatar_hint": "Creador de contenido joven, estético, manos cuidadas, mostrando el producto en primer plano sobre una mesa clara"
+            },
+            {
+              "name": "Personas con fatiga digital que buscan desconectar",
+              "demographics": "30-55 años, trabajadores de conocimiento con alta exposición a pantallas",
+              "psychographics": "Siente que las notificaciones y apps le generan ansiedad; busca rituales analógicos para recuperar foco",
+              "awareness_level": "problem_aware",
+              "usage_context": "Primera hora de la mañana, como ritual antes de abrir el ordenador",
+              "avatar_hint": "Persona de mediana edad, energía calmada, sentada frente a un escritorio con luz natural, sin móvil visible"
+            }
+          ],
+          "not_for": "No es para quienes ya tienen un sistema digital que les funciona perfectamente y no sienten fricción con las apps de productividad."
+        },
+        "pain_points": [
+          {
+            "pain": "Sensación de estar todo el día ocupado sin avanzar en lo importante",
+            "severity": "high",
+            "current_alternative": "Apps de listas de tareas digitales (Todoist, Notion, notas del móvil)",
+            "evidence": null
+          },
+          {
+            "pain": "Exceso de tareas pendientes que generan ansiedad y parálisis para decidir por dónde empezar",
+            "severity": "high",
+            "current_alternative": "Listas interminables en el móvil o notas adhesivas",
+            "evidence": null
+          },
+          {
+            "pain": "Las notificaciones y el móvil rompen la concentración constantemente",
+            "severity": "medium",
+            "current_alternative": "Modo 'no molestar' del teléfono",
+            "evidence": null
+          }
+        ],
+        "objections": [
+          {
+            "objection": "Ya tengo una app para esto, ¿por qué pagar por tarjetas de papel?",
+            "type": "skepticism",
+            "counter": "Analog no sustituye tus herramientas digitales, las complementa: es un objeto físico que te obliga a priorizar solo lo esencial del día, algo que las apps con listas infinitas no logran.",
+            "counter_source": "inferred"
+          },
+          {
+            "objection": "$69 parece caro para tarjetas de papel y un soporte de madera",
+            "type": "price",
+            "counter": "El kit incluye un mes completo de tarjetas y un soporte de nogal macizo grabado con láser, pensado para durar años; más de 150.000 personas ya confían en el sistema.",
+            "counter_source": "on_page"
+          },
+          {
+            "objection": "¿Y si compro esto y no lo uso, como me pasa con otros métodos?",
+            "type": "risk",
+            "counter": "Ugmonk ofrece devoluciones o cambios dentro de los 30 días posteriores a la entrega si el producto no te convence.",
+            "counter_source": "on_page"
+          },
+          {
+            "objection": "Necesitaré comprar recambios de tarjetas constantemente",
+            "type": "friction",
+            "counter": "Existen kits con hasta 6 recambios incluidos (7 meses de tarjetas) para no depender de compras frecuentes.",
+            "counter_source": "on_page"
+          }
+        ],
+        "social_proof": {
+          "rating": 4.7,
+          "review_count": 2108,
+          "quotes": [
+            {
+              "quote": "Analog Premium Starter Kit (Walnut) is simple, sophisticated, and has changed how I organize my work. Highly recommend.",
+              "author": "Josh Kaufman, Bestselling Author"
+            },
+            {
+              "quote": "The most comfortable shoes I have ever owned, I wear them every single day.",
+              "author": null
+            },
+            {
+              "quote": "Bought a second pair within a week. Worth every penny.",
+              "author": null
+            }
+          ],
+          "badges": [
+            "#1 Best Seller",
+            "Trusted by 150,000+",
+            "Designed in Pennsylvania"
+          ],
+          "stats": [
+            "433 reviews",
+            "Trusted by 150,000+"
+          ]
+        },
+        "brand": {
+          "tone_of_voice": "Minimalista, sereno y directo, con enfoque en diseño y funcionalidad más que en efectismo publicitario",
+          "recommended_ad_tone": "authentic",
+          "visual_style": {
+            "palette": [
+              "#1A1A1A",
+              "#C8A97E",
+              "#F7F5F2",
+              "#8B7355"
+            ],
+            "aesthetic": "premium minimal",
+            "photography_style": "fotografía de producto natural con luz suave y fondos neutros"
+          },
+          "banned_or_risky_claims": []
+        },
+        "pricing": {
+          "price": "69",
+          "currency": "USD",
+          "compare_at_price": null,
+          "active_offer": null,
+          "guarantee": "Devoluciones o cambios dentro de 30 días desde la entrega; posible cargo de reposición del 15% si el artículo se devuelve usado o fuera de su estado original",
+          "shipping": "Envío gratis en EE.UU. en pedidos superiores a $200",
+          "positioning": "premium"
+        },
+        "assets": {
+          "hero_image_url": "https://ugmonk.com/cdn/shop/files/new-solo.jpg?v=1771626446&width=180",
+          "images": [
+            {
+              "url": "https://ugmonk.com/cdn/shop/files/new-solo.jpg?v=1771626446&width=180",
+              "kind": "packshot",
+              "has_overlay_text": true,
+              "background": "clean",
+              "video_suitability": "hero"
+            },
+            {
+              "url": "https://ugmonk.com/cdn/shop/files/new-daily-walnut-4.jpg?v=1772037595&width=180",
+              "kind": "lifestyle",
+              "has_overlay_text": false,
+              "background": "busy",
+              "video_suitability": "hero"
+            },
+            {
+              "url": "https://ugmonk.com/cdn/shop/files/kit-contents-analog-walnut.jpg?v=1772037595&width=180",
+              "kind": "detail",
+              "has_overlay_text": false,
+              "background": "transparent",
+              "video_suitability": "hero"
+            },
+            {
+              "url": "https://ugmonk.com/cdn/shop/files/Analog-lifestyle-2025-33_8a94be50-1464-4c8d-b7eb-f8024ed815d5.jpg?v=1773668369&width=180",
+              "kind": "infographic",
+              "has_overlay_text": false,
+              "background": "unknown",
+              "video_suitability": "hero"
+            },
+            {
+              "url": "https://ugmonk.com/cdn/shop/files/bottom-walnut-1.jpg?v=1772050907&width=180",
+              "kind": "other",
+              "has_overlay_text": true,
+              "background": "busy",
+              "video_suitability": "broll"
+            },
+            {
+              "url": "https://ugmonk.com/cdn/shop/files/grain-walnut-1.jpg?v=1772050907&width=180",
+              "kind": "packshot",
+              "has_overlay_text": false,
+              "background": "transparent",
+              "video_suitability": "broll"
+            },
+            {
+              "url": "https://ugmonk.com/cdn/shop/files/analog-ls-0305-45_5fee90be-5c76-4609-aecb-b749c783f8ad.jpg?v=1772050907&width=180",
+              "kind": "detail",
+              "has_overlay_text": false,
+              "background": "clean",
+              "video_suitability": "broll"
+            },
+            {
+              "url": "https://ugmonk.com/cdn/shop/files/slide-stack.jpg?v=1773668369&width=180",
+              "kind": "infographic",
+              "has_overlay_text": false,
+              "background": "busy",
+              "video_suitability": "broll"
+            },
+            {
+              "url": "https://ugmonk.com/cdn/shop/products/analog-ls-HQ-12_c7e7ca73-0e35-4d0e-937b-4b749c2489ea-983216.jpg?v=1772050907&width=180",
+              "kind": "packshot",
+              "has_overlay_text": false,
+              "background": "clean",
+              "video_suitability": "broll"
+            },
+            {
+              "url": "https://ugmonk.com/cdn/shop/files/TodayCard.png?v=1772050907&width=180",
+              "kind": "detail",
+              "has_overlay_text": false,
+              "background": "transparent",
+              "video_suitability": "broll"
+            }
+          ],
+          "video_urls": []
+        },
+        "angles": [
+          {
+            "name": "El objeto que reemplaza tu lista mental caótica",
+            "framework": "pain_point",
+            "target_segment": "Personas con fatiga digital que buscan desconectar",
+            "awareness_level": "problem_aware",
+            "hook_examples": [
+              "Abro el móvil para una tarea y salgo veinte minutos después.",
+              "Tengo quince apps de productividad y sigo sin saber qué hacer hoy.",
+              "Esto es lo que pasó cuando dejé el móvil fuera de mi escritorio."
+            ],
+            "key_message": "Analog es un sistema físico que te obliga a elegir solo una tarea importante por día, sin las distracciones de una pantalla.",
+            "objection_addressed": "Ya tengo una app para esto, ¿por qué pagar por tarjetas de papel?",
+            "social_proof_used": null,
+            "cta": "Prueba el sistema Analog y quítale el ruido a tu día.",
+            "suggested_tone": "authentic",
+            "suggested_assets": [
+              "https://ugmonk.com/cdn/shop/files/new-daily-walnut-4.jpg?v=1772037595&width=180",
+              "https://ugmonk.com/cdn/shop/files/analog-ls-0305-45_5fee90be-5c76-4609-aecb-b749c783f8ad.jpg?v=1772050907&width=180"
+            ]
+          },
+          {
+            "name": "Unboxing del kit de nogal",
+            "framework": "unboxing_demo",
+            "target_segment": "Amantes de la papelería y objetos de diseño",
+            "awareness_level": "product_aware",
+            "hook_examples": [
+              "Mira lo que hay dentro de esta caja de madera.",
+              "Esto es todo lo que trae el kit Analog de nogal.",
+              "Nunca había visto un organizador de tareas así."
+            ],
+            "key_message": "El kit incluye un soporte de nogal macizo grabado con láser, un divisor con pestaña y un mes completo de tarjetas Today, Next y Someday listas para usar.",
+            "objection_addressed": "$69 parece caro para tarjetas de papel y un soporte de madera",
+            "social_proof_used": null,
+            "cta": "Consigue tu kit Analog de nogal y empieza hoy mismo.",
+            "suggested_tone": "friendly",
+            "suggested_assets": [
+              "https://ugmonk.com/cdn/shop/files/kit-contents-analog-walnut.jpg?v=1772037595&width=180",
+              "https://ugmonk.com/cdn/shop/files/grain-walnut-1.jpg?v=1772050907&width=180"
+            ]
+          },
+          {
+            "name": "Lo que dicen los que ya lo usan cada día",
+            "framework": "social_proof",
+            "target_segment": "Profesionales de escritorio saturados de apps de productividad",
+            "awareness_level": "solution_aware",
+            "hook_examples": [
+              "Más de 150.000 personas ya cambiaron su forma de organizar el día.",
+              "Un autor bestseller dice que esto le cambió cómo trabaja.",
+              "2.108 personas ya dejaron su opinión sobre este sistema."
+            ],
+            "key_message": "Analog tiene una valoración de 4.7 sobre más de 2.000 reseñas y es recomendado por profesionales que buscaban simplificar su forma de trabajar.",
+            "objection_addressed": "$69 parece caro para tarjetas de papel y un soporte de madera",
+            "social_proof_used": "Analog Premium Starter Kit (Walnut) is simple, sophisticated, and has changed how I organize my work. Highly recommend.",
+            "cta": "Únete a las más de 150.000 personas que ya usan Analog.",
+            "suggested_tone": "professional",
+            "suggested_assets": [
+              "https://ugmonk.com/cdn/shop/files/new-solo.jpg?v=1771626446&width=180"
+            ]
+          },
+          {
+            "name": "El mito de que necesitas más apps",
+            "framework": "myth_busting",
+            "target_segment": "Profesionales de escritorio saturados de apps de productividad",
+            "awareness_level": "solution_aware",
+            "hook_examples": [
+              "No necesitas otra app. Necesitas menos opciones.",
+              "Probé cinco apps de productividad y el problema no era la app.",
+              "La mejor herramienta de productividad no tiene batería."
+            ],
+            "key_message": "El problema no es la falta de herramientas digitales, sino el exceso de opciones; un sistema físico y limitado te fuerza a decidir qué es realmente importante hoy.",
+            "objection_addressed": "Ya tengo una app para esto, ¿por qué pagar por tarjetas de papel?",
+            "social_proof_used": null,
+            "cta": "Descubre por qué menos es más con Analog.",
+            "suggested_tone": "authentic",
+            "suggested_assets": [
+              "https://ugmonk.com/cdn/shop/files/Analog-lifestyle-2025-33_8a94be50-1464-4c8d-b7eb-f8024ed815d5.jpg?v=1773668369&width=180"
+            ]
+          },
+          {
+            "name": "El escritorio como reflejo de quién eres",
+            "framework": "identity",
+            "target_segment": "Amantes de la papelería y objetos de diseño",
+            "awareness_level": "product_aware",
+            "hook_examples": [
+              "Si tu escritorio te representa, esto tiene que estar en él.",
+              "Esto es para quien cuida hasta el último detalle de su espacio.",
+              "Un objeto de madera que dice más de ti que cualquier app."
+            ],
+            "key_message": "Analog no es solo un organizador: es un objeto de diseño minimalista en nogal macizo que combina función y estética en tu escritorio.",
+            "objection_addressed": null,
+            "social_proof_used": null,
+            "cta": "Añade Analog a tu espacio de trabajo.",
+            "suggested_tone": "luxury",
+            "suggested_assets": [
+              "https://ugmonk.com/cdn/shop/files/grain-walnut-1.jpg?v=1772050907&width=180",
+              "https://ugmonk.com/cdn/shop/products/analog-ls-HQ-12_c7e7ca73-0e35-4d0e-937b-4b749c2489ea-983216.jpg?v=1772050907&width=180"
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

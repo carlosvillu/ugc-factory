@@ -1,0 +1,31 @@
+
+> ugc-factory@0.0.0 dev /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads
+> pnpm --parallel --filter @ugc/web --filter @ugc/worker dev
+
+Scope: 2 of 6 workspace projects
+apps/web dev$ node scripts/dev.mjs
+apps/worker dev$ tsx watch --env-file-if-exists=../../.env src/main.ts
+apps/web dev: ⚠ Port 3000 is in use by process 17721, using available port 3001 instead.
+apps/web dev: ▲ Next.js 16.2.10 (Turbopack)
+apps/web dev: - Local:         http://localhost:3001
+apps/web dev: - Network:       http://192.168.1.132:3001
+apps/web dev: ✓ Ready in 449ms
+apps/worker dev: {"level":30,"time":1783793641581,"pid":65030,"hostname":"MBP-de-Carlos","name":"worker","intervalMs":5000,"msg":"sweeper de timeouts arrancado"}
+apps/worker dev: {"level":30,"time":1783793641581,"pid":65030,"hostname":"MBP-de-Carlos","name":"worker","queue":"demo.noop","msg":"pg-boss arrancado: colas y consumers listos"}
+apps/worker dev: {"level":30,"time":1783793641581,"pid":65030,"hostname":"MBP-de-Carlos","name":"worker","health":{"ok":true,"db":true},"msg":"worker ready"}
+apps/web dev: {"level":30,"time":1783793642268,"pid":65029,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","msg":"running startup migrations"}
+apps/web dev: {"level":30,"time":1783793642337,"pid":65029,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","msg":"startup migrations applied"}
+apps/web dev: {"level":30,"time":1783793642396,"pid":65029,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","seeded":false,"msg":"auth.password_hash ya existía"}
+apps/web dev: {"level":30,"time":1783793642439,"pid":65029,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","provider":"fal","seeded":false,"msg":"secret.fal ya existía en BD (env ignorada; la BD es la fuente)"}
+apps/web dev: {"level":30,"time":1783793642445,"pid":65029,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","provider":"anthropic","seeded":false,"msg":"secret.anthropic ya existía en BD (env ignorada; la BD es la fuente)"}
+apps/web dev: {"level":30,"time":1783793642445,"pid":65029,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","provider":"firecrawl","seeded":false,"msg":"secret.firecrawl ya existía en BD (env ignorada; la BD es la fuente)"}
+apps/web dev:  GET /login 200 in 216ms (next.js: 73ms, application-code: 143ms)
+apps/web dev:  POST /api/login 200 in 240ms (next.js: 139ms, application-code: 102ms)
+apps/web dev:  GET / 200 in 48ms (next.js: 16ms, proxy.ts: 4ms, application-code: 28ms)
+apps/web dev:  GET /api/spend 200 in 46ms (next.js: 27ms, application-code: 19ms)
+apps/web dev:  GET /spend 200 in 249ms (next.js: 44ms, proxy.ts: 4ms, application-code: 202ms)
+apps/worker dev: {"level":30,"time":1783794120513,"pid":65030,"hostname":"MBP-de-Carlos","name":"worker","signal":"SIGTERM","msg":"worker shutting down"}
+apps/worker dev: {"level":30,"time":1783794120526,"pid":65030,"hostname":"MBP-de-Carlos","name":"worker","msg":"sweeper de timeouts detenido"}
+apps/worker dev: Done
+apps/web dev: [?25h
+apps/web dev: Done

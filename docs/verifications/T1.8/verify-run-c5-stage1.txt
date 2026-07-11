@@ -1,0 +1,39 @@
+verify-brief-c3: project = 01KX9A5H7DZA7BZCETZ2SX3X2M  stage=1
+verify-brief-c3: visual1 imgs=27 json=7243 chars
+verify-brief-c3: visual2 imgs=117 json=23512 chars
+
+--- [1] URL_1 allbirds — llamada FRÍA (escribe caché del system) + VISUAL REALISTA (27 imgs) ---
+
+=== [URL_1 allbirds (FRÍA, visual 27)] ===
+status   = synthesized
+warnings = []
+usage    = in=10025 out=7759 cache_write=15491 cache_read=0
+coste    = $0.2046  (20.46 cts)
+producto = "Allbirds Tree Runners (Hombre)"
+assets.images = 8
+ángulos  = 5
+   [1] (sin título)
+   [2] (sin título)
+   [3] (sin título)
+   [4] (sin título)
+   [5] (sin título)
+
+--- [2] URL_2 ugmonk — CALIENTE (cache_read>0) + VISUAL REALISTA (117 imgs) ---
+
+=== [URL_2 ugmonk (CALIENTE, visual 117)] ===
+status   = synthesized
+warnings = ["markdown_truncated"]
+usage    = in=10071 out=7708 cache_write=0 cache_read=15491
+coste    = $0.1505  (15.05 cts)
+producto = "Analog Daily Focus Kit (Walnut)"
+assets.images = 10
+ángulos  = 5
+   [1] (sin título)
+   [2] (sin título)
+   [3] (sin título)
+   [4] (sin título)
+   [5] (sin título)
+
+verify-brief-c3: TOTAL stage1 = $0.3550
+
+verify-brief-c3: project 01KX9A5H7DZA7BZCETZ2SX3X2M — briefs-c3-stage1.json escrito. OK

@@ -1,0 +1,18 @@
+Gasto
+
+Presupuesto mensual y ledger de gasto por proveedor y día.
+
+Presupuesto mensual
+$0.83
+/ $30
+0
+70%
+90%
+100%
+Gasto por proveedor
+PROVEEDOR	CANTIDAD	UNIDAD	USD
+Anthropic	184 333	tokens	$0.81
+Firecrawl	41	credits	$0.02
+Gasto por día
+DÍA	USD
+2026-07-11	$0.83

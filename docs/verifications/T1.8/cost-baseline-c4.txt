@@ -1,0 +1,6 @@
+ provider  | filas | cts |  tok   
+-----------+-------+-----+--------
+ anthropic |    11 | 120 | 259149
+ firecrawl |    11 |   2 |     41
+(2 rows)
+

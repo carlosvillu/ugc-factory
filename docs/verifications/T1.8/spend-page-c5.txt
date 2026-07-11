@@ -1,0 +1,45 @@
+- main
+  - sectionheader
+    - heading "Gasto" [level=1, ref=e3]
+    - paragraph
+      - StaticText "Presupuesto mensual y ledger de gasto por proveedor y día."
+  - StaticText "Presupuesto mensual"
+  - StaticText "$"
+  - StaticText "1.74"
+  - StaticText "/ $"
+  - StaticText "30"
+  - StaticText "0"
+  - StaticText "70"
+  - StaticText "%"
+  - StaticText "90"
+  - StaticText "%"
+  - StaticText "100%"
+  - region "Gasto por proveedor" [ref=e1]
+    - heading "Gasto por proveedor" [level=2, ref=e4]
+    - table
+      - rowgroup
+        - row
+          - columnheader "PROVEEDOR" [ref=e17]
+          - columnheader "CANTIDAD" [ref=e18]
+          - columnheader "UNIDAD" [ref=e19]
+          - columnheader "USD" [ref=e20]
+      - row
+        - cell "Anthropic" [ref=e6]
+        - cell "367 806" [ref=e7]
+        - cell "tokens" [ref=e8]
+        - cell "$1.72" [ref=e9]
+      - row
+        - cell "Firecrawl" [ref=e10]
+        - cell "41" [ref=e11]
+        - cell "credits" [ref=e12]
+        - cell "$0.02" [ref=e13]
+  - region "Gasto por día" [ref=e2]
+    - heading "Gasto por día" [level=2, ref=e5]
+    - table
+      - rowgroup
+        - row
+          - columnheader "DÍA" [ref=e21]
+          - columnheader "USD" [ref=e22]
+      - row
+        - cell "2026-07-11" [ref=e14]
+        - cell "$1.74" [ref=e15]

@@ -1,0 +1,12 @@
+=== URL_1 allbirds (FRÍA, visual 27)
+  features (EXTRACTIVO, evidence obligatorio): 4 · con cita: 4 · NULL: 0  OK
+  pains (INFERENCIAL, evidence nullable+optional): 3 · con cita: 1 · sin cita: 2 (permitido por contrato)
+=== URL_2 ugmonk (CALIENTE, visual 117)
+  features (EXTRACTIVO, evidence obligatorio): 8 · con cita: 8 · NULL: 0  OK
+  pains (INFERENCIAL, evidence nullable+optional): 3 · con cita: 0 · sin cita: 3 (permitido por contrato)
+=== TEXTO LIBRE
+  features (EXTRACTIVO, evidence obligatorio): 9 · con cita: 9 · NULL: 0  OK
+  pains (INFERENCIAL, evidence nullable+optional): 3 · con cita: 1 · sin cita: 2 (permitido por contrato)
+=== ADVERSARIAL
+  features (EXTRACTIVO, evidence obligatorio): 5 · con cita: 5 · NULL: 0  OK
+  pains (INFERENCIAL, evidence nullable+optional): 4 · con cita: 1 · sin cita: 3 (permitido por contrato)

@@ -1,0 +1,8 @@
+Normalización: whitespace colapsado + comillas/guiones tipográficos -> ASCII. Nada más.
+
+URL_1 (FRÍA)               citas NO nulas:  3/ 6 campos | LITERALES:  3 | INVENTADAS: 0
+URL_2 (CALIENTE)           citas NO nulas: 15/15 campos | LITERALES: 15 | INVENTADAS: 0
+TEXTO LIBRE (CALIENTE)     citas NO nulas: 14/14 campos | LITERALES: 14 | INVENTADAS: 0
+ADVERSARIAL (CALIENTE)     citas NO nulas:  7/10 campos | LITERALES:  7 | INVENTADAS: 0
+
+TOTAL: 39 citas literales verificadas contra el markdown real, 0 inventadas.

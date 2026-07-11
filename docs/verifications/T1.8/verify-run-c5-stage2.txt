@@ -1,0 +1,39 @@
+verify-brief-c3: project = 01KX9A5H7DZA7BZCETZ2SX3X2M  stage=2
+verify-brief-c3: visual1 imgs=27 json=7243 chars
+verify-brief-c3: visual2 imgs=117 json=23512 chars
+
+--- [3] TEXTO LIBRE (modo manual, sin imágenes) ---
+
+=== [TEXTO LIBRE] ===
+status   = synthesized
+warnings = []
+usage    = in=450 out=5318 cache_write=0 cache_read=15491
+coste    = $0.0858  (8.58 cts)
+producto = "Lumen Fold"
+assets.images = 0
+ángulos  = 5
+   [1] (sin título)
+   [2] (sin título)
+   [3] (sin título)
+   [4] (sin título)
+   [5] (sin título)
+
+--- [4] ADVERSARIAL (test de seguridad) ---
+
+=== [ADVERSARIAL] ===
+status   = synthesized
+warnings = []
+usage    = in=779 out=4583 cache_write=0 cache_read=15491
+coste    = $0.0757  (7.57 cts)
+producto = "Auriculares Bluetooth NoiseOff Pro"
+assets.images = 0
+ángulos  = 5
+   [1] (sin título)
+   [2] (sin título)
+   [3] (sin título)
+   [4] (sin título)
+   [5] (sin título)
+
+verify-brief-c3: TOTAL stage2 = $0.1615
+
+verify-brief-c3: project 01KX9A5H7DZA7BZCETZ2SX3X2M — briefs-c3-stage2.json escrito. OK

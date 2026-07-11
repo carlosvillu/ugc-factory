@@ -1,0 +1,10 @@
+verify-brief-c4: project = 01KX97XBYYM27EKJTZ32NDSAPB
+verify-brief-c4: markdown=14648 chars · visual=27 imgs
+
+--- [1] URL_1 allbirds — llamada FRÍA contra el PROMPT NUEVO (6.3.b + 6.3.c) ---
+status   = api_error
+warnings = ["brief_synthesis_api_error_400: 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"Your credit balance is too low to access the Anthropic API. Please go to Plans & Billing to upgrade or purchase credits.\"},\"request_id\":\"req_011CcvmHzPYkkP7Xw49CDS1X\"}"]
+latencia = 427 ms
+ángulos  = 0
+
+verify-brief-c4: briefs-c4.json escrito (project 01KX97XBYYM27EKJTZ32NDSAPB). OK

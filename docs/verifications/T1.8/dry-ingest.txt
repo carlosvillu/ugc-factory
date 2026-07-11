@@ -1,0 +1,6 @@
+verify-brief: project = 01KX9003FRQE5R21GXFQH9BNNK
+verify-brief: URL_1   = https://www.allbirds.com/products/mens-tree-runners
+verify-brief: URL_2   = https://ugmonk.com/products/analog-starter-kit
+verify-brief: [URL_1] provider=firecrawl credits=2 platform=shopify markdown=14648 chars images=27 product=null
+verify-brief: [URL_2] provider=firecrawl credits=4 platform=shopify markdown=102816 chars images=117 product={"price":"69","title":"Analog Daily Focus Kit (Walnut)","currency":"USD","availability":"In stock"}
+verify-brief: DRY RUN — paro antes de gastar en Anthropic.

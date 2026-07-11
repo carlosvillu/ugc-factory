@@ -1,0 +1,8 @@
+             id             | provider  |         project_id         | amount_cents | quantity |  unit  |          occurred_at          
+----------------------------+-----------+----------------------------+--------------+----------+--------+-------------------------------
+ 01KX962YAW5MAYY1DWSPJTX9VG | anthropic | 01KX95YVAVNDHHJZKNBQRZE8XQ |           16 |    33627 | tokens | 2026-07-11 18:12:27.648925+00
+ 01KX960RPQH0GEVXQ2NNVY8WZ0 | anthropic | 01KX95YVAVNDHHJZKNBQRZE8XQ |           19 |    32389 | tokens | 2026-07-11 18:11:16.349965+00
+ 01KX90CHJ0TZV84MZD96C16EWB | anthropic | 01KX90256X3E8AE3WN7NPEZX56 |            9 |    21744 | tokens | 2026-07-11 16:32:50.761884+00
+ 01KX90ATX1FYNBGT2TA2ZEFPQZ | anthropic | 01KX90256X3E8AE3WN7NPEZX56 |            9 |    21302 | tokens | 2026-07-11 16:31:54.802483+00
+(4 rows)
+

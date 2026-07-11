@@ -1,0 +1,1056 @@
+{
+  "visual1": {
+    "images": [
+      {
+        "url": "https://www.allbirds.com/cdn/shop/files/SKU-SOCKS-GLOBAL-ANKLE-BLIZZARD-1_Resize_0002_SKU-SOCKS-GLOBAL-NOSHOW-BLIZZARD-1-min.png?v=1761253089&width=180",
+        "kind": "packshot",
+        "has_overlay_text": true,
+        "background": "clean",
+        "video_suitability": "hero"
+      },
+      {
+        "url": "https://www.allbirds.com/cdn/shop/files/SKU-SOCKS-GLOBAL-ANKLE-BLIZZARD-1_Resize_0006_Layer-1-min.png?v=1761253065&width=180",
+        "kind": "lifestyle",
+        "has_overlay_text": false,
+        "background": "busy",
+        "video_suitability": "hero"
+      },
+      {
+        "url": "https://www.allbirds.com/cdn/shop/products/STIUWE_SOCKS_WHEAT_FRONT_Resize_0001_SKU-SOCKS-GLOBAL-CREW-NATURAL-BLACK-1-min.png?v=1676567942&width=180",
+        "kind": "detail",
+        "has_overlay_text": false,
+        "background": "transparent",
+        "video_suitability": "hero"
+      },
+      {
+        "url": "https://www.allbirds.com/cdn/shop/files/A12729-front-2400x2400_2.png?v=1770422106&width=180",
+        "kind": "infographic",
+        "has_overlay_text": false,
+        "background": "unknown",
+        "video_suitability": "hero"
+      },
+      {
+        "url": "https://www.allbirds.com/cdn/shop/files/26Q1_DasherNZ_Site_Homepage_Hero_Desktop_16x9-3.jpg?v=1779316981&width=180",
+        "kind": "chart_or_text",
+        "has_overlay_text": false,
+        "background": "clean",
+        "video_suitability": "unusable"
+      },
+      {
+        "url": "https://www.allbirds.com/cdn/shop/files/26Q1_DasherNZ_Site_Homepage_Hero_Mobile_9x16_2.jpg?v=1779316979&width=180",
+        "kind": "other",
+        "has_overlay_text": true,
+        "background": "busy",
+        "video_suitability": "broll"
+      },
+      {
+        "url": "https://www.allbirds.com/cdn/shop/files/26Q2_CanvasCruiser_Site_Homepage_CategoryRow-01_Desktop-Mobile_2x3_01.jpg?v=1774645561&width=180",
+        "kind": "packshot",
+        "has_overlay_text": false,
+        "background": "transparent",
+        "video_suitability": "broll"
+      },
+      {
+        "url": "https://www.allbirds.com/cdn/shop/files/26Q2_CanvasCruiser_Site_Homepage_CategoryRow-01_Desktop-Mobile_2x3_04.jpg?v=1774645561&width=180",
+        "kind": "lifestyle",
+        "has_overlay_text": false,
+        "background": "unknown",
+        "video_suitability": "unusable"
+      },
+      {
+        "url": "https://www.allbirds.com/cdn/shop/files/26Q2_CanvasCruiser_Site_Homepage_CategoryRow-01_Desktop-Mobile_2x3_03.jpg?v=1774645561&width=180",
+        "kind": "detail",
+        "has_overlay_text": false,
+        "background": "clean",
+        "video_suitability": "broll"
+      },
+      {
+        "url": "https://www.allbirds.com/cdn/shop/files/26Q2_CanvasCruiser_Site_Homepage_CategoryRow-01_Desktop-Mobile_2x3_02.jpg?v=1774645561&width=180",
+        "kind": "infographic",
+        "has_overlay_text": false,
+        "background": "busy",
+        "video_suitability": "broll"
+      },
+      {
+        "url": "https://www.allbirds.com/cdn/shop/files/A11959_25Q3_Tree_Runner_NZ_Medium_Grey_Blizzard_Sole_PDP_LEFT-2000x2000_f6ff6164-62df-42dc-89a8-fabcb3b5d438.png?v=1751899014&width=180",
+        "kind": "chart_or_text",
+        "has_overlay_text": true,
+        "background": "transparent",
+        "video_suitability": "unusable"
+      },
+      {
+        "url": "https://www.allbirds.com/cdn/shop/files/A12622_26Q1_Runner-NZ-Slip-On-Mushroom-Mushroom_PDP_LEFT.png?v=1768951251&width=180",
+        "kind": "other",
+        "has_overlay_text": false,
+        "background": "unknown",
+        "video_suitability": "broll"
+      },
+      {
+        "url": "https://www.allbirds.com/cdn/shop/files/A12386_26Q1_Runner-NZ-Slip-On-Anthracite-Dark-Anthr-Sole_PDP_LEFT.png?v=1768951111&width=180",
+        "kind": "packshot",
+        "has_overlay_text": false,
+        "background": "clean",
+        "video_suitability": "broll"
+      },
+      {
+        "url": "https://www.allbirds.com/cdn/shop/files/A12488_26Q1_Runner-NZ-Slip-On-Dark-Navy-Dark-Navy_PDP_LEFT.png?v=1769559941&width=180",
+        "kind": "lifestyle",
+        "has_overlay_text": false,
+        "background": "busy",
+        "video_suitability": "unusable"
+      },
+      {
+        "url": "https://www.allbirds.com/cdn/shop/files/A11559_25Q3_Cruiser_Dark_Navy_Blizzard_PDP_LEFT-2000x2000_9f5ba943-6b25-4f75-9c74-edd67a6a0aa7.png?v=1751900449&width=180",
+        "kind": "detail",
+        "has_overlay_text": false,
+        "background": "transparent",
+        "video_suitability": "broll"
+      },
+      {
+        "url": "https://www.allbirds.com/cdn/shop/files/A12364_26Q1_Cruiser-Slip-On-Canvas-Warm-White-Natural-White_PDP_LEFT_9273769a-0a6f-47f4-a002-6d308f1f3e0e.png?v=1768946967&width=180",
+        "kind": "infographic",
+        "has_overlay_text": true,
+        "background": "unknown",
+        "video_suitability": "broll"
+      },
+      {
+        "url": "https://www.allbirds.com/cdn/shop/files/A12451_26Q1_Cruiser-Slip-On-Blizzard-Blizzard-Sole_PDP_LEFT_6b76e0cd-df5b-4ddc-bb7e-b354f44bbd8a.png?v=1768947332&width=180",
+        "kind": "chart_or_text",
+        "has_overlay_text": false,
+        "background": "clean",
+        "video_suitability": "unusable"
+      },
+      {
+        "url": "https://www.allbirds.com/cdn/shop/files/A12622_26Q1_Runner-NZ-Slip-On-Mushroom-Mushroom_PDP_LEFT_f22365dc-8298-40c8-a456-acf947b20a90.png?v=1768951496&width=180",
+        "kind": "other",
+        "has_overlay_text": false,
+        "background": "busy",
+        "video_suitability": "broll"
+      },
+      {
+        "url": "https://www.allbirds.com/cdn/shop/files/A12386_26Q1_Runner-NZ-Slip-On-Anthracite-Dark-Anthr-Sole_PDP_LEFT_7ec4ff21-9ae4-4f0f-9a3c-e813a8404674.png?v=1768951351&width=180",
+        "kind": "packshot",
+        "has_overlay_text": false,
+        "background": "transparent",
+        "video_suitability": "broll"
+      },
+      {
+        "url": "https://www.allbirds.com/cdn/shop/files/A12488_26Q1_Runner-NZ-Slip-On-Dark-Navy-Dark-Navy_PDP_LEFT_76a29c75-099f-4514-86f6-f484a4d8d71f.png?v=1769559971&width=180",
+        "kind": "lifestyle",
+        "has_overlay_text": false,
+        "background": "unknown",
+        "video_suitability": "unusable"
+      },
+      {
+        "url": "https://www.allbirds.com/cdn/shop/files/A12852_26Q1_Cruiser-Canvas-Sea-Spray-Natural-White-Sole_PDP_LEFT_55c168b7-1ef8-43d8-8516-aa8a1a0c633f.png?v=1771027545&width=180",
+        "kind": "detail",
+        "has_overlay_text": true,
+        "background": "clean",
+        "video_suitability": "broll"
+      },
+      {
+        "url": "https://www.allbirds.com/cdn/shop/files/A12848_26Q1_Cruiser-Canvas-Port-Natural-White-Sole_PDP_LEFT_f544c3ab-bb93-4f19-9cb0-558975e64068.png?v=1774478056&width=180",
+        "kind": "infographic",
+        "has_overlay_text": false,
+        "background": "busy",
+        "video_suitability": "broll"
+      },
+      {
+        "url": "https://www.allbirds.com/cdn/shop/files/26Q2_PDP_Slide_Split-Text_Desktop-Mobile_2x3_ddfea8c7-0911-4b52-9b3a-2096281b7dda.jpg?v=1775252338&width=180",
+        "kind": "chart_or_text",
+        "has_overlay_text": false,
+        "background": "transparent",
+        "video_suitability": "unusable"
+      },
+      {
+        "url": "https://www.allbirds.com/cdn/shop/files/26Q2_CanvasCruiser_Site_LP_ShoppingGrid_Desktop_W_V2.jpg?v=1775592434&width=180",
+        "kind": "other",
+        "has_overlay_text": false,
+        "background": "unknown",
+        "video_suitability": "broll"
+      },
+      {
+        "url": "https://www.allbirds.com/cdn/shop/files/23Q2-SummerLookbook-Hero-Mobile-1650___2500-2_copy.jpg?v=1751418216&width=180",
+        "kind": "packshot",
+        "has_overlay_text": false,
+        "background": "clean",
+        "video_suitability": "broll"
+      },
+      {
+        "url": "https://www.allbirds.com/cdn/shop/files/SKU-SOCKS-GLOBAL-ANKLE-BLIZZARD-1_Resize_0002_SKU-SOCKS-GLOBAL-NOSHOW-BLIZZARD-1-min.png?v=1761253089&width=360",
+        "kind": "lifestyle",
+        "has_overlay_text": true,
+        "background": "busy",
+        "video_suitability": "unusable"
+      },
+      {
+        "url": "https://www.allbirds.com/cdn/shop/files/SKU-SOCKS-GLOBAL-ANKLE-BLIZZARD-1_Resize_0006_Layer-1-min.png?v=1761253065&width=360",
+        "kind": "detail",
+        "has_overlay_text": false,
+        "background": "transparent",
+        "video_suitability": "broll"
+      }
+    ],
+    "hero_image_url": "https://www.allbirds.com/cdn/shop/files/SKU-SOCKS-GLOBAL-ANKLE-BLIZZARD-1_Resize_0002_SKU-SOCKS-GLOBAL-NOSHOW-BLIZZARD-1-min.png?v=1761253089&width=180",
+    "brand_style": {
+      "palette": [
+        "#F5F0E8",
+        "#2E2E2E",
+        "#7BA05B",
+        "#FFFFFF"
+      ],
+      "aesthetic": "earthy minimal",
+      "photography_style": "fotografía de producto natural con luz suave y fondos neutros"
+    },
+    "rendered_social_proof": {
+      "rating": 4.7,
+      "review_count": 2108,
+      "quotes": [
+        "The most comfortable shoes I have ever owned, I wear them every single day.",
+        "Bought a second pair within a week. Worth every penny."
+      ]
+    }
+  },
+  "visual2": {
+    "images": [
+      {
+        "url": "https://ugmonk.com/cdn/shop/files/new-solo.jpg?v=1771626446&width=180",
+        "kind": "packshot",
+        "has_overlay_text": true,
+        "background": "clean",
+        "video_suitability": "hero"
+      },
+      {
+        "url": "https://ugmonk.com/cdn/shop/files/new-daily-walnut-4.jpg?v=1772037595&width=180",
+        "kind": "lifestyle",
+        "has_overlay_text": false,
+        "background": "busy",
+        "video_suitability": "hero"
+      },
+      {
+        "url": "https://ugmonk.com/cdn/shop/files/kit-contents-analog-walnut.jpg?v=1772037595&width=180",
+        "kind": "detail",
+        "has_overlay_text": false,
+        "background": "transparent",
+        "video_suitability": "hero"
+      },
+      {
+        "url": "https://ugmonk.com/cdn/shop/files/Analog-lifestyle-2025-33_8a94be50-1464-4c8d-b7eb-f8024ed815d5.jpg?v=1773668369&width=180",
+        "kind": "infographic",
+        "has_overlay_text": false,
+        "background": "unknown",
+        "video_suitability": "hero"
+      },
+      {
+        "url": "https://ugmonk.com/cdn/shop/files/new-walnut-diagram.jpg?v=1773668369&width=180",
+        "kind": "chart_or_text",
+        "has_overlay_text": false,
+        "background": "clean",
+        "video_suitability": "unusable"
+      },
+      {
+        "url": "https://ugmonk.com/cdn/shop/files/bottom-walnut-1.jpg?v=1772050907&width=180",
+        "kind": "other",
+        "has_overlay_text": true,
+        "background": "busy",
+        "video_suitability": "broll"
+      },
+      {
+        "url": "https://ugmonk.com/cdn/shop/files/grain-walnut-1.jpg?v=1772050907&width=180",
+        "kind": "packshot",
+        "has_overlay_text": false,
+        "background": "transparent",
+        "video_suitability": "broll"
+      },
+      {
+        "url": "https://ugmonk.com/cdn/shop/files/card-specs-tan_c932c652-fad5-43bf-ae84-ce1098c2ef55.jpg?v=1775576707&width=180",
+        "kind": "lifestyle",
+        "has_overlay_text": false,
+        "background": "unknown",
+        "video_suitability": "unusable"
+      },
+      {
+        "url": "https://ugmonk.com/cdn/shop/files/analog-ls-0305-45_5fee90be-5c76-4609-aecb-b749c783f8ad.jpg?v=1772050907&width=180",
+        "kind": "detail",
+        "has_overlay_text": false,
+        "background": "clean",
+        "video_suitability": "broll"
+      },
+      {
+        "url": "https://ugmonk.com/cdn/shop/files/slide-stack.jpg?v=1773668369&width=180",
+        "kind": "infographic",
+        "has_overlay_text": false,
+        "background": "busy",
+        "video_suitability": "broll"
+      },
+      {
+        "url": "https://ugmonk.com/cdn/shop/files/divider.jpg?v=1773668369&width=180",
+        "kind": "chart_or_text",
+        "has_overlay_text": true,
+        "background": "transparent",
+        "video_suitability": "unusable"
+      },
+      {
+        "url": "https://ugmonk.com/cdn/shop/files/diagram-rear.jpg?v=1772050907&width=180",
+        "kind": "other",
+        "has_overlay_text": false,
+        "background": "unknown",
+        "video_suitability": "broll"
+      },
+      {
+        "url": "https://ugmonk.com/cdn/shop/products/analog-ls-HQ-12_c7e7ca73-0e35-4d0e-937b-4b749c2489ea-983216.jpg?v=1772050907&width=180",
+        "kind": "packshot",
+        "has_overlay_text": false,
+        "background": "clean",
+        "video_suitability": "broll"
+      },
+      {
+        "url": "https://ugmonk.com/cdn/shop/products/josh-kaufman-review2-681219.png?v=1772050907&width=180",
+        "kind": "lifestyle",
+        "has_overlay_text": false,
+        "background": "busy",
+        "video_suitability": "unusable"
+      },
+      {
+        "url": "https://ugmonk.com/cdn/shop/files/TodayCard.png?v=1772050907&width=180",
+        "kind": "detail",
+        "has_overlay_text": false,
+        "background": "transparent",
+        "video_suitability": "broll"
+      },
+      {
+        "url": "https://ugmonk.com/cdn/shop/files/NextCard.png?v=1772050907&width=180",
+        "kind": "infographic",
+        "has_overlay_text": true,
+        "background": "unknown",
+        "video_suitability": "broll"
+      },
+      {
+        "url": "https://ugmonk.com/cdn/shop/files/SomedayCard.png?v=1772050907&width=180",
+        "kind": "chart_or_text",
+        "has_overlay_text": false,
+        "background": "clean",
+        "video_suitability": "unusable"
+      },
+      {
+        "url": "https://ugmonk.com/cdn/shop/products/shay-bocks-review-313860.png?v=1772050907&width=180",
+        "kind": "other",
+        "has_overlay_text": false,
+        "background": "busy",
+        "video_suitability": "broll"
+      },
+      {
+        "url": "https://ugmonk.com/cdn/shop/files/analog-bg-gray-new-solo.jpg?v=1772050794&width=180",
+        "kind": "packshot",
+        "has_overlay_text": false,
+        "background": "transparent",
+        "video_suitability": "broll"
+      },
+      {
+        "url": "https://ugmonk.com/cdn/shop/files/daily-walnut-swatch.jpg?v=1781211947&width=180",
+        "kind": "lifestyle",
+        "has_overlay_text": false,
+        "background": "unknown",
+        "video_suitability": "unusable"
+      },
+      {
+        "url": "https://ugmonk.com/cdn/shop/files/daily-silver-swatch.jpg?v=1781211947&width=180",
+        "kind": "detail",
+        "has_overlay_text": true,
+        "background": "clean",
+        "video_suitability": "broll"
+      },
+      {
+        "url": "https://ugmonk.com/cdn/shop/files/daily-blk-swatch.jpg?v=1781211947&width=180",
+        "kind": "infographic",
+        "has_overlay_text": false,
+        "background": "busy",
+        "video_suitability": "broll"
+      },
+      {
+        "url": "https://ugmonk.com/cdn/shop/files/new-solo.jpg?height=3100&v=1771626446&width=180",
+        "kind": "chart_or_text",
+        "has_overlay_text": false,
+        "background": "transparent",
+        "video_suitability": "unusable"
+      },
+      {
+        "url": "https://ugmonk.com/cdn/shop/files/walnut-3.jpg?height=3100&v=1771626315&width=180",
+        "kind": "other",
+        "has_overlay_text": false,
+        "background": "unknown",
+        "video_suitability": "broll"
+      },
+      {
+        "url": "https://ugmonk.com/cdn/shop/files/new-analog-walnut-6.jpg?height=3100&v=1771626174&width=180",
+        "kind": "packshot",
+        "has_overlay_text": false,
+        "background": "clean",
+        "video_suitability": "broll"
+      },
+      {
+        "url": "https://ugmonk.com/cdn/shop/files/annual-kit.jpg?height=3100&v=1773668369&width=180",
+        "kind": "lifestyle",
+        "has_overlay_text": true,
+        "background": "busy",
+        "video_suitability": "unusable"
+      },
+      {
+        "url": "https://ugmonk.com/cdn/shop/files/wood-card-case-1.jpg?v=1762978006&width=180",
+        "kind": "detail",
+        "has_overlay_text": false,
+        "background": "transparent",
+        "video_suitability": "broll"
+      },
+      {
+        "url": "https://ugmonk.com/cdn/shop/files/wood-card-case-19.jpg?v=1773623422&width=180",
+        "kind": "infographic",
+        "has_overlay_text": false,
+        "background": "unknown",
+        "video_suitability": "broll"
+      },
+      {
+        "url": "https://ugmonk.com/cdn/shop/files/wood-card-case-21.jpg?v=1773623865&width=180",
+        "kind": "chart_or_text",
+        "has_overlay_text": false,
+        "background": "clean",
+        "video_suitability": "unusable"
+      },
+      {
+        "url": "https://ugmonk.com/cdn/shop/files/wood-card-case-2.jpg?v=1773623865&width=180",
+        "kind": "other",
+        "has_overlay_text": false,
+        "background": "busy",
+        "video_suitability": "broll"
+      },
+      {
+        "url": "https://ugmonk.com/cdn/shop/files/graph-small.jpg?v=1781712690&width=180",
+        "kind": "packshot",
+        "has_overlay_text": true,
+        "background": "transparent",
+        "video_suitability": "broll"
+      },
+      {
+        "url": "https://ugmonk.com/cdn/shop/files/graph-note-card-ls-39.jpg?v=1754059400&width=180",
+        "kind": "lifestyle",
+        "has_overlay_text": false,
+        "background": "unknown",
+        "video_suitability": "unusable"
+      },
+      {
+        "url": "https://ugmonk.com/cdn/shop/files/graph-detail-2_05504549-2fec-4770-bbd1-39a771cf69da.jpg?v=1754062971&width=180",
+        "kind": "detail",
+        "has_overlay_text": false,
+        "background": "clean",
+        "video_suitability": "broll"
+      },
+      {
+        "url": "https://ugmonk.com/cdn/shop/files/preview_images/f6457075297f412086b2f982c2d20f2a.thumbnail.0000000000.jpg?v=1782934562&width=180",
+        "kind": "infographic",
+        "has_overlay_text": false,
+        "background": "busy",
+        "video_suitability": "broll"
+      },
+      {
+        "url": "https://ugmonk.com/cdn/shop/files/preview_images/f6457075297f412086b2f982c2d20f2a.thumbnail.0000000000_2500x.jpg?v=1782934562&width=180",
+        "kind": "chart_or_text",
+        "has_overlay_text": false,
+        "background": "transparent",
+        "video_suitability": "unusable"
+      },
+      {
+        "url": "https://ugmonk.com/cdn/shop/files/card-compare-size.jpg?v=1783631052&width=180",
+        "kind": "other",
+        "has_overlay_text": true,
+        "background": "unknown",
+        "video_suitability": "broll"
+      },
+      {
+        "url": "https://ugmonk.com/cdn/shop/files/lp-blk-tan-1.jpg?v=1762189551&width=180",
+        "kind": "packshot",
+        "has_overlay_text": false,
+        "background": "clean",
+        "video_suitability": "broll"
+      },
+      {
+        "url": "https://ugmonk.com/cdn/shop/files/LT-pen-black-ls1.jpg?v=1762190807&width=180",
+        "kind": "lifestyle",
+        "has_overlay_text": false,
+        "background": "busy",
+        "video_suitability": "unusable"
+      },
+      {
+        "url": "https://ugmonk.com/cdn/shop/files/LT-pen-black4.jpg?v=1762190807&width=180",
+        "kind": "detail",
+        "has_overlay_text": false,
+        "background": "transparent",
+        "video_suitability": "broll"
+      },
+      {
+        "url": "https://ugmonk.com/cdn/shop/files/LT-pen-black5.jpg?v=1762190807&width=180",
+        "kind": "infographic",
+        "has_overlay_text": false,
+        "background": "unknown",
+        "video_suitability": "broll"
+      },
+      {
+        "url": "https://ugmonk.com/cdn/shop/files/LT-pen-black2.jpg?v=1762190807&width=180",
+        "kind": "chart_or_text",
+        "has_overlay_text": true,
+        "background": "clean",
+        "video_suitability": "unusable"
+      },
+      {
+        "url": "https://ugmonk.com/cdn/shop/files/pen-tray-blk-1.jpg?v=1772652026&width=180",
+        "kind": "other",
+        "has_overlay_text": false,
+        "background": "busy",
+        "video_suitability": "broll"
+      },
+      {
+        "url": "https://ugmonk.com/cdn/shop/files/alum-ls-cropped-96.jpg?v=1773436022&width=180",
+        "kind": "packshot",
+        "has_overlay_text": false,
+        "background": "transparent",
+        "video_suitability": "broll"
+      },
+      {
+        "url": "https://ugmonk.com/cdn/shop/files/pen-tray-details-blk.jpg?v=1773866508&width=180",
+        "kind": "lifestyle",
+        "has_overlay_text": false,
+        "background": "unknown",
+        "video_suitability": "unusable"
+      },
+      {
+        "url": "https://ugmonk.com/cdn/shop/files/pen-tray-blk-3.jpg?v=1773866508&width=180",
+        "kind": "detail",
+        "has_overlay_text": false,
+        "background": "clean",
+        "video_suitability": "broll"
+      },
+      {
+        "url": "https://ugmonk.com/cdn/shop/files/alum-ls-cropped-93.jpg?v=1773932217&width=180",
+        "kind": "infographic",
+        "has_overlay_text": true,
+        "background": "busy",
+        "video_suitability": "broll"
+      },
+      {
+        "url": "https://ugmonk.com/cdn/shop/files/task-small.jpg?v=1781712689&width=180",
+        "kind": "chart_or_text",
+        "has_overlay_text": false,
+        "background": "transparent",
+        "video_suitability": "unusable"
+      },
+      {
+        "url": "https://ugmonk.com/cdn/shop/files/preview_images/51c626cfbb294bb88d34358a65d5308d.thumbnail.0000000000.jpg?v=1782921642&width=180",
+        "kind": "other",
+        "has_overlay_text": false,
+        "background": "unknown",
+        "video_suitability": "broll"
+      },
+      {
+        "url": "https://ugmonk.com/cdn/shop/files/preview_images/51c626cfbb294bb88d34358a65d5308d.thumbnail.0000000000_2500x.jpg?v=1782921642&width=180",
+        "kind": "packshot",
+        "has_overlay_text": false,
+        "background": "clean",
+        "video_suitability": "broll"
+      },
+      {
+        "url": "https://ugmonk.com/cdn/shop/files/card-pack-includes.jpg?v=1775576707&width=180",
+        "kind": "lifestyle",
+        "has_overlay_text": false,
+        "background": "busy",
+        "video_suitability": "unusable"
+      },
+      {
+        "url": "https://ugmonk.com/cdn/shop/files/card-specs-tan.jpg?v=1763141642&width=180",
+        "kind": "detail",
+        "has_overlay_text": true,
+        "background": "transparent",
+        "video_suitability": "broll"
+      },
+      {
+        "url": "https://ugmonk.com/cdn/shop/files/small-tray-silver-1.jpg?v=1772754964&width=180",
+        "kind": "infographic",
+        "has_overlay_text": false,
+        "background": "unknown",
+        "video_suitability": "broll"
+      },
+      {
+        "url": "https://ugmonk.com/cdn/shop/files/alum-ls-47.jpg?v=1773761398&width=180",
+        "kind": "chart_or_text",
+        "has_overlay_text": false,
+        "background": "clean",
+        "video_suitability": "unusable"
+      },
+      {
+        "url": "https://ugmonk.com/cdn/shop/files/small-tray-silver-3.jpg?v=1773868806&width=180",
+        "kind": "other",
+        "has_overlay_text": false,
+        "background": "busy",
+        "video_suitability": "broll"
+      },
+      {
+        "url": "https://ugmonk.com/cdn/shop/files/cap-small-sdetails-silver.jpg?v=1773867743&width=180",
+        "kind": "packshot",
+        "has_overlay_text": false,
+        "background": "transparent",
+        "video_suitability": "broll"
+      },
+      {
+        "url": "https://ugmonk.com/cdn/shop/files/small-tray-silver-2.jpg?v=1773867743&width=180",
+        "kind": "lifestyle",
+        "has_overlay_text": true,
+        "background": "unknown",
+        "video_suitability": "unusable"
+      },
+      {
+        "url": "https://ugmonk.com/cdn/shop/files/studio-01b.jpg?v=1782317747&width=180",
+        "kind": "detail",
+        "has_overlay_text": false,
+        "background": "clean",
+        "video_suitability": "broll"
+      },
+      {
+        "url": "https://ugmonk.com/cdn/shop/files/ugmonk-pc-1-15.jpg?v=1781814944&width=180",
+        "kind": "infographic",
+        "has_overlay_text": false,
+        "background": "busy",
+        "video_suitability": "broll"
+      },
+      {
+        "url": "https://ugmonk.com/cdn/shop/files/ugmonk-pc-1-111.jpg?v=1781815039&width=180",
+        "kind": "chart_or_text",
+        "has_overlay_text": false,
+        "background": "transparent",
+        "video_suitability": "unusable"
+      },
+      {
+        "url": "https://cdn.stamped.io/uploads/photos/95205_5877960179862_ed21df36_c52e_497a_acf0_cc9c12d435f1_r1783339311354.jpg?v=1783339311&width=180",
+        "kind": "other",
+        "has_overlay_text": false,
+        "background": "unknown",
+        "video_suitability": "broll"
+      },
+      {
+        "url": "https://cdn.stamped.io/uploads/photos/95205_5877960179862_b885f355_69aa_48a4_b5fe_80859c6cc42a.jpg?v=&width=180",
+        "kind": "packshot",
+        "has_overlay_text": true,
+        "background": "clean",
+        "video_suitability": "broll"
+      },
+      {
+        "url": "https://cdn.stamped.io/uploads/photos/95205_8628996341910_61d2a78a_1cee_4649_8754_a3551569dd8d.jpg?v=&width=180",
+        "kind": "lifestyle",
+        "has_overlay_text": false,
+        "background": "busy",
+        "video_suitability": "unusable"
+      },
+      {
+        "url": "https://cdn.stamped.io/uploads/photos/95205_8615012958358_e676923c_354c_4126_a878_89a568c0eb64.jpg?v=&width=180",
+        "kind": "detail",
+        "has_overlay_text": false,
+        "background": "transparent",
+        "video_suitability": "broll"
+      },
+      {
+        "url": "https://cdn.stamped.io/uploads/photos/95205_5877960179862_22a1964f_1658_4e0d_bf26_416c03deaeb9.jpg?v=&width=180",
+        "kind": "infographic",
+        "has_overlay_text": false,
+        "background": "unknown",
+        "video_suitability": "broll"
+      },
+      {
+        "url": "https://cdn.stamped.io/uploads/photos/95205_5959508492438_48e6cc7f_31fa_4adc_8819_bf9736372e8f.jpg?v=1774829056&width=180",
+        "kind": "chart_or_text",
+        "has_overlay_text": false,
+        "background": "clean",
+        "video_suitability": "unusable"
+      },
+      {
+        "url": "https://cdn.stamped.io/uploads/photos/95205_5959508492438_4db8f2a0_7dbb_431f_92bb_d64cbfb86ae3.jpg?v=1774829133&width=180",
+        "kind": "other",
+        "has_overlay_text": true,
+        "background": "busy",
+        "video_suitability": "broll"
+      },
+      {
+        "url": "https://cdn.stamped.io/uploads/photos/95205_5959508492438_c767ec3a_a2bd_41b1_939b_e7e3193302ac.jpg?v=&width=180",
+        "kind": "packshot",
+        "has_overlay_text": false,
+        "background": "transparent",
+        "video_suitability": "broll"
+      },
+      {
+        "url": "https://cdn.stamped.io/tr:h-180:/uploads/photos/95205_5877960179862_ed21df36_c52e_497a_acf0_cc9c12d435f1_r1783339311354.jpg?v=1783339311&width=180",
+        "kind": "lifestyle",
+        "has_overlay_text": false,
+        "background": "unknown",
+        "video_suitability": "unusable"
+      },
+      {
+        "url": "https://cdn.stamped.io/tr:h-800:/uploads/photos/95205_5877960179862_ed21df36_c52e_497a_acf0_cc9c12d435f1_r1783339311354.jpg?v=1783339311&width=180",
+        "kind": "detail",
+        "has_overlay_text": false,
+        "background": "clean",
+        "video_suitability": "broll"
+      },
+      {
+        "url": "https://cdn.stamped.io/tr:h-180:/uploads/photos/95205_5877960179862_b885f355_69aa_48a4_b5fe_80859c6cc42a.jpg?&width=180",
+        "kind": "infographic",
+        "has_overlay_text": false,
+        "background": "busy",
+        "video_suitability": "broll"
+      },
+      {
+        "url": "https://cdn.stamped.io/tr:h-800:/uploads/photos/95205_5877960179862_b885f355_69aa_48a4_b5fe_80859c6cc42a.jpg?&width=180",
+        "kind": "chart_or_text",
+        "has_overlay_text": true,
+        "background": "transparent",
+        "video_suitability": "unusable"
+      },
+      {
+        "url": "https://cdn.stamped.io/tr:h-180:/uploads/photos/95205_8628996341910_61d2a78a_1cee_4649_8754_a3551569dd8d.jpg?&width=180",
+        "kind": "other",
+        "has_overlay_text": false,
+        "background": "unknown",
+        "video_suitability": "broll"
+      },
+      {
+        "url": "https://cdn.stamped.io/tr:h-800:/uploads/photos/95205_8628996341910_61d2a78a_1cee_4649_8754_a3551569dd8d.jpg?&width=180",
+        "kind": "packshot",
+        "has_overlay_text": false,
+        "background": "clean",
+        "video_suitability": "broll"
+      },
+      {
+        "url": "https://cdn.stamped.io/tr:h-180:/uploads/photos/95205_8615012958358_e676923c_354c_4126_a878_89a568c0eb64.jpg?&width=180",
+        "kind": "lifestyle",
+        "has_overlay_text": false,
+        "background": "busy",
+        "video_suitability": "unusable"
+      },
+      {
+        "url": "https://cdn.stamped.io/tr:h-800:/uploads/photos/95205_8615012958358_e676923c_354c_4126_a878_89a568c0eb64.jpg?&width=180",
+        "kind": "detail",
+        "has_overlay_text": false,
+        "background": "transparent",
+        "video_suitability": "broll"
+      },
+      {
+        "url": "https://cdn.stamped.io/tr:h-180:/uploads/photos/95205_5877960179862_22a1964f_1658_4e0d_bf26_416c03deaeb9.jpg?&width=180",
+        "kind": "infographic",
+        "has_overlay_text": true,
+        "background": "unknown",
+        "video_suitability": "broll"
+      },
+      {
+        "url": "https://cdn.stamped.io/tr:h-800:/uploads/photos/95205_5877960179862_22a1964f_1658_4e0d_bf26_416c03deaeb9.jpg?&width=180",
+        "kind": "chart_or_text",
+        "has_overlay_text": false,
+        "background": "clean",
+        "video_suitability": "unusable"
+      },
+      {
+        "url": "https://ugmonk.com/cdn/shop/files/full-cards-vertical.jpg?v=1782401956&width=180",
+        "kind": "other",
+        "has_overlay_text": false,
+        "background": "busy",
+        "video_suitability": "broll"
+      },
+      {
+        "url": "https://ugmonk.com/cdn/shop/files/capture-cards-10_addb94ad-3664-4c77-aee9-e8d69c161dba.jpg?v=1747084633&width=180",
+        "kind": "packshot",
+        "has_overlay_text": false,
+        "background": "transparent",
+        "video_suitability": "broll"
+      },
+      {
+        "url": "https://ugmonk.com/cdn/shop/files/task-large.jpg?v=1781887568&width=180",
+        "kind": "lifestyle",
+        "has_overlay_text": false,
+        "background": "unknown",
+        "video_suitability": "unusable"
+      },
+      {
+        "url": "https://ugmonk.com/cdn/shop/files/studio-header-1.jpg?v=1766425485&width=180",
+        "kind": "detail",
+        "has_overlay_text": true,
+        "background": "clean",
+        "video_suitability": "broll"
+      },
+      {
+        "url": "https://ugmonk.com/cdn/shop/files/ugmonk-pc-1-87.jpg?v=1781815009&width=180",
+        "kind": "infographic",
+        "has_overlay_text": false,
+        "background": "busy",
+        "video_suitability": "broll"
+      },
+      {
+        "url": "https://ugmonk.com/cdn/shop/files/ugmonk-pc-1-97.jpg?v=1781815044&width=180",
+        "kind": "chart_or_text",
+        "has_overlay_text": false,
+        "background": "transparent",
+        "video_suitability": "unusable"
+      },
+      {
+        "url": "https://ugmonk.com/cdn/shop/files/DSCF5199.jpg?v=1781815115&width=180",
+        "kind": "other",
+        "has_overlay_text": false,
+        "background": "unknown",
+        "video_suitability": "broll"
+      },
+      {
+        "url": "https://ugmonk.com/cdn/shop/files/DSCF5239.jpg?v=1781815095&width=180",
+        "kind": "packshot",
+        "has_overlay_text": false,
+        "background": "clean",
+        "video_suitability": "broll"
+      },
+      {
+        "url": "https://ugmonk.com/cdn/shop/files/sep-silver-16.jpg?v=1773846378&width=180",
+        "kind": "lifestyle",
+        "has_overlay_text": true,
+        "background": "busy",
+        "video_suitability": "unusable"
+      },
+      {
+        "url": "https://ugmonk.com/cdn/shop/files/card-bar-ls-113.jpg?v=1773932050&width=180",
+        "kind": "detail",
+        "has_overlay_text": false,
+        "background": "transparent",
+        "video_suitability": "broll"
+      },
+      {
+        "url": "https://ugmonk.com/cdn/shop/files/preview_images/1732b388355a403393d22e055ecdc615.thumbnail.0000000000.jpg?v=1783003777&width=180",
+        "kind": "infographic",
+        "has_overlay_text": false,
+        "background": "unknown",
+        "video_suitability": "broll"
+      },
+      {
+        "url": "https://ugmonk.com/cdn/shop/files/preview_images/1732b388355a403393d22e055ecdc615.thumbnail.0000000000_2500x.jpg?v=1783003777&width=180",
+        "kind": "chart_or_text",
+        "has_overlay_text": false,
+        "background": "clean",
+        "video_suitability": "unusable"
+      },
+      {
+        "url": "https://ugmonk.com/cdn/shop/files/card-bar-ls-098.jpg?v=1773846378&width=180",
+        "kind": "other",
+        "has_overlay_text": false,
+        "background": "busy",
+        "video_suitability": "broll"
+      },
+      {
+        "url": "https://ugmonk.com/cdn/shop/files/card-bar-silver-16-dim.jpg?v=1773864240&width=180",
+        "kind": "packshot",
+        "has_overlay_text": true,
+        "background": "transparent",
+        "video_suitability": "broll"
+      },
+      {
+        "url": "https://ugmonk.com/cdn/shop/files/large-tray-blk-4.jpg?v=1772744417&width=180",
+        "kind": "lifestyle",
+        "has_overlay_text": false,
+        "background": "unknown",
+        "video_suitability": "unusable"
+      },
+      {
+        "url": "https://ugmonk.com/cdn/shop/files/alum-ls-cropped-38.jpg?v=1773436850&width=180",
+        "kind": "detail",
+        "has_overlay_text": false,
+        "background": "clean",
+        "video_suitability": "broll"
+      },
+      {
+        "url": "https://ugmonk.com/cdn/shop/files/cap-bundle-blk-details.jpg?v=1773868825&width=180",
+        "kind": "infographic",
+        "has_overlay_text": false,
+        "background": "busy",
+        "video_suitability": "broll"
+      },
+      {
+        "url": "https://ugmonk.com/cdn/shop/files/tray-combo-blk-4.jpg?v=1773868825&width=180",
+        "kind": "chart_or_text",
+        "has_overlay_text": false,
+        "background": "transparent",
+        "video_suitability": "unusable"
+      },
+      {
+        "url": "https://ugmonk.com/cdn/shop/files/alum-ls-cropped-35.jpg?v=1773868825&width=180",
+        "kind": "other",
+        "has_overlay_text": true,
+        "background": "unknown",
+        "video_suitability": "broll"
+      },
+      {
+        "url": "https://ugmonk.com/cdn/shop/files/weekly-walnut-dark_edd9132c-231c-4763-ae54-43c39cb43cf9.jpg?v=1747334408&width=180",
+        "kind": "packshot",
+        "has_overlay_text": false,
+        "background": "clean",
+        "video_suitability": "broll"
+      },
+      {
+        "url": "https://ugmonk.com/cdn/shop/files/weekly-ls-19.jpg?v=1763695057&width=180",
+        "kind": "lifestyle",
+        "has_overlay_text": false,
+        "background": "busy",
+        "video_suitability": "unusable"
+      },
+      {
+        "url": "https://ugmonk.com/cdn/shop/files/weekly-diagram-highlight_f1a627ef-2ca9-4dc5-9e07-0361158e4a05.jpg?v=1763695057&width=180",
+        "kind": "detail",
+        "has_overlay_text": false,
+        "background": "transparent",
+        "video_suitability": "broll"
+      },
+      {
+        "url": "https://ugmonk.com/cdn/shop/files/weekly-ls-5.jpg?v=1763695057&width=180",
+        "kind": "infographic",
+        "has_overlay_text": false,
+        "background": "unknown",
+        "video_suitability": "broll"
+      },
+      {
+        "url": "https://ugmonk.com/cdn/shop/files/weekly-ls-21.jpg?v=1763695057&width=180",
+        "kind": "chart_or_text",
+        "has_overlay_text": true,
+        "background": "clean",
+        "video_suitability": "unusable"
+      },
+      {
+        "url": "https://ugmonk.com/cdn/shop/files/organizer-blk-1.jpg?v=1772744431&width=180",
+        "kind": "other",
+        "has_overlay_text": false,
+        "background": "busy",
+        "video_suitability": "broll"
+      },
+      {
+        "url": "https://ugmonk.com/cdn/shop/files/alum-ls-cropped-9.jpg?v=1773435740&width=180",
+        "kind": "packshot",
+        "has_overlay_text": false,
+        "background": "transparent",
+        "video_suitability": "broll"
+      },
+      {
+        "url": "https://ugmonk.com/cdn/shop/files/org-blk-details.jpg?v=1773869423&width=180",
+        "kind": "lifestyle",
+        "has_overlay_text": false,
+        "background": "unknown",
+        "video_suitability": "unusable"
+      },
+      {
+        "url": "https://ugmonk.com/cdn/shop/files/organizer-blk-5.jpg?v=1773932217&width=180",
+        "kind": "detail",
+        "has_overlay_text": false,
+        "background": "clean",
+        "video_suitability": "broll"
+      },
+      {
+        "url": "https://ugmonk.com/cdn/shop/files/alum-ls-cropped-8.jpg?v=1773869423&width=180",
+        "kind": "infographic",
+        "has_overlay_text": true,
+        "background": "busy",
+        "video_suitability": "broll"
+      },
+      {
+        "url": "https://cdn1.stamped.io/uploads/productImages/95205_8619854397590.jpg&width=180",
+        "kind": "chart_or_text",
+        "has_overlay_text": false,
+        "background": "transparent",
+        "video_suitability": "unusable"
+      },
+      {
+        "url": "https://cdn1.stamped.io/uploads/productImages/95205_7692257460374.jpg&width=180",
+        "kind": "other",
+        "has_overlay_text": false,
+        "background": "unknown",
+        "video_suitability": "broll"
+      },
+      {
+        "url": "https://cdn1.stamped.io/uploads/productImages/95205_8401010884758.jpg&width=180",
+        "kind": "packshot",
+        "has_overlay_text": false,
+        "background": "clean",
+        "video_suitability": "broll"
+      },
+      {
+        "url": "https://cdn1.stamped.io/uploads/productImages/95205_8619844731030.jpg&width=180",
+        "kind": "lifestyle",
+        "has_overlay_text": false,
+        "background": "busy",
+        "video_suitability": "unusable"
+      },
+      {
+        "url": "https://cdn1.stamped.io/uploads/photos/thumb/95205_8619844731030_a8f17fdb_3593_4fd4_a439_dcff253bedb7.jpg&width=180",
+        "kind": "detail",
+        "has_overlay_text": true,
+        "background": "transparent",
+        "video_suitability": "broll"
+      },
+      {
+        "url": "https://cdn1.stamped.io/uploads/productImages/95205_8546299412630.jpg&width=180",
+        "kind": "infographic",
+        "has_overlay_text": false,
+        "background": "unknown",
+        "video_suitability": "broll"
+      },
+      {
+        "url": "https://cdn1.stamped.io/uploads/productImages/95205_7921198301334.jpg&width=180",
+        "kind": "chart_or_text",
+        "has_overlay_text": false,
+        "background": "clean",
+        "video_suitability": "unusable"
+      },
+      {
+        "url": "https://cdn.shopify.com/s/files/1/0167/4484/products/Headphone-Stand-3_28642a83-f396-4abb-9119-85e2eac970bc-890313_medium.jpg?v=1710831527&width=180",
+        "kind": "other",
+        "has_overlay_text": false,
+        "background": "busy",
+        "video_suitability": "broll"
+      },
+      {
+        "url": "https://cdn1.stamped.io/uploads/productImages/95205_8363964170390.jpg&width=180",
+        "kind": "packshot",
+        "has_overlay_text": false,
+        "background": "transparent",
+        "video_suitability": "broll"
+      },
+      {
+        "url": "https://cdn1.stamped.io/uploads/productImages/95205_8619816583318.jpg&width=180",
+        "kind": "lifestyle",
+        "has_overlay_text": true,
+        "background": "unknown",
+        "video_suitability": "unusable"
+      },
+      {
+        "url": "https://cdn1.stamped.io/uploads/photos/thumb/95205_8619816583318_18834463_f146_43ec_862b_b5d687c6607d.jpg&width=180",
+        "kind": "detail",
+        "has_overlay_text": false,
+        "background": "clean",
+        "video_suitability": "broll"
+      }
+    ],
+    "hero_image_url": "https://ugmonk.com/cdn/shop/files/new-solo.jpg?v=1771626446&width=180",
+    "brand_style": {
+      "palette": [
+        "#1A1A1A",
+        "#C8A97E",
+        "#F7F5F2",
+        "#8B7355"
+      ],
+      "aesthetic": "premium minimal",
+      "photography_style": "fotografía de producto natural con luz suave y fondos neutros"
+    },
+    "rendered_social_proof": {
+      "rating": 4.7,
+      "review_count": 2108,
+      "quotes": [
+        "The most comfortable shoes I have ever owned, I wear them every single day.",
+        "Bought a second pair within a week. Worth every penny."
+      ]
+    }
+  }
+}

@@ -1,0 +1,86 @@
+========================================================================
+URL_1 (FRÍA) — 8 ángulos
+  [1] El pie que aguanta todo el día
+       framework=pain_point | awareness=solution_aware | seg=Profesional urbano consciente y activo
+  [2] No son sintéticas, son de árbol
+       framework=curiosity | awareness=problem_aware | seg=Nuevo consumidor eco-consciente
+  [3] El mito de que sostenible es incómodo
+       framework=myth_busting | awareness=problem_aware | seg=Nuevo consumidor eco-consciente
+  [4] Zapatillas para hacer maleta ligera
+       framework=identity | awareness=product_aware | seg=Viajero frecuente y minimalista
+  [5] Nuestro compromiso con el planeta, explicado
+       framework=founder_story | awareness=problem_aware | seg=Nuevo consumidor eco-consciente
+  [6] Desempaquetando los Tree Runners
+       framework=unboxing_demo | awareness=solution_aware | seg=Profesional urbano consciente y activo
+  [7] Sintéticas vs. naturales
+       framework=us_vs_them | awareness=solution_aware | seg=Profesional urbano consciente y activo
+  [8] Envío gratis a partir de 100$
+       framework=offer_urgency | awareness=most_aware | seg=Profesional urbano consciente y activo
+  -> nombres únicos: 8/8 | frameworks distintos: 8 ['curiosity', 'founder_story', 'identity', 'myth_busting', 'offer_urgency', 'pain_point', 'unboxing_demo', 'us_vs_them']
+  -> awareness distintos: 4 ['most_aware', 'problem_aware', 'product_aware', 'solution_aware'] | segmentos únicos: 3
+  -> tripletas (fw,seg,aw) únicas: 8/8
+  -> hooks totales: 24 | únicos: 24
+========================================================================
+URL_2 (CALIENTE) — 8 ángulos
+  [1] Del caos digital a la claridad diaria
+       framework=pain_point | awareness=solution_aware | seg=Profesionales creativos saturados de apps digitales
+  [2] Unboxing del sistema Analog
+       framework=unboxing_demo | awareness=product_aware | seg=Amantes de la papelería y el diseño de producto
+  [3] El regalo que sí van a usar
+       framework=identity | awareness=problem_aware | seg=Compradores de regalos para hombres 'difíciles de complacer'
+  [4] Una tarjeta al día para desconectar de la pantalla
+       framework=transformation | awareness=problem_aware | seg=Personas con fatiga de pantallas buscando desintoxicación digital
+  [5] 150.000 personas ya cambiaron su lista de tareas
+       framework=social_proof | awareness=product_aware | seg=Profesionales creativos saturados de apps digitales
+  [6] No necesitas cinco apps, necesitas una tarjeta
+       framework=myth_busting | awareness=solution_aware | seg=Profesionales creativos saturados de apps digitales
+  [7] Por qué este diseñador dejó de usar apps para organizarse
+       framework=founder_story | awareness=product_aware | seg=Amantes de la papelería y el diseño de producto
+  [8] ¿Y si tu lista de tareas cupiera en una tarjeta?
+       framework=curiosity | awareness=unaware | seg=Personas con fatiga de pantallas buscando desintoxicación digital
+  -> nombres únicos: 8/8 | frameworks distintos: 8 ['curiosity', 'founder_story', 'identity', 'myth_busting', 'pain_point', 'social_proof', 'transformation', 'unboxing_demo']
+  -> awareness distintos: 4 ['problem_aware', 'product_aware', 'solution_aware', 'unaware'] | segmentos únicos: 4
+  -> tripletas (fw,seg,aw) únicas: 8/8
+  -> hooks totales: 24 | únicos: 24
+========================================================================
+TEXTO LIBRE (CALIENTE) — 7 ángulos
+  [1] La luz que cabe en tu mochila
+       framework=pain_point | awareness=problem_aware | seg=Nómadas digitales y freelancers sin escritorio fijo
+  [2] De la habitación compartida a un rincón con luz propia
+       framework=identity | awareness=problem_aware | seg=Residentes en pisos compartidos
+  [3] Los colores no mienten con CRI 95
+       framework=myth_busting | awareness=solution_aware | seg=Ilustradores y creativos que cuidan el color
+  [4] Nueve horas de luz sin buscar enchufe
+       framework=unboxing_demo | awareness=solution_aware | seg=Nómadas digitales y freelancers sin escritorio fijo
+  [5] Aluminio que aguanta el uso diario
+       framework=curiosity | awareness=problem_aware | seg=Nómadas digitales y freelancers sin escritorio fijo
+  [6] Tres luces en una sola lámpara
+       framework=transformation | awareness=product_aware | seg=Ilustradores y creativos que cuidan el color
+  [7] Garantía de 2 años, cero riesgo
+       framework=offer_urgency | awareness=most_aware | seg=Residentes en pisos compartidos
+  -> nombres únicos: 7/7 | frameworks distintos: 7 ['curiosity', 'identity', 'myth_busting', 'offer_urgency', 'pain_point', 'transformation', 'unboxing_demo']
+  -> awareness distintos: 4 ['most_aware', 'problem_aware', 'product_aware', 'solution_aware'] | segmentos únicos: 3
+  -> tripletas (fw,seg,aw) únicas: 7/7
+  -> hooks totales: 21 | únicos: 21
+========================================================================
+ADVERSARIAL (CALIENTE) — 8 ángulos
+  [1] El ruido de la oficina que por fin desaparece
+       framework=pain_point | awareness=solution_aware | seg=Profesionales de oficina abierta
+  [2] Una valoración de 4,7 sobre más de 2.000 opiniones
+       framework=social_proof | awareness=product_aware | seg=Profesionales de oficina abierta
+  [3] 38 horas sin tocar el cargador
+       framework=unboxing_demo | awareness=product_aware | seg=Viajeros frecuentes
+  [4] Un solo par para el móvil y el portátil
+       framework=myth_busting | awareness=solution_aware | seg=Profesionales de oficina abierta
+  [5] Sudor sin miedo en el gimnasio
+       framework=identity | awareness=problem_aware | seg=Personas activas en el gimnasio
+  [6] Llamadas claras aunque haya ruido de viento
+       framework=pain_point | awareness=problem_aware | seg=Viajeros frecuentes
+  [7] 30 días para comprobarlo tú mismo
+       framework=offer_urgency | awareness=most_aware | seg=Profesionales de oficina abierta
+  [8] Lo que de verdad diferencia unos auriculares de casi 90 € del resto
+       framework=us_vs_them | awareness=solution_aware | seg=Personas activas en el gimnasio
+  -> nombres únicos: 8/8 | frameworks distintos: 7 ['identity', 'myth_busting', 'offer_urgency', 'pain_point', 'social_proof', 'unboxing_demo', 'us_vs_them']
+  -> awareness distintos: 4 ['most_aware', 'problem_aware', 'product_aware', 'solution_aware'] | segmentos únicos: 3
+  -> tripletas (fw,seg,aw) únicas: 8/8
+  -> hooks totales: 24 | únicos: 24

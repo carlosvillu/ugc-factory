@@ -1,0 +1,6 @@
+             id             | provider  | cts |  tok  |  unit  |          occurred_at          
+----------------------------+-----------+-----+-------+--------+-------------------------------
+ 01KX9A7Q9NYM1MGNW21N1VAHSW | anthropic |  20 | 33275 | tokens | 2026-07-11 19:24:58.591978+00
+ 01KX9A9SFV3RZTMJ4Y5ZNVHHSR | anthropic |  15 | 33270 | tokens | 2026-07-11 19:26:06.374697+00
+(2 rows)
+

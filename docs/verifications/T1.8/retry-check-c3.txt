@@ -1,0 +1,18 @@
+retry-check: project 01KX965BATQG1JDZKEN49DTQRW
+
+[A] parse_error x2 → status=parse_error llamadas=2 usage={"inputTokens":2000,"outputTokens":200,"cacheCreationInputTokens":0,"cacheReadInputTokens":0}
+    warnings: ["brief_schema_invalid: meta: Invalid input: expected object, received undefined; product: Invalid input: expected object, received undefined; benefits: Invalid input: expected array, received undefined","brief_synthesis_retry","brief_schema_invalid: meta: Invalid input: expected object, received undefined; product: Invalid input: expected object, received undefined; benefits: Invalid input: expected array, received undefined"]
+    ¿reintentó? SÍ ✓ | ¿usage SUMA ambos (2000 in / 200 out)? SÍ ✓
+
+[B] api_error 400 → status=api_error llamadas=1
+    warnings: ["brief_synthesis_api_error_400: 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"compiled grammar too large\"}}"]
+    ¿NO reintentó (1 sola llamada)? SÍ ✓ (correcto: un 400 es determinista)
+
+[C] parse_error → ok → status=synthesized llamadas=2 usage={"inputTokens":2000,"outputTokens":200,"cacheCreationInputTokens":0,"cacheReadInputTokens":0}
+    warnings: ["brief_schema_invalid: meta: Invalid input: expected object, received undefined; product: Invalid input: expected object, received undefined; benefits: Invalid input: expected array, received undefined","brief_synthesis_retry"]
+    ¿brief recuperado? SÍ ✓ | ¿usage SUMA ambos? SÍ ✓
+
+--- cost_entry del proyecto de retry (la BD, no la memoria) ---
+[{"amount_cents":1,"quantity":2200},{"amount_cents":1,"quantity":2200}]
+filas=2 quantity total=4400
+(esperado: A=2200 tok, B=sin fila (400 sin usage), C=2200 tok → 2 filas, 4400 tok)

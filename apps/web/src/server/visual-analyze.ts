@@ -23,18 +23,17 @@ import {
   type VisualAnalyzerUsage,
 } from '@ugc/core/analyze';
 import type { RawContent, VisualAnalysis } from '@ugc/core/contracts';
-import { decryptSecret, type SecretBlob } from '@ugc/core/secrets';
-import { getSecretBlob, recordCost, type DbClient } from '@ugc/db';
+import type { DbClient } from '@ugc/db';
 
-/** Precio de Haiku 4.5 en CÉNTIMOS por TOKEN (skill claude-api: $1/M input, $5/M output). En
- *  céntimos: $1/M = 100 cts / 1_000_000 tokens = 0,0001 cts/token input; $5/M = 0,0005
- *  cts/token output. OJO: una llamada url-mode REAL (screenshot + hasta 8 imágenes) ≈ 15k
- *  tokens ≈ 1,5-2 céntimos — NO es sub-céntimo. El corte que mantiene el <$0,02 DURO de la
- *  Verificación es reescalar las imágenes de PRODUCTO a ≤768px (≈600 tok c/u vs ≈1600 sin
- *  capar): a 768px la llamada de 8 imágenes queda holgada bajo 1 céntimo. La VERDAD del gasto
- *  vive en `quantity` (unit='tokens'); `amount_cents` es el entero facturable. */
-const ANTHROPIC_INPUT_CENTS_PER_TOKEN = 100 / 1_000_000; // $1/M
-const ANTHROPIC_OUTPUT_CENTS_PER_TOKEN = 500 / 1_000_000; // $5/M
+import { loadAnthropicKey, recordAnthropicCost } from './anthropic-service';
+
+/** Modelo de visión (T1.7). Su precio ($1/M input, $5/M output) vive en la tabla COMPARTIDA
+ *  `anthropic-pricing.ts`, extraída en T1.8 cuando entró un segundo modelo (Sonnet 5 para la
+ *  síntesis): un solo sitio donde vive el precio de Anthropic. OJO: una llamada url-mode REAL
+ *  (screenshot + hasta 8 imágenes) ≈ 15k tokens ≈ 1,5-2 céntimos — NO es sub-céntimo. El corte
+ *  que mantiene el <$0,02 DURO de la Verificación de T1.7 es reescalar las imágenes de PRODUCTO
+ *  a ≤768px (≈600 tok c/u vs ≈1600 sin capar). */
+const VISION_MODEL = 'claude-haiku-4-5';
 
 /** Techo del lado largo (px) de las imágenes de PRODUCTO enviadas al VLM. 768px es el corte
  *  real de coste: Haiku capa cada imagen a ~1568px SERVER-SIDE (NO es high-res), así que
@@ -78,16 +77,6 @@ export interface VisualAnalyzeServiceResult {
   /** Uso de tokens (null si skipped). */
   usage: VisualAnalyzerUsage | null;
   warnings: string[];
-}
-
-/** Lee y descifra la API key de Anthropic del módulo de secretos (T0.14). Lanza si no hay key
- *  configurada — sin key no hay análisis visual (a diferencia de Firecrawl no hay fallback). */
-async function loadAnthropicKey(db: DbClient, secretsKey: Buffer): Promise<string> {
-  const blob = await getSecretBlob(db, 'anthropic');
-  if (blob === undefined || blob === null) {
-    throw new Error('visual-analyze: no hay API key de Anthropic configurada (T0.14)');
-  }
-  return decryptSecret(blob as SecretBlob, secretsKey);
 }
 
 /** Lee todos los bytes de un ReadableStream del StorageAdapter. */
@@ -198,17 +187,6 @@ async function prepareProductImages(
   return prepared;
 }
 
-/** amount_cents ENTERO del uso de tokens (Haiku input $1/M, output $5/M). Redondea al céntimo
- *  entero (invariante duro: amount_cents es integer, NUNCA float). La VERDAD granular vive en
- *  `quantity` (tokens). Se factura input+output al precio base, sin descuento por cache_read
- *  (conservador, nunca infra-reporta el gasto). */
-function usageToCents(usage: VisualAnalyzerUsage): number {
-  const cents =
-    usage.inputTokens * ANTHROPIC_INPUT_CENTS_PER_TOKEN +
-    usage.outputTokens * ANTHROPIC_OUTPUT_CENTS_PER_TOKEN;
-  return Math.round(cents);
-}
-
 /**
  * Ejecuta el análisis visual y persiste su coste. Lee la key (secretos T0.14), lee el
  * screenshot del StorageAdapter (modo url), reúne las imágenes de producto, llama a Haiku vía
@@ -220,7 +198,7 @@ export async function runVisualAnalyze(
   input: VisualAnalyzeInput,
 ): Promise<VisualAnalyzeServiceResult> {
   const { db, storage, secretsKey } = deps;
-  const apiKey = await loadAnthropicKey(db, secretsKey);
+  const apiKey = await loadAnthropicKey(db, secretsKey, 'visual-analyze');
 
   const analyzer = makeVisualAnalyzer({
     apiKey,
@@ -253,21 +231,23 @@ export async function runVisualAnalyze(
   // cost_entry (Verificación #4): SOLO si hubo llamada (usage presente). En 'skipped' no hay
   // usage → cero coste, no se registra. En 'refused'/'parse_error' SÍ hay usage → se registra
   // (se pagaron los tokens; record-first, disciplina de T1.4). quantity = total tokens.
+  // `recordAnthropicCost` (plomería compartida con T1.8) NUNCA lanza: un modelo sin precio degrada
+  // a 0 con warning en vez de tumbar el registro — un throw aquí perdería la fila de un gasto YA
+  // realizado.
+  const warnings = [...result.warnings];
   if (result.usage) {
-    const quantity = result.usage.inputTokens + result.usage.outputTokens;
-    await recordCost(db, {
-      provider: 'anthropic',
-      amountCents: usageToCents(result.usage),
-      quantity,
-      unit: 'tokens',
+    const warning = await recordAnthropicCost(db, {
+      model: VISION_MODEL,
+      usage: result.usage,
       projectId: input.projectId,
     });
+    if (warning) warnings.push(warning);
   }
 
   return {
     visualAnalysis: result.visualAnalysis,
     status: result.status,
     usage: result.usage,
-    warnings: result.warnings,
+    warnings,
   };
 }

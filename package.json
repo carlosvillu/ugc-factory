@@ -21,7 +21,7 @@
     "test:unit": "vitest run --project '*:unit'",
     "test:integration": "vitest run --project '*:integration'",
     "test:e2e": "pnpm --filter @ugc/web test:e2e",
-    "test:live": "echo 'test:live DESHABILITADO hasta T1.8: el tier live exige el guard de presupuesto @ugc/test-utils/live-budget (LIVE_BUDGET_USD) — desviacion deliberada de stack-setup.md §6 para no gastar dinero SIN limite' && exit 1",
+    "test:live": "RUN_LIVE=1 vitest run --project live",
     "test:media": "RUN_MEDIA=1 vitest run --project 'worker:media'",
     "test:watch": "vitest --project '*:unit'",
     "gate": "pnpm lint && pnpm typecheck && pnpm format:check && pnpm knip && pnpm test"

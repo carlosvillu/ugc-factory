@@ -20,6 +20,11 @@ docs/
 skills-lock.json
 .mcp.json
 
+# Fixtures de páginas REALES scrapeadas (T1.8): son bytes capturados de tiendas de verdad, no
+# código. Reformatearlos los falsearía — el test de coste mide tokens sobre ESE contenido exacto y
+# las aserciones de "evidence literal" buscan las citas tal cual aparecen en la página.
+packages/core/src/analyze/__fixtures__/
+
 # artefactos de otros arneses de agentes (espejos locales, no del proyecto)
 .agents/
 .codex/

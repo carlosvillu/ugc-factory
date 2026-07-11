@@ -19,3 +19,33 @@ export {
   type ImageBytes,
   type ImageDimensions,
 } from './rescale';
+// Cliente Anthropic COMPARTIDO (T1.8): construcción + normalización de `usage`. Lo consumen el
+// VisualAnalyzer (T1.7, Haiku) y el BriefSynthesizer (T1.8, Sonnet 5), y el servicio de web lo
+// necesita para tipar el `usage` que convierte en cost_entry.
+export {
+  makeAnthropicClient,
+  toAnthropicUsage,
+  DEFAULT_ANTHROPIC_TIMEOUT_MS,
+  type AnthropicDeps,
+  type AnthropicUsage,
+} from './anthropic-client';
+// BriefSynthesizer (T1.8): el paso N3 de SÍNTESIS — una llamada a Sonnet 5 con structured
+// output = ProductBrief, system prompt versionado y cacheado (packages/core/prompts/).
+export {
+  makeBriefSynthesizer,
+  buildUserMessage,
+  truncateMarkdown,
+  BRIEF_SYNTHESIZER_MODEL,
+  MAX_MARKDOWN_CHARS,
+  TRUNCATION_MARKER,
+  type BriefSynthesizer,
+  type BriefSynthesizerDeps,
+  type BriefSynthesizeInput,
+  type BriefSynthesizerResult,
+  type BriefSynthesizerStatus,
+} from './brief-synthesizer';
+export {
+  BRIEF_SYNTHESIZER_SYSTEM_PROMPT,
+  BRIEF_SYNTHESIZER_PROMPT_VERSION,
+  ANTI_INJECTION_BLOCK,
+} from '../../prompts/brief-synthesizer';

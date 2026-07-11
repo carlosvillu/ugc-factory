@@ -1,0 +1,30 @@
+
+#### URL_1 allbirds (FRÍA, visual 27)
+  zod-status: synthesized | warnings: []
+  angles: 5
+  angle names: Comodidad invisible en el día a día | Materiales de la tierra, no del petróleo | Un solo par para todo el viaje | Lo que dicen quienes ya las llevan | Curiosidad: la etiqueta que nadie mira
+  frameworks: pain_point,myth_busting,identity,social_proof,curiosity
+  segments: Urbanitas conscientes que buscan comodidad diaria / Compradores con conciencia de sostenibilidad / Viajeros y gente activa que busca calzado versátil / Urbanitas conscientes que buscan comodidad diaria / Compradores con conciencia de sostenibilidad
+  awareness: solution_aware,problem_aware,product_aware,product_aware,unaware
+  hooks: 15 unique: 15
+  evidence citas: 3 | NO literales: 0
+  assets.images: 6 | hero_image_url del visual presente en assets? true
+  algún hero en assets? true
+  suggested_assets: 5 | todos ⊆ assets.images? true
+  meta.extraction_confidence: low | meta.warnings: ["El markdown capturado corresponde a la homepage de Allbirds, no a la ficha de producto del Tree Runner: no se encontró descripción de producto, list
+  price: null
+
+#### URL_2 ugmonk (CALIENTE, visual 117)
+  zod-status: synthesized | warnings: ["markdown_truncated"]
+  angles: 5
+  angle names: El escritorio saturado de notificaciones | El testimonio de un autor de bestsellers | Desempaquetado del kit completo | El regalo con buen gusto para tu jefe o colega | El mito de que más apps significa más productividad
+  frameworks: pain_point,social_proof,unboxing_demo,identity,myth_busting
+  segments: Ejecutivos con exceso de reuniones y correo digital / Profesionales de escritorio saturados de apps de productividad / Amantes de la papelería y objetos de diseño / Regalo para colegas o jefes con buen gusto / Profesionales de escritorio saturados de apps de productividad
+  awareness: problem_aware,solution_aware,product_aware,unaware,solution_aware
+  hooks: 15 unique: 15
+  evidence citas: 6 | NO literales: 0
+  assets.images: 12 | hero_image_url del visual presente en assets? true
+  algún hero en assets? true
+  suggested_assets: 9 | todos ⊆ assets.images? true
+  meta.extraction_confidence: high | meta.warnings: ["El precio estructurado ($99.00) difiere del precio mostrado en la página para esta variante concreta ($69 para 'Daily Focus' Walnut); se ha prioriza
+  price: "$99.00"

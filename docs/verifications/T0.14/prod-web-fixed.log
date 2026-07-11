@@ -1,0 +1,20 @@
+
+> @ugc/web@0.0.0 start /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/web
+> next start
+
+▲ Next.js 16.2.10
+- Local:         http://localhost:3100
+- Network:       http://192.168.1.132:3100
+✓ Ready in 174ms
+{"level":30,"time":1783758312454,"pid":90704,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","msg":"running startup migrations"}
+{"level":30,"time":1783758312518,"pid":90704,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","msg":"startup migrations applied"}
+{"level":30,"time":1783758312575,"pid":90704,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","seeded":false,"msg":"auth.password_hash ya existía"}
+{"level":30,"time":1783758312611,"pid":90704,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","provider":"fal","seeded":false,"msg":"secret.fal ya existía en BD (env ignorada; la BD es la fuente)"}
+{"level":30,"time":1783758312636,"pid":90704,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","provider":"anthropic","seeded":true,"msg":"secret.anthropic sembrado cifrado desde env (first boot)"}
+{"level":30,"time":1783758312639,"pid":90704,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","provider":"firecrawl","seeded":true,"msg":"secret.firecrawl sembrado cifrado desde env (first boot)"}
+{"level":30,"time":1783758328402,"pid":90704,"hostname":"MBP-de-Carlos","name":"web","request_id":"80be2d6e-695e-4c79-9590-9119c58c0c12","route":"/api/health","health":{"ok":true,"db":true},"msg":"health check"}
+{"level":30,"time":1783758328447,"pid":90704,"hostname":"MBP-de-Carlos","name":"web","request_id":"dd022073-ba4e-424b-b670-643b2eb546fe","route":"/api/health","health":{"ok":true,"db":true},"msg":"health check"}
+{"level":30,"time":1783758343038,"pid":90704,"hostname":"MBP-de-Carlos","name":"web","request_id":"54b90568-74fa-4c7d-969b-a7446dc3564c","route":"/api/health","health":{"ok":true,"db":true},"msg":"health check"}
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/web:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @ugc/web@0.0.0 start: `next start`
+Exit status 143

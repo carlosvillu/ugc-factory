@@ -1,0 +1,17 @@
+
+> @ugc/web@0.0.0 smoke:firecrawl /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/web
+> tsx --env-file-if-exists=../../.env scripts/smoke-firecrawl.ts
+
+smoke:firecrawl: proyecto 01KX87Q937RSJXQ1JXKD3YT7D9 creado
+smoke:firecrawl: URL          = https://www.oatly.com/en-gb
+smoke:firecrawl: provider     = firecrawl
+smoke:firecrawl: analysis id  = 01KX87QQKV8PBHX6D54MFCDXM1 (status=done)
+smoke:firecrawl: credits      = 1
+smoke:firecrawl: --- RawContent (comprobar a mano vs la página) ---
+smoke:firecrawl: markdown     = 10614 chars
+smoke:firecrawl: images       = 25 imagen(es)
+smoke:firecrawl: palette      = ["#E43E39","#F8C8D8","#98C5D3","#FFFFFF","#000000","#98C5D3"]
+smoke:firecrawl: screenshotRef= "screenshots/01KX87QQKDHRW5M2ZH0TSYGS7C.png"
+smoke:firecrawl: screenshot asset 01KX87QQKMPNZ6TJSWZ1XCXHS0 (1484565 bytes, key=screenshots/01KX87QQKDHRW5M2ZH0TSYGS7C.png)
+smoke:firecrawl: descárgalo con GET /api/assets/01KX87QQKMPNZ6TJSWZ1XCXHS0/download (T0.5)
+smoke:firecrawl: OK ✓ — inspecciona lo de arriba contra la página real y /spend

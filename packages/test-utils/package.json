@@ -6,7 +6,8 @@
   "exports": {
     ".": "./src/index.ts",
     "./setup-env": "./src/setup-env.ts",
-    "./global-setup": "./src/global-setup.ts"
+    "./global-setup": "./src/global-setup.ts",
+    "./fixtures/firecrawl": "./src/fixtures/firecrawl.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",

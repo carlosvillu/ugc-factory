@@ -93,6 +93,9 @@ export { recordCost, getSpendSummary, seedMonthlyBudgetIfAbsent } from './repos/
 // todavía: solo la usan los tests de integración (import relativo), sin consumidor de
 // runtime aún — knip vetaría el export sin consumidor.
 export { createUrlAnalysis } from './repos/url-analysis.repo';
+// El tipo de fila `url_analysis` (retorno de createUrlAnalysis): lo consume el servicio
+// de ingesta N2 de web (T1.4) para tipar su resultado.
+export type { UrlAnalysis } from './schema/project';
 // Modo MANUAL (T1.6, §7.4): la caché lookup-then-insert del intake por texto libre.
 // `findManualUrlAnalysisByHash` (lookup por (project_id, content_hash, source='manual'))
 // + `createManualUrlAnalysis` (insert source='manual', status='done') los compone el

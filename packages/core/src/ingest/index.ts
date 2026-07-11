@@ -15,6 +15,17 @@ export {
   type FastPathResult,
   type FastPathDeps,
 } from './fast-path';
+// Cliente HTTP de scraping N2 (T1.4, §7.2/§9.1): Firecrawl `/v2/scrape` con fallback
+// transparente a Jina Reader. Produce un `RawContent` rico + bytes de screenshot +
+// créditos; la persistencia (asset/cost_entry/url_analysis) la hace la capa servicio.
+export {
+  makeFirecrawlIngester,
+  FIRECRAWL_CENTS_PER_CREDIT,
+  type FirecrawlIngester,
+  type FirecrawlDeps,
+  type FirecrawlIngestResult,
+  type ScreenshotBytes,
+} from './firecrawl';
 // Síntesis del RawContent en modo MANUAL (T1.6, §7.4): short-circuit puro que NO
 // pasa por el fast-path ingester — el intake manual no scrapea.
 export { synthManualRawContent, type SynthManualRawContentInput } from './manual';

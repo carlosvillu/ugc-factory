@@ -1,0 +1,19 @@
+fallback: url          = https://www.oatly.com/en-gb
+fallback: provider     = jina
+fallback: credits      = 0
+fallback: warnings     = ["firecrawl_status_401"]
+fallback: markdown len = 20735 chars
+fallback: images       = 0
+fallback: branding     = null
+fallback: --- markdown head (first 500 chars) ---
+Title: Oatly | the Original Oat Drink Company | Oatly | United Kingdom
+
+URL Source: https://www.oatly.com/en-gb
+
+Markdown Content:
+## We know you didn’t come here for cookies
+
+But they’re good if you want our site to work correctly. If you want it to work perfectly, choose “Accept all.” If you don’t like being an anonymous statistic or having ads tailored for you, you might want to make some choices.
+
+ Without the necessary cookies, the website won’t work at all; functional cookies are good for 
+fallback: RESULT = PASS (expect provider=jina, markdown>0, 401 warning)

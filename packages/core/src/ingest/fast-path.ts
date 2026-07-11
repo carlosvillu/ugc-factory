@@ -16,6 +16,7 @@
 //    puede construir un RawContent válido.
 import type { RawContent } from '../contracts/raw-content';
 import { classifyUrl, contentHash, normalizeUrl, type FastPathPlatform } from './url';
+import { makeFetchWithTimeout } from './http';
 import { mergeRawContent } from './merge';
 import { parseJsonLd } from './parsers/json-ld';
 import { parseOpenGraph } from './parsers/opengraph';
@@ -62,20 +63,11 @@ function shopifyJsonUrl(rawUrl: string): string | null {
 }
 
 export function makeFastPathIngester(deps: FastPathDeps = {}) {
-  // Resuelto EN CADA llamada, no en construcción: si se toma `globalThis.fetch` al
-  // construir el ingester (posible module scope), se captura la referencia ANTES de
-  // que un interceptor (msw en tests) reemplace el global, y las peticiones se irían
-  // por el fetch original sin mockear. Con default perezoso, msw intercepta.
-  const doFetch: typeof globalThis.fetch = (input, init) =>
-    (deps.fetch ?? globalThis.fetch)(input, init);
-  const timeoutMs = deps.timeoutMs ?? DEFAULT_FETCH_TIMEOUT_MS;
-
-  /** Fetch con timeout duro vía AbortSignal: un servidor que cuelga aborta a los
-   *  `timeoutMs` en vez de bloquear `ingest()` para siempre. El abort se propaga como
-   *  excepción (lo tratan `tryShopifyJson`/`tryFetchHtml` según su política). */
-  function fetchWithTimeout(url: string, init: RequestInit): Promise<Response> {
-    return doFetch(url, { ...init, signal: AbortSignal.timeout(timeoutMs) });
-  }
+  // Fetch con timeout duro (helper compartido con firecrawl.ts): resuelve `fetch` en
+  // cada llamada (default perezoso) para que msw intercepte, y aborta a los `timeoutMs`
+  // en vez de bloquear `ingest()` para siempre. El abort se propaga como excepción (lo
+  // tratan `tryShopifyJson`/`tryFetchHtml` según su política).
+  const fetchWithTimeout = makeFetchWithTimeout(deps, deps.timeoutMs ?? DEFAULT_FETCH_TIMEOUT_MS);
 
   /**
    * Ejecuta el fast path sobre una URL. NUNCA lanza por fuentes ausentes: devuelve

@@ -200,8 +200,8 @@ Decisiones del usuario (2026-07-07): la fase se ejecuta tras T0.1 y **antes** de
 - **Entrega**: clasificador de URL (regex §7.2 N1), cliente Shopify `.json`, parsers JSON-LD (`Product/Offer/AggregateRating`) y OpenGraph, merge a `RawContent`; normalizador de URL + content_hash; manejo de 404/401 del `.json` con fallback transparente.
 - **Verificación**: contra 3 URLs reales (1 Shopify, 1 con JSON-LD, 1 solo-OG), el `RawContent` persistido contiene título/precio/imágenes correctos comprobados a mano contra la página; una URL cuyo `{url}.json` responde 404/401 degrada al parser JSON-LD/OG de forma transparente (sin error visible ni fila rota).
 
-#### T1.4 · Cliente Firecrawl + fallback Jina
-- **Depende de**: T1.3, T0.5, T0.12, T0.14 *(el screenshot se persiste como `asset` y se descarga por el endpoint de T0.5)*; ⚠ API key de Firecrawl (la aporta el usuario)
+#### T1.4 · Cliente Firecrawl + fallback Jina [x] 2026-07-11 — PASS (red real oatly.com), ver docs/verifications/T1.4/ (coste ~$0,001)
+- **Depende de**: T1.3, T0.5, T0.12, T0.14 *(el screenshot se persiste como `asset` y se descarga por el endpoint de T0.5)*; ⚠ API key de Firecrawl (la aporta el usuario) ✓ aportada 2026-07-11
 - **Entrega**: cliente `/v2/scrape` con `formats: [markdown, images, branding, product, screenshot]` + `onlyMainContent` + `proxy: auto`; fallback a Jina Reader si Firecrawl falla; screenshot persistido como `asset`; créditos registrados en `cost_entry`.
 - **Coste estimado**: ~$0,30 (créditos Firecrawl de varios scrapes de prueba)
 - **Verificación**: analizar una landing real JS-heavy → `url_analysis.raw_content` contiene markdown legible, ≥3 imágenes y branding con paleta; el screenshot se descarga por `GET /api/assets/:id/download` (T0.5) y coincide con la landing; con la key de Firecrawl inválida, Jina produce al menos el markdown; los créditos aparecen en `/spend`.

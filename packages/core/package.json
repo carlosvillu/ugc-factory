@@ -5,6 +5,7 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
+    "./analyze": "./src/analyze/index.ts",
     "./contracts": "./src/contracts/index.ts",
     "./ingest": "./src/ingest/index.ts",
     "./jobs": "./src/jobs/index.ts",
@@ -17,7 +18,9 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.111.0",
     "pino": "catalog:",
+    "sharp": "^0.35.3",
     "ulid": "^3.0.2",
     "zod": "catalog:"
   },

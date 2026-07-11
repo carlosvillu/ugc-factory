@@ -1,0 +1,10 @@
+../../.env not found. Continuing without it.
+analyze-verify: project      = 01KX8GWP1MY9PTKC4JK31PGJ4R
+analyze-verify: firecrawl    = provider=firecrawl credits=5
+analyze-verify: raw.images   = 13 total
+analyze-verify: screenshotRef= "screenshots/01KX8GXHTNQE81J3CQ3QFVATNS.png"
+analyze-verify: sendable     = 3 raster http(s) images
+  send[01] https://a.storyblok.com/f/89894/80x80/b6b4de3343/2-brand-update.png
+  send[02] https://a.storyblok.com/f/89894/80x80/4a542b6f81/3-brand-update.png
+  send[03] https://a.storyblok.com/f/89894/80x80/eea81db370/1-brand-update.png
+analyze-verify: DRY RUN — stopping before the paid Anthropic call.

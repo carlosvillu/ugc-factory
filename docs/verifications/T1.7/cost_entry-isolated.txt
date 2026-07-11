@@ -1,0 +1,13 @@
+             id             | provider  | amount_cents | quantity |  unit  |         project_id         |          occurred_at          
+----------------------------+-----------+--------------+----------+--------+----------------------------+-------------------------------
+ 01KX8H33E6155TS6976TSHYJYF | anthropic |            1 |     7008 | tokens | 01KX8H1J1VWRCEF1H3K0WQ9TBT | 2026-07-11 12:05:32.762848+00
+ 01KX65D0E0AN18TF7FVMT9M5Q9 | anthropic |         1288 |          |        |                            | 2026-07-10 14:02:45.572653+00
+(2 rows)
+
+ provider  | count | cents | qty  
+-----------+-------+-------+------
+ fal       |     1 |   377 |     
+ anthropic |     2 |  1289 | 7008
+ firecrawl |     7 |     2 |   29
+(3 rows)
+

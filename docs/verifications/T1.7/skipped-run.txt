@@ -1,0 +1,5 @@
+skipped-verify: status        = skipped
+skipped-verify: usage         = null
+skipped-verify: visualAnalysis= {"images":[],"hero_image_url":null,"brand_style":null,"rendered_social_proof":null}
+skipped-verify: warnings      = []
+skipped-verify: RESULT        = PASS

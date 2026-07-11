@@ -1,0 +1,27 @@
+analyze-verify: project      = 01KX8H1J1VWRCEF1H3K0WQ9TBT
+analyze-verify: firecrawl    = provider=firecrawl credits=7
+analyze-verify: raw.images   = 42 total
+analyze-verify: screenshotRef= "screenshots/01KX8H2EDC7CBYPZA2Y3RZVH3J.png"
+analyze-verify: sendable     = 39 raster http(s) images
+analyze-verify: --- llamando a runVisualAnalyze (RED REAL, gasto Anthropic) ---
+analyze-verify: status       = analyzed  (21545 ms)
+analyze-verify: usage        = {"inputTokens":6695,"outputTokens":313,"cacheCreationInputTokens":0,"cacheReadInputTokens":0}
+analyze-verify: warnings     = []
+analyze-verify: hero_image   = "https://www.deathwishcoffee.com/cdn/shop/files/Power_Surge_10ct_Angle_Vertical_Pod_DTC_A1_FTO.jpg?v=1773242535&width=533"
+analyze-verify: brand_style  = {"palette":["#000000","#FF0000","#00BB00","#0066FF","#FF9900"],"aesthetic":"dark edgy rebellion with neon accents, skull and crossbones gothic aesthetic mixed with modern coffee culture","photography_style":"studio packshots with dramatic lighting and lifestyle contextual shots"}
+analyze-verify: social_proof = {"rating":null,"review_count":null,"quotes":[]}
+analyze-verify: #images      = 8 classified
+
+# --- Clasificación por imagen (orden de envío; las 8 primeras de las 39 sendable) ---
+[01] kind=other     | bg=unknown | video=unusable | overlay=false | url=.../Daily_Mom_Logo_White.png
+[02] kind=packshot  | bg=clean   | video=hero     | overlay=true  | url=.../Power_Surge_10ct_Angle_Vertical_Pod_DTC_A1_FTO.jpg
+[03] kind=packshot  | bg=clean   | video=hero     | overlay=true  | url=.../Maple_Cinnamon_9oz_Ground_Angle_DTC_A1.jpg
+[04] kind=packshot  | bg=clean   | video=hero     | overlay=false | url=.../DeathWishCoffee_July26_Product_TShirt_Blueberry_Front_Web2.jpg
+[05] kind=lifestyle | bg=busy    | video=broll    | overlay=true  | url=.../PowerSurge_Banner_Desktop.jpg
+[06] kind=lifestyle | bg=busy    | video=broll    | overlay=false | url=.../MediumRoast_Chemex_2.jpg
+[07] kind=lifestyle | bg=busy    | video=broll    | overlay=true  | url=.../Core_Bagged_Photo_Rendering_Dark_Roast_A1_1200x1200_2.jpg
+[08] kind=other     | bg=unknown | video=unusable | overlay=false | url=.../Trend_Hunter_Logo_White.png
+
+# NOTA: el tee original falló por cwd=apps/web (--filter exec). Esta transcripción es el stdout
+# literal del run pagado; las 8 imágenes se re-descargaron a product-01..08 (mismo orden) para el
+# side-by-side. El cost_entry quedó registrado (ver cost_entry-isolated.txt).

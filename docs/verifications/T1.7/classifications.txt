@@ -1,0 +1,9 @@
+# Clasificación T1.7 — deathwishcoffee.com — 8 imágenes (orden de envío) — status=analyzed
+[01] kind=other      | bg=unknown | video=unusable | overlay=false | Daily_Mom_Logo_White.png
+[02] kind=packshot   | bg=clean   | video=hero     | overlay=true  | Power_Surge_10ct_Angle_Vertical_Pod
+[03] kind=packshot   | bg=clean   | video=hero     | overlay=true  | Maple_Cinnamon_9oz_Ground_Angle
+[04] kind=packshot   | bg=clean   | video=hero     | overlay=false | July26_Product_TShirt_Blueberry_Front
+[05] kind=lifestyle  | bg=busy    | video=broll    | overlay=true  | PowerSurge_Banner_Desktop
+[06] kind=lifestyle  | bg=busy    | video=broll    | overlay=false | MediumRoast_Chemex_2
+[07] kind=lifestyle  | bg=busy    | video=broll    | overlay=true  | Core_Bagged_Photo_Rendering_Dark_Roast
+[08] kind=other      | bg=unknown | video=unusable | overlay=false | Trend_Hunter_Logo_White.png

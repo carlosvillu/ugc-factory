@@ -218,8 +218,8 @@ Decisiones del usuario (2026-07-07): la fase se ejecuta tras T0.1 y **antes** de
 - **Playwright permanente**: `apps/web/e2e/intake-manual.spec.ts` cubre envío de texto con y sin imágenes, validación visible del formulario y reutilización observable de una entrada repetida usando fixtures locales.
 - **Verificación**: crear un análisis solo con un párrafo y 2 imágenes → `url_analysis` en `done` sin ninguna llamada de scraping (logs); repetir el mismo texto reutiliza la caché (sin fila nueva).
 
-#### T1.7 · Cliente Anthropic + VisualAnalyzer
-- **Depende de**: T1.4, T1.6, T0.14; ⚠ API key de Anthropic (la aporta el usuario)
+#### T1.7 · Cliente Anthropic + VisualAnalyzer [x] 2026-07-11 — PASS (coste $0.01<$0.02 + skipped automatizado; ≥7/8 juicio humano OK del usuario), ver docs/verifications/T1.7/
+- **Depende de**: T1.4, T1.6, T0.14; ⚠ API key de Anthropic (la aporta el usuario) ✓ aportada 2026-07-11
 - **Entrega**: cliente Anthropic en `packages/core` (structured outputs + prompt caching + tokens a `cost_entry`); `VisualAnalyzer` (Haiku 4.5): clasificación de imágenes, paleta y social proof del screenshot (prompt `research/07 §5 P3`); reescalado ≤1080p. Con `source=manual`: clasifica las subidas; sin imágenes → `skipped`.
 - **Coste estimado**: ~$0,10
 - **Verificación**: sobre las imágenes de una landing real, la clasificación coincide con el juicio humano en ≥7 de 8 (revisión manual); coste del paso <$0,02 en `/spend`; el modo manual sin imágenes deja el paso `skipped` y el flujo continúa.

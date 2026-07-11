@@ -1,0 +1,14 @@
+=== ESTADOS REALES EN BD (escenario 2) ===
+ node_key |  status   |                                                                                                                                         
+----------+-----------+-----------------------------------------------------------------------------------------------------------------------------------------
+ N1       | succeeded | {"raw": {"url": null, "images": [], "source": "manual", "markdown": "Cuaderno de notas de tapa dura, papel reciclado de 120g, 200 pagina
+ N2       | skipped   | {"reason": "no_analyzable_visuals", "skipped": true}                                                                                    
+ N3       | succeeded | {"brief": {"meta": {"language": "es", "platform": "manual", "warnings": ["No hay datos estructurados de precio, moneda ni rating: el pre
+(3 rows)
+
+=== tiempos escenario 2 ===
+ pipeline_s 
+------------
+       43.4
+(1 row)
+

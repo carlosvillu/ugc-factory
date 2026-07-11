@@ -1,6 +1,8 @@
-// Plomería COMPARTIDA de los pasos de Anthropic en la capa servicio (T1.8): leer la key de
+// Plomería COMPARTIDA de los pasos de Anthropic en `@ugc/services` (T1.8): leer la key de
 // secretos y registrar el `cost_entry`. La consumen el VisualAnalyzer (T1.7, Haiku) y el
 // BriefSynthesizer (T1.8, Sonnet 5), y la consumirá todo paso de IA de Anthropic que venga.
+// (Nació en la capa server de web; se movió al paquete en T1.10a, cuando el worker pasó a
+// ejecutar estos mismos pasos desde sus executors.)
 //
 // POR QUÉ EXISTE: el invariante de dinero —tras una llamada de pago con `usage` SIEMPRE hay
 // `cost_entry`— es demasiado importante para vivir replicado en cada servicio. T1.8 extrajo el

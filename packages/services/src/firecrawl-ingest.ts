@@ -1,9 +1,12 @@
 // Servicio de ingesta N2 (T1.4): la superficie INVOCABLE que persiste una scrape de
 // Firecrawl/Jina. Orquesta core (`makeFirecrawlIngester` — solo red) + la capa db/storage
-// (asset del screenshot, cost_entry de los créditos, url_analysis). Vive en la capa
-// server de web (composition root: cablea, no contiene lógica de negocio); el ingester
-// N2 y el mapeo a RawContent viven en core. Lo consumen el smoke del verifier
-// (`smoke-firecrawl.ts`) y, cuando llegue, el endpoint de intake URL (T1.10a).
+// (asset del screenshot, cost_entry de los créditos, url_analysis). Vive en `@ugc/services`
+// (T1.10a): cablea, no contiene lógica de negocio — el ingester N2 y el mapeo a RawContent
+// viven en core. Lo consumen el smoke del verifier (`smoke-firecrawl.ts`) y el executor del
+// nodo N1 del worker (T1.10a). NACIÓ en la capa server de web (T1.4) y se MOVIÓ aquí cuando
+// el worker necesitó el mismo servicio: apps/web y apps/worker son composition roots
+// hermanos y ninguno importa del otro (architecture.md §1), así que lo que comparten vive en
+// un paquete.
 //
 // Por qué la persistencia está aquí y no en core: escribir en la BD y en el StorageAdapter
 // es I/O de datos (la frontera prohibida de core, architecture §1). El screenshot de

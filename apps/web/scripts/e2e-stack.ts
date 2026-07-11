@@ -3,13 +3,18 @@
 // @ugc/test-utils, que se consume como TypeScript sin build (Node plano falla con
 // ERR_UNKNOWN_FILE_EXTENSION).
 //
-// Orden: Postgres (testcontainer) → clon aislado desde la template migrada → worker
-// (T0.11: procesa los steps de demo del canvas — sin él los nodos nunca cambian de
-// estado y el spec de canvas cuelga) → web (que en su arranque migra idempotente +
+// Orden: Postgres (testcontainer) → clon aislado desde la template migrada → APIs
+// externas FALSAS + semilla de sus API keys cifradas → worker (procesa los steps: los de
+// demo del canvas de T0.11 y los REALES del análisis de T1.10a — sin él los nodos nunca
+// cambian de estado y el spec cuelga) → web (que en su arranque migra idempotente +
 // SIEMBRA el hash de password desde AUTH_BOOTSTRAP_PASSWORD vía
-// instrumentation.register). El worker usa los executors de demo (sleep_ms/fail_rate)
-// — NO hace falta ni fake APIs ni seedFixtures (e2e.md §4/§136: los specs de F0
-// ejercitan orquestador + SSE + canvas con executors de demo, sin API externa).
+// instrumentation.register).
+//
+// T1.10a: los specs del análisis ejercitan los nodos REALES (N1 scrapea, N2 mira
+// imágenes, N3 sintetiza), que llaman a Firecrawl/Jina/Anthropic. Para que la suite NO
+// GASTE UN CÉNTIMO, el stack levanta un servidor HTTP local que finge esas tres APIs
+// (startFakeExternalApis) y apunta los clientes ahí vía *_BASE_URL. Los specs de F0
+// siguen usando los executors de demo, que no tocan la red.
 //
 // Si algo falla: exit != 0 y Playwright aborta mostrando el log (stdio 'inherit').
 import { spawn, type ChildProcess } from 'node:child_process';
@@ -17,7 +22,9 @@ import { fileURLToPath } from 'node:url';
 import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { startPostgresContainer, createTestDatabase } from '@ugc/test-utils';
+import { startPostgresContainer, createTestDatabase, startFakeExternalApis } from '@ugc/test-utils';
+import { deriveSecretsKey, encryptSecret } from '@ugc/core/secrets';
+import { createDbPool, seedSecretIfAbsent } from '@ugc/db';
 
 const PORT = 3100;
 // Password de bootstrap del stack: el nombre de la env es el que LEE nuestro
@@ -46,11 +53,39 @@ const nextBin = fileURLToPath(new URL('../node_modules/.bin/next', import.meta.u
 // web) e inserta la fila en la BD del stack. Se publica en .runtime.json.
 const assetsDir = mkdtempSync(path.join(tmpdir(), 'ugc-e2e-assets-'));
 
+// APIs externas FALSAS (T1.10a): Firecrawl, Jina y Anthropic servidos por un HTTP local
+// en puerto efímero. Los nodos REALES del análisis (N1/N2/N3) que corre el worker las
+// llaman a través de los overrides de base URL de abajo ⇒ la suite E2E NUNCA gasta
+// dinero real. (El único gasto de la tarea es la Verificación manual con una URL real.)
+const fakeApis = await startFakeExternalApis();
+
+// La master key del stack, fijada INCONDICIONALMENTE (mismo criterio que ASSETS_DIR: un
+// shell limpio debe pasar igual). Se usa para cifrar los secretos que se siembran justo
+// debajo Y para que web/worker los descifren — han de ser LA MISMA.
+const masterKey = 'e2e-app-master-key-not-a-secret';
+
+// Semilla de las API keys de los proveedores (T0.14): sin ellas, N1 lanza ("no hay API
+// key de Firecrawl configurada") y el pipeline nunca arranca. Son claves FALSAS — el
+// servidor al que viajan es el fake de arriba, no el proveedor real. Se cifran con el
+// mismo esquema de producción (AES-256-GCM sobre la clave derivada de la master key):
+// el E2E ejercita el camino REAL de secretos, no un bypass.
+const { db: seedDb, pool: seedPool } = createDbPool(connectionString);
+const secretsKey = deriveSecretsKey(masterKey);
+await seedSecretIfAbsent(seedDb, 'firecrawl', encryptSecret('fake-firecrawl-key', secretsKey));
+await seedSecretIfAbsent(seedDb, 'anthropic', encryptSecret('fake-anthropic-key', secretsKey));
+await seedPool.end();
+
 const env: NodeJS.ProcessEnv = {
   ...process.env,
   PORT: String(PORT),
   DATABASE_URL: connectionString,
   UGC_DB_MIGRATIONS_DIR: migrationsDir,
+  // Overrides de base URL de los clientes externos → al fake local. Fijados
+  // INCONDICIONALMENTE: si se heredaran del shell, un entorno con las URLs reales haría
+  // que la suite llamara (y pagara) a los proveedores de verdad.
+  FIRECRAWL_BASE_URL: fakeApis.firecrawlBaseUrl,
+  JINA_BASE_URL: fakeApis.jinaBaseUrl,
+  ANTHROPIC_BASE_URL: fakeApis.anthropicBaseUrl,
   // StorageAdapter local (T0.5): web sirve /api/assets/:id/download desde aquí.
   // Fijado incondicionalmente (no `?? process.env.ASSETS_DIR`): un shell limpio
   // (`env -u ASSETS_DIR`) debe pasar igual — el fix no puede depender del entorno
@@ -63,7 +98,10 @@ const env: NodeJS.ProcessEnv = {
   INTERNAL_API_URL: `http://localhost:${String(PORT)}`,
   // Fail-fast de boot (T0.4): APP_MASTER_KEY firma las sesiones; sin ella web
   // revienta en instrumentation.register. Valor de test (no es un secreto).
-  APP_MASTER_KEY: process.env.APP_MASTER_KEY ?? 'e2e-app-master-key-not-a-secret',
+  // FIJADA (ya no `?? process.env`): es la MISMA con la que se cifraron los secretos
+  // sembrados arriba. Si el shell traía otra, el worker no podría descifrar las API keys
+  // y N1 fallaría — un heredado del entorno daría un fallo desconcertante.
+  APP_MASTER_KEY: masterKey,
   // Seeding first-boot del hash: el nombre que LEE nuestro código.
   AUTH_BOOTSTRAP_PASSWORD: E2E_PASSWORD,
   // Rate limit del login: max=2 → el 3.er intento fallido ya es 429 (literal a la
@@ -107,6 +145,7 @@ async function shutdown(code = 0): Promise<void> {
   shuttingDown = true;
   web.kill('SIGTERM');
   worker.kill('SIGTERM');
+  await fakeApis.close().catch(() => undefined);
   await pg.stop().catch(() => undefined);
   process.exit(code);
 }

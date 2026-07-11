@@ -121,3 +121,22 @@ export function makeLocalStorageAdapter(opts: LocalStorageOptions): StorageAdapt
     },
   };
 }
+
+/** Raíz de assets por defecto en producción (PRD §19.2 / architecture.md §6). En dev y en el
+ *  stack E2E se pasa un path escribible del host vía `ASSETS_DIR`. */
+const DEFAULT_ASSETS_DIR = '/data/assets';
+
+/**
+ * El StorageAdapter local cableado desde el ENTORNO (`ASSETS_DIR`, con el default de
+ * producción). UNA sola definición del "dónde viven los assets", compartida por los DOS
+ * composition roots: `apps/web` (que sirve `/api/assets/:id/download`) y `apps/worker` (que
+ * los escribe desde los executors). Antes cada uno tenía su propia copia del default y de la
+ * lectura de env — y si el deploy cambiaba el directorio y solo se tocaba una, el worker
+ * escribía los assets donde web no los lee. Un bug silencioso y muy caro de encontrar.
+ *
+ * Leer `process.env` es CONFIG, no I/O de datos: la construcción del adaptador es
+ * precisamente el sitio donde la config se resuelve.
+ */
+export function makeLocalStorageAdapterFromEnv(): StorageAdapter {
+  return makeLocalStorageAdapter({ root: process.env.ASSETS_DIR ?? DEFAULT_ASSETS_DIR });
+}

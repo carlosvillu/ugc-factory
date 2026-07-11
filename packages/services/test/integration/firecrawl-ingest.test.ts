@@ -27,7 +27,7 @@ import {
   JINA_MARKDOWN_BODY,
 } from '@ugc/test-utils/fixtures/firecrawl';
 
-import { runFirecrawlIngest } from '@/server/firecrawl-ingest';
+import { runFirecrawlIngest } from '../../src/firecrawl-ingest';
 
 const FIRECRAWL_SCRAPE = 'https://api.firecrawl.dev/v2/scrape';
 const JINA_WILDCARD = 'https://r.jina.ai/*';

@@ -64,6 +64,9 @@ export {
   type ManualIntakeConfig,
   type IntakeImageRef,
 } from './intake';
+// Rama URL del intake (T1.10a): la que T1.6 dejó anticipada. El submit por URL NO crea
+// el análisis — arranca el run y N1 lo scrapea dentro (analysis-dag.ts).
+export { UrlIntakeConfigSchema, ANALYSIS_LANGUAGES, type UrlIntakeConfig } from './intake';
 export {
   VisualAnalysisSchema,
   ClassifiedImageSchema,
@@ -111,3 +114,18 @@ export {
   type BriefValidationProfile,
   type NeedsUserDecisionReason,
 } from './brief-warning';
+// Artefactos que los nodos dejan en `step_run.output_refs` (T1.10a). Viven en core porque
+// `output_refs` es una interfaz PÚBLICA: la consumen el nodo siguiente, el panel del canvas
+// y CP1 (T1.10b) — y `apps/web` no puede importar de `apps/worker`. `SkippedOutputSchema` es
+// GENÉRICO: cualquier nodo que se autodescarte (F2–F4), no solo N2.
+export {
+  SkippedOutputSchema,
+  isSkippedOutput,
+  N1OutputSchema,
+  N2OutputSchema,
+  N3OutputSchema,
+  type SkippedOutput,
+  type N1Output,
+  type N2Output,
+  type N3Output,
+} from './step-outputs';

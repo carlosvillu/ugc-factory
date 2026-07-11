@@ -18,7 +18,7 @@
 import { deriveSecretsKey } from '@ugc/core/secrets';
 import { createDb, createProject, getAsset, makeLocalStorageAdapter } from '@ugc/db';
 
-import { runFirecrawlIngest } from '../src/server/firecrawl-ingest';
+import { runFirecrawlIngest } from '@ugc/services';
 
 function requireEnv(name: string): string {
   const v = process.env[name];

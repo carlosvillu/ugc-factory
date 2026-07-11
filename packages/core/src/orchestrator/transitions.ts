@@ -60,8 +60,23 @@ export type StepEvent =
   | 'approve_edited'
   // waiting_approval → rejected: rechazado (§7.1.b).
   | 'reject'
-  // → skipped: un step que no se ejecuta (rama no elegida).
+  // → skipped: un step que no se ejecuta (rama no elegida). Evento de USUARIO
+  // (POST /api/steps/:id/skip → checkpoint-ops.skipStep): SOLO legal ANTES de
+  // arrancar (awaiting_deps/pending). NUNCA desde `running`: saltar un step en
+  // vuelo abandonaría trabajo ya pagado a mitad (p. ej. una generación fal.ai en
+  // curso, F4). Para el auto-skip de un nodo que se descubre inaplicable está
+  // `skip_inapplicable`, que es OTRO evento a propósito.
   | 'skip'
+  // running → skipped: el nodo, YA en ejecución, se autodetermina INAPLICABLE y
+  // termina sin trabajo (PRD §7.1: "skipped (nodo no aplicable, p. ej. N2 sin
+  // imágenes)"; §7.2 ficha de N2: "si no hay ninguna → skipped"). Es el caso
+  // canónico del PRD y NO es el `skip` de usuario: aquí lo decide el propio nodo
+  // tras mirar sus entradas (N2 lee el RawContent de N1 y no encuentra imágenes
+  // que analizar). Se separa de `skip` DELIBERADAMENTE para no legalizar el
+  // `skip` de usuario desde `running` (ver el comentario de `skip`). Ambos
+  // aterrizan en `skipped`, así que la resolución aguas abajo es idéntica: un
+  // nodo saltado satisface la dep de sus dependientes (T0.8) y el run continúa.
+  | 'skip_inapplicable'
   // → cancelled: el run se cancela.
   | 'cancel'
   // → superseded: una versión nueva (con supersedes_id) reemplaza a esta
@@ -103,6 +118,10 @@ const TRANSITIONS: Partial<Record<StepStatus, Partial<Record<StepEvent, StepStat
     fail: 'failed',
     expire: 'expired',
     reach_checkpoint: 'waiting_approval',
+    // T1.10a: auto-skip del nodo INAPLICABLE (PRD §7.1 / §7.2 N2 sin imágenes). Ojo
+    // al par que NO está aquí: `skip` (el de usuario) sigue ILEGAL desde `running` a
+    // propósito — ver el comentario de ambos eventos arriba y el test que lo fija.
+    skip_inapplicable: 'skipped',
     cancel: 'cancelled',
     supersede: 'superseded',
   },

@@ -248,15 +248,25 @@ Decisiones del usuario (2026-07-07): la fase se ejecuta tras T0.1 y **antes** de
   - ⚠ **Deuda abierta**: `registrableDomain` (heurística last-two-labels) pasa a ser la clave ABSOLUTA del dedup de `brand_kit` → `marca-a.co.uk` y `marca-b.co.uk` colapsan a `co.uk` ⇒ **contaminación cruzada de identidad de marca** entre comerciantes (paleta/tipografía/tono alimentan los guiones; `reused:true` es el camino feliz, sin error). Mitigación: PSL embebida antes del primer dominio con sufijo compuesto.
   - Los hooks reales de Sonnet 5 **incumplen** el techo de ≤12 palabras (8 `hook_too_long` sobre los briefs auténticos de T1.8): CP1 mostrará estos warnings en la mayoría de análisis reales. Si resulta ruidoso, la palanca es el prompt de N3, no el techo del validador.
 
-#### T1.10a · N1–N3 como nodos reales del DAG
+#### T1.10a · N1–N3 como nodos reales del DAG [x] 2026-07-12 — PASS, ver docs/verifications/T1.10a/ (coste real $0,27)
 - **Depende de**: T1.9, T0.11
 - **Entrega**: executors reales de N1 (ingesta con fast path/scrape/mini-crawl/texto libre y caché), N2 (visual, con skip) y N3 (síntesis + validación) registrados en el orquestador; definición del DAG de análisis; formulario de intake en modo URL (N0 mínimo: URL + config del lote) — página nueva sin mockup: layout a acordar con el usuario antes de implementarla (regla 7).
 - **Coste estimado**: ~$0,25
 - **Playwright permanente**: `apps/web/e2e/analysis-pipeline.spec.ts` usa Firecrawl/Anthropic fake y cubre intake URL → N1/N2/N3 en el canvas, output JSON de N3 y el camino de texto libre sin imágenes con N2 en `skipped`.
 - **Verificación**: pegar una URL real en el intake → los nodos N1→N2→N3 progresan en el canvas en vivo y el brief JSON aparece como output del nodo N3 en el panel genérico; con texto libre sin imágenes, N2 aparece `skipped` en el grafo.
+- **Notas de cierre**:
+  - Layout acordado con el usuario (regla 7): `/analyses/new` YA existía (T1.6, texto libre) → se extendió con **TABS del DS**, «Desde URL» por defecto. No era página nueva.
+  - **`skip_inapplicable`**: evento NUEVO en la máquina de estados (PRD §7.1/§7.2: «skipped = nodo no aplicable, p. ej. N2 sin imágenes»). T0.11 solo había cableado el `skip` de USUARIO (desde `awaiting_deps`/`pending`); faltaba el auto-skip del nodo inaplicable. **Deliberadamente DISTINTO del `skip` de usuario**: reutilizarlo habría permitido a un usuario abandonar vía `POST /api/steps/:id/skip` un step EN VUELO ya pagado (`skipStep` no valida estados por su cuenta: su única guardia es la tabla). 3 tests lo blindan.
+  - **Bug latente cazado en review**: las deps se resolvían por `node_key`, que **NO identifica una fila** — `insertSuperseding` (T0.8) crea filas nuevas con el MISMO `node_key`, así que al editar en CP1 el pipeline podía leer el output de un step `superseded`, en silencio. Ahora el CONSUMER las resuelve por los **ULIDs de `dependsOn`** y se las entrega al executor. Test permanente contra Postgres real.
+  - **N3 declaraba `dependsOn:['N2']` pero LEÍA también N1**: dependencia real sin declarar. Corregido a `['N1','N2']`.
+  - `PermanentStepError`: los fallos DETERMINISTAS de N3 (refused / brief que no supera T1.9) cierran `failed` **sin retry** — antes reintentaban 3× pagando Sonnet 5 cada vuelta (~$0,60 quemados para acabar igual).
+  - Paquete nuevo **`@ugc/services`** (los 5 servicios que combinan red + persistencia + registro de coste; los invocan route handlers Y executors). Frontera escrita en `backend/references/architecture.md` §1.
 
 #### T1.10b · CP1: editor de brief
 - **Depende de**: T1.10a
+- ⚠ **DOS BLOQUEOS MEDIDOS EN T1.10a — resolver ANTES de dar por cerrable esta tarea** (evidencia: `docs/verifications/T1.10a/report.md`):
+  1. **El pipeline tarda 116,7 s y la Verificación de abajo exige <90 s.** Desglose real (URL de ugmonk): N1 20,0 s · N2 32,3 s · **N3 64,4 s (55 % del total)**. **El dominante es N3, NO N2**: paralelizar las descargas en serie de `prepareProductImages` (deuda de T1.7) recorta ~20 s → ~95 s, **sigue sin bajar de 90**. Hace falta N2 en paralelo **Y** recorte en N3 (¿menos input? ¿`max_tokens`? ¿streaming?).
+  2. **No hay atribución de coste por run**: las filas de `cost_entry` se insertan con **`step_run_id = NULL`** y nadie escribe `step_run.cost_actual`, que es lo que suma el KPI del canvas (`run-shell.tsx:49`) → **muestra $0,00 con 20 cts gastados**. `/spend` sí ve el dinero (agregado). Pero la Verificación de abajo exige **«coste real del lote <$0,25»**, y sin `step_run_id` no se puede calcular por run. No es regresión de T1.10a (`boss.ts:83` ya documentaba el hueco en F0): los servicios nunca reciben `ctx.stepId`, aunque `recordCost()` acepta el campo.
 - **Entrega**: panel de CP1 con el brief editable campo a campo, badges extraído/inferido (`evidence`/`confidence`), gestión de warnings (incl. petición bloqueante de imágenes o derivación a packshot-IA en modo manual), aprobación que persiste `product_brief` versionado + `edited_by_user`; endpoint standalone `GET/PATCH /api/briefs/:id` (editar un brief aprobado fuera de un run activo, Apéndice E).
 - **Mockup**: `docs/mockups/brief-editor.html` (variante 3a · formulario en tarjetas + rail de trazabilidad). El layout parte de ese mockup; el reviewer rechaza una página que se desvíe sin acuerdo (ver `.claude/skills/frontend`).
 - **Coste estimado**: ~$0,50

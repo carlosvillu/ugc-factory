@@ -55,3 +55,33 @@ export const ManualIntakeConfigSchema = z.object({
     .default([]),
 });
 export type ManualIntakeConfig = z.infer<typeof ManualIntakeConfigSchema>;
+
+// ─── Rama URL del intake (T1.10a) ────────────────────────────────────────────────
+// La que este fichero anticipaba desde T1.6 ("cuando T1.4 añada la rama `url` como
+// unión discriminada sobre este mismo campo"). Mismo discriminante: `source`.
+
+/** Idiomas de análisis soportados hoy (config del LOTE, N0). Lista corta y explícita:
+ *  un `z.string()` libre dejaría pasar cualquier cosa hasta el prompt de N3. */
+export const ANALYSIS_LANGUAGES = ['es', 'en'] as const;
+
+/**
+ * Config del intake por URL: la URL a scrapear + la config del lote (N0 mínimo). NO
+ * crea el `url_analysis` en el submit — a diferencia del modo manual, aquí el scraping
+ * es TRABAJO del pipeline (nodo N1), así que el submit arranca el run y el análisis
+ * nace dentro de él.
+ */
+export const UrlIntakeConfigSchema = z.object({
+  source: z.literal('url'),
+  projectId: z.string().min(1),
+  url: z
+    .string()
+    .trim()
+    .min(1, 'Pega la URL del producto')
+    // `z.url()` valida el formato; además se exige http(s) explícitamente: un
+    // `ftp://` o un `javascript:` parsean como URL válida pero no son scrapeables
+    // (y `javascript:` sería un vector de inyección si alguna vista lo renderizara).
+    .refine((value) => /^https?:\/\//i.test(value), 'La URL debe empezar por http:// o https://')
+    .refine((value) => URL.canParse(value), 'No parece una URL válida'),
+  targetLanguage: z.enum(ANALYSIS_LANGUAGES).default('es'),
+});
+export type UrlIntakeConfig = z.infer<typeof UrlIntakeConfigSchema>;

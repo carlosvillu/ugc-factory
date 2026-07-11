@@ -7,29 +7,27 @@
 // NUNCA colores CSS (el color es E2E/CUA visual, no una aserción estable aquí).
 import { test, expect, type Page } from '@playwright/test';
 import { launchDemoCanvasRun } from './support/runs';
+import { canvasNode, waitCanvasStatus, openCanvasPanel } from './support/canvas';
 
-// Un nodo del canvas por su clave corta (N0…N5). El node_key REAL del DAG de demo
-// es `demo.canvas.NX` (prefijo para no colisionar en el singletonKey de la cola);
-// el accessible name del nodo lo expone (`role=article`, aria-label = node_key +
-// estado). El estado CRUDO va en `data-status`.
+// El contrato de testabilidad del canvas (role=article + data-status + panel
+// role=complementary) vive UNA vez en `support/canvas.ts`, compartido con el spec del
+// pipeline de análisis. Aquí solo se traduce la clave CORTA que usan los tests de este
+// fichero (N0…N5) al `node_key` REAL del DAG de demo (`demo.canvas.NX` — el prefijo evita
+// colisionar en el singletonKey de la cola).
 function nodeKeyOf(shortKey: string): string {
   return `demo.canvas.${shortKey}`;
 }
 
 function node(page: Page, shortKey: string) {
-  return page.getByRole('article', { name: new RegExp(`${nodeKeyOf(shortKey)}\\b`) });
+  return canvasNode(page, nodeKeyOf(shortKey));
 }
 
-// Espera a que un nodo alcance un `data-status` concreto (el mecanismo del cambio en
-// vivo por SSE — sin reload). Timeout holgado: el worker duerme sleep_ms por step.
 async function waitStatus(page: Page, shortKey: string, status: string) {
-  await expect(node(page, shortKey)).toHaveAttribute('data-status', status, { timeout: 30_000 });
+  await waitCanvasStatus(page, nodeKeyOf(shortKey), status, 30_000);
 }
 
-// Abre el panel del nodo (click) y devuelve el aside del inspector.
 async function openPanel(page: Page, shortKey: string) {
-  await node(page, shortKey).click();
-  return page.getByRole('complementary', { name: new RegExp(nodeKeyOf(shortKey)) });
+  return openCanvasPanel(page, nodeKeyOf(shortKey));
 }
 
 test.describe('canvas del run (T0.11)', () => {
@@ -149,9 +147,22 @@ test.describe('canvas del run (T0.11)', () => {
     { tag: ['@f0'] },
     async ({ page, request }) => {
       // Un run largo que sigue en curso mientras lo cancelamos.
-      const otherRunId = await launchDemoCanvasRun(request, { sleepMs: 4000 });
+      //
+      // sleepMs GENEROSO (20 s, antes 4 s): el test es intrínsecamente una CARRERA —
+      // cancela N0 mientras sigue `running`—, y con 4 s se volvió flaky al crecer la
+      // suite (T1.10a añadió los specs del pipeline de análisis: más carga en el worker
+      // y en el stack, y el `goto` + el click a veces ya no entraban en la ventana; N0
+      // llegaba a `succeeded` y el cancel no tenía nada que cancelar). Ampliar la
+      // ventana ataca la CAUSA (la carrera) sin tocar un solo assert: lo que se prueba
+      // —que el cancel barre los nodos no-terminales a `cancelled`— es idéntico. No se
+      // reintenta el test: se le quita la carrera.
+      const otherRunId = await launchDemoCanvasRun(request, { sleepMs: 20_000 });
       await page.goto(`/runs/${otherRunId}`);
       await expect(node(page, 'N0')).toBeVisible({ timeout: 30_000 });
+      // Y se cancela con N0 DEMOSTRABLEMENTE en curso (no "esperando que lo esté"): si
+      // el estado no fuera `running`, el test fallaría aquí diciendo la verdad, en vez
+      // de más abajo con un `succeeded` desconcertante.
+      await waitStatus(page, 'N0', 'running');
 
       // Cancela el LOTE desde el panel (sin nodo seleccionado el botón sigue visible).
       await page.locator('[data-slot="cancel-action"]').click();

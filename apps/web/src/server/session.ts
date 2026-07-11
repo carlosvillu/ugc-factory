@@ -10,7 +10,7 @@
 // el fail-fast por ausencia vive en el arranque (instrumentation.register()), no
 // en import time, para que los tests handler-level puedan importar las rutas.
 import { createHmac, randomBytes, scryptSync, timingSafeEqual } from 'node:crypto';
-import { deriveSecretsKey } from '@ugc/core/secrets';
+import { deriveSecretsKey, getSecretsKeyFromEnv, resetSecretsKeyCache } from '@ugc/core/secrets';
 
 export const SESSION_COOKIE = 'ugc_session';
 
@@ -51,16 +51,27 @@ export function setMasterKeyForTests(key: string | undefined): void {
   masterKeyCache = key;
   sessionKeyCache = undefined;
   secretsKeyCache = undefined;
+  // También el memoizado del helper COMPARTIDO: si no, un test que cambie la master key y
+  // caiga por el camino de env seguiría recibiendo la clave derivada de la anterior.
+  resetSecretsKeyCache();
 }
 
 /** Clave de cifrado de credenciales at-rest (T0.14). Derivada de APP_MASTER_KEY con el
  *  salt de dominio `'ugc-secrets-v1'` (core/secrets), SEPARADA de la clave de sesión:
  *  jamás se cifran secretos con la clave que firma cookies. La consume el módulo de
- *  settings (route handler + seeding). El fail-fast por master key ausente vive en
- *  `getMasterKey()`, igual que la sesión. */
+ *  settings (route handler + seeding).
+ *
+ *  La DERIVACIÓN es la compartida con el worker (`getSecretsKeyFromEnv`, @ugc/core/secrets):
+ *  una sola verdad sobre cómo se obtiene la clave desde el entorno. Este módulo conserva su
+ *  camino propio SOLO para el override de tests (`setMasterKeyForTests` fija la master key en
+ *  memoria, sin tocar `process.env`, cosa que el helper de env no puede ver). Sin override,
+ *  delega — y así el fail-fast, el salt y el memoizado son literalmente el mismo código. */
 export function getSecretsKey(): Buffer {
-  secretsKeyCache ??= deriveSecretsKey(getMasterKey());
-  return secretsKeyCache;
+  if (masterKeyCache !== undefined && masterKeyCache !== '') {
+    secretsKeyCache ??= deriveSecretsKey(masterKeyCache);
+    return secretsKeyCache;
+  }
+  return getSecretsKeyFromEnv();
 }
 
 /** Clave de firma de la sesión, derivada de APP_MASTER_KEY con un salt fijo de

@@ -36,6 +36,7 @@ const ALL_EVENTS: StepEvent[] = [
   'approve_edited',
   'reject',
   'skip',
+  'skip_inapplicable',
   'cancel',
   'supersede',
 ];
@@ -63,6 +64,14 @@ const LEGAL: [StepStatus, StepEvent, StepStatus][] = [
   ['running', 'fail', 'failed'],
   ['running', 'expire', 'expired'],
   ['running', 'reach_checkpoint', 'waiting_approval'],
+  // T1.10a: auto-skip del nodo INAPLICABLE, ya en ejecución. Respaldo del PRD:
+  // §7.1 ("skipped (nodo no aplicable, p. ej. N2 sin imágenes)") y §7.2, ficha de
+  // N2 ("Con source=manual ... si no hay ninguna → skipped"). Es un EVENTO NUEVO,
+  // distinto del `skip` de usuario a propósito: `skip` (POST /api/steps/:id/skip)
+  // sigue ILEGAL desde `running` — saltar un step EN VUELO abandonaría trabajo ya
+  // pagado a mitad (una generación fal.ai en curso, F4). Ver el test de regresión
+  // "el `skip` de USUARIO sigue prohibido desde running" más abajo.
+  ['running', 'skip_inapplicable', 'skipped'],
   ['running', 'cancel', 'cancelled'],
   ['running', 'supersede', 'superseded'],
   // failed → queued (retry; legalidad no depende del contador).
@@ -96,7 +105,8 @@ describe('nextStatus: TODO par fuera de la tabla es ILEGAL (null)', () => {
   }
 
   it('la tabla tiene exactamente las transiciones válidas esperadas', () => {
-    // 13 estados × 14 eventos = 182 pares; 23 válidos ⇒ 159 ilegales.
+    // 13 estados × 15 eventos = 195 pares; 24 válidos ⇒ 171 ilegales (T1.10a sumó
+    // el evento `skip_inapplicable` y su único par legal: running → skipped).
     expect(legalKeys.size).toBe(LEGAL.length);
     expect(illegal.length).toBe(ALL_STATUSES.length * ALL_EVENTS.length - LEGAL.length);
   });
@@ -104,6 +114,38 @@ describe('nextStatus: TODO par fuera de la tabla es ILEGAL (null)', () => {
   it.each(illegal)('%s --(%s)--> ✗', (from, event) => {
     expect(nextStatus(from, event)).toBeNull();
     expect(isLegalTransition(from, event)).toBe(false);
+  });
+});
+
+// T1.10a. Este bloque NO es redundante con el barrido exhaustivo de arriba (que ya
+// cubre `running|skip` por construcción): existe para que el motivo quede ESCRITO
+// junto al assert. Los dos eventos aterrizan en `skipped`, así que la "simplificación"
+// obvia (fusionarlos en uno) es tentadora — y sería un agujero de seguridad, porque
+// `skip` está expuesto como acción de usuario en POST /api/steps/:id/skip
+// (checkpoint-ops.skipStep NO valida estados por su cuenta: delega ENTERAMENTE en la
+// tabla, que es su única guardia). Si alguien fusiona los eventos, esto se pone rojo
+// con el porqué delante.
+describe('regresión T1.10a: el `skip` de USUARIO sigue prohibido desde `running`', () => {
+  it('running --(skip)--> ✗ (saltar un step EN VUELO abandonaría trabajo ya pagado)', () => {
+    // Un `skip` de usuario sobre un step en ejecución (p. ej. una generación fal.ai
+    // en vuelo, F4) dejaría el step abandonado a mitad y el dinero gastado. La única
+    // vía a `skipped` desde `running` es que el PROPIO nodo se declare inaplicable.
+    expect(nextStatus('running', 'skip')).toBeNull();
+    expect(isLegalTransition('running', 'skip')).toBe(false);
+  });
+
+  it('running --(skip_inapplicable)--> skipped SÍ es legal (PRD §7.1/§7.2: N2 sin imágenes)', () => {
+    expect(nextStatus('running', 'skip_inapplicable')).toBe('skipped');
+  });
+
+  it('`skip_inapplicable` NO abre ninguna otra puerta: solo es legal desde `running`', () => {
+    // El auto-skip es del nodo EN EJECUCIÓN. Desde cualquier otro estado (incluidos
+    // awaiting_deps/pending, donde el `skip` de usuario sí es legal) es ilegal: nadie
+    // puede usarlo como un `skip` alternativo que se salte las guardias del de usuario.
+    for (const from of ALL_STATUSES) {
+      if (from === 'running') continue;
+      expect(nextStatus(from, 'skip_inapplicable')).toBeNull();
+    }
   });
 });
 

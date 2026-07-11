@@ -29,8 +29,8 @@ import {
   anthropicBriefResponse,
 } from '@ugc/test-utils/fixtures/anthropic';
 
-import { recordAnthropicCost } from '@/server/anthropic-service';
-import { runSynthesizeBrief } from '@/server/synthesize-brief';
+import { recordAnthropicCost } from '../../src/anthropic-service';
+import { runSynthesizeBrief } from '../../src/synthesize-brief';
 
 const ANTHROPIC_BASE = 'https://api.anthropic.com';
 const MESSAGES_ENDPOINT = `${ANTHROPIC_BASE}/v1/messages`;

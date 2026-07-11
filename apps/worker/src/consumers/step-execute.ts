@@ -15,6 +15,9 @@
 import { StepExecuteJobSchema, stepExecuteJob } from '@ugc/core/jobs';
 import {
   IllegalTransitionError,
+  PermanentStepError,
+  type ExecutorDep,
+  type StepEvent,
   type StepExecutor,
   type TransitionDeps,
   failStep,
@@ -22,7 +25,7 @@ import {
   transition,
 } from '@ugc/core/orchestrator';
 import type { Logger } from '@ugc/core';
-import { findRunAutopilot, findStep } from '@ugc/db';
+import { findRunAutopilot, findStep, findStepsByIds } from '@ugc/db';
 import type { DbClient } from '@ugc/db';
 import type { PgBoss } from 'pg-boss';
 
@@ -112,13 +115,68 @@ export async function registerStepConsumer({
       const step = await findStep(db, stepId);
       const config = step?.config ?? null;
 
+      // T1.10a: resolver las DEPENDENCIAS del step y entregárselas ya cargadas al executor.
+      // Se hace AQUÍ, en el consumer genérico, y no en cada executor, por dos razones:
+      //
+      //  1) CORRECCIÓN. Se resuelven por los ULIDs EXACTOS de `step.dependsOn`, NUNCA por
+      //     `node_key`. `node_key` NO identifica una fila dentro de un run: la invalidación
+      //     de un checkpoint (T0.8, `insertSuperseding`) crea una fila NUEVA con el MISMO
+      //     `node_key` que la que supersede. Un executor que buscase "el step N1 de mi run"
+      //     por su clave leería una fila AL AZAR entre la vigente y la `superseded` — es
+      //     decir, podría sintetizar sobre datos VIEJOS sin lanzar un solo error. En cuanto
+      //     CP1 (T1.10b) permita editar el brief, ese caso deja de ser hipotético.
+      //     `dependsOn` es inmune: el supersede REMAPEA los ids a las filas nuevas.
+      //
+      //  2) ALTITUD. El executor deja de saber cómo se llaman sus vecinos y deja de hacer
+      //     su propio SELECT. Escala a F2–F4, donde hay decenas de nodos hermanos (una
+      //     variante por fila de la matriz) sin un `node_key` singular que buscar.
+      const depRows = step === undefined ? [] : await findStepsByIds(db, step.dependsOn);
+      const deps: ExecutorDep[] = depRows.map((d) => ({
+        stepId: d.id,
+        nodeKey: d.nodeKey,
+        status: d.status,
+        outputRefs: d.outputRefs,
+      }));
+
       // 4) Ejecutar el TRABAJO del nodo. El fallo del EXECUTOR y el fallo de
       //    `transition('succeed')` son dos mundos distintos y NO comparten catch:
       //    un `succeed` que falla tras un executor exitoso NO debe re-ejecutar el
       //    trabajo (doble gasto en fal.ai para un executor real de F4). Invariante:
       //    éxito del executor ⇒ JAMÁS failStep.
+      //
+      //    T1.10a: `capturedOutput` es el canal simétrico a `errorInfo` del catch de
+      //    abajo — un executor real (N1/N2/N3) entrega su artefacto llamando a
+      //    `collectOutput(refs)` antes de retornar; queda `undefined` si no lo llama
+      //    (los executors de demo nunca lo hacen), y el `succeed` de más abajo solo
+      //    escribe `output_refs` cuando hay algo capturado (StepPatch: `undefined` =
+      //    no tocar la columna).
+      //
+      //    T1.10a: `inapplicable` es el otro canal de salida del executor — el nodo se
+      //    declara NO APLICABLE (N2 sin imágenes que analizar, PRD §7.1/§7.2). No es un
+      //    fallo (no lanza) ni un éxito (no hizo el trabajo): cambia el EVENTO DE CIERRE
+      //    que elige el consumer más abajo. El executor sigue sin tocar el estado del
+      //    step — ese invariante de T0.7b se mantiene intacto.
+      //
+      //    Ambas señales viven en un objeto mutable (no en dos `let`): el executor las
+      //    escribe desde un callback, y TypeScript no sigue esa escritura a través del
+      //    closure — con `let` estrecharía el tipo al literal inicial y marcaría los
+      //    checks de más abajo como "condición innecesaria". Un campo de objeto no se
+      //    estrecha así.
+      const outcome: { output?: unknown; inapplicable: boolean } = { inapplicable: false };
       try {
-        await executor({ config, signal: job.signal });
+        await executor({
+          config,
+          signal: job.signal,
+          runId,
+          stepId,
+          deps,
+          collectOutput: (refs) => {
+            outcome.output = refs;
+          },
+          markInapplicable: () => {
+            outcome.inapplicable = true;
+          },
+        });
       } catch (err) {
         // Fallo REAL del trabajo del executor ⇒ failStep (fail + retry atómico
         // gateado por retry_count/max_retries). NO relanzamos: el estado del
@@ -126,6 +184,33 @@ export async function registerStepConsumer({
         // failStep ya reencoló un job nuevo si procedía, y relanzar duplicaría el
         // reintento (retryLimit 0 + nuestro re-encolado). El job queda `completed`:
         // su trabajo (delegar en la máquina de estados) terminó bien.
+        // T1.10a — FALLO PERMANENTE: el executor declara que reintentar es inútil (la
+        // entrada es la que es y el resultado sería el mismo: refusal del modelo, config
+        // inválida, contrato incumplido). Va a `failed` TERMINAL con `transition('fail')`,
+        // NO por `failStep` — exactamente el mismo camino que el "executor desconocido" de
+        // más arriba, y por la misma razón. En un nodo de PAGO esto no es una optimización:
+        // reintentar 3 veces una síntesis que siempre va a fallar quema ~$0,60 de Sonnet 5
+        // para acabar igualmente en `failed`. El coste YA registrado no se pierde
+        // (recordAnthropicCost escribe la fila ANTES de que esto se lance: record-first).
+        if (err instanceof PermanentStepError) {
+          log.error(
+            { err },
+            'step.execute: fallo PERMANENTE del executor; failed terminal SIN retry',
+          );
+          try {
+            await transition(transitionDeps, stepId, 'fail', {
+              error: { message: err.message, permanent: true },
+            });
+          } catch (failErr) {
+            if (failErr instanceof IllegalTransitionError) {
+              log.info({}, 'step.execute: fallo permanente sobre step ya no-running: no-op');
+              return;
+            }
+            throw failErr;
+          }
+          return;
+        }
+
         log.warn({ err }, 'step.execute: executor falló; evaluando retry');
         // failStep aplica `fail` bajo el lock. CARRERA esperada con el sweeper de
         // T0.9: éste puede haber expirado el step (running→expired, terminal)
@@ -165,15 +250,30 @@ export async function registerStepConsumer({
       // checkpoint_config, autopilot) ⇒ leerlas sin lock es seguro; la transición
       // re-valida bajo el lock. Su fallo es de INFRAESTRUCTURA/transición, no del
       // trabajo: NUNCA dispara failStep.
+      //
+      // T1.10a: el nodo INAPLICABLE cierra con `skip_inapplicable` (running→skipped) y
+      // ese evento GANA sobre el checkpoint: un nodo que no ha hecho trabajo no tiene
+      // artefacto que aprobar, así que pausarlo en `waiting_approval` dejaría al usuario
+      // revisando la nada y al run bloqueado. `skipped` satisface la dep aguas abajo
+      // (T0.8) ⇒ los dependientes (N3) avanzan igual.
       const autopilot = (await findRunAutopilot(db, runId)) ?? false;
       const pause = shouldPause({
         isCheckpoint: step?.isCheckpoint ?? false,
         checkpointConfig: step?.checkpointConfig ?? null,
         autopilot,
       });
-      const closingEvent = pause ? 'reach_checkpoint' : 'succeed';
+      const closingEvent: StepEvent = outcome.inapplicable
+        ? 'skip_inapplicable'
+        : pause
+          ? 'reach_checkpoint'
+          : 'succeed';
       try {
-        await transition(transitionDeps, stepId, closingEvent);
+        // T1.10a: `outputRefs` capturado del executor (si lo hubo) viaja en la MISMA
+        // transición de cierre — sea `succeed` (N1/N2/N3, sin checkpoint) o
+        // `reach_checkpoint` (un futuro nodo real que además sea checkpoint). `opts`
+        // ignora el campo si el evento no es uno de los dos que lo persisten
+        // (transition.ts solo lo escribe en `succeed`; ver su comentario).
+        await transition(transitionDeps, stepId, closingEvent, { outputRefs: outcome.output });
       } catch (err) {
         if (err instanceof IllegalTransitionError) {
           // Carrera: el step ya no está `running` (p. ej. cancel/supersede en T0.8,

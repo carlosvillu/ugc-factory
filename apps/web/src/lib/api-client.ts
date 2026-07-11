@@ -96,8 +96,19 @@ export const RunResponseSchema = z.object({
 });
 export type RunResponse = z.infer<typeof RunResponseSchema>;
 
+/** Respuesta de `POST /api/runs` (createRun): el id del run recién creado. Nombre DISTINTO
+ *  de `RunResponseSchema` a propósito — son cosas distintas (aquí solo nace un id; allí viaja
+ *  el objeto run entero). Los dos formularios de intake declaraban cada uno su propia copia
+ *  de esto, con el MISMO nombre que el schema de arriba y forma distinta: dos verdades
+ *  homónimas en el mismo árbol de imports. */
+const CreateRunResponseSchema = z.object({ runId: z.string() });
+
 export const runActions = {
   getRun: (runId: string) => api.get(`/api/runs/${runId}`, RunResponseSchema),
+  /** Crea un run desde una definición de DAG (`POST /api/runs`) y devuelve su id. La usan los
+   *  dos modos del intake (URL y texto libre): comparten la plomería del arranque del run,
+   *  no el formulario (sus campos y su pre-paso son genuinamente distintos). */
+  createRun: (definition: unknown) => api.post('/api/runs', CreateRunResponseSchema, definition),
   setAutopilot: (runId: string, autopilot: boolean) =>
     api.patch(`/api/runs/${runId}`, OkSchema, { autopilot }),
   cancelRun: (runId: string) => api.post(`/api/runs/${runId}/cancel`, OkSchema),

@@ -3,9 +3,14 @@
 // Formulario de intake modo TEXTO LIBRE (T1.6, forms.md §2). RHF + zodResolver con
 // el MISMO `ManualIntakeConfigSchema` de core que re-valida el route handler — un
 // solo "válido", cero drift. Submit por `api.post` a `/api/analyses` (short-circuit
-// manual); al resolver, navega a `/analyses/:id` con el id devuelto — que en un 2.º
-// submit del mismo texto es el MISMO id (la reutilización de caché es observable en
-// el navegador: el usuario acaba en el mismo análisis).
+// manual, con su caché §7.4: un 2.º submit del mismo texto reutiliza el MISMO
+// análisis).
+//
+// T1.10a: tras crear el análisis, ARRANCA el DAG (N1→N2→N3) sobre él y navega al
+// CANVAS `/runs/:id` (antes terminaba en `/analyses/:id`, una fila sin pipeline). El
+// brief lo produce ahora N3, igual que en el modo URL — y es lo que hace observable en
+// el grafo que N2 quede `saltado` cuando no hay imágenes (PRD §7.2). Los CAMPOS del
+// formulario no cambian: lo que cambia es a dónde lleva el submit.
 //
 // El upload de imágenes es opcional: cada fichero se sube a `/api/assets` (mutación
 // REST, forms.md §112) y su URL de descarga se guarda como ref en `imageRefs`. La
@@ -20,7 +25,8 @@ import {
   MANUAL_IMAGE_REFS_MAX,
   type IntakeImageRef,
 } from '@ugc/core/contracts';
-import { api, ApiError } from '@/lib/api-client';
+import { analysisRunDefinition } from '@ugc/core/orchestrator';
+import { api, ApiError, runActions } from '@/lib/api-client';
 import { applyEnvelopeToForm } from '@/lib/form-errors';
 import { Alert } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -105,10 +111,23 @@ export function IntakeForm({ projectId }: IntakeFormProps) {
 
   const onSubmit = handleSubmit(async (config) => {
     try {
+      // 1) El análisis manual: short-circuit texto→RawContent + caché §7.4. SIN cambios
+      //    respecto a T1.6 (mismo endpoint, misma respuesta): en un 2.º submit del mismo
+      //    texto devuelve el MISMO id (reutilización de caché).
       const analysis = await api.post('/api/analyses', AnalysisResponseSchema, config);
-      // Navega al análisis. En un 2.º submit del mismo texto, `analysis.id` es el
-      // MISMO (reutilización de caché observable): el usuario acaba en el mismo sitio.
-      router.push(`/analyses/${analysis.id}`);
+
+      // 2) T1.10a: el texto libre ARRANCA TAMBIÉN el DAG de análisis (N1→N2→N3) sobre el
+      //    análisis recién creado, y navega al CANVAS. Antes (T1.6) el intake manual
+      //    terminaba aquí, en una fila `done` sin pipeline; ahora el brief (N3) lo produce
+      //    el pipeline igual que en el modo URL — y es lo que permite ver a N2 `saltado` en
+      //    el grafo cuando no se han subido imágenes (PRD §7.2). N1 no scrapea en este
+      //    modo: solo carga el análisis por id.
+      const definition = analysisRunDefinition(config.projectId, {
+        source: 'manual',
+        analysisId: analysis.id,
+      });
+      const run = await runActions.createRun(definition);
+      router.push(`/runs/${run.runId}`);
     } catch (e) {
       if (e instanceof ApiError) {
         applyEnvelopeToForm(e, setError);

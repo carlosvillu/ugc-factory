@@ -4,12 +4,13 @@
 // exigir ASSETS_DIR presente. El primer `getStorage()` en producción lo construye
 // desde `ASSETS_DIR` (default `/data/assets`); los tests lo sustituyen con
 // `setStorageForTests(...)` apuntando a un tmpdir.
-import { makeLocalStorageAdapter } from '@ugc/db';
+import { makeLocalStorageAdapterFromEnv } from '@ugc/db';
 import type { StorageAdapter } from '@ugc/core';
 
-// Default de producción (PRD §19.2 / architecture §6). En dev/E2E se pasa un path
-// escribible del host vía ASSETS_DIR (el stack E2E usa un tmpdir).
-const DEFAULT_ASSETS_DIR = '/data/assets';
+// El default de producción (`/data/assets`) y la lectura de `ASSETS_DIR` viven en
+// `makeLocalStorageAdapterFromEnv` (@ugc/db), COMPARTIDO con el worker: si cada composition
+// root tuviera su copia, un cambio de directorio en el deploy podría hacer que el worker
+// escriba los assets donde web no los lee.
 
 let override: StorageAdapter | undefined;
 let fromEnv: StorageAdapter | undefined;
@@ -21,6 +22,6 @@ export function setStorageForTests(storage: StorageAdapter | undefined): void {
 
 export function getStorage(): StorageAdapter {
   if (override) return override;
-  fromEnv ??= makeLocalStorageAdapter({ root: process.env.ASSETS_DIR ?? DEFAULT_ASSETS_DIR });
+  fromEnv ??= makeLocalStorageAdapterFromEnv();
   return fromEnv;
 }

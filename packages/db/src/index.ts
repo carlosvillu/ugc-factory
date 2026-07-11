@@ -38,6 +38,11 @@ export { ensureQueue } from './adapters/ensure-queue';
 // (T0.7b) para obtener `config`/retry counters tras arrancar el step. La
 // revalidación bajo lock la hace `transition()`; esto solo lee datos.
 export { findStep } from './repos/steps.repo';
+// Steps por sus ULIDs exactos, sin lock (T1.10a): la usa el consumer de `step.execute`
+// para resolver las DEPENDENCIAS de un step (los ids exactos vienen en `dependsOn`) y
+// entregarle sus outputs al executor. Por id y NUNCA por `node_key`: el supersede de T0.8
+// crea filas nuevas con el MISMO node_key, así que la clave no identifica una fila.
+export { findStepsByIds } from './repos/steps.repo';
 // Ids de los steps colgados que el sweeper de T0.9 debe expirar
 // (`status='running' AND timeout_at < now()`). La consumen el composition root
 // del worker (setInterval del sweep) y los tests de integración del orquestador.
@@ -74,6 +79,10 @@ export {
 // `LocalStorageOptions` no sale al barrel: los callers pasan `{ root }` inline
 // (knip veta el type export sin consumidor).
 export { makeLocalStorageAdapter } from './adapters/local-storage';
+// El adaptador cableado desde el ENTORNO (ASSETS_DIR + default de prod). Lo comparten los DOS
+// composition roots (web y worker): una sola verdad sobre dónde viven los assets — si cada uno
+// tuviera su copia, un cambio de directorio en el deploy los desincronizaría en silencio.
+export { makeLocalStorageAdapterFromEnv } from './adapters/local-storage';
 // Repo del agregado `asset` (T0.5): create/get tipados. Los consume el endpoint de
 // download (web) y el smoke/seed de assets. `NewAsset` lo consume la factory
 // makeAsset de test-utils; `Asset` no se importa por nombre (se infiere).

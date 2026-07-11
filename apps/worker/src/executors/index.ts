@@ -4,12 +4,21 @@
 // por fase con sus tareas.
 import type { StepExecutor } from '@ugc/core/orchestrator';
 import { type DemoCostRecorder, type DemoFailDecider, makeDemoExecutor } from './demo';
+import {
+  type AnalysisExecutorDeps,
+  makeN1Executor,
+  makeN2Executor,
+  makeN3Executor,
+} from './analysis';
 
 export interface ExecutorRegistryDeps {
   /** Decisor de fallo de los executors de demo, resuelto por bootstrap. */
   demoShouldFail: DemoFailDecider;
   /** Registrador de coste de los executors de demo (T0.12), cableado por createBoss. */
   demoRecordCost: DemoCostRecorder;
+  /** Deps de los nodos REALES del análisis (T1.10a): BD, storage, secretos y los
+   *  overrides de base URL de los clientes externos (el stack E2E los apunta a su fake). */
+  analysis: AnalysisExecutorDeps;
 }
 
 /**
@@ -22,9 +31,15 @@ export interface ExecutorRegistryDeps {
 export function makeExecutorRegistry({
   demoShouldFail,
   demoRecordCost,
+  analysis,
 }: ExecutorRegistryDeps): Record<string, StepExecutor> {
   const demo = makeDemoExecutor({ shouldFail: demoShouldFail, recordCost: demoRecordCost });
   return {
+    // Nodos REALES del DAG de análisis (T1.10a, analysis-dag.ts). Un node_key por nodo:
+    // el singletonKey `${runId}:${nodeKey}` exige que sean únicos dentro del run.
+    N1: makeN1Executor(analysis),
+    N2: makeN2Executor(analysis),
+    N3: makeN3Executor(analysis),
     'demo.sleep': demo,
     'demo.fail': demo,
     // `demo.hang` (T0.9): el executor no retorna nunca (espera al abort) — es el

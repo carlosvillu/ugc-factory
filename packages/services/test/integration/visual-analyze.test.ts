@@ -30,7 +30,7 @@ import {
 } from '@ugc/test-utils/fixtures/anthropic';
 import type { StorageAdapter } from '@ugc/core';
 
-import { runVisualAnalyze } from '@/server/visual-analyze';
+import { runVisualAnalyze } from '../../src/visual-analyze';
 
 const ANTHROPIC_BASE = 'https://api.anthropic.com';
 const MESSAGES_ENDPOINT = `${ANTHROPIC_BASE}/v1/messages`;

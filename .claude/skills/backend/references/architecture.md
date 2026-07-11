@@ -19,7 +19,21 @@ El mapa (ver diagrama del SKILL.md) cabe en tres líneas y es innegociable:
 
 - `packages/core` → solo `zod` y `pino` (pino ÚNICAMENTE para el factory de logging compartido de T0.1; los módulos consumen el puerto `Logger`, jamás pino directo).
 - `packages/db` → `core` (+ drizzle/pg). Implementa los puertos de persistencia y cola que core define.
-- `apps/web` y `apps/worker` → ambos. Son composition roots: cablean, no contienen lógica de negocio. `packages/test-utils` → db+core (lo gobierna la skill `testing`, ver su `stack-setup.md`).
+- `packages/services` → `core` + `db`. Los **servicios del pipeline** (ver más abajo).
+- `apps/web` y `apps/worker` → todos los anteriores. Son composition roots: cablean, no contienen lógica de negocio. `packages/test-utils` → db+core (lo gobierna la skill `testing`, ver su `stack-setup.md`).
+
+### Qué es (y qué no) un servicio de `packages/services`
+
+**Un servicio = una unidad de trabajo del pipeline que combina red + persistencia + registro de coste, invocable tanto desde un route handler como desde un executor.** Firma canónica: `run<Algo>(deps, input) → result` (`runFirecrawlIngest`, `runVisualAnalyze`, `runSynthesizeBrief`).
+
+Existe porque un paso real del pipeline **no cabe** en core ni en db:
+- en **core** no cabe: escribe en BD y en el StorageAdapter (I/O de datos = frontera prohibida);
+- en **db** no cabe: llama a proveedores externos por red y decide la secuencia del paso;
+- en **apps/web** no puede vivir: `apps/worker` lo necesita también, y los dos son composition roots **hermanos** — ninguno importa del otro. Lo que comparten vive en un paquete. (Este es exactamente el motivo por el que T1.10a movió los cinco servicios de `apps/web/src/server/` a `packages/services`: el executor de un nodo hace el MISMO trabajo que el route handler que lo ejercitaba.)
+
+Un servicio **cablea y ordena; no contiene la lógica de negocio**: el cliente HTTP, el prompt, el mapeo y la validación viven en core; la escritura vive en db. Si una pieza nueva no llama a la red **o** no persiste nada, no es un servicio — es lógica de core (CPU/red pura) o un repo de db.
+
+**Invariante de dinero (no negociable)**: toda llamada de pago va seguida SIEMPRE de su `cost_entry`, en el propio servicio y antes de retornar (*record-first*, T1.4/T1.8) — el registro no puede quedar en manos del llamante, que puede fallar después de haber gastado.
 
 **Matiz vinculante que confunde a todo el mundo**: los clientes HTTP de proveedores (`FalClient`, cliente Anthropic, Firecrawl/Jina) SÍ viven en `packages/core` (PRD §9.6, T1.7). Usan `fetch` y reciben config/keys por deps — no importan nada de I/O de datos. La frontera prohibida de core es **BD y cola** (drizzle, pg, pg-boss), no la red. Por qué: el pipeline ES llamadas a proveedores; sacarlas de core partiría cada módulo en dos mitades artificiales, mientras que la BD/cola sí tiene una implementación intercambiable (Testcontainers, futura s3) que justifica el puerto.
 

@@ -46,8 +46,13 @@ describe('IntakeForm (intake manual)', () => {
     expect(push).not.toHaveBeenCalled();
   });
 
-  test('un submit válido envía el ManualIntakeConfig correcto y navega al análisis', async () => {
+  test('un submit válido envía el ManualIntakeConfig, arranca el DAG y navega al CANVAS', async () => {
+    // T1.10a: el texto libre ya NO termina en `/analyses/:id` (una fila sin pipeline).
+    // Crea el análisis (igual que en T1.6) y ADEMÁS arranca el run del DAG N1→N2→N3
+    // sobre él, navegando al canvas en vivo — que es donde se ve a N2 quedar `saltado`
+    // si no hay imágenes (PRD §7.2, y lo que exige la Verificación de la tarea).
     let received: unknown;
+    let runDefinition: unknown;
     server.use(
       http.post('*/api/analyses', async ({ request }) => {
         received = await request.json();
@@ -55,6 +60,10 @@ describe('IntakeForm (intake manual)', () => {
           { id: 'analysis-1', status: 'done', source: 'manual', reused: false },
           { status: 201 },
         );
+      }),
+      http.post('*/api/runs', async ({ request }) => {
+        runDefinition = await request.json();
+        return HttpResponse.json({ runId: 'run-1' }, { status: 201 });
       }),
     );
     const user = userEvent.setup();
@@ -64,13 +73,26 @@ describe('IntakeForm (intake manual)', () => {
     await user.click(screen.getByRole('button', { name: /analizar/i }));
 
     await waitFor(() => {
-      expect(push).toHaveBeenCalledWith('/analyses/analysis-1');
+      expect(push).toHaveBeenCalledWith('/runs/run-1');
     });
     expect(received).toMatchObject({
       source: 'manual',
       projectId: PROJECT_ID,
       freeText: LONG_TEXT,
       imageRefs: [],
+    });
+    // El DAG que se arranca es el del análisis, y N1 va en modo `manual` apuntando al
+    // análisis recién creado: es lo que le dice a N1 "no scrapees, carga esta fila".
+    expect(runDefinition).toMatchObject({
+      projectId: PROJECT_ID,
+      nodes: [
+        {
+          nodeKey: 'N1',
+          config: { source: 'manual', projectId: PROJECT_ID, analysisId: 'analysis-1' },
+        },
+        { nodeKey: 'N2', dependsOn: ['N1'] },
+        { nodeKey: 'N3', dependsOn: ['N1', 'N2'] },
+      ],
     });
   });
 
@@ -106,6 +128,7 @@ describe('IntakeForm (intake manual)', () => {
           { status: 201 },
         );
       }),
+      http.post('*/api/runs', () => HttpResponse.json({ runId: 'run-2' }, { status: 201 })),
     );
     const user = userEvent.setup();
     render(<IntakeForm projectId={PROJECT_ID} />);
@@ -120,7 +143,7 @@ describe('IntakeForm (intake manual)', () => {
 
     await user.click(screen.getByRole('button', { name: /analizar/i }));
     await waitFor(() => {
-      expect(push).toHaveBeenCalledWith('/analyses/analysis-2');
+      expect(push).toHaveBeenCalledWith('/runs/run-2');
     });
     expect(received?.imageRefs).toEqual([{ url: '/api/assets/asset-1/download', alt: 'ref.png' }]);
   });

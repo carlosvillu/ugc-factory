@@ -1,9 +1,10 @@
 // Servicio de análisis visual (T1.7): la superficie INVOCABLE que ejecuta el paso de VISIÓN
 // (P3) y persiste su coste. Orquesta core (`makeVisualAnalyzer` — solo red/CPU: la llamada a
 // Haiku + el reescalado) + la capa db/storage (leer la key descifrada de secretos T0.14, leer
-// el screenshot del StorageAdapter T0.5, registrar el `cost_entry`). Vive en la capa server de
-// web (composition root: cablea, no contiene lógica de negocio); la llamada a Anthropic, el
-// mapeo P3→VisualAnalysis y el reescalado viven en core. Espeja `firecrawl-ingest.ts` (T1.4).
+// el screenshot del StorageAdapter T0.5, registrar el `cost_entry`). Vive en `@ugc/services`
+// (T1.10a): cablea, no contiene lógica de negocio — la llamada a Anthropic, el mapeo
+// P3→VisualAnalysis y el reescalado viven en core. Lo consume el executor del nodo N2 del
+// worker. Espeja `firecrawl-ingest.ts` (T1.4).
 //
 // Por qué la persistencia está aquí y no en core: leer secretos/BD y el StorageAdapter es I/O
 // de datos (la frontera prohibida de core, architecture §1). La key de Anthropic se descifra

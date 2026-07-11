@@ -2,17 +2,24 @@
 // PROPIOS del spec en `cost_entry` (+ un presupuesto por debajo del gasto) y verifica
 // desde `/spend` los totales por día y por proveedor y la ALERTA de presupuesto.
 //
-// Este spec es el ÚNICO escritor de `cost_entry` de toda la suite (el canvas usa
-// `demoCanvasRunDefinition`, sin `costCents`; nada más siembra costes) y la BD del
-// stack arranca vacía en cada `pnpm test:e2e` → posee el ledger entero, así que las
-// sumas son EXACTAS sin gimnasia de deltas. Siembra por factory directa (recordCost)
-// contra la MISMA BD que lee web (databaseUrl de .runtime.json), nunca por clicks
-// (e2e.md §6). Serial: un único recorrido con estado sembrado; los asserts leen la
-// foto completa del ledger.
+// Este spec asserta sumas EXACTAS del ledger, así que necesita POSEERLO. Hasta T1.10a
+// eso era gratis (nadie más escribía `cost_entry`: el canvas usa
+// `demoCanvasRunDefinition`, sin `costCents`). YA NO: los specs del pipeline de análisis
+// (analysis-pipeline.spec.ts) ejecutan los nodos REALES N1/N2/N3, que registran su coste
+// de verdad (créditos de Firecrawl, tokens de Anthropic — contra las APIs FALSAS, pero el
+// cargo se contabiliza igual, que es justo lo que debe pasar). Como Playwright no
+// garantiza el orden entre ficheros, esas filas podían colarse antes de estos asserts y
+// romper las sumas.
+//
+// FIX (sin rebajar el test): el `beforeAll` VACÍA `cost_entry` antes de sembrar, de modo
+// que la premisa "este spec posee el ledger" vuelve a ser cierta por CONSTRUCCIÓN en vez
+// de por suerte de ordenación. Las sumas siguen siendo exactas — no se relaja ni un
+// assert.
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { test, expect } from '@playwright/test';
 import { createDb, recordCost, seedMonthlyBudgetIfAbsent } from '@ugc/db';
+import { Pool } from 'pg';
 
 const runtime = JSON.parse(
   readFileSync(fileURLToPath(new URL('./.runtime.json', import.meta.url)), 'utf8'),
@@ -41,6 +48,16 @@ test.describe('panel de gasto /spend (T0.12)', () => {
   const BUDGET_CENTS = 800;
 
   test.beforeAll(async () => {
+    // El ledger queda LIMPIO antes de sembrar: otros specs (el pipeline de análisis)
+    // registran costes reales sobre esta misma BD y el orden entre ficheros no está
+    // garantizado. Sin esto, las sumas exactas de abajo dependerían de la suerte.
+    const pool = new Pool({ connectionString: runtime.databaseUrl });
+    try {
+      await pool.query('DELETE FROM cost_entry');
+    } finally {
+      await pool.end();
+    }
+
     await recordCost(db, {
       provider: 'fal',
       amountCents: 500,

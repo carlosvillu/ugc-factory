@@ -1,0 +1,3 @@
+=== ENV del proceso worker (pid 4586), filtrado ===
+--- Búsqueda explícita de overrides de fake (debe salir vacío): ---
+<<<sin resultados = clientes apuntan a las APIs REALES>>>

@@ -1,8 +1,9 @@
 // Servicio de síntesis del brief (T1.8, N3): la superficie INVOCABLE que ejecuta el paso P4 y
 // persiste su coste. Orquesta core (`makeBriefSynthesizer` — solo red/CPU: la llamada a Sonnet 5,
 // el truncado y el parse) + la capa db (leer la key descifrada de secretos T0.14, registrar el
-// `cost_entry`). Vive en la capa server de web (composition root: cablea, no contiene lógica de
-// negocio). Espeja `visual-analyze.ts` (T1.7) y `firecrawl-ingest.ts` (T1.4).
+// `cost_entry`). Vive en `@ugc/services` (T1.10a): cablea, no contiene lógica de negocio. Lo
+// consume el executor del nodo N3 del worker. Espeja `visual-analyze.ts` (T1.7) y
+// `firecrawl-ingest.ts` (T1.4).
 //
 // COST_ENTRY (record-first, disciplina de T1.4): tras la llamada se registra el gasto desde
 // `usage`. provider='anthropic', unit='tokens'. Se registra INCLUSO en refusal/parse_error (se

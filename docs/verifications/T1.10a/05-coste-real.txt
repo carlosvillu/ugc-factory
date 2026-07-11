@@ -1,0 +1,36 @@
+=== COST ENTRIES nuevas (posteriores al baseline) ===
+ provider  | amount_cents | quantity |  unit   | node_key |          occurred_at          
+-----------+--------------+----------+---------+----------+-------------------------------
+ firecrawl |            0 |        4 | credits |          | 2026-07-11 23:25:46.237119+00
+ anthropic |            1 |     5903 | tokens  |          | 2026-07-11 23:26:18.601749+00
+ anthropic |           19 |    32045 | tokens  |          | 2026-07-11 23:27:23.018868+00
+(3 rows)
+
+=== ¿step_run_id / project_id nulos? ===
+             id             | provider  | amount_cents | step_run_id |         project_id         
+----------------------------+-----------+--------------+-------------+----------------------------
+ 01KX9R0MBWTQDDDZRK32F997C2 | firecrawl |            0 |             | 01JQ0T0T0T0T0T0T0T0T0T0T0V
+ 01KX9R1KZ8KJRW04VAWA32KGXX | anthropic |            1 |             | 01JQ0T0T0T0T0T0T0T0T0T0T0V
+ 01KX9R3JVSJQX5QFEZ1HKSSD2N | anthropic |           19 |             | 01JQ0T0T0T0T0T0T0T0T0T0T0V
+(3 rows)
+
+=== cost_actual de los steps ===
+ node_key | cost_actual | cost_estimated 
+----------+-------------+----------------
+ N1       |             |               
+ N2       |             |               
+ N3       |             |               
+(3 rows)
+
+=== COSTE TOTAL DE LA VERIFICACION (delta vs baseline 174 cents) ===
+ provider  | llamadas | cents | unidades 
+-----------+----------+-------+----------
+ anthropic |        3 |    27 |    57645
+ firecrawl |        1 |     0 |        4
+(2 rows)
+
+ cents_verificacion | filas 
+--------------------+-------
+                 27 |     4
+(1 row)
+

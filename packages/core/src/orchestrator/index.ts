@@ -46,9 +46,14 @@ export {
 } from './create-run';
 export {
   DemoConfigSchema,
+  // Fallo PERMANENTE de un executor (T1.10a): el consumer lo lleva a `failed` TERMINAL
+  // sin gastar reintentos — crítico en nodos de PAGO (un retry determinista = dinero
+  // quemado para fallar igual).
+  PermanentStepError,
   type DemoConfig,
   type StepExecutor,
   type ExecutorContext,
+  type ExecutorDep,
 } from './executor';
 export {
   demoRunDefinition,
@@ -56,6 +61,19 @@ export {
   demoCanvasRunDefinition,
   demoCostRunDefinition,
 } from './demo-dag';
+// DAG del análisis N1→N2→N3 (T1.10a): el intake en modo URL lo usa para crear el
+// run real (ingesta → visión con skip → síntesis+validación).
+export {
+  analysisRunDefinition,
+  DEFAULT_ANALYSIS_LANGUAGE,
+  // Schemas de la config de los steps: los IMPORTA el executor del worker para re-validar
+  // el jsonb `step_run.config` — una sola verdad productor/consumidor (patrón DemoConfigSchema).
+  AnalysisN1ConfigSchema,
+  AnalysisN3ConfigSchema,
+  type AnalysisIntake,
+  type AnalysisN1Config,
+  type AnalysisN3Config,
+} from './analysis-dag';
 export {
   shouldPause,
   CheckpointConfigSchema,

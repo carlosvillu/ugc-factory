@@ -32,7 +32,7 @@ const nextConfig: NextConfig = {
   // Los paquetes internos exportan TS fuente (JIT): Next los transpila
   // (architecture.md §7). @ugc/db entra en T0.2: web consume su ping de conexión
   // (@ugc/db → pingDb) en /api/health.
-  transpilePackages: ['@ugc/core', '@ugc/db'],
+  transpilePackages: ['@ugc/core', '@ugc/db', '@ugc/services'],
   // pino resuelve pino-pretty y sus workers (thread-stream) en runtime:
   // fuera del bundle del server o el transport no encuentra sus ficheros.
   serverExternalPackages: ['pino', 'pino-pretty'],

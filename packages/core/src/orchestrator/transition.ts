@@ -73,6 +73,9 @@ function setsFinishedAt(event: StepEvent): boolean {
     event === 'reject' ||
     event === 'expire' ||
     event === 'skip' ||
+    // T1.10a: el auto-skip del nodo inaplicable también TERMINA el trabajo del step
+    // (skipped es terminal), igual que el `skip` de usuario.
+    event === 'skip_inapplicable' ||
     event === 'cancel' ||
     event === 'supersede'
   );
@@ -167,7 +170,22 @@ export async function applyTransition(
   // mensaje del throw del executor; se persiste en `step_run.error` para el visor de
   // logs del panel del canvas. Ignorado en cualquier otro evento (solo `fail` lo
   // escribe; el `retry` lo LIMPIA a null aparte).
-  opts: { error?: unknown } = {},
+  //
+  // T1.10a: `outputRefs` opcional — MISMO patrón que `error` en `fail`. Un executor real
+  // (N1/N2/N3) produce un artefacto (RawContent, VisualAnalysis, ProductBrief) que el
+  // consumer pasa aquí para que quede persistido en `step_run.output_refs` en la MISMA
+  // transición (el canal `output_refs` ya existe desde T0.8/checkpoint-ops; esto lo
+  // alimenta también desde el camino del EXECUTOR, no solo desde la edición humana de un
+  // checkpoint).
+  //
+  // Lo escriben DOS eventos, no uno:
+  //   - `succeed`            → el artefacto producido por el nodo.
+  //   - `skip_inapplicable`  → el MOTIVO del auto-skip (p. ej. N2:
+  //     `{skipped:true, reason:'no_analyzable_visuals'}`), para que el panel explique POR
+  //     QUÉ se saltó el nodo en vez de mostrar un hueco. Si alguien "simplifica" la
+  //     condición a solo `succeed`, BORRA ese motivo.
+  // Ignorado en el resto de eventos.
+  opts: { error?: unknown; outputRefs?: unknown } = {},
 ): Promise<StepStatus> {
   // 1) Lock de fila + estado BAJO el lock.
   const step = await steps.findForUpdate(stepId);
@@ -204,6 +222,18 @@ export async function applyTransition(
     // viejo del intento anterior. Ambos escriben la columna `error`.
     ...(event === 'fail' && { error: opts.error ?? null }),
     ...(event === 'retry' && { error: null }),
+    // T1.10a: `outputRefs` del executor — solo si el caller lo pasó (`undefined` = no
+    // tocar la columna, mismo criterio de tres-estados que el resto de StepPatch). Lo
+    // escriben DOS eventos:
+    //   - `succeed`           → el artefacto que produjo el nodo.
+    //   - `skip_inapplicable` → el MOTIVO del auto-skip (N2: `{skipped:true,
+    //     reason:'no_analyzable_visuals'}`), para que el panel explique POR QUÉ se saltó
+    //     el nodo en vez de mostrar un hueco. NO lo quites de la condición: sin él, el
+    //     skip queda mudo en la UI.
+    // El resto de eventos no lo escriben aquí (edit/approve_edited siguen su propio
+    // camino en checkpoint-ops.ts).
+    ...((event === 'succeed' || event === 'skip_inapplicable') &&
+      opts.outputRefs !== undefined && { outputRefs: opts.outputRefs }),
   });
 
   // Invalidación de sub-grafo (§7.1.b editar / §7.1.c superseder): EFECTO en
@@ -229,7 +259,17 @@ export async function applyTransition(
   //      además resolviéramos aquí, promoveríamos la fila ANTIGUA del dependiente
   //      (que luego superseremos) y encolaríamos su job con el mismo singletonKey
   //      que la nueva → la nueva quedaría `queued` SIN job, varada para siempre.
-  if (event === 'succeed' || event === 'approve' || event === 'skip') {
+  //    - `skip_inapplicable` (T1.10a): → skipped ⇒ resolver, EXACTAMENTE igual que el
+  //      `skip` de usuario. `skipped` es una dep satisfecha venga del evento que venga
+  //      (T0.8), así que N3 avanza aunque N2 se haya autodescartado por no tener
+  //      imágenes (PRD §7.2). Si esto no resolviera, el run quedaría varado para
+  //      siempre en el camino de texto libre sin imágenes.
+  if (
+    event === 'succeed' ||
+    event === 'approve' ||
+    event === 'skip' ||
+    event === 'skip_inapplicable'
+  ) {
     await resolveDownstream(steps, jobs, stepId);
   }
 
@@ -249,8 +289,10 @@ export async function transition(
   stepId: string,
   event: StepEvent,
   // T0.11: contexto opcional del error para el evento `fail` (persiste en
-  // `step_run.error` para el visor del panel). Ignorado en otros eventos.
-  opts: { error?: unknown } = {},
+  // `step_run.error` para el visor del panel). T1.10a: `outputRefs` opcional para
+  // `succeed` (el artefacto que produjo el executor) y para `skip_inapplicable` (el
+  // MOTIVO del auto-skip, que el panel muestra). Ignorados en el resto de eventos.
+  opts: { error?: unknown; outputRefs?: unknown } = {},
 ): Promise<void> {
   await deps.withTransaction((stores) => applyTransition(stores, stepId, event, opts));
 }

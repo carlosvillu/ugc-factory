@@ -31,3 +31,9 @@ export { makeAngle, makeBrief, makeRawContent, makeVisualAnalysis } from './fact
 // arrancar el contenedor él mismo, luego clonar con createTestDatabase({serverUri,
 // templateDb}). Dentro de vitest NO se usa (el globalSetup lo posee).
 export { startPostgresContainer, type PostgresHarness } from './postgres-container';
+// APIs externas FALSAS (T1.10a, e2e.md §4): un servidor HTTP local que finge Firecrawl,
+// Jina y Anthropic para el stack E2E. Lo consume el `webServer` de Playwright (que es un
+// proceso normal, no vitest) para que la suite NUNCA gaste dinero real. Emite lo que
+// emiten los productores reales: reutiliza los fixtures y las factories, no inventa.
+export { startFakeExternalApis, FAKE_BRIEF, FAKE_VISUAL_ANALYSIS } from './fake-apis';
+export type { FakeExternalApis } from './fake-apis';

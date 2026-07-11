@@ -3,8 +3,11 @@
 // 5 para síntesis) y el coste debe ser POR MODELO. Duplicarlo habría dejado dos tablas de precios
 // derivando por su cuenta — y el precio es lo que la Verificación mide en `/spend`.
 //
-// VIVE EN LA CAPA WEB, NO EN CORE: el precio y el `cost_entry` son I/O de datos (persistencia),
-// la frontera prohibida de core (architecture §1). Core solo devuelve `AnthropicUsage` (tokens).
+// VIVE EN `@ugc/services`, NO EN CORE: el precio y el `cost_entry` son I/O de datos
+// (persistencia), la frontera prohibida de core (architecture.md §1). Core solo devuelve
+// `AnthropicUsage` (tokens). Estaba en la capa server de web hasta T1.10a, cuando el worker
+// necesitó los mismos servicios y lo compartido se movió a un paquete (web y worker son
+// composition roots hermanos: ninguno importa del otro).
 import type { AnthropicUsage } from '@ugc/core/analyze';
 
 /** Precio de un modelo en DÓLARES por millón de tokens (skill claude-api, tabla de modelos). */

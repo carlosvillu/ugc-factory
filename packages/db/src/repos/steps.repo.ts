@@ -89,6 +89,28 @@ export async function findStep(db: Db, id: string): Promise<StepRow | undefined>
   return row ? toStepRow(row) : undefined;
 }
 
+/**
+ * Steps por sus ULIDs EXACTOS, sin lock (T1.10a). La usa el consumer de `step.execute`
+ * para resolver las DEPENDENCIAS de un step: `StepRow.dependsOn` ya trae los ids exactos
+ * de sus predecesores, así que se leen por id y punto.
+ *
+ * POR ULID, NUNCA por `node_key`: `node_key` NO es único dentro de un run. La invalidación
+ * (T0.8, `insertSuperseding`) crea una fila NUEVA con el MISMO `node_key` que la que
+ * supersede — de modo que buscar "el step N1 de este run" por su clave devolvería una fila
+ * al azar (esta query no tiene ORDER BY, y Postgres no promete orden) y un re-run podría
+ * leer el artefacto de una fila `superseded` (datos viejos) sin lanzar un solo error.
+ * `dependsOn` es inmune: el supersede lo REMAPEA a los ids nuevos (ver `insertSuperseding`).
+ *
+ * Lectura simple, igual criterio que `findStep`: no hay decisión de estado que proteger con
+ * FOR UPDATE, solo datos ya persistidos por transiciones anteriores (que sí tomaron su lock
+ * en su momento).
+ */
+export async function findStepsByIds(db: Db, ids: string[]): Promise<StepRow[]> {
+  if (ids.length === 0) return [];
+  const rows = await db.select(stepRowColumns).from(stepRun).where(inArray(stepRun.id, ids));
+  return rows.map(toStepRow);
+}
+
 /** Aplica el patch a la fila ya lockeada (UPDATE, db.md §6 paso 3). */
 export async function updateStep(db: Db, id: string, patch: StepPatch): Promise<void> {
   await db

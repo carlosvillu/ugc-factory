@@ -1,7 +1,14 @@
 import { noopJob, stepExecuteJob } from '@ugc/core/jobs';
 import type { Logger } from '@ugc/core';
 import type { TransitionDeps } from '@ugc/core/orchestrator';
-import { createDbPool, ensureQueue, makeWithTransaction, recordCost } from '@ugc/db';
+import { getSecretsKeyFromEnv } from '@ugc/core/secrets';
+import {
+  createDbPool,
+  ensureQueue,
+  makeLocalStorageAdapterFromEnv,
+  makeWithTransaction,
+  recordCost,
+} from '@ugc/db';
 import { PgBoss } from 'pg-boss';
 import { type FailDecider, registerNoopConsumer } from './consumers/demo-noop';
 import { registerStepConsumer } from './consumers/step-execute';
@@ -76,6 +83,28 @@ export async function createBoss(deps: CreateBossDeps): Promise<PgBoss> {
       // pool de Drizzle del worker cuando su config lleva `costCents`. Sin refs
       // (step/project): el ExecutorContext no las expone — quedan null en F0.
       demoRecordCost: (input) => recordCost(db, input),
+      // Nodos REALES del análisis (T1.10a). `secretsKey` se deriva PEREZOSAMENTE (ver
+      // `secretsKey` abajo): un worker sin APP_MASTER_KEY sigue arrancando y sirviendo
+      // los runs de demo — solo revienta, y con mensaje claro, si un nodo real necesita
+      // descifrar una API key. Mismo criterio que web (session.ts: lanza al USAR, nunca
+      // en import/boot).
+      analysis: {
+        db,
+        // Ambos helpers viven en paquetes compartidos (@ugc/db, @ugc/core/secrets) y los usa
+        // TAMBIÉN web: una sola verdad sobre dónde viven los assets y sobre cómo se deriva la
+        // clave de cifrado. La clave sigue siendo PEREZOSA (getter): un worker sin
+        // APP_MASTER_KEY arranca igual y solo revienta el nodo que de verdad la necesita.
+        storage: makeLocalStorageAdapterFromEnv(),
+        get secretsKey() {
+          return getSecretsKeyFromEnv();
+        },
+        // Overrides de base URL de los clientes externos: en producción van `undefined`
+        // (cada cliente usa su URL real). El stack E2E levanta un fake HTTP local y
+        // apunta estas tres aquí, de modo que la suite NUNCA gasta dinero real.
+        firecrawlBaseUrl: process.env.FIRECRAWL_BASE_URL,
+        jinaBaseUrl: process.env.JINA_BASE_URL,
+        anthropicBaseUrl: process.env.ANTHROPIC_BASE_URL,
+      },
     });
     await registerStepConsumer({
       boss,

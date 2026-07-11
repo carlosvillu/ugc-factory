@@ -1,0 +1,74 @@
+
+> ugc-factory@0.0.0 gate /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads
+> pnpm lint && pnpm typecheck && pnpm format:check && pnpm knip && pnpm test
+
+
+> ugc-factory@0.0.0 lint /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads
+> eslint .
+
+
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/web/e2e/runs-canvas.spec.ts
+   54:3  warning  Test has no assertions  playwright/expect-expect
+   71:3  warning  Test has no assertions  playwright/expect-expect
+   81:3  warning  Test has no assertions  playwright/expect-expect
+  128:3  warning  Test has no assertions  playwright/expect-expect
+
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/web/src/components/intake/intake-form.tsx
+  64:39  warning  Compilation Skipped: Use of incompatible library
+
+This API returns functions which cannot be memoized without leading to stale UI. To prevent this, by default React Compiler will skip memoizing this component/hook. However, you may see issues if values from this API are passed to other components/hooks that are memoized.
+
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/web/src/components/intake/intake-form.tsx:64:39
+  62 |   const { errors, isSubmitting } = formState;
+  63 |
+> 64 |   const imageRefs: IntakeImageRef[] = watch('imageRefs') ?? [];
+     |                                       ^^^^^ React Hook Form's `useForm()` API returns a `watch()` function which cannot be memoized safely.
+  65 |   const [uploadError, setUploadError] = useState<string | null>(null);
+  66 |   const [uploading, setUploading] = useState(false);
+  67 |  react-hooks/incompatible-library
+
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/core/src/contracts/product-brief.json-schema.test.ts
+  7:8  warning  Using exported name 'Ajv2020' as identifier for default export  import-x/no-named-as-default
+
+✖ 6 problems (0 errors, 6 warnings)
+
+
+> ugc-factory@0.0.0 typecheck /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads
+> tsc --noEmit && pnpm -r --parallel typecheck
+
+Scope: 5 of 6 workspace projects
+apps/web typecheck$ tsc --noEmit
+packages/core typecheck$ tsc --noEmit
+apps/worker typecheck$ tsc --noEmit
+packages/test-utils typecheck$ tsc --noEmit
+packages/db typecheck$ tsc --noEmit
+packages/test-utils typecheck: Done
+apps/worker typecheck: Done
+packages/db typecheck: Done
+packages/core typecheck: Done
+apps/web typecheck: Done
+
+> ugc-factory@0.0.0 format:check /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads
+> prettier --check .
+
+Checking formatting...
+All matched files use Prettier code style!
+
+> ugc-factory@0.0.0 knip /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads
+> knip
+
+Configuration hints (1)
+src/golden.ts  packages/test-utils  knip.json  Remove from ignore
+
+> ugc-factory@0.0.0 test /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads
+> vitest run --project '*:unit' --project '*:integration'
+
+
+ RUN  v4.1.10 /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads
+
+
+ Test Files  73 passed (73)
+      Tests  720 passed (720)
+   Start at  12:51:27
+   Duration  46.76s (transform 8.22s, setup 1.77s, import 40.12s, tests 62.95s, environment 11.50s)
+

@@ -1,0 +1,2 @@
+onlyMainContent=false: total links = 42
+reviews/faq/about links = ["https://www.ollie.com/faqs/","https://www.ollie.com/reviews/","https://www.ollie.com/about/"]

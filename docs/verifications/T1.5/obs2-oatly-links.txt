@@ -1,0 +1,26 @@
+probe: http status = 200
+probe: success     = true
+probe: total links = 38
+probe: same-domain links = 18
+probe: --- sample same-domain links (up to 40) ---
+  https://www.oatly.com/en-gb/oatly-who
+  https://www.oatly.com/en-gb/recipes/look-book-vol-3
+  https://www.oatly.com/en-gb/things-we-do/initiatives/aftertaste
+  https://www.oatly.com/en-gb/things-we-do/initiatives/pee-for-the-planet
+  https://www.oatly.com/en-gb/things-we-do/initiatives/oatly-x-avavav
+  https://www.oatly.com/en-gb/random-answers
+  https://www.oatly.com/en-gb/things-we-do/initiatives/future-of-taste
+  https://www.oatly.com/en-gb/products/oat-drink/oat-drink-matcha-1l
+  https://www.oatly.com/en-gb/products
+  https://www.oatly.com/en-gb/recipes/look-book-autumn-winter-2025
+  https://www.oatly.com/en-gb/products/oat-drink/oat-drink-chocolate-250ml
+  https://www.oatly.com/en-gb/things-we-do/stories/tastes-like-miami
+  https://www.oatly.com/en-gb/recipes/look-book-autumn-winter-2025/ginger-nut-chai
+  https://www.oatly.com/en-gb/oatly-who/sustainability-plan
+  https://www.oatly.com/en-gb/sustainability
+  https://www.oatly.com/en-gb/random-answers/17-facts-about-oatly-and-nutrition
+  https://www.oatly.com/en-gb/oatly-who/sustainability-plan/sustainability-report-2024
+  https://www.oatly.com/en-gb/things-we-do/brainwashing/blind-test
+
+probe: discoverInternalUrls picked = []
+probe: MEANINGFUL_SKIP = true (same-domain links exist but none match reviews/faq/about)

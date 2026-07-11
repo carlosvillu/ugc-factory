@@ -206,7 +206,7 @@ Decisiones del usuario (2026-07-07): la fase se ejecuta tras T0.1 y **antes** de
 - **Coste estimado**: ~$0,30 (créditos Firecrawl de varios scrapes de prueba)
 - **Verificación**: analizar una landing real JS-heavy → `url_analysis.raw_content` contiene markdown legible, ≥3 imágenes y branding con paleta; el screenshot se descarga por `GET /api/assets/:id/download` (T0.5) y coincide con la landing; con la key de Firecrawl inválida, Jina produce al menos el markdown; los créditos aparecen en `/spend`.
 
-#### T1.5 · Mini-crawl de páginas internas
+#### T1.5 · Mini-crawl de páginas internas [x] 2026-07-11 — PASS (red real ollie.com/oatly.com, 2 ciclos: FAIL#1 onlyMainContent→fix→PASS), ver docs/verifications/T1.5/ (coste ~$0,013)
 - **Depende de**: T1.4
 - **Entrega**: descubrimiento de hasta 3 URLs same-domain (`/reviews`, `/faq`, `/about` y variantes por idioma) + scrape ligero + anexión al `RawContent` (§9.1).
 - **Coste estimado**: ~$0,10

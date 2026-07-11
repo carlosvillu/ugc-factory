@@ -1,0 +1,11 @@
+probe: http status = 200
+probe: success     = true
+probe: total links = 3
+probe: same-domain links = 3
+probe: --- sample same-domain links (up to 40) ---
+  https://www.ollie.com/onboarding/
+  https://www.ollie.com/privacy-policy/
+  https://www.ollie.com/terms/
+
+probe: discoverInternalUrls picked = []
+probe: MEANINGFUL_SKIP = true (same-domain links exist but none match reviews/faq/about)

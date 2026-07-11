@@ -1,0 +1,10 @@
+minicrawl: url           = https://ollie.com
+minicrawl: provider      = firecrawl   (MUST be 'firecrawl'; 'jina' => run VOID)
+minicrawl: credits       = 1
+minicrawl: warnings      = ["internal_crawl_skipped"]
+minicrawl: internalPages = []
+minicrawl: markdown len  = 4796 chars
+minicrawl: anexed blocks = 0
+
+minicrawl: provider_ok  = true
+minicrawl: skipped      = true

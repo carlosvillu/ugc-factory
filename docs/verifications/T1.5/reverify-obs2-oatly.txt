@@ -1,0 +1,24 @@
+===== T1.5 RE-VERIFY :: https://www.oatly.com/en-gb =====
+
+--- PHASE A: discovery probe (formats:[links], onlyMainContent:false) ---
+  raw links returned      = 65
+  discoverInternalUrls -> = []
+  pattern matches (count) = 0
+  same-domain unique paths = 37
+  paths: ["/","/en-gb","/en-gb/accessibility-statement","/en-gb/contact","/en-gb/legal","/en-gb/legal/privacy-policy","/en-gb/oatly-who","/en-gb/oatly-who/sustainability-plan","/en-gb/oatly-who/sustainability-plan/climate-footprint-product-label","/en-gb/oatly-who/sustainability-plan/sustainability-report-2024","/en-gb/products","/en-gb/products/chilled-oat-drink","/en-gb/products/cooking","/en-gb/products/oat-drink","/en-gb/products/oat-drink/oat-drink-chocolate-250ml","/en-gb/products/oat-drink/oat-drink-matcha-1l","/en-gb/products/oatgurt","/en-gb/random-answers","/en-gb/random-answers/17-facts-about-oatly-and-nutrition","/en-gb/recipes/look-book-autumn-winter-2025","/en-gb/recipes/look-book-autumn-winter-2025/ginger-nut-chai","/en-gb/recipes/look-book-spring-summer-2025","/en-gb/recipes/look-book-vol-3","/en-gb/sustainability","/en-gb/sustainability/climate-solutions-company","/en-gb/things-we-do","/en-gb/things-we-do/brainwashing/blind-test","/en-gb/things-we-do/brainwashing/nespresso","/en-gb/things-we-do/initiatives/aftertaste","/en-gb/things-we-do/initiatives/ef-pro-cycling","/en-gb/things-we-do/initiatives/future-of-taste","/en-gb/things-we-do/initiatives/oatly-x-avavav","/en-gb/things-we-do/initiatives/pee-for-the-planet","/en-gb/things-we-do/stories/how-do-you-say-f-a-r-m-in-canadian","/en-gb/things-we-do/stories/last-first-dates","/en-gb/things-we-do/stories/tastes-like-miami","/en-us"]
+
+--- PHASE B: full ingest() ---
+  provider      = firecrawl   (MUST be 'firecrawl')
+  credits       = 2
+  warnings      = ["internal_crawl_skipped"]
+  internalPages = []
+  markdown len  = 11505 chars
+  skipped(warning)        = true
+  links_scrape_FAILED     = false  (must be false for a LEGIT skip)
+  appended blocks         = 0
+
+--- SIGNALS ---
+  provider_ok             = true
+  is_skipped              = true
+  legit_skip (no fail)    = true
+  reviews_block_present   = false

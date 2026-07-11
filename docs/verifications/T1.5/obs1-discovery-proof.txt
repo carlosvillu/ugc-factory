@@ -1,0 +1,3 @@
+proof: onlyMainContent=false total links = 42
+proof: discoverInternalUrls(url, FULL links) = ["https://www.ollie.com/faqs/","https://www.ollie.com/reviews/","https://www.ollie.com/about/"]
+proof: DISCOVERY_WORKS = true (shipped fn picks targets when links aren't stripped)

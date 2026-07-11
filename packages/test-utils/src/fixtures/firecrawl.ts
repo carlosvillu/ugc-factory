@@ -138,3 +138,131 @@ export const JINA_MARKDOWN =
 
 /** El cuerpo (sin preámbulo) que los asserts buscan con `.toContain`. */
 export const JINA_MARKDOWN_BODY = 'Hidratación clínica en 24h. Contenido leído por Jina Reader.';
+
+// ── Fixtures del mini-crawl de páginas internas (T1.5, research §3.5) ─────────────
+// El mini-crawl usa DOS scrapes del landing (fix del verify): el scrape RICO
+// (`onlyMainContent:true`, markdown/branding/product/screenshot — SIN links) y un scrape de
+// DESCUBRIMIENTO aparte (`onlyMainContent:false`, `formats:['links']`) que SÍ ve el nav/footer
+// donde viven los enlaces internos. Por eso el fixture de links está SEPARADO del rico y se
+// ATA a la request de descubrimiento por su `onlyMainContent:false` (así el test prueba el
+// contrato real, no inyecta links a ciegas). La respuesta v2 da `data.links` como array<string>.
+
+/** URL del landing del mini-crawl (misma tienda Shopify que el resto de fixtures). */
+export const CRAWL_LANDING_URL = 'https://glow.example/products/serum';
+
+/** Scrape RICO del landing (`onlyMainContent:true`): markdown limpio, sin links (el nav/footer
+ *  se strippea — por eso los links llegan por el scrape de descubrimiento aparte). `screenshot`
+ *  como data-URI (sin red en el handler del screenshot). Invariante T1.4: markdown SIN
+ *  boilerplate de nav/footer. */
+export const FIRECRAWL_LANDING_RICH = {
+  success: true,
+  data: {
+    markdown: '# GlowSerum\n\nHidratación clínica en 24h.',
+    images: ['https://cdn.glow.example/hero.jpg'],
+    screenshot:
+      'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
+    metadata: { statusCode: 200 },
+  },
+} as const;
+
+/** Scrape de DESCUBRIMIENTO del landing (`onlyMainContent:false`, `formats:['links']`): los
+ *  links del nav/footer. 4 candidatas same-domain de interés (reviews/opiniones/faq/valoraciones,
+ *  todas keyword-al-final tras FIX 1) para probar el cap 3; un off-site (`glow-cdn.net/reviews`)
+ *  que el filtro de dominio DEBE descartar pese a casar el path; un slug de producto con basura
+ *  tras la keyword (`/reviews-are-fake-serum`) que FIX 1 NO debe casar; y links irrelevantes
+ *  (home, cart) que se ignoran por path. */
+export const FIRECRAWL_LANDING_DISCOVERY_LINKS = {
+  success: true,
+  data: {
+    links: [
+      'https://glow.example/',
+      'https://glow.example/cart',
+      // Slug de producto con basura tras `reviews` → FIX 1 lo descarta (no keyword-al-final).
+      'https://glow.example/reviews-are-fake-serum',
+      'https://glow.example/pages/reviews',
+      'https://glow.example/es/opiniones',
+      'https://glow.example/faq',
+      'https://glow.example/valoraciones', // 4ª candidata real → excluida por el cap de 3.
+      // Off-site (CDN) con path de interés → DEBE filtrarse por dominio registrable.
+      'https://glow-cdn.net/reviews',
+    ],
+    metadata: { statusCode: 200 },
+  },
+} as const;
+
+/** Respuesta de la scrape LIGERA (markdown-only) de la página de reviews. Su texto es
+ *  reconociblemente de reviews (la 1ª observable: "el markdown anexado contiene texto de
+ *  reviews reconocible"). SIN `creditsUsed` → 1 crédito por defecto. */
+export const FIRECRAWL_INTERNAL_REVIEWS = {
+  success: true,
+  data: {
+    markdown:
+      '# Opiniones de clientes\n\n★★★★★ "Mi piel cambió en una semana" — Marta R.\n★★★★☆ "Buen serum, algo caro" — Luis P.',
+    metadata: { statusCode: 200 },
+  },
+} as const;
+
+/** Fragmento reconocible del markdown de reviews que la 1ª observable busca anexado. */
+export const FIRECRAWL_INTERNAL_REVIEWS_SNIPPET = 'Mi piel cambió en una semana';
+
+/** Respuesta de la scrape ligera de la página de opiniones (2ª interna del cap). */
+export const FIRECRAWL_INTERNAL_OPINIONES = {
+  success: true,
+  data: {
+    markdown: '# Opiniones\n\nValoración media 4,8/5 sobre 1.240 reseñas verificadas.',
+    metadata: { statusCode: 200 },
+  },
+} as const;
+
+/** Respuesta de la scrape ligera de la página de FAQ (3ª interna del cap). */
+export const FIRECRAWL_INTERNAL_FAQ = {
+  success: true,
+  data: {
+    markdown:
+      '# Preguntas frecuentes\n\n¿Es apto para piel sensible? Sí, dermatológicamente testado.',
+    metadata: { statusCode: 200 },
+  },
+} as const;
+
+/** Página de reviews que a su vez ENLAZA a una 4ª página interna de interés (`/about`).
+ *  Sirve para fijar la NO-RECURSIÓN (Observable #4): la scrape ligera pide markdown-only
+ *  (sin `links`), pero aunque la respuesta los traiga, el mini-crawl NUNCA sigue los links
+ *  de una página interna. `/about` NO debe rastrearse ni anexarse. */
+export const FIRECRAWL_INTERNAL_REVIEWS_WITH_LINKS = {
+  success: true,
+  data: {
+    markdown: '# Opiniones de clientes\n\n★★★★★ "Mi piel cambió en una semana" — Marta R.',
+    // Links a una 4ª interna: si hubiera recursión, se rastrearía. NO debe seguirse.
+    links: ['https://glow.example/about', 'https://glow.example/faq'],
+    metadata: { statusCode: 200 },
+  },
+} as const;
+
+/** Scrape RICO del landing sin páginas internas (`onlyMainContent:true`): markdown limpio. */
+export const FIRECRAWL_LANDING_NO_INTERNAL_RICH = {
+  success: true,
+  data: {
+    markdown: '# Landing sin páginas internas\n\nSolo home y carrito.',
+    images: ['https://cdn.shop.example/a.jpg'],
+    metadata: { statusCode: 200 },
+  },
+} as const;
+
+/** Scrape de DESCUBRIMIENTO del landing sin páginas internas: solo enlaces irrelevantes (home,
+ *  cart, otro producto) y off-site. El mini-crawl NO descubre nada → resultado `skipped`,
+ *  markdown intacto (2ª observable). */
+export const FIRECRAWL_LANDING_NO_INTERNAL_DISCOVERY_LINKS = {
+  success: true,
+  data: {
+    links: [
+      'https://shop.example/',
+      'https://shop.example/cart',
+      'https://shop.example/products/other',
+      'https://facebook.com/shop',
+    ],
+    metadata: { statusCode: 200 },
+  },
+} as const;
+
+/** URL del landing sin páginas internas (2ª observable). */
+export const CRAWL_LANDING_NO_INTERNAL_URL = 'https://shop.example/products/thing';

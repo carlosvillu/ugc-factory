@@ -168,10 +168,13 @@ describe('cadena ingester N2 → persistencia (Verificación T1.4)', () => {
     expect(costs).toHaveLength(1);
     expect(costs[0]!.provider).toBe('firecrawl');
     expect(costs[0]!.unit).toBe('credits');
-    expect(Number(costs[0]!.quantity)).toBe(1);
-    // Sub-céntimo → amount_cents entero = 0 (la verdad de los créditos vive en quantity).
+    // T1.5: el ingest emite DOS scrapes del landing — el rico (1 crédito por defecto) + el de
+    // descubrimiento de páginas internas full-page (este handler devuelve el mismo fixture rich
+    // sin `links` → +1 crédito, mini-crawl skipped). El cost_entry AGREGA ambos → quantity=2.
+    expect(Number(costs[0]!.quantity)).toBe(2);
+    // Sub-céntimo → amount_cents entero = 0 (2 × 0,083 = 0,166 → round 0; la verdad vive en quantity).
     expect(costs[0]!.amount_cents).toBe(0);
-    expect(result.credits).toBe(1);
+    expect(result.credits).toBe(2);
   });
 
   it('fallback: Firecrawl 401 → Jina persiste al menos el markdown, sin screenshot ni coste', async () => {
@@ -242,7 +245,8 @@ describe('cadena ingester N2 → persistencia (Verificación T1.4)', () => {
     );
     expect(costs).toHaveLength(1);
     expect(costs[0]!.provider).toBe('firecrawl');
-    expect(Number(costs[0]!.quantity)).toBe(1);
+    // T1.5: 1 (landing rico) + 1 (scrape de descubrimiento, ambos antes del fallo del put) = 2.
+    expect(Number(costs[0]!.quantity)).toBe(2);
     // Y NO se creó url_analysis (la escritura del análisis nunca se alcanzó).
     const { rows: analyses } = await tdb.pool.query(
       `SELECT 1 FROM url_analysis WHERE project_id = $1`,

@@ -1,0 +1,279 @@
+===== T1.5 RE-VERIFY :: https://ollie.com =====
+
+--- PHASE A: discovery probe (formats:[links], onlyMainContent:false) ---
+  raw links returned      = 42
+  discoverInternalUrls -> = ["https://www.ollie.com/faqs/","https://www.ollie.com/reviews/","https://www.ollie.com/about/"]
+  pattern matches (count) = 3
+  same-domain unique paths = 27
+  paths: ["/","/about/","/accessibility-statement/","/affiliate/","/auth/login/","/dog-supplements/","/dog-treats/","/faqs/","/fresh-dog-food/","/health-screenings/","/home-cooking/","/how-it-works/","/meal-plans/","/nutrition-facts/","/onboarding/","/picky-eaters/","/press/","/privacy-policy/","/promo-code/","/puppies/","/reviews/","/sale/","/sitemap/","/store-locator/","/terms/","/vets/","/weight-loss/"]
+
+--- PHASE B: full ingest() ---
+  provider      = firecrawl   (MUST be 'firecrawl')
+  credits       = 5
+  warnings      = []
+  internalPages = ["https://www.ollie.com/faqs/","https://www.ollie.com/reviews/","https://www.ollie.com/about/"]
+  markdown len  = 32027 chars
+  skipped(warning)        = false
+  links_scrape_FAILED     = false  (must be false for a LEGIT skip)
+  appended blocks         = 3
+
+===== BLOCK 1: /faqs/ (4992 chars) — review-tokens hit: ["star","review","my dog"] =====
+
+
+## /faqs/
+
+# Frequently Asked Questions
+
+## Get the answers to your questions
+
+### Our Food
+
+Do Ollie's recipes meet AAFCO standards?
+
+Does Ollie's recipes meet WSAVA guidelines?
+
+How do I transition my Pup to Ollie's Fresh Recipes?
+
+What steps are taken to ensure Ollie's food is safe?
+
+How much Ollie do I feed my dog?
+
+How is Ollie made?
+
+What ingredients are used in Ollie's dog food?
+
+What is the Pork W/Apples recipe?
+
+Can I freeze the food? And how long will it last?
+
+How do I switch my dog to Ollie’s fresh food?
+
+What ingredients are used in Ollie Salmon & Coconut Jerky Strips?
+
+What if my dog has a sensitive stomach?
+
+### Your Subscription
+
+Where can I view my order history?
+
+Can I order Ollie without subscribing?
+
+When am I charged for each order?
+
+How do I increase or decrease how much food I am getting?
+
+How do I add another dog to my account?
+
+How do I cancel my subscription? (Turn off auto-renew)
+
+How does the subscription work?
+
+How do I change my pet profile?
+
+Can I still make changes to my subscription or delivery dates?
+
+### Creating Your Plan
+
+How do you tailor my meal plan to my dog?
+
+How much does Ollie cost?
+
+Can I choose more than one recipe?
+
+What's included in my starter box?
+
+Can I mix Baked and Fresh food?
+
+Do I need to transition my pup to baked if I have already been on Ollie?
+
+How do I add the Jerky Strips to my pup’s boxes?
+
+### Shipping and Delivery
+
+How long will the food stay fresh after it's delivered?
+
+Can I recycle the packaging?
+
+When is my pup's food shipped?
+
+What if I need to make changes to my delivery?
+
+What if I am traveling?
+
+What if I'm not home when Ollie is delivered?
+
+Where do you ship?
+
+How do I change my shipping address?
+
+Should I feed my Pup any packs that have been damaged?
+
+### Ollie Health \| Digestion Screenings
+
+What is the Digestion Screening?
+
+Stool Results -What does Right on Track mean?
+
+What does “Looks good” mean?
+
+Stool Results - What does Slow Down mean?
+
+What does Needs help mean?
+
+Stool Results - What does Seek Veterinary Care mean?
+
+When should I upload photos in the transition process?
+
+What happens to a Digestion Screening photo after it’s uploaded?
+
+Who can use a Digestion Screening?
+
+Who revi
+... [truncated 2792 more chars]
+
+===== BLOCK 2: /reviews/ (15987 chars) — review-tokens hit: ["star","5 out of 5","review","rating","recommend","my dog","customer","love"] =====
+
+
+## /reviews/
+
+# The obsession is real!
+
+## Here’s what pups and their parents are saying about our fresh, human-grade food.
+
+[Feed the Obsession](https://www.ollie.com/onboarding/)
+
+![a dog and it's pup parent playing](https://a.storyblok.com/f/89894/1816x1360/3d17237fef/reviews-hero.jpg/m/3840x0)
+
+## The proof is in the pup
+
+We take care of the nutrition so you can take care of the belly rubs.
+
+90%
+
+of members notice positive changes in their pup after 30 days of feeding them Ollie
+
+100%
+
+of dogs saw firmer, healthier poops in 3 days
+
+98%
+
+of dogs choose our fresh food over premium kibble
+
+1-2
+
+months on Ollie can help  under- and overweight pups reach their ideal weight
+
+[Join the Pack](https://www.ollie.com/onboarding/)
+
+![Before and after image of a dog that went from sad to happy and healthy](https://a.storyblok.com/f/89894/1264x1264/9db4d4a42e/before-after-rebrand.jpg/m/3840x0)
+
+# Before / After
+
+“Grady was having terrible gut issues. We thought we were going to lose him. With Ollie, Grady eats with gusto and hasn't refused a meal since. I genuinely believe Ollie saved his life.”
+
+#### \- Grady's Parent
+
+# The nutrition they need, just how they like it
+
+[Feed the Obsession](https://www.ollie.com/onboarding/)
+
+## Read more reviews on Trustpilot
+
+Trustpilot Custom Widget
+
+- 4 out of 5 star rating on Trustpilot
+
+
+
+
+
+
+
+
+[Doing business with everyone at Ollie's has been great..my baby is doing good..weight...\\
+\\
+Review by\\
+\\
+Geri Bardo,\\
+\\
+10 hours ago\\
+\\
+Click to view the full review on Trustpilot](https://www.trustpilot.com/reviews/6a517e982c175b495da50f6b?utm_medium=trustbox&utm_source=Slider)
+- 5 out of 5 star rating on Trustpilot
+
+
+
+
+
+
+
+
+[My box arrived with a gash in it which allow 20 of the 42 packages to thaw. Fiona wa...\\
+\\
+Review by\\
+\\
+Colleen Sherman,\\
+\\
+10 hours ago\\
+\\
+Click to view the full review on Trustpilot](https://www.trustpilot.com/reviews/6a5175f4b8dea9476d58591a?utm_medium=trustbox&utm_source=Slider)
+- 5 out of 5 star rating on Trustpilot
+
+
+
+
+
+
+
+
+[Great communication and understanding!\\
+\\
+Review by\\
+\\
+janice Freiberg,\\
+\\
+13 hours ago\\
+\\
+Click to view the full review on Trustpilot](https://www.trustpilot.com/review
+... [truncated 13787 more chars]
+
+===== BLOCK 3: /about/ (6522 chars) — review-tokens hit: ["love"] =====
+
+
+## /about/
+
+![Dog paw](https://a.storyblok.com/f/125940/46x46/38c5200212/sweet-potato-paw.png/m/3840x0)
+
+# Dogs Make Good Company
+
+At Ollie, our pups are more than pets. They’re our best friends, our protectors, and furry members of our family. They’ve got quirks and character that are unmatched, and they’ve got needs that are unique to them. So we work with dogged determination day in and day out to provide the nutrition and care they need to live as long as canine-ly possible.
+
+![Dog smiling under desk](https://a.storyblok.com/f/125940/176x216/28ad649c1b/aboutus-dogsmile.png/m/3840x0)
+
+![Dogs excited because their Ollie shipment arrived](https://a.storyblok.com/f/125940/264x351/a5de0e650e/aboutus-dogonbox.png/m/3840x0)
+
+We believe a dog’s health, happiness, and longevity begins with their food — and superior ingredients and cooking techniques lead to the best nutrition. With the guidance of top pet health authorities, we craft clean, healthy recipes made from simple ingredients in human-grade kitchens. The end result is delicious, nutritious meals that dogs love and you can feel good about.
+
+![Dog sniffing Ollie Fresh dog food in a bowl](https://a.storyblok.com/f/125940/240x306/31c3a5ec1a/aboutus-dogbowl.png/m/3840x0)
+
+![Dalmatian eating Ollie fresh dog food from a bowl](https://a.storyblok.com/f/125940/168x216/ced0afbbd1/aboutus-dalmatianeating.png/m/3840x0)
+
+Our clean and simple recipes offer clean and simple benefits: nutrition you can see at mealtime and beyond. Every Ollie recipe is packed with quality protein, fruit, vegetables, and grains, carefully chosen to bring out the best in your pup. Each meal is perfectly portioned to provide the nutrients your pup needs and deliver visible results, like shiny coats, great energy, and better digestion.
+
+At Ollie, we see every dog as an individual, and we’re committed to helping them thrive. Dogs make us a better business, a better company, and above all, better humans.
+
+![Ollie](https://a.storyblok.com/f/125940/79x39/b0c7df2e29/ollie-logo.png/m/3840x0)
+
+[How Ollie Works](https://www.ollie.com/how-it-works/)
+
+![Dog licking Ollie fresh food out of a bowl](https://a.storyblok.com/f/125940/168x217/515d3f5154/about
+... [truncated 4322 more chars]
+
+--- SIGNALS ---
+  provider_ok             = true
+  is_skipped              = false
+  legit_skip (no fail)    = false
+  reviews_block_present   = true (/reviews/)
+  reviews_tokens_hit      = 8 ["star","5 out of 5","review","rating","recommend","my dog","customer","love"]
+  reviews_text_recognizable = true

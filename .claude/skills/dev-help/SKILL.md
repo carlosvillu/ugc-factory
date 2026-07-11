@@ -22,7 +22,7 @@ Eres el guía del arnés de desarrollo autónomo de UGC Factory. Tu trabajo: res
 |---|---|
 | Visión completa del arnés, flujos, comandos, FAQ | `references/tour.md` (de esta skill) — tu documento principal |
 | El protocolo del bucle paso a paso, paradas, presupuesto, journal | `.claude/skills/dev-loop/SKILL.md` |
-| Qué hace/tiene prohibido cada agente | `.claude/agents/implementer.md` · `.claude/agents/verifier.md` |
+| Qué hace/tiene prohibido cada agente | `.claude/agents/implementer.md` · `.claude/agents/verifier.md` · `.claude/agents/ds-reviewer.md` (adherencia al DS en REVIEW 5c) |
 | El guardia anti-ficción (por qué no se puede marcar [x] sin evidencia) | `.claude/hooks/guard-planning.sh` |
 | Permisos del bucle (qué corre sin preguntar, qué está vetado) | `.claude/settings.json` |
 | Reglas de oro y orientación general del proyecto | `CLAUDE.md` |

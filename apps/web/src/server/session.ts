@@ -10,6 +10,7 @@
 // el fail-fast por ausencia vive en el arranque (instrumentation.register()), no
 // en import time, para que los tests handler-level puedan importar las rutas.
 import { createHmac, randomBytes, scryptSync, timingSafeEqual } from 'node:crypto';
+import { deriveSecretsKey } from '@ugc/core/secrets';
 
 export const SESSION_COOKIE = 'ugc_session';
 
@@ -23,6 +24,11 @@ let masterKeyCache: string | undefined;
 // se invalida junto a masterKeyCache en setMasterKeyForTests (si no, un test que
 // cambie la master key firmaría/verificaría con la clave de sesión anterior).
 let sessionKeyCache: Buffer | undefined;
+// Clave de CIFRADO de secretos, derivada de la master key con un salt de dominio
+// DISTINTO al de sesión (T0.14, §19.2). Memoizada por el mismo motivo que la de sesión
+// (scrypt es caro y el resultado es constante para una master key dada). Se invalida
+// junto a masterKeyCache en setMasterKeyForTests.
+let secretsKeyCache: Buffer | undefined;
 
 /** Clave maestra desde env. Lanza si falta — pero solo cuando se USA (login o
  *  verificación de sesión), nunca en import time. El fail-fast de arranque vive en
@@ -44,6 +50,17 @@ function getMasterKey(): string {
 export function setMasterKeyForTests(key: string | undefined): void {
   masterKeyCache = key;
   sessionKeyCache = undefined;
+  secretsKeyCache = undefined;
+}
+
+/** Clave de cifrado de credenciales at-rest (T0.14). Derivada de APP_MASTER_KEY con el
+ *  salt de dominio `'ugc-secrets-v1'` (core/secrets), SEPARADA de la clave de sesión:
+ *  jamás se cifran secretos con la clave que firma cookies. La consume el módulo de
+ *  settings (route handler + seeding). El fail-fast por master key ausente vive en
+ *  `getMasterKey()`, igual que la sesión. */
+export function getSecretsKey(): Buffer {
+  secretsKeyCache ??= deriveSecretsKey(getMasterKey());
+  return secretsKeyCache;
 }
 
 /** Clave de firma de la sesión, derivada de APP_MASTER_KEY con un salt fijo de

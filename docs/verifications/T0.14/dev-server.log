@@ -1,0 +1,40 @@
+
+> ugc-factory@0.0.0 dev /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads
+> pnpm --parallel --filter @ugc/web --filter @ugc/worker dev
+
+Scope: 2 of 6 workspace projects
+apps/web dev$ node scripts/dev.mjs
+apps/worker dev$ tsx watch --env-file-if-exists=../../.env src/main.ts
+apps/web dev: ▲ Next.js 16.2.10 (Turbopack)
+apps/web dev: - Local:         http://localhost:3000
+apps/web dev: - Network:       http://192.168.1.132:3000
+apps/web dev: ✓ Ready in 298ms
+apps/worker dev: {"level":30,"time":1783729119259,"pid":60600,"hostname":"MBP-de-Carlos","name":"worker","intervalMs":5000,"msg":"sweeper de timeouts arrancado"}
+apps/worker dev: {"level":30,"time":1783729119259,"pid":60600,"hostname":"MBP-de-Carlos","name":"worker","queue":"demo.noop","msg":"pg-boss arrancado: colas y consumers listos"}
+apps/worker dev: {"level":30,"time":1783729119259,"pid":60600,"hostname":"MBP-de-Carlos","name":"worker","health":{"ok":true,"db":true},"msg":"worker ready"}
+apps/web dev: {"level":30,"time":1783729119896,"pid":60599,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","msg":"running startup migrations"}
+apps/web dev: {"level":30,"time":1783729120024,"pid":60599,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","msg":"startup migrations applied"}
+apps/web dev: {"level":30,"time":1783729120082,"pid":60599,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","seeded":false,"msg":"auth.password_hash ya existía"}
+apps/web dev: {"level":30,"time":1783729120117,"pid":60599,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","provider":"fal","seeded":false,"msg":"secret.fal ya existía en BD (env ignorada; la BD es la fuente)"}
+apps/web dev: {"level":30,"time":1783729120326,"pid":60599,"hostname":"MBP-de-Carlos","name":"web","request_id":"9446882c-2960-4150-9bd0-700610cdc7ba","route":"/api/health","health":{"ok":true,"db":true},"msg":"health check"}
+apps/web dev:  GET /api/health 200 in 207ms (next.js: 164ms, application-code: 42ms)
+apps/web dev: {"level":30,"time":1783729120371,"pid":60599,"hostname":"MBP-de-Carlos","name":"web","request_id":"51be54bb-4013-46a0-b183-1863eb1c0be2","route":"/api/health","health":{"ok":true,"db":true},"msg":"health check"}
+apps/web dev:  GET /api/health 200 in 20ms (next.js: 1483µs, application-code: 18ms)
+apps/web dev: {"level":30,"time":1783729133686,"pid":60599,"hostname":"MBP-de-Carlos","name":"web","request_id":"2cb89026-8217-4d48-902c-f042be9e1d7f","route":"/api/health","health":{"ok":true,"db":true},"msg":"health check"}
+apps/web dev:  GET /api/health 200 in 16ms (next.js: 3ms, application-code: 13ms)
+apps/web dev:  GET /login 200 in 250ms (next.js: 100ms, application-code: 151ms)
+apps/web dev:  POST /api/login 200 in 119ms (next.js: 29ms, application-code: 90ms)
+apps/web dev:  GET / 200 in 86ms (next.js: 16ms, proxy.ts: 38ms, application-code: 32ms)
+apps/web dev:  GET /api/settings 200 in 88ms (next.js: 26ms, application-code: 62ms)
+apps/web dev:  GET /settings 200 in 310ms (next.js: 46ms, proxy.ts: 5ms, application-code: 260ms)
+apps/web dev:  PATCH /api/settings 200 in 57ms (next.js: 6ms, application-code: 51ms)
+apps/web dev:  GET /api/settings 200 in 32ms (next.js: 3ms, application-code: 29ms)
+apps/web dev:  GET /api/settings 200 in 38ms (next.js: 1688µs, application-code: 37ms)
+apps/web dev:  GET /settings 200 in 105ms (next.js: 6ms, proxy.ts: 6ms, application-code: 93ms)
+apps/web dev:  PATCH /api/settings 200 in 57ms (next.js: 3ms, application-code: 54ms)
+apps/web dev:  GET /api/settings 200 in 26ms (next.js: 1353µs, application-code: 25ms)
+apps/worker dev: {"level":30,"time":1783729490717,"pid":60600,"hostname":"MBP-de-Carlos","name":"worker","signal":"SIGTERM","msg":"worker shutting down"}
+apps/worker dev: {"level":30,"time":1783729490730,"pid":60600,"hostname":"MBP-de-Carlos","name":"worker","msg":"sweeper de timeouts detenido"}
+apps/worker dev: Done
+apps/web dev: [?25h
+apps/web dev: Done

@@ -38,15 +38,17 @@ export async function register(): Promise<void> {
   // Los cuatro módulos son independientes entre sí: se cargan en paralelo para no
   // serializar la resolución en el arranque.
   const [
-    { runMigrations, seedPasswordHashIfAbsent, seedMonthlyBudgetIfAbsent },
+    { runMigrations, seedPasswordHashIfAbsent, seedMonthlyBudgetIfAbsent, seedSecretIfAbsent },
     { getRootLogger },
     { getDb },
-    { hashPassword },
+    { hashPassword, getSecretsKey },
+    { encryptSecret },
   ] = await Promise.all([
     import('@ugc/db'),
     import('@/server/logger'),
     import('@/server/db'),
     import('@/server/session'),
+    import('@ugc/core/secrets'),
   ]);
   const log = getRootLogger().child({ phase: 'startup' });
   // Observable: sin este par de líneas el cableado de arranque es silencioso y un
@@ -97,4 +99,35 @@ export async function register(): Promise<void> {
       );
     }
   }
+
+  // Seeding first-boot de las API keys de proveedor desde env (T0.14, §19.2). Las env
+  // vars son bootstrap OPCIONAL: si `<PROVIDER>_KEY` está presente Y la BD aún no tiene
+  // la key de ese proveedor, se SIEMBRA CIFRADA (AES-256-GCM, clave derivada de
+  // APP_MASTER_KEY). Idempotente: seedSecretIfAbsent JAMÁS sobrescribe una key ya
+  // presente en BD — tras el primer arranque la fuente de verdad es `app_setting`, y
+  // borrar la env NO rompe nada (la key sigue en la BD, editable desde /settings).
+  // Solo `fal` es obligatorio a efectos de la Verificación (env FAL_KEY); anthropic y
+  // firecrawl leen su env si está presente pero no es requisito (T1.7/T1.4).
+  const providerEnvKeys: { provider: string; env: string | undefined }[] = [
+    { provider: 'fal', env: process.env.FAL_KEY },
+    { provider: 'anthropic', env: process.env.ANTHROPIC_API_KEY },
+    { provider: 'firecrawl', env: process.env.FIRECRAWL_API_KEY },
+  ];
+  // Seeds independientes (inserts ON CONFLICT DO NOTHING sobre el pool client) → en paralelo.
+  await Promise.all(
+    providerEnvKeys.map(async ({ provider, env }) => {
+      if (!env) return; // sin env no hay bootstrap para ese proveedor (silencioso: es opcional)
+      const seeded = await seedSecretIfAbsent(
+        getDb(),
+        provider,
+        encryptSecret(env, getSecretsKey()),
+      );
+      log.info(
+        { provider, seeded },
+        seeded
+          ? `secret.${provider} sembrado cifrado desde env (first boot)`
+          : `secret.${provider} ya existía en BD (env ignorada; la BD es la fuente)`,
+      );
+    }),
+  );
 }

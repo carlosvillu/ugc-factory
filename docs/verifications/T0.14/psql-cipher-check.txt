@@ -1,0 +1,18 @@
+=== 1. secret.% values: must be {v,iv,tag,ct} jsonb, no plaintext ===
+    key     |                                                            value                                                            
+------------+-----------------------------------------------------------------------------------------------------------------------------
+ secret.fal | {"v": 1, "ct": "e94b19f4cf8cfccbb7da6f810849", "iv": "5fbc76525d76c486cd30ba8f", "tag": "7ece923b4eb3429a92b9a1301a0c289d"}
+(1 row)
+
+
+=== 2. needle 'CLICK-5566' anywhere in app_setting (whole row as text)? expect 0 rows ===
+ key 
+-----
+(0 rows)
+
+
+=== 3. broad: any 'fal-' plaintext prefix anywhere in the table? expect 0 ===
+ key | value 
+-----+-------
+(0 rows)
+

@@ -1,0 +1,15 @@
+WCAG contrast: text-on-accent over bg-accent (segmented-active button + primary "Guardar ajustes")
+Threshold AA: 4.5:1 normal text. Measured with getComputedStyle color+background, live DOM.
+
+theme  accent   fg(text)          bg(accent)        ratio   AA(4.5)
+dark   indigo   rgb(255,255,255)  rgb(84,87,229)    5.42    PASS
+dark   emerald  rgb(10,10,11)     rgb(16,185,129)   7.80    PASS
+dark   amber    rgb(10,10,11)     rgb(245,158,11)   9.21    PASS
+dark   cyan     rgb(10,10,11)     rgb(6,182,212)    8.15    PASS
+light  indigo   rgb(255,255,255)  rgb(84,87,229)    5.42    PASS
+light  emerald  rgb(10,10,11)     rgb(16,185,129)   7.80    PASS
+light  amber    rgb(10,10,11)     rgb(245,158,11)   9.21    PASS
+light  cyan     rgb(10,10,11)     rgb(6,182,212)    8.15    PASS
+
+All accents pass AA. text-on-accent = white on indigo, near-black on emerald/amber/cyan.
+(TD.7 regression — white-on-emerald/amber/cyan at 2.1-2.5:1 — is NOT present; DS fix confirmed.)

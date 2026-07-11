@@ -1,0 +1,31 @@
+
+> ugc-factory@0.0.0 dev /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads
+> pnpm --parallel --filter @ugc/web --filter @ugc/worker dev
+
+Scope: 2 of 6 workspace projects
+apps/worker dev$ tsx watch --env-file-if-exists=../../.env src/main.ts
+apps/web dev$ node scripts/dev.mjs
+apps/web dev: ▲ Next.js 16.2.10 (Turbopack)
+apps/web dev: - Local:         http://localhost:3000
+apps/web dev: - Network:       http://192.168.1.132:3000
+apps/web dev: ✓ Ready in 304ms
+apps/worker dev: {"level":30,"time":1783729879709,"pid":74697,"hostname":"MBP-de-Carlos","name":"worker","intervalMs":5000,"msg":"sweeper de timeouts arrancado"}
+apps/worker dev: {"level":30,"time":1783729879709,"pid":74697,"hostname":"MBP-de-Carlos","name":"worker","queue":"demo.noop","msg":"pg-boss arrancado: colas y consumers listos"}
+apps/worker dev: {"level":30,"time":1783729879709,"pid":74697,"hostname":"MBP-de-Carlos","name":"worker","health":{"ok":true,"db":true},"msg":"worker ready"}
+apps/web dev: {"level":30,"time":1783729880055,"pid":74696,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","msg":"running startup migrations"}
+apps/web dev: {"level":30,"time":1783729880120,"pid":74696,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","msg":"startup migrations applied"}
+apps/web dev: {"level":30,"time":1783729880164,"pid":74696,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","seeded":false,"msg":"auth.password_hash ya existía"}
+apps/web dev: {"level":30,"time":1783729880396,"pid":74696,"hostname":"MBP-de-Carlos","name":"web","request_id":"271c1f22-c89a-4038-9d29-9063c3d1805f","route":"/api/health","health":{"ok":true,"db":true},"msg":"health check"}
+apps/web dev:  GET /api/health 200 in 224ms (next.js: 189ms, application-code: 34ms)
+apps/web dev: {"level":30,"time":1783729880454,"pid":74696,"hostname":"MBP-de-Carlos","name":"web","request_id":"c1a99438-866b-48c2-9911-164d565598f8","route":"/api/health","health":{"ok":true,"db":true},"msg":"health check"}
+apps/web dev:  GET /api/health 200 in 24ms (next.js: 1846µs, application-code: 23ms)
+apps/web dev:  GET /api/settings 200 in 124ms (next.js: 19ms, application-code: 104ms)
+apps/web dev:  GET /settings 200 in 532ms (next.js: 89ms, proxy.ts: 53ms, application-code: 391ms)
+apps/web dev:  POST /api/login 200 in 79ms (next.js: 25ms, application-code: 54ms)
+apps/web dev:  GET /api/settings 200 in 31ms (next.js: 1746µs, application-code: 29ms)
+apps/web dev:  GET /api/settings 200 in 29ms (next.js: 1465µs, application-code: 27ms)
+apps/web dev:  GET /settings 200 in 79ms (next.js: 3ms, proxy.ts: 4ms, application-code: 72ms)
+apps/web dev:  GET /api/settings 200 in 32ms (next.js: 2ms, application-code: 30ms)
+apps/web dev:  GET /settings 200 in 86ms (next.js: 5ms, proxy.ts: 4ms, application-code: 77ms)
+apps/web dev:  GET /api/settings 200 in 34ms (next.js: 1303µs, application-code: 32ms)
+apps/web dev:  GET /settings 200 in 83ms (next.js: 5ms, proxy.ts: 3ms, application-code: 75ms)

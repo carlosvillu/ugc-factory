@@ -74,3 +74,22 @@ export {
   type VisualBrandStyle,
   type RenderedSocialProof,
 } from './visual-analysis';
+// Settings `GET/PATCH /api/settings` (T0.14): shape enmascarado de lectura + payload
+// write-only de escritura de credenciales, y las preferencias (idiomas/preset/umbrales).
+// La apariencia (tema/acento/densidad) NO está aquí: persiste en cookie, no en BD.
+export {
+  SettingsViewSchema,
+  SettingsPatchSchema,
+  MaskedSecretSchema,
+  SettingsPreferencesSchema,
+  ExperimentThresholdsSchema,
+  SecretProviderSchema,
+  SECRET_PROVIDERS,
+  DEFAULT_SETTINGS_PREFERENCES,
+  type SettingsView,
+  type SettingsPatch,
+  type MaskedSecret,
+  type SettingsPreferences,
+  type ExperimentThresholds,
+  type SecretProvider,
+} from './settings';

@@ -9,7 +9,7 @@ export { withRoute } from './with-route';
 // que NO pasa por withRoute (body multipart, no JSON) y construye su try/catch.
 export { toErrorResponse } from './errors';
 export { getRequestLogger } from './request-context';
-export { createSessionCookie, verifyPassword } from './session';
+export { createSessionCookie, verifyPassword, getSecretsKey } from './session';
 export { assertNotRateLimited, recordFailure, clearAttempts, clientIp } from './rate-limit';
 export { getDb } from './db';
 export { getBoss } from './boss';

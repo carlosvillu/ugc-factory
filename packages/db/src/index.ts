@@ -58,6 +58,17 @@ export { findRun, updateRunAutopilot } from './repos/runs.repo';
 // Auth single-user (T0.4): lectura/seed idempotente del hash de password en
 // `app_setting`. Los consume web (route de login + seeding en instrumentation).
 export { getPasswordHash, seedPasswordHashIfAbsent } from './repos/auth.repo';
+// Settings (T0.14): repo genérico de `app_setting` para credenciales cifradas (blobs
+// producidos por core/secrets en web) y preferencias. Los consume web (route
+// GET/PATCH /api/settings + seeding de FAL_KEY en instrumentation). db no conoce el
+// cifrado: solo persiste jsonb por clave.
+export {
+  getSecretBlob,
+  setSecretBlob,
+  seedSecretIfAbsent,
+  getPreferences,
+  setPreferences,
+} from './repos/settings.repo';
 // Storage local (T0.5): implementación filesystem del puerto StorageAdapter de
 // core. La cablean el accessor lazy de web (getStorage) y el bootstrap del worker.
 // `LocalStorageOptions` no sale al barrel: los callers pasan `{ root }` inline

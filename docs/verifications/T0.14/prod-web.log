@@ -1,0 +1,372 @@
+
+> @ugc/web@0.0.0 start /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/web
+> next start
+
+▲ Next.js 16.2.10
+- Local:         http://localhost:3000
+- Network:       http://192.168.1.132:3000
+✓ Ready in 107ms
+{"level":30,"time":1783728966938,"pid":57579,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","msg":"running startup migrations"}
+Failed to prepare server TypeError: An error occurred while loading instrumentation hook: The "path" argument must be of type string. Received type number (87600)
+    at u (.next/server/chunks/_13k9d2k._.js:69:76568)
+    at async Module.s [as register] (.next/server/chunks/_0-c1i5e._.js:1:592) {
+  code: 'ERR_INVALID_ARG_TYPE'
+}
+TypeError: An error occurred while loading instrumentation hook: The "path" argument must be of type string. Received type number (87600)
+    at u (.next/server/chunks/_13k9d2k._.js:69:76568)
+    at async Module.s [as register] (.next/server/chunks/_0-c1i5e._.js:1:592) {
+  code: 'ERR_INVALID_ARG_TYPE'
+}
+⨯ unhandledRejection:  TypeError: An error occurred while loading instrumentation hook: The "path" argument must be of type string. Received type number (87600)
+    at u (.next/server/chunks/_13k9d2k._.js:69:76568)
+    at async Module.s [as register] (.next/server/chunks/_0-c1i5e._.js:1:592) {
+  code: 'ERR_INVALID_ARG_TYPE'
+}
+Failed to prepare server TypeError: An error occurred while loading instrumentation hook: The "path" argument must be of type string. Received type number (87600)
+    at u (.next/server/chunks/_13k9d2k._.js:69:76568)
+    at async Module.s [as register] (.next/server/chunks/_0-c1i5e._.js:1:592) {
+  code: 'ERR_INVALID_ARG_TYPE'
+}
+Error handling upgrade request TypeError: An error occurred while loading instrumentation hook: The "path" argument must be of type string. Received type number (87600)
+    at u (.next/server/chunks/_13k9d2k._.js:69:76568)
+    at async Module.s [as register] (.next/server/chunks/_0-c1i5e._.js:1:592) {
+  code: 'ERR_INVALID_ARG_TYPE'
+}
+TypeError: An error occurred while loading instrumentation hook: The "path" argument must be of type string. Received type number (87600)
+    at u (.next/server/chunks/_13k9d2k._.js:69:76568)
+    at async Module.s [as register] (.next/server/chunks/_0-c1i5e._.js:1:592) {
+  code: 'ERR_INVALID_ARG_TYPE'
+}
+TypeError: An error occurred while loading instrumentation hook: The "path" argument must be of type string. Received type number (87600)
+    at u (.next/server/chunks/_13k9d2k._.js:69:76568)
+    at async Module.s [as register] (.next/server/chunks/_0-c1i5e._.js:1:592) {
+  code: 'ERR_INVALID_ARG_TYPE'
+}
+Error handling upgrade request TypeError: An error occurred while loading instrumentation hook: The "path" argument must be of type string. Received type number (87600)
+    at u (.next/server/chunks/_13k9d2k._.js:69:76568)
+    at async Module.s [as register] (.next/server/chunks/_0-c1i5e._.js:1:592) {
+  code: 'ERR_INVALID_ARG_TYPE'
+}
+TypeError: An error occurred while loading instrumentation hook: The "path" argument must be of type string. Received type number (87600)
+    at u (.next/server/chunks/_13k9d2k._.js:69:76568)
+    at async Module.s [as register] (.next/server/chunks/_0-c1i5e._.js:1:592) {
+  code: 'ERR_INVALID_ARG_TYPE'
+}
+TypeError: An error occurred while loading instrumentation hook: The "path" argument must be of type string. Received type number (87600)
+    at u (.next/server/chunks/_13k9d2k._.js:69:76568)
+    at async Module.s [as register] (.next/server/chunks/_0-c1i5e._.js:1:592) {
+  code: 'ERR_INVALID_ARG_TYPE'
+}
+TypeError: An error occurred while loading instrumentation hook: The "path" argument must be of type string. Received type number (87600)
+    at u (.next/server/chunks/_13k9d2k._.js:69:76568)
+    at async Module.s [as register] (.next/server/chunks/_0-c1i5e._.js:1:592) {
+  code: 'ERR_INVALID_ARG_TYPE'
+}
+TypeError: An error occurred while loading instrumentation hook: The "path" argument must be of type string. Received type number (87600)
+    at u (.next/server/chunks/_13k9d2k._.js:69:76568)
+    at async Module.s [as register] (.next/server/chunks/_0-c1i5e._.js:1:592) {
+  code: 'ERR_INVALID_ARG_TYPE'
+}
+TypeError: An error occurred while loading instrumentation hook: The "path" argument must be of type string. Received type number (87600)
+    at u (.next/server/chunks/_13k9d2k._.js:69:76568)
+    at async Module.s [as register] (.next/server/chunks/_0-c1i5e._.js:1:592) {
+  code: 'ERR_INVALID_ARG_TYPE'
+}
+TypeError: An error occurred while loading instrumentation hook: The "path" argument must be of type string. Received type number (87600)
+    at u (.next/server/chunks/_13k9d2k._.js:69:76568)
+    at async Module.s [as register] (.next/server/chunks/_0-c1i5e._.js:1:592) {
+  code: 'ERR_INVALID_ARG_TYPE'
+}
+TypeError: An error occurred while loading instrumentation hook: The "path" argument must be of type string. Received type number (87600)
+    at u (.next/server/chunks/_13k9d2k._.js:69:76568)
+    at async Module.s [as register] (.next/server/chunks/_0-c1i5e._.js:1:592) {
+  code: 'ERR_INVALID_ARG_TYPE'
+}
+TypeError: An error occurred while loading instrumentation hook: The "path" argument must be of type string. Received type number (87600)
+    at u (.next/server/chunks/_13k9d2k._.js:69:76568)
+    at async Module.s [as register] (.next/server/chunks/_0-c1i5e._.js:1:592) {
+  code: 'ERR_INVALID_ARG_TYPE'
+}
+TypeError: An error occurred while loading instrumentation hook: The "path" argument must be of type string. Received type number (87600)
+    at u (.next/server/chunks/_13k9d2k._.js:69:76568)
+    at async Module.s [as register] (.next/server/chunks/_0-c1i5e._.js:1:592) {
+  code: 'ERR_INVALID_ARG_TYPE'
+}
+TypeError: An error occurred while loading instrumentation hook: The "path" argument must be of type string. Received type number (87600)
+    at u (.next/server/chunks/_13k9d2k._.js:69:76568)
+    at async Module.s [as register] (.next/server/chunks/_0-c1i5e._.js:1:592) {
+  code: 'ERR_INVALID_ARG_TYPE'
+}
+Error handling upgrade request TypeError: An error occurred while loading instrumentation hook: The "path" argument must be of type string. Received type number (87600)
+    at u (.next/server/chunks/_13k9d2k._.js:69:76568)
+    at async Module.s [as register] (.next/server/chunks/_0-c1i5e._.js:1:592) {
+  code: 'ERR_INVALID_ARG_TYPE'
+}
+TypeError: An error occurred while loading instrumentation hook: The "path" argument must be of type string. Received type number (87600)
+    at u (.next/server/chunks/_13k9d2k._.js:69:76568)
+    at async Module.s [as register] (.next/server/chunks/_0-c1i5e._.js:1:592) {
+  code: 'ERR_INVALID_ARG_TYPE'
+}
+TypeError: An error occurred while loading instrumentation hook: The "path" argument must be of type string. Received type number (87600)
+    at u (.next/server/chunks/_13k9d2k._.js:69:76568)
+    at async Module.s [as register] (.next/server/chunks/_0-c1i5e._.js:1:592) {
+  code: 'ERR_INVALID_ARG_TYPE'
+}
+TypeError: An error occurred while loading instrumentation hook: The "path" argument must be of type string. Received type number (87600)
+    at u (.next/server/chunks/_13k9d2k._.js:69:76568)
+    at async Module.s [as register] (.next/server/chunks/_0-c1i5e._.js:1:592) {
+  code: 'ERR_INVALID_ARG_TYPE'
+}
+TypeError: An error occurred while loading instrumentation hook: The "path" argument must be of type string. Received type number (87600)
+    at u (.next/server/chunks/_13k9d2k._.js:69:76568)
+    at async Module.s [as register] (.next/server/chunks/_0-c1i5e._.js:1:592) {
+  code: 'ERR_INVALID_ARG_TYPE'
+}
+TypeError: An error occurred while loading instrumentation hook: The "path" argument must be of type string. Received type number (87600)
+    at u (.next/server/chunks/_13k9d2k._.js:69:76568)
+    at async Module.s [as register] (.next/server/chunks/_0-c1i5e._.js:1:592) {
+  code: 'ERR_INVALID_ARG_TYPE'
+}
+TypeError: An error occurred while loading instrumentation hook: The "path" argument must be of type string. Received type number (87600)
+    at u (.next/server/chunks/_13k9d2k._.js:69:76568)
+    at async Module.s [as register] (.next/server/chunks/_0-c1i5e._.js:1:592) {
+  code: 'ERR_INVALID_ARG_TYPE'
+}
+TypeError: An error occurred while loading instrumentation hook: The "path" argument must be of type string. Received type number (87600)
+    at u (.next/server/chunks/_13k9d2k._.js:69:76568)
+    at async Module.s [as register] (.next/server/chunks/_0-c1i5e._.js:1:592) {
+  code: 'ERR_INVALID_ARG_TYPE'
+}
+TypeError: An error occurred while loading instrumentation hook: The "path" argument must be of type string. Received type number (87600)
+    at u (.next/server/chunks/_13k9d2k._.js:69:76568)
+    at async Module.s [as register] (.next/server/chunks/_0-c1i5e._.js:1:592) {
+  code: 'ERR_INVALID_ARG_TYPE'
+}
+TypeError: An error occurred while loading instrumentation hook: The "path" argument must be of type string. Received type number (87600)
+    at u (.next/server/chunks/_13k9d2k._.js:69:76568)
+    at async Module.s [as register] (.next/server/chunks/_0-c1i5e._.js:1:592) {
+  code: 'ERR_INVALID_ARG_TYPE'
+}
+TypeError: An error occurred while loading instrumentation hook: The "path" argument must be of type string. Received type number (87600)
+    at u (.next/server/chunks/_13k9d2k._.js:69:76568)
+    at async Module.s [as register] (.next/server/chunks/_0-c1i5e._.js:1:592) {
+  code: 'ERR_INVALID_ARG_TYPE'
+}
+Error handling upgrade request TypeError: An error occurred while loading instrumentation hook: The "path" argument must be of type string. Received type number (87600)
+    at u (.next/server/chunks/_13k9d2k._.js:69:76568)
+    at async Module.s [as register] (.next/server/chunks/_0-c1i5e._.js:1:592) {
+  code: 'ERR_INVALID_ARG_TYPE'
+}
+TypeError: An error occurred while loading instrumentation hook: The "path" argument must be of type string. Received type number (87600)
+    at u (.next/server/chunks/_13k9d2k._.js:69:76568)
+    at async Module.s [as register] (.next/server/chunks/_0-c1i5e._.js:1:592) {
+  code: 'ERR_INVALID_ARG_TYPE'
+}
+TypeError: An error occurred while loading instrumentation hook: The "path" argument must be of type string. Received type number (87600)
+    at u (.next/server/chunks/_13k9d2k._.js:69:76568)
+    at async Module.s [as register] (.next/server/chunks/_0-c1i5e._.js:1:592) {
+  code: 'ERR_INVALID_ARG_TYPE'
+}
+TypeError: An error occurred while loading instrumentation hook: The "path" argument must be of type string. Received type number (87600)
+    at u (.next/server/chunks/_13k9d2k._.js:69:76568)
+    at async Module.s [as register] (.next/server/chunks/_0-c1i5e._.js:1:592) {
+  code: 'ERR_INVALID_ARG_TYPE'
+}
+TypeError: An error occurred while loading instrumentation hook: The "path" argument must be of type string. Received type number (87600)
+    at u (.next/server/chunks/_13k9d2k._.js:69:76568)
+    at async Module.s [as register] (.next/server/chunks/_0-c1i5e._.js:1:592) {
+  code: 'ERR_INVALID_ARG_TYPE'
+}
+TypeError: An error occurred while loading instrumentation hook: The "path" argument must be of type string. Received type number (87600)
+    at u (.next/server/chunks/_13k9d2k._.js:69:76568)
+    at async Module.s [as register] (.next/server/chunks/_0-c1i5e._.js:1:592) {
+  code: 'ERR_INVALID_ARG_TYPE'
+}
+TypeError: An error occurred while loading instrumentation hook: The "path" argument must be of type string. Received type number (87600)
+    at u (.next/server/chunks/_13k9d2k._.js:69:76568)
+    at async Module.s [as register] (.next/server/chunks/_0-c1i5e._.js:1:592) {
+  code: 'ERR_INVALID_ARG_TYPE'
+}
+TypeError: An error occurred while loading instrumentation hook: The "path" argument must be of type string. Received type number (87600)
+    at u (.next/server/chunks/_13k9d2k._.js:69:76568)
+    at async Module.s [as register] (.next/server/chunks/_0-c1i5e._.js:1:592) {
+  code: 'ERR_INVALID_ARG_TYPE'
+}
+TypeError: An error occurred while loading instrumentation hook: The "path" argument must be of type string. Received type number (87600)
+    at u (.next/server/chunks/_13k9d2k._.js:69:76568)
+    at async Module.s [as register] (.next/server/chunks/_0-c1i5e._.js:1:592) {
+  code: 'ERR_INVALID_ARG_TYPE'
+}
+TypeError: An error occurred while loading instrumentation hook: The "path" argument must be of type string. Received type number (87600)
+    at u (.next/server/chunks/_13k9d2k._.js:69:76568)
+    at async Module.s [as register] (.next/server/chunks/_0-c1i5e._.js:1:592) {
+  code: 'ERR_INVALID_ARG_TYPE'
+}
+TypeError: An error occurred while loading instrumentation hook: The "path" argument must be of type string. Received type number (87600)
+    at u (.next/server/chunks/_13k9d2k._.js:69:76568)
+    at async Module.s [as register] (.next/server/chunks/_0-c1i5e._.js:1:592) {
+  code: 'ERR_INVALID_ARG_TYPE'
+}
+TypeError: An error occurred while loading instrumentation hook: The "path" argument must be of type string. Received type number (87600)
+    at u (.next/server/chunks/_13k9d2k._.js:69:76568)
+    at async Module.s [as register] (.next/server/chunks/_0-c1i5e._.js:1:592) {
+  code: 'ERR_INVALID_ARG_TYPE'
+}
+TypeError: An error occurred while loading instrumentation hook: The "path" argument must be of type string. Received type number (87600)
+    at u (.next/server/chunks/_13k9d2k._.js:69:76568)
+    at async Module.s [as register] (.next/server/chunks/_0-c1i5e._.js:1:592) {
+  code: 'ERR_INVALID_ARG_TYPE'
+}
+TypeError: An error occurred while loading instrumentation hook: The "path" argument must be of type string. Received type number (87600)
+    at u (.next/server/chunks/_13k9d2k._.js:69:76568)
+    at async Module.s [as register] (.next/server/chunks/_0-c1i5e._.js:1:592) {
+  code: 'ERR_INVALID_ARG_TYPE'
+}
+TypeError: An error occurred while loading instrumentation hook: The "path" argument must be of type string. Received type number (87600)
+    at u (.next/server/chunks/_13k9d2k._.js:69:76568)
+    at async Module.s [as register] (.next/server/chunks/_0-c1i5e._.js:1:592) {
+  code: 'ERR_INVALID_ARG_TYPE'
+}
+TypeError: An error occurred while loading instrumentation hook: The "path" argument must be of type string. Received type number (87600)
+    at u (.next/server/chunks/_13k9d2k._.js:69:76568)
+    at async Module.s [as register] (.next/server/chunks/_0-c1i5e._.js:1:592) {
+  code: 'ERR_INVALID_ARG_TYPE'
+}
+TypeError: An error occurred while loading instrumentation hook: The "path" argument must be of type string. Received type number (87600)
+    at u (.next/server/chunks/_13k9d2k._.js:69:76568)
+    at async Module.s [as register] (.next/server/chunks/_0-c1i5e._.js:1:592) {
+  code: 'ERR_INVALID_ARG_TYPE'
+}
+TypeError: An error occurred while loading instrumentation hook: The "path" argument must be of type string. Received type number (87600)
+    at u (.next/server/chunks/_13k9d2k._.js:69:76568)
+    at async Module.s [as register] (.next/server/chunks/_0-c1i5e._.js:1:592) {
+  code: 'ERR_INVALID_ARG_TYPE'
+}
+TypeError: An error occurred while loading instrumentation hook: The "path" argument must be of type string. Received type number (87600)
+    at u (.next/server/chunks/_13k9d2k._.js:69:76568)
+    at async Module.s [as register] (.next/server/chunks/_0-c1i5e._.js:1:592) {
+  code: 'ERR_INVALID_ARG_TYPE'
+}
+TypeError: An error occurred while loading instrumentation hook: The "path" argument must be of type string. Received type number (87600)
+    at u (.next/server/chunks/_13k9d2k._.js:69:76568)
+    at async Module.s [as register] (.next/server/chunks/_0-c1i5e._.js:1:592) {
+  code: 'ERR_INVALID_ARG_TYPE'
+}
+TypeError: An error occurred while loading instrumentation hook: The "path" argument must be of type string. Received type number (87600)
+    at u (.next/server/chunks/_13k9d2k._.js:69:76568)
+    at async Module.s [as register] (.next/server/chunks/_0-c1i5e._.js:1:592) {
+  code: 'ERR_INVALID_ARG_TYPE'
+}
+TypeError: An error occurred while loading instrumentation hook: The "path" argument must be of type string. Received type number (87600)
+    at u (.next/server/chunks/_13k9d2k._.js:69:76568)
+    at async Module.s [as register] (.next/server/chunks/_0-c1i5e._.js:1:592) {
+  code: 'ERR_INVALID_ARG_TYPE'
+}
+TypeError: An error occurred while loading instrumentation hook: The "path" argument must be of type string. Received type number (87600)
+    at u (.next/server/chunks/_13k9d2k._.js:69:76568)
+    at async Module.s [as register] (.next/server/chunks/_0-c1i5e._.js:1:592) {
+  code: 'ERR_INVALID_ARG_TYPE'
+}
+TypeError: An error occurred while loading instrumentation hook: The "path" argument must be of type string. Received type number (87600)
+    at u (.next/server/chunks/_13k9d2k._.js:69:76568)
+    at async Module.s [as register] (.next/server/chunks/_0-c1i5e._.js:1:592) {
+  code: 'ERR_INVALID_ARG_TYPE'
+}
+TypeError: An error occurred while loading instrumentation hook: The "path" argument must be of type string. Received type number (87600)
+    at u (.next/server/chunks/_13k9d2k._.js:69:76568)
+    at async Module.s [as register] (.next/server/chunks/_0-c1i5e._.js:1:592) {
+  code: 'ERR_INVALID_ARG_TYPE'
+}
+TypeError: An error occurred while loading instrumentation hook: The "path" argument must be of type string. Received type number (87600)
+    at u (.next/server/chunks/_13k9d2k._.js:69:76568)
+    at async Module.s [as register] (.next/server/chunks/_0-c1i5e._.js:1:592) {
+  code: 'ERR_INVALID_ARG_TYPE'
+}
+TypeError: An error occurred while loading instrumentation hook: The "path" argument must be of type string. Received type number (87600)
+    at u (.next/server/chunks/_13k9d2k._.js:69:76568)
+    at async Module.s [as register] (.next/server/chunks/_0-c1i5e._.js:1:592) {
+  code: 'ERR_INVALID_ARG_TYPE'
+}
+TypeError: An error occurred while loading instrumentation hook: The "path" argument must be of type string. Received type number (87600)
+    at u (.next/server/chunks/_13k9d2k._.js:69:76568)
+    at async Module.s [as register] (.next/server/chunks/_0-c1i5e._.js:1:592) {
+  code: 'ERR_INVALID_ARG_TYPE'
+}
+TypeError: An error occurred while loading instrumentation hook: The "path" argument must be of type string. Received type number (87600)
+    at u (.next/server/chunks/_13k9d2k._.js:69:76568)
+    at async Module.s [as register] (.next/server/chunks/_0-c1i5e._.js:1:592) {
+  code: 'ERR_INVALID_ARG_TYPE'
+}
+TypeError: An error occurred while loading instrumentation hook: The "path" argument must be of type string. Received type number (87600)
+    at u (.next/server/chunks/_13k9d2k._.js:69:76568)
+    at async Module.s [as register] (.next/server/chunks/_0-c1i5e._.js:1:592) {
+  code: 'ERR_INVALID_ARG_TYPE'
+}
+TypeError: An error occurred while loading instrumentation hook: The "path" argument must be of type string. Received type number (87600)
+    at u (.next/server/chunks/_13k9d2k._.js:69:76568)
+    at async Module.s [as register] (.next/server/chunks/_0-c1i5e._.js:1:592) {
+  code: 'ERR_INVALID_ARG_TYPE'
+}
+TypeError: An error occurred while loading instrumentation hook: The "path" argument must be of type string. Received type number (87600)
+    at u (.next/server/chunks/_13k9d2k._.js:69:76568)
+    at async Module.s [as register] (.next/server/chunks/_0-c1i5e._.js:1:592) {
+  code: 'ERR_INVALID_ARG_TYPE'
+}
+TypeError: An error occurred while loading instrumentation hook: The "path" argument must be of type string. Received type number (87600)
+    at u (.next/server/chunks/_13k9d2k._.js:69:76568)
+    at async Module.s [as register] (.next/server/chunks/_0-c1i5e._.js:1:592) {
+  code: 'ERR_INVALID_ARG_TYPE'
+}
+TypeError: An error occurred while loading instrumentation hook: The "path" argument must be of type string. Received type number (87600)
+    at u (.next/server/chunks/_13k9d2k._.js:69:76568)
+    at async Module.s [as register] (.next/server/chunks/_0-c1i5e._.js:1:592) {
+  code: 'ERR_INVALID_ARG_TYPE'
+}
+TypeError: An error occurred while loading instrumentation hook: The "path" argument must be of type string. Received type number (87600)
+    at u (.next/server/chunks/_13k9d2k._.js:69:76568)
+    at async Module.s [as register] (.next/server/chunks/_0-c1i5e._.js:1:592) {
+  code: 'ERR_INVALID_ARG_TYPE'
+}
+TypeError: An error occurred while loading instrumentation hook: The "path" argument must be of type string. Received type number (87600)
+    at u (.next/server/chunks/_13k9d2k._.js:69:76568)
+    at async Module.s [as register] (.next/server/chunks/_0-c1i5e._.js:1:592) {
+  code: 'ERR_INVALID_ARG_TYPE'
+}
+TypeError: An error occurred while loading instrumentation hook: The "path" argument must be of type string. Received type number (87600)
+    at u (.next/server/chunks/_13k9d2k._.js:69:76568)
+    at async Module.s [as register] (.next/server/chunks/_0-c1i5e._.js:1:592) {
+  code: 'ERR_INVALID_ARG_TYPE'
+}
+TypeError: An error occurred while loading instrumentation hook: The "path" argument must be of type string. Received type number (87600)
+    at u (.next/server/chunks/_13k9d2k._.js:69:76568)
+    at async Module.s [as register] (.next/server/chunks/_0-c1i5e._.js:1:592) {
+  code: 'ERR_INVALID_ARG_TYPE'
+}
+TypeError: An error occurred while loading instrumentation hook: The "path" argument must be of type string. Received type number (87600)
+    at u (.next/server/chunks/_13k9d2k._.js:69:76568)
+    at async Module.s [as register] (.next/server/chunks/_0-c1i5e._.js:1:592) {
+  code: 'ERR_INVALID_ARG_TYPE'
+}
+TypeError: An error occurred while loading instrumentation hook: The "path" argument must be of type string. Received type number (87600)
+    at u (.next/server/chunks/_13k9d2k._.js:69:76568)
+    at async Module.s [as register] (.next/server/chunks/_0-c1i5e._.js:1:592) {
+  code: 'ERR_INVALID_ARG_TYPE'
+}
+TypeError: An error occurred while loading instrumentation hook: The "path" argument must be of type string. Received type number (87600)
+    at u (.next/server/chunks/_13k9d2k._.js:69:76568)
+    at async Module.s [as register] (.next/server/chunks/_0-c1i5e._.js:1:592) {
+  code: 'ERR_INVALID_ARG_TYPE'
+}
+TypeError: An error occurred while loading instrumentation hook: The "path" argument must be of type string. Received type number (87600)
+    at u (.next/server/chunks/_13k9d2k._.js:69:76568)
+    at async Module.s [as register] (.next/server/chunks/_0-c1i5e._.js:1:592) {
+  code: 'ERR_INVALID_ARG_TYPE'
+}
+TypeError: An error occurred while loading instrumentation hook: The "path" argument must be of type string. Received type number (87600)
+    at u (.next/server/chunks/_13k9d2k._.js:69:76568)
+    at async Module.s [as register] (.next/server/chunks/_0-c1i5e._.js:1:592) {
+  code: 'ERR_INVALID_ARG_TYPE'
+}
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/web:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @ugc/web@0.0.0 start: `next start`
+Exit status 143

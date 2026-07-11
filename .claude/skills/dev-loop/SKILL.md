@@ -43,13 +43,13 @@ Lanza el subagente **`implementer`** (uno NUEVO por tarea, `run_in_background: f
 ### 4 · GATE LOCAL
 Desde la raíz: `pnpm gate` (= lint + typecheck + format:check + knip + test unit+integration; lo crea T0.1) y `pnpm test:e2e` si la tarea tocó superficie web. En rojo → devuelve el fallo al implementer vía SendMessage (mantiene su contexto). Sin CI remota, **este es el gate de merge** (decisión 2026-07-07).
 
-### 5 · REVIEW (dos pases obligatorios: `code-review` → `simplify`)
+### 5 · REVIEW (pases obligatorios: `code-review` → `simplify` → `ds-reviewer` si hubo web)
 
-**Solo si la tarea produjo diff de CÓDIGO.** En tareas de solo-docs/skill (sin superficie de runtime que revisar) se saltan ambos pases — espeja la condicionalidad de `test:e2e`. La edición del propio arnés y el trabajo de mockups son ejemplos que se saltan.
+**Solo si la tarea produjo diff de CÓDIGO.** En tareas de solo-docs/skill (sin superficie de runtime que revisar) se saltan todos los pases — espeja la condicionalidad de `test:e2e`. La edición del propio arnés y el trabajo de mockups son ejemplos que se saltan.
 
-Ambos pases MUTAN código (`simplify` auto-aplica; los fixes de `code-review` mutan), así que corren **antes de VERIFY y antes del commit**: el invariante duro es que *lo que VERIFY bendice == lo que se commitea*. Un `simplify` después de un PASS invalidaría la verificación en silencio. Secuencia:
+Los pases MUTAN código (`simplify` auto-aplica; los fixes de `code-review` y de `ds-reviewer` mutan), así que corren **antes de VERIFY y antes del commit**: el invariante duro es que *lo que VERIFY bendice == lo que se commitea*. Un pase que mute después de un PASS invalidaría la verificación en silencio. Secuencia:
 
-`Gate verde (4) → code-review → fix correctness → re-gate → simplify → re-gate (inspeccionar diff) → VERIFY (6)`
+`Gate verde (4) → code-review → fix correctness → re-gate → simplify → re-gate (inspeccionar diff) → [ds-reviewer si hubo web → fix 1:1 → re-gate] → VERIFY (6)`
 
 **Cada comando se ejecuta UNA vez por cierre**, no a punto fijo: nada de bucle code-review↔simplify. Si un pase abre trabajo grande, es una decisión consciente, no una iteración automática.
 
@@ -59,7 +59,12 @@ Ambos pases MUTAN código (`simplify` auto-aplica; los fixes de `code-review` mu
 - **Re-gate tras `simplify` es no negociable, e INSPECCIONA su diff — no lo aceptes a ciegas.** El gate tiene huecos conocidos (no corre `build` — así se coló el bug del bundle del worker en T0.2) y el código tiene mecanismos load-bearing no obvios (p.ej. los 3 timeouts distintos del ping, `pingDb` standalone) que un pase de "calidad" puede fundir en un bug. Rechaza cualquier cambio de `simplify` que toque un mecanismo documentado como load-bearing.
 - Un cambio de `simplify` que ponga el gate en rojo se revierte o se arregla hacia delante — JAMÁS se acomoda debilitando un test (regla 5).
 
-Nota sobre la naturaleza de cada pase (para no dar forma equivocada a la regla): un hallazgo de reuso/simplificación lo absorbe `simplify`; un bug de robustez (p.ej. una fuga de conexión en una ruta de error) lo caza `code-review` y NO desaparece por pasar `simplify` — se arregla o se anota como deuda en 5a.
+**5c · `ds-reviewer` (solo si el diff tocó `apps/web/**`)** — subagente de contexto fresco (`.claude/agents/ds-reviewer.md`) que revisa el diff frontend contra el Design System: caza HTML crudo estilado que debería ser una primitiva de `components/ui/` (el `<button>`→`<Button>`, el `<div className="rounded-lg border bg-surface">`→`<Card>`, el banner a mano →`<Alert>`), tokens hardcodeados y props fuera de contrato. Hace cumplir la política ya escrita en la skill `frontend` §1 («usar el componente del DS es OBLIGATORIO»). Se salta si el diff no toca `apps/web/**` — espeja la condicionalidad de `test:e2e`.
+- **Mandato acotado**: solo reuso *DS-específico* (adopción de primitiva, uso de token, props en contrato). NO pisa a `simplify` (reuso genérico) ni a `code-review` (bugs); por eso corre DESPUÉS de ambos, sobre el diff ya simplificado.
+- **Reparto de acción** (por eso corre en REVIEW y no en VERIFY): hallazgos **mecánicos 1:1** (las clases coinciden con la primitiva) → al implementer vía SendMessage, **re-gate tras el fix**; hallazgos con criterio o «no existe primitiva para esto» → deuda de journal (candidata a crear el componente en el DS), no bloquean el cierre. El veredicto LIMPIO no muta nada.
+- **Cero falsos positivos es su contrato**: divs de layout (flex/grid), nodos de React Flow (`nodrag`, handles), `<input type=file>` y superficies sin primitiva son LEGÍTIMOS y no se marcan (la taxonomía completa vive en el agente).
+
+Nota sobre la naturaleza de cada pase (para no dar forma equivocada a la regla): un hallazgo de reuso/simplificación genérico lo absorbe `simplify`; uno de reuso *del DS* (primitiva/token) lo caza `ds-reviewer`; un bug de robustez (p.ej. una fuga de conexión en una ruta de error) lo caza `code-review` y NO desaparece por pasar los otros — se arregla o se anota como deuda en 5a.
 
 ### 6 · VERIFY
 Lanza el subagente **`verifier`** (contexto fresco, escéptico) con: el ID de la tarea, el texto LITERAL de su Verificación, el resumen del implementer y el diff (`git diff --stat`). El verifier ejecuta la Verificación de verdad contra el sistema levantado (protocolo en `testing/references/cua.md`), persiste la evidencia en `docs/verifications/<ID>/` y devuelve **PASS/FAIL + coste real**.

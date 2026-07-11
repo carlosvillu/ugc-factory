@@ -1,0 +1,13 @@
+(vacío arriba = NO tocado)
+
+=== INV: hash del fichero vs HEAD (idéntico) ===
+worktree: 24cebd44a38e8f81765d76eb0aea7d9a30163f53
+HEAD    : 24cebd44a38e8f81765d76eb0aea7d9a30163f53
+
+=== INV: DO UPDATE en los repos de brand_kit? (debe ser 0) ===
+packages/db/src/repos/brand-kit.repo.ts:6:// `DO UPDATE`. Un `DO UPDATE` machacaría el kit existente (y su `extracted_at`) en cada
+coincidencias DO UPDATE: 1
+packages/db/src/repos/brand-kit.repo.ts:56:    .onConflictDoNothing({
+
+=== INV: sha del código verificado ===
+HEAD=c518adc (+ working tree con el diff de T1.9)

@@ -49,3 +49,12 @@ export {
   BRIEF_SYNTHESIZER_PROMPT_VERSION,
   ANTI_INJECTION_BLOCK,
 } from '../../prompts/brief-synthesizer';
+// BriefValidator (T1.9, §9.2): checks DETERMINISTAS post-síntesis con perfil por origen
+// (`url`/`manual`) y warnings TIPADOS. Puro: corrige (precio del fast path, poda de
+// suggested_assets) y avisa; no persiste nada.
+export {
+  validateBrief,
+  MAX_HOOK_WORDS,
+  type ValidateBriefOptions,
+  type ValidateBriefResult,
+} from './brief-validator';

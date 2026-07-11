@@ -230,7 +230,13 @@ export function makeRawContent(overrides: Partial<RawContent> = {}): RawContent 
     branding: { palette: ['#F5E9E2'], typography: 'serif' },
     product: {
       title: 'Sérum Hidratante 24h',
-      price: '34,90 €',
+      // FORMATO REAL del fast path (T1.9): número CRUDO, sin símbolo de moneda. Es lo que
+      // emiten `mapProduct` de firecrawl (`String(amount)`) y `priceToString` de los parsers
+      // (el string tal cual lo sirve la tienda). El precio con moneda (`"34,90 €"`) es lo que
+      // produce el LLM en `ProductBrief.pricing.price`, NUNCA N1. El fixture debe parecerse al
+      // dato real: con `'34,90 €'` aquí, el cross-check de precio del BriefValidator pasaba en
+      // test y en producción habría disparado un mismatch espurio en CADA análisis.
+      price: '34.90',
       currency: 'EUR',
       variants: ['30ml'],
     },

@@ -93,3 +93,21 @@ export {
   type ExperimentThresholds,
   type SecretProvider,
 } from './settings';
+// Warnings TIPADOS del BriefValidator (T1.9, §9.2): union discriminada por `code` con los
+// datos accionables de cada check. NO confundir con `ProductBrief.meta.warnings` (string[],
+// canal de observabilidad del sintetizador).
+export {
+  isBlockingWarning,
+  BriefWarningSchema,
+  BriefValidationProfileSchema,
+  PriceMismatchWarningSchema,
+  PrunedSuggestedAssetWarningSchema,
+  HookTooLongWarningSchema,
+  NeedsUserDecisionWarningSchema,
+  MissingHeroImageWarningSchema,
+  NeedsUserDecisionReasonSchema,
+  type BriefWarning,
+  type BriefWarningCode,
+  type BriefValidationProfile,
+  type NeedsUserDecisionReason,
+} from './brief-warning';

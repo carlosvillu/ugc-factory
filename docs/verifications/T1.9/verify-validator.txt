@@ -1,0 +1,36 @@
+=== ENTRADA REAL (de T1.8, salida auténtica de Sonnet 5) ===
+ugmonk   N3 pricing.price = "69"
+ugmonk   N3 currency      = "USD"
+ugmonk   N3 hero          = https://ugmonk.com/cdn/shop/files/new-solo.jpg?v=1771626446& ...
+allbirds N3 pricing.price = null
+
+=== C1a · MISMO valor en distinto formato ⇒ NO debe haber warning ===
+OK   | C1a REAL ugmonk: N1 "69" vs N3 "69" | warnings=[] price_final="69"
+OK   | C1a N1 "34.9" (String(amount)) vs N3 "34,90 €" | warnings=[] price_final="34,90 €"
+OK   | C1a N1 "34.90" vs N3 "€34.90" | warnings=[] price_final="€34.90"
+OK   | C1a N1 "29,99" (coerce, tienda ES) vs N3 "29,99 €" | warnings=[] price_final="29,99 €"
+OK   | C1a N1 "1234.56" vs N3 "1.234,56 €" | warnings=[] price_final="1.234,56 €"
+OK   | C1a N1 "69" vs N3 "$69.00" | warnings=[] price_final="$69.00"
+
+=== C1b · valores DISTINTOS ⇒ warning tipado Y gana el precio del fast path ===
+OK   | C1b REAL ugmonk N1 "69" vs N3 alucinado "49 $" | warning={"code":"price_mismatch","synthesized":"49 $","fastPath":"69 USD"} price_final="69 USD" valor=69 ok=true
+OK   | C1b N1 "79.90" vs N3 "34,90 €" (otra variante) | warning={"code":"price_mismatch","synthesized":"34,90 €","fastPath":"79.90 EUR"} price_final="79.90 EUR" valor=79.9 ok=true
+OK   | C1b N1 "29,99" (tienda ES) vs N3 "39,99 €" | warning={"code":"price_mismatch","synthesized":"39,99 €","fastPath":"29,99 EUR"} price_final="29,99 EUR" valor=29.99 ok=true
+
+=== C1c · REAL allbirds: N1 sin precio (product=null) y N3 null ⇒ sin warning ===
+OK   | C1c allbirds sin fast path ⇒ sin price_mismatch | warnings=["hook_too_long","hook_too_long","hook_too_long","hook_too_long","hook_too_long","hook_too_long","hook_too_long"] price=null
+
+=== C2 · manual SIN hero ⇒ needs_user_decision:missing_hero_image, brief VÁLIDO, NO falla ===
+OK   | C2 el paso NO falla (no lanza) | threw=null
+OK   | C2 warning TIPADO needs_user_decision:missing_hero_image en la SALIDA | {"code":"needs_user_decision","reason":"missing_hero_image","message":"No hay imagen de producto: sube al menos una foto o elige generar un packshot con IA."}
+OK   | C2 el brief queda VÁLIDO (ok === true) | ok=true
+OK   | C2 no se emite el bloqueante missing_hero_image en perfil manual | ["needs_user_decision","hook_too_long","pruned_suggested_asset","pruned_suggested_asset","pruned_suggested_asset","pruned_suggested_asset","pruned_suggested_asset","pruned_suggested_asset","pruned_suggested_asset","pruned_suggested_asset"]
+OK   | C2-contraste: el MISMO brief sin hero en perfil url ⇒ missing_hero_image y ok=false | ok=false codes=["missing_hero_image","hook_too_long","pruned_suggested_asset","pruned_suggested_asset","pruned_suggested_asset","pruned_suggested_asset","pruned_suggested_asset","pruned_suggested_asset","pruned_suggested_asset","pruned_suggested_asset"]
+
+=== PUREZA · la entrada no se muta (caso que toca TODAS las ramas de corrección) ===
+OK   | PUREZA la entrada es deep-equal a su clon previo (sin mutación) | comparado structuredClone antes vs objeto después
+OK   | PUREZA se dispararon las 3 ramas de corrección (el caso NO es un no-op) | ["price_mismatch","missing_hero_image","hook_too_long","hook_too_long","pruned_suggested_asset"]
+OK   | PUREZA hero ALUCINADO se poda a null en la COPIA (y sigue en la entrada) | copia=null entrada=https://ugmonk.com/ALUCINADA-no-esta-en-images.jpg
+  warnings emitidos: ["price_mismatch","missing_hero_image","hook_too_long","hook_too_long","pruned_suggested_asset"]
+
+=== TODO OK (0 fallos) ===

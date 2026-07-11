@@ -1,0 +1,64 @@
+== arrancando Postgres 16 REAL (Testcontainers) + migraciones REALES del producto ==
+== BD lista: postgres://test:***@localhost:33966/test_5c0ac4439d8d ==
+
+ÍNDICE REAL EN LA BD:
+  CREATE UNIQUE INDEX brand_kit_domain_key ON public.brand_kit USING btree (domain) WHERE (domain IS NOT NULL)
+OK   | C3-pre el UNIQUE PARCIAL brand_kit_domain_key existe en la BD real | CREATE UNIQUE INDEX brand_kit_domain_key ON public.brand_kit USING btree (domain) WHERE (domain IS NOT NULL)
+
+=== C3 · 2 URLs del MISMO dominio (ugmonk.com) ⇒ el kit se extrae UNA SOLA VEZ ===
+  URL 1: https://ugmonk.com/products/analog-starter-kit
+  URL 2: https://www.ugmonk.com/products/gather-desk-organizer
+OK   | C3 las 2 URLs colapsan al MISMO dominio registrable | d1=ugmonk.com d2=ugmonk.com
+
+  [análisis 1 @ 2026-07-11T10:00:00.000Z] reused=false id=01KX9EHR54VRTVP2BTMCYJY342 extracted_at=2026-07-11T10:00:00.000Z
+  [análisis 2 @ 2026-07-11T18:00:00.000Z] reused=true id=01KX9EHR54VRTVP2BTMCYJY342 extracted_at=2026-07-11T10:00:00.000Z
+OK   | C3 el 1er análisis EXTRAE (reused=false) | reused=false
+OK   | C3 el 2º análisis REUTILIZA (reused=true) | reused=true
+OK   | C3 es la MISMA fila (mismo id) | 01KX9EHR54VRTVP2BTMCYJY342 vs 01KX9EHR54VRTVP2BTMCYJY342
+
+  FILAS REALES en brand_kit WHERE domain = ugmonk.com (SQL crudo):
+[
+  {
+    "id": "01KX9EHR54VRTVP2BTMCYJY342",
+    "domain": "ugmonk.com",
+    "source": "extracted",
+    "palette": [
+      "#1A1A1A",
+      "#F5F5F0"
+    ],
+    "tone_of_voice": "Minimalista, sereno y directo, con enfoque en diseño y funcionalidad más que en efectismo publicitario",
+    "extracted_at": "2026-07-11T10:00:00.000Z",
+    "created_at": "2026-07-11T20:40:21.415Z",
+    "updated_at": "2026-07-11T20:40:21.415Z"
+  }
+]
+OK   | C3 hay UNA SOLA fila para el dominio (se extrajo una sola vez) | rowCount=1
+OK   | C3 TIMESTAMP: extracted_at sigue siendo el del PRIMER análisis (t1), NO el del segundo (t2) | extracted_at=2026-07-11T10:00:00.000Z t1=2026-07-11T10:00:00.000Z t2=2026-07-11T18:00:00.000Z
+OK   | C3 el 2º análisis NO re-extrajo: el tono/paleta del 2º NO pisaron los del 1º (DO NOTHING, no DO UPDATE) | tone="Minimalista, sereno y directo, con enfoque en dis palette=["#1A1A1A","#F5F5F0"]
+OK   | C3 el retorno del 2º análisis lleva el extracted_at del PRIMERO | second.kit.extractedAt=2026-07-11T10:00:00.000Z
+
+=== INV · kits MANUALES (domain NULL) quedan EXENTOS del dedup ===
+OK   | INV dos kits manuales (domain NULL) crean DOS filas distintas, ninguna reutiliza | m1.reused=false m2.reused=false filas_null=2
+
+=== INV · insertBrandKitIfAbsent en conflicto ⇒ undefined y NADA se escribe ===
+OK   | INV el insert en conflicto devuelve undefined y la fila queda INTACTA (extracted_at y updated_at sin tocar) | conflicted=undefined tone="Minimalista, sereno y directo, con enfo extracted_at=2026-07-11T10:00:00.000Z
+
+OK   | INV un dominio DISTINTO (allbirds.com) SÍ extrae su propio kit | reused=false domain=allbirds.com
+
+  RECUENTO FINAL por dominio (SQL crudo):
+[
+  {
+    "domain": "allbirds.com",
+    "n": "1"
+  },
+  {
+    "domain": "ugmonk.com",
+    "n": "1"
+  },
+  {
+    "domain": null,
+    "n": "2"
+  }
+]
+
+=== TODO OK (0 fallos) ===

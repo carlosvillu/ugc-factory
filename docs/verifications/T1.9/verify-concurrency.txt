@@ -1,0 +1,12 @@
+8 análisis CONCURRENTES del MISMO dominio (carrera.example):
+  extrajeron (reused=false): 1
+  reutilizaron (reused=true): 7
+  FILAS REALES en brand_kit: 1
+  ids distintos devueltos: 1
+  fila ganadora: {"id":"01KX9EKTDMXCKMNYFZN85EYMCE","tone_of_voice":"analisis-1","extracted_at":"2026-07-11T09:01:00.000Z"}
+
+OK   | CONC el BrandKit se extrajo UNA SOLA VEZ (1 sola fila) | rowCount=1
+OK   | CONC exactamente 1 análisis extrajo; los otros 7 reutilizaron | extracted=1 reused=7
+OK   | CONC los 8 devuelven la MISMA fila (mismo id) | ids=1
+
+=== TODO OK (0 fallos) ===

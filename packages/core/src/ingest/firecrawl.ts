@@ -301,9 +301,33 @@ function mapCredits(data: FirecrawlData | undefined): number {
 
 /** Dominio registrable APROXIMADO (últimas dos etiquetas del host): `shop.glow.example`
  *  y `glow.example` colapsan a `glow.example`. Heurística deliberada (last-two-labels), NO
- *  una public-suffix-list: el filtro de path hace el grueso del trabajo; esto solo descarta
- *  links claramente off-site (CDN, redes sociales). Suficiente para el alcance de T1.5. */
-function registrableDomain(host: string): string {
+ *  una public-suffix-list.
+ *
+ *  ⚠ DEUDA ABIERTA (T1.9) — LEE ESTO ANTES DE AÑADIRLE UN CONSUMIDOR NUEVO. Esta función
+ *  tiene HOY dos usos con RIESGOS MUY DISTINTOS:
+ *
+ *   1) T1.5, uso COMPARATIVO (`registrableDomain(link) === registrableDomain(landing)`): un
+ *      colapso falso solo ensancha el crawl DENTRO del mismo sitio real, y el filtro de path
+ *      + el cap de 3 páginas lo contienen. Inocuo — por eso la heurística bastaba.
+ *
+ *   2) T1.9, uso como CLAVE ABSOLUTA del dedupe de `brand_kit` (§9.1), escrita en la columna
+ *      con UNIQUE parcial. Aquí la heurística SÍ hace daño: `marca-a.co.uk` y `marca-b.co.uk`
+ *      colapsan AMBAS a `co.uk` (igual `.com.au`, `.co.jp`, `.com.br`…). Con el upsert
+ *      reuse-first (`ON CONFLICT DO NOTHING`), el PRIMER comerciante analizado en un sufijo
+ *      compuesto se queda con la fila `brand_kit` de TODOS los demás, y los siguientes
+ *      reutilizan su paleta, tipografía y tono de voz —que alimentan los guiones— sin error
+ *      ni warning: `reused: true` es el camino feliz. No es un fallo cosmético: es
+ *      CONTAMINACIÓN CRUZADA DE IDENTIDAD DE MARCA entre comerciantes distintos.
+ *
+ *  Mitigación pendiente: una public-suffix-list (basta una lista embebida de los ~40 sufijos
+ *  compuestos frecuentes) el día que entre en el sistema el primer dominio afectado. Hasta
+ *  entonces el riesgo es real pero acotado (mono-usuario, dominios conocidos). Anotado en el
+ *  journal como deuda de T1.9.
+ *
+ *  Compartir la normalización entre los dos usos es DELIBERADO y correcto: la clave del kit
+ *  debe normalizar igual que el crawl, para que `shop.glow.example` y `glow.example` compartan
+ *  kit igual que comparten crawl (import relativo desde `ingest/brand-kit.ts`). */
+export function registrableDomain(host: string): string {
   const labels = host.toLowerCase().split('.').filter(Boolean);
   if (labels.length <= 2) return labels.join('.');
   return labels.slice(-2).join('.');

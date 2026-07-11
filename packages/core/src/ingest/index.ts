@@ -37,3 +37,11 @@ export {
   type ManualIntakeResult,
   type ManualAnalysisRow,
 } from './manual-intake';
+// Derivación PURA del BrandKit (T1.9, §9.1): dominio registrable (clave del dedup) + fusión
+// de branding/visual/brief en los campos de `brand_kit`. El UPSERT vive en packages/db.
+export {
+  brandKitDomain,
+  deriveBrandKit,
+  type DerivedBrandKit,
+  type DeriveBrandKitInput,
+} from './brand-kit';

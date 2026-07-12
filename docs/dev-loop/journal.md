@@ -1001,3 +1001,52 @@
 - La 6ª instancia (T2.1, arriba) tiene una forma que NO estaba catalogada, y es **la más traicionera de las cuatro: el test es correcto y pasa**. No hay doble mentiroso, ni variable fijada a mano, ni medición aislada — simplemente **el test hace el chequeo por su cuenta en vez de pedírselo al código de producción**, y así vigila una puerta por la que el dato no entra.
 - Escrita en `testing/SKILL.md` §9 como **forma 4** + **4ª pregunta de control**: *¿estoy ejerciendo el camino que recorre el dato de verdad, o uno paralelo que he construido en el test?*
 - **Refinamiento del CONTROL NEGATIVO** (esto es lo que casi se me escapa): no basta con ver rojo — **hay que mirar QUÉ se pone rojo**. Al inyectar la CTA venenosa, el gate se puso rojo… en el test que barría por su cuenta, mientras `validateSeeds` seguía devolviendo `ok:true`. **El rojo estaba en el sitio equivocado.** Un control negativo que solo comprueba "¿se pone rojo?" habría dado el guard por bueno.
+
+## 2026-07-12 · ⏳ T2.0 iniciada (Personas v1) — decisión de alcance del usuario
+- **STOP-CHECK resuelto**: T2.0 pide "seed manual de 2 personas con imágenes subidas a mano", pero su **Verificación mide PÍXELES, no caras** (≥2K se acepta, <2K se rechaza) → la maquinaria entera es verificable con fixtures sintéticos. El bloqueo real era solo el CONTENIDO de producción.
+- **Decisión del usuario**: construir y verificar TODO ahora con fixtures sintéticos + sembrar 2 personas **placeholder**; él sube sus 2 caras reales más tarde **por el propio CRUD que esta tarea entrega** (sin tocar código). Descartado adelantar la generación IA de referencias (el PRD la pone en F4 y gastaría fal.ai fuera de presupuesto).
+- Desbloquea T2.2/T2.3/T2.4 (toda F2 pasa por T2.0).
+
+## 2026-07-12 · T2.0 · decisión de navegación (desviación deliberada del mockup 2a)
+- **Problema**: T2.0 entrega `/personas` completa, pero sin entrada en `routes.ts` era una página HUÉRFANA (solo alcanzable escribiendo la URL) — justo la queja que originó T1.13.
+- El implementer no la enchufó y **hizo bien en no decidirlo solo**: activar «Biblioteca» (el destino más cercano, hoy deshabilitado) habría afirmado que las variantes/guiones de F2 existen, y F2 acaba de arrancar.
+- **La clave que desatasca**: **Biblioteca ≠ Personas.** Biblioteca es el ÁREA de F2 (variantes/guiones); Personas es una LIBRERÍA de recursos que existe hoy y funciona entera. Son dos destinos, no uno.
+- **Decisión del usuario**: `/personas` es un **SÉPTIMO destino propio y habilitado**. «Biblioteca» sigue `href: null` esperando a F2. El mockup 2a dibuja 6 → **desviación deliberada, aprobada**: una página que funciona del todo se ve y se usa.
+- Consecuencia esperada: los specs de nav de T1.13 se ponen ROJOS al añadir el 7º. **Es el test haciendo su trabajo** (defiende el mockup); se actualizan documentando el porqué, NO se relajan a «al menos N destinos».
+
+## 2026-07-12 · T2.0 · deuda de los pases de review (anotada, no bloquea)
+- **`readUploadedFile` compartido (DEUDA, 2 consumidores REALES ya escritos)**: el preámbulo multipart está duplicado casi literal entre `POST /api/assets` (T1.6) y `POST /api/personas/:id/reference-images` (T2.0): precheck de `content-length` → **413 con el envelope construido A MANO** (fuera de `toErrorResponse`, así que sale **sin `request_id`**), `try{req.formData()}`, guard `file instanceof File`, allowlist mime + type-guard, cap de `file.size`. Ya divergen (allowlist: assets lleva `gif`, personas no; cap 8 vs 24 MiB) → un endurecimiento en una NO llega a la otra. No se arregla en T2.0 porque exige CREAR el helper y tocar una ruta de T1.6 (fuera de alcance). **Forma correcta**: un LECTOR (`readUploadedFile(req, {maxBytes, mimeToExt})` en `apps/web/src/server/`), no un `withMultipartRoute` (las partes que varían son demasiadas para plegarlas en un HOF). Cobrar cuando F4/F5 traigan la 3ª ruta multipart.
+- **DS sin `FormSection`**: el `<fieldset>` + `<legend>` de voz (`persona-form.tsx`) es su **tercer** usuario. Candidata a crear la primitiva en Claude Design.
+- **`role="alert"` redundante** en `<Alert tone="danger">`: la primitiva ya lo pone sola. Limpiado en T2.0.
+
+## 2026-07-12 · DEUDA DEL DESIGN SYSTEM: contraste AA de `ghost` / `danger-ghost` en tema LIGHT
+- **Medido por el verifier de T2.0 (CUA, navegador real)**: `ghost` **2,48:1** y `danger-ghost` **3,20:1** en light. WCAG AA para texto exige **4,5:1**. En dark pasan.
+- **NO es de T2.0** (que las consume correctamente): son variantes del primitivo `apps/web/src/components/ui/button.tsx`. **13 ficheros** las usan (`login-form`, `intake-form`, `step-panel`, `checkpoint-banner`, `persona-detail`…). La propia página `/design-system` (fase FD, cerrada) ya mide `danger-ghost` a **3,02:1 / 2,66:1** en light — el fallo estaba ahí desde FD y nadie lo miró.
+- **Es el MISMO fallo que T1.12** (tonos calibrados solo en dark que se hunden en light), una capa más abajo: allí eran los tonos semánticos, aquí las variantes de botón. Se arregló lo que se miró; esto no se miró.
+- **Se rutea al DS** (cua.md: el contraste de un primitivo se arregla en el Design System, no en la tarea que lo consume). **Cobrar en una tarea propia**: recalibrar el color de texto de `ghost`/`danger-ghost` en light contra la superficie PEOR (no contra `#fff`) y con margen — la lección literal de T1.12.
+- Lo que la Verificación de T2.0 sí exigía (el mensaje de rechazo <2K) pasa holgado: **16,68:1** dark / **14,39:1** light.
+
+## 2026-07-12 · T2.0 cerrada — PASS
+- Coste: **$0** · Ciclos verifier: 1 (+1 re-verificación por un fix posterior) · Gate: **1090 tests** · E2E: **46/46**
+- Entregado: tabla `persona` (`0012`), CRUD REST + `/personas` (mockup 6c), upload con validación **≥2K leída del FICHERO** (sharp), endpoint de candidatas por `avatar_hint`, seed de 2 personas placeholder, y la **FK `ad_variant.persona_id → persona.id ON DELETE set null`** (deuda de T2.1 SALDADA; verificada contra `pg_constraint`: `confdeltype='n'`).
+- **Nav**: `/personas` es el **7º destino** (desviación deliberada del mockup 2a, aprobada por el usuario). «Biblioteca» sigue deshabilitada esperando a F2.
+- **Mockup 6c**: «Usar en lote» (→T2.3) y «Generar variación» (→F4) se pintan **deshabilitados con el motivo en el `aria-label`** — mismo criterio que T1.13, tras dictamen del `ds-reviewer` + firma del usuario. El ▶ de voz sí se omite (el bloque conserva forma y lleva nota de F4).
+
+### El bug que casi cierra en verde: SHARP EN EL BUNDLE DEL NAVEGADOR
+- El barrel `@ugc/core/persona` re-exportaba código con **sharp**, y `api-client.ts` (cliente) lo importaba → Turbopack intentaba resolver `child_process` para el browser → **la app ENTERA dejaba de compilar** (cayeron 28 specs de F0 sin relación con personas).
+- **Los 1042 tests estaban VERDES.** `pnpm test` corre en Node, y en Node importar sharp funciona. **El único test que compila la app para un NAVEGADOR es el E2E** — y fue el único que lo vio. Principio 9 en estado puro: *el arnés (Node) era más cómodo que la realidad (el bundler)*.
+- Fix: subpath **`@ugc/core/persona/server`** (mismo patrón que `@ugc/core/analyze`) + **`client-bundle-honesty.test.ts`**: guard permanente que recorre el grafo de imports desde **los 32 `'use client'` DESCUBIERTOS** (glob+grep) y `api-client.ts`. Con la lista de 1 entrada que tenía al principio, un `'use client'` que importara sharp sin pasar por `api-client` **seguía verde** (verificado).
+- ⚠ **`NODE_ONLY_SCHEMES` (prefijo) vs `NODE_ONLY_PACKAGES` (igualdad/`pkg/`) están separados A PROPÓSITO**: `node:` NO es un paquete, es un **esquema**. Fusionarlos "para simplificar" **apaga la detección de todos los `node:*` en silencio**. (Yo propuse ese fix ingenuo; el implementer me refutó con evidencia. No repetirlo.)
+
+### Altitud: `matchPersonas` era INALCANZABLE para su consumidor
+- La regla vivía en core (correcto) pero pedía `Persona` — **el contrato de SALIDA de la API** — mientras solo lee **6 campos**. El único conversor `PersonaRow → Persona` vive en `apps/web`. Resultado: **T2.2** (que lee filas de `@ugc/db`) no podía llamarla sin importar `apps/web`, duplicar el mapping, o hacerse un HTTP a sí mismo.
+- Fix: **`MatchablePersona`** (subconjunto estructural) + funciones **genéricas** → `Persona` Y `PersonaRow` encajan sin conversión, y cada llamante recupera SU tipo. El síntoma que lo delató: el test fabricaba `id`/`createdAt`/`voiceMap` para puntuar sobre 6 campos.
+
+### El género: FILTRO, no señal de afinidad (hallazgo del verifier, arreglado antes de cerrar)
+- El género **descalificaba** si no coincidía (bien) pero **sumaba un punto** si coincidía (mal). Con 2 personas sembradas (1 female, 1 male), **cualquier hint que nombrara un género devolvía a esa persona** con score 1 aunque no compartiera nada más: `hombre 55-64 asiático elegante` → recomendaba a un hombre de 35-44 negro y deportista.
+- Decisión del usuario: **afinar antes de cerrar**. Los tokens de género se excluyen del recuento. Ahora ese hint → `[]`. Verificado en 9 casos contra el endpoint real.
+- **Arista conocida, NO regresión** (para T2.2 si molesta): los intervalos de edad son CERRADOS y se tocan en el extremo — `hombre 25-35` casa con un `35-44` por el 35 (score 1). Regla preexistente y testeada.
+
+### Rarezas del arnés (importan para futuras verificaciones)
+- **`pnpm gate` NO es hermético frente a un `pnpm dev` vivo**: con el dev server en :3001, `sse-contract.test.ts` arranca *su propio* `next dev` y choca («Another next dev server is already running») → el gate FALLA con los 1090 tests en verde. **Mata el dev antes del gate.** Explica rojos fantasma.
+- El otro flake conocido de `sse-contract.test.ts` (arranca `next dev` sin build previo → sensible a compilación en frío) sigue siendo deuda del arnés. Arreglo real = meter `next build` en el gate.

@@ -161,6 +161,24 @@ export { recordCheckpointDecision } from './repos/checkpoint-decision.repo';
 // Sus repos de caso de uso llegan con sus consumidores (T2.2 compone la matriz, T2.3 crea
 // las variantes, T2.4 escribe los guiones) — mismo criterio que T1.2 con el análisis.
 export type { NewAdBatch, NewAdVariant, NewAdScript } from './schema/batch';
+// Librería de PERSONAS (T2.0): el CRUD que consume `/api/personas` en web, la gestión de sus
+// imágenes de referencia y la lista que alimenta el endpoint de candidatas (la REGLA de
+// matching por `avatar_hint` es pura y vive en `@ugc/core/persona`; db solo lee).
+// `upsertPersonaByName`/`countPersonas` NO salen al barrel: sus únicos consumidores viven DENTRO
+// del paquete (el script `pnpm seed` vía `persona-seed.ts`, y los tests de integración, que
+// importan relativo) — mismo criterio que `seedLibrary`/`listRecipes` de T2.1.
+export {
+  listPersonas,
+  getPersona,
+  createPersona,
+  updatePersona,
+  removePersona,
+  addReferenceImage,
+  removeReferenceImage,
+} from './repos/persona.repo';
+// El tipo de fila `persona` (retorno de los repos de arriba): lo consumen los route handlers de
+// web para serializar la respuesta contra el contrato `PersonaSchema` de core.
+export type { Persona as PersonaRow } from './schema/gallery';
 // Rollup del coste real de un step (T1.10b): recomputa `step_run.cost_actual` desde
 // `cost_entry` (SUM por step_run_id). Lo llama el ORQUESTADOR (consumer del worker) al cerrar
 // un step — nunca `@ugc/services` (la columna del step es territorio del step, T1.10a).

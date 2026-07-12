@@ -1,10 +1,9 @@
 // Dominio `gallery` (§12, db.md §1). El mapa de db.md §1 asigna a este fichero
 // `prompt_template`, `prompt_version`, `guard_pack`, `hook_line`, `cta_line`,
-// `persona`, `model_profile` y `recipe`. En T2.1 SOLO nacen las tres tablas que la
-// tarea entrega: `hook_line`, `cta_line` y `recipe` (las librerías de copy y las
-// recetas por tier). El resto llega con sus tareas (galería = F3, personas = T2.0,
-// model_profile = F3) — mismo criterio que `ops.ts`, que en T0.3 solo trajo dos de
-// sus cuatro tablas.
+// `persona`, `model_profile` y `recipe`. T2.1 trajo `hook_line`, `cta_line` y `recipe`
+// (las librerías de copy y las recetas por tier); **T2.0 añade `persona`** (la librería de
+// avatares, §11). El resto llega con sus tareas (galería = F3, model_profile = F3) — mismo
+// criterio que `ops.ts`, que en T0.3 solo trajo dos de sus cuatro tablas.
 import { sql } from 'drizzle-orm';
 import { index, integer, jsonb, pgEnum, pgTable, text, uniqueIndex } from 'drizzle-orm/pg-core';
 import { timestamps, ulidPk } from './columns.helpers';
@@ -143,3 +142,90 @@ export const recipe = pgTable('recipe', {
 
 export type Recipe = typeof recipe.$inferSelect;
 export type NewRecipe = typeof recipe.$inferInsert;
+
+// ── persona (§11 + §12) ─────────────────────────────────────────────────────
+//
+// §12: `persona (campos de §11) + voice_map jsonb {locale: {provider, voiceId}}`
+// §11: nombre, demografía (rango de edad, género, etnia, estilo), personalidad (se inyecta
+//      en el CASTING del prompt), `referenceImages[]` ≥2K (identity lock), `voice_map` por
+//      idioma Y PROVEEDOR, wardrobeNotes, notas de rendimiento (`PerfStats`).
+//
+// Una persona es un avatar SINTÉTICO (D10: sin caras reales) reutilizable entre lotes. El
+// contrato Zod público (lo que valida la API y consume el formulario) vive en
+// `@ugc/core/persona`; esto es solo el shape de persistencia.
+
+// El género se inyecta en el casting del prompt: su vocabulario es CONTRATO del prompt, no
+// texto libre → enum nativo (espejo de `PersonaGenderSchema` en core).
+export const personaGender = pgEnum('persona_gender', ['female', 'male', 'non_binary']);
+
+export const persona = pgTable(
+  'persona',
+  {
+    id: ulidPk(),
+    // CLAVE NATURAL (UNIQUE abajo): la identidad de una persona es su nombre. Es lo que hace
+    // IDEMPOTENTE el seed (mismo criterio que `(language, text)` en hook_line): `pnpm seed` se
+    // corre N veces y no puede duplicar «Lucía (placeholder)».
+    name: text('name').notNull(),
+
+    // ── Demografía (§11) ────────────────────────────────────────────────────
+    // `age_range` (NO una edad): §11 dice «rango de edad» y —clave— es EXACTAMENTE el
+    // placeholder `{persona.age_range}` del contrato de variables de §10.4, que T2.4 resuelve
+    // SIN traducir. Formato `NN-NN`, validado por Zod en la frontera.
+    ageRange: text('age_range').notNull(),
+    gender: personaGender('gender').notNull(),
+    ethnicity: text('ethnicity').notNull(),
+    style: text('style').notNull(),
+
+    // ── Los otros dos placeholders de §10.4 ─────────────────────────────────
+    // DIVERGENCIA DELIBERADA DE §11 (anotada; regla de trabajo 6): §11 no nombra `descriptor`
+    // ni `setting`, pero §10.4 declara `{persona.descriptor}` y `{persona.setting}` como
+    // variables canónicas del contrato de templates «← Persona». Se crean como COLUMNAS de
+    // primera clase precisamente para que T2.4 pueda resolverlas sin inventárselas ni
+    // derivarlas a ojo de un texto libre. La alternativa (concatenar demografía) produciría
+    // prompts robóticos: el descriptor es REDACCIÓN («mujer de 29 años, latina, look casual»).
+    descriptor: text('descriptor').notNull(),
+    // El escenario cotidiano por defecto (§10.3 punto 3: «escenario cotidiano con 2–3 anclas»).
+    setting: text('setting').notNull(),
+
+    // Personalidad (§11): «se inyecta en el casting del prompt».
+    personality: text('personality').notNull(),
+    // Continuidad de vestuario entre CUTs (§11 + «wardrobe continuity declarada por CUT»).
+    // Nullable: una persona puede no fijar vestuario.
+    wardrobeNotes: text('wardrobe_notes'),
+
+    // §12 LITERAL: `voice_map jsonb {locale: {provider, voiceId}}`. jsonb (no tablas
+    // normalizadas) por el mismo criterio que `ad_batch.matrix`: es un documento cuyo shape lo
+    // valida Zod en la frontera (`VoiceMapSchema` en core), y añadir un idioma NO puede exigir
+    // una migración (§17: «añadir un idioma es añadir voces al voice_map»). El PROVEEDOR viaja
+    // con el voiceId porque «el voiceId solo es unívoco DENTRO de su proveedor» (§11).
+    voiceMap: jsonb('voice_map')
+      .notNull()
+      .default(sql`'{}'::jsonb`),
+
+    // `referenceImages[]` (§11): los ULIDs de las filas `asset` (kind `reference_image`) que
+    // son el IDENTITY LOCK, EN ORDEN (el primero es el retrato principal — el grande del
+    // mockup 6c). Array de texto y NO una tabla join ni FKs por elemento: son 2–3 imágenes en
+    // una herramienta mono-usuario, y una tabla join añadiría superficie (orden explícito,
+    // repo, migración) sin comprar nada que este producto necesite. Precedente en el propio
+    // §12: `asset.parent_asset_ids`. El coste asumido —Postgres no garantiza la integridad
+    // referencial de los elementos— se paga con el repo: borrar una persona borra sus assets
+    // (misma tx) y el endpoint valida que el asset existe antes de añadirlo.
+    referenceImageIds: text('reference_image_ids')
+      .array()
+      .notNull()
+      .default(sql`'{}'::text[]`),
+
+    // §11: «notas de rendimiento (`PerfStats`)». Nullable: una persona nueva no tiene historia.
+    // Mismo trato que `hook_line.perf` — y por eso el seed NUNCA lo pisa (el seed es la fuente
+    // de verdad de lo que la persona ES; la BD, de cómo le ha IDO).
+    perf: jsonb('perf'),
+    ...timestamps,
+  },
+  (t) => [
+    // La clave natural que hace idempotente el seed (ver `name` arriba).
+    uniqueIndex('persona_name_key').on(t.name),
+  ],
+);
+
+export type Persona = typeof persona.$inferSelect;
+export type NewPersona = typeof persona.$inferInsert;

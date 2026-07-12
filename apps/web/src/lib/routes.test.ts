@@ -76,16 +76,35 @@ describe('isCurrentPage (aria-current="page")', () => {
   });
 });
 
-describe('DESTINATIONS (los 6 del mockup 2a)', () => {
-  it('están los 6, en el orden del mockup', () => {
+describe('DESTINATIONS (los 6 del mockup 2a + «Personas»)', () => {
+  // ⚠ ESTA LISTA CAMBIÓ EN T2.0, A PROPÓSITO Y CON APROBACIÓN DEL USUARIO. El mockup 2a dibuja
+  // SEIS destinos y aquí hay SIETE: `/personas` es una desviación deliberada del mockup, porque
+  // la página existe hoy, funciona entera, y dejarla accesible solo tecleando la URL es la queja
+  // que originó T1.13. No cabía en «Biblioteca» (que es el área de F2 —guiones y variantes— y
+  // sigue deshabilitada): Biblioteca ≠ Personas.
+  //
+  // El test sigue ENUMERANDO la lista completa en orden, y así debe quedarse: su trabajo es
+  // cazar el próximo destino que alguien añada sin pensarlo. Un «hay al menos N destinos» no
+  // cazaría nada.
+  it('están los 7, en orden (los 6 del mockup + Personas junto a Biblioteca)', () => {
     expect(DESTINATIONS.map((d) => d.label)).toEqual([
       'Inicio',
       'Canvas',
+      'Personas',
       'Biblioteca',
       'Galería',
       'Métricas',
       'Gasto',
     ]);
+  });
+
+  it('«Biblioteca» SIGUE deshabilitada: Personas no la activa (es otra área, la de F2)', () => {
+    const biblioteca = DESTINATIONS.find((d) => d.label === 'Biblioteca');
+    expect(biblioteca?.href).toBeNull();
+    expect(biblioteca?.pending).toMatch(/fase F2/);
+
+    const personas = DESTINATIONS.find((d) => d.label === 'Personas');
+    expect(personas?.href).toBe('/personas');
   });
 
   it('todo destino sin página declara POR QUÉ y en qué fase llega', () => {
@@ -112,6 +131,9 @@ describe('homeEntries (las tarjetas de la home)', () => {
   it('incluye los destinos navegables Y las utilidades, todos con descripción', () => {
     const labels = homeEntries().map((e) => e.label);
     expect(labels).toContain('Canvas');
+    // Personas tiene página: aparece como tarjeta SOLA, sin tocar la home. Es la promesa de
+    // T1.13 («activar un destino es darle href») cobrada por primera vez.
+    expect(labels).toContain('Personas');
     expect(labels).toContain('Gasto');
     expect(labels).toContain('Ajustes');
     expect(labels).toContain('Design system');

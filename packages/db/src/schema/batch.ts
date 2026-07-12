@@ -16,7 +16,7 @@ import {
 } from 'drizzle-orm/pg-core';
 import { timestamps, ulidPk } from './columns.helpers';
 import { asset } from './generation';
-import { adObjective, hookLine, recipeTier } from './gallery';
+import { adObjective, hookLine, persona, recipeTier } from './gallery';
 import { project, productBrief } from './project';
 
 // §12: `ad_batch … tier ENUM(test|standard|premium)`. Es EL MISMO conjunto que la PK
@@ -110,11 +110,17 @@ export const adVariant = pgTable(
     // y en ese segundo caso no hay fila que referenciar. `set null`: purgar una línea de
     // la librería no puede borrar los anuncios que se hicieron con ella.
     hookLineId: text('hook_line_id').references(() => hookLine.id, { onDelete: 'set null' }),
-    // `persona_id`: la tabla `persona` es T2.0 y NO existe todavía. Texto nullable SIN FK
-    // (mismo precedente que `cost_entry.generation_id`, que apunta a una tabla de F4):
-    // la FK real se añade con una migración cuando la tabla exista. §12 lo marca sin `?`,
-    // pero una NOT NULL sin FK sería una restricción sin garante; nullable hasta T2.0.
-    personaId: text('persona_id'),
+    // `persona_id`: DEUDA DE T2.1 SALDADA EN T2.0. En T2.1 esto era texto nullable SIN FK
+    // porque la tabla `persona` aún no existía. T2.0 la crea → aquí llega su FK REAL.
+    //
+    // `set null` (y no `cascade`) es una decisión de PRODUCTO, no un default: **borrar una
+    // persona no puede borrar los anuncios que ya hizo**. Una variante generada, compuesta y
+    // publicada sigue existiendo (y sus métricas siguen contando) aunque el usuario retire de
+    // la librería la persona que la protagonizó; lo que se pierde es el puntero, no el anuncio.
+    // Sigue nullable: una variante puede no tener persona asignada (§12 la marca sin `?`, pero
+    // el compositor de T2.2 puede planificar sin fijar persona — el usuario «puede fijar o
+    // dejar que rote», §11).
+    personaId: text('persona_id').references(() => persona.id, { onDelete: 'set null' }),
     language: text('language').notNull(),
     // Receta reproducible (§12): `prompt_template` es F3 (T3.1) — mismo trato que
     // `persona_id`: texto nullable sin FK hasta que la tabla exista.

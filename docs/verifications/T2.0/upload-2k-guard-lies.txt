@@ -1,0 +1,2 @@
+{"code":"validation_error","message":"la imagen de referencia mide 1200×800 px y el lado largo debe ser ≥2048 px","details":{"formErrors":["Imagen demasiado pequeña: 1200×800 px. El identity lock exige al menos 2048 px en el lado largo (2K)."],"fieldErrors":{}}}
+HTTP 400

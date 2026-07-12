@@ -319,7 +319,7 @@ Decisiones del usuario (2026-07-07): la fase se ejecuta tras T0.1 y **antes** de
 
 > Personas y recetas viven aquí (no en F3) porque CP2 las necesita. Ajuste anotado en PRD §21.
 
-#### T2.0 · Personas v1 (modelo, CRUD y seed manual)
+#### T2.0 · Personas v1 (modelo, CRUD y seed manual) [x] 2026-07-12 — PASS, ver docs/verifications/T2.0/ (coste $0)
 - **Depende de**: T0.3, T0.5
 - **Entrega**: migración de `persona` (§12, con `voice_map {locale: {provider, voiceId}}`), página `/personas` con CRUD (demografía, personalidad, wardrobeNotes), upload manual de imágenes de referencia (validación ≥2K), endpoint de candidatas por `avatar_hint`; seed manual de 2 personas (es/en) con imágenes subidas a mano. (La generación IA de referencias y el preview de voz llegan en F4.)
 - **Mockup**: `docs/mockups/personas.html` (variante 6c · ficha inmersiva · refs grandes + voz por idioma). El layout parte de ese mockup; el reviewer rechaza una página que se desvíe sin acuerdo (ver `.claude/skills/frontend`).

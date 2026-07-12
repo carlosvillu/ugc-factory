@@ -1,0 +1,6 @@
+=== ¿personas.spec.ts está DE VERDAD en la suite e2e? ===
+[2/5] [chromium] › e2e/personas.spec.ts:170:3 › /personas — librería de personas (T2.0) › upload de una imagen ≥2K: se acepta y aparece en la ficha @f2
+[3/5] [chromium] › e2e/personas.spec.ts:70:3 › /personas — librería de personas (T2.0) › CRUD completo: crear con voice map es/en, ver la ficha, editar y eliminar @f2
+[4/5] [chromium] › e2e/personas.spec.ts:210:3 › /personas — librería de personas (T2.0) › una imagen <2K es RECHAZADA con un mensaje VISIBLE y no se añade @f2
+[5/5] [chromium] › e2e/personas.spec.ts:141:3 › /personas — librería de personas (T2.0) › las acciones de fases futuras se VEN pero están DESHABILITADAS, y dicen por qué @f2
+  5 passed (12.6s)

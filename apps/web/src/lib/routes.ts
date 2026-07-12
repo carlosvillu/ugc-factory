@@ -40,10 +40,24 @@ export interface Destination {
 }
 
 /**
- * Los 6 destinos de la nav, EN EL ORDEN DEL MOCKUP 2a (`docs/mockups/dashboard.html`).
+ * Los 7 destinos de la nav: los 6 DEL MOCKUP 2a (`docs/mockups/dashboard.html`) + «Personas».
  *
- * Se muestran los 6 aunque 3 no existan aún (decisión del usuario): el mockup es vinculante,
+ * Se muestran todos aunque 3 no existan aún (decisión del usuario): el mockup es vinculante,
  * enseñan a dónde va el producto, y —al ir deshabilitados— nunca llevan a una página rota.
+ *
+ * ⚠ «PERSONAS» ES UNA DESVIACIÓN DELIBERADA DEL MOCKUP, APROBADA POR EL USUARIO (T2.0). El
+ * mockup 2a dibuja 6 destinos; este es el séptimo. Por qué:
+ *
+ *   · `/personas` EXISTE HOY y está completa (CRUD, imágenes de referencia, voz por idioma). Una
+ *     página que funciona entera y a la que solo se llega TECLEANDO la URL es exactamente la
+ *     queja que originó T1.13 («solo veo la home, no he visto absolutamente nada»).
+ *   · Y NO cabía en «Biblioteca»: **Biblioteca ≠ Personas.** «Biblioteca» es el área de F2
+ *     (guiones y variantes) y sigue deshabilitada esperando a su fase; darle `href` ahora
+ *     afirmaría que ese área existe. Son dos cosas distintas.
+ *
+ * Va JUNTO a «Biblioteca» porque conceptualmente son los RECURSOS REUTILIZABLES del producto
+ * (los avatares que protagonizan los anuncios, y los guiones/variantes que los visten), frente a
+ * los destinos de flujo (Canvas) y de resultado (Galería, Métricas, Gasto).
  *
  * «Canvas» no tiene índice propio (un canvas es SIEMPRE el de un run concreto, `/runs/:id`):
  * su entrada apunta al intake, que es la puerta REAL por la que se llega hoy a un canvas
@@ -58,6 +72,12 @@ export const DESTINATIONS: Destination[] = [
     matches: ['/analyses', '/runs'],
     description:
       'Pega la URL del producto (o descríbelo con tus palabras) y arranca el pipeline: se extrae la landing, se miran las imágenes y se sintetiza el brief.',
+  },
+  {
+    label: 'Personas',
+    href: '/personas',
+    description:
+      'Los avatares que protagonizan los anuncios: demografía, personalidad, voz por idioma e imágenes de referencia del identity lock.',
   },
   { label: 'Biblioteca', href: null, pending: 'llega en la fase F2 (guiones y variantes)' },
   { label: 'Galería', href: null, pending: 'llega en la fase F5 (composición y export)' },

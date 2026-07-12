@@ -1,0 +1,4 @@
+=== CONTROL NEGATIVO — FASE VERDE (fix restaurado) ===
+sha: 038a574c92cc289aff6c76ff26bb2cbb8c4908c3  packages/core/src/persona/candidates.ts  (idéntico al de antes del experimento)
+ Test Files  1 passed (1)
+      Tests  15 passed (15)

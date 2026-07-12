@@ -1,0 +1,24 @@
+### A · COMPATIBLE (sugerido por implementer) → debe salir Lucía
+HINT: mujer 25-35 latina casual
+[{"name": "Lucía (placeholder)", "score": 4, "matched": ["age_range", "mujer", "latina", "casual"]}]
+
+### B · INCOMPATIBLE (sugerido por implementer) → ¿[] de verdad?
+HINT: hombre 55-64 asiático elegante
+[{"name": "Marcus (placeholder)", "score": 1, "matched": ["hombre"]}]
+
+### C · INCOMPATIBLE sin género (mío)
+HINT: persona 55-64, asiática, elegante
+[]
+
+### D · COMPATIBLE mío (Marcus, en inglés)
+HINT: man 35-44, black, sporty
+[{"name": "Marcus (placeholder)", "score": 4, "matched": ["age_range", "man", "black", "sporty"]}]
+
+### E · INCOMPATIBLE mío (nadie encaja, sin género)
+HINT: adolescente 13-17, escandinavo, gótico
+[]
+
+### F · gender-only male
+HINT: hombre
+[{"name": "Marcus (placeholder)", "score": 1, "matched": ["hombre"]}]
+

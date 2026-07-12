@@ -1,0 +1,39 @@
+== RE-VERIFICACIÓN CLÁUSULA 2 (tras el fix: género = FILTRO, no señal de afinidad) ==
+Personas sembradas: Lucía (female/latina/casual/25-34) · Marcus (male/black/sporty/35-44)
+
+### 1 · COMPATIBLE (es) → Lucía, y SIN token de género en matched
+HINT: mujer 25-35 latina casual
+[{"name": "Lucía (placeholder)", "score": 3, "matched": ["age_range", "latina", "casual"]}]
+
+### 2 · EL CASO QUE YO ENCONTRÉ — antes daba Marcus(1), ahora debe dar []
+HINT: hombre 55-64 asiático elegante
+[]
+
+### 3 · NO ROMPER EL CAMINO BUENO: género + señales reales → Marcus
+HINT: man 35-44, black, sporty
+[{"name": "Marcus (placeholder)", "score": 3, "matched": ["age_range", "black", "sporty"]}]
+
+### 4 · INCOMPATIBLE sin género (regresión de mi caso C)
+HINT: persona 55-64, asiática, elegante
+[]
+
+### 5 · INCOMPATIBLE mío (nadie encaja)
+HINT: adolescente 13-17, escandinavo, gótico
+[]
+
+### 6 · SOLO GÉNERO (antes: score 1; ahora debe ser [])
+HINT: hombre
+[]
+
+### 7 · SOLO GÉNERO femenino (antes: Lucía score 1; ahora [])
+HINT: mujer
+[]
+
+### 8 · género correcto + UNA señal real → debe seguir saliendo
+HINT: mujer latina
+[{"name": "Lucía (placeholder)", "score": 1, "matched": ["latina"]}]
+
+### 9 · género INCOMPATIBLE pero todo lo demás de Lucía (el filtro debe seguir descalificando)
+HINT: hombre 25-35 latina casual
+[{"name": "Marcus (placeholder)", "score": 1, "matched": ["age_range"]}]
+

@@ -1,0 +1,18 @@
+GATE tras el fix de candidatas (re-ejecutado por el verifier, no me fío del conteo del brief):
+
+  Test Files  106 passed (106)
+       Tests  1090 passed (1090)     ← +1 sobre los 1089 de la primera verificación (el test nuevo del hallazgo)
+  exit 0
+
+⚠ FALSO POSITIVO QUE ME ENCONTRÉ Y HAY QUE SABER: si dejas un `pnpm dev` vivo en :3001, el gate
+FALLA con «Test Files 1 failed» aunque TODOS los tests pasen (1088 passed | 2 skipped). El fichero
+que revienta es apps/web/test/integration/server/sse-contract.test.ts, que arranca SU PROPIO
+`next dev` y choca:
+
+    Error: next dev murió durante el arranque (code 1):
+    ⨯ Another next dev server is already running.
+    - PID: 13424  - Local: http://localhost:3001
+
+NO es un defecto del código ni del fix: es interferencia del servidor que yo mismo había dejado
+levantado para la verificación CUA. Matando el `pnpm dev` y repitiendo → 1090/1090 verde, exit 0.
+(Anotado como rareza del arnés: el gate no es hermético frente a un dev server en marcha.)

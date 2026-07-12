@@ -11,8 +11,11 @@
 //
 // IDEMPOTENTE: correrlo N veces deja la misma librería (ON CONFLICT — ver library.repo.ts).
 import { formatSeedIssues, SEED_LIBRARY, validateSeeds } from '@ugc/core/library';
+import { PERSONA_SEEDS } from '@ugc/core/persona/server';
+import { makeLocalStorageAdapterFromEnv } from '../src/adapters/local-storage';
 import { createDb } from '../src/client';
 import { listRecipes, seedLibrary } from '../src/repos/library.repo';
+import { seedPersonas } from '../src/repos/persona-seed';
 
 async function main(): Promise<void> {
   const connectionString = process.env.DATABASE_URL;
@@ -33,8 +36,16 @@ async function main(): Promise<void> {
   const db = createDb(connectionString);
   const counts = await seedLibrary(db, validation.library);
 
+  // PERSONAS (T2.0): 2 personas PLACEHOLDER (es/en) con imágenes de referencia SINTÉTICAS ≥2K.
+  // Necesita el StorageAdapter (los ficheros van al almacén, igual que en un upload real) —
+  // por eso el seed ahora también depende de `ASSETS_DIR` (default de prod: /data/assets).
+  // Idempotente: re-sembrar no duplica personas ni imágenes (ver persona-seed.ts).
+  const personas = await seedPersonas(db, makeLocalStorageAdapterFromEnv(), PERSONA_SEEDS);
+
   console.log(
-    `seed: OK — hook_line=${String(counts.hookLines)} cta_line=${String(counts.ctaLines)} recipe=${String(counts.recipes)}`,
+    `seed: OK — hook_line=${String(counts.hookLines)} cta_line=${String(counts.ctaLines)} ` +
+      `recipe=${String(counts.recipes)} persona=${String(personas.personas)} ` +
+      `(imágenes de referencia nuevas: ${String(personas.imagesCreated)})`,
   );
 
   // El `SELECT` de la Verificación de T2.1: "los 3 tiers con estimaciones que cuadran con el

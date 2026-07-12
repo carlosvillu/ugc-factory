@@ -1,0 +1,32 @@
+CONTRASTE WCAG — T2.0 (/personas), medido con getComputedStyle + compositing alpha REAL.
+(La alerta de rechazo tiene fondo rojo SEMITRANSPARENTE sobre la página: el bg efectivo se
+ calcula compositando todas las capas hasta la raíz, no leyendo el backgroundColor a pelo.)
+
+TEMA DARK (el DEFAULT de la app; globals.css:22 «dark is DEFAULT»)
+| Elemento                        | color            | bg efectivo    | px/weight | ratio   | umbral | pasa |
+|---------------------------------|------------------|----------------|-----------|---------|--------|------|
+| ALERTA rechazo <2K (el mensaje) | rgb(244,244,245) | rgb(33,16,17)  | 13px/400  | 16.68:1 |  4.5   |  SÍ  |
+| btn "Nueva persona" (primary)   | rgb(255,255,255) | rgb(84,87,229) | 13px/600  |  5.42:1 |  4.5   |  SÍ  |
+| btn "Editar" (ghost)            | rgb(161,161,170) | rgb(10,10,11)  | 13px/500  |  7.72:1 |  4.5   |  SÍ  |
+| btn "Eliminar" (danger-ghost)   | rgb(239,68,68)   | rgb(33,16,17)  | 13px/600  |  4.87:1 |  4.5   |  SÍ  |
+
+TEMA LIGHT (por atributo `data-theme=light` en <html>; la app NO usa prefers-color-scheme)
+| Elemento                        | color            | bg efectivo      | ratio   | umbral | pasa |
+|---------------------------------|------------------|------------------|---------|--------|------|
+| ALERTA rechazo <2K (el mensaje) | rgb(24,24,27)    | rgb(245,228,228) | 14.39:1 |  4.5   |  SÍ  |
+| btn "Nueva persona" (primary)   | rgb(255,255,255) | rgb(84,87,229)   |  5.42:1 |  4.5   |  SÍ  |
+| btn "Editar" (ghost)            | rgb(161,161,170) | rgb(251,251,252) |  2.48:1 |  4.5   |  NO  |
+| btn "Eliminar" (danger-ghost)   | rgb(239,68,68)   | rgb(250,233,234) |  3.20:1 |  4.5   |  NO  |
+
+⚠ HALLAZGO RUTEADO AL DESIGN SYSTEM (no es defecto de T2.0):
+Los dos que fallan en LIGHT son las variantes `ghost` y `danger-ghost` del PRIMITIVO del DS
+(apps/web/src/components/ui/button.tsx, tokens `text-muted` y `text-danger`/`bg-danger-soft`).
+T2.0 las CONSUME correctamente (persona-detail.tsx:284-289) — no hardcodea colores.
+PRUEBA DE QUE ES HEREDADO: la propia página /design-system (fase FD, pre-T2.0, ya verificada)
+mide `danger-ghost` en LIGHT a 3.02:1 y 2.66:1 — el mismo fallo, en páginas ya cerradas
+(login-form, intake-form, step-panel, checkpoint-banner usan las mismas variantes).
+Según cua.md: «hallazgo a rutear si el color viene del DS: el defecto está en los valores del
+DS, decisión del usuario, pero se REPORTA con la tabla de ratios». Queda reportado.
+
+LO QUE T2.0 SÍ DEBE CUMPLIR (la cláusula 3 pide «mensaje CLARO»): la ALERTA de rechazo pasa AA
+holgadamente en AMBOS temas (16.68:1 dark / 14.39:1 light).

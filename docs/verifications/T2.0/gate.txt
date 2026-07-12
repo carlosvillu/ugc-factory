@@ -1,0 +1,36 @@
+packages/db typecheck: Done
+packages/core typecheck: Done
+apps/web typecheck: Done
+packages/test-utils typecheck: Done
+apps/worker typecheck: Done
+
+> ugc-factory@0.0.0 format:check /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads
+> prettier --check .
+
+Checking formatting...
+All matched files use Prettier code style!
+
+> ugc-factory@0.0.0 knip /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads
+> knip
+
+Configuration hints (1)
+src/golden.ts  packages/test-utils  knip.json  Remove from ignore
+
+> ugc-factory@0.0.0 test /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads
+> vitest run --project '*:unit' --project '*:integration'
+
+
+ RUN  v4.1.10 /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads
+
+
+ Test Files  106 passed (106)
+      Tests  1089 passed (1089)
+   Start at  21:52:23
+   Duration  54.29s (transform 15.72s, setup 2.96s, import 73.28s, tests 84.69s, environment 16.69s)
+
+      Tests  1088 passed | 2 skipped (1090)
+   Start at  22:35:31
+   Duration  53.78s (transform 16.16s, setup 2.51s, import 71.90s, tests 81.15s, environment 15.23s)
+
+ ELIFECYCLE  Test failed. See above for more details.
+ ELIFECYCLE  Command failed with exit code 1.

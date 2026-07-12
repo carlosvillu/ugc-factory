@@ -546,3 +546,21 @@
 @utility caption-shadow {
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
 }
+
+/* Rejillas de /personas (T2.0). Los DOS ratios vienen del mockup 6c
+   (docs/mockups/personas.html), que es vinculante: la ficha inmersiva es
+   `grid-template-columns: 1fr 1.2fr` (refs grandes a la izquierda, datos a la
+   derecha). El índice lateral de la librería (que el mockup no dibuja: es
+   añadido sobrio) usa un raíl fijo de 220px + resto.
+
+   Viven aquí y no como `grid-cols-[1fr_1.2fr]` en el componente por la MISMA razón
+   que hatch-9x16 y caption-shadow: la regla del DS (design-system.md §3, y el
+   `no-restricted-syntax` que la vigila) prohíbe el valor arbitrario en className —
+   el valor crudo vive en el fichero de tokens, con nombre y motivo. Cambiar el
+   ratio del mockup se hace en UN sitio. */
+@utility persona-detail-grid {
+  grid-template-columns: 1fr 1.2fr;
+}
+@utility persona-library-grid {
+  grid-template-columns: 220px 1fr;
+}

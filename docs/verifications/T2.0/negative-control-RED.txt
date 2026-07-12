@@ -1,0 +1,10 @@
+     × RECHAZA una imagen un solo píxel por debajo del umbral, con mensaje accionable 5ms
+     × RECHAZA una imagen claramente pequeña (el caso del usuario: sube una miniatura) 5ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  |core:unit| src/persona/validate-reference-image.test.ts > validateReferenceImage (≥2K, §11 identity lock) > RECHAZA una imagen un solo píxel por debajo del umbral, con mensaje accionable
+AssertionError: expected { width: 1637, height: 511 } to be an instance of AppError
+ FAIL  |core:unit| src/persona/validate-reference-image.test.ts > validateReferenceImage (≥2K, §11 identity lock) > RECHAZA una imagen claramente pequeña (el caso del usuario: sube una miniatura)
+AssertionError: promise resolved "{ width: 512, height: 640 }" instead of rejecting
+     46|   it('RECHAZA una imagen claramente pequeña (el caso del usuario: sube…
+ Test Files  1 failed (1)
+      Tests  2 failed | 4 passed (6)

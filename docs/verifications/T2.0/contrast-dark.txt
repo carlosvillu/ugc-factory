@@ -1,0 +1,9 @@
+Contraste WCAG (dark) medido con getComputedStyle + compositing alpha real
+(la alerta tiene fondo rojo SEMITRANSPARENTE sobre la página oscura → bg efectivo rgb(33,16,17)):
+
+| Elemento              | color             | bg efectivo   | px/weight | ratio   | umbral | pasa |
+|-----------------------|-------------------|---------------|-----------|---------|--------|------|
+| ALERTA rechazo <2K    | rgb(244,244,245)  | rgb(33,16,17) | 13px/400  | 16.68:1 |  4.5   |  SI  |
+| btn "Nueva persona"   | rgb(255,255,255)  | rgb(84,87,229)| 13px/600  |  5.42:1 |  4.5   |  SI  |
+| btn "Editar"          | rgb(161,161,170)  | rgb(10,10,11) | 13px/500  |  7.72:1 |  4.5   |  SI  |
+| btn "Eliminar"        | rgb(239,68,68)    | rgb(33,16,17) | 13px/600  |  4.87:1 |  4.5   |  SI  |

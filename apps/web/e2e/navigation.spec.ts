@@ -58,6 +58,10 @@ test.describe('base URL del fetch de servidor y navegación global (T1.13)', () 
       // título, así que se ancla con `^`.
       const entries = [
         { link: /^nuevo análisis/i, heading: 'Nuevo análisis' },
+        // «Personas» (T2.0): la tarjeta NO se escribió a mano en la home — aparece sola porque el
+        // destino tiene `href`. Es la promesa de T1.13 cobrada, y por eso se comprueba de verdad
+        // que se llega a la página a golpe de click.
+        { link: /^personas/i, heading: 'Personas' },
         { link: /^gasto/i, heading: 'Gasto' },
         { link: /^ajustes/i, heading: 'Ajustes' },
         { link: /^design system/i, heading: 'Design system' },
@@ -74,7 +78,7 @@ test.describe('base URL del fetch de servidor y navegación global (T1.13)', () 
   );
 
   test(
-    'la nav global muestra los 6 destinos del mockup; los de fases futuras, deshabilitados',
+    'la nav global muestra los 7 destinos; los de fases futuras, deshabilitados',
     {
       tag: ['@f1'],
     },
@@ -82,10 +86,16 @@ test.describe('base URL del fetch de servidor y navegación global (T1.13)', () 
       await page.goto('/');
       const nav = page.getByRole('navigation', { name: 'Navegación principal' });
 
-      // Los 6 destinos del mockup 2a, en su orden, están TODOS.
+      // ⚠ SON 7 Y NO 6 DESDE T2.0, a propósito y con aprobación del usuario: el mockup 2a dibuja
+      // seis destinos y «Personas» es el séptimo, porque su página existe hoy y está completa
+      // (dejarla accesible solo tecleando la URL es la queja que originó T1.13). NO se fusiona con
+      // «Biblioteca»: esa es el área de F2 (guiones y variantes) y sigue deshabilitada — son dos
+      // cosas distintas. La lista se sigue enumerando ENTERA: su trabajo es cazar el próximo
+      // destino que alguien añada sin pensarlo.
       await expect(nav.getByRole('link')).toHaveText([
         'Inicio',
         'Canvas',
+        'Personas',
         'Biblioteca',
         'Galería',
         'Métricas',

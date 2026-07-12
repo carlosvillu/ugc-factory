@@ -40,3 +40,9 @@ export { startPostgresContainer, type PostgresHarness } from './postgres-contain
 // emiten los productores reales: reutiliza los fixtures y las factories, no inventa.
 export { startFakeExternalApis, FAKE_BRIEF, FAKE_VISUAL_ANALYSIS } from './fake-apis';
 export type { FakeExternalApis } from './fake-apis';
+
+// Fixtures de IMAGEN reales (T2.0): PNGs generados con sharp cuyas dimensiones son de verdad las
+// que dicen. Los consumen los tests handler-level del upload de referencias (apps/web) y el spec
+// de Playwright de /personas — la validación ≥2K LEE el fichero, así que el fixture tiene que ser
+// un fichero (principio 9 de la skill testing).
+export { makeTestPng, writeTestPng } from './image-fixtures';

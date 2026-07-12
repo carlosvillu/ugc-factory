@@ -382,6 +382,9 @@ importers:
       pg:
         specifier: 'catalog:'
         version: 8.22.0
+      sharp:
+        specifier: ^0.35.3
+        version: 0.35.3(@types/node@24.13.2)
     devDependencies:
       '@types/node':
         specifier: 'catalog:'

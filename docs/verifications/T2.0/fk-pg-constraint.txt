@@ -1,0 +1,7 @@
+=== FK ad_variant.persona_id -> persona.id (pg_constraint) ===
+               conname               | confdeltype |                                def                                 
+-------------------------------------+-------------+--------------------------------------------------------------------
+ ad_variant_persona_id_persona_id_fk | n           | FOREIGN KEY (persona_id) REFERENCES persona(id) ON DELETE SET NULL
+(1 row)
+
+confdeltype = 'n'  ⇒  ON DELETE SET NULL  ✓ (la deuda de T2.1 queda saldada)

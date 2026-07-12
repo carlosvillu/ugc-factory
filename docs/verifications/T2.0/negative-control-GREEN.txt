@@ -1,0 +1,6 @@
+=== CONTROL NEGATIVO — FASE VERDE (guard restaurado a 2048) ===
+sha del fichero: 8ffc3cfee0b9457f11eacb79a36107416e167cc6  packages/core/src/persona/contracts.ts
+(idéntico al sha ANTES del experimento: 8ffc3cfee0b9457f11eacb79a36107416e167cc6)
+
+ Test Files  1 passed (1)
+      Tests  6 passed (6)

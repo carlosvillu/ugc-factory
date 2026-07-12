@@ -21,7 +21,8 @@
     "@ugc/db": "workspace:*",
     "drizzle-orm": "catalog:",
     "msw": "^2.14.6",
-    "pg": "catalog:"
+    "pg": "catalog:",
+    "sharp": "^0.35.3"
   },
   "devDependencies": {
     "@types/node": "catalog:",

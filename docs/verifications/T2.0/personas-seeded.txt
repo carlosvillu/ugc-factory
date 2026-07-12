@@ -1,0 +1,6 @@
+             id             |         name         | age_range | gender | ethnicity | style  |                                                                                        voice_map                                                                                         |                   reference_image_ids                   
+----------------------------+----------------------+-----------+--------+-----------+--------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+---------------------------------------------------------
+ 01KXBPVY1VN90MQYDRXX6N5DFM | Lucía (placeholder)  | 25-34     | female | latina    | casual | {"en": {"label": "Placeholder EN", "voiceId": "placeholder-en", "provider": "elevenlabs"}, "es": {"label": "Placeholder ES", "voiceId": "placeholder-es", "provider": "elevenlabs"}}     | {01KXBPVY2WNDJAV7746YA9SDJD,01KXBPVY3SEDSV7BYP4B0NP4AC}
+ 01KXBPVY47EKQK92NYHX0VZPJM | Marcus (placeholder) | 35-44     | male   | black     | sporty | {"en": {"label": "Placeholder EN", "voiceId": "placeholder-en-m", "provider": "elevenlabs"}, "es": {"label": "Placeholder ES", "voiceId": "placeholder-es-m", "provider": "elevenlabs"}} | {01KXBPVY4TN751DVWPXJPN5SN2,01KXBPVY5K0GPNTXYW97KQ3QQC}
+(2 rows)
+

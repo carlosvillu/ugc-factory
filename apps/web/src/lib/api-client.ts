@@ -11,6 +11,7 @@ import {
   type CheckpointDecision,
   type ErrorEnvelope,
 } from '@ugc/core/contracts';
+import { PersonaSchema, type PersonaBody, type PersonaPatch } from '@ugc/core/persona';
 
 export class ApiError extends Error {
   constructor(
@@ -174,6 +175,32 @@ const StepResponseSchema = z.object({
 // del navegador: CP1 edita el brief a través del checkpoint del step, no por esa ruta. Un cliente
 // tipado sin consumidor sería código muerto que knip veta con razón; llegará con la pantalla de
 // edición del brief fuera de un run (F2+), que es quien lo va a llamar.
+
+// ── Librería de personas (T2.0) ──────────────────────────────────────────────
+// El CRUD de `/personas` + el upload de imágenes de referencia. Todo contra la API REST del
+// Apéndice E, con los contratos de `@ugc/core/persona` (los mismos que re-valida el handler).
+export const personaActions = {
+  create: (body: PersonaBody) => api.post('/api/personas', PersonaSchema, body),
+  update: (id: string, patch: PersonaPatch) =>
+    api.patch(`/api/personas/${id}`, PersonaSchema, patch),
+  remove: (id: string) => apiFetch(`/api/personas/${id}`, OkSchema, { method: 'DELETE' }),
+  /** Sube una imagen de referencia (multipart). El servidor VALIDA ≥2K leyendo el fichero: un
+   *  rechazo llega como `ApiError('validation_error')` y la UI lo pinta en un `role="alert"`.
+   *  Devuelve la persona ya actualizada (con la imagen en su lista) — sin un segundo GET. */
+  addReferenceImage: (id: string, file: File) => {
+    const form = new FormData();
+    form.append('file', file);
+    return api.postForm(
+      `/api/personas/${id}/reference-images`,
+      z.object({ persona: PersonaSchema }),
+      form,
+    );
+  },
+  removeReferenceImage: (id: string, assetId: string) =>
+    apiFetch(`/api/personas/${id}/reference-images/${assetId}`, PersonaSchema, {
+      method: 'DELETE',
+    }),
+};
 
 export const runActions = {
   getRun: (runId: string) => api.get(`/api/runs/${runId}`, RunResponseSchema),

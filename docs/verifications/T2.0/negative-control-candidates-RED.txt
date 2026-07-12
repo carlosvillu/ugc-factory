@@ -1,0 +1,10 @@
+=== CONTROL NEGATIVO — fix REVERTIDO (el género vuelve a sumar en el solape) ===
+     × casa etnia, estilo y el SOLAPE de rangos de edad (no la igualdad literal) 3ms
+     × EL GÉNERO FILTRA, NO PUNTÚA: coincidir es el mínimo para seguir en la lista, no un mérito 1ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  |core:unit| src/persona/candidates.test.ts > scorePersona > casa etnia, estilo y el SOLAPE de rangos de edad (no la igualdad literal)
+AssertionError: expected [ Array(4) ] to not include 'mujer'
+ FAIL  |core:unit| src/persona/candidates.test.ts > scorePersona > EL GÉNERO FILTRA, NO PUNTÚA: coincidir es el mínimo para seguir en la lista, no un mérito
+AssertionError: expected 1 to be +0 // Object.is equality
+ Test Files  1 failed (1)
+      Tests  2 failed | 13 passed (15)

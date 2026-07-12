@@ -1,0 +1,11 @@
+=== CANONICAL [DS · DARK (baseline — dark values byte-identical to pre-T1.12)] theme=dark (default, no data-theme)  --surface #141416  --bg #0a0a0b
+--- BADGE PAIR: token as TEXT over its own -soft (threshold 4.5:1) ---
+  OK    6.93:1 (on surface 6.93 / on bg 7.66) success  #22c55e
+  OK    7.28:1 (on surface 7.28 / on bg 8.06) warning  #f59e0b
+  FAIL  4.45:1 (on surface 4.45 / on bg 4.86) danger   #ef4444
+  FAIL  4.47:1 (on surface 4.47 / on bg 4.91) info     #3b82f6
+  OK    5.85:1 (on surface 5.85 / on bg 6.47) violet   #a78bfa
+--- SOLID FILL: --x-on over solid --x (threshold 4.5:1) ---
+  OK    6.54:1 --success-on on solid --success = #052e16 on #22c55e
+
+>>> FAILING: danger, info

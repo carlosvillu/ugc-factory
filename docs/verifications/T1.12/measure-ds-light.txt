@@ -1,0 +1,11 @@
+=== CANONICAL [DS · LIGHT (T1.12 — the deliverable)] theme=light  --surface #fff  --bg #fbfbfc
+--- BADGE PAIR: token as TEXT over its own -soft (threshold 4.5:1) ---
+  FAIL  4.44:1 (on surface 4.59 / on bg 4.44) success  #157c3b
+  FAIL  4.35:1 (on surface 4.49 / on bg 4.35) warning  #986206
+  FAIL  4.42:1 (on surface 4.56 / on bg 4.42) danger   #d31212
+  FAIL  4.38:1 (on surface 4.52 / on bg 4.38) info     #0b62ef
+  OK    4.85:1 (on surface 5.01 / on bg 4.85) violet   #6b3bf7
+--- SOLID FILL: --x-on over solid --x (threshold 4.5:1) ---
+  OK    5.27:1 --success-on on solid --success = #fff on #157c3b
+
+>>> FAILING: success, warning, danger, info

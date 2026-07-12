@@ -47,7 +47,10 @@
   --accent-border: #5457e559;
   --ring: #5457e566;
 
-  /* ---- Semantic status (fixed) ---- */
+  /* ---- Semantic status ---- */
+  /* These are the DARK values. They are NOT theme-invariant: each one is re-declared
+     under [data-theme="light"] below, because a hue tuned to glow on a near-black
+     surface lands at 2:1 on a white one. See the light block for the measured ratios. */
   --success: #22c55e;
   --success-soft: #22c55e1a;
   --success-border: #22c55e40;
@@ -96,6 +99,64 @@
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.06);
   --shadow-md: 0 6px 18px rgba(0, 0, 0, 0.08);
   --shadow-lg: 0 18px 48px rgba(0, 0, 0, 0.12);
+
+  /* ---- Semantic status, light variants (T1.12) ----------------------------
+     The dark hues above are tuned to glow on a near-black surface. Reused as-is on
+     a light one they collapse: measured on the real pair a badge renders (the token
+     as TEXT over its own -soft tint composited on the surface behind it), they scored
+       success 2.09 · warning 1.99 · danger 3.30 · info 3.27 · violet 2.49  (:1)
+     against WCAG AA's 4.5:1 for text. All five failed — not just the three CP1 uses.
+
+     CALIBRATED AGAINST THE WORST SURFACE, NOT THE BEST. A first pass tuned these
+     against #fff alone and landed at 4.52-4.60 — and FAILED verification at 3.9-4.3,
+     because a badge is rarely on pure white: in CP1 it sits inside a --surface-2
+     fieldset, and in the showcase most of them sit on --bg-subtle. Isolating the
+     token from the surface it actually renders on is the SAME mistake that produced
+     the original bug, one level down. So each hue below clears >=4.60:1 on the WORST
+     of the four light surfaces (--surface-3 #eeeef1), which leaves 4.8-5.3 on the
+     rest — real headroom, not a number that passes only where you chose to look.
+     Values are rounded to integer channels, as the browser rasterizes them (float
+     arithmetic reads ~0.03 high, enough to matter at zero margin).
+
+       token    hex       surface  surface-2  bg-subtle  surface-3 (worst)
+       success  #147136     5.29      4.96       4.83       4.60
+       warning  #885806     5.28      4.96       4.82       4.61
+       danger   #c01010     5.30      4.98       4.84       4.61
+       info     #0a58d8     5.30      4.97       4.84       4.61
+       violet   #6535f6     5.31      4.98       4.85       4.62
+
+     Each is the lightest tone of the SAME hue that clears the bar, so the colour keeps
+     its identity (the green still reads green, the violet still reads violet). Dark is
+     untouched. Same convention as the accents below: the ratio travels WITH the token. */
+  --success: #147136;
+  --success-soft: #1471361a;
+  --success-border: #14713640;
+  /* INVERTED on purpose. --success-on is the text on a SOLID --success fill (CP1's
+     "Aprobar y continuar" button, checkpoint-banner, step-panel — 3 call sites). The
+     near-black #052e16 reads 6.54:1 on the bright green but only ~2.8:1 on this darker
+     one; white reads 6.10:1. Fixing the badge without this would have broken the
+     button — one contrast bug traded for another. */
+  --success-on: #ffffff;
+
+  --warning: #885806;
+  --warning-soft: #8858061a;
+  --warning-border: #88580640;
+
+  --danger: #c01010;
+  --danger-soft: #c010101a;
+  --danger-border: #c0101040;
+
+  --info: #0a58d8;
+  --info-soft: #0a58d81a;
+  --info-border: #0a58d840;
+
+  --violet: #6535f6;
+  --violet-soft: #6535f61a;
+  --violet-border: #6535f640;
+  /* The -border tokens (25% alpha) land at ~1.4:1. Left as-is on purpose: they are a
+     decorative hairline around an already-tinted fill, not a functional boundary
+     carrying information, so the 3:1 UI threshold does not apply. Pushing them to 3:1
+     would draw a hard rule around every badge and lose the quiet look. */
 }
 
 /* ---- Accent: emerald ---- */

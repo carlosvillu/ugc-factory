@@ -69,34 +69,103 @@ function Surfaces() {
 
 // ── Colors · semantic status ────────────────────────────────────────────────
 function Semantic() {
-  const rows: { name: string; hex: string; klass: string }[] = [
-    { name: 'Success', hex: '#22c55e', klass: 'bg-success' },
-    { name: 'Warning', hex: '#f59e0b', klass: 'bg-warning' },
-    { name: 'Danger', hex: '#ef4444', klass: 'bg-danger' },
-    { name: 'Info', hex: '#3b82f6', klass: 'bg-info' },
+  // Los DOS hexes por familia: los semánticos NO son invariantes de tema (T1.12). Imprimir
+  // solo el oscuro —lo que se hacía— era una etiqueta que MENTÍA en cuanto se conmutaba a
+  // light: la muestra de al lado pinta `var(--success)`, que sí cambia. El ratio es el del
+  // par REAL que renderiza un badge (el token como TEXTO sobre su propio `-soft`), no el del
+  // token suelto: medir el color aislado es justo lo que ocultaba el fallo.
+  // Las clases van LITERALES y completas, nunca interpoladas (`bg-${x}`): Tailwind escanea el
+  // fuente en estático y una clase construida en runtime NO se genera — la muestra saldría sin
+  // color. Es la misma razón por la que el resto del repo las escribe enteras.
+  const rows: {
+    name: string;
+    dark: string;
+    light: string;
+    ratio: string;
+    sw: string;
+    pill: string;
+  }[] = [
+    {
+      name: 'Success',
+      dark: '#22c55e',
+      light: '#147136',
+      ratio: '4.60:1',
+      sw: 'bg-success',
+      pill: 'border-success-border bg-success-soft text-success',
+    },
+    {
+      name: 'Warning',
+      dark: '#f59e0b',
+      light: '#885806',
+      ratio: '4.61:1',
+      sw: 'bg-warning',
+      pill: 'border-warning-border bg-warning-soft text-warning',
+    },
+    {
+      name: 'Danger',
+      dark: '#ef4444',
+      light: '#c01010',
+      ratio: '4.61:1',
+      sw: 'bg-danger',
+      pill: 'border-danger-border bg-danger-soft text-danger',
+    },
+    {
+      name: 'Info',
+      dark: '#3b82f6',
+      light: '#0a58d8',
+      ratio: '4.61:1',
+      sw: 'bg-info',
+      pill: 'border-info-border bg-info-soft text-info',
+    },
+    {
+      name: 'Violet',
+      dark: '#a78bfa',
+      light: '#6535f6',
+      ratio: '4.62:1',
+      sw: 'bg-violet',
+      pill: 'border-violet-border bg-violet-soft text-violet',
+    },
   ];
   return (
     <Specimen
       title="Estados semánticos"
-      subtitle="Fijos en todo tema y acento: success / warning / danger / info"
+      subtitle="success / warning / danger / info / violet — variante por tema, AA en ambos"
     >
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
         {rows.map((r) => (
           <div
             key={r.name}
-            className="flex items-center gap-2.5 rounded-md border border-border bg-surface p-3"
+            className="flex flex-col gap-2 rounded-md border border-border bg-surface p-3"
           >
-            <span className={`size-6.5 shrink-0 rounded-md ${r.klass}`} />
-            <div>
+            <div className="flex items-center gap-2.5">
+              <span className={`size-6.5 shrink-0 rounded-md ${r.sw}`} />
               <div className="text-small font-semibold text-text">{r.name}</div>
-              <div className="font-mono text-micro text-text-3">{r.hex}</div>
             </div>
+            <div className="font-mono text-micro text-text-3">
+              <span className="text-text-2">dark</span> {r.dark}
+              <br />
+              <span className="text-text-2">light</span> {r.light}
+            </div>
+            {/* La píldora ES el par que importa: el token como TEXTO sobre su propio `-soft`.
+                Conmuta el tema: sigue legible en ambos — eso es lo que T1.12 arregló. Medir la
+                muestra sólida de arriba, en cambio, ocultaba el fallo. */}
+            <span
+              className={`inline-flex w-fit items-center rounded-full border px-2 py-0.5 font-mono text-micro font-semibold ${r.pill}`}
+            >
+              {r.ratio}
+            </span>
           </div>
         ))}
       </div>
       <p className="mt-4 text-small text-text-3">
-        El acento nunca significa estado; los estados usan estos semánticos fijos (más{' '}
-        <span className="text-violet">violet</span> para «inferido / premium»).
+        El acento nunca significa estado. Los semánticos son fijos frente al <em>acento</em>, pero{' '}
+        <strong className="text-text-2">no frente al tema</strong>: un tono calibrado para brillar
+        sobre casi-negro cae a ~2:1 sobre uno claro. Cada variante light es el tono más claro del
+        mismo matiz que supera el 4,5:1 de WCAG AA{' '}
+        <strong className="text-text-2">sobre la PEOR superficie</strong> (los ratios de arriba son
+        sobre <code>--surface-3</code>; sobre <code>--surface</code> llegan a 5,3). Calibrarlos solo
+        contra blanco los dejaba en 3,9–4,3 allí donde los badges viven de verdad — aislar un token
+        de su superficie es el mismo error que causó el fallo.
       </p>
     </Specimen>
   );

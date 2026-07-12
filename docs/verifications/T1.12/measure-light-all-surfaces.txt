@@ -1,0 +1,10 @@
+Lazy loading nvm node npm ...
+LIGHT · badge pair on EVERY real light surface of the DS (integer-rasterized, alpha=26/255)
+surface                 success  warning   danger     info   violet
+--surface #ffffff          4.60    x4.49     4.58     4.52     5.01
+--bg #fbfbfc              x4.45    x4.34    x4.41    x4.38     4.84
+--bg-subtle #f4f4f6       x4.20    x4.11    x4.18    x4.13     4.58
+--surface-2 #f7f7f9       x4.29    x4.22    x4.28    x4.25     4.71
+--surface-3 #eeeef1       x3.99    x3.92    x3.98    x3.95    x4.37
+
+(x = below 4.5:1 AA.  Badges in /design-system actually render on #f4f4f6 (15 of them) and #ffffff (13).)

@@ -1,23 +1,65 @@
-<!-- @dsCard group="Colors" viewport="700x150" name="Semantic status" subtitle="fixed across theme & accent: success / warning / danger / info" -->
+<!-- @dsCard group="Colors" viewport="700x230" name="Semantic status" subtitle="success / warning / danger / info / violet — per-theme, AA on both" -->
 <!DOCTYPE html>
 <html>
 <head>
 <link rel="stylesheet" href="../styles.css">
 <style>
   body{margin:0;background:var(--bg);font-family:var(--font-sans);padding:18px;}
-  .row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
-  .card{border:1px solid var(--border);border-radius:var(--r-md);padding:12px;background:var(--surface);display:flex;align-items:center;gap:10px;}
-  .sw{width:26px;height:26px;border-radius:7px;flex-shrink:0;}
+  .row{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;}
+  .card{border:1px solid var(--border);border-radius:var(--r-md);padding:11px;background:var(--surface);}
+  .top{display:flex;align-items:center;gap:9px;margin-bottom:9px;}
+  .sw{width:24px;height:24px;border-radius:7px;flex-shrink:0;}
   .name{font-size:12px;font-weight:600;color:var(--text);}
-  .hex{font-size:11px;color:var(--text-3);font-family:var(--font-mono);}
+  .hex{font-size:10.5px;color:var(--text-3);font-family:var(--font-mono);line-height:1.5;}
+  .hex b{color:var(--text-2);font-weight:600;}
+  /* The badge is the pair that actually matters: the token as TEXT on its own -soft
+     tint. This is what T1.12 measured and fixed — the swatch alone hides the bug. */
+  .badge{display:inline-flex;align-items:center;padding:3px 8px;border-radius:999px;
+         font-size:10.5px;font-weight:600;margin-top:8px;}
+  .note{margin-top:14px;font-size:11px;color:var(--text-3);line-height:1.55;}
+  .note b{color:var(--text-2);}
 </style>
 </head>
 <body>
   <div class="row">
-    <div class="card"><span class="sw" style="background:var(--success);"></span><div><div class="name">Success</div><div class="hex">#22c55e</div></div></div>
-    <div class="card"><span class="sw" style="background:var(--warning);"></span><div><div class="name">Warning</div><div class="hex">#f59e0b</div></div></div>
-    <div class="card"><span class="sw" style="background:var(--danger);"></span><div><div class="name">Danger</div><div class="hex">#ef4444</div></div></div>
-    <div class="card"><span class="sw" style="background:var(--info);"></span><div><div class="name">Info</div><div class="hex">#3b82f6</div></div></div>
+    <div class="card">
+      <div class="top"><span class="sw" style="background:var(--success);"></span><div class="name">Success</div></div>
+      <div class="hex"><b>dark</b> #22c55e<br><b>light</b> #147136</div>
+      <span class="badge" style="color:var(--success);background:var(--success-soft);border:1px solid var(--success-border);">4.60:1</span>
+    </div>
+    <div class="card">
+      <div class="top"><span class="sw" style="background:var(--warning);"></span><div class="name">Warning</div></div>
+      <div class="hex"><b>dark</b> #f59e0b<br><b>light</b> #885806</div>
+      <span class="badge" style="color:var(--warning);background:var(--warning-soft);border:1px solid var(--warning-border);">4.61:1</span>
+    </div>
+    <div class="card">
+      <div class="top"><span class="sw" style="background:var(--danger);"></span><div class="name">Danger</div></div>
+      <div class="hex"><b>dark</b> #ef4444<br><b>light</b> #c01010</div>
+      <span class="badge" style="color:var(--danger);background:var(--danger-soft);border:1px solid var(--danger-border);">4.61:1</span>
+    </div>
+    <div class="card">
+      <div class="top"><span class="sw" style="background:var(--info);"></span><div class="name">Info</div></div>
+      <div class="hex"><b>dark</b> #3b82f6<br><b>light</b> #0a58d8</div>
+      <span class="badge" style="color:var(--info);background:var(--info-soft);border:1px solid var(--info-border);">4.61:1</span>
+    </div>
+    <div class="card">
+      <div class="top"><span class="sw" style="background:var(--violet);"></span><div class="name">Violet</div></div>
+      <div class="hex"><b>dark</b> #a78bfa<br><b>light</b> #6535f6</div>
+      <span class="badge" style="color:var(--violet);background:var(--violet-soft);border:1px solid var(--violet-border);">4.62:1</span>
+    </div>
+  </div>
+  <div class="note">
+    <b>Not theme-invariant.</b> A hue tuned to glow on a near-black surface collapses on a light one:
+    reused as-is, these five scored 1.99–3.30:1 in light against WCAG AA's 4.5:1 for text. Each light
+    variant is the lightest tone of the same hue that clears the bar — measured on the pair above (the
+    token as text on its own <code>-soft</code> tint), which is what a badge actually renders.
+    <b>Calibrated on the WORST surface, not the best:</b> the ratios shown are on <code>--surface-3</code>;
+    on <code>--surface</code> they reach 5.3. A first pass tuned only against white passed there and
+    failed at 3.9–4.3 where badges really sit (<code>--surface-2</code>, <code>--bg-subtle</code>) —
+    isolating a token from its surface is the same mistake that caused the bug.
+    <b>Toggle the theme:</b> the pills stay legible in both.
+    <br><b>--success-on inverts</b> (near-black in dark, white in light): it is the text on a solid
+    <code>--success</code> fill, and the darker green needs the opposite end.
   </div>
 </body>
 </html>

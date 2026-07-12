@@ -1,0 +1,10 @@
+===== T1.12 · CP1 MEDIDO (rasterizado real) =====
+LIGHT | FAIL  4.28:1 | badge ✓extraído (success)                      | rgb(21, 124, 59) on rgb(223,234,229) | "✓ extraído"
+LIGHT | OK    4.66:1 | badge inferido (violet)                        | rgb(107, 59, 247) on rgb(232,227,248) | "inferido"
+LIGHT | OK    5.27:1 | BOTÓN Aprobar y continuar (success-on/success) | rgb(255, 255, 255) on rgb(21,124,59) | "Aprobar y continuar"
+DARK  | OK    6.51:1 | badge ✓extraído (success)                      | rgb(34, 197, 94) on rgb(26,43,36) | "✓ extraído"
+DARK  | OK     5.5:1 | badge inferido (violet)                        | rgb(167, 139, 250) on rgb(40,37,51) | "inferido"
+DARK  | OK    6.54:1 | BOTÓN Aprobar y continuar (success-on/success) | rgb(5, 46, 22) on rgb(34,197,94) | "Aprobar y continuar"
+=================================================
+    LIGHT | FAIL  4.28:1 | badge ✓extraído (success)                      | rgb(21, 124, 59) on rgb(223,234,229) | "✓ extraído"
+    Received array:  ["LIGHT | FAIL  4.28:1 | badge ✓extraído (success)                      | rgb(21, 124, 59) on rgb(223,234,229) | \"✓ extraído\""]

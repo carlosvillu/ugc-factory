@@ -1,0 +1,8 @@
+Lazy loading nvm node npm ...
+INDEPENDENT HAND-CHECK (light) — badge pair = token TEXT over token@10% composited on the base
+family    token      on --surface(#fff)   on --bg(#fbfbfc)   implementer claimed
+success   #157c3b    OK   4.603           FAIL 4.459         4.60
+warning   #986206    OK   4.504           FAIL 4.363         4.52
+danger    #d31212    OK   4.582           FAIL 4.436         4.57
+info      #0b62ef    OK   4.539           FAIL 4.396         4.56
+violet    #6b3bf7    OK   5.029           OK   4.871         5.03

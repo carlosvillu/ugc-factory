@@ -1,0 +1,19 @@
+===== /spend · light =====
+  OK    5.14:1  badge/text-warning[0]    bg=rgb(255,255,255)   "70%"
+  OK    5.43:1  badge/text-danger[0]     bg=rgb(255,255,255)   "90%"
+===== /spend · dark =====
+lazy_load:unalias:9: no such hash table element: nvm
+lazy_load:unalias:9: no such hash table element: node
+lazy_load:unalias:9: no such hash table element: npm
+  OK    8.57:1  badge/text-warning[0]    bg=rgb(20,20,22)      "70%"
+  OK    4.89:1  badge/text-danger[0]     bg=rgb(20,20,22)      "90%"
+===== /settings · light =====
+lazy_load:unalias:9: no such hash table element: nvm
+lazy_load:unalias:9: no such hash table element: node
+lazy_load:unalias:9: no such hash table element: npm
+  (sin elementos semánticos)
+===== /settings · dark =====
+lazy_load:unalias:9: no such hash table element: nvm
+lazy_load:unalias:9: no such hash table element: node
+lazy_load:unalias:9: no such hash table element: npm
+  (sin elementos semánticos)

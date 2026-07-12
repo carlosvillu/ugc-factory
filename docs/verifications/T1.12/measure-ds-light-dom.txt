@@ -1,0 +1,58 @@
+Lazy loading nvm node npm ...
+REAL DOM SWEEP — theme: light | elems: 54
+
+SUCCESS: 8 elementos, PEOR = 4.21:1 FAIL
+    FAIL  4.21:1  bg=rgb(222,232,227)   "✓ extraído"
+    FAIL  4.21:1  bg=rgb(222,232,227)   "Orgánico publicado"
+    FAIL  4.21:1  bg=rgb(222,232,227)   "✓"
+    OK    4.60:1  bg=rgb(232,242,235)   "↑ scale"
+    OK    4.60:1  bg=rgb(232,242,235)   "✓aprobada"
+    OK    4.60:1  bg=rgb(232,242,235)   "✓aprobada"
+    OK    4.60:1  bg=rgb(232,242,235)   "4.60:1"
+    OK    4.81:1  bg=rgb(244,244,246)   "✓"
+
+WARNING: 15 elementos, PEOR = 3.66:1 FAIL
+    FAIL  4.12:1  bg=rgb(235,229,222)   "+19%"
+    FAIL  4.12:1  bg=rgb(235,229,222)   "Ad borrador"
+    FAIL  4.12:1  bg=rgb(235,229,222)   "⚠"
+    OK    5.14:1  bg=rgb(255,255,255)   "N3 · CP1"
+    OK    5.14:1  bg=rgb(255,255,255)   "esperando aprobación"
+    FAIL  3.66:1  bg=rgb(227,216,200)   "◆"
+    OK    5.14:1  bg=rgb(255,255,255)   "70%"
+    OK    4.50:1  bg=rgb(245,239,230)   "⚠"
+    OK    5.14:1  bg=rgb(255,255,255)   "70%"
+    OK    5.14:1  bg=rgb(255,255,255)   "70%"
+    OK    4.50:1  bg=rgb(245,239,230)   "⚠"
+    OK    4.50:1  bg=rgb(245,239,230)   "4.52:1"
+    OK    4.68:1  bg=rgb(244,244,246)   "⚠"
+    OK    4.68:1  bg=rgb(244,244,246)   "◆"
+    FAIL  4.12:1  bg=rgb(235,229,222)   "◆"
+
+DANGER: 12 elementos, PEOR = 3.71:1 FAIL
+    FAIL  4.19:1  bg=rgb(241,221,223)   "Rechazar"
+    FAIL  4.19:1  bg=rgb(241,221,223)   "✕"
+    FAIL  4.19:1  bg=rgb(241,221,223)   "✕"
+    OK    4.58:1  bg=rgb(251,231,231)   "✕ kill"
+    FAIL  3.71:1  bg=rgb(232,208,202)   "Rechazar"
+    OK    5.43:1  bg=rgb(255,255,255)   "90%"
+    OK    5.43:1  bg=rgb(255,255,255)   "⚠"
+    OK    4.58:1  bg=rgb(251,231,231)   "fallo"
+    OK    5.43:1  bg=rgb(255,255,255)   "90%"
+    OK    5.43:1  bg=rgb(255,255,255)   "90%"
+    OK    4.58:1  bg=rgb(251,231,231)   "4.57:1"
+    OK    4.95:1  bg=rgb(244,244,246)   "✕"
+
+INFO: 4 elementos, PEOR = 4.15:1 FAIL
+    FAIL  4.15:1  bg=rgb(221,229,245)   "i"
+    OK    4.54:1  bg=rgb(231,239,253)   "componiendo"
+    OK    4.54:1  bg=rgb(231,239,253)   "4.56:1"
+    OK    4.77:1  bg=rgb(244,244,246)   "i"
+
+VIOLET: 2 elementos, PEOR = 4.6:1 OK
+    OK    4.60:1  bg=rgb(230,226,246)   "inferido · 0.82"
+    OK    5.03:1  bg=rgb(240,235,254)   "5.03:1"
+
+SOLID FILLS:
+    OK    5.43:1 rgb(255, 255, 255) on rgb(211,18,18) "Cancelar lote"
+    OK    5.43:1 rgb(255, 255, 255) on rgb(211,18,18) "Cancelar lote"
+    OK    5.28:1 rgb(255, 255, 255) on rgb(21,124,59) "Aprobar y continuar"

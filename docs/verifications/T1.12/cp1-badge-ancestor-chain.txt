@@ -1,0 +1,17 @@
+CADENA DE ANCESTROS REAL del badge «✓ extraído» en CP1 (light), volcada del DOM vivo
+(NO deducida de la captura — medida, que es justo lo que la Verificación exige).
+
+  span.badge            background-color: rgba(21, 124, 59, 0.1)   <-- --success-soft (10%)
+  div.flex...           transparent
+  fieldset.bg-surface-2 background-color: rgb(247, 247, 249)       <-- PRIMER OPACO: --surface-2 (#f7f7f9)
+  section.bg-surface    rgb(255, 255, 255)                          (ya no se ve: tapado por el opaco de arriba)
+  div.bg-bg             rgb(251, 251, 252)
+  div.bg-bg-subtle      rgb(244, 244, 246)
+  body                  rgb(251, 251, 252)
+
+CONCLUSIÓN: el badge NO se compone sobre blanco ni sobre ningún "lavado verde": se compone
+sobre --surface-2 (#f7f7f9), un panel NEUTRO y perfectamente ordinario (el fieldset del bloque
+PRODUCTO). El fondo resultante es rgb(223,234,229) y el ratio 4,28:1 — que coincide con la
+casilla "success sobre --surface-2 = 4,29" de measure-light-all-surfaces.txt.
+
+Es decir: el token falla sobre una TARJETA NEUTRA CORRIENTE, no por una rareza de CP1.

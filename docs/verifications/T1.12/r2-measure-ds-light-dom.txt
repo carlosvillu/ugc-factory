@@ -1,0 +1,14 @@
+Lazy loading nvm node npm ...
+BARRIDO DEL DOM VIVO — /design-system LIGHT (r2). Cada badge, sobre la superficie donde REALMENTE se pinta.
+  success   8 badges · PEOR 4.82:1 sobre rgb(222,231,227)    todos AA
+  warning  15 badges · PEOR 4.25:1 sobre rgb(223,214,200)    <<< 1 POR DEBAJO DE 4.5
+  danger   12 badges · PEOR 4.25:1 sobre rgb(229,207,201)    <<< 1 POR DEBAJO DE 4.5
+  info      4 badges · PEOR 4.85:1 sobre rgb(221,228,243)    todos AA
+  violet    2 badges · PEOR 4.85:1 sobre rgb(230,225,246)    todos AA
+
+  RELLENOS SÓLIDOS:
+    OK   6.32:1  rgb(255, 255, 255) sobre rgb(192,16,16)  "Cancelar lote"
+    OK   6.32:1  rgb(255, 255, 255) sobre rgb(192,16,16)  "Cancelar lote"
+    OK   6.10:1  rgb(255, 255, 255) sobre rgb(20,113,54)  "Aprobar y continuar"
+
+>>> 2 BADGES POR DEBAJO DE AA — FAIL

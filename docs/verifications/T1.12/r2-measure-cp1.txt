@@ -1,0 +1,6 @@
+LIGHT | OK    4.91:1 | badge ✓extraído (success)                      | rgb(20, 113, 54) on rgb(223,233,229) | "✓ extraído"
+LIGHT | OK     4.9:1 | badge inferido (violet)                        | rgb(101, 53, 246) on rgb(231,226,248) | "inferido"
+LIGHT | OK    6.09:1 | BOTÓN Aprobar y continuar (success-on/success) | rgb(255, 255, 255) on rgb(20,113,54) | "Aprobar y continuar"
+DARK  | OK    6.51:1 | badge ✓extraído (success)                      | rgb(34, 197, 94) on rgb(26,43,36) | "✓ extraído"
+DARK  | OK     5.5:1 | badge inferido (violet)                        | rgb(167, 139, 250) on rgb(40,37,51) | "inferido"
+DARK  | OK    6.54:1 | BOTÓN Aprobar y continuar (success-on/success) | rgb(5, 46, 22) on rgb(34,197,94) | "Aprobar y continuar"

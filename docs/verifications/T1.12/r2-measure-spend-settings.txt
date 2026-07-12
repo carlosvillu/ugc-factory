@@ -1,0 +1,10 @@
+===== /spend · light =====
+  OK    6.10:1  badge/text-warning[0]  bg=rgb(255,255,255)   "70%"
+  OK    6.32:1  badge/text-danger[0]   bg=rgb(255,255,255)   "90%"
+===== /spend · dark =====
+  OK    8.57:1  badge/text-warning[0]  bg=rgb(20,20,22)      "70%"
+  OK    4.89:1  badge/text-danger[0]   bg=rgb(20,20,22)      "90%"
+===== /settings · light =====
+  (sin elementos semánticos)
+===== /settings · dark =====
+  (sin elementos semánticos)

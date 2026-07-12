@@ -275,6 +275,36 @@ Decisiones del usuario (2026-07-07): la fase se ejecuta tras T0.1 y **antes** de
 
 ---
 
+## F1b — Deuda de cierre de F1 (acordada con el usuario el 2026-07-12, antes de entrar en F2)
+
+> Las tres salen de hallazgos REALES de F1 (verifier de T1.10b, pase de altitud de `simplify`, y uso manual del usuario). Se hacen **antes de F2** porque las tres se abaratan cuanto antes se hagan: el DS afecta a todas las páginas que vengan, el canal de decisiones lo estrenarán CP2/CP3/CP4, y el bug del puerto muerde cada vez que se levanta la app. Ninguna gasta APIs de pago.
+
+#### T1.12 · Contraste WCAG AA de los tokens semánticos en tema claro
+- **Depende de**: —
+- **Origen**: verificación de T1.10b. Los badges de procedencia dan **2,28:1** («✓ extraído»), **2,54–2,72:1** («inferido») y **2,13:1** («on_page») en tema LIGHT, contra el umbral **4,5:1** de WCAG AA. En dark pasan (6,38–8,07:1). **NO es un bug de T1.10b**: el verifier lo reprodujo en `/design-system` con los mismos ratios malos (1,96–2,48:1) — el defecto está en los **tokens del DS** (`--violet`/`--success`/`--info` sin variante light), no en el código que los consume (`brief-editor.tsx` usa la primitiva `Badge` sin hardcodear color). Es **el mismo agujero que TD.7 cerró para otra familia de tokens**.
+- **Entrega**: variante light de los tokens semánticos afectados (al menos `--violet`, `--success`, `--info` y sus `-soft`/`-border`) que cumpla AA sobre su fondo real. El DS es la fuente de verdad visual y vive en Claude Design: **el cambio se hace ALLÍ y se baja con `DesignSync`** — `docs/design-system/` es un espejo de solo lectura y `globals.css` deriva de él (jamás se editan a mano). Si el arreglo exige una decisión de diseño (p. ej. el violeta AA se ve distinto), se para y se pregunta.
+- **Verificación**: en `/design-system` y en CP1 (`/runs/:id` con N3 pausado), en tema **light**, los badges `success`/`violet`/`info` miden **≥4,5:1** con un medidor de contraste real (no a ojo), y **siguen ≥4,5:1 en dark**; evidencia con los ratios medidos antes/después en `docs/verifications/T1.12/`. Ninguna otra página del DS regresiona (recorrido CUA del showcase en ambos temas).
+
+#### T1.11 · Canal de decisiones del checkpoint
+- **Depende de**: T1.10b
+- **Origen**: pase de altitud de `simplify` sobre T1.10b. La `ImageDecision` de CP1 (`upload_images` | `ai_packshot`) **es `useState` local y no sale del cliente** (grep: solo existe en `brief-editor.tsx`, su test y su tipo). Habilita el botón de aprobar y **se evapora**. No es un bug de T1.10b (su Verificación solo exige *mostrar* la petición con su derivación, y quien consume la decisión es **N7a = T4.4**, en F4), pero destapa que **el seam de aprobación transporta un ARTEFACTO y no una DECISIÓN** — y un checkpoint humano produce las dos cosas. Sin canal, CP2 (qué variantes generar), CP3 (aprobar guiones) y CP4 (QA) improvisarán cada uno el suyo y en F4 habrá que armonizar tres apaños.
+- **Entrega**: canal GENÉRICO para la decisión de un checkpoint: `POST /api/steps/:id/approve` (y `/edit`) acepta una `decision` opcional que se **persiste en la MISMA transacción** que la transición, reutilizando `withDomainTransaction` (T1.10b — el pase de altitud lo declaró «a la altura correcta, escala a F2–F4 tal cual»). **NUNCA en `output_refs`**: el artefacto tiene autor, y colar ahí una decisión humana rompería el linaje IA→humano que `audit_log` compara (§19.1); además la decisión vive lo que vive el STEP, no la fila versionada del brief (que se puede editar luego por `PATCH /api/briefs/:id`, fuera de todo run, donde una `image_decision` no significa nada). CP1 lo ESTRENA persistiendo su decisión de imágenes.
+- **Límite de alcance (NO adelantar F4)**: esta tarea crea el CANAL y CP1 lo estrena. **NO** cablea la subida de imágenes ni genera packshots: el consumo real es **T4.4 (N7a)**, que además creará el flag `synthetic_product`. Si al implementar aparece la tentación de "ya que estamos", se para.
+- **Deuda menor que entra aquí** (toca los mismos ficheros): `PATCH /api/briefs/:id` descarta claves desconocidas **en silencio** (Zod strip por defecto) → una edición con un typo se pierde sin aviso. Candidato a `.strict()`.
+- **Playwright permanente**: el spec de CP1 (`apps/web/e2e/brief-editor.spec.ts`) extiende su caso del modo manual: elegir «Generar packshot con IA» → aprobar → la decisión **queda persistida y es legible** tras recargar (hoy se evapora).
+- **Verificación**: en el navegador, un análisis manual SIN imágenes → CP1 → elegir «Generar packshot con IA» → aprobar → la decisión está **en la BD** (`SELECT` que la muestre, asociada al step del checkpoint) y sobrevive a un reload; y si la transición del checkpoint falla, la decisión **no** queda persistida (atomicidad: mismo criterio que la v2 huérfana que cerró T1.10b). Aprobar sin decisión (el caso de la rama URL, que no la necesita) sigue funcionando igual.
+
+#### T1.13 · Base URL del fetch de servidor + navegación global
+- **Depende de**: —
+- **Origen**: uso manual del usuario (2026-07-12), levantando la app para ver la UI. Dos cosas, ambas de F0:
+  1. **`apps/web/src/lib/api-client.ts:26` tiene `http://localhost:3000` HARDCODEADO** en `base()`. Las páginas server-component (`/spend`, `/settings`) necesitan URL absoluta al renderizar en servidor y se la piden al 3000 — pero el 3000 lo ocupa otro proyecto del usuario y **este repo sirve en el 3001** → 404 → **500**. El mecanismo correcto YA EXISTE al lado (`api-server.ts:23`: `process.env.INTERNAL_API_URL ?? …`); lo que falla es el fallback. **Ningún test lo caza** porque el ternario contempla `NODE_ENV === 'test'` y el stack E2E levanta el server en el puerto que sí coincide: **otra vez el entorno de test más cómodo que la realidad** (van tres: T1.8, T1.9 y esta).
+  2. **La home es un placeholder SIN NAVEGACIÓN**: hoy la app solo es navegable escribiendo las URLs a mano. No hay ninguna tarea de layout/nav global en el planning — es un hueco del plan, no un bug.
+- **Entrega**: (a) el base URL del fetch de servidor se **deriva del puerto real** (`process.env.PORT`) en vez de asumir el 3000, con `INTERNAL_API_URL` como override explícito; (b) navegación global mínima: la home enlaza a las páginas que existen (`/analyses/new`, `/spend`, `/settings`, `/design-system`) y hay una forma de volver. **Parte del mockup si existe uno de layout**; si no, es la propuesta más sobria que respete el DS (el `ds-reviewer` la revisa).
+- **Playwright permanente**: un spec que levante el web en un puerto **DISTINTO del 3000** y compruebe que `/spend` y `/settings` renderizan (hoy darían 500). Es el test que faltaba: sin él, el bug vuelve.
+- **Verificación**: con el dev server en **3001** y sin exportar `INTERNAL_API_URL` a mano, `/spend` y `/settings` cargan correctamente en el navegador; y desde la home se llega a las páginas existentes sin escribir ninguna URL.
+
+---
+
 ## F2 — Estrategia y guiones (incluye Personas v1 y recetas)
 
 > Personas y recetas viven aquí (no en F3) porque CP2 las necesita. Ajuste anotado en PRD §21.

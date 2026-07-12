@@ -898,3 +898,18 @@
 - ⚠️ **DEUDA NUEVA, NO ES DE ESTA TAREA — los badges INCUMPLEN WCAG AA en tema LIGHT**: «✓ extraído» **2,28:1**, «inferido» 2,54–2,72:1, «on_page» 2,13:1 (umbral **4,5:1**). En dark pasan (6,38–8,07:1). El verifier hizo lo correcto: **lo reprodujo en `/design-system`** (misma miseria, 1,96–2,48:1) → el defecto es de los **tokens del DS** (`--violet`/`--success`/`--info` sin variante light), no de T1.10b (que consume la primitiva `Badge` sin hardcodear color). **Es el mismo agujero que TD.7, en otra familia de tokens.** Violación AA real en un estado alcanzable → hay que rutearla al DS.
 - **Deuda menor**: `PATCH /api/briefs/:id` descarta claves desconocidas en SILENCIO (Zod strip) → una edición con un typo se pierde sin aviso. Candidato a `.strict()`.
 - **Arnés**: `wait --url "**/runs/*"` de agent-browser **cuelga hasta el timeout** en el canvas (SSE vivo) aunque la navegación ocurra. `cua.md` ya lo advierte de `--load networkidle`; **muerde también a `wait --url`** → usar `wait --text` o polleo de BD.
+
+## 2026-07-12 · FIN DE FASE F1 — parada de protocolo y decisión del usuario
+- **F1 CERRADA**: T1.7 (visión Haiku) · T1.8 (síntesis Sonnet 5) · T1.9 (validación determinista) · T1.10a (N1–N3 como DAG real) · T1.10b (CP1). **Todas PASS, ninguna con más de 1 ciclo de verifier.**
+- **Lo que funciona de verdad** (verificado contra APIs reales sobre `ugmonk.com`): URL o texto libre → scrape → clasificación visual → ProductBrief con Sonnet 5 → editor CP1 con procedencia por campo (verde + cita textual si es extraído; violeta si es inferido) → edición → aprobación → brief versionado distinguiendo IA de humano. **119,9 s y $0,21** por análisis completo.
+- **LA LECCIÓN DE LA FASE (para el arnés)**: los **916 tests en verde no vieron NINGUNO** de los 4 bugs graves de F1. Los cazaron los pases de REVIEW:
+  - T1.9: comparar precios como STRINGS (Firecrawl emite `34.9`, el modelo `34,90 €`) → precio corrupto en todos los anuncios aguas abajo.
+  - T1.10b: `createBriefVersion` fuera de `PermanentStepError` → **re-pagar Sonnet 5 en cada reintento**.
+  - T1.10b: `reach_checkpoint` no persistía `output_refs` → CP1 abriría vacío sobre un brief ya pagado (lo cazó el propio implementer).
+  - T1.10b: fila v2 huérfana declarada "benigna" que NO lo era.
+  **Un test verde no es evidencia de que la funcionalidad esté bien; es evidencia de que el test pasa.** Los pases de revisión NO son opcionales.
+- **Decisión del usuario: las 3 deudas de cierre se hacen ANTES de F2** (nueva sección **F1b** en planning.md, ninguna gasta APIs de pago):
+  1. **T1.12 · contraste WCAG AA del DS** (badges a 2,1–2,7:1 en light, umbral 4,5:1). PRIMERO: es del Design System, afecta a TODAS las páginas que vengan, y cuanto más tarde más superficie hay que revisar. **Se arregla en Claude Design y se baja con `DesignSync`** — `docs/design-system/` es espejo de solo lectura.
+  2. **T1.11 · canal de decisiones del checkpoint**. La decisión va en el body del approve, **NUNCA en `output_refs`** (recomendación del implementer, y es correcta: el artefacto tiene autor; colar ahí una decisión humana rompe el linaje IA→humano que `audit_log` compara). Reutiliza `withDomainTransaction`, que el pase de altitud declaró «a la altura correcta, escala a F2–F4 tal cual». **Límite duro: crea el CANAL, NO adelanta F4** (el consumo real es T4.4/N7a).
+  3. **T1.13 · base URL del fetch de servidor + navegación global**. El `localhost:3000` hardcodeado y la home sin enlaces. Lleva **Playwright que levante el web en un puerto ≠3000** — el test que faltaba, sin el cual el bug vuelve.
+- **Orden**: T1.12 → T1.11 → T1.13. Después, F2.

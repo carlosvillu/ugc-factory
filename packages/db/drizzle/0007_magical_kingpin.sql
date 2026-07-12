@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX "product_brief_analysis_version_key" ON "product_brief" USING btree ("url_analysis_id","version");

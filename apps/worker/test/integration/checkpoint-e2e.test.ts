@@ -9,14 +9,13 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from
 import { makeLogger } from '@ugc/core/observability';
 import { approveStep, createRun, demoCheckpointRunDefinition } from '@ugc/core/orchestrator';
 import type { TransitionDeps } from '@ugc/core/orchestrator';
-import { createTestDatabase, makeProject } from '@ugc/test-utils';
+import { createTestDatabase } from '@ugc/test-utils';
 import type { TestDatabase } from '@ugc/test-utils';
 import { stepExecuteJob } from '@ugc/core/jobs';
 import { PgBoss } from 'pg-boss';
 import { createDbPool, ensureQueue, makeWithTransaction } from '@ugc/db';
-import { project } from '@ugc/db/schema';
 import { bootstrap } from '../../src/bootstrap';
-import { waitFor } from '../helpers';
+import { seedProject, stopBossAndWait, waitFor } from '../helpers';
 
 const silentLogger = makeLogger({ name: 'worker', level: 'silent' });
 
@@ -35,11 +34,6 @@ async function fetchSteps(runId: string): Promise<StepStateRow[]> {
     [runId],
   );
   return rows.map((r) => ({ id: r.id, nodeKey: r.node_key, status: r.status }));
-}
-
-async function seedProject(): Promise<string> {
-  const [p] = await tdb.db.insert(project).values(makeProject()).returning();
-  return p!.id;
 }
 
 beforeAll(async () => {
@@ -99,7 +93,7 @@ describe('checkpoint E2E: pausa, approve reanuda, autopilot, override', () => {
     await startWorker();
     const { deps, cleanup } = await makeDeps();
     try {
-      const projectId = await seedProject();
+      const projectId = await seedProject(tdb);
       // N0 → N1(checkpoint) → N2, sin autopilot.
       const { runId } = await createRun(
         deps,
@@ -151,7 +145,7 @@ describe('checkpoint E2E: pausa, approve reanuda, autopilot, override', () => {
     await startWorker();
     const { deps, cleanup } = await makeDeps();
     try {
-      const projectId = await seedProject();
+      const projectId = await seedProject(tdb);
       const { runId } = await createRun(
         deps,
         demoCheckpointRunDefinition(projectId, { sleepMs: 5, autopilot: true }),
@@ -177,7 +171,7 @@ describe('checkpoint E2E: pausa, approve reanuda, autopilot, override', () => {
     await startWorker();
     const { deps, cleanup } = await makeDeps();
     try {
-      const projectId = await seedProject();
+      const projectId = await seedProject(tdb);
       const { runId } = await createRun(
         deps,
         demoCheckpointRunDefinition(projectId, {
@@ -205,14 +199,3 @@ describe('checkpoint E2E: pausa, approve reanuda, autopilot, override', () => {
     }
   });
 });
-
-async function stopBossAndWait(instance: PgBoss): Promise<void> {
-  const stopped = new Promise<void>((resolve) => {
-    instance.once('stopped', () => {
-      resolve();
-    });
-  });
-  const safety = new Promise<void>((resolve) => setTimeout(resolve, 15_000));
-  await instance.stop({ graceful: true, timeout: 10_000 });
-  await Promise.race([stopped, safety]);
-}

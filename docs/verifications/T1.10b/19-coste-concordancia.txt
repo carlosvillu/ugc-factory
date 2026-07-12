@@ -1,0 +1,22 @@
+== TRIPLE CONCORDANCIA de coste ==
+-- Run A (ugmonk): cost_entry vs step_run.cost_actual --
+ node_key | step_cost_actual | ledger_cents 
+----------+------------------+--------------
+ N1       |                0 |            0
+ N2       |                1 |            1
+ N3       |               20 |           20
+(3 rows)
+
+-- Totales de hoy: cost_entry con step_run_id NOT NULL --
+ filas | con_step_run_id | cents |          usd           
+-------+-----------------+-------+------------------------
+     4 |               4 |    33 | 0.33000000000000000000
+(1 row)
+
+-- Coste por RUN (lo que exige la Verificacion) --
+           run_id           | cents |          usd           
+----------------------------+-------+------------------------
+ 01KXAQPG1EEM8ARBXQ6PE33N0T |    21 | 0.21000000000000000000
+ 01KXAR7Z14ZJYA11XSPTMK3YFG |    12 | 0.12000000000000000000
+(2 rows)
+

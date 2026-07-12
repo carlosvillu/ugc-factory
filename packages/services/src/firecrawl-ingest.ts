@@ -44,6 +44,9 @@ export interface FirecrawlIngestDeps {
 export interface FirecrawlIngestInput {
   projectId: string;
   url: string;
+  /** El step que originó el gasto (T1.10b): atribuye el `cost_entry` a `step_run_id`. OPCIONAL
+   *  — el servicio también se invoca fuera de un run (ahí la columna queda NULL, correcto). */
+  stepRunId?: string;
 }
 
 export interface FirecrawlIngestServiceResult {
@@ -110,6 +113,8 @@ export async function runFirecrawlIngest(
       quantity: result.credits,
       unit: 'credits',
       projectId: input.projectId,
+      // T1.10b: el step que originó el gasto (NULL fuera de un run).
+      stepRunId: input.stepRunId,
     });
   }
 

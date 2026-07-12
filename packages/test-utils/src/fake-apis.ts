@@ -77,6 +77,29 @@ export const FAKE_VISUAL_ANALYSIS = makeVisualAnalysis({
  * emite el fast path de verdad.
  */
 export const FAKE_BRIEF = makeBrief({
+  // T1.10b — UN PAIN POINT CON `evidence` (cita textual) Y OTRO SIN ELLA.
+  //
+  // Otra vez el mismo criterio: hacer al fake MÁS fiel, no más cómodo. `pain_points[].evidence`
+  // es un campo EXTRACTIVO del Apéndice A —el modelo cita la frase de la página de la que sacó
+  // el dolor— y Sonnet 5 lo rellena de verdad. El default de `makeBrief()` lo deja a `null` (le
+  // basta para lo suyo), así que un CP1 alimentado con él no mostraría NI UNA cita: el badge
+  // «✓ extraído» aparecería sin nada que respaldarlo, y la trazabilidad —que es LA razón de ser
+  // de este editor— no se podría observar. El par (con cita / sin cita) es lo que hace
+  // observables los DOS badges y la evidencia. Override LOCAL, no en la factory.
+  pain_points: [
+    {
+      pain: 'La piel tira y se ve apagada al despertar',
+      severity: 'high',
+      current_alternative: 'Cremas genéricas que no penetran',
+      evidence: 'Mis clientas notan la piel más luminosa desde la primera semana',
+    },
+    {
+      pain: 'Miedo a que irrite la piel sensible',
+      severity: 'medium',
+      current_alternative: null,
+      evidence: null, // inferido: sin cita (el badge violeta, sin <q>)
+    },
+  ],
   assets: {
     // `hero_image_url` NO nulo: la validación de T1.9 en perfil `url` exige ≥1 imagen
     // hero usable, y su ausencia es un warning BLOQUEANTE (ok:false) que haría fallar a
@@ -93,7 +116,81 @@ export const FAKE_BRIEF = makeBrief({
       },
     ],
   },
+  // T1.10b — UN HOOK QUE EXCEDE EL TECHO DE ≤12 PALABRAS, A PROPÓSITO.
+  //
+  // Esto hace al fake MÁS fiel, no menos: los hooks auténticos de Sonnet 5 se pasan del techo
+  // con frecuencia (8 `hook_too_long` en los briefs reales de T1.9). Un fake que solo emitiera
+  // hooks cortos pintaría un CP1 sin warnings que en producción NUNCA se ve — y el editor
+  // llegaría a la Verificación sin que nadie hubiera mirado cómo renderiza un warning. El
+  // override es LOCAL (aquí), no en `makeBrief`: su default corto lo comparten decenas de tests
+  // que no van de esto.
+  //
+  // 14 palabras ⇒ `hook_too_long` (MAX_HOOK_WORDS = 12). NO bloquea la aprobación (no está en
+  // BLOCKING_WARNING_CODES): se avisa y el usuario reescribe el copy si quiere, en el editor.
+  angles: makeBrief().angles.map((angle, i) =>
+    i === 0
+      ? {
+          ...angle,
+          hook_examples: [
+            'Llevo tres semanas usando este sérum cada mañana y mi piel ya no se apaga',
+            'Y si el problema no era tu piel',
+          ],
+        }
+      : angle,
+  ),
 });
+
+/**
+ * El brief que devuelve el Anthropic falso para N3 EN MODO MANUAL SIN IMÁGENES (T1.10b).
+ *
+ * SIN HERO Y SIN IMÁGENES — y es lo que EMITIRÍA el productor real: si la síntesis no recibe
+ * ninguna imagen (texto libre, N2 saltado por inaplicable), el modelo no puede inventarse
+ * `assets.images[]` (la regla 8.7 de su system prompt se lo prohíbe: `suggested_assets` debe
+ * referenciar imágenes REALES). El fake anterior devolvía SIEMPRE un brief con hero, incluso
+ * cuando la entrada no tenía ni una foto — un fixture cómodo que hacía IMPOSIBLE observar el
+ * warning `needs_user_decision` (la petición bloqueante de imágenes del modo manual, §9.2), que
+ * es justo lo que CP1 tiene que resolver.
+ *
+ * Con esto, el camino manual dispara en el validador (perfil `manual`, T1.9):
+ *   `needs_user_decision` → brief VÁLIDO (el step NO falla) → llega a CP1 → el editor pide
+ *   imágenes o deriva a packshot-IA. Exactamente lo que exige la Verificación.
+ */
+const FAKE_BRIEF_NO_IMAGES = makeBrief({
+  meta: {
+    // Modo manual: sin URL (el bicondicional del Apéndice A lo exige).
+    source_url: null,
+    platform: 'manual',
+    language: 'es',
+    extracted_at: '2026-07-10T12:00:00.000Z',
+    extraction_confidence: 'medium',
+    warnings: [],
+  },
+  assets: {
+    hero_image_url: null,
+    images: [],
+  },
+  // Sin imágenes que referenciar, ningún ángulo puede sugerir assets (regla 8.7).
+  angles: makeBrief().angles.map((angle) => ({ ...angle, suggested_assets: [] })),
+});
+
+/**
+ * ¿La request de síntesis (N3) es de MODO MANUAL? Se mira el bloque STRUCTURED DATA que el
+ * sintetizador REAL escribe en el user message (`brief-synthesizer.ts` buildUserMessage:
+ * `{source: raw.source, url, product, branding}`), que es un dato EXPLÍCITO y estable — no una
+ * heurística sobre el contenido.
+ *
+ * `content` es un STRING (el user message), y el JSON va DENTRO de él. Por eso se busca sobre el
+ * texto del mensaje y NO sobre `JSON.stringify(body)`: ahí las comillas del JSON interior están
+ * ESCAPADAS (`{\"source\":\"manual\"}`) y el patrón nunca casaría.
+ */
+function isManualSynthesis(body: Record<string, unknown>): boolean {
+  const messages = Array.isArray(body.messages) ? body.messages : [];
+  return messages.some((m: unknown) => {
+    if (typeof m !== 'object' || m === null || !('content' in m)) return false;
+    const { content } = m;
+    return typeof content === 'string' && content.includes('"source":"manual"');
+  });
+}
 
 export interface FakeExternalApis {
   /** Base URL del Firecrawl falso (para `firecrawlBaseUrl`). */
@@ -165,7 +262,22 @@ export async function startFakeExternalApis(): Promise<FakeExternalApis> {
         return;
       }
       if (model === SYNTHESIS_MODEL) {
-        json(anthropicBriefResponse(FAKE_BRIEF));
+        // T1.10b — EL FAKE RESPONDE SEGÚN LO QUE SE LE PIDE, como haría el modelo real.
+        //
+        // El user message del sintetizador lleva el bloque STRUCTURED DATA con `source` del
+        // RawContent (`brief-synthesizer.ts` buildUserMessage: `{source: raw.source, ...}`). En
+        // modo MANUAL sin imágenes no hay NADA visual que el modelo pueda poner en `assets`, así
+        // que devuelve un brief SIN hero (FAKE_BRIEF_NO_IMAGES) — que es lo que dispara el
+        // `needs_user_decision` del validador y lleva la petición bloqueante de imágenes a CP1.
+        //
+        // Devolver siempre el brief CON hero (lo que hacía antes) era el fixture cómodo de
+        // T1.8/T1.9 otra vez: hacía inobservable el único warning que CP1 tiene que resolver.
+        //
+        // OJO al escapado: el user message es un STRING que CONTIENE JSON, así que dentro del
+        // body de la request las comillas van escapadas (`{\"source\":\"manual\"}`). Buscar
+        // `"source":"manual"` sobre el `JSON.stringify(body)` NO casa nunca. Se mira el TEXTO
+        // del mensaje ya des-escapado (que es donde el sintetizador lo escribe).
+        json(anthropicBriefResponse(isManualSynthesis(body) ? FAKE_BRIEF_NO_IMAGES : FAKE_BRIEF));
         return;
       }
       json(

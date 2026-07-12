@@ -1,0 +1,1 @@
+CREATE INDEX "cost_entry_step_run_id_idx" ON "cost_entry" USING btree ("step_run_id") WHERE "cost_entry"."step_run_id" is not null;

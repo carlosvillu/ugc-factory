@@ -68,6 +68,20 @@ export const costEntry = pgTable(
   (t) => [
     // §12 "Índices clave": el panel /spend filtra/ordena/agrupa por fecha.
     index('cost_entry_occurred_at_idx').on(t.occurredAt),
+    // T1.10b — EL ÍNDICE DEL ROLLUP. `rollupStepCost` (spend.repo) recomputa
+    // `step_run.cost_actual` con un `SUM(amount_cents) WHERE step_run_id = $1` en CADA cierre
+    // de step. `cost_entry` es un ledger APPEND-ONLY que crece sin techo, así que sin índice esa
+    // query es un SEQ SCAN DEL LEDGER ENTERO — y encima justo ANTES del NOTIFY, o sea
+    // retrasando el SSE del run. Es lo que hace cierto el argumento de "correr el rollup en
+    // todos los cierres es barato": barato lo es CON índice.
+    //
+    // PARCIAL, con el mismo criterio que `product_brief_origin_step_key`: el comentario de la
+    // columna de arriba ya dice que `step_run_id` está "casi siempre null" (los costes globales
+    // y los de F0 no cuelgan de un step). El índice solo cubre las filas que el rollup busca, y
+    // Postgres lo usa igual para el `= $1` — una igualdad NUNCA casa NULL.
+    index('cost_entry_step_run_id_idx')
+      .on(t.stepRunId)
+      .where(sql`${t.stepRunId} is not null`),
   ],
 );
 

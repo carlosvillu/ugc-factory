@@ -9,17 +9,19 @@
 // — la lección de T1.8/T1.9.
 //
 // Cubre las dos observables de la Verificación:
-//   1. Intake por URL → N1/N2/N3 progresan en el canvas EN VIVO y el brief JSON aparece
-//      como output de N3 en el panel genérico.
+//   1. Intake por URL → N1/N2/N3 progresan en el canvas EN VIVO y el brief aparece en CP1.
 //   2. Texto libre SIN imágenes → N2 aparece `skipped` en el grafo (PRD §7.1/§7.2: el
-//      nodo no aplicable), y el run COMPLETA igualmente (N3 sigue: un nodo saltado
+//      nodo no aplicable), y el run avanza igualmente (N3 sigue: un nodo saltado
 //      satisface la dependencia).
+//
+// ACTUALIZADO EN T1.10b — CAMBIO DE CONTRATO, no relajación del test: N3 pasó a ser el
+// CHECKPOINT de CP1 (`isCheckpoint: true` en analysis-dag.ts). Ya NO termina en `succeeded`
+// por su cuenta: PAUSA en `waiting_approval` con el brief en su `output_refs`, esperando al
+// usuario. Los asserts que decían `N3 succeeded` ahora dicen `N3 waiting_approval` y siguen
+// hasta la aprobación — que es lo que el sistema hace de verdad desde esta tarea. Afirmar
+// `succeeded` sería afirmar algo que ya no es cierto.
 import { test, expect } from '@playwright/test';
-import {
-  canvasNode as node,
-  waitCanvasStatus as waitStatus,
-  openCanvasPanel as openPanel,
-} from './support/canvas';
+import { canvasNode as node, waitCanvasStatus as waitStatus } from './support/canvas';
 
 // Los node_key del DAG de análisis son PLANOS (`N1`/`N2`/`N3`), a diferencia de los del DAG
 // de demo (`demo.canvas.NX`) — los helpers del canvas toman el node_key completo.
@@ -49,18 +51,19 @@ test.describe('pipeline de análisis N1→N2→N3 (T1.10a)', () => {
       await expect(node(page, 'N1')).toBeVisible({ timeout: 30_000 });
       await waitStatus(page, 'N1', 'succeeded'); // ingesta (scrape del Firecrawl falso)
       await waitStatus(page, 'N2', 'succeeded'); // visión (hay imágenes → NO se salta)
-      await waitStatus(page, 'N3', 'succeeded'); // síntesis + validación determinista
 
-      // El brief JSON está como OUTPUT de N3 en el panel genérico (§8.2). OJO: el panel
-      // muestra un EXCERPT (recorte) del artefacto, no el jsonb entero — así que se
-      // asserta sobre lo que el recorte SÍ contiene, y que además es reconocible del
-      // brief y de ningún otro nodo: la clave `brief` y el bloque `meta` del Apéndice A
-      // (con su `extraction_confidence`). Un output vacío, el de N1 (RawContent) o el de
-      // N2 (VisualAnalysis) NO pasarían estos asserts.
-      const panel = await openPanel(page, 'N3');
-      const output = panel.getByLabel('Output del paso');
-      await expect(output).toContainText('"brief"', { timeout: 15_000 });
-      await expect(output).toContainText('extraction_confidence');
+      // T1.10b: N3 sintetiza y PAUSA (es el checkpoint de CP1). El editor de brief toma la
+      // vista con el brief REAL cargado — no un editor vacío, que es lo que salía antes del
+      // fix de `reach_checkpoint` (que no persistía `output_refs` al pausar).
+      const editor = page.getByRole('form', { name: /editor de brief/i });
+      await expect(editor).toBeVisible({ timeout: 30_000 });
+
+      // El brief está cargado de verdad: sus campos editables traen contenido (no huecos).
+      await expect(editor.getByLabel('Beneficio 1')).not.toHaveValue('');
+
+      // Aprobar sin editar reanuda el run y N3 queda `succeeded`.
+      await editor.getByRole('button', { name: /aprobar y continuar/i }).click();
+      await waitStatus(page, 'N3', 'succeeded');
     },
   );
 
@@ -91,16 +94,24 @@ test.describe('pipeline de análisis N1→N2→N3 (T1.10a)', () => {
       // LA OBSERVABLE: N2 se autodeclara inaplicable → `skipped` en el grafo.
       await waitStatus(page, 'N2', 'skipped');
 
-      // Y el run NO se queda varado: `skipped` satisface la dep (T0.8) y N3 sintetiza
-      // igual, solo con el texto. Sin este assert, un `skipped` que bloqueara el
-      // pipeline pasaría por bueno.
-      await waitStatus(page, 'N3', 'succeeded');
+      // El grafo explica POR QUÉ se saltó (no un hueco): el motivo quedó en `output_refs` y el
+      // nodo lo muestra. Se asserta sobre el NODO y no sobre el inspector porque mientras CP1
+      // está abierto el inspector genérico se retira (el artefacto que importa es el brief) —
+      // pero el CANVAS SIGUE MONTADO, así que el motivo del skip nunca deja de ser observable.
+      await expect(node(page, 'N2').locator('[data-slot="node-output"]')).toContainText(
+        /no_analyzable_visuals/,
+        { timeout: 15_000 },
+      );
 
-      // El panel explica POR QUÉ se saltó (no un hueco): el motivo quedó en output_refs.
-      const panel = await openPanel(page, 'N2');
-      await expect(panel.getByLabel('Output del paso')).toContainText(/no_analyzable_visuals/, {
-        timeout: 15_000,
-      });
+      // Y el run NO se queda varado: `skipped` satisface la dep (T0.8) y N3 sintetiza igual,
+      // solo con el texto. T1.10b: N3 no acaba en `succeeded` por su cuenta — es el checkpoint
+      // de CP1, así que la prueba de que N3 CORRIÓ es que el editor de brief aparece con su
+      // brief. Un `skipped` que bloqueara el pipeline dejaría el canvas parado y esto fallaría.
+      const editor = page.getByRole('form', { name: /editor de brief/i });
+      await expect(editor).toBeVisible({ timeout: 60_000 });
+
+      // Y el canvas SIGUE AHÍ con CP1 abierto (el pipeline no se vuelve ciego en el checkpoint).
+      await expect(node(page, 'N2')).toBeVisible();
     },
   );
 });

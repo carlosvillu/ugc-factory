@@ -79,8 +79,9 @@ export type AnalysisIntake =
  * `startSkipped` en la definición: en modo URL no se sabe si habrá imágenes hasta que
  * N1 ha scrapeado — la decisión es necesariamente de RUNTIME.
  *
- * `autopilot=false`: CP1 (el brief editable sobre N3) es un checkpoint humano, pero lo
- * cablea T1.10b — aquí solo se fija el flag del run por coherencia con `createRun`.
+ * `autopilot=false` + N3 `isCheckpoint` (T1.10b): CP1 —el brief editable— es el checkpoint
+ * humano de F1. El run arranca SIN autopilot, así que N3 pausa en `waiting_approval` con su
+ * ProductBrief ya en `output_refs`, y de ahí lo recoge el editor de CP1.
  */
 export function analysisRunDefinition(
   projectId: string,
@@ -122,6 +123,13 @@ export function analysisRunDefinition(
         // la arista N1→N3 no altera la ejecución: solo la hace VERDADERA.
         dependsOn: ['N1', 'N2'],
         config: { targetLanguage } satisfies AnalysisN3Config,
+        // CP1 (T1.10b, §7.1.b): N3 ES el checkpoint del brief. Al terminar la síntesis, el step
+        // NO pasa a `succeeded` sino a `waiting_approval` (salvo autopilot) y el usuario edita el
+        // brief campo a campo antes de dejarlo avanzar. Es el checkpoint REAL de F1 — el primero
+        // que además PRODUCE un artefacto (los de demo de F0 no producían nada), y por eso
+        // `reach_checkpoint` tuvo que aprender a persistir `output_refs` (transition.ts): sin ese
+        // fix, CP1 abriría un editor VACÍO sobre un brief que sí se sintetizó y se pagó.
+        isCheckpoint: true,
       },
     ],
   };

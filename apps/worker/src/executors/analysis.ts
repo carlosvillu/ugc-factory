@@ -28,6 +28,7 @@ import {
 import {
   N1OutputSchema,
   N2OutputSchema,
+  ProductBriefSchema,
   RawContentSchema,
   isSkippedOutput,
 } from '@ugc/core/contracts';
@@ -40,7 +41,7 @@ import type {
 } from '@ugc/core/contracts';
 import { validateBrief } from '@ugc/core/analyze';
 import type { StorageAdapter } from '@ugc/core';
-import { getUrlAnalysis, type DbClient } from '@ugc/db';
+import { createBriefVersion, findBriefByOriginStep, getUrlAnalysis, type DbClient } from '@ugc/db';
 import { runFirecrawlIngest, runVisualAnalyze, runSynthesizeBrief } from '@ugc/services';
 
 /** Deps de los tres executors de análisis, cableadas por el composition root del
@@ -125,7 +126,7 @@ function depOutput<T>(
  */
 export function makeN1Executor(deps: AnalysisExecutorDeps): StepExecutor {
   return async (ctx) => {
-    const { collectOutput } = requireExecutorContext(ctx);
+    const { collectOutput, stepId } = requireExecutorContext(ctx);
 
     const parsed = AnalysisN1ConfigSchema.safeParse(ctx.config);
     if (!parsed.success) {
@@ -163,7 +164,10 @@ export function makeN1Executor(deps: AnalysisExecutorDeps): StepExecutor {
         firecrawlBaseUrl: deps.firecrawlBaseUrl,
         jinaBaseUrl: deps.jinaBaseUrl,
       },
-      { projectId: cfg.projectId, url: cfg.url },
+      // `stepRunId` (T1.10b): el `cost_entry` de los créditos de Firecrawl se ATRIBUYE a este
+      // step, para que el rollup (`rollupStepCost`, en el consumer) pueda escribir
+      // `step_run.cost_actual` y el KPI del canvas deje de mostrar $0,00 con dinero gastado.
+      { projectId: cfg.projectId, url: cfg.url, stepRunId: stepId },
     );
 
     const raw = RawContentSchema.parse(result.analysis.rawContent);
@@ -193,7 +197,7 @@ function hasAnalyzableVisuals(raw: RawContent): boolean {
  */
 export function makeN2Executor(deps: AnalysisExecutorDeps): StepExecutor {
   return async (ctx) => {
-    const { collectOutput, deps: stepDeps } = requireExecutorContext(ctx);
+    const { collectOutput, deps: stepDeps, stepId } = requireExecutorContext(ctx);
     const { markInapplicable } = ctx;
 
     const n1 = depOutput(stepDeps, 'N1', N1OutputSchema, 'N2');
@@ -216,7 +220,8 @@ export function makeN2Executor(deps: AnalysisExecutorDeps): StepExecutor {
         fetch: deps.fetch,
         anthropicBaseUrl: deps.anthropicBaseUrl,
       },
-      { projectId: n1.projectId, raw: n1.raw },
+      // `stepRunId` (T1.10b): atribuye el `cost_entry` de Haiku a ESTE step (rollup del canvas).
+      { projectId: n1.projectId, raw: n1.raw, stepRunId: stepId },
     );
 
     collectOutput({
@@ -237,7 +242,7 @@ export function makeN2Executor(deps: AnalysisExecutorDeps): StepExecutor {
  */
 export function makeN3Executor(deps: AnalysisExecutorDeps): StepExecutor {
   return async (ctx) => {
-    const { collectOutput, deps: stepDeps } = requireExecutorContext(ctx);
+    const { collectOutput, deps: stepDeps, stepId } = requireExecutorContext(ctx);
 
     const parsed = AnalysisN3ConfigSchema.safeParse(ctx.config);
     if (!parsed.success) {
@@ -261,6 +266,53 @@ export function makeN3Executor(deps: AnalysisExecutorDeps): StepExecutor {
           // aquí (ruidoso) que colar basura al prompt de síntesis.
           N2OutputSchema.parse(depN2.outputRefs).visualAnalysis;
 
+    // El perfil de validación (T1.9) sale del ORIGEN del RawContent, y se usa en los DOS
+    // caminos de abajo (síntesis nueva y reuso del brief ya pagado).
+    const validationOpts = {
+      profile: n1.raw.source === 'url' ? ('url' as const) : ('manual' as const),
+      rawContent: n1.raw,
+    };
+
+    // ══ IDEMPOTENCIA DE ENTRADA (T1.10b) — ESTO ES UNA SALVAGUARDA DE DINERO ══
+    //
+    // ¿YA produje yo mi brief? Si sí, se REUSA y NO se vuelve a pasar por caja.
+    //
+    // El caso que lo motiva: N3 paga ~$0,20 de Sonnet 5 y DESPUÉS persiste la fila. Un fallo
+    // TRANSITORIO entre esas dos cosas (deadlock contra el advisory lock del bump, timeout,
+    // conexión caída DESPUÉS de que el commit haya prosperado en el servidor) manda el step a
+    // `failStep` → gate de retry → N3 se re-ejecuta ENTERO, `runSynthesizeBrief` incluida:
+    // otros ~$0,20 por un INSERT que falló, con el brief ya sintetizado y el dinero ya en el
+    // ledger. Tres vueltas ≈ $0,60 quemados. Y con el bump `MAX+1`, cada vuelta dejaba ADEMÁS
+    // otra fila "de la IA" (v2, v3…) que el usuario no pidió y que `edited_by_user:false` no
+    // distingue de la buena.
+    //
+    // POR QUÉ LA CLAVE ES EL STEP Y NO EL ANÁLISIS: un retry CONSERVA el `step_run.id`
+    // (`failStep` reusa la fila: failed→queued + `retry_count++`), mientras que un RE-RUN del
+    // pipeline crea steps nuevos — y un re-run SÍ debe sintetizar de nuevo (es lo que el usuario
+    // pidió). El id del step separa exactamente esos dos casos; el `url_analysis_id` no (lo
+    // comparten). La barrera estructural es el UNIQUE parcial `product_brief_origin_step_key`:
+    // aunque dos entregas del mismo job se colasen entre este SELECT y el INSERT, la segunda
+    // choca 23505 y el brief duplicado no llega a existir.
+    //
+    // QUÉ NO SOBREVIVE AL REUSO: los warnings del SINTETIZADOR (viven en su respuesta, que no
+    // persistimos). Los del VALIDADOR sí se regeneran —`validateBrief` es determinista y
+    // GRATIS— y son los que CP1 necesita para decidir (`needs_user_decision` y compañía). Se
+    // acepta a conciencia: el camino de reuso es raro (solo tras un fallo de persistencia), y
+    // perder unos warnings informativos es infinitamente más barato que volver a pagar la
+    // síntesis.
+    const existing = await findBriefByOriginStep(deps.db, stepId);
+    if (existing !== undefined) {
+      const reused = ProductBriefSchema.parse(existing.data);
+      const revalidated = validateBrief(reused, validationOpts);
+      collectOutput({
+        briefId: existing.id,
+        brief: revalidated.brief,
+        warnings: revalidated.warnings,
+        status: 'reused',
+      });
+      return;
+    }
+
     const result = await runSynthesizeBrief(
       {
         db: deps.db,
@@ -273,6 +325,10 @@ export function makeN3Executor(deps: AnalysisExecutorDeps): StepExecutor {
         raw: n1.raw,
         visualAnalysis,
         targetLanguage: parsed.data.targetLanguage,
+        // `stepRunId` (T1.10b): atribuye el `cost_entry` de Sonnet 5 —el cargo más caro del
+        // pipeline— a ESTE step. Sin esto, `step_run.cost_actual` quedaba NULL y el canvas
+        // mostraba $0,00 mientras `/spend` sí veía el dinero.
+        stepRunId: stepId,
       },
     );
 
@@ -298,10 +354,7 @@ export function makeN3Executor(deps: AnalysisExecutorDeps): StepExecutor {
     // silencio — exactamente el fallo que costó T1.9 (un fixture cómodo tapó un
     // cross-check roto). Se pasa SIEMPRE; en perfil `manual` el propio validador lo
     // ignora.
-    const validated = validateBrief(result.brief, {
-      profile: n1.raw.source === 'url' ? 'url' : 'manual',
-      rawContent: n1.raw,
-    });
+    const validated = validateBrief(result.brief, validationOpts);
 
     // `ok:false` ⇒ FALLO del step, y PERMANENTE.
     //
@@ -326,7 +379,32 @@ export function makeN3Executor(deps: AnalysisExecutorDeps): StepExecutor {
       );
     }
 
+    // T1.10b — PERSISTENCIA DEL BRIEF (v1, el de la IA). Hasta aquí el brief vivía SOLO inline
+    // en `output_refs`, sin fila ni versión: no había nada que versionar en CP1 ni nada que
+    // direccionar desde `GET/PATCH /api/briefs/:id`. Ahora N3 ESTRENA la fila `product_brief`:
+    //   - `version`: lo calcula el repo (MAX+1 por url_analysis_id, bajo advisory lock). Es 1 en
+    //      el caso normal; un RE-RUN del análisis sobre el MISMO `url_analysis` crearía la
+    //      siguiente versión, que es lo correcto (es otro brief de la IA, pedido a conciencia).
+    //   - `edited_by_user: false` (esto lo escribió la IA, no el humano — §19.1 mide justo eso).
+    //   - `status: 'draft'` (aún no aprobado: lo aprueba el usuario en CP1).
+    //   - `originStepRunId`: la clave de idempotencia (ver el bloque de arriba). Es lo que hace
+    //      que un REINTENTO de este step reuse ESTE brief en vez de pagar otra síntesis, y lo que
+    //      —vía el UNIQUE parcial— impide que el retry deje una segunda "versión de la IA".
+    // Se persiste ANTES del collectOutput para que el `briefId` que viaja en el artefacto
+    // apunte a una fila que YA existe (nadie puede leer un id que no resuelve).
+    const briefRow = await createBriefVersion(deps.db, {
+      urlAnalysisId: n1.analysisId,
+      data: validated.brief,
+      language: parsed.data.targetLanguage,
+      editedByUser: false,
+      status: 'draft',
+      originStepRunId: stepId,
+    });
+
     collectOutput({
+      // La FILA es la fuente de verdad del brief desde T1.10b; el inline de abajo se conserva
+      // para el panel genérico y el excerpt del SSE (que no van a la BD).
+      briefId: briefRow.id,
       // El brief CORREGIDO (precio del fast path, suggested_assets podadas), no el crudo.
       brief: validated.brief,
       // Los warnings del sintetizador y los del validador son de fuentes distintas y

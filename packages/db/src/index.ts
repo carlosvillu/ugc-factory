@@ -16,6 +16,11 @@ export { createDb, createDbPool } from './client';
 // cableado de `makeWithTransaction` en el composition root (T0.7b). Solo el TIPO
 // sale al barrel; `makeDb`/los alias internos siguen sin exportarse.
 export type { DbClient } from './client';
+// `Db` = conexión O transacción (client.ts): es lo que aceptan TODOS los repos, y es lo que
+// `withDomainTransaction` entrega a su callback. Sale al barrel para que un consumidor (los route
+// handlers de los checkpoints en web) pueda tipar una función que corre indistintamente dentro o
+// fuera de una tx — que es justo la propiedad que hace atómico el efecto de dominio.
+export type { Db } from './client';
 export { runMigrations } from './migrate';
 export { createProject, getProject, ensureDefaultProject } from './repos/project.repo';
 export type { NewProject } from './schema/project';
@@ -29,6 +34,11 @@ export type { NewUrlAnalysis, NewProductBrief, NewBrandKit } from './schema/proj
 // integración. `makeStepStore`/`makeTxJobQueue` son piezas internas que este
 // compone; no van al barrel.
 export { makeWithTransaction } from './adapters/with-transaction';
+// T1.10b: compone una escritura de DOMINIO (versionar el brief de CP1) con una operación del
+// ORQUESTADOR (`editStep`) en UNA sola transacción — o commitean las dos, o no commitea ninguna.
+// Sin esto, un `editStep` que falla tras crear la versión deja una fila `product_brief` huérfana
+// que nadie referencia (y que F2 leería creyendo que el usuario la aprobó). Ver su cabecera.
+export { withDomainTransaction } from './adapters/with-domain-transaction';
 export type { NewPipelineRun, NewStepRun } from './schema/pipeline';
 // Creación idempotente de colas de pg-boss desde su JobDefinition de core. La
 // consumen el composition root del worker (createBoss) y los tests de
@@ -114,3 +124,26 @@ export {
   findManualUrlAnalysisByHash,
   getUrlAnalysis,
 } from './repos/url-analysis.repo';
+// Brief versionado (T1.10b, CP1): `product_brief` estrena persistencia. `createBriefVersion` es
+// el bump ATÓMICO (advisory lock por análisis + UNIQUE como barrera estructural) que usan los
+// TRES caminos — v1 (N3, worker), v2 (edición en CP1, web) y v3 (PATCH /api/briefs/:id, web).
+// `getBrief` lo lee el endpoint standalone; `approveBrief` marca aprobado el brief cuando CP1 se
+// aprueba SIN editar (no crea versión: no hubo edición humana). `findBriefByOriginStep` es la
+// clave de IDEMPOTENCIA de N3: le permite reusar el brief que YA pagó en vez de re-sintetizarlo
+// tras un fallo de persistencia (ver su docstring — es una salvaguarda de dinero).
+// `getLatestBriefByAnalysis` NO sale al barrel: solo lo usan los tests de integración (import
+// relativo) — knip veta el export sin consumidor de runtime, y volverá cuando la pantalla del
+// brief standalone lo consuma.
+export {
+  createBriefVersion,
+  getBrief,
+  approveBrief,
+  findBriefByOriginStep,
+} from './repos/brief.repo';
+// El tipo de fila `product_brief` (retorno de los repos de arriba): lo consumen los route
+// handlers de web (`/api/briefs/:id`, `/api/steps/:id/{approve,edit}`) para tipar la respuesta.
+export type { ProductBrief as ProductBriefRow } from './schema/project';
+// Rollup del coste real de un step (T1.10b): recomputa `step_run.cost_actual` desde
+// `cost_entry` (SUM por step_run_id). Lo llama el ORQUESTADOR (consumer del worker) al cerrar
+// un step — nunca `@ugc/services` (la columna del step es territorio del step, T1.10a).
+export { rollupStepCost } from './repos/spend.repo';

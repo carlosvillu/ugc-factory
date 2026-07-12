@@ -41,6 +41,30 @@ describe('analysisRunDefinition', () => {
     expect(byKey.N3?.dependsOn).toEqual(['N1', 'N2']);
   });
 
+  it('N3 es el CHECKPOINT de CP1, y solo N3 (T1.10b)', () => {
+    // Sin `isCheckpoint` en N3, el run auto-completaría la síntesis y NUNCA pausaría: no habría
+    // CP1 que abrir, y el brief —ya sintetizado y ya pagado— avanzaría sin que nadie lo revise.
+    // Es la bandera que convierte N3 en el checkpoint humano de F1 (§7.1.b).
+    const def = analysisRunDefinition('proj_01', URL_INTAKE);
+    const byKey = Object.fromEntries(def.nodes.map((n) => [n.nodeKey, n]));
+
+    expect(byKey.N3?.isCheckpoint).toBe(true);
+    // N1/N2 NO son checkpoints: pausar en la ingesta o en la visión no tiene sentido de
+    // producto (no hay nada que el usuario decida ahí) y bloquearía el pipeline dos veces.
+    expect(byKey.N1?.isCheckpoint ?? false).toBe(false);
+    expect(byKey.N2?.isCheckpoint ?? false).toBe(false);
+
+    // El run arranca SIN autopilot: si arrancara con autopilot, `shouldPause` diría que no hay
+    // pausa y el checkpoint no serviría de nada.
+    expect(def.autopilot).toBe(false);
+
+    // Y en modo MANUAL igual (el camino que la Verificación usa para ver la petición de
+    // imágenes): CP1 no es del modo url, es del DAG.
+    const manual = analysisRunDefinition('proj_01', MANUAL_INTAKE);
+    const n3Manual = manual.nodes.find((n) => n.nodeKey === 'N3');
+    expect(n3Manual?.isCheckpoint).toBe(true);
+  });
+
   it('los node_key son ÚNICOS (invariante del singletonKey `${runId}:${nodeKey}`)', () => {
     const def = analysisRunDefinition('proj_01', URL_INTAKE);
     const keys = def.nodes.map((n) => n.nodeKey);

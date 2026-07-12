@@ -1,0 +1,26 @@
+== TIEMPOS Run A ==
+             id             | node_key |      status      |         started_at         |        finished_at         | secs | cost_actual 
+----------------------------+----------+------------------+----------------------------+----------------------------+------+-------------
+ 01KXAQPG1B4EVV7AKW0TQTCXAV | N1       | succeeded        | 2026-07-12 08:39:28.859+00 | 2026-07-12 08:39:58.317+00 | 29.5 |           0
+ 01KXAQPG1DQPGPQ8H7DH7FWTSB | N2       | succeeded        | 2026-07-12 08:39:58.36+00  | 2026-07-12 08:40:09.524+00 | 11.2 |           1
+ 01KXAQPG1DXQYBBP2DF0PGC2Z2 | N3       | waiting_approval | 2026-07-12 08:40:09.557+00 |                            |      |          20
+(3 rows)
+
+== TOTAL PIPELINE (min started -> max finished, sin edicion humana) ==
+ total_secs 
+------------
+       40.7
+(1 row)
+
+== PIPELINE REAL: min(started) del run -> updated_at de N3 al entrar en waiting_approval ==
+       pipeline_start       |       n3_waiting_at       | pipeline_secs 
+----------------------------+---------------------------+---------------
+ 2026-07-12 08:39:28.859+00 | 2026-07-12 08:41:28.78+00 |         119.9
+(1 row)
+
+== N3 duracion (started -> coste registrado) ==
+ n3_secs 
+---------
+    79.2
+(1 row)
+

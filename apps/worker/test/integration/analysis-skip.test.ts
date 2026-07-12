@@ -11,19 +11,13 @@
 // (consumer → skip_inapplicable → skipped → resolveDownstream), que es justo lo que
 // podría romperse en silencio.
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { makeLogger } from '@ugc/core/observability';
 import { createRun, PermanentStepError } from '@ugc/core/orchestrator';
-import type { StepExecutor, TransitionDeps } from '@ugc/core/orchestrator';
+import type { StepExecutor } from '@ugc/core/orchestrator';
 import { stepExecuteJob } from '@ugc/core/jobs';
-import { createTestDatabase, makeProject } from '@ugc/test-utils';
+import { createTestDatabase } from '@ugc/test-utils';
 import type { TestDatabase } from '@ugc/test-utils';
-import { createDbPool, ensureQueue, makeWithTransaction } from '@ugc/db';
-import { project } from '@ugc/db/schema';
 import { PgBoss } from 'pg-boss';
-import { registerStepConsumer } from '../../src/consumers/step-execute';
-import { waitFor } from '../helpers';
-
-const silentLogger = makeLogger({ name: 'worker', level: 'silent' });
+import { seedProject, startWorkerWith, stopBossAndWait, waitFor } from '../helpers';
 
 let tdb: TestDatabase;
 
@@ -55,22 +49,6 @@ async function fetchSteps(runId: string): Promise<StepRowLite[]> {
   }));
 }
 
-async function seedProject(): Promise<string> {
-  const [p] = await tdb.db.insert(project).values(makeProject()).returning();
-  return p!.id;
-}
-
-/** Para el boss y ESPERA a que suelte sus conexiones (si no, el DROP de la BD da 57P01). */
-async function stopBossAndWait(b: PgBoss): Promise<void> {
-  const stopped = new Promise<void>((resolve) =>
-    b.once('stopped', () => {
-      resolve();
-    }),
-  );
-  await b.stop({ graceful: false });
-  await stopped;
-}
-
 beforeAll(async () => {
   tdb = await createTestDatabase({ label: 'worker:analysis-skip' });
   const seedBoss = new PgBoss(tdb.connectionString);
@@ -89,29 +67,6 @@ beforeEach(async () => {
   await tdb.pool.query('TRUNCATE step_run, pipeline_run, project CASCADE');
   await tdb.pool.query(`DELETE FROM pgboss.job WHERE name = $1`, [stepExecuteJob.name]);
 });
-
-/** Un worker real (boss + consumer genérico) con los executors que le pasemos. */
-async function startWorkerWith(executors: Record<string, StepExecutor>): Promise<{
-  deps: TransitionDeps;
-  cleanup: () => Promise<void>;
-}> {
-  const boss = new PgBoss(tdb.connectionString);
-  boss.on('error', () => {
-    /* irrelevante para estos asserts */
-  });
-  await boss.start();
-  await ensureQueue(boss, stepExecuteJob);
-  const { db, pool } = createDbPool(tdb.connectionString);
-  const deps: TransitionDeps = { withTransaction: makeWithTransaction(db, boss) };
-  await registerStepConsumer({ boss, db, transitionDeps: deps, executors, logger: silentLogger });
-  return {
-    deps,
-    cleanup: async () => {
-      await stopBossAndWait(boss);
-      await pool.end();
-    },
-  };
-}
 
 describe('resolución de deps por ULID (T1.10a): inmune al supersede de un checkpoint', () => {
   // EL BUG QUE ESTO IMPIDE (latente hasta que T1.10b cablee CP1): resolver la dependencia
@@ -143,9 +98,9 @@ describe('resolución de deps por ULID (T1.10a): inmune al supersede de un check
       await Promise.resolve();
     };
 
-    const { deps, cleanup } = await startWorkerWith({ N1: n1, N2: n2 });
+    const { deps, cleanup } = await startWorkerWith(tdb, { N1: n1, N2: n2 });
     try {
-      const projectId = await seedProject();
+      const projectId = await seedProject(tdb);
       const { runId } = await createRun(deps, {
         projectId,
         nodes: [
@@ -206,9 +161,9 @@ describe('fallo PERMANENTE (T1.10a): un error determinista NO quema reintentos d
       throw new PermanentStepError('N3: la síntesis no produjo brief (status=refused)');
     };
 
-    const { deps, cleanup } = await startWorkerWith({ N1: n1 });
+    const { deps, cleanup } = await startWorkerWith(tdb, { N1: n1 });
     try {
-      const projectId = await seedProject();
+      const projectId = await seedProject(tdb);
       const { runId } = await createRun(deps, {
         projectId,
         nodes: [{ key: 'N1', nodeKey: 'N1', dependsOn: [], config: {} }],
@@ -246,9 +201,9 @@ describe('fallo PERMANENTE (T1.10a): un error determinista NO quema reintentos d
       throw new Error('timeout de red hablando con el proveedor');
     };
 
-    const { deps, cleanup } = await startWorkerWith({ N1: n1 });
+    const { deps, cleanup } = await startWorkerWith(tdb, { N1: n1 });
     try {
-      const projectId = await seedProject();
+      const projectId = await seedProject(tdb);
       const { runId } = await createRun(deps, {
         projectId,
         nodes: [{ key: 'N1', nodeKey: 'N1', dependsOn: [], config: {} }],
@@ -298,9 +253,9 @@ describe('auto-skip del nodo inaplicable (T1.10a): N2 sin imágenes → skipped,
       await Promise.resolve();
     };
 
-    const { deps, cleanup } = await startWorkerWith({ N1: n1, N2: n2, N3: n3 });
+    const { deps, cleanup } = await startWorkerWith(tdb, { N1: n1, N2: n2, N3: n3 });
     try {
-      const projectId = await seedProject();
+      const projectId = await seedProject(tdb);
       const { runId } = await createRun(deps, {
         projectId,
         nodes: [
@@ -355,9 +310,9 @@ describe('auto-skip del nodo inaplicable (T1.10a): N2 sin imágenes → skipped,
       await Promise.resolve();
     };
 
-    const { deps, cleanup } = await startWorkerWith({ N1: n1, N2: n2, N3: n3 });
+    const { deps, cleanup } = await startWorkerWith(tdb, { N1: n1, N2: n2, N3: n3 });
     try {
-      const projectId = await seedProject();
+      const projectId = await seedProject(tdb);
       const { runId } = await createRun(deps, {
         projectId,
         nodes: [

@@ -1,0 +1,11 @@
+== product_brief del Run B ANTES de aprobar ==
+             id             | version | edited_by_user | status |     origin_step_run_id     
+----------------------------+---------+----------------+--------+----------------------------
+ 01KXAR97X74QM016G5B73DVN3A |       1 | f              | draft  | 01KXAR7Z13FHF36RVK727G9FA3
+(1 row)
+
+             id             | version | edited_by_user |  status  
+----------------------------+---------+----------------+----------
+ 01KXAR97X74QM016G5B73DVN3A |       1 | f              | approved
+(1 row)
+

@@ -12,16 +12,15 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from
 import { makeLogger } from '@ugc/core/observability';
 import { createRun, demoRunDefinition } from '@ugc/core/orchestrator';
 import type { StepExecutor, TransitionDeps } from '@ugc/core/orchestrator';
-import { createTestDatabase, makeProject } from '@ugc/test-utils';
+import { createTestDatabase } from '@ugc/test-utils';
 import type { TestDatabase } from '@ugc/test-utils';
 import { stepExecuteJob } from '@ugc/core/jobs';
 import { PgBoss } from 'pg-boss';
 import { createDbPool, ensureQueue, makeWithTransaction } from '@ugc/db';
-import { project } from '@ugc/db/schema';
 import { bootstrap } from '../../src/bootstrap';
 import type { DemoFailDecider } from '../../src/executors/demo';
 import { registerStepConsumer } from '../../src/consumers/step-execute';
-import { waitFor } from '../helpers';
+import { seedProject, stopBossAndWait, waitFor } from '../helpers';
 
 const silentLogger = makeLogger({ name: 'worker', level: 'silent' });
 
@@ -84,11 +83,6 @@ async function fetchSteps(runId: string): Promise<StepStateRow[]> {
 function orderByChain(steps: StepStateRow[]): StepStateRow[] {
   const order = ['demo.sleep.N0', 'demo.sleep.N1', 'demo.sleep.N2'];
   return [...steps].sort((a, b) => order.indexOf(a.nodeKey) - order.indexOf(b.nodeKey));
-}
-
-async function seedProject(): Promise<string> {
-  const [p] = await tdb.db.insert(project).values(makeProject()).returning();
-  return p!.id;
 }
 
 beforeAll(async () => {
@@ -163,7 +157,7 @@ describe('createRun: estados iniciales + encolado atómico de roots', () => {
   it('N0(root)→N1→N2: root queda queued+job, dependientes awaiting_deps, sin worker', async () => {
     const { deps, cleanup } = await makeDeps();
     try {
-      const projectId = await seedProject();
+      const projectId = await seedProject(tdb);
       const result = await createRun(deps, demoRunDefinition(projectId));
 
       const steps = await fetchSteps(result.runId);
@@ -192,7 +186,7 @@ describe('createRun: estados iniciales + encolado atómico de roots', () => {
   it('DAG inválido (dep colgante) ⇒ InvalidRunDefinitionError, cero filas', async () => {
     const { deps, cleanup } = await makeDeps();
     try {
-      const projectId = await seedProject();
+      const projectId = await seedProject(tdb);
       await expect(
         createRun(deps, {
           projectId,
@@ -214,7 +208,7 @@ describe('consumer: camino feliz end-to-end', () => {
     await startWorker();
     const { deps, cleanup } = await makeDeps();
     try {
-      const projectId = await seedProject();
+      const projectId = await seedProject(tdb);
       const { runId } = await createRun(deps, demoRunDefinition(projectId, 20));
 
       await waitFor(
@@ -258,7 +252,7 @@ describe('consumer: retry_count agotándose (no bucle infinito)', () => {
     await startWorker(alwaysFail);
     const { deps, cleanup } = await makeDeps();
     try {
-      const projectId = await seedProject();
+      const projectId = await seedProject(tdb);
       const { runId } = await createRun(deps, {
         projectId,
         nodes: [{ key: 'F', nodeKey: 'demo.fail', dependsOn: [], config: { failRate: 1 } }],
@@ -292,7 +286,7 @@ describe('consumer: retry_count agotándose (no bucle infinito)', () => {
     await startWorker(failFirstKAttempts(2));
     const { deps, cleanup } = await makeDeps();
     try {
-      const projectId = await seedProject();
+      const projectId = await seedProject(tdb);
       const { runId } = await createRun(deps, {
         projectId,
         nodes: [{ key: 'F', nodeKey: 'demo.fail', dependsOn: [], config: { failRate: 1 } }],
@@ -322,7 +316,7 @@ describe('consumer: idempotencia bajo at-least-once', () => {
     await startWorker();
     const { deps, enqueueBoss, cleanup } = await makeDeps();
     try {
-      const projectId = await seedProject();
+      const projectId = await seedProject(tdb);
       const { runId } = await createRun(deps, {
         projectId,
         nodes: [{ key: 'A', nodeKey: 'demo.sleep', dependsOn: [], config: {} }],
@@ -371,7 +365,7 @@ describe('consumer: executor desconocido (error de config permanente)', () => {
     await startWorker();
     const { deps, cleanup } = await makeDeps();
     try {
-      const projectId = await seedProject();
+      const projectId = await seedProject(tdb);
       const { runId } = await createRun(deps, {
         projectId,
         nodes: [{ key: 'X', nodeKey: 'no.such.executor', dependsOn: [] }],
@@ -405,7 +399,7 @@ describe('estrés: 20 runs concurrentes (Verificación T0.7b)', () => {
     await startWorker();
     const { deps, cleanup } = await makeDeps();
     try {
-      const projectId = await seedProject();
+      const projectId = await seedProject(tdb);
       // 20 runs del DAG de demo (3 steps encadenados) creados en paralelo.
       const runs = await Promise.all(
         Array.from({ length: 20 }, () => createRun(deps, demoRunDefinition(projectId, 5))),
@@ -494,7 +488,7 @@ describe('consumer: éxito del executor + succeed que falla (FIX 1)', () => {
     // (el encolado del root no toca `succeed`).
     const enqueueDeps: TransitionDeps = { withTransaction: makeWithTransaction(db, workerBoss) };
     try {
-      const projectId = await seedProject();
+      const projectId = await seedProject(tdb);
       const { runId } = await createRun(enqueueDeps, {
         projectId,
         nodes: [{ key: 'S', nodeKey: 'demo.spy', dependsOn: [], config: {} }],
@@ -533,7 +527,7 @@ describe('sweeper de timeouts (T0.9): expira un step COLGADO sin intervención',
     await startWorker();
     const { deps, cleanup } = await makeDeps();
     try {
-      const projectId = await seedProject();
+      const projectId = await seedProject(tdb);
       const { runId } = await createRun(deps, {
         projectId,
         // timeout_ms corto (500 ms) para no esperar el default del mapa; el sweep
@@ -572,14 +566,3 @@ describe('sweeper de timeouts (T0.9): expira un step COLGADO sin intervención',
     }
   });
 });
-
-async function stopBossAndWait(instance: PgBoss): Promise<void> {
-  const stopped = new Promise<void>((resolve) => {
-    instance.once('stopped', () => {
-      resolve();
-    });
-  });
-  const safety = new Promise<void>((resolve) => setTimeout(resolve, 15_000));
-  await instance.stop({ graceful: true, timeout: 10_000 });
-  await Promise.race([stopped, safety]);
-}

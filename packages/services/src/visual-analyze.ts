@@ -69,6 +69,9 @@ export interface VisualAnalyzeInput {
   /** Subidas del usuario en modo manual (bytes + su ref), si las hay. En modo url va vacío:
    *  las imágenes son URLs CDN dentro de `raw.images`. */
   uploads?: { url: string; data: Uint8Array; mime: string }[];
+  /** El step que originó el gasto (T1.10b): atribuye el `cost_entry` a `step_run_id`. OPCIONAL
+   *  — el servicio también se invoca fuera de un run (ahí la columna queda NULL, correcto). */
+  stepRunId?: string;
 }
 
 export interface VisualAnalyzeServiceResult {
@@ -241,6 +244,7 @@ export async function runVisualAnalyze(
       model: VISION_MODEL,
       usage: result.usage,
       projectId: input.projectId,
+      stepRunId: input.stepRunId,
     });
     if (warning) warnings.push(warning);
   }

@@ -45,7 +45,22 @@ export async function loadAnthropicKey(
  */
 export async function recordAnthropicCost(
   db: DbClient,
-  args: { model: string; usage: AnthropicUsage; projectId: string },
+  args: {
+    model: string;
+    usage: AnthropicUsage;
+    projectId: string;
+    /**
+     * El step del pipeline que originó este gasto (T1.10b). OPCIONAL a propósito: los servicios
+     * también se invocan FUERA de un run (p. ej. `PATCH /api/briefs/:id` edita un brief sin run
+     * activo) y ahí no hay step al que atribuir el cargo — la columna queda NULL, que es la
+     * verdad, no un hueco.
+     *
+     * Con él, `cost_entry.step_run_id` deja de ser siempre NULL y el orquestador puede hacer el
+     * rollup a `step_run.cost_actual` (`rollupStepCost`) — el KPI "coste real" del canvas, que
+     * hasta T1.10b mostraba $0,00 con dinero realmente gastado.
+     */
+    stepRunId?: string;
+  },
 ): Promise<string | null> {
   const cost = anthropicCostOf(args.model, args.usage);
   await recordCost(db, {
@@ -54,6 +69,7 @@ export async function recordAnthropicCost(
     quantity: cost.billedTokens,
     unit: 'tokens',
     projectId: args.projectId,
+    stepRunId: args.stepRunId,
   });
   return cost.warning;
 }

@@ -7,6 +7,7 @@
 // roots hermanos, architecture.md §1) — si el schema viviera en el executor, web acabaría
 // redeclarando la misma forma y tendríamos DOS verdades divergiendo en silencio.
 import { z } from 'zod';
+import { UlidSchema } from './ids';
 import { RawContentSchema } from './raw-content';
 import { VisualAnalysisSchema } from './visual-analysis';
 
@@ -68,6 +69,15 @@ export type N2Output = z.infer<typeof N2OutputSchema>;
  * necesite el brief tipado lo parsea con `ProductBriefSchema` en su punto de uso.
  */
 export const N3OutputSchema = z.object({
+  /**
+   * T1.10b — LA FILA del brief en `product_brief`, que es la FUENTE DE VERDAD desde ahora.
+   * Hasta T1.10a el brief vivía SOLO inline aquí (sin fila, sin versión): CP1 necesita
+   * versionarlo (v1 IA → v2 editado → v3 standalone) y el endpoint `GET/PATCH /api/briefs/:id`
+   * necesita poder direccionarlo fuera del run. `brief` (abajo) se conserva porque el panel
+   * genérico del canvas y el excerpt del SSE lo leen sin ir a la BD, pero ante una divergencia
+   * manda la FILA, no el inline.
+   */
+  briefId: UlidSchema,
   brief: z.unknown(),
   status: z.string(),
   warnings: z.array(z.unknown()),

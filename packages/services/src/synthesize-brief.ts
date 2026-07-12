@@ -45,6 +45,9 @@ export interface SynthesizeBriefInput {
   targetLanguage: string;
   /** Marca ISO-8601 de la extracción. Inyectable para determinismo en tests. */
   extractedAt?: string;
+  /** El step que originó el gasto (T1.10b): atribuye el `cost_entry` a `step_run_id`. OPCIONAL
+   *  — el servicio también se invoca fuera de un run (ahí la columna queda NULL, correcto). */
+  stepRunId?: string;
 }
 
 export interface SynthesizeBriefResult {
@@ -92,6 +95,7 @@ export async function runSynthesizeBrief(
       model: BRIEF_SYNTHESIZER_MODEL,
       usage: result.usage,
       projectId: input.projectId,
+      stepRunId: input.stepRunId,
     });
     if (warning) warnings.push(warning);
   }

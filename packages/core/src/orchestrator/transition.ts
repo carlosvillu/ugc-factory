@@ -224,15 +224,21 @@ export async function applyTransition(
     ...(event === 'retry' && { error: null }),
     // T1.10a: `outputRefs` del executor — solo si el caller lo pasó (`undefined` = no
     // tocar la columna, mismo criterio de tres-estados que el resto de StepPatch). Lo
-    // escriben DOS eventos:
+    // escriben TRES eventos:
     //   - `succeed`           → el artefacto que produjo el nodo.
     //   - `skip_inapplicable` → el MOTIVO del auto-skip (N2: `{skipped:true,
     //     reason:'no_analyzable_visuals'}`), para que el panel explique POR QUÉ se saltó
     //     el nodo en vez de mostrar un hueco. NO lo quites de la condición: sin él, el
     //     skip queda mudo en la UI.
+    //   - `reach_checkpoint`  → T1.10b. Un checkpoint REAL (N3/CP1) hace SU TRABAJO y
+    //     LUEGO pausa: el artefacto (el ProductBrief) YA existe cuando el step entra en
+    //     `waiting_approval`, y es EXACTAMENTE lo que el usuario tiene que revisar. Sin
+    //     esta rama, `reach_checkpoint` dejaba `output_refs` a NULL y CP1 abriría un
+    //     editor VACÍO sobre un brief que sí se sintetizó (y se pagó). En F0 el hueco no
+    //     se veía porque los checkpoints eran nodos de demo que no producían artefacto.
     // El resto de eventos no lo escriben aquí (edit/approve_edited siguen su propio
     // camino en checkpoint-ops.ts).
-    ...((event === 'succeed' || event === 'skip_inapplicable') &&
+    ...((event === 'succeed' || event === 'skip_inapplicable' || event === 'reach_checkpoint') &&
       opts.outputRefs !== undefined && { outputRefs: opts.outputRefs }),
   });
 

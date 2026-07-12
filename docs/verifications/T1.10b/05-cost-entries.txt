@@ -1,0 +1,14 @@
+== COST_ENTRY del Run A (step_run_id NOT NULL?) ==
+             id             | provider  |        step_run_id         | node_key | amount_cents |          occurred_at          
+----------------------------+-----------+----------------------------+----------+--------------+-------------------------------
+ 01KXAQQD1QZBST8N16GHFH130G | firecrawl | 01KXAQPG1B4EVV7AKW0TQTCXAV | N1       |            0 | 2026-07-12 08:39:58.26518+00
+ 01KXAQQR15MNKKJBYF7N8758Q6 | anthropic | 01KXAQPG1DQPGPQ8H7DH7FWTSB | N2       |            1 | 2026-07-12 08:40:09.509809+00
+ 01KXAQT5D7ZZYN4S1Z0SHPBZ4D | anthropic | 01KXAQPG1DXQYBBP2DF0PGC2Z2 | N3       |           20 | 2026-07-12 08:41:28.748565+00
+(3 rows)
+
+== TOTAL COSTE Run A ==
+ cents |          usd           
+-------+------------------------
+    21 | 0.21000000000000000000
+(1 row)
+

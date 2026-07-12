@@ -25,7 +25,7 @@ import {
   transition,
 } from '@ugc/core/orchestrator';
 import type { Logger } from '@ugc/core';
-import { findRunAutopilot, findStep, findStepsByIds } from '@ugc/db';
+import { findRunAutopilot, findStep, findStepsByIds, rollupStepCost } from '@ugc/db';
 import type { DbClient } from '@ugc/db';
 import type { PgBoss } from 'pg-boss';
 
@@ -267,6 +267,34 @@ export async function registerStepConsumer({
         : pause
           ? 'reach_checkpoint'
           : 'succeed';
+
+      // T1.10b — ROLLUP DEL COSTE REAL, ANTES de la transición de cierre.
+      //
+      // El servicio que gastó (Firecrawl/Anthropic) YA escribió su `cost_entry` con
+      // `step_run_id = este step` (record-first, T1.4: la fila del gasto se escribe DENTRO del
+      // servicio, ANTES de retornar — nunca se mueve de ahí, o un throw intermedio perdería
+      // dinero ya gastado). Lo que faltaba —y lo que hacía que el canvas mostrase $0,00 con 20
+      // céntimos gastados— es la columna `step_run.cost_actual`, que es la que suma el KPI. Se
+      // RECOMPUTA aquí desde `cost_entry` (rollup, no acumulador: recalculable ⇒ no puede
+      // derivar de la verdad granular del ledger).
+      //
+      // FRONTERA (T1.10a): la columna del step la escribe el ORQUESTADOR (esto), nunca
+      // `@ugc/services` — los servicios solo escriben SU gasto.
+      //
+      // ANTES del cierre y no después: el cierre es lo que dispara el NOTIFY → SSE, así que si
+      // el rollup fuese después, el frontend recibiría el step ya `succeeded`/`waiting_approval`
+      // con `cost_actual` todavía a NULL y no habría un segundo evento que lo corrigiera (el KPI
+      // se quedaría a 0 hasta el siguiente cambio del run).
+      //
+      // Su fallo NO tumba el step (el trabajo está hecho y el gasto está registrado en
+      // `cost_entry`, que es la verdad del ledger): se loguea y se sigue. El rollup es
+      // RECOMPUTABLE — un fallo aquí es una columna desactualizada, no dinero perdido.
+      try {
+        await rollupStepCost(db, stepId);
+      } catch (err) {
+        log.warn({ err }, 'step.execute: rollup de cost_actual falló (el cost_entry sí está)');
+      }
+
       try {
         // T1.10a: `outputRefs` capturado del executor (si lo hubo) viaja en la MISMA
         // transición de cierre — sea `succeed` (N1/N2/N3, sin checkpoint) o

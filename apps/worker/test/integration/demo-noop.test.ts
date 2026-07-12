@@ -6,7 +6,7 @@ import type { PgBoss } from 'pg-boss';
 import { bootstrap } from '../../src/bootstrap';
 import type { FailDecider } from '../../src/consumers/demo-noop';
 import { makeJobQueue } from '../../src/job-queue';
-import { waitFor } from '../helpers';
+import { stopBossAndWait, waitFor } from '../helpers';
 
 // Logger real y silencioso (el comportamiento observable es la tabla pgboss.job,
 // no los logs). `level: 'silent'` descarta todo output sin construir un doble.
@@ -65,22 +65,6 @@ afterAll(async () => {
   if (boss !== undefined) await stopBossAndWait(boss);
   await tdb.close();
 });
-
-/**
- * Para pg-boss y espera a que cierre físicamente su pool (`stop()` resuelve en el
- * drain; el cierre real lo señala el evento `stopped`). Timeout de seguridad para
- * no colgar el teardown si `stopped` no llegara.
- */
-async function stopBossAndWait(instance: PgBoss): Promise<void> {
-  const stopped = new Promise<void>((resolve) => {
-    instance.once('stopped', () => {
-      resolve();
-    });
-  });
-  const safety = new Promise<void>((resolve) => setTimeout(resolve, 15_000));
-  await instance.stop({ graceful: true, timeout: 10_000 });
-  await Promise.race([stopped, safety]);
-}
 
 describe('pg-boss operativo en el worker (T0.6)', () => {
   it('encola 10 jobs demo.noop con fallo per-intento y todos convergen a completed con retries', async () => {

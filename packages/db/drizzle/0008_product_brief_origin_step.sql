@@ -1,0 +1,2 @@
+ALTER TABLE "product_brief" ADD COLUMN "origin_step_run_id" text;--> statement-breakpoint
+CREATE UNIQUE INDEX "product_brief_origin_step_key" ON "product_brief" USING btree ("origin_step_run_id") WHERE "product_brief"."origin_step_run_id" is not null;

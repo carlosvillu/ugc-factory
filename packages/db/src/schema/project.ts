@@ -112,21 +112,64 @@ export const urlAnalysis = pgTable(
   ],
 );
 
-export const productBrief = pgTable('product_brief', {
-  id: ulidPk(),
-  urlAnalysisId: text('url_analysis_id')
-    .notNull()
-    .references(() => urlAnalysis.id, { onDelete: 'cascade' }),
-  version: integer('version').notNull().default(1),
-  // El ProductBrief del Apéndice A (contrato Zod de T1.1). La columna es jsonb
-  // OPACO: la validación del shape es Zod en la capa de aplicación (T1.1), NO en
-  // la BD — sin CHECK del shape (guarda de alcance del brief).
-  data: jsonb('data').notNull(),
-  editedByUser: boolean('edited_by_user').notNull().default(false),
-  language: text('language').notNull(),
-  status: productBriefStatus('status').notNull().default('draft'),
-  ...timestamps,
-});
+export const productBrief = pgTable(
+  'product_brief',
+  {
+    id: ulidPk(),
+    urlAnalysisId: text('url_analysis_id')
+      .notNull()
+      .references(() => urlAnalysis.id, { onDelete: 'cascade' }),
+    version: integer('version').notNull().default(1),
+    // El ProductBrief del Apéndice A (contrato Zod de T1.1). La columna es jsonb
+    // OPACO: la validación del shape es Zod en la capa de aplicación (T1.1), NO en
+    // la BD — sin CHECK del shape (guarda de alcance del brief).
+    data: jsonb('data').notNull(),
+    editedByUser: boolean('edited_by_user').notNull().default(false),
+    language: text('language').notNull(),
+    status: productBriefStatus('status').notNull().default('draft'),
+    // T1.10b — EL STEP QUE PRODUJO ESTA VERSIÓN, o NULL si no la produjo un step (el
+    // PATCH standalone edita el brief FUERA de un run: ahí NULL es la verdad, no un
+    // hueco). Es la CLAVE DE IDEMPOTENCIA de N3, y existe por una razón de DINERO:
+    // véase el UNIQUE parcial de abajo.
+    //
+    // Sin FK a `step_run`: `step_run` se borra en cascada con el run (§12), y perder el
+    // run NO debe borrar el brief — el brief es del PRODUCTO, no del run que lo generó
+    // (el PATCH standalone lo edita cuando ya no hay ningún run vivo). La FK convertiría
+    // el linaje en una correa.
+    originStepRunId: text('origin_step_run_id'),
+    ...timestamps,
+  },
+  (t) => [
+    // BARRERA ESTRUCTURAL del versionado (T1.10b): `version` es un contador POR
+    // `url_analysis_id` (v1 = brief de la IA que escribe N3; v2 = editado en CP1;
+    // v3+ = ediciones standalone vía PATCH /api/briefs/:id). El bump lo SERIALIZA un
+    // advisory lock por análisis (`createBriefVersion`, brief.repo.ts) y este UNIQUE es
+    // la barrera ESTRUCTURAL que lo respalda: el lock da la SECUENCIA, el UNIQUE la
+    // IMPOSIBILIDAD del duplicado — aunque alguien inserte por otro camino (una
+    // migración, un script, un repo futuro que olvide el lock), la BD no admitirá dos
+    // "brief actual" con el mismo número. Mismo patrón que `url_analysis_manual_cache_key`.
+    uniqueIndex('product_brief_analysis_version_key').on(t.urlAnalysisId, t.version),
+    // BARRERA ESTRUCTURAL DE DINERO (T1.10b): UN SOLO brief por step_run.
+    //
+    // N3 paga ~$0,20 de Sonnet 5 y DESPUÉS inserta esta fila. Si el INSERT falla por algo
+    // TRANSITORIO (deadlock, timeout, conexión caída tras el commit), el step va a
+    // `failStep` → retry → N3 se re-ejecuta ENTERO y VUELVE A PAGAR, y además deja OTRA
+    // fila (v2, v3…) de "briefs de la IA" que el usuario nunca pidió. Por eso N3 es
+    // IDEMPOTENTE POR ENTRADA: antes de llamar a Anthropic busca su propio brief por este
+    // `origin_step_run_id` (un retry conserva el `step_run.id`: `failStep` reusa la fila y
+    // solo incrementa `retry_count`) y, si ya existe, lo REUSA sin pasar por caja.
+    //
+    // Este índice es la barrera que hace de esa idempotencia una IMPOSIBILIDAD y no una
+    // convención: aunque dos entregas concurrentes del mismo job se colasen entre el SELECT
+    // y el INSERT, la segunda choca 23505 y el brief duplicado NO existe. PARCIAL (`where
+    // origin_step_run_id is not null`) porque las ediciones humanas —CP1 y el PATCH
+    // standalone— comparten `NULL` y deben poder ser muchas: la unicidad es del brief que
+    // produce la MÁQUINA, que es el único que cuesta dinero.
+    uniqueIndex('product_brief_origin_step_key')
+      .on(t.originStepRunId)
+      .where(sql`${t.originStepRunId} is not null`),
+  ],
+);
 
 export const brandKit = pgTable(
   'brand_kit',

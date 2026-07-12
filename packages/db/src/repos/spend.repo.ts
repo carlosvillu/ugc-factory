@@ -6,6 +6,7 @@
 import { eq, sql } from 'drizzle-orm';
 import type { Db } from '../client';
 import { budget, costEntry, type Budget, type CostEntry } from '../schema/ops';
+import { stepRun } from '../schema/pipeline';
 
 /** Datos de un cargo. `amountCents`/`quantity`/`unit` describen la facturación;
  *  las refs son opcionales (en F0 casi siempre ausentes). `occurredAt` default
@@ -45,6 +46,44 @@ export async function recordCost(db: Db, input: RecordCostInput): Promise<CostEn
     .returning();
   if (!row) throw new Error('recordCost: el INSERT no devolvió fila');
   return row;
+}
+
+/**
+ * ROLLUP de `step_run.cost_actual` desde el ledger (T1.10b — el fix del bloqueo 2).
+ *
+ * EL SÍNTOMA que arregla: los servicios de pago (Firecrawl/Anthropic) escriben su `cost_entry`
+ * (record-first, T1.4), pero NADIE escribía `step_run.cost_actual` — y esa columna es la que
+ * suma el KPI "coste real" del canvas (run-shell.tsx). Resultado: el canvas mostraba $0,00 con
+ * 20 céntimos REALMENTE gastados, mientras `/spend` (que agrega `cost_entry`) sí veía el dinero.
+ *
+ * POR QUÉ ROLLUP RECOMPUTABLE Y NO COLUMNA DERIVADA EN LA LECTURA:
+ *  - La proyección SSE (`sseColumns`) lee `cost_actual` como COLUMNA PLANA, y el delta
+ *    `step_changed` RELEE TODOS los steps del run en CADA `NOTIFY`. Derivar el coste en la
+ *    lectura metería un `SUM(cost_entry)` correlacionado en esa query caliente, por step y por
+ *    evento — el path más frecuente del sistema paga el precio del caso raro.
+ *  - "Rollup" NO significa acumulador: esto RECOMPUTA el total desde `cost_entry` (la única
+ *    verdad granular del ledger, T0.12) y lo escribe. Un rollup recomputable no puede derivar:
+ *    si alguna vez sospechas de la columna, la vuelves a calcular y coincide por construcción.
+ *    Un acumulador (`cost_actual += x`) sí podría, y por eso NO se hace así.
+ *
+ * FRONTERA (T1.10a): esto lo llama el ORQUESTADOR (el consumer del worker, al cerrar el step),
+ * NUNCA `@ugc/services`. Los servicios escriben `cost_entry` —su gasto— y nada más; la columna
+ * del step es territorio del step.
+ */
+export async function rollupStepCost(db: Db, stepRunId: string): Promise<void> {
+  await db
+    .update(stepRun)
+    .set({
+      // `coalesce(sum(...), 0)` — un step sin cargos queda en 0, no en NULL: "ejecutado y no
+      // gastó" es información, y es distinto de "todavía no se sabe" (NULL, el valor previo a
+      // ejecutarse). `::int` es seguro aquí (el total de UN step, no del ledger entero).
+      costActual: sql<number>`(
+        select coalesce(sum(${costEntry.amountCents}), 0)::int
+        from ${costEntry}
+        where ${costEntry.stepRunId} = ${stepRunId}
+      )`,
+    })
+    .where(eq(stepRun.id, stepRunId));
 }
 
 /** Total gastado por PROVEEDOR (con nº de filas y suma de cantidad). Ordenado por

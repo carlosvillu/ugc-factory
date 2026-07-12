@@ -10,6 +10,8 @@ import { Switch } from '@/components/ui/switch';
 import { useRunEvents } from '@/hooks/use-run-events';
 import { useRunStore } from '@/stores/run-store';
 import { ApiError, runActions } from '@/lib/api-client';
+import { BriefEditor } from '@/components/checkpoints/brief-editor';
+import { useBriefCheckpoint } from '@/components/checkpoints/use-brief-checkpoint';
 import { RunCanvas } from './run-canvas';
 import { StepPanel } from './step-panel';
 import { formatCost } from './status';
@@ -17,14 +19,52 @@ import { formatCost } from './status';
 export function RunShell({ runId }: { runId: string }) {
   const { status } = useRunEvents(runId); // SSE → store; se monta UNA vez
 
+  // CP1 (T1.10b): cuando el checkpoint del brief pausa en `waiting_approval`, el editor de brief
+  // pasa a ser el ÁREA DE TRABAJO del run. Pero el CANVAS SIGUE MONTADO — y esto no es un detalle
+  // de layout:
+  //
+  //   - El mockup 3a lo dice en su propia barra de URL (`ugcfactory.local/runs/8f21 · CP1`): CP1
+  //     es un ESTADO DENTRO de la página del run, no una página que la sustituye.
+  //   - El canvas es el hogar del run: el usuario tiene que poder seguir viendo N1/N2/N3 (sus
+  //     estados, su coste) MIENTRAS revisa el brief. Desmontarlo dejaba el pipeline ciego justo
+  //     en el momento en el que se está decidiendo si continúa.
+  //
+  // Reparto: el canvas cede la anchura al editor (un grafo de 3 nodos se lee igual en una
+  // columna estrecha; un formulario en tarjetas + rail de trazabilidad, no) y el INSPECTOR
+  // genérico (`StepPanel`) se retira — mientras CP1 está abierto, el artefacto que importa es el
+  // brief, y dos paneles compitiendo por la derecha sería ruido. Al aprobar, el step deja
+  // `waiting_approval` (por SSE) y la vista cockpit vuelve sola.
+  //
+  // QUÉ ABRE CP1, exactamente: un checkpoint pausado CUYO ARTEFACTO ES UN BRIEF — se discrimina
+  // por la FORMA del artefacto (`N3OutputSchema`), igual que en el servidor
+  // (`server/brief-checkpoint.ts`), y NUNCA por `node_key` (que no identifica una fila tras un
+  // supersede) ni solo por `isCheckpoint` (demasiado ancho: los checkpoints de demo de F0 y los
+  // CP2/CP3 de F2 también lo son, y CP1 les secuestraría el panel genérico). El detalle —y por qué
+  // la detección no vive en la proyección del SSE— está en `useBriefCheckpoint`.
+  //
+  // Mientras no haya CONFIRMACIÓN de brief, el hook devuelve `null` y la vista es la cockpit de
+  // siempre: en la duda no se secuestra la UI de nadie.
+  const cp1 = useBriefCheckpoint();
+  const cp1Open = cp1 !== null;
+
   return (
     <div className="flex h-dvh flex-col bg-bg-subtle">
       <RunHeader runId={runId} />
       <div className="flex min-h-0 flex-1">
-        <div className="min-w-0 flex-1">
+        {/* El canvas NUNCA se desmonta: con CP1 abierto se estrecha, no desaparece. */}
+        <div className={cp1Open ? 'w-64 shrink-0 border-r border-border' : 'min-w-0 flex-1'}>
           <RunCanvas />
         </div>
-        <StepPanel />
+        {cp1 !== null ? (
+          <BriefEditor
+            stepId={cp1.stepId}
+            briefId={cp1.briefId}
+            brief={cp1.brief}
+            warnings={cp1.warnings}
+          />
+        ) : (
+          <StepPanel />
+        )}
       </div>
       {/* estado de conexión SSE observable (accesible + para e2e) */}
       <output role="status" aria-label="conexión" data-slot="sse-status" className="sr-only">

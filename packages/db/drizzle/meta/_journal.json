@@ -50,6 +50,27 @@
       "when": 1783710494414,
       "tag": "0006_flashy_hardball",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1783836775519,
+      "tag": "0007_magical_kingpin",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1783840893109,
+      "tag": "0008_product_brief_origin_step",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1783843174321,
+      "tag": "0009_cost_entry_step_run_idx",
+      "breakpoints": true
     }
   ]
 }

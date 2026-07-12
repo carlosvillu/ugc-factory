@@ -1,0 +1,51 @@
+== product_brief tras aprobar con edicion (esperado: v1 IA + v2 editado) ==
+             id             | version | edited_by_user |  status  |     origin_step_run_id     |      url_analysis_id       
+----------------------------+---------+----------------+----------+----------------------------+----------------------------
+ 01KXAQT5DQQ3ZPF88B60KHMDRD |       1 | f              | draft    | 01KXAQPG1DXQYBBP2DF0PGC2Z2 | 01KXAQQD2GT8EKRD1VHSR9H4B9
+ 01KXAR42H9F166XHHP1FFDEYXC |       2 | t              | approved |                            | 01KXAQQD2GT8EKRD1VHSR9H4B9
+(2 rows)
+
+== v1 vs v2: el beneficio editado ==
+ version | edited_by_user |                                                                                                                                                              beneficio_3                                                                                                                                                              
+---------+----------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+       1 | f              | {"type": "functional", "benefit": "Mantiene las tareas siempre visibles sobre el escritorio", "linked_feature": "Analog Card Bar (16\", disponible en negro) como organizador de escritorio de aluminio", "emotional_outcome": "Tranquilidad de no depender de la memoria ni de abrir el móvil para recordar qué hacer"}
+       2 | t              | {"type": "functional", "benefit": "VERIFIER-T110B: mantiene las tareas visibles sin desbloquear el movil", "linked_feature": "Analog Card Bar (16\", disponible en negro) como organizador de escritorio de aluminio", "emotional_outcome": "Tranquilidad de no depender de la memoria ni de abrir el móvil para recordar qué hacer"}
+(2 rows)
+
+== el hook editado ==
+== HOOK editado: cuenta de 'VERIFIER-T110B' por version ==
+ version | edited_by_user | ocurrencias_verifier 
+---------+----------------+----------------------
+       1 | f              |                    0
+       2 | t              |                    2
+(2 rows)
+
+== el hook concreto en v2 ==
+ version | angulo | hook 
+---------+--------+------
+(0 rows)
+
+== product_brief tras PATCH (esperado v1,v2,v3) ==
+             id             | version | edited_by_user |  status  |     origin_step_run_id     
+----------------------------+---------+----------------+----------+----------------------------
+ 01KXAQT5DQQ3ZPF88B60KHMDRD |       1 | f              | draft    | 01KXAQPG1DXQYBBP2DF0PGC2Z2
+ 01KXAR42H9F166XHHP1FFDEYXC |       2 | t              | approved | 
+ 01KXAR650B2Q8JHD55DG3BPGVJ |       3 | t              | approved | 
+(3 rows)
+
+== v3 conserva la edicion de v2? ==
+ version | marcas_v2 
+---------+-----------
+       1 |         0
+       2 |         2
+       3 |         2
+(3 rows)
+
+ version | edited_by_user |                                                      one_liner                                                       
+---------+----------------+----------------------------------------------------------------------------------------------------------------------
+       1 | f              | Un sistema analógico de tarjetas y accesorios de escritorio diseñado para ayudarte a enfocarte lejos de la pantalla.
+       2 | t              | Un sistema analógico de tarjetas y accesorios de escritorio diseñado para ayudarte a enfocarte lejos de la pantalla.
+       3 | t              | Un sistema analógico de tarjetas y accesorios de escritorio diseñado para ayudarte a enfocarte lejos de la pantalla.
+       4 | t              | VERIFIER-V4: sistema analogico que saca tus tareas del movil
+(4 rows)
+

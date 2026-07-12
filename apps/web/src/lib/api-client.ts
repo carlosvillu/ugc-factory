@@ -103,8 +103,35 @@ export type RunResponse = z.infer<typeof RunResponseSchema>;
  *  homónimas en el mismo árbol de imports. */
 const CreateRunResponseSchema = z.object({ runId: z.string() });
 
+/**
+ * El step COMPLETO (`GET /api/steps/:id`, T1.10b): con su `output_refs` ENTERO, no el
+ * `outputExcerpt` de 200 caracteres del SSE. Lo consume CP1, que necesita el ProductBrief entero
+ * (con todos los ángulos y sus evidencias) para editarlo campo a campo — un brief truncado no se
+ * puede editar. `outputRefs` es `unknown`: quien lo consume lo valida contra SU contrato.
+ */
+const StepResponseSchema = z.object({
+  id: z.string(),
+  runId: z.string(),
+  nodeKey: z.string(),
+  status: z.string(),
+  isCheckpoint: z.boolean(),
+  outputRefs: z.unknown(),
+});
+
+// NOTA: aquí NO hay un `briefActions`/`BriefResponseSchema` para `GET/PATCH /api/briefs/:id`. El
+// endpoint standalone existe y está probado (Apéndice E), pero HOY no lo consume ningún cliente
+// del navegador: CP1 edita el brief a través del checkpoint del step, no por esa ruta. Un cliente
+// tipado sin consumidor sería código muerto que knip veta con razón; llegará con la pantalla de
+// edición del brief fuera de un run (F2+), que es quien lo va a llamar.
+
 export const runActions = {
   getRun: (runId: string) => api.get(`/api/runs/${runId}`, RunResponseSchema),
+  /** El step con su artefacto COMPLETO (CP1 lo necesita entero; el SSE lo recorta). */
+  getStep: (stepId: string) => api.get(`/api/steps/${stepId}`, StepResponseSchema),
+  /** Edición TIPADA del checkpoint del brief (CP1): el servidor versiona (v2) y aprueba el step,
+   *  invalidando el sub-grafo aguas abajo. Distinta de `edit` (canal JSON opaco genérico). */
+  editBrief: (stepId: string, brief: unknown) =>
+    api.post(`/api/steps/${stepId}/edit`, OkSchema, { brief }),
   /** Crea un run desde una definición de DAG (`POST /api/runs`) y devuelve su id. La usan los
    *  dos modos del intake (URL y texto libre): comparten la plomería del arranque del run,
    *  no el formulario (sus campos y su pre-paso son genuinamente distintos). */

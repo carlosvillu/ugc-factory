@@ -18,36 +18,48 @@ Cómo se estructura `apps/web` (Next.js 16 App Router): qué páginas existen, d
 
 | Ruta | Fichero | Dominio que compone |
 |---|---|---|
-| `/` | `app/(dashboard)/page.tsx` | Dashboard: proyectos, lotes activos, gasto del mes, alertas |
-| `/projects/[id]` | `app/(dashboard)/projects/[id]/page.tsx` | Proyecto: briefs, lotes, variantes, métricas |
-| `/runs/[id]` | `app/runs/[id]/page.tsx` | ★ Canvas del pipeline (`components/run-canvas/`) |
-| `/library` | `app/(dashboard)/library/page.tsx` | Biblioteca de variantes (`components/library/`) |
-| `/gallery` | `app/(dashboard)/gallery/page.tsx` | Galería de prompts (`components/gallery/`) |
-| `/personas` | `app/(dashboard)/personas/page.tsx` | Librería de personas (`components/personas/`) |
-| `/metrics` | `app/(dashboard)/metrics/page.tsx` | Dashboard de performance (`components/metrics/`) |
-| `/spend` | `app/(dashboard)/spend/page.tsx` | Panel de gasto (`components/spend/`) |
-| `/settings` | `app/(dashboard)/settings/page.tsx` | Credenciales, presets, umbrales (`components/settings/`) |
+| `/` | `app/(app)/page.tsx` | Home: accesos a lo que existe. Los KPIs/lotes del mockup llegan en T5.10 |
+| `/analyses/new` | `app/(app)/analyses/new/page.tsx` | Intake del análisis, 2 modos (`components/intake/`) |
+| `/analyses/[id]` | `app/(app)/analyses/[id]/page.tsx` | Análisis creado/reutilizado (T1.6) |
+| `/projects/[id]` | `app/(app)/projects/[id]/page.tsx` | Proyecto: briefs, lotes, variantes, métricas |
+| `/runs/[id]` | `app/(app)/runs/[id]/page.tsx` | ★ Canvas del pipeline (`components/run-canvas/`) |
+| `/library` | `app/(app)/library/page.tsx` | Biblioteca de variantes (`components/library/`) |
+| `/gallery` | `app/(app)/gallery/page.tsx` | Galería de prompts (`components/gallery/`) |
+| `/personas` | `app/(app)/personas/page.tsx` | Librería de personas (`components/personas/`) |
+| `/metrics` | `app/(app)/metrics/page.tsx` | Dashboard de performance (`components/metrics/`) |
+| `/spend` | `app/(app)/spend/page.tsx` | Panel de gasto (`components/spend/`) |
+| `/settings` | `app/(app)/settings/page.tsx` | Credenciales, presets, umbrales (`components/settings/`) |
+| `/design-system` | `app/(app)/design-system/page.tsx` | Showcase de tokens y componentes (FD) |
 | `/login` | `app/login/page.tsx` | Login single-user (T0.4) — fuera de todo grupo, sin nav |
 
-### 1.2 Route groups: `(dashboard)` vs `runs/[id]`
+### 1.2 Route groups: `(app)` (todo lo autenticado) vs `login`
+
+> **Reescrito en T1.13.** Esta sección describía un grupo `(dashboard)` con **nav LATERAL** (`<SideNav/>`) y `runs/[id]` **fuera** del grupo. El código real hace las tres cosas al revés, y a propósito: el **mockup vinculante** del dashboard (`docs/mockups/dashboard.html`, variante 2a — skill §4b) dibuja una **topbar HORIZONTAL**, no un rail lateral. Manda el mockup (jerarquía PRD/planning > skills), así que la skill se actualiza para no seguir publicando un layout que nadie va a construir.
 
 ```
 app/
-├─ (dashboard)/            # grupo con layout de nav lateral compartido
-│  ├─ layout.tsx           # <SideNav/> + <main>{children}</main>
+├─ (app)/                  # grupo con el CHROME GLOBAL compartido
+│  ├─ layout.tsx           # <AppNav/> (topbar) + región de contenido scrollable
 │  ├─ page.tsx             # /
-│  ├─ projects/[id]/page.tsx
-│  ├─ library/  gallery/  personas/  metrics/  spend/  settings/
-├─ runs/[id]/              # FUERA del grupo: el canvas es full-screen (PRD §8.2)
-│  ├─ page.tsx
-│  ├─ loading.tsx          # skeleton del canvas
-│  └─ error.tsx
-├─ login/page.tsx          # sin sesión, sin nav
+│  ├─ analyses/new/  analyses/[id]/
+│  ├─ runs/[id]/           # DENTRO del grupo: el canvas cuelga de la topbar
+│  │  ├─ page.tsx
+│  │  ├─ loading.tsx       # skeleton del canvas
+│  │  └─ error.tsx
+│  ├─ library/  gallery/  personas/  metrics/  spend/  settings/  design-system/
+├─ login/page.tsx          # FUERA del grupo: sin sesión, sin nav
 ├─ api/                    # route handlers → skill backend (references/api.md)
 └─ layout.tsx              # root: html/body, tokens, fuentes
 ```
 
-Por qué: el canvas de `/runs/[id]` necesita el viewport completo para el grafo (React Flow + panel lateral propio); meterlo bajo el layout de navegación obligaría a huecos condicionales en el layout — exactamente el tipo de `if` que los route groups eliminan gratis. `/login` queda fuera porque no hay sesión que pinte la nav. La protección de rutas NO se hace en layouts: vive en `proxy.ts` (Next 16 sustituye a `middleware.ts`) y en los propios handlers — territorio de la skill backend.
+Por qué **`/runs/[id]` SÍ va dentro del grupo**: la topbar es el chrome global de la app y el canvas no es una excepción — sin ella, la página del run sería un callejón sin salida (hoy no tiene ninguna forma de volver). El viewport se reparte en el layout (`h-dvh` en columna flex; el hijo, `min-h-0 flex-1`), así que el canvas ocupa **todo el alto restante bajo la topbar** y sigue siendo full-bleed: `run-shell` usa `h-full`, no `h-dvh` — quien fija el viewport es el layout, no la página. No hace falta ningún `if` condicional en el layout.
+
+**`/login` queda fuera** porque no hay sesión que navegar: enseñar «Inicio · Canvas · …» a quien el proxy va a rebotar sería enlazar a páginas prohibidas. La protección de rutas NO se hace en layouts: vive en `proxy.ts` (Next 16 sustituye a `middleware.ts`) y en los propios handlers — territorio de la skill backend.
+
+**Los destinos de la nav no se declaran en el componente**: viven en `lib/routes.ts` (label, `href`, `matches`, `pending`, `description`), la fuente de verdad que comparten la topbar y las tarjetas de la home. Dos reglas que salieron de T1.13 y que valen para toda superficie de navegación:
+
+- **Los destinos de fases futuras se MUESTRAN, deshabilitados** (el mockup los tiene): `aria-disabled`, fuera del orden de tabulación, sin `href`, y con el motivo **en el nombre accesible** (`aria-label="Biblioteca · llega en la fase F2 (guiones y variantes)"`) — no solo en un `title`, que únicamente aparece con el hover del ratón. Activar uno cuando cierre su fase es **darle `href`**: aparece solo en la nav Y en la home.
+- **«Resaltado» y «página actual» son DOS preguntas, no un booleano.** El resaltado VISUAL usa prefijos de área (`isHighlighted`: `/runs/x` resalta «Canvas»); `aria-current="page"` exige **igualdad exacta** (`isCurrentPage`). Fusionarlas hace que el lector de pantalla anuncie «Canvas, página actual» dentro de un run, cuando activar ese enlace te llevaría a un formulario de intake vacío.
 
 ### 1.3 `page/layout/loading/error` delgados
 
@@ -61,7 +73,7 @@ Por qué: el canvas de `/runs/[id]` necesita el viewport completo para el grafo 
 En Next 16 `params`, `searchParams`, `cookies()` y `headers()` son asíncronos. Tipa `params` como `Promise<...>` y haz `await` sin excepción — el acceso síncrono está eliminado, no deprecado:
 
 ```tsx
-// app/(dashboard)/library/page.tsx
+// app/(app)/library/page.tsx
 interface LibraryPageProps {
   searchParams: Promise<{ status?: string; project?: string }>;
 }
@@ -161,7 +173,7 @@ Los server components async NO se pueden renderizar con Testing Library (testing
 | Aspecto | Regla |
 |---|---|
 | Dos entradas | `lib/api-client.ts` (isomorfo, importable desde `'use client'`) y `lib/api-server.ts` (`import 'server-only'`, SOLO para RSC). `next/headers` es server-only a nivel de grafo de módulos: un módulo compartido con client components no puede importarlo ni dinámicamente. |
-| Base URL | En servidor (`api-server`): `INTERNAL_API_URL` (env; default `http://localhost:3000` — el web se llama a sí mismo). En cliente: rutas relativas; en tests jsdom el helper resuelve `http://localhost:3000` (testing/frontend.md §6: el fetch de Node exige URL absoluta; los handlers msw usan patrones `*/api/...`). |
+| Base URL | **En servidor (RSC y jsdom): `resolveServerBaseUrl(process.env)` — función pura, PRECEDENCIA `INTERNAL_API_URL` (override explícito: otro host/proxy) > `http://localhost:${PORT}` (DERIVADA del puerto real: el web se llama A SÍ MISMO, y `PORT` es la var que Next lee para elegir puerto) > `http://localhost:3000` (default de Next).** Corregido en **T1.13**: la base estaba HARDCODEADA al 3000 y cualquier arranque en otro puerto tumbaba con 500 todas las páginas RSC — y ningún test lo cazaba porque el stack E2E fijaba `INTERNAL_API_URL` a mano (la muleta se retiró: el stack sirve en :3100 y ejercita la derivación). Del `PORT` se valida la FORMA (dígitos: un `PORT=abc` daría una URL inválida), **nunca el RANGO** — `PORT=99999` impide que Next arranque (⇒ el resolver jamás se llama con él) y rechazar `PORT=0` sería peor que no validar: Next SÍ arranca con él (en un puerto EFÍMERO) y caer al 3000 reintroduciría el mismo 500. La lección: **`process.env.PORT` no es «el puerto del servidor», es «el puerto que se PIDIÓ»** — con `PORT=0` difieren, y ninguna validación del env puede arreglarlo (el puerto real solo existe en el socket). `PORT=0` es **no soportado**: el proyecto es self-hosted de puerto fijo. En cliente: rutas RELATIVAS (`''`) — la base es el propio origin y `PORT` no significa nada ahí; el guard de `typeof window` va PRIMERO. En jsdom el fetch de Node exige URL absoluta (testing/frontend.md §6) y los handlers msw usan patrones `*/api/...`, así que el puerto resuelto da igual. |
 | Auth | `api-server` reenvía la cookie de sesión con `cookies()` de `next/headers` (el fetch de RSC no la propaga solo). En cliente el navegador la manda gratis. |
 | Cache | `cache: 'no-store'` SIEMPRE, fijado por el cliente — nadie lo decide por llamada. |
 | Validación | Toda respuesta se parsea con el schema Zod de `@ugc/core` que se le pasa. Respuesta que no cumple el contrato = error, no datos corruptos aguas abajo. |
@@ -184,9 +196,17 @@ export class ApiError extends Error {
   }
 }
 
-// En navegador: relativa. En jsdom (tests): absoluta (fetch de Node la exige — testing/frontend.md §6).
+// Base de SERVIDOR por precedencia (T1.13): `resolveServerBaseUrl(env)` — función PURA sobre el
+// env, definida en el propio api-client.ts (no se copia su cuerpo aquí: la tabla de arriba es el
+// contrato; el código es el código). Su precedencia se testea en api-client.test.ts.
+//
+// En navegador: relativa (el origin propio). En jsdom (tests) o servidor: absoluta (el fetch de
+// Node la exige — testing/frontend.md §6). El guard de `typeof window` va PRIMERO: `PORT` es
+// config del PROCESO servidor y no significa nada en cliente.
 const base = () =>
-  typeof window === 'undefined' || process.env.NODE_ENV === 'test' ? 'http://localhost:3000' : '';
+  typeof window === 'undefined' || process.env.NODE_ENV === 'test'
+    ? resolveServerBaseUrl(process.env)
+    : '';
 
 export async function apiFetch<S extends z.ZodType>(
   path: string,
@@ -233,7 +253,7 @@ async function serverFetch<S extends z.ZodType>(path: string, schema: S, init: R
   const cookieHeader = (await cookies()).toString(); // hace la página dinámica: correcto, sin 'use cache' todo es dinámico
   return apiFetch(path, schema, {
     ...init,
-    baseUrl: process.env.INTERNAL_API_URL ?? 'http://localhost:3000',
+    baseUrl: resolveServerBaseUrl(process.env), // T1.13: NUNCA un puerto hardcodeado
     headers: { ...init.headers, ...(cookieHeader && { cookie: cookieHeader }) },
   });
 }
@@ -249,7 +269,7 @@ Regla de imports: los RSC importan `api` de `@/lib/api-server`; los client compo
 ### 3.2 Uso: un GET (RSC) y un POST (client)
 
 ```tsx
-// GET desde un server component — app/(dashboard)/spend/page.tsx
+// GET desde un server component — app/(app)/spend/page.tsx
 import { SpendLedgerSchema } from '@ugc/core/contracts';
 import { api } from '@/lib/api-server';
 import { aggregateByProvider } from '@/lib/spend'; // función pura consumida por RSC: vive en lib/ (§2.3)

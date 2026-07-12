@@ -48,7 +48,10 @@ export function RunShell({ runId }: { runId: string }) {
   const cp1Open = cp1 !== null;
 
   return (
-    <div className="flex h-dvh flex-col bg-bg-subtle">
+    // `h-full` (no `h-dvh`): desde T1.13 el viewport lo fija el layout del grupo `(app)`,
+    // que resta la altura de la topbar y da al hijo la región restante. Un `h-dvh` aquí
+    // sumaría la nav ENCIMA del alto completo → la página del canvas scrollearía.
+    <div className="flex h-full flex-col bg-bg-subtle">
       <RunHeader runId={runId} />
       <div className="flex min-h-0 flex-1">
         {/* El canvas NUNCA se desmonta: con CP1 abierto se estrecha, no desaparece. */}

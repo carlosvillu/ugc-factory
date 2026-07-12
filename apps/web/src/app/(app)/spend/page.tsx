@@ -3,10 +3,10 @@
 // componer el panel. Estático al cargar (NO SSE): el gasto es server-computed en
 // cada carga (sumas + alerta over-limit), no en vivo.
 //
-// Vive en `app/spend/` (fuera de un route group): el grupo `(dashboard)` con la nav
-// lateral compartida aún no existe (llega con su tarea); crearlo aquí sería fuera de
-// alcance. El panel COMPLETO (vistas por proyecto/lote/tier, freno, email, umbrales-%)
-// es T7.7 — esto es solo el esqueleto.
+// Vive en el route group `app/(app)/` (T1.13): hereda el chrome global (la topbar de
+// navegación del mockup del dashboard). El paréntesis no añade segmento: la URL sigue
+// siendo `/spend`. El panel COMPLETO (vistas por proyecto/lote/tier, freno, email,
+// umbrales-%) es T7.7 — esto es solo el esqueleto.
 import type { Metadata } from 'next';
 import { SpendSummarySchema } from '@ugc/core/contracts';
 import { api } from '@/lib/api-server';

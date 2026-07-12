@@ -24,10 +24,57 @@ export class ApiError extends Error {
   }
 }
 
-// En navegador: ruta relativa. En jsdom (tests) o servidor: absoluta (el fetch de
-// Node exige URL absoluta — testing/frontend.md §6).
+/**
+ * Base URL del fetch **de servidor** (RSC y jsdom), resuelta por PRECEDENCIA (T1.13):
+ *
+ *   1. `INTERNAL_API_URL` — override explícito. Único canal para apuntar a otro host
+ *      (proxy, contenedor, red interna); gana siempre.
+ *   2. `http://localhost:${PORT}` — DERIVADA del puerto real en el que sirve este mismo
+ *      proceso. El web se llama A SÍ MISMO: su base es su propio puerto, y `PORT` es la
+ *      variable que Next lee para elegirlo (`PORT=3001 next dev` → sirve en 3001 Y expone
+ *      `process.env.PORT='3001'` al runtime nodejs; verificado empíricamente).
+ *   3. `http://localhost:3000` — el default de Next cuando nadie fija `PORT`.
+ *
+ * Por qué esto existe: hasta T1.13 el paso 2 no existía y la base estaba HARDCODEADA al
+ * 3000. Arrancar en cualquier otro puerto (p. ej. porque el 3000 está ocupado) hacía que
+ * los RSC (`/spend`, `/settings`, `/runs/[id]`) se llamaran al 3000 — un servidor ajeno o
+ * ninguno → 404/ECONNREFUSED → 500 de la página. Derivar del PORT hace que la app funcione
+ * en el puerto en el que de verdad está, sin ceremonia de env.
+ *
+ * Función PURA sobre el env (no lee `process.env` ella misma) para poder testear la
+ * precedencia sin tocar variables globales.
+ */
+export function resolveServerBaseUrl(env: Record<string, string | undefined>): string {
+  if (env.INTERNAL_API_URL) return env.INTERNAL_API_URL;
+  const port = env.PORT?.trim();
+  // Se valida la FORMA (dígitos), no el RANGO — y la distinción importa:
+  //
+  //   · `PORT=abc` → `http://localhost:abc` sería una URL inválida y el fetch moriría con un
+  //     error incomprensible. Caer al default es diagnosticable. Por eso el `/^\d+$/`.
+  //   · Validar el rango (1–65535) sería, en cambio, un ERROR. `PORT=99999` ni siquiera hace
+  //     falta defenderlo: Next NO ARRANCA (ERR_SOCKET_BAD_PORT), así que ningún RSC renderiza
+  //     y esta función jamás se llama con ese valor. Y `PORT=0` sería activamente DAÑINO
+  //     rechazarlo: Next SÍ arranca (en un puerto EFÍMERO, p. ej. 64834), y caer al 3000
+  //     apuntaría a un servidor ajeno ⇒ el MISMO 500 que T1.13 elimina, reintroducido por el
+  //     guard que decía prevenirlo.
+  //
+  // La lección de fondo: **`process.env.PORT` no es «el puerto del servidor», es «el puerto
+  // que se PIDIÓ»**. Con `PORT=0` esos dos números DIFIEREN, y ninguna validación del env
+  // puede arreglarlo — el puerto real solo existe en el socket que escucha. `PORT=0` queda
+  // como NO SOPORTADO: este proyecto es mono-usuario self-hosted con puerto fijo.
+  const isNumericPort = port !== undefined && /^\d+$/.test(port);
+  return `http://localhost:${isNumericPort ? port : '3000'}`;
+}
+
+// En navegador: ruta RELATIVA — la base es el propio origin desde el que se sirvió la
+// página, así que el navegador acierta siempre y `PORT` (que es config del PROCESO
+// servidor) no significa nada aquí. En jsdom (tests) o servidor: absoluta (el fetch de
+// Node exige URL absoluta — testing/frontend.md §6). El guard de `typeof window` va
+// PRIMERO: nunca se lee `PORT` en cliente.
 const base = () =>
-  typeof window === 'undefined' || process.env.NODE_ENV === 'test' ? 'http://localhost:3000' : '';
+  typeof window === 'undefined' || process.env.NODE_ENV === 'test'
+    ? resolveServerBaseUrl(process.env)
+    : '';
 
 export async function apiFetch<S extends z.ZodType>(
   path: string,

@@ -4,9 +4,9 @@
 // apariencia. La superficie de cuentas conectadas (TikTok/Meta) del PRD §18.1 es F7 —
 // aquí solo lo que T0.14 entrega.
 //
-// Vive en `app/settings/` (fuera de un route group): el grupo `(dashboard)` con la nav
-// lateral compartida aún no existe (llega con su tarea). Protegida por `withAuth` en el
-// endpoint y por el proxy en la página.
+// Vive en el route group `app/(app)/` (T1.13): hereda el chrome global (la topbar de
+// navegación), y la URL sigue siendo `/settings` (el paréntesis no añade segmento).
+// Protegida por `withAuth` en el endpoint y por el proxy en la página.
 import type { Metadata } from 'next';
 import { cookies } from 'next/headers';
 import { SettingsViewSchema } from '@ugc/core/contracts';

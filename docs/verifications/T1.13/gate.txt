@@ -1,0 +1,30 @@
+apps/worker typecheck: Done
+packages/core typecheck: Done
+apps/web typecheck: Done
+packages/test-utils typecheck: Done
+packages/services typecheck: Done
+
+> ugc-factory@0.0.0 format:check /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads
+> prettier --check .
+
+Checking formatting...
+All matched files use Prettier code style!
+
+> ugc-factory@0.0.0 knip /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads
+> knip
+
+Configuration hints (1)
+src/golden.ts  packages/test-utils  knip.json  Remove from ignore
+
+> ugc-factory@0.0.0 test /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads
+> vitest run --project '*:unit' --project '*:integration'
+
+
+ RUN  v4.1.10 /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads
+
+
+ Test Files  98 passed (98)
+      Tests  958 passed (958)
+   Start at  16:33:59
+   Duration  52.55s (transform 13.46s, setup 2.85s, import 63.08s, tests 82.60s, environment 16.20s)
+

@@ -7,7 +7,7 @@
 // revienta el build si se importa en cliente.
 import type { z } from 'zod';
 import { cookies } from 'next/headers';
-import { apiFetch } from './api-client';
+import { apiFetch, resolveServerBaseUrl } from './api-client';
 
 async function serverFetch<S extends z.ZodType>(path: string, schema: S, init: RequestInit = {}) {
   // `cookies()` hace la página dinámica: correcto — la app es dinámica (datos vivos
@@ -19,8 +19,13 @@ async function serverFetch<S extends z.ZodType>(path: string, schema: S, init: R
   const headers = new Headers(init.headers);
   if (cookieHeader) headers.set('cookie', cookieHeader);
   return apiFetch(path, schema, {
+    // Base interna resuelta por precedencia `INTERNAL_API_URL` > `http://localhost:$PORT` >
+    // 3000 (T1.13, `resolveServerBaseUrl`). Antes estaba clavada al 3000: arrancar en otro
+    // puerto (con el 3000 ocupado) hacía que este fetch fuera a un servidor AJENO → 404 →
+    // 500 de la página. La misma función la usa el fallback de servidor de api-client, así
+    // que las dos entradas resuelven idéntico: una sola verdad.
     ...init,
-    baseUrl: process.env.INTERNAL_API_URL ?? 'http://localhost:3000',
+    baseUrl: resolveServerBaseUrl(process.env),
     headers,
   });
 }

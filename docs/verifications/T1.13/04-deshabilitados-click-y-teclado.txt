@@ -1,0 +1,18 @@
+=== A) CLICK on each disabled item -> URL must NOT change ===
+@e8  before=http://localhost:3001/  after=http://localhost:3001/  OK no navego
+@e9  before=http://localhost:3001/  after=http://localhost:3001/  OK no navego
+@e10  before=http://localhost:3001/  after=http://localhost:3001/  OK no navego
+
+=== B) KEYBOARD: Tab through the nav -> disabled items must never receive focus ===
+"A :: Gasto"
+"A :: Design system"
+"A :: Ajustes"
+"A :: Nuevo análisis"
+"A :: Gasto"
+"A :: Design system"
+"A :: Ajustes"
+"NEXTJS-PORTAL :: "
+"BODY :: UGC Factory"
+"A :: UGC Factory"
+"A :: Inicio"
+"A :: Canvas"

@@ -1,0 +1,9 @@
+### Desde /settings, CLICK marca 'UGC Factory' -> volver a home (la 'forma de volver') ###
+URL: http://localhost:3001/
+
+### Desde home, CLICK 'Canvas' -> /analyses/new ###
+URL: http://localhost:3001/analyses/new
+"{\"path\":\"/analyses/new\",\"h1\":\"Nuevo análisis\",\"inputs\":1}"
+### CLICK 'Design system' ###
+URL: http://localhost:3001/design-system
+"{\"path\":\"/design-system\",\"h1\":\"Design system\"}"

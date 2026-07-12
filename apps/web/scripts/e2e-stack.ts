@@ -91,11 +91,14 @@ const env: NodeJS.ProcessEnv = {
   // (`env -u ASSETS_DIR`) debe pasar igual — el fix no puede depender del entorno
   // del que lanza la suite.
   ASSETS_DIR: assetsDir,
-  // Base interna que usa api-server (RSC): el web se llama A SÍ MISMO. Por defecto
-  // api-server apunta a :3000, pero el stack corre en :3100 → sin esto el fetch del
-  // RSC `/runs/[id]` iría a un puerto muerto y la página daría 500 (T0.11). Fijado
-  // al puerto del stack.
-  INTERNAL_API_URL: `http://localhost:${String(PORT)}`,
+  // INTERNAL_API_URL NO se fija — A PROPÓSITO (T1.13). Era la MULETA que ocultaba el bug
+  // que T1.13 arregla: la base del fetch de servidor estaba clavada al 3000, y el stack la
+  // parcheaba con esta env para que los RSC (/spend, /settings, /runs/[id]) se llamaran a
+  // sí mismos en :3100. Con la muleta puesta, la suite E2E jamás podía cazar el fallo — el
+  // entorno de test más cómodo que la realidad. Ahora la base se DERIVA de `PORT` (que este
+  // stack sí fija, a 3100 ≠ 3000), así que la suite ejercita el camino REAL: si alguien
+  // vuelve a clavar el 3000, TODOS los specs con RSC se ponen rojos. No re-añadir.
+  // El override sigue existiendo para producción (otro host/proxy), no para taparse esto.
   // Fail-fast de boot (T0.4): APP_MASTER_KEY firma las sesiones; sin ella web
   // revienta en instrumentation.register. Valor de test (no es un secreto).
   // FIJADA (ya no `?? process.env`): es la MISMA con la que se cifraron los secretos

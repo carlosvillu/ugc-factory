@@ -87,6 +87,7 @@ Solo con PASS:
 2. Si la tarea cerraba una deuda `[verificar]`: anota el resultado en PRD.md y planning.md (regla 3).
 3. Entrada en `docs/dev-loop/journal.md` (formato abajo).
 4. Commit: `T<ID>: <resumen imperativo en inglés>` (incluye evidencia y planning.md). Solo en verde. Sin push.
+5. **Re-corre `pnpm gate` DESPUÉS del commit, sobre lo COMMITEADO.** El hook de pre-commit (lefthook) **reformatea ficheros con prettier DESPUÉS de que el gate haya pasado**: el gate corrió sobre una versión y se commiteó otra. Pasó en T1.10a (`6714f30` quedó con el typecheck roto — el reformateo convirtió un import de valores en `import type` y rompió `tsc`, con el gate verde minutos antes). Es el mismo invariante que rige el REVIEW —*lo que se verifica == lo que se commitea*—, aplicado al último tramo. Si sale rojo: arreglar y `--amend` (o commit de fix inmediato), nunca dejarlo para la tarea siguiente.
 
 ### 8 · STOP-CHECK
 Para (informa al usuario con el resumen de lo hecho + estado + siguiente paso) si:

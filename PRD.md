@@ -81,7 +81,7 @@ Este producto no compite en el mercado SaaS: es la máquina de growth personal d
 
 | # | Objetivo | Medible por |
 |---|---|---|
-| O1 | Analizar una URL de producto (o texto libre) y producir un **ProductBrief** multifaceta editable con trazabilidad extraído-vs-inferido | Brief completo conforme a schema en <90 s, coste **<$0,25** (revisado en T1.8 — ver nota) |
+| O1 | Analizar una URL de producto (o texto libre) y producir un **ProductBrief** multifaceta editable con trazabilidad extraído-vs-inferido | Brief completo conforme a schema en **<180 s** (revisado en T1.10a — ver nota), coste **<$0,25** (revisado en T1.8 — ver nota) |
 | O2 | Generar una **matriz de variantes** (ángulos × hooks × avatares × duraciones) con guiones editables | Lote de 10 variantes definido en <5 min de interacción |
 | O3 | Renderizar anuncios 9:16 completos (avatar + voz + b-roll + subtítulos karaoke + música) vía fal.ai + worker FFmpeg | Vídeo master válido (ffprobe + QA checks) en <8 min/variante; COGS según tier |
 | O4 | **Pipeline visual** tipo grafo con estado en vivo, checkpoints editables y autopilot conmutable por lote | Cada nodo muestra estado/coste/output; pausar-editar-reanudar funciona en todos los checkpoints |
@@ -90,6 +90,14 @@ Este producto no compite en el mercado SaaS: es la máquina de growth personal d
 | O7 | **Medir y realimentar**: ingesta de hook rate, thumbstop, CTR, spend por variante; reglas kill/scale a 24–48 h; scoring que realimenta galería de prompts, hooks y avatares | Dashboard por variante con linaje completo hook→métrica; recomendaciones de siguiente lote |
 | O8 | **Multi-idioma desde el día 1**: guiones, voces y hooks localizables por mercado | Un lote puede generar la misma matriz en N idiomas |
 | O9 | **Panel de gasto**: ledger de coste real por generación/lote/proyecto, con alertas configurables | Coste visible antes (estimado) y después (real) de cada nodo |
+
+> **Nota sobre el TIEMPO de O1: el bound sube de <90 s a <180 s** (decisión del usuario, 2026-07-12, tras la verificación de T1.10a con el pipeline real de punta a punta).
+>
+> **Medido** (URL real, ugmonk.com, APIs reales): **116,7 s** = N1 (Firecrawl) 20,0 s + N2 (visión, Haiku) 32,3 s + **N3 (síntesis, Sonnet 5) 64,4 s**. El dominante es **N3, con el 55 % del total** — no las descargas de imágenes de N2, como se suponía. Bajar de 90 s exigiría **recortar el brief** (menos ángulos, menos evidencia), y eso degrada justo la pieza de la que depende la calidad de todos los anuncios aguas abajo.
+>
+> **Decisión del usuario**: *"Esperamos sin problemas"*. El tiempo de espera no es una restricción real de este producto (mono-usuario, self-hosted, uso no interactivo: se lanza un análisis y se revisa el brief cuando esté). Se prefiere **un brief bueno en 2 minutos a uno pobre en 90 s**. El techo de 180 s se fija con holgura sobre los 116,7 s medidos (margen del 54 %) para absorber páginas más lentas o con más imágenes — pero sigue siendo un límite **verificable**: si un día el pipeline tarda 4 minutos, algo se ha roto y el gate lo caza.
+>
+> **Deuda relacionada (NO se cierra aquí)**: `visual-analyze.ts` descarga y reescala las imágenes **en serie** (hasta 8, timeout 15 s c/u). Paralelizarlo ganaría ~20 s, pero con el techo en 180 s deja de ser urgente. Se mantiene anotada.
 
 > **Nota sobre el coste de O1: el bound sube de $0,15 a $0,25** (decisión del usuario, 2026-07-11, tras tres ciclos de verificación de T1.8 con medición real).
 >

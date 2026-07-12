@@ -23,16 +23,20 @@ import {
   type ExecutorDep,
   type StepExecutor,
 } from '@ugc/core/orchestrator';
-import type {
-  RawContent,
-  VisualAnalysis,
+// Los schemas y `isSkippedOutput` son VALORES en runtime (parsean el jsonb opaco que sale de
+// la BD), no solo tipos: van en un import normal. Los tipos, aparte.
+import {
   N1OutputSchema,
   N2OutputSchema,
   RawContentSchema,
   isSkippedOutput,
-  type N1Output,
-  type N2Output,
-  type SkippedOutput,
+} from '@ugc/core/contracts';
+import type {
+  RawContent,
+  VisualAnalysis,
+  N1Output,
+  N2Output,
+  SkippedOutput,
 } from '@ugc/core/contracts';
 import { validateBrief } from '@ugc/core/analyze';
 import type { StorageAdapter } from '@ugc/core';

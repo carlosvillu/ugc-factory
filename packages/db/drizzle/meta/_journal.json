@@ -71,6 +71,13 @@
       "when": 1783843174321,
       "tag": "0009_cost_entry_step_run_idx",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1783857043575,
+      "tag": "0010_checkpoint_decision",
+      "breakpoints": true
     }
   ]
 }

@@ -129,3 +129,12 @@ export {
   type N2Output,
   type N3Output,
 } from './step-outputs';
+// La DECISIÓN de un checkpoint (T1.11): lo que el humano RESUELVE (CP1: subir fotos vs generar
+// packshot-IA), que NO es el artefacto que edita. Canal genérico: unión discriminada por `kind`,
+// a la que CP2/CP3/CP4 añaden su miembro. Ver la cabecera de `checkpoint-decision.ts`.
+export {
+  CheckpointDecisionSchema,
+  BriefCheckpointDecisionSchema,
+  type CheckpointDecision,
+  type BriefCheckpointDecision,
+} from './checkpoint-decision';

@@ -10,6 +10,9 @@
 //      packshot-IA).
 //   3. EDICIÓN: editar un beneficio y un hook y guardar → versión v2 del brief.
 //   4. VERSIONADO STANDALONE: `PATCH /api/briefs/:id` fuera del run crea v3.
+//   5. DECISIÓN DEL CHECKPOINT (T1.11): la decisión del modo manual (packshot-IA) VIAJA al
+//      servidor, se PERSISTE con la transición y SOBREVIVE a un reload (hasta T1.11 era un
+//      `useState` que se evaporaba: habilitaba el botón y no salía nunca del cliente).
 import { test, expect } from '@playwright/test';
 import { waitCanvasStatus as waitStatus } from './support/canvas';
 import {
@@ -18,7 +21,11 @@ import {
   fetchBrief,
   runManualAnalysisToCp1,
   runUrlAnalysisToCp1,
+  stepIdOf,
 } from './support/brief';
+// La BD del stack, para el SELECT de aserción de T1.11: la Verificación pide ver la decisión EN
+// LA BD, no en un endpoint que podría estar mintiendo.
+import { queryStack } from './support/stack-db';
 
 test.describe('CP1 · editor de brief (T1.10b)', () => {
   test(
@@ -82,6 +89,34 @@ test.describe('CP1 · editor de brief (T1.10b)', () => {
       // La derivación a packshot-IA es una de las dos salidas.
       await editor.getByRole('button', { name: /generar packshot con ia/i }).click();
       await expect(approve).toBeEnabled();
+
+      // ── T1.11: LA DECISIÓN SALE DEL CLIENTE Y SE PERSISTE ──────────────────────────────
+      // Hasta T1.11 la historia acababa en la línea de arriba: el botón se habilitaba y la
+      // decisión se EVAPORABA (era `useState` local, no viajaba a ningún endpoint). Su
+      // consumidor real —N7a (T4.4), que decide si genera un packshot-IA o usa fotos reales— no
+      // habría tenido nada que leer.
+      const stepId = await stepIdOf(page);
+      await approve.click();
+      await waitStatus(page, 'N3', 'succeeded', 30_000);
+
+      // LA CLÁUSULA: la decisión está EN LA BD, asociada al step del checkpoint.
+      const rows = await queryStack<{ kind: string; decision: { images: string } }>(
+        `SELECT kind, decision FROM checkpoint_decision WHERE step_run_id = $1`,
+        [stepId],
+      );
+      expect(rows).toHaveLength(1);
+      expect(rows[0]?.kind).toBe('brief');
+      expect(rows[0]?.decision.images).toBe('ai_packshot');
+
+      // Y SOBREVIVE A UN RELOAD: es persistencia, no memoria del cliente. Tras recargar, el run
+      // sigue con N3 aprobado (CP1 ya no está abierto) y la decisión sigue en su fila.
+      await page.reload();
+      await waitStatus(page, 'N3', 'succeeded', 30_000);
+      const trasReload = await queryStack<{ decision: { images: string } }>(
+        `SELECT decision FROM checkpoint_decision WHERE step_run_id = $1`,
+        [stepId],
+      );
+      expect(trasReload[0]?.decision.images).toBe('ai_packshot');
     },
   );
 

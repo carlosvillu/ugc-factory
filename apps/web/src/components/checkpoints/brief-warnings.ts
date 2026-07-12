@@ -21,11 +21,23 @@
 // el techo de ≤12 palabras con frecuencia (8 casos en briefs reales de T1.9). Si bloqueara,
 // CP1 estaría bloqueado en casi cualquier análisis real. Se AVISA (el usuario reescribe el copy
 // si quiere, en el mismo editor) y se deja aprobar.
-import type { BriefWarning } from '@ugc/core/contracts';
+import type { BriefCheckpointDecision, BriefWarning } from '@ugc/core/contracts';
 
 /** Las dos salidas de la petición bloqueante de imágenes (§7.2 N3): subir fotos del producto, o
- *  derivar el frame inicial de i2v a un packshot generado por IA (N7a). */
-export type ImageDecision = 'upload_images' | 'ai_packshot';
+ *  derivar el frame inicial de i2v a un packshot generado por IA (N7a).
+ *
+ *  DERIVADO del contrato de core (T1.11), no redeclarado: esta decisión ya no es estado local que
+ *  se evapora — VIAJA al servidor en el body del `/approve` (y del `/edit`) y se persiste en
+ *  `checkpoint_decision`. Si el contrato añade una salida, esto no compila hasta que la UI la
+ *  pinte, que es exactamente lo que queremos. */
+export type ImageDecision = BriefCheckpointDecision['images'];
+
+/** La DECISIÓN de CP1 en la forma del contrato genérico (`kind` discrimina el checkpoint). Es lo
+ *  que el editor manda al servidor; construirla aquí —y no inline en el componente— mantiene el
+ *  componente ignorante del transporte. */
+export function toBriefDecision(decision: ImageDecision): BriefCheckpointDecision {
+  return { kind: 'brief', images: decision };
+}
 
 /** Tono visual del warning (mapea a los tonos del DS: Alert/Badge). */
 type WarningTone = 'warning' | 'info';

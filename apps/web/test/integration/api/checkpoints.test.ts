@@ -395,4 +395,208 @@ describe('CP1 · el efecto sobre product_brief es ATÓMICO con la transición (T
     });
     expect(res.status).toBe(400);
   });
+
+  // ──────────────────────────────────────────────────────────────────────────────────────────
+  // T1.11 — EL CANAL DE DECISIONES del checkpoint.
+  //
+  // Un checkpoint humano produce DOS cosas: un ARTEFACTO (el brief editado, en `output_refs`) y
+  // una DECISIÓN (CP1: ¿subo fotos o genero un packshot-IA?). Hasta T1.11 solo viajaba la
+  // primera: la decisión era `useState` del editor y se EVAPORABA. Aquí se prueba el canal:
+  // `decision` en el body de `/approve` (y de `/edit`), persistida en `checkpoint_decision` EN LA
+  // MISMA TX que la transición — el mismo criterio de atomicidad que la v2 huérfana de arriba.
+  describe('CP1 · la DECISIÓN del checkpoint se persiste con la transición (T1.11)', () => {
+    async function decisionsOf(stepId: string): Promise<{ kind: string; decision: unknown }[]> {
+      const { rows } = await tdb.pool.query<{ kind: string; decision: unknown }>(
+        `SELECT kind, decision FROM checkpoint_decision WHERE step_run_id = $1`,
+        [stepId],
+      );
+      return rows;
+    }
+
+    it('approve con decisión → 200 y la decisión queda en checkpoint_decision, asociada al step', async () => {
+      const { stepId } = await seedBriefCheckpoint('waiting_approval');
+
+      const res = await call(approvePost, stepId, `/api/steps/${stepId}/approve`, {
+        decision: { kind: 'brief', images: 'ai_packshot' },
+      });
+
+      expect(res.status).toBe(200);
+      expect(await statusOf(stepId)).toBe('succeeded');
+      // La decisión es LEGIBLE por step (lectura por clave: lo que N7a/T4.4 necesita, y lo que un
+      // `audit_log` append-only no sabe hacer bien) — y NO está en el artefacto.
+      expect(await decisionsOf(stepId)).toEqual([
+        { kind: 'brief', decision: { kind: 'brief', images: 'ai_packshot' } },
+      ]);
+    });
+
+    it('ATOMICIDAD: si la transición FALLA, la decisión NO queda persistida', async () => {
+      // Mismo disparador realista que los tests de la v2 huérfana: el step ya no está en
+      // `waiting_approval` (doble clic, run cancelado entre medias, redelivery) ⇒ el orquestador
+      // lanza IllegalTransitionError. La decisión se escribe en la MISMA tx ⇒ rollback.
+      // Sin esto quedaría una decisión sobre una aprobación QUE NUNCA OCURRIÓ, y N7a la leería
+      // como si el humano hubiese elegido.
+      const { stepId } = await seedBriefCheckpoint('succeeded');
+
+      const res = await call(approvePost, stepId, `/api/steps/${stepId}/approve`, {
+        decision: { kind: 'brief', images: 'ai_packshot' },
+      });
+
+      expect(res.status).toBe(409); // invalid_transition
+      expect(await decisionsOf(stepId)).toEqual([]);
+    });
+
+    it('edit con decisión: la decisión se persiste JUNTO a la v2 del brief (mismo commit)', async () => {
+      // El camino que se perdería si la decisión solo montara en `/approve`: el usuario decide
+      // packshot-IA Y ADEMÁS edita el brief antes de guardar.
+      const { stepId, analysisId } = await seedBriefCheckpoint('waiting_approval');
+
+      const res = await call(editPost, stepId, `/api/steps/${stepId}/edit`, {
+        brief: makeBrief(),
+        decision: { kind: 'brief', images: 'upload_images' },
+      });
+
+      expect(res.status).toBe(200);
+      expect(await briefRows(analysisId)).toEqual([
+        { version: 1, status: 'draft' },
+        { version: 2, status: 'approved' },
+      ]);
+      expect(await decisionsOf(stepId)).toEqual([
+        { kind: 'brief', decision: { kind: 'brief', images: 'upload_images' } },
+      ]);
+    });
+
+    it('ATOMICIDAD (edit): transición fallida ⇒ ni v2 del brief ni decisión', async () => {
+      const { stepId, analysisId } = await seedBriefCheckpoint('succeeded');
+
+      const res = await call(editPost, stepId, `/api/steps/${stepId}/edit`, {
+        brief: makeBrief(),
+        decision: { kind: 'brief', images: 'ai_packshot' },
+      });
+
+      expect(res.status).toBe(409);
+      expect(await briefRows(analysisId)).toEqual([{ version: 1, status: 'draft' }]);
+      expect(await decisionsOf(stepId)).toEqual([]);
+    });
+
+    it('aprobar SIN decisión (la rama URL, que no necesita ninguna) sigue funcionando igual', async () => {
+      // La otra mitad de la Verificación. Sin `decision` no se escribe fila: una decisión vacía
+      // "por si acaso" sería ruido que el consumidor tendría que aprender a ignorar.
+      const { stepId } = await seedBriefCheckpoint('waiting_approval');
+
+      const res = await call(approvePost, stepId, `/api/steps/${stepId}/approve`);
+
+      expect(res.status).toBe(200);
+      expect(await statusOf(stepId)).toBe('succeeded');
+      expect(await decisionsOf(stepId)).toEqual([]);
+    });
+
+    it('una decisión con forma DESCONOCIDA → 400 (el canal es tipado, no un jsonb libre)', async () => {
+      // El `kind` discrimina: una decisión de un checkpoint que no existe (o con un valor fuera
+      // del enum) es un caller roto ⇒ 400 ANTES de tocar la BD, no basura persistida que
+      // reventaría en F4 cuando N7a intente leerla.
+      const { stepId } = await seedBriefCheckpoint('waiting_approval');
+
+      const res = await call(approvePost, stepId, `/api/steps/${stepId}/approve`, {
+        decision: { kind: 'brief', images: 'lo_que_sea' },
+      });
+
+      expect(res.status).toBe(400);
+      expect(await statusOf(stepId)).toBe('waiting_approval'); // BD intacta
+      expect(await decisionsOf(stepId)).toEqual([]);
+    });
+
+    it('body VACÍO (curl sin -d) sigue siendo una aprobación válida; body BASURA → 400', async () => {
+      // T1.11 tocó `readJson` (withRoute) para que `/approve` pudiera declarar un body schema sin
+      // romper a quien no manda body: un POST SIN body no es "JSON malformado", es "sin body" ⇒
+      // `{}`, y el schema (todo opcional) lo acepta. Esta es la regresión de las DOS ramas — la
+      // segunda (bytes que no parsean) SIGUE siendo un 400: eso sí es un caller roto.
+      const { stepId } = await seedBriefCheckpoint('waiting_approval');
+      const vacio = await approvePost(
+        new Request(`http://test.local/api/steps/${stepId}/approve`, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json', cookie: cookie() },
+        }),
+        { params: Promise.resolve({ id: stepId }) },
+      );
+      expect(vacio.status).toBe(200);
+      expect(await statusOf(stepId)).toBe('succeeded');
+
+      const { stepId: otro } = await seedBriefCheckpoint('waiting_approval');
+      const basura = await approvePost(
+        new Request(`http://test.local/api/steps/${otro}/approve`, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json', cookie: cookie() },
+          body: '{esto no es json',
+        }),
+        { params: Promise.resolve({ id: otro }) },
+      );
+      expect(basura.status).toBe(400);
+      expect(await statusOf(otro)).toBe('waiting_approval'); // BD intacta
+    });
+
+    // T1.11 (code-review): `readJson` MATERIALIZA el body en memoria. Sin tope, un POST gigante es
+    // un OOM del proceso que sirve TODA la app. Hay DOS caminos y los dos se prueban: el
+    // `Content-Length` (que rechaza ANTES de leer nada — es el que usa cualquier cliente real) y
+    // el recuento de bytes sobre el texto ya leído (el cinturón para peticiones sin
+    // `Content-Length`, o sea chunked). 400 y no 413 porque `APP_ERROR_CODES` es una unión CERRADA
+    // (tabla del Apéndice E): añadir `payload_too_large` es un cambio de CONTRATO, no una decisión
+    // de un route handler.
+    //
+    // Ojo al detalle que hace falta escribir aquí para que el test pruebe lo que cree: un `Request`
+    // construido a mano NO trae `content-length` (lo pone la capa de fetch al enviar), así que sin
+    // fijarlo explícitamente solo se estaría ejercitando el cinturón.
+    const enorme = () =>
+      JSON.stringify({ decision: { kind: 'brief', images: 'x'.repeat(2_000_000) } });
+
+    it('body DESMESURADO con `Content-Length` → 400 SIN llegar a leerlo (el camino real)', async () => {
+      const { stepId } = await seedBriefCheckpoint('waiting_approval');
+      const body = enorme();
+
+      const res = await approvePost(
+        new Request(`http://test.local/api/steps/${stepId}/approve`, {
+          method: 'POST',
+          headers: {
+            'content-type': 'application/json',
+            'content-length': String(Buffer.byteLength(body)),
+            cookie: cookie(),
+          },
+          body,
+        }),
+        { params: Promise.resolve({ id: stepId }) },
+      );
+
+      expect(res.status).toBe(400);
+      expect(((await res.json()) as { code: string }).code).toBe('validation_error');
+      expect(await statusOf(stepId)).toBe('waiting_approval'); // BD intacta
+    });
+
+    it('body DESMESURADO SIN `Content-Length` (chunked) → 400 igualmente (el cinturón)', async () => {
+      const { stepId } = await seedBriefCheckpoint('waiting_approval');
+
+      const res = await approvePost(
+        new Request(`http://test.local/api/steps/${stepId}/approve`, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json', cookie: cookie() },
+          body: enorme(),
+        }),
+        { params: Promise.resolve({ id: stepId }) },
+      );
+
+      expect(res.status).toBe(400);
+      expect(await statusOf(stepId)).toBe('waiting_approval');
+    });
+
+    it('una clave DESCONOCIDA en el body → 400 (strict: un typo no se pierde en silencio)', async () => {
+      // Deuda menor que entra con T1.11: con el `strip` por defecto de Zod, `{ decison: … }`
+      // parseaba a `{}` y la decisión se EVAPORABA con un 200 — el usuario se enteraría en F4.
+      const { stepId } = await seedBriefCheckpoint('waiting_approval');
+
+      const res = await call(approvePost, stepId, `/api/steps/${stepId}/approve`, {
+        decison: { kind: 'brief', images: 'ai_packshot' },
+      });
+
+      expect(res.status).toBe(400);
+      expect(await statusOf(stepId)).toBe('waiting_approval');
+    });
+  });
 });

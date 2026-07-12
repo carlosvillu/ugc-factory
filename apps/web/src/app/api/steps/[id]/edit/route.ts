@@ -23,11 +23,17 @@
 // no vale: `editStep` NECESITA el `briefId` de la v2 para escribirlo en el `output_refs`. Una
 // tx: o las dos mitades, o ninguna.
 import { z } from 'zod';
-import { AppError, ProductBriefSchema, UlidSchema } from '@ugc/core/contracts';
+import {
+  AppError,
+  CheckpointDecisionSchema,
+  ProductBriefSchema,
+  UlidSchema,
+} from '@ugc/core/contracts';
 import { editStep } from '@ugc/core/orchestrator';
 import { findStep, withDomainTransaction } from '@ugc/db';
 import { withRoute, getBoss, getDb, getRequestLogger } from '@/server';
 import { createEditedBriefVersion } from '@/server/brief-checkpoint';
+import { persistCheckpointDecision } from '@/server/checkpoint-decision';
 import { withAuth } from '@/server/with-auth';
 import { toCheckpointError } from '../checkpoint-errors';
 
@@ -43,9 +49,18 @@ const ParamsSchema = z.object({ id: UlidSchema });
 //  - `{ outputRefs }` (T0.8): el editor JSON genérico del panel del canvas. Artefacto opaco.
 //    `.optional()` dentro de su rama para que `{}` siga siendo válido (aprobar-con-edición-nula).
 //  - `{ brief }`      (T1.10b): la edición TIPADA de CP1 (ProductBrief entero).
+//
+// T1.11 — `decision` (opcional) es ORTOGONAL a las dos formas: el mismo checkpoint que edita un
+// artefacto puede además DECIDIR algo (en CP1, el usuario del modo manual elige packshot-IA y
+// además corrige un hook antes de guardar). Por eso viaja en las DOS ramas y no en una tercera.
+const DecisionField = { decision: CheckpointDecisionSchema.optional() };
 const BodySchema = z.union([
-  z.object({ brief: ProductBriefSchema, outputRefs: z.never().optional() }),
-  z.object({ outputRefs: z.unknown().optional(), brief: z.never().optional() }),
+  z.strictObject({ brief: ProductBriefSchema, outputRefs: z.never().optional(), ...DecisionField }),
+  z.strictObject({
+    outputRefs: z.unknown().optional(),
+    brief: z.never().optional(),
+    ...DecisionField,
+  }),
 ]);
 
 export const POST = withAuth(
@@ -77,12 +92,18 @@ export const POST = withAuth(
           }
 
           await editStep({ withTransaction }, params.id, editedOutputRefs);
+          // T1.11 — la DECISIÓN del checkpoint (si la hubo), en la MISMA tx: si `editStep` lanza,
+          // ni versión nueva del brief, ni transición, ni decisión. No-op sin `decision`.
+          await persistCheckpointDecision(tx, params.id, body.decision);
         });
       } catch (err) {
         throw toCheckpointError(err);
       }
 
-      getRequestLogger().info({ step_id: params.id }, 'checkpoint editado + sub-grafo invalidado');
+      getRequestLogger().info(
+        { step_id: params.id, decision_kind: body.decision?.kind },
+        'checkpoint editado + sub-grafo invalidado',
+      );
       return Response.json({ ok: true });
     },
     { params: ParamsSchema, body: BodySchema },

@@ -34,6 +34,7 @@ import { Textarea } from '@/components/ui/textarea';
 import {
   canApprove,
   requiresUserDecision,
+  toBriefDecision,
   toWarningView,
   type ImageDecision,
 } from './brief-warnings';
@@ -183,14 +184,25 @@ export function BriefEditor({ stepId, brief, warnings, briefId }: BriefEditorPro
   const objections = useFieldArray({ control, name: 'objections' });
 
   // La decisión del usuario ante la petición BLOQUEANTE de imágenes (modo manual sin hero:
-  // `needs_user_decision`, §7.2 N3). Estado local: NO es un campo del brief — es una decisión
-  // sobre CÓMO seguir el pipeline (subir fotos o derivar a packshot-IA en N7a).
+  // `needs_user_decision`, §7.2 N3). NO es un campo del brief — es una decisión sobre CÓMO seguir
+  // el pipeline (subir fotos o derivar a packshot-IA en N7a), y por eso no vive en el form.
+  //
+  // El `useState` es solo el estado de la ELECCIÓN mientras el usuario está en el checkpoint: al
+  // aprobar (o al guardar) VIAJA al servidor en el body (T1.11) y se persiste en
+  // `checkpoint_decision`, en la misma tx que la transición. Hasta T1.11 se evaporaba aquí: el
+  // botón se habilitaba y la decisión no salía nunca del cliente — y su consumidor real (N7a,
+  // T4.4) no habría tenido nada que leer.
   const [decision, setDecision] = useState<ImageDecision | null>(null);
   const [busy, setBusy] = useState(false);
 
   const views = useMemo(() => warnings.map(toWarningView), [warnings]);
   const needsDecision = warnings.some(requiresUserDecision);
   const approvable = canApprove(warnings, decision);
+  // La decisión EN LA FORMA DEL CONTRATO, lista para el body — o `undefined` si el usuario no
+  // tenía nada que decidir (rama URL). Se deriva UNA vez: los dos caminos de salida del
+  // checkpoint (aprobar y guardar-y-aprobar) la mandan, y tenerlo escrito dos veces es el par
+  // clásico que se desincroniza el día que la decisión gane un campo.
+  const decisionPayload = decision === null ? undefined : toBriefDecision(decision);
 
   // Trazabilidad (rail del mockup): contadores de campos con cita vs sin ella. Se cuentan sobre
   // el brief ORIGINAL (el de la IA), no sobre los valores editados: el rail responde "¿de dónde
@@ -228,9 +240,13 @@ export function BriefEditor({ stepId, brief, warnings, briefId }: BriefEditorPro
   //
   // `applyEnvelopeToForm` reparte el envelope: los errores de CAMPO van a su campo y el resto cae
   // en `root.server` (ver form-errors.ts) — el mismo sitio donde `runAction` deja los suyos.
+  //
+  // La DECISIÓN viaja también por aquí (T1.11): el usuario del modo manual puede elegir
+  // packshot-IA Y ADEMÁS corregir un hook antes de guardar — si la decisión solo montara en
+  // `/approve`, ese camino la perdería. Es ORTOGONAL al artefacto: no va dentro del brief.
   const onSubmit = handleSubmit(async (values) => {
     try {
-      await runActions.editBrief(stepId, values);
+      await runActions.editBrief(stepId, values, decisionPayload);
     } catch (e) {
       if (e instanceof ApiError) {
         applyEnvelopeToForm(e, setError);
@@ -241,9 +257,11 @@ export function BriefEditor({ stepId, brief, warnings, briefId }: BriefEditorPro
   });
 
   // APROBAR SIN EDITAR: el brief de la IA se aprueba tal cual. NO crea versión nueva (sería
-  // mentir sobre quién escribió el contenido): solo marca el v1 `approved`.
+  // mentir sobre quién escribió el contenido): solo marca el v1 `approved`. La DECISIÓN (si la
+  // hubo) SÍ viaja: aprobar sin editar es el camino normal del modo manual (el brief está bien;
+  // lo que falta es decir de dónde salen las imágenes).
   function onApprove() {
-    void runAction(() => runActions.approve(stepId));
+    void runAction(() => runActions.approve(stepId, decisionPayload));
   }
 
   const productName = watch('product.name');

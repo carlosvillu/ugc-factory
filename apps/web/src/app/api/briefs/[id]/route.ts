@@ -36,8 +36,17 @@ const ParamsSchema = z.object({ id: UlidSchema });
  * la única frontera que impide persistir un brief con forma inválida (5–10 ángulos, 2–3 hooks,
  * el bicondicional source_url⟺manual…). Sin ella, la UI podría guardar basura que reventaría
  * tres nodos más abajo, en F2.
+ *
+ * `.strictObject` (T1.11, deuda menor): con el `strip` por defecto de Zod, un `{ brif: … }` mal
+ * escrito parseaba como `{}`… y `brief` es obligatorio, así que ESO ya daba 400. Lo que se
+ * perdía en SILENCIO era cualquier clave EXTRA junto al brief (`{ brief, decision }`, `{ brief,
+ * language }`): el caller creía haber mandado algo que este endpoint nunca guardó. Con strict es
+ * un 400 con el detalle Zod. LÍMITE CONOCIDO: esto solo cubre el NIVEL SUPERIOR del body — un
+ * typo DENTRO del brief (`{ product: { nombre } }`) lo decide `ProductBriefSchema`, en core, y
+ * volverlo recursivamente estricto es otra tarea (y otro riesgo: rompería a cualquier productor
+ * que añada un campo).
  */
-const PatchBodySchema = z.object({ brief: ProductBriefSchema });
+const PatchBodySchema = z.strictObject({ brief: ProductBriefSchema });
 
 /** Serializa una fila `product_brief` a JSON (las fechas van en ISO; `data` es el brief). */
 function toResponse(row: ProductBriefRow): Record<string, unknown> {

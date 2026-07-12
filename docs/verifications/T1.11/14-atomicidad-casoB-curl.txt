@@ -1,0 +1,50 @@
+==========================================================================
+CASO B — DOBLE APROBACION diseñada para que la transicion falle SIN que
+  haya habido aprobacion previa CON decision:
+   B1) 1er POST /approve SIN decision  -> 200, transicion OK, NO escribe fila
+   B2) 2do POST /approve CON decision  -> 409 (ya no esta en waiting_approval)
+   => la tabla NO debe tener fila para este step (ni de B1 ni de B2).
+  step N3 = 01KXB6JWCC69MAB825BYS9VYWR
+==========================================================================
+
+--- B1: POST approve SIN decision (body {}):
+HTTP/1.1 200 OK
+{"ok":true}
+--- B2: POST approve CON decision (la transicion ya no es posible):
+HTTP/1.1 409 Conflict
+{"code":"invalid_transition","message":"el step no admite esta acción en su estado actual","request_id":"3b769381-803d-463f-9a53-b3d7ee20f296"}
+--- CASO B: fila de decision para N3=01KXB6JWCC69MAB825BYS9VYWR? DEBE SER 0 filas:
+-- DB: postgres://test:test@localhost:34353/test_35043a83f4ad
+-- SQL: SELECT * FROM checkpoint_decision WHERE step_run_id='01KXB6JWCC69MAB825BYS9VYWR'
+-- rows: 0
+[]
+
+--- CASO B: el step SI transiciono (B1 fue 200) pero SIN decision:
+-- DB: postgres://test:test@localhost:34353/test_35043a83f4ad
+-- SQL: SELECT node_key, status FROM step_run WHERE id='01KXB6JWCC69MAB825BYS9VYWR'
+-- rows: 1
+[
+  {
+    "node_key": "N3",
+    "status": "succeeded"
+  }
+]
+
+--- TABLA COMPLETA al final de todos los casos (debe seguir habiendo UNA sola fila:
+    la del run manual 1, con ai_packshot):
+-- DB: postgres://test:test@localhost:34353/test_35043a83f4ad
+-- SQL: SELECT cd.step_run_id, sr.run_id, sr.node_key, sr.status, cd.kind, cd.decision FROM checkpoint_decision cd JOIN step_run sr ON sr.id=cd.step_run_id
+-- rows: 1
+[
+  {
+    "step_run_id": "01KXB61FWMKA97QY65Y5FS143M",
+    "run_id": "01KXB61FWNBKCFTFDWM0Q68BVG",
+    "node_key": "N3",
+    "status": "succeeded",
+    "kind": "brief",
+    "decision": {
+      "kind": "brief",
+      "images": "ai_packshot"
+    }
+  }
+]

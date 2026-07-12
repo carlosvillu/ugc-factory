@@ -1,0 +1,16 @@
+-- DB: postgres://test:test@localhost:34353/test_35043a83f4ad
+-- SQL: SELECT cd.step_run_id, sr.node_key, sr.status, cd.kind, cd.decision, cd.decided_at FROM checkpoint_decision cd JOIN step_run sr ON sr.id=cd.step_run_id
+-- rows: 1
+[
+  {
+    "step_run_id": "01KXB61FWMKA97QY65Y5FS143M",
+    "node_key": "N3",
+    "status": "succeeded",
+    "kind": "brief",
+    "decision": {
+      "kind": "brief",
+      "images": "ai_packshot"
+    },
+    "decided_at": "2026-07-12T12:57:15.594Z"
+  }
+]

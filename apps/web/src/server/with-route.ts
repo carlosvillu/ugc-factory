@@ -49,9 +49,50 @@ function parseOrThrow<T>(schema: z.ZodType<T>, value: unknown): T {
   return r.data;
 }
 
+/**
+ * Techo del body JSON (T1.11, code-review). `readJson` MATERIALIZA el body entero en memoria
+ * (string + objeto parseado): sin tope, un POST gigante —accidental o no— es un OOM del proceso
+ * que sirve TODA la app. 1 MiB da holgura de sobra al payload más grande que existe hoy (el DAG
+ * de `POST /api/runs`, unos pocos KB) y a los briefs del Apéndice A.
+ */
+const MAX_BODY_BYTES = 1024 * 1024;
+
+/**
+ * El body de la petición como JSON.
+ *
+ * BODY VACÍO ⇒ `{}` (T1.11). Un body SIN CONTENIDO no es JSON malformado: es "sin body", y para
+ * un POST cuyo payload es enteramente OPCIONAL (`/approve` con o sin `decision`; `curl -X POST`
+ * sin `-d`) eso equivale a `{}`. Devolverlo así deja que el SCHEMA decida —si todos sus campos
+ * son opcionales, pasa; si exige alguno, da 400 con el detalle Zod— en vez de rechazar con un
+ * opaco "el body no es JSON" una petición perfectamente legal. Se trata como vacío tanto el body
+ * de cero bytes como el de SOLO ESPACIOS (`" \n\t "`): en JSON ninguno de los dos lleva
+ * información, y distinguirlos solo cambiaría el mensaje de un 400 por otro.
+ *
+ * BYTES QUE NO PARSEAN ⇒ 400: eso sí es un caller roto.
+ *
+ * DEMASIADO GRANDE ⇒ 400 (`validation_error`), no 413: `APP_ERROR_CODES` es una unión CERRADA y
+ * su mapa code→status es la tabla del Apéndice E del PRD — añadir un `payload_too_large` es un
+ * cambio de contrato, no una decisión de este fichero. El `Content-Length` se mira ANTES de leer
+ * (rechaza sin materializar nada); el tope sobre el texto ya leído es el cinturón para las
+ * peticiones sin `Content-Length` (chunked).
+ */
 async function readJson(req: Request): Promise<unknown> {
+  const declared = Number(req.headers.get('content-length') ?? Number.NaN);
+  const declaredSize = Number.isFinite(declared);
+  if (declaredSize && declared > MAX_BODY_BYTES) {
+    throw new AppError('validation_error', 'el body es demasiado grande');
+  }
+
+  const raw = await req.text();
+  // Solo cuando NO hubo `Content-Length` (chunked): si lo hubo, el tamaño ya quedó acotado
+  // arriba y recontar los bytes de un body ya validado es trabajo por nada en el 100% de las
+  // peticiones reales.
+  if (!declaredSize && Buffer.byteLength(raw, 'utf8') > MAX_BODY_BYTES) {
+    throw new AppError('validation_error', 'el body es demasiado grande');
+  }
+  if (raw.trim() === '') return {};
   try {
-    return await req.json();
+    return JSON.parse(raw);
   } catch {
     throw new AppError('validation_error', 'el body no es JSON');
   }

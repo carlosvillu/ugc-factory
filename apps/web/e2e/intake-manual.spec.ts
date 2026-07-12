@@ -18,33 +18,11 @@
 //     estos tests observan) se lee ahora de la config de N1 del run vía la API.
 //  Las PROPIEDADES que T1.6 protegía (short-circuit, caché, refs de imagen, validación)
 //  se siguen aseverando todas — solo cambia por dónde se observan.
-import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { test, expect, type Page } from '@playwright/test';
-import { Pool } from 'pg';
-
-// La BD del stack (publicada por e2e-stack.ts), para las lecturas de aserción.
-const runtime = JSON.parse(
-  readFileSync(fileURLToPath(new URL('./.runtime.json', import.meta.url)), 'utf8'),
-) as { databaseUrl: string };
-
-/** Una consulta de aserción contra la BD del stack, con pool EFÍMERO. Se abre y se cierra
- *  por consulta a propósito: un pool de módulo compartido se cerraba dos veces cuando
- *  Playwright reparte los tests del fichero entre workers ("Called end on pool more than
- *  once"). Son 3 lecturas en toda la suite — el coste es irrelevante y no hay ciclo de
- *  vida que gestionar. */
-async function queryStack<T extends Record<string, unknown>>(
-  sql: string,
-  params: unknown[],
-): Promise<T[]> {
-  const pool = new Pool({ connectionString: runtime.databaseUrl });
-  try {
-    const { rows } = await pool.query<T>(sql, params);
-    return rows;
-  } finally {
-    await pool.end();
-  }
-}
+// La BD del stack (la publica `e2e-stack.ts`), para las lecturas de aserción. La plomería de
+// conexión vive en UN solo sitio (`support/stack-db.ts`): estaba copiada en tres specs.
+import { queryStack } from './support/stack-db';
 
 // Fixtures de imagen locales (packages/test-utils/fixtures/media): PNGs válidos mínimos.
 const REF_A = fileURLToPath(

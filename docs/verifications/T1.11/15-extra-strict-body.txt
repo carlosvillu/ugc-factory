@@ -1,0 +1,8 @@
+==========================================================================
+EXTRA (deuda menor de T1.11): PATCH /api/briefs/:id con clave DESCONOCIDA.
+  Antes: Zod strip la descartaba EN SILENCIO. Ahora .strictObject => 400.
+  brief id = 01KXB61H8EHH0ZWHWRD0YMT37K (el del run manual verificado)
+==========================================================================
+HTTP/1.1 400 Bad Request
+{"code":"validation_error","message":"payload inválido","details":{"formErrors":["Unrecognized key: \"tyop_desconocido\""],"fieldErrors":{"brief":["Invalid input: expected object, received undefined","Invalid input: expected object, received undefined","Invalid input: expected array, received undefined","Invalid input: expected object, received undefined","Invalid input: expected array, received undefined","Invalid input: expected array, received undefined","Invalid input: expected object, received undefined","Invalid input: expected object, received undefined","Invalid input: expected object, received undefined","Invalid input: expected object, received undefined","Invalid input: expected array, received undefined"]}},"request_id":"70a30986-0c4c-4a92-bb4f-317463149789"}
+--- Y el brief del run manual quedo APPROVED (efecto de dominio de T1.10b intacto)

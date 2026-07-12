@@ -1,0 +1,43 @@
+--- COSTE de la verificacion: TODAS las llamadas externas fueron a los FAKES locales
+    (FIRECRAWL_BASE_URL/JINA_BASE_URL/ANTHROPIC_BASE_URL -> server HTTP local del stack
+     E2E, ver apps/web/scripts/e2e-stack.ts). Gasto real de proveedor: $0.00
+
+--- cost_entry del stack (cifras del FAKE, no dinero real):
+-- DB: postgres://test:test@localhost:34353/test_35043a83f4ad
+-- SQL: SELECT * FROM cost_entry LIMIT 3
+-- rows: 3
+[
+  {
+    "id": "01KXB61H8ATM12KNZ1H34WGXDY",
+    "provider": "anthropic",
+    "step_run_id": "01KXB61FWMKA97QY65Y5FS143M",
+    "generation_id": null,
+    "project_id": "01KXB60ZBENPCW37SJ4YBEANB3",
+    "amount_cents": 8,
+    "quantity": 12200,
+    "unit": "tokens",
+    "occurred_at": "2026-07-12T12:50:10.314Z"
+  },
+  {
+    "id": "01KXB6GH1M7NXEGVE3813KZM4S",
+    "provider": "firecrawl",
+    "step_run_id": "01KXB6GGWGJ0P26DZPN8HN1V1C",
+    "generation_id": null,
+    "project_id": "01KXB60ZBENPCW37SJ4YBEANB3",
+    "amount_cents": 0,
+    "quantity": 5,
+    "unit": "credits",
+    "occurred_at": "2026-07-12T12:58:21.622Z"
+  },
+  {
+    "id": "01KXB6GHJ13Q9AYTJ18T1GSG8J",
+    "provider": "anthropic",
+    "step_run_id": "01KXB6GGWHKWHXVJHR9D804DKT",
+    "generation_id": null,
+    "project_id": "01KXB60ZBENPCW37SJ4YBEANB3",
+    "amount_cents": 0,
+    "quantity": 1720,
+    "unit": "tokens",
+    "occurred_at": "2026-07-12T12:58:22.147Z"
+  }
+]

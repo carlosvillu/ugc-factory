@@ -169,6 +169,83 @@ describe('BriefEditor (CP1)', () => {
     });
   });
 
+  // ── T1.11 · LA DECISIÓN SALE DEL CLIENTE ────────────────────────────────────────────────
+  // Hasta T1.11 la `ImageDecision` era `useState` local: habilitaba el botón y SE EVAPORABA (no
+  // viajaba a ningún endpoint). Su consumidor real —N7a (T4.4), que decide si genera un
+  // packshot-IA o usa fotos reales— no habría tenido NADA que leer. Estos dos tests son la
+  // regresión de que la decisión viaja, por los DOS caminos que el usuario puede tomar.
+
+  test('T1.11 · aprobar con la decisión de packshot-IA la MANDA en el body de /approve', async () => {
+    const user = userEvent.setup();
+    let payload: unknown;
+    server.use(
+      http.post(`*/api/steps/${STEP_ID}/approve`, async ({ request }) => {
+        payload = await request.json();
+        return HttpResponse.json({ ok: true });
+      }),
+    );
+
+    render(<BriefEditor stepId={STEP_ID} brief={brief} warnings={[needsImages]} />);
+    await user.click(screen.getByRole('button', { name: /generar packshot con ia/i }));
+    await user.click(screen.getByRole('button', { name: /aprobar y continuar/i }));
+
+    await waitFor(() => {
+      expect(payload).toBeDefined();
+    });
+    // El canal GENÉRICO: `kind` discrimina el checkpoint (CP2/CP3/CP4 mandarán el suyo), y la
+    // decisión concreta va dentro. NO es un campo del brief: viaja aparte del artefacto.
+    expect(payload).toEqual({ decision: { kind: 'brief', images: 'ai_packshot' } });
+  });
+
+  test('T1.11 · guardar (editar) con decisión: el body lleva el brief EDITADO **y** la decisión', async () => {
+    // El camino que se pierde si la decisión solo montara en `/approve`: el usuario del modo
+    // manual elige packshot-IA Y ADEMÁS corrige un hook antes de guardar.
+    const user = userEvent.setup();
+    let payload: unknown;
+    server.use(
+      http.post(`*/api/steps/${STEP_ID}/edit`, async ({ request }) => {
+        payload = await request.json();
+        return HttpResponse.json({ ok: true });
+      }),
+    );
+
+    render(<BriefEditor stepId={STEP_ID} brief={brief} warnings={[needsImages]} />);
+    await user.click(screen.getByRole('button', { name: /subir imágenes del producto/i }));
+
+    const primerBeneficio = screen.getByLabelText('Beneficio 1');
+    await user.clear(primerBeneficio);
+    await user.type(primerBeneficio, 'Piel luminosa en 7 días');
+    await user.click(screen.getByRole('button', { name: /guardar cambios y continuar/i }));
+
+    await waitFor(() => {
+      expect(payload).toBeDefined();
+    });
+    const body = payload as { brief: ProductBrief; decision: unknown };
+    expect(body.decision).toEqual({ kind: 'brief', images: 'upload_images' });
+    expect(body.brief.benefits[0]?.benefit).toBe('Piel luminosa en 7 días');
+  });
+
+  test('T1.11 · sin decisión pendiente (rama URL), el approve NO manda decisión', async () => {
+    // La otra mitad de la Verificación: aprobar sin decisión sigue funcionando igual. Un `{}` y
+    // no un `{decision: null}`: el servidor distingue "no decidió" de "decidió nada".
+    const user = userEvent.setup();
+    let payload: unknown;
+    server.use(
+      http.post(`*/api/steps/${STEP_ID}/approve`, async ({ request }) => {
+        payload = await request.json();
+        return HttpResponse.json({ ok: true });
+      }),
+    );
+
+    render(<BriefEditor stepId={STEP_ID} brief={brief} warnings={[]} />);
+    await user.click(screen.getByRole('button', { name: /aprobar y continuar/i }));
+
+    await waitFor(() => {
+      expect(payload).toBeDefined();
+    });
+    expect(payload).toEqual({});
+  });
+
   test('un hook demasiado largo se AVISA pero NO bloquea (los hooks reales de Sonnet se pasan)', () => {
     const hookTooLong: BriefWarning = {
       code: 'hook_too_long',

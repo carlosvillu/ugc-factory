@@ -1,0 +1,8 @@
+-- DB: postgres://test:test@localhost:34353/test_35043a83f4ad
+-- SQL: SELECT count(*) AS filas FROM checkpoint_decision
+-- rows: 1
+[
+  {
+    "filas": "0"
+  }
+]

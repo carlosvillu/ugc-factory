@@ -1,0 +1,54 @@
+-- DB: postgres://test:test@localhost:34353/test_35043a83f4ad
+-- SQL: SELECT node_key, status FROM step_run WHERE run_id='01KXB61FWNBKCFTFDWM0Q68BVG' ORDER BY node_key
+-- rows: 3
+[
+  {
+    "node_key": "N1",
+    "status": "succeeded"
+  },
+  {
+    "node_key": "N2",
+    "status": "skipped"
+  },
+  {
+    "node_key": "N3",
+    "status": "succeeded"
+  }
+]
+
+lazy_load:unalias:9: no such hash table element: nvm
+lazy_load:unalias:9: no such hash table element: node
+lazy_load:unalias:9: no such hash table element: npm
+-- DB: postgres://test:test@localhost:34353/test_35043a83f4ad
+-- SQL: SELECT step_run_id, kind, decision, decided_at FROM checkpoint_decision
+-- rows: 1
+[
+  {
+    "step_run_id": "01KXB61FWMKA97QY65Y5FS143M",
+    "kind": "brief",
+    "decision": {
+      "kind": "brief",
+      "images": "ai_packshot"
+    },
+    "decided_at": "2026-07-12T12:57:15.594Z"
+  }
+]
+
+lazy_load:unalias:9: no such hash table element: nvm
+lazy_load:unalias:9: no such hash table element: node
+lazy_load:unalias:9: no such hash table element: npm
+-- DB: postgres://test:test@localhost:34353/test_35043a83f4ad
+-- SQL: SELECT cd.step_run_id, sr.node_key, sr.status AS step_status, cd.kind, cd.decision FROM checkpoint_decision cd JOIN step_run sr ON sr.id = cd.step_run_id WHERE sr.run_id = '01KXB61FWNBKCFTFDWM0Q68BVG'
+-- rows: 1
+[
+  {
+    "step_run_id": "01KXB61FWMKA97QY65Y5FS143M",
+    "node_key": "N3",
+    "step_status": "succeeded",
+    "kind": "brief",
+    "decision": {
+      "kind": "brief",
+      "images": "ai_packshot"
+    }
+  }
+]

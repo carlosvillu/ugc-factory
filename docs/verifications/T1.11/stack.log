@@ -1,0 +1,113 @@
+▲ Next.js 16.2.10 (Turbopack)
+- Local:         http://localhost:3100
+- Network:       http://192.168.1.132:3100
+✓ Ready in 231ms
+{"level":30,"time":1783860342222,"pid":10648,"hostname":"MBP-de-Carlos","name":"worker","intervalMs":5000,"msg":"sweeper de timeouts arrancado"}
+{"level":30,"time":1783860342222,"pid":10648,"hostname":"MBP-de-Carlos","name":"worker","queue":"demo.noop","msg":"pg-boss arrancado: colas y consumers listos"}
+{"level":30,"time":1783860342222,"pid":10648,"hostname":"MBP-de-Carlos","name":"worker","health":{"ok":true,"db":true},"msg":"worker ready"}
+{"level":30,"time":1783860342710,"pid":10649,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","msg":"running startup migrations"}
+{"level":30,"time":1783860342765,"pid":10649,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","msg":"startup migrations applied"}
+{"level":30,"time":1783860342815,"pid":10649,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","seeded":true,"msg":"auth.password_hash sembrado (first boot)"}
+{"level":30,"time":1783860342859,"pid":10649,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","provider":"fal","seeded":true,"msg":"secret.fal sembrado cifrado desde env (first boot)"}
+{"level":30,"time":1783860342875,"pid":10649,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","provider":"firecrawl","seeded":false,"msg":"secret.firecrawl ya existía en BD (env ignorada; la BD es la fuente)"}
+{"level":30,"time":1783860342875,"pid":10649,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","provider":"anthropic","seeded":false,"msg":"secret.anthropic ya existía en BD (env ignorada; la BD es la fuente)"}
+
+{"level":30,"time":1783860356907,"pid":10649,"hostname":"MBP-de-Carlos","name":"web","request_id":"6144a895-4e43-4b9b-9230-2c7a0fac5435","route":"/api/health","health":{"ok":true,"db":true},"msg":"health check"}
+ GET /api/health 200 in 547ms (next.js: 527ms, application-code: 20ms)
+{"level":30,"time":1783860356945,"pid":10649,"hostname":"MBP-de-Carlos","name":"web","request_id":"4e01b41f-4c6e-4755-85c7-1150ecdd6661","route":"/api/health","health":{"ok":true,"db":true},"msg":"health check"}
+ GET /api/health 200 in 12ms (next.js: 1799µs, application-code: 11ms)
+ GET /login 200 in 1248ms (next.js: 1102ms, application-code: 145ms)
+ POST /api/login 200 in 288ms (next.js: 194ms, application-code: 94ms)
+ GET / 200 in 218ms (next.js: 160ms, proxy.ts: 37ms, application-code: 21ms)
+ GET /analyses/new 200 in 1503ms (next.js: 957ms, proxy.ts: 5ms, application-code: 542ms)
+{"level":30,"time":1783860608712,"pid":10649,"hostname":"MBP-de-Carlos","name":"web","request_id":"439d84ef-6a27-4255-a754-d65b5fc58a3d","analysis_id":"01KXB61FP1BBM6VCZA8NSBJT57","project_id":"01KXB60ZBENPCW37SJ4YBEANB3","reused":false,"source":"manual","msg":"intake manual creado"}
+ POST /api/analyses 201 in 224ms (next.js: 175ms, application-code: 49ms)
+{"level":30,"time":1783860608938,"pid":10649,"hostname":"MBP-de-Carlos","name":"web","request_id":"b6b956a0-b944-4167-816a-310397ef083a","run_id":"01KXB61FWNBKCFTFDWM0Q68BVG","steps":3,"msg":"run creado"}
+ POST /api/runs 201 in 221ms (next.js: 157ms, application-code: 64ms)
+ GET /api/runs/01KXB61FWNBKCFTFDWM0Q68BVG 200 in 653ms (next.js: 647ms, application-code: 6ms)
+ GET /runs/01KXB61FWNBKCFTFDWM0Q68BVG 200 in 1786ms (next.js: 1089ms, proxy.ts: 3ms, application-code: 694ms)
+ GET /api/steps/01KXB61FWMKA97QY65Y5FS143M 200 in 642ms (next.js: 636ms, application-code: 6ms)
+{"level":30,"time":1783861035611,"pid":10649,"hostname":"MBP-de-Carlos","name":"web","request_id":"e88e0a93-1047-4bb9-9f5b-de40c63fc6cf","step_id":"01KXB61FWMKA97QY65Y5FS143M","decision_kind":"brief","msg":"checkpoint aprobado"}
+ POST /api/steps/01KXB61FWMKA97QY65Y5FS143M/approve 200 in 875ms (next.js: 847ms, application-code: 28ms)
+[browser] [React Flow]: The parent container needs a width and a height to render the graph. Help: https://reactflow.dev/error#004
+[browser] [React Flow]: The parent container needs a width and a height to render the graph. Help: https://reactflow.dev/error#004
+[browser] [React Flow]: The parent container needs a width and a height to render the graph. Help: https://reactflow.dev/error#004
+ GET /api/runs/01KXB61FWNBKCFTFDWM0Q68BVG 200 in 21ms (next.js: 3ms, application-code: 18ms)
+ GET /api/runs/01KXB61FWNBKCFTFDWM0Q68BVG/events 200 in 7.6min (next.js: 614ms, application-code: 7.6min)
+ GET /runs/01KXB61FWNBKCFTFDWM0Q68BVG 200 in 188ms (next.js: 6ms, proxy.ts: 3ms, application-code: 178ms)
+[browser] [React Flow]: The parent container needs a width and a height to render the graph. Help: https://reactflow.dev/error#004
+[browser] [React Flow]: The parent container needs a width and a height to render the graph. Help: https://reactflow.dev/error#004
+ GET /analyses/new 200 in 66ms (next.js: 4ms, proxy.ts: 5ms, application-code: 57ms)
+ GET /api/runs/01KXB61FWNBKCFTFDWM0Q68BVG/events 200 in 24.4s (next.js: 4ms, application-code: 24.4s)
+{"level":30,"time":1783861101497,"pid":10649,"hostname":"MBP-de-Carlos","name":"web","request_id":"754ee4b7-f475-4776-8462-586d44037337","run_id":"01KXB6GGWKMNCS0G3DP3WSNS5C","steps":3,"msg":"run creado"}
+ POST /api/runs 201 in 51ms (next.js: 2ms, application-code: 48ms)
+ GET /api/runs/01KXB6GGWKMNCS0G3DP3WSNS5C 200 in 8ms (next.js: 4ms, application-code: 4ms)
+ GET /runs/01KXB6GGWKMNCS0G3DP3WSNS5C 200 in 40ms (next.js: 7ms, proxy.ts: 2ms, application-code: 31ms)
+ GET /api/steps/01KXB6GGWJKAW715BWRVC61WTW 200 in 9ms (next.js: 4ms, application-code: 5ms)
+{"level":30,"time":1783861152543,"pid":10649,"hostname":"MBP-de-Carlos","name":"web","request_id":"a0cd7b8c-28a0-4796-bf5a-5d3efb0c9cd0","step_id":"01KXB6GGWJKAW715BWRVC61WTW","msg":"checkpoint aprobado"}
+ POST /api/steps/01KXB6GGWJKAW715BWRVC61WTW/approve 200 in 47ms (next.js: 5ms, application-code: 42ms)
+[browser] [React Flow]: The parent container needs a width and a height to render the graph. Help: https://reactflow.dev/error#004
+[browser] [React Flow]: The parent container needs a width and a height to render the graph. Help: https://reactflow.dev/error#004
+[browser] [React Flow]: The parent container needs a width and a height to render the graph. Help: https://reactflow.dev/error#004
+ GET /analyses/new 200 in 72ms (next.js: 8ms, proxy.ts: 15ms, application-code: 48ms)
+ GET /api/runs/01KXB6GGWKMNCS0G3DP3WSNS5C/events 200 in 69s (next.js: 4ms, application-code: 69s)
+{"level":30,"time":1783861178755,"pid":10649,"hostname":"MBP-de-Carlos","name":"web","request_id":"ecc82d5f-5a68-43e2-b346-f17b8f5b1906","analysis_id":"01KXB6JWC1PJT0ZRZZ0MAX0NXD","project_id":"01KXB60ZBENPCW37SJ4YBEANB3","reused":false,"source":"manual","msg":"intake manual creado"}
+ POST /api/analyses 201 in 17ms (next.js: 2ms, application-code: 14ms)
+{"level":30,"time":1783861178773,"pid":10649,"hostname":"MBP-de-Carlos","name":"web","request_id":"9d2968ae-c53f-4944-bc0c-c6628883d494","run_id":"01KXB6JWCDZN7PCMFZ790V7CWY","steps":3,"msg":"run creado"}
+ POST /api/runs 201 in 15ms (next.js: 1558µs, application-code: 14ms)
+ GET /api/runs/01KXB6JWCDZN7PCMFZ790V7CWY 200 in 6ms (next.js: 3ms, application-code: 3ms)
+ GET /runs/01KXB6JWCDZN7PCMFZ790V7CWY 200 in 41ms (next.js: 6ms, proxy.ts: 2ms, application-code: 33ms)
+ GET /api/steps/01KXB6JWCC69MAB825BYS9VYWR 200 in 9ms (next.js: 4ms, application-code: 4ms)
+ POST /api/steps/01KXB6JWCAK5YMDXNS5K9MYKS3/approve 409 in 32ms (next.js: 3ms, application-code: 29ms)
+{"level":30,"time":1783861385971,"pid":10649,"hostname":"MBP-de-Carlos","name":"web","request_id":"39267064-98c7-433d-be47-223a7f6e3a63","step_id":"01KXB6JWCC69MAB825BYS9VYWR","msg":"checkpoint aprobado"}
+ POST /api/steps/01KXB6JWCC69MAB825BYS9VYWR/approve 200 in 48ms (next.js: 5ms, application-code: 43ms)
+ POST /api/steps/01KXB6JWCC69MAB825BYS9VYWR/approve 409 in 11ms (next.js: 2ms, application-code: 9ms)
+ POST /api/steps/01KXB6JWCC69MAB825BYS9VYWR/approve 400 in 6ms (next.js: 3ms, application-code: 4ms)
+ PATCH /api/briefs/01KXB61H8EHH0ZWHWRD0YMT37K 400 in 791ms (next.js: 787ms, application-code: 4ms)
+ GET /api/runs/01KXB6JWCDZN7PCMFZ790V7CWY/events 200 in 7.3min (next.js: 5ms, application-code: 7.3min)
+{"level":30,"time":1783861618727,"pid":10648,"hostname":"MBP-de-Carlos","name":"worker","signal":"SIGTERM","msg":"worker shutting down"}
+{"level":30,"time":1783861618740,"pid":10648,"hostname":"MBP-de-Carlos","name":"worker","msg":"sweeper de timeouts detenido"}
+node:events:496
+      throw er; // Unhandled 'error' event
+      ^
+
+error: terminating connection due to administrator command
+    at parseErrorMessage (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/pg-protocol@1.15.0/node_modules/pg-protocol/src/parser.ts:394:9)
+    at Parser.handlePacket (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/pg-protocol@1.15.0/node_modules/pg-protocol/src/parser.ts:212:19)
+    at Parser.parse (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/pg-protocol@1.15.0/node_modules/pg-protocol/src/parser.ts:105:30)
+    at Socket.<anonymous> (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/pg-protocol@1.15.0/node_modules/pg-protocol/src/index.ts:7:48)
+    at Socket.emit (node:events:518:28)
+    at addChunk (node:internal/streams/readable:561:12)
+    at readableAddChunkPushByteMode (node:internal/streams/readable:512:3)
+    at Readable.push (node:internal/streams/readable:392:5)
+    at TCP.onStreamRead (node:internal/stream_base_commons:189:23)
+Emitted 'error' event on Client instance at:
+    at Client._handleErrorEvent (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/pg@8.22.0/node_modules/pg/lib/client.js:417:10)
+    at Client._handleErrorMessage (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/pg@8.22.0/node_modules/pg/lib/client.js:428:12)
+    at Connection.emit (node:events:518:28)
+    at /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/pg@8.22.0/node_modules/pg/lib/connection.js:136:12
+    at Parser.parse (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/pg-protocol@1.15.0/node_modules/pg-protocol/src/parser.ts:106:9)
+    at Socket.<anonymous> (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/pg-protocol@1.15.0/node_modules/pg-protocol/src/index.ts:7:48)
+    [... lines matching original stack trace ...]
+    at Readable.push (node:internal/streams/readable:392:5) {
+  length: 116,
+  severity: 'FATAL',
+  code: '57P01',
+  detail: undefined,
+  hint: undefined,
+  position: undefined,
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: 'postgres.c',
+  line: '3286',
+  routine: 'ProcessInterrupts'
+}
+
+Node.js v22.18.0
+[?25h

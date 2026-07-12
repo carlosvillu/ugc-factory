@@ -15,17 +15,14 @@
 // que la premisa "este spec posee el ledger" vuelve a ser cierta por CONSTRUCCIÓN en vez
 // de por suerte de ordenación. Las sumas siguen siendo exactas — no se relaja ni un
 // assert.
-import { readFileSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
 import { test, expect } from '@playwright/test';
 import { createDb, recordCost, seedMonthlyBudgetIfAbsent } from '@ugc/db';
-import { Pool } from 'pg';
+// La BD del stack en UN solo sitio (`support/stack-db.ts`): la URL para el cliente TIPADO (que es
+// como este spec SIEMBRA: `recordCost`/`seedMonthlyBudgetIfAbsent`) y `queryStack` para el SQL
+// crudo de limpieza. Antes este fichero parseaba `.runtime.json` y abría su propio `Pool` inline.
+import { queryStack, stackDatabaseUrl } from './support/stack-db';
 
-const runtime = JSON.parse(
-  readFileSync(fileURLToPath(new URL('./.runtime.json', import.meta.url)), 'utf8'),
-) as { databaseUrl: string };
-
-const db = createDb(runtime.databaseUrl);
+const db = createDb(stackDatabaseUrl);
 
 // Dos días UTC distintos DEL MES EN CURSO (coherente con el "este mes" del mockup).
 // Las fechas se construyen en UTC y el bucket del repo trunca en UTC → el string
@@ -51,12 +48,7 @@ test.describe('panel de gasto /spend (T0.12)', () => {
     // El ledger queda LIMPIO antes de sembrar: otros specs (el pipeline de análisis)
     // registran costes reales sobre esta misma BD y el orden entre ficheros no está
     // garantizado. Sin esto, las sumas exactas de abajo dependerían de la suerte.
-    const pool = new Pool({ connectionString: runtime.databaseUrl });
-    try {
-      await pool.query('DELETE FROM cost_entry');
-    } finally {
-      await pool.end();
-    }
+    await queryStack('DELETE FROM cost_entry');
 
     await recordCost(db, {
       provider: 'fal',

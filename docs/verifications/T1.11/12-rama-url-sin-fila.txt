@@ -1,0 +1,38 @@
+-- DB: postgres://test:test@localhost:34353/test_35043a83f4ad
+-- SQL: SELECT node_key, status FROM step_run WHERE run_id='01KXB6GGWKMNCS0G3DP3WSNS5C' ORDER BY node_key
+-- rows: 3
+[
+  {
+    "node_key": "N1",
+    "status": "succeeded"
+  },
+  {
+    "node_key": "N2",
+    "status": "succeeded"
+  },
+  {
+    "node_key": "N3",
+    "status": "succeeded"
+  }
+]
+
+-- La rama URL NO debe tener fila de decisión (ni una fila vacía 'por si acaso'):
+-- DB: postgres://test:test@localhost:34353/test_35043a83f4ad
+-- SQL: SELECT * FROM checkpoint_decision WHERE step_run_id='01KXB6GGWJKAW715BWRVC61WTW'
+-- rows: 0
+[]
+
+-- Estado global de la tabla (solo debe seguir la fila del run MANUAL):
+-- DB: postgres://test:test@localhost:34353/test_35043a83f4ad
+-- SQL: SELECT step_run_id, kind, decision FROM checkpoint_decision
+-- rows: 1
+[
+  {
+    "step_run_id": "01KXB61FWMKA97QY65Y5FS143M",
+    "kind": "brief",
+    "decision": {
+      "kind": "brief",
+      "images": "ai_packshot"
+    }
+  }
+]

@@ -130,3 +130,50 @@ export type PipelineRun = typeof pipelineRun.$inferSelect;
 export type NewPipelineRun = typeof pipelineRun.$inferInsert;
 export type StepRun = typeof stepRun.$inferSelect;
 export type NewStepRun = typeof stepRun.$inferInsert;
+
+// ────────────────────────────────────────────────────────────────────────────────────────────
+// `checkpoint_decision` (T1.11): LA DECISIÓN que un humano toma en un checkpoint.
+//
+// UN CHECKPOINT PRODUCE DOS COSAS Y NO SON LA MISMA. (1) un ARTEFACTO (el brief que el usuario
+// dejó, la matriz que editó): vive en `step_run.output_refs`, tiene AUTOR, y el diff de
+// `audit_log` (§19.1) lo compara IA-vs-humano para medir cuánto corrige el humano a la máquina.
+// (2) una DECISIÓN sobre CÓMO SEGUIR el pipeline (CP1: ¿subo fotos o genero packshot-IA?; CP2:
+// ¿qué variantes genero?; CP4: ¿re-genero o publico?). La decisión NO es parte del artefacto:
+// colarla en `output_refs` haría que el diff de auditoría la leyese como "la IA cambió de
+// opinión", y además la decisión vive lo que vive el STEP, no lo que vive la fila versionada del
+// brief (que se puede reeditar por `PATCH /api/briefs/:id` fuera de todo run, donde una decisión
+// de imágenes no significa nada).
+//
+// POR QUÉ TABLA PROPIA Y NO `audit_log`. `audit_log` es un registro APPEND-ONLY de *qué pasó*:
+// bueno para auditar, malo para consultar ESTADO ACTUAL. El consumidor real de esto es N7a
+// (T4.4), que necesita preguntar "¿qué decidió el humano en el checkpoint del que dependo?" para
+// saber si genera un packshot-IA o usa fotos reales — una lectura POR CLAVE, no un
+// `ORDER BY at DESC LIMIT 1` con filtros de `action`/`entity` sobre un log que crece sin techo.
+// La decisión es ESTADO, con su clave natural (el step) y su unicidad (una por aprobación).
+//
+// GENÉRICA POR CONSTRUCCIÓN: `kind` (qué checkpoint decidió) + `decision` jsonb (la decisión, con
+// la forma que su checkpoint le dé). CP1 la estrena con `{"images":"ai_packshot"}`; CP2/CP3/CP4
+// escriben la suya sin tocar el schema. Aquí NO hay una columna `image_decision`.
+export const checkpointDecision = pgTable('checkpoint_decision', {
+  id: ulidPk(),
+  // La clave natural: el step del checkpoint. UNIQUE porque un step se aprueba UNA vez (tras la
+  // transición ya no está en `waiting_approval`: un segundo POST da 409). Si el checkpoint se
+  // rehace tras un supersede (§7.1.c), la fila nueva del step es OTRA (ids distintos) y trae su
+  // propia decisión — el linaje se conserva en vez de sobrescribirse.
+  // ON DELETE CASCADE: la decisión no sobrevive al step que la produjo (borrar un run se lleva
+  // sus steps; una decisión colgando de un step inexistente no es auditable ni consultable).
+  stepRunId: text('step_run_id')
+    .notNull()
+    .unique('checkpoint_decision_step_run_id_key')
+    .references(() => stepRun.id, { onDelete: 'cascade' }),
+  // QUÉ checkpoint la tomó, en texto libre (no un enum): los checkpoints de F2–F4 llegarán sin
+  // migración, y un enum obligaría a un ALTER TYPE por cada uno. Hoy: `brief` (CP1).
+  kind: text('kind').notNull(),
+  // LA DECISIÓN, jsonb opaco para la BD: su forma la valida el contrato de SU checkpoint en core
+  // (el mismo criterio que `output_refs`). CP1: `{"images":"upload_images"|"ai_packshot"}`.
+  decision: jsonb('decision').notNull(),
+  decidedAt: timestamp('decided_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+export type CheckpointDecision = typeof checkpointDecision.$inferSelect;
+export type NewCheckpointDecision = typeof checkpointDecision.$inferInsert;

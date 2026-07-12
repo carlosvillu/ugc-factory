@@ -143,6 +143,13 @@ export {
 // El tipo de fila `product_brief` (retorno de los repos de arriba): lo consumen los route
 // handlers de web (`/api/briefs/:id`, `/api/steps/:id/{approve,edit}`) para tipar la respuesta.
 export type { ProductBrief as ProductBriefRow } from './schema/project';
+// La DECISIÓN de un checkpoint (T1.11): `recordCheckpointDecision` la persiste en la MISMA tx que
+// la transición (la llaman los route handlers de `/approve` y `/edit` dentro de
+// `withDomainTransaction`). Es el canal genérico —`kind` + `decision` jsonb— que CP2/CP3/CP4
+// reutilizan sin tocar el schema. `findCheckpointDecision` (la lectura por step) NO sale al barrel
+// todavía: su consumidor de runtime es N7a (T4.4) y hoy solo lo usan los tests de integración
+// (import relativo) — knip veta el export sin consumidor.
+export { recordCheckpointDecision } from './repos/checkpoint-decision.repo';
 // Rollup del coste real de un step (T1.10b): recomputa `step_run.cost_actual` desde
 // `cost_entry` (SUM por step_run_id). Lo llama el ORQUESTADOR (consumer del worker) al cerrar
 // un step — nunca `@ugc/services` (la columna del step es territorio del step, T1.10a).

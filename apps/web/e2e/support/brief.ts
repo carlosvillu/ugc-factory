@@ -48,6 +48,18 @@ export async function fetchBrief(
   return (await res.json()) as BriefApiResponse;
 }
 
+/**
+ * El id del STEP del checkpoint que el editor tiene delante (`data-step-id`) — el mismo ancla
+ * que `briefIdOf`, y por la misma razón: la Verificación de T1.11 exige comprobar en la BD que la
+ * DECISIÓN quedó «asociada al step del checkpoint», y sin este id el test tendría que adivinarlo
+ * reconstruyendo el stream SSE.
+ */
+export async function stepIdOf(page: Page): Promise<string> {
+  const id = await briefEditor(page).getAttribute('data-step-id');
+  expect(id, 'el editor de CP1 debe anclar el id de su step').toBeTruthy();
+  return id ?? '';
+}
+
 /** Arranca un análisis por URL y espera a que CP1 tome la vista (N3 pausa en el checkpoint). */
 export async function runUrlAnalysisToCp1(page: Page): Promise<void> {
   await page.goto('/analyses/new');

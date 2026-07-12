@@ -1,0 +1,37 @@
+commit: c17c07c + working tree con el diff de T1.11
+Lazy loading nvm node npm ...
+-- DB: postgres://test:test@localhost:34353/test_35043a83f4ad
+-- SQL: SELECT column_name, data_type, is_nullable FROM information_schema.columns WHERE table_name='checkpoint_decision' ORDER BY ordinal_position
+-- rows: 5
+[
+  {
+    "column_name": "id",
+    "data_type": "text",
+    "is_nullable": "NO"
+  },
+  {
+    "column_name": "step_run_id",
+    "data_type": "text",
+    "is_nullable": "NO"
+  },
+  {
+    "column_name": "kind",
+    "data_type": "text",
+    "is_nullable": "NO"
+  },
+  {
+    "column_name": "decision",
+    "data_type": "jsonb",
+    "is_nullable": "NO"
+  },
+  {
+    "column_name": "decided_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "NO"
+  }
+]
+Lazy loading nvm node npm ...
+-- DB: postgres://test:test@localhost:34353/test_35043a83f4ad
+-- SQL: SELECT * FROM checkpoint_decision
+-- rows: 0
+[]

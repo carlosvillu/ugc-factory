@@ -6,7 +6,11 @@
 // `code` del envelope de core (`{code,message,details?}`), que es la rama de
 // decisión de la UI (NUNCA branch sobre `message`, texto para humanos).
 import { z } from 'zod';
-import { ErrorEnvelopeSchema, type ErrorEnvelope } from '@ugc/core/contracts';
+import {
+  ErrorEnvelopeSchema,
+  type CheckpointDecision,
+  type ErrorEnvelope,
+} from '@ugc/core/contracts';
 
 export class ApiError extends Error {
   constructor(
@@ -129,9 +133,19 @@ export const runActions = {
   /** El step con su artefacto COMPLETO (CP1 lo necesita entero; el SSE lo recorta). */
   getStep: (stepId: string) => api.get(`/api/steps/${stepId}`, StepResponseSchema),
   /** Edición TIPADA del checkpoint del brief (CP1): el servidor versiona (v2) y aprueba el step,
-   *  invalidando el sub-grafo aguas abajo. Distinta de `edit` (canal JSON opaco genérico). */
-  editBrief: (stepId: string, brief: unknown) =>
-    api.post(`/api/steps/${stepId}/edit`, OkSchema, { brief }),
+   *  invalidando el sub-grafo aguas abajo. Distinta de `edit` (canal JSON opaco genérico).
+   *  `decision` (T1.11): lo que el humano DECIDIÓ en el checkpoint, que NO es parte del artefacto
+   *  — se persiste aparte, en la misma tx que la transición. Opcional: la rama URL no decide. */
+  editBrief: (stepId: string, brief: unknown, decision?: CheckpointDecision) =>
+    api.post(
+      `/api/steps/${stepId}/edit`,
+      OkSchema,
+      // `=== undefined` explícito (no `decision && …`): el truthiness sobre un objeto funciona
+      // por casualidad y se copia mal al siguiente campo, que puede ser `0` o `''`. El body
+      // OMITE la clave cuando no hay decisión — el schema del servidor es `.strict()` y
+      // `{decision: undefined}` no es lo mismo que "sin decisión".
+      decision === undefined ? { brief } : { brief, decision },
+    ),
   /** Crea un run desde una definición de DAG (`POST /api/runs`) y devuelve su id. La usan los
    *  dos modos del intake (URL y texto libre): comparten la plomería del arranque del run,
    *  no el formulario (sus campos y su pre-paso son genuinamente distintos). */
@@ -139,7 +153,12 @@ export const runActions = {
   setAutopilot: (runId: string, autopilot: boolean) =>
     api.patch(`/api/runs/${runId}`, OkSchema, { autopilot }),
   cancelRun: (runId: string) => api.post(`/api/runs/${runId}/cancel`, OkSchema),
-  approve: (stepId: string) => api.post(`/api/steps/${stepId}/approve`, OkSchema),
+  /** Aprobar el checkpoint SIN editar. `decision` (T1.11): la decisión del humano, si ese
+   *  checkpoint exigía una (CP1 modo manual: subir fotos vs packshot-IA). Sin ella, el body va
+   *  vacío y el servidor no persiste nada — que es el caso de la rama URL y de los checkpoints
+   *  genéricos del canvas. */
+  approve: (stepId: string, decision?: CheckpointDecision) =>
+    api.post(`/api/steps/${stepId}/approve`, OkSchema, decision === undefined ? {} : { decision }),
   edit: (stepId: string, outputRefs: unknown) =>
     api.post(`/api/steps/${stepId}/edit`, OkSchema, { outputRefs }),
   reject: (stepId: string) => api.post(`/api/steps/${stepId}/reject`, OkSchema),

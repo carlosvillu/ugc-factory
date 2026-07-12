@@ -1,0 +1,295 @@
+
+> ugc-factory@0.0.0 gate /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads
+> pnpm lint && pnpm typecheck && pnpm format:check && pnpm knip && pnpm test
+
+
+> ugc-factory@0.0.0 lint /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads
+> eslint .
+
+
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/web/e2e/runs-canvas.spec.ts
+   52:3  warning  Test has no assertions  playwright/expect-expect
+   69:3  warning  Test has no assertions  playwright/expect-expect
+   79:3  warning  Test has no assertions  playwright/expect-expect
+  126:3  warning  Test has no assertions  playwright/expect-expect
+
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/web/src/components/checkpoints/brief-editor.tsx
+  267:23  warning  Compilation Skipped: Use of incompatible library
+
+This API returns functions which cannot be memoized without leading to stale UI. To prevent this, by default React Compiler will skip memoizing this component/hook. However, you may see issues if values from this API are passed to other components/hooks that are memoized.
+
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/web/src/components/checkpoints/brief-editor.tsx:267:23
+  265 |   }
+  266 |
+> 267 |   const productName = watch('product.name');
+      |                       ^^^^^ React Hook Form's `useForm()` API returns a `watch()` function which cannot be memoized safely.
+  268 |
+  269 |   return (
+  270 |     <form  react-hooks/incompatible-library
+
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/web/src/components/intake/intake-form.tsx
+  70:39  warning  Compilation Skipped: Use of incompatible library
+
+This API returns functions which cannot be memoized without leading to stale UI. To prevent this, by default React Compiler will skip memoizing this component/hook. However, you may see issues if values from this API are passed to other components/hooks that are memoized.
+
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/web/src/components/intake/intake-form.tsx:70:39
+  68 |   const { errors, isSubmitting } = formState;
+  69 |
+> 70 |   const imageRefs: IntakeImageRef[] = watch('imageRefs') ?? [];
+     |                                       ^^^^^ React Hook Form's `useForm()` API returns a `watch()` function which cannot be memoized safely.
+  71 |   const [uploadError, setUploadError] = useState<string | null>(null);
+  72 |   const [uploading, setUploading] = useState(false);
+  73 |  react-hooks/incompatible-library
+
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/core/src/analyze/rescale.test.ts
+  5:8  warning  Using exported name 'sharp' as identifier for default export  import-x/no-named-as-default
+
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/core/src/analyze/rescale.ts
+  9:8  warning  Using exported name 'sharp' as identifier for default export  import-x/no-named-as-default
+
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/core/src/analyze/visual-analyzer.test.ts
+  6:8  warning  Using exported name 'sharp' as identifier for default export  import-x/no-named-as-default
+
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/core/src/contracts/product-brief.json-schema.test.ts
+  7:8  warning  Using exported name 'Ajv2020' as identifier for default export  import-x/no-named-as-default
+
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/services/test/integration/visual-analyze.test.ts
+  13:8  warning  Using exported name 'sharp' as identifier for default export  import-x/no-named-as-default
+
+✖ 11 problems (0 errors, 11 warnings)
+
+
+> ugc-factory@0.0.0 typecheck /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads
+> tsc --noEmit && pnpm -r --parallel typecheck
+
+Scope: 6 of 7 workspace projects
+apps/web typecheck$ tsc --noEmit
+apps/worker typecheck$ tsc --noEmit
+packages/core typecheck$ tsc --noEmit
+packages/db typecheck$ tsc --noEmit
+packages/test-utils typecheck$ tsc --noEmit
+packages/services typecheck$ tsc --noEmit
+apps/web typecheck: Done
+packages/test-utils typecheck: Done
+apps/worker typecheck: Done
+packages/db typecheck: Done
+packages/core typecheck: Done
+packages/services typecheck: Done
+
+> ugc-factory@0.0.0 format:check /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads
+> prettier --check .
+
+Checking formatting...
+All matched files use Prettier code style!
+
+> ugc-factory@0.0.0 knip /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads
+> knip
+
+Configuration hints (1)
+src/golden.ts  packages/test-utils  knip.json  Remove from ignore
+
+> ugc-factory@0.0.0 test /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads
+> vitest run --project '*:unit' --project '*:integration'
+
+
+ RUN  v4.1.10 /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads
+
+ ❯ |core:unit| src/library/seed-validator.test.ts (22 tests | 5 failed) 17ms
+     × pasa el validador entero (control positivo del gate) 8ms
+     × ningún hook supera MAX_HOOK_WORDS en su PEOR CASO RENDERIZADO (techo DURO) 1ms
+     × control positivo: la base intacta pasa 1ms
+     × una CTA LARGA con placeholders conocidos pasa: el techo de 12 palabras es del HOOK, no de la CTA 0ms
+     × línea duplicada en el mismo idioma → rojo (chocaría con el UNIQUE de la BD) 1ms
+ ❯ |db:integration| test/integration/library-seed.test.ts (6 tests | 5 failed) 249ms
+     × siembra la librería REAL y es IDEMPOTENTE (dos corridas, mismos totales) 7ms
+     × las dos librerías (es/en) llegan a la BD con su idioma 17ms
+     × `SELECT` de `recipe`: los 3 tiers cuadran con el Apéndice B (±10 %) 2ms
+     × re-sembrar una línea con el ÁNGULO corregido ACTUALIZA la fila (no la descarta) 1ms
+     × re-sembrar con costes recalibrados REESCRIBE la receta del tier (no duplica) — T3.4 1ms
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 10 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |db:integration| test/integration/library-seed.test.ts > `pnpm seed`: puebla librerías y recetas (T2.1) > siembra la librería REAL y es IDEMPOTENTE (dos corridas, mismos totales)
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ test/integration/library-seed.test.ts:55:27
+     53|     // validador (mismo camino, sin atajos — el arnés no puede ser más…
+     54|     const validation = validateSeeds(SEED_LIBRARY);
+     55|     expect(validation.ok).toBe(true);
+       |                           ^
+     56|     if (!validation.library) throw new Error('la librería real no vali…
+     57|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/10]⎯
+
+ FAIL  |db:integration| test/integration/library-seed.test.ts > `pnpm seed`: puebla librerías y recetas (T2.1) > las dos librerías (es/en) llegan a la BD con su idioma
+AssertionError: expected 0 to be greater than or equal to 40
+ ❯ test/integration/library-seed.test.ts:76:28
+     74|       const hooks = await tdb.db.select().from(hookLine).where(eq(hook…
+     75|       const ctas = await tdb.db.select().from(ctaLine).where(eq(ctaLin…
+     76|       expect(hooks.length).toBeGreaterThanOrEqual(40);
+       |                            ^
+     77|       expect(ctas.length).toBeGreaterThanOrEqual(15);
+     78|     }
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/10]⎯
+
+ FAIL  |db:integration| test/integration/library-seed.test.ts > `pnpm seed`: puebla librerías y recetas (T2.1) > `SELECT` de `recipe`: los 3 tiers cuadran con el Apéndice B (±10 %)
+AssertionError: expected [] to deeply equal [ 'premium', 'standard', 'test' ]
+
+- Expected
++ Received
+
+- [
+-   "premium",
+-   "standard",
+-   "test",
+- ]
++ []
+
+ ❯ test/integration/library-seed.test.ts:83:45
+     81|   it('`SELECT` de `recipe`: los 3 tiers cuadran con el Apéndice B (±10…
+     82|     const recipes = await listRecipes(tdb.db);
+     83|     expect(recipes.map((r) => r.id).sort()).toEqual(['premium', 'stand…
+       |                                             ^
+     84|
+     85|     for (const row of recipes) {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/10]⎯
+
+ FAIL  |db:integration| test/integration/library-seed.test.ts > `pnpm seed`: puebla librerías y recetas (T2.1) > re-sembrar una línea con el ÁNGULO corregido ACTUALIZA la fila (no la descarta)
+Error: la librería real no valida
+ ❯ realRecipes test/integration/library-seed.test.ts:36:34
+     34| function realRecipes() {
+     35|   const validation = validateSeeds(SEED_LIBRARY);
+     36|   if (!validation.library) throw new Error('la librería real no valida…
+       |                                  ^
+     37|   return validation.library.recipes;
+     38| }
+ ❯ test/integration/library-seed.test.ts:132:70
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/10]⎯
+
+ FAIL  |db:integration| test/integration/library-seed.test.ts > `pnpm seed`: puebla librerías y recetas (T2.1) > re-sembrar con costes recalibrados REESCRIBE la receta del tier (no duplica) — T3.4
+Error: la librería real no valida
+ ❯ test/integration/library-seed.test.ts:161:36
+    159|   it('re-sembrar con costes recalibrados REESCRIBE la receta del tier …
+    160|     const validation = validateSeeds(SEED_LIBRARY);
+    161|     if (!validation.library) throw new Error('la librería real no vali…
+       |                                    ^
+    162|
+    163|     const recalibrated = {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/10]⎯
+
+ FAIL  |core:unit| src/library/seed-validator.test.ts > la librería REAL que siembra `pnpm seed` > pasa el validador entero (control positivo del gate)
+AssertionError: expected [ { code: 'hook_too_long', …(3) } ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   {
++     "code": "hook_too_long",
++     "entity": "hook_line",
++     "message": "hook de 15 palabras renderizadas en el peor caso (máx 12): \"Este hook tiene exactamente catorce palabras literales sin placeholders y debe romper el gate ahora\"",
++     "where": "hooks[0]",
++   },
++ ]
+
+ ❯ src/library/seed-validator.test.ts:32:27
+     30|     const result = validateSeeds(SEED_LIBRARY);
+     31|     // Mensaje útil si algún día se rompe: el gate dice EXACTAMENTE qu…
+     32|     expect(result.issues).toEqual([]);
+       |                           ^
+     33|     expect(result.ok).toBe(true);
+     34|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/10]⎯
+
+ FAIL  |core:unit| src/library/seed-validator.test.ts > la librería REAL que siembra `pnpm seed` > ningún hook supera MAX_HOOK_WORDS en su PEOR CASO RENDERIZADO (techo DURO)
+AssertionError: expected [ Array(1) ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   "15w: Este hook tiene exactamente catorce palabras literales sin placeholders y debe romper el gate ahora",
++ ]
+
+ ❯ src/library/seed-validator.test.ts:51:21
+     49|       (h) => `${String(countRenderedWords(h.text))}w: ${h.text}`,
+     50|     );
+     51|     expect(tooLong).toEqual([]);
+       |                     ^
+     52|   });
+     53|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/10]⎯
+
+ FAIL  |core:unit| src/library/seed-validator.test.ts > validateSeeds: los fixtures INVÁLIDOS que la Verificación nombra > control positivo: la base intacta pasa
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ src/library/seed-validator.test.ts:148:45
+    146|
+    147|   it('control positivo: la base intacta pasa', () => {
+    148|     expect(validateSeeds(baseLibrary()).ok).toBe(true);
+       |                                             ^
+    149|   });
+    150|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/10]⎯
+
+ FAIL  |core:unit| src/library/seed-validator.test.ts > validateSeeds: los fixtures INVÁLIDOS que la Verificación nombra > una CTA LARGA con placeholders conocidos pasa: el techo de 12 palabras es del HOOK, no de la CTA
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ src/library/seed-validator.test.ts:229:39
+    227|       },
+    228|     ];
+    229|     expect(validateSeeds(library).ok).toBe(true);
+       |                                       ^
+    230|   });
+    231|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/10]⎯
+
+ FAIL  |core:unit| src/library/seed-validator.test.ts > validateSeeds: los fixtures INVÁLIDOS que la Verificación nombra > línea duplicada en el mismo idioma → rojo (chocaría con el UNIQUE de la BD)
+AssertionError: expected [ 'hook_too_long', 'hook_too_long' ] to include 'duplicate_line'
+ ❯ src/library/seed-validator.test.ts:286:46
+    284|     const result = validateSeeds(library);
+    285|     expect(result.ok).toBe(false);
+    286|     expect(result.issues.map((i) => i.code)).toContain('duplicate_line…
+       |                                              ^
+    287|   });
+    288|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/10]⎯
+
+
+ Test Files  2 failed | 99 passed (101)
+      Tests  10 failed | 986 passed (996)
+   Start at  18:04:47
+   Duration  52.52s (transform 14.19s, setup 2.59s, import 62.50s, tests 83.84s, environment 14.93s)
+
+ ELIFECYCLE  Test failed. See above for more details.
+ ELIFECYCLE  Command failed with exit code 1.

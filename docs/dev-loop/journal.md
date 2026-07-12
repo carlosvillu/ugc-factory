@@ -967,3 +967,32 @@
 - **Se evaluó un mecanismo de código único que los cazara a todos y se DESCARTÓ**: viven en capas distintas (fixtures, fakes, calibración de color, `Request` sin `content-length`, env del stack) y buscarlo produce justo lo que ya teníamos — N guards puntuales, cada uno frágil por su cuenta.
 - **Escrito donde SÍ funciona**: **principio 9 de la skill `testing`** (fuente de verdad: las 3 formas que adopta, las 5 instancias como evidencia, y las 3 preguntas de control) + **regla de revisión en `dev-loop` §5a** (lo que el revisor debe HACER).
 - **CONTROL NEGATIVO, ahora obligatorio en todo fix de bug con test nuevo**: *reintroduce el bug y comprueba que el test se pone ROJO*. Si el implementer no lo aporta, se le pide antes de VERIFY.
+
+## 2026-07-12 · ⏳ F2 ARRANCA · T2.1 iniciada (migraciones de lote + seeds de hooks/CTAs/recetas)
+- Bootstrap: sin ⚠ en toda F2 (ninguna parada por prerequisito externo). Elegibles T2.0 y T2.1; se elige **T2.1** primero (infra de datos pura, sin UI, sin gasto, y T2.2 la necesita).
+- Recon: **nada de esto existe todavía** — no hay `pnpm seed`, ninguna de las 6 tablas está en el schema, y el `gate` no tiene validador de seeds. T2.1 lo estrena todo.
+- Fuentes localizadas: **Apéndice B** (PRD:798) define las 3 recetas por tier (modelos por componente + COGS 30s: Test $0,3-1,7 · Standard $1,8-5 · Premium $9-13) y **§16.1** (PRD:660) da los rangos verificados. **Coinciden** — no hay contradicción que resolver.
+- Nota para T2.0 (la siguiente): exige **subir imágenes a mano** (2 personas con fotos reales ≥2K). Necesitará fixtures o imágenes del usuario.
+
+## 2026-07-12 · T2.1 cerrada — PASS
+- Coste: **$0** (sin APIs de pago) · Ciclos verifier: 1 · Gate: 101 ficheros / **996 tests**
+- Entregado: 6 tablas (`0011_batch_and_libraries.sql`), 80 hooks + 30 CTAs (es/en, redacción nativa), 3 recetas por tier, validador de seeds DENTRO del gate, `pnpm seed` idempotente.
+- **Enum `ad_variant_status` verificado contra `pg_enum` en la BD real** (no contra la constante TS): verbatim PRD §12. **COGS: desviación 0 %** en los 6 límites del Apéndice B (leído del PRD por el verifier, no de mi resumen).
+- **Idempotencia confirmada de verdad**: 2ª corrida de `pnpm seed` → mismos conteos Y **mismas PKs ULID** → es upsert sobre clave natural, no delete+reinsert.
+
+### El bug que definió la tarea: EL TECHO DE 12 PALABRAS MENTÍA
+- `{pain}` cuenta como **1 palabra** en la plantilla pero se sustituye por una frase real. Un hook que validaba a 9 palabras se hablaba en **17**. **16 de 80 hooks estaban por encima del techo** y se reescribieron.
+- Fix: `PLACEHOLDER_WORD_BUDGET` + `countRenderedWords()` (`core/library/placeholders.ts`) — el techo se aplica al **peor caso RENDERIZADO**.
+- ⚠️ **REQUISITO PARA T2.4 (el renderizador de guiones)**: `PLACEHOLDER_WORD_BUDGET` es un **CONTRATO ENTRE DOS CONSUMIDORES**, no una constante decorativa. T2.4 **DEBE truncar el valor del brief al presupuesto de su placeholder** al sustituir ({pain}=6, {benefit}=4, {product}=3, {category}=2). Si no lo hace, el techo vuelve a mentir un nivel más abajo — y esta vez ya en el anuncio emitido. El presupuesto es una ASUNCIÓN, no un límite derivado del contrato: `ProductBriefSchema` declara `product.name`/`benefits[].benefit`/`pain_points[].pain` como `z.string()` **sin `.max()`**.
+
+### SEXTA instancia del principio 9 — cazada por el pase de ALTITUD de `simplify`
+- El chequeo de "placeholder desconocido" vivía **solo en la rama de hooks** del validador. Pero las CTAs sembradas llevan **46 placeholders** y también se interpolan (§12).
+- **La forma exacta del anti-patrón**: el **TEST** barría hooks Y CTAs por su cuenta con `findPlaceholders`; el **VALIDADOR** —el único código que `pnpm seed` ejecuta antes de escribir— solo miraba hooks. *El gate guardaba una puerta por la que el dato no entraba.* Control negativo: una CTA con `{producto_inventado}` daba `validateSeeds → ok:true` y `pnpm seed` la insertaba; T2.4 habría escupido la llave literal dentro del anuncio.
+- Fix a la altura correcta: `validateTemplate(text, entity, where, maxWords?)` — el contrato de plantilla es de la **línea interpolable**, no del hook. Lo llaman las DOS ramas. El techo sigue siendo solo del hook (`maxWords` opcional): lo compartido es el **vocabulario** de placeholders, no el techo. Código de issue renombrado `hook_unknown_placeholder` → `unknown_placeholder`.
+- Confirmado por control negativo tras el fix: la misma CTA pone en rojo **4 tests**, y el fallo lo emite `validateSeeds` (el camino real), no el barrido del test.
+
+### Otras decisiones y deuda
+- **Re-seed = `DO UPDATE` en las TRES tablas** (hook/cta usaban `DO NOTHING`): corregir el `angle` de un hook y re-sembrar lo descartaba **en silencio** — y `angle` es justo el campo por el que T2.2 compone la matriz. Semántica: **el seed es la fuente de verdad de los METADATOS de la línea; la BD lo es de su HISTORIA** (`perf` no se toca jamás). `excluded.*` obligatorio (un literal pisaría las N filas con el último valor).
+- **Deuda que hereda T2.0**: `persona_id` en `ad_variant` es **texto nullable SIN FK** (la tabla `persona` no existe aún). **T2.0 debe añadir la FK.** Igual `prompt_template_id` (→ F3).
+- **Deuda (naming)**: `step_run.cost_estimated`/`cost_actual` no llevan el sufijo `_cents` que sí lleva `cost_entry.amount_cents` (T0.12). Son céntimos. Renombrar cuando toque migración de esa tabla.
+- **Deuda menor (test autorreferencial)**: `seed-validator.test.ts` compara las recetas contra un `APPENDIX_B_COGS_CENTS` **transcrito a mano** en el propio test → cambiar seed y test a la vez pasaría inadvertido. El guard real de "cuadra con el Apéndice B" es el verifier (que lee el PRD). Aceptado: parsear el PRD desde un test es peor negocio.

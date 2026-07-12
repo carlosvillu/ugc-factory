@@ -5,6 +5,9 @@
 import { newUlid } from '@ugc/core/contracts';
 import type { Angle, ProductBrief, RawContent, VisualAnalysis } from '@ugc/core/contracts';
 import type {
+  NewAdBatch,
+  NewAdScript,
+  NewAdVariant,
   NewAsset,
   NewBrandKit,
   NewPipelineRun,
@@ -328,4 +331,70 @@ export function makeVisualAnalysis(overrides: Partial<VisualAnalysis> = {}): Vis
     rendered_social_proof: { rating: 4.7, review_count: 1240, quotes: ['Mi piel cambió'] },
   };
   return { ...base, ...overrides };
+}
+
+// ── Lote y variantes (T2.1) ─────────────────────────────────────────────────
+
+/**
+ * Fila válida de `ad_batch`. Requiere `projectId` y `briefId` reales (FKs NOT NULL con
+ * `ON DELETE cascade`): el test crea el proyecto/análisis/brief antes y los pasa. `id` se
+ * genera aquí (ULID) para poder referenciarlo en `ad_variant.batchId` pre-insert.
+ */
+export function makeAdBatch(
+  overrides: Partial<NewAdBatch> & Pick<NewAdBatch, 'projectId' | 'briefId'>,
+): NewAdBatch {
+  return {
+    id: newUlid(),
+    // El BatchPlan que compone T2.2; jsonb opaco aquí.
+    matrix: { angles: ['pain_point'], hooks: 3, languages: ['es'] },
+    tier: 'standard',
+    objective: 'conversion',
+    platforms: ['tiktok'],
+    languages: ['es'],
+    status: 'planned',
+    ...overrides,
+  };
+}
+
+/**
+ * Fila válida de `ad_variant`. Requiere `batchId` real. `filenameCode` es UNIQUE GLOBAL:
+ * por defecto lleva un sufijo aleatorio (el ULID de la propia fila) para que dos variantes
+ * de un mismo test no choquen por accidente; el test del constraint lo fija a mano.
+ */
+export function makeAdVariant(
+  overrides: Partial<NewAdVariant> & Pick<NewAdVariant, 'batchId'>,
+): NewAdVariant {
+  const id = overrides.id ?? newUlid();
+  return {
+    id,
+    angleName: 'pain_point',
+    framework: 'PAS',
+    language: 'es',
+    durationTarget: 30,
+    platformTargets: ['tiktok'],
+    filenameCode: `demo-pain-${id.slice(-6).toLowerCase()}-es-30s`,
+    status: 'planned',
+    ...overrides,
+  };
+}
+
+/** Fila válida de `ad_script`. Requiere `variantId` real (FK NOT NULL, cascade). */
+export function makeAdScript(
+  overrides: Partial<NewAdScript> & Pick<NewAdScript, 'variantId'>,
+): NewAdScript {
+  return {
+    id: newUlid(),
+    version: 1,
+    hook: 'Si te pasa esto, mira.',
+    scenes: [{ index: 0, text: 'Plano del producto', seconds: 5 }],
+    subtitles: [{ start: 0, end: 5, text: 'Si te pasa esto, mira.' }],
+    cta: 'Enlace en la bio.',
+    fullText: 'Si te pasa esto, mira. Enlace en la bio.',
+    wordCount: 9,
+    estSeconds: 4,
+    tone: 'cercano',
+    language: 'es',
+    editedByUser: false,
+    ...overrides,
+  };
 }

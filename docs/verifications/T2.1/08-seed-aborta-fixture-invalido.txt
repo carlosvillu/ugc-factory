@@ -1,0 +1,21 @@
+
+> ugc-factory@0.0.0 seed /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads
+> pnpm --filter @ugc/db db:seed
+
+
+> @ugc/db@0.0.0 db:seed /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/db
+> tsx --env-file-if-exists=../../.env scripts/seed.ts
+
+seed: la librería NO es válida (1 problemas):
+  [hook_too_long] hook_line hooks[0] — hook de 15 palabras renderizadas en el peor caso (máx 12): "Este hook tiene exactamente catorce palabras literales sin placeholders y debe romper el gate ahora"
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/db:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @ugc/db@0.0.0 db:seed: `tsx --env-file-if-exists=../../.env scripts/seed.ts`
+Exit status 1
+ ELIFECYCLE  Command failed with exit code 1.
+     t     | count 
+-----------+-------
+ cta_line  |    30
+ hook_line |    80
+ recipe    |     3
+(3 rows)
+

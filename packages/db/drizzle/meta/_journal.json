@@ -78,6 +78,13 @@
       "when": 1783857043575,
       "tag": "0010_checkpoint_decision",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1783869911546,
+      "tag": "0011_batch_and_libraries",
+      "breakpoints": true
     }
   ]
 }

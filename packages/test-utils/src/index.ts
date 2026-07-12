@@ -22,6 +22,9 @@ export { makeProject, makePipelineRun, makeStepRun, makeAsset } from './factorie
 // Factories de FILAS del análisis (T1.2): rows de url_analysis/product_brief/brand_kit
 // que insertan los tests de integración de @ugc/db.
 export { makeUrlAnalysis, makeProductBrief, makeBrandKit } from './factories';
+// Factories de FILAS del lote (T2.1): rows de ad_batch/ad_variant/ad_script que insertan
+// los tests de constraints de @ugc/db.
+export { makeAdBatch, makeAdVariant, makeAdScript } from './factories';
 // Factories de los contratos del análisis (T1.1): objetos válidos según su schema
 // Zod, base de los tests inválidos (mutación dirigida).
 export { makeAngle, makeBrief, makeRawContent, makeVisualAnalysis } from './factories';

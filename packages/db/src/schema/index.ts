@@ -7,3 +7,5 @@ export * from './project';
 export * from './ops';
 export * from './pipeline';
 export * from './generation';
+export * from './gallery';
+export * from './batch';

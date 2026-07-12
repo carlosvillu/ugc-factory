@@ -324,9 +324,10 @@ Decisiones del usuario (2026-07-07): la fase se ejecuta tras T0.1 y **antes** de
 - **Entrega**: migración de `persona` (§12, con `voice_map {locale: {provider, voiceId}}`), página `/personas` con CRUD (demografía, personalidad, wardrobeNotes), upload manual de imágenes de referencia (validación ≥2K), endpoint de candidatas por `avatar_hint`; seed manual de 2 personas (es/en) con imágenes subidas a mano. (La generación IA de referencias y el preview de voz llegan en F4.)
 - **Mockup**: `docs/mockups/personas.html` (variante 6c · ficha inmersiva · refs grandes + voz por idioma). El layout parte de ese mockup; el reviewer rechaza una página que se desvíe sin acuerdo (ver `.claude/skills/frontend`).
 - **Playwright permanente**: `apps/web/e2e/personas.spec.ts` cubre CRUD, voice map es/en, upload ≥2K y rechazo visible de una imagen <2K; usa fixtures locales y no generación IA.
+- **Deuda heredada de T2.1**: `ad_variant.persona_id` quedó como **texto nullable SIN FK** (la tabla `persona` no existía al migrar). Esta tarea, que la crea, **debe añadir la FK** (`ON DELETE set null`: borrar una persona no borra los anuncios que ya hizo).
 - **Verificación**: crear una persona con 2 imágenes ≥2K y voice_map es/en desde el navegador; el endpoint de candidatas devuelve la persona correcta para un `avatar_hint` compatible y ninguna para uno incompatible; una imagen <2K es rechazada con mensaje claro.
 
-#### T2.1 · Migraciones de lote + seeds de hooks, CTAs y recetas
+#### T2.1 · Migraciones de lote + seeds de hooks, CTAs y recetas [x] 2026-07-12 — PASS, ver docs/verifications/T2.1/ (coste $0)
 - **Depende de**: T0.3
 - **Entrega**: tablas `hook_line`, `cta_line`, `ad_batch`, `ad_variant` (enum con estado **`scripted`** añadido tras `planned` — alineación anotada en PRD §12), `ad_script`, **`recipe`**; seed de ~40 hook lines y ~15 CTA lines por idioma (es/en, redacción propia) y **seed de las 3 recetas por tier con los costes del Apéndice B**; validador de seeds integrado en `pnpm gate` (no hay CI remota — decisión 2026-07-07).
 - **Verificación**: `pnpm seed` puebla librerías y recetas; el validador (dentro de `pnpm gate`) falla con un fixture inválido (hook sin ángulo o >12 palabras; receta sin coste); `SELECT` de `recipe` muestra los 3 tiers con estimaciones que cuadran con el Apéndice B.
@@ -346,7 +347,8 @@ Decisiones del usuario (2026-07-07): la fase se ejecuta tras T0.1 y **antes** de
 - **Depende de**: T2.2
 - **Entrega**: generación de guiones con Sonnet 5 (sin sampling params; diversidad por prompt): modo normal (1 guion/variante) y modo hook-testing (1 body+CTA por ángulo + N hooks encajados, §9.4); `scenes[]` con timing duro (`word_count ÷ 2.5`), `subtitles[]`, CTA por objetivo, idioma destino nativo (§17).
 - **Coste estimado**: ~$0,50 (12 guiones + reintentos)
-- **Verificación**: para la matriz de T2.2, los 12 guiones validan contra Zod; los de es suenan nativos (revisión humana); en hook-testing los bodies de las variantes del mismo ángulo son **textualmente idénticos** (diff vacío); `est_seconds` ≤ duración objetivo en todos.
+- **Deuda heredada de T2.1 — CONTRATO, no sugerencia**: al sustituir los `{placeholder}` de un hook de librería por valores del brief, el renderizador **DEBE truncar cada valor al presupuesto de palabras de su placeholder** (`PLACEHOLDER_WORD_BUDGET` en `packages/core/src/library/placeholders.ts`: `{pain}`=6, `{benefit}`=4, `{product}`=3, `{category}`=2). Ese presupuesto es lo que T2.1 usó para validar el techo de 12 palabras sobre el **peor caso renderizado**; si T2.4 sustituye sin truncar, el techo vuelve a mentir —ya en el anuncio emitido— porque `ProductBriefSchema` declara `product.name`/`benefits[].benefit`/`pain_points[].pain` como `z.string()` **sin `.max()`**.
+- **Verificación**: para la matriz de T2.2, los 12 guiones validan contra Zod; los de es suenan nativos (revisión humana); en hook-testing los bodies de las variantes del mismo ángulo son **textualmente idénticos** (diff vacío); `est_seconds` ≤ duración objetivo en todos; **un hook de librería con `{pain}` renderizado contra un brief cuyo `pain` tiene 12 palabras produce un hook de ≤12 palabras habladas** (el truncado al presupuesto se aplica de verdad).
 
 #### T2.5 · Guardrails FTC + linter de claims
 - **Depende de**: T2.4

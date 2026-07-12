@@ -1,0 +1,16 @@
+### CONTROL NEGATIVO (c): RECETA SIN COSTE — se pone estCost30sMinCents: 0 en el tier 'test' (línea 598)
+      { component: 'shots', model: 'Seedream 4.5 edit' },
+    ],
+    estCost30sMinCents: 0,
+    estCost30sMaxCents: 170,
+    notes: 'Apéndice B — hook-testing masivo y borradores. COGS 30 s: $0,3–1,7.',
+--- pnpm seed (debe abortar con recipe_missing_cost) ---
+seed: la librería NO es válida (2 problemas):
+  [recipe_missing_cost] recipe test — estCost30sMinCents: Too small: expected number to be >0
+  [recipe_tier_coverage] recipe test — falta la receta del tier "test" (Apéndice B define los 3)
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @ugc/db@0.0.0 db:seed: `tsx --env-file-if-exists=../../.env scripts/seed.ts`
+--- suite core:unit (debe ponerse roja) ---
++     "code": "recipe_missing_cost",
+ Test Files  1 failed (1)
+      Tests  6 failed | 16 passed (22)
+restaurado: e167b094592e7220e416452156c1f17925fa4bb7  packages/core/src/library/seed-data.ts

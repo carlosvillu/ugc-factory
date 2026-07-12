@@ -15,6 +15,7 @@
     "db:migrate": "pnpm --filter @ugc/db db:migrate",
     "db:generate": "pnpm --filter @ugc/db db:generate",
     "db:smoke": "pnpm --filter @ugc/db db:smoke",
+    "seed": "pnpm --filter @ugc/db db:seed",
     "knip": "knip",
     "prepare": "lefthook install",
     "test": "vitest run --project '*:unit' --project '*:integration'",

@@ -1,0 +1,7 @@
+     t     | count 
+-----------+-------
+ cta_line  |    30
+ hook_line |    80
+ recipe    |     3
+(3 rows)
+

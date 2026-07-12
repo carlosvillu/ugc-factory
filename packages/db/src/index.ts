@@ -150,6 +150,17 @@ export type { ProductBrief as ProductBriefRow } from './schema/project';
 // todavía: su consumidor de runtime es N7a (T4.4) y hoy solo lo usan los tests de integración
 // (import relativo) — knip veta el export sin consumidor.
 export { recordCheckpointDecision } from './repos/checkpoint-decision.repo';
+// Librería sembrada (T2.1): `seedLibrary` (escritura idempotente de hook_line/cta_line/recipe)
+// y `listRecipes` (el `SELECT` de las 3 recetas por tier) NO salen al barrel todavía: sus
+// únicos consumidores viven DENTRO del paquete (el script `pnpm seed` y los tests de
+// integración, que importan relativo). El barrel expone solo lo que se consume desde FUERA;
+// `listRecipes` volverá aquí cuando el estimador de coste de T2.2 lo llame desde web/services.
+//
+// Tipos de fila de las tablas del LOTE (T2.1): los consumen las factories makeAdBatch/
+// makeAdVariant/makeAdScript de @ugc/test-utils (los tests de constraints los insertan).
+// Sus repos de caso de uso llegan con sus consumidores (T2.2 compone la matriz, T2.3 crea
+// las variantes, T2.4 escribe los guiones) — mismo criterio que T1.2 con el análisis.
+export type { NewAdBatch, NewAdVariant, NewAdScript } from './schema/batch';
 // Rollup del coste real de un step (T1.10b): recomputa `step_run.cost_actual` desde
 // `cost_entry` (SUM por step_run_id). Lo llama el ORQUESTADOR (consumer del worker) al cerrar
 // un step — nunca `@ugc/services` (la columna del step es territorio del step, T1.10a).

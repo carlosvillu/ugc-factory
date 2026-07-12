@@ -1,0 +1,17 @@
+### CONTROL NEGATIVO (b): HOOK SIN ÁNGULO — se borra el campo angle de hooks[0] de la librería REAL
+22:const HOOKS_ES: HookLineSeed[] = [
+23-  // pain_point
+24-  {
+25-    text: 'Si te pasa {pain}, mira esto.',
+26-    verticals: [],
+--- pnpm seed (debe abortar con hook_missing_angle) ---
+seed: la librería NO es válida (1 problemas):
+  [hook_missing_angle] hook_line hooks[0] — hook sin ángulo válido (recibido: undefined)
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @ugc/db@0.0.0 db:seed: `tsx --env-file-if-exists=../../.env scripts/seed.ts`
+--- suite core:unit (debe ponerse roja) ---
+⎯⎯⎯⎯⎯⎯ Failed Tests 10 ⎯⎯⎯⎯⎯⎯⎯
++     "code": "hook_missing_angle",
+AssertionError: expected [ 'hook_missing_angle', …(1) ] to include 'duplicate_line'
+AssertionError: expected [ 'hook_missing_angle', …(4) ] to include 'hook_too_long'
+    303|     expect(codes).toContain('hook_missing_angle');
+restaurado: e167b094592e7220e416452156c1f17925fa4bb7  packages/core/src/library/seed-data.ts

@@ -1,0 +1,16 @@
+
+> ugc-factory@0.0.0 seed /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads
+> pnpm --filter @ugc/db db:seed
+
+
+> @ugc/db@0.0.0 db:seed /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/db
+> tsx --env-file-if-exists=../../.env scripts/seed.ts
+
+seed: OK — hook_line=80 cta_line=30 recipe=3
+┌─────────┬────────────┬────────────────┬───────────┬───────────┐
+│ (index) │ tier       │ cogs_30s       │ min_cents │ max_cents │
+├─────────┼────────────┼────────────────┼───────────┼───────────┤
+│ 0       │ 'test'     │ '$0.30–$1.70'  │ 30        │ 170       │
+│ 1       │ 'standard' │ '$1.80–$5.00'  │ 180       │ 500       │
+│ 2       │ 'premium'  │ '$9.00–$13.00' │ 900       │ 1300      │
+└─────────┴────────────┴────────────────┴───────────┴───────────┘

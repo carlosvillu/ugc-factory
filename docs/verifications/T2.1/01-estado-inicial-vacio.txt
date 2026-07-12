@@ -1,0 +1,10 @@
+NOTICE:  truncate cascades to table "ad_variant"
+NOTICE:  truncate cascades to table "ad_script"
+TRUNCATE TABLE
+     t     | count 
+-----------+-------
+ cta_line  |     0
+ hook_line |     0
+ recipe    |     0
+(3 rows)
+

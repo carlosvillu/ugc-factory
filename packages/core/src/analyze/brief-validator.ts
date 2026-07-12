@@ -53,8 +53,18 @@ export interface ValidateBriefResult {
   warnings: BriefWarning[];
 }
 
-/** Cuenta palabras de un hook: tokens separados por espacio en blanco. Determinista. */
-function countWords(text: string): number {
+/**
+ * Cuenta palabras de un hook: tokens separados por espacio en blanco. Determinista.
+ *
+ * EXPORTADA en T2.1 para que el test del validador de seeds pueda asertar que sus fixtures
+ * tienen de verdad N palabras literales. Ojo: la librería NO cuenta con esta función, sino con
+ * `countRenderedWords` (core/library/placeholders.ts), que suma el presupuesto de cada
+ * `{placeholder}` — una plantilla de 9 palabras puede renderizar 17. Lo que las dos capas SÍ
+ * comparten, deliberadamente, es el techo: `MAX_HOOK_WORDS`. Una constante, dos formas de
+ * contar, cada una honesta con lo que mide (el hook del LLM no lleva placeholders; el de la
+ * librería sí).
+ */
+export function countWords(text: string): number {
   return text.trim().split(/\s+/).filter(Boolean).length;
 }
 

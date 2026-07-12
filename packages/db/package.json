@@ -13,7 +13,8 @@
     "test": "vitest run",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx --env-file-if-exists=../../.env scripts/migrate.ts",
-    "db:smoke": "tsx --env-file-if-exists=../../.env scripts/smoke-project.ts"
+    "db:smoke": "tsx --env-file-if-exists=../../.env scripts/smoke-project.ts",
+    "db:seed": "tsx --env-file-if-exists=../../.env scripts/seed.ts"
   },
   "devDependencies": {
     "@types/pg": "catalog:",

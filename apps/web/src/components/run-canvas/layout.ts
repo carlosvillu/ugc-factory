@@ -16,8 +16,12 @@ import type { AppEdge, AppNode } from './steps-to-graph';
 // marca como acceso/argumento inseguro.
 type DagreGraph = InstanceType<typeof graphlib.Graph>;
 
+// T1.16: el nodo creció ~20 px de alto (el título humano del §7.2 es una línea NUEVA
+// encima del estado, que baja a secundaria). La constante lo sigue: si se quedara en 104,
+// dagre calcularía el ranking vertical con nodos más bajos de lo que son y los nodos
+// contiguos se rozarían.
 const SIZE = {
-  step: { width: 224, height: 104 },
+  step: { width: 224, height: 124 },
   'n7-group': { width: 224, height: 120 },
 } as const;
 

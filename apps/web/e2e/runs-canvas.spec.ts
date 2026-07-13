@@ -6,7 +6,7 @@
 // alwaysPause. Los asserts miran ESTADOS OBSERVABLES (roles/aria/`data-status`),
 // NUNCA colores CSS (el color es E2E/CUA visual, no una aserción estable aquí).
 import { test, expect, type Page } from '@playwright/test';
-import { launchDemoCanvasRun } from './support/runs';
+import { launchAnalysisRun, launchDemoCanvasRun } from './support/runs';
 import { canvasNode, waitCanvasStatus, openCanvasPanel } from './support/canvas';
 
 // El contrato de testabilidad del canvas (role=article + data-status + panel
@@ -193,6 +193,177 @@ test.describe('canvas del run (T0.11)', () => {
       await waitStatus(page, 'N1', 'succeeded');
       // N3 (candado alwaysPause) SÍ pausa AUNQUE autopilot esté on: el candado gana.
       await waitStatus(page, 'N3', 'waiting_approval');
+    },
+  );
+});
+
+// ── T1.16: títulos humanos, visor modal del artefacto y controles del lienzo ──────────
+//
+// Estos tests corren sobre el DAG de ANÁLISIS (N1/N2/N3), no sobre el de demo, y no es una
+// comodidad: el DAG de demo NO produce `output_refs` (su executor no devuelve nada) ni abre
+// CP1 (el editor de brief se activa por la FORMA del artefacto, `N3OutputSchema`, no por
+// `isCheckpoint`). Las dos observables de esta tarea —una modal con un artefacto que el
+// excerpt TRUNCA, y el lienzo comprimido por CP1— solo existen con un brief real. Sigue sin
+// costar un céntimo: las APIs externas del stack E2E son falsas.
+test.describe('canvas: títulos, visor del artefacto y controles (T1.16)', () => {
+  test(
+    'los nodos muestran su título humano y la clave sigue siendo el accessible name',
+    { tag: ['@f1'] },
+    async ({ page, request }) => {
+      const runId = await launchAnalysisRun(request);
+      await page.goto(`/runs/${runId}`);
+
+      // El nodo se sigue encontrando POR SU CLAVE (la API de test no cambia)…
+      const n2 = canvasNode(page, 'N2');
+      await expect(n2).toBeVisible({ timeout: 30_000 });
+      // …y lo que el humano lee es el título del PRD §7.2, no `N2`.
+      await expect(n2.locator('[data-slot="node-title"]')).toHaveText('Análisis visual');
+      await expect(canvasNode(page, 'N1').locator('[data-slot="node-title"]')).toHaveText(
+        'Ingesta',
+      );
+      await expect(canvasNode(page, 'N3').locator('[data-slot="node-title"]')).toHaveText(
+        'ProductBrief',
+      );
+    },
+  );
+
+  test(
+    'con CP1 abierto el lienzo se comprime pero N2 sigue alcanzable (fit/zoom)',
+    { tag: ['@f1'] },
+    async ({ page, request }) => {
+      // La deuda que dejó el verifier de T1.14: con el editor de CP1 abierto el lienzo baja a
+      // ~255 px y N2/N3 se salían de la vista, sin controles para recuperarlos.
+      const runId = await launchAnalysisRun(request);
+      await page.goto(`/runs/${runId}`);
+
+      // Esperar a CP1: N3 pausa en waiting_approval y el editor de brief toma la vista.
+      await waitCanvasStatus(page, 'N3', 'waiting_approval', 60_000);
+      await expect(page.getByRole('form', { name: /editor de brief/i })).toBeVisible();
+
+      // Los controles del lienzo existen (con su accessible name en español).
+      await expect(page.getByRole('button', { name: 'Ajustar a la vista' })).toBeVisible();
+      await expect(page.getByRole('button', { name: 'Acercar' })).toBeVisible();
+
+      // LA OBSERVABLE: N2 está DENTRO del viewport, no solo en el DOM. `toBeInViewport` y no
+      // `toBeVisible`: React Flow mantiene los nodos fuera de encuadre montados y a tamaño
+      // completo, así que `toBeVisible` pasaría incluso con N2 paneado fuera de la vista — es
+      // decir, no detectaría el bug que esta tarea arregla.
+      await expect(canvasNode(page, 'N2')).toBeInViewport({ timeout: 15_000 });
+      // Y no solo N2: el re-encuadre mete el DAG ENTERO en el lienzo estrecho (es lo que
+      // exige bajar `minZoom` por debajo del 0.5 de fábrica).
+      await expect(canvasNode(page, 'N1')).toBeInViewport();
+      await expect(canvasNode(page, 'N3')).toBeInViewport();
+
+      // Y el fit manual lo mantiene alcanzable (el control funciona, no es decoración).
+      await page.getByRole('button', { name: 'Ajustar a la vista' }).click();
+      await expect(canvasNode(page, 'N2')).toBeInViewport();
+    },
+  );
+
+  test(
+    'la caja de output abre la modal con el artefacto COMPLETO (lo que el excerpt trunca)',
+    { tag: ['@f1'] },
+    async ({ page, context, request }) => {
+      // El portapapeles es una API con PERMISO: Chromium headless lo deniega por defecto y
+      // `navigator.clipboard.writeText` rechazaría. Concederlo es reproducir al usuario real
+      // (que lo tiene), no debilitar el test: el assert de abajo lee el contenido COPIADO.
+      await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+
+      const runId = await launchAnalysisRun(request);
+      await page.goto(`/runs/${runId}`);
+
+      // CP1 aparece → se aprueba sin editar para que vuelva la vista cockpit (con CP1 abierto
+      // el inspector genérico se retira: es el editor de brief quien manda).
+      await waitCanvasStatus(page, 'N3', 'waiting_approval', 60_000);
+      const editor = page.getByRole('form', { name: /editor de brief/i });
+      await editor.getByRole('button', { name: /aprobar y continuar/i }).click();
+      await waitCanvasStatus(page, 'N3', 'succeeded');
+
+      // El inspector de N3: su caja de output enseña el EXCERPT (200 chars del servidor).
+      const panel = await openCanvasPanel(page, 'N3');
+      await expect(panel.getByText('ProductBrief')).toBeVisible(); // título humano (§7.2 / DS)
+      const excerpt = panel.locator('[data-slot="open-output-dialog"]');
+      await expect(excerpt).toBeVisible();
+
+      // Prueba de que el recorte del servidor ES REAL: un campo del brief que vive MÁS ALLÁ
+      // del carácter 200 (los ángulos son de lo último del artefacto) NO está en la caja…
+      await expect(excerpt).not.toContainText('angles');
+
+      // …y SÍ está en la modal, que pide el `output_refs` entero a `GET /api/steps/:id`.
+      await excerpt.click();
+      const dialog = page.getByRole('dialog');
+      await expect(dialog).toBeVisible();
+      await expect(dialog.getByRole('heading', { name: /output de productbrief/i })).toBeVisible();
+      await expect(dialog.locator('[data-slot="json-viewer"]')).toContainText('"angles"', {
+        timeout: 15_000,
+      });
+      // El JSON está FORMATEADO (indentado), no en una línea minificada como el excerpt.
+      await expect(dialog.locator('[data-slot="json-viewer"]')).toContainText('\n  "');
+
+      // Copiar: y se comprueba lo que HAY EN EL PORTAPAPELES (que el botón diga "Copiado" no
+      // demuestra que copiara nada — y menos que copiara el artefacto ENTERO).
+      await dialog.getByRole('button', { name: /^copiar$/i }).click();
+      await expect(dialog.getByText(/copiado/i)).toBeVisible();
+      const clipboard = await page.evaluate(() => navigator.clipboard.readText());
+      expect(clipboard).toContain('"angles"'); // el campo que el excerpt truncaba
+
+      // Cerrar.
+      await dialog.getByRole('button', { name: /^cerrar$/i }).click();
+      await expect(page.getByRole('dialog')).toBeHidden();
+    },
+  );
+
+  test(
+    'la caja de error abre la modal con el error COMPLETO (lo que el excerpt trunca)',
+    { tag: ['@f1'] },
+    async ({ page, context, request }) => {
+      await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+
+      // El error se INYECTA largo y con la forma de los reales (prefijo del nodo + volcado de
+      // issues de Zod, que es lo que produce un `PermanentStepError` de N3). NO vale el
+      // "fallo inyectado" de 25 caracteres del default: cabe entero en los 200 del excerpt, así
+      // que un visor que truncara pasaría el test igual — el arnés sería más cómodo que la
+      // realidad, y el bug que esta tarea arregla no podría ponerlo rojo.
+      const sentinel = 'ULTIMO_ISSUE_DEL_VOLCADO';
+      const longError = `N3: config inválida: ${Array.from(
+        { length: 8 },
+        (_, i) =>
+          `[{"code":"invalid_type","path":["angles",${String(i)},"hook"],"message":"Required"}]`,
+      ).join(' ')} ${sentinel}`;
+
+      const runId = await launchDemoCanvasRun(request, { sleepMs: 400, failMessage: longError });
+      await page.goto(`/runs/${runId}`);
+
+      // Avanzar por los checkpoints hasta N4 (failRate=1), que falla con ESE mensaje.
+      await waitStatus(page, 'N1', 'waiting_approval');
+      await (await openPanel(page, 'N1')).getByRole('button', { name: /^aprobar$/i }).click();
+      await waitStatus(page, 'N3', 'waiting_approval');
+      await (await openPanel(page, 'N3')).getByRole('button', { name: /^aprobar$/i }).click();
+      await waitStatus(page, 'N4', 'failed');
+
+      const panel = await openPanel(page, 'N4');
+      const box = panel.locator('[data-slot="open-error-dialog"]');
+      await expect(box).toBeVisible();
+
+      // CONTROL NEGATIVO (espejo del test de output): el excerpt del SSE está cortado a 200
+      // caracteres y el centinela del FINAL del mensaje NO está en la caja del inspector…
+      await expect(box).toContainText('N3: config inválida');
+      await expect(box).not.toContainText(sentinel);
+
+      // …y SÍ está en la modal, que pide el error ENTERO a `GET /api/steps/:id`.
+      await box.click();
+      const dialog = page.getByRole('dialog');
+      await expect(dialog).toBeVisible();
+      await expect(dialog.getByRole('heading', { name: /^error de /i })).toBeVisible();
+      const errorText = dialog.locator('[data-slot="error-text"]');
+      await expect(errorText).toContainText(sentinel, { timeout: 15_000 });
+
+      // Copiar copia el error ENTERO (no el recorte), y cerrar cierra.
+      await dialog.getByRole('button', { name: /^copiar$/i }).click();
+      const clipboard = await page.evaluate(() => navigator.clipboard.readText());
+      expect(clipboard).toContain(sentinel);
+      await dialog.getByRole('button', { name: /^cerrar$/i }).click();
+      await expect(page.getByRole('dialog')).toBeHidden();
     },
   );
 });

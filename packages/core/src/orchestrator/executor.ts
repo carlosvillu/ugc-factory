@@ -117,6 +117,13 @@ export type StepExecutor = (ctx: ExecutorContext) => Promise<void>;
 export const DemoConfigSchema = z.strictObject({
   sleepMs: z.number().int().nonnegative().optional(),
   failRate: z.number().min(0).max(1).optional(),
+  // Mensaje del fallo inyectado (T1.16), mismo patrón config-injectable que `failRate`. Por
+  // defecto el executor lanza su mensaje corto de siempre. Existe porque los errores REALES
+  // del producto son LARGOS (un `PermanentStepError` de N3 arrastra el volcado de issues de
+  // Zod, varios KB) y el visor de error tiene que demostrar que los sirve ENTEROS: con un
+  // "fallo inyectado" de 25 caracteres, un visor que trunca a 200 pasaría el test igual. El
+  // arnés tiene que poder ser tan incómodo como la realidad.
+  failMessage: z.string().optional(),
   hang: z.boolean().optional(),
   // Coste INYECTABLE (T0.12): si un step de demo lleva `costCents` en su config, el
   // executor registra ese cargo en `cost_entry` al terminar con éxito (mismo patrón

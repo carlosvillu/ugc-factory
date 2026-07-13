@@ -564,3 +564,34 @@
 @utility persona-library-grid {
   grid-template-columns: 220px 1fr;
 }
+
+/* Controles de zoom/fit del canvas de React Flow (T1.16). React Flow los pinta con SU
+   paleta por defecto (botones blancos, texto oscuro): sobre el tema oscuro del DS son un
+   parche que grita. La librería expone sus propias variables (`--xy-controls-*`), así que
+   NO se re-estila nada a mano: se REMAPEAN a los tokens semánticos del DS, y así los
+   controles siguen al tema (claro/oscuro) y al acento sin una sola regla nueva. Los
+   valores crudos siguen viviendo solo en este fichero, como manda design-system.md §3. */
+.react-flow__controls {
+  --xy-controls-button-background-color: var(--surface);
+  --xy-controls-button-background-color-hover: var(--surface-3);
+  --xy-controls-button-color: var(--text-2);
+  --xy-controls-button-color-hover: var(--text);
+  --xy-controls-button-border-color: var(--border);
+  --xy-controls-box-shadow: var(--shadow-md);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+.react-flow__controls-button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--ring);
+}
+
+/* Alto máximo de la modal de artefacto del canvas (T1.16): el visor del output completo
+   crece con el payload (un ProductBrief son cientos de líneas), pero la modal no puede
+   pasar de la pantalla — el cuerpo scrollea DENTRO. El valor crudo (85vh) vive aquí y no
+   como `max-h-[85vh]` en el componente, igual que hatch-9x16 o persona-detail-grid: el
+   valor arbitrario en className está prohibido (design-system.md §3). */
+@utility artifact-dialog {
+  max-height: 85vh;
+}

@@ -90,6 +90,51 @@ export async function findStep(db: Db, id: string): Promise<StepRow | undefined>
 }
 
 /**
+ * Lectura del step PARA LA UI (T1.16): el artefacto Y el error, ENTEROS. La consume
+ * `GET /api/steps/:id`, que alimenta el editor de CP1 y los visores modales del inspector.
+ *
+ * POR QUÉ NO ES `findStep`. `findStep` devuelve `StepRow`, que es el PUERTO del orquestador
+ * (`@ugc/core/orchestrator`): la forma que el motor necesita para DECIDIR (estado, deps,
+ * contadores de retry, config). Meterle `error` —un dato que solo existe para que un humano
+ * lea qué pasó— contaminaría un contrato de dominio con una necesidad de pantalla. Esta es
+ * una lectura de PRESENTACIÓN, hermana de `readRunSnapshot`/`readChangedSteps` (que también
+ * viven aparte del puerto porque sirven al stream, no al motor).
+ *
+ * Y NO ES el `StepSnapshot` del SSE: ese RECORTA `output_refs` y `error` a 200 caracteres a
+ * propósito (el frame del stream no es sitio para un jsonb de KB). Aquí van SIN recortar —
+ * es exactamente lo que el endpoint existe para servir. Un `PermanentStepError` real de N3
+ * arrastra el volcado de issues de Zod: cortado a 200 caracteres, el usuario ve el prefijo y
+ * CERO issues, justo en el fallo que más necesita entender.
+ */
+export interface StepDetailRow {
+  id: string;
+  runId: string;
+  nodeKey: string;
+  status: StepRow['status'];
+  isCheckpoint: boolean;
+  /** El artefacto COMPLETO (jsonb opaco). `null` si el step aún no produjo nada. */
+  outputRefs: unknown;
+  /** El error COMPLETO tal cual se persistió (`{message}` del consumer). `null` si no falló. */
+  error: unknown;
+}
+
+export async function findStepDetail(db: Db, id: string): Promise<StepDetailRow | undefined> {
+  const [row] = await db
+    .select({
+      id: stepRun.id,
+      runId: stepRun.runId,
+      nodeKey: stepRun.nodeKey,
+      status: stepRun.status,
+      isCheckpoint: stepRun.isCheckpoint,
+      outputRefs: stepRun.outputRefs,
+      error: stepRun.error,
+    })
+    .from(stepRun)
+    .where(eq(stepRun.id, id));
+  return row ?? undefined;
+}
+
+/**
  * Steps por sus ULIDs EXACTOS, sin lock (T1.10a). La usa el consumer de `step.execute`
  * para resolver las DEPENDENCIAS de un step: `StepRow.dependsOn` ya trae los ids exactos
  * de sus predecesores, así que se leen por id y punto.

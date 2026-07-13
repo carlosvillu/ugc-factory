@@ -11,6 +11,7 @@ import { Handle, Position, type NodeProps } from '@xyflow/react';
 import { cn } from '@/lib/utils';
 import { useRunStore } from '@/stores/run-store';
 import type { N7GroupNode } from '../steps-to-graph';
+import { nodeTitle } from '../node-titles';
 import { statusLabel, visualToneClass, visualBorderClass, HANDLE_IN, HANDLE_OUT } from '../status';
 
 export const N7GroupNodeView = memo(function N7GroupNodeView({ data }: NodeProps<N7GroupNode>) {
@@ -45,6 +46,11 @@ export const N7GroupNodeView = memo(function N7GroupNodeView({ data }: NodeProps
               {data.expanded ? '−' : '+'}
             </button>
           </header>
+          {/* Mismo criterio que step-node (T1.16): el título humano manda, la clave es
+              el badge mono de arriba. */}
+          <div className="truncate text-mono font-semibold text-text">
+            {nodeTitle(data.groupKey)}
+          </div>
           <div className="text-micro text-text-3">{data.childCount} variantes</div>
         </div>
       </div>

@@ -48,6 +48,10 @@ export { ensureQueue } from './adapters/ensure-queue';
 // (T0.7b) para obtener `config`/retry counters tras arrancar el step. La
 // revalidación bajo lock la hace `transition()`; esto solo lee datos.
 export { findStep } from './repos/steps.repo';
+// Lectura de PRESENTACIÓN de un step (T1.16): el artefacto y el error ENTEROS, para
+// `GET /api/steps/:id` (editor de CP1 + visores modales del canvas). Vive aparte del puerto
+// `StepRow` del orquestador a propósito: el motor no necesita el `error`, y la UI sí.
+export { findStepDetail } from './repos/steps.repo';
 // Steps por sus ULIDs exactos, sin lock (T1.10a): la usa el consumer de `step.execute`
 // para resolver las DEPENDENCIAS de un step (los ids exactos vienen en `dependsOn`) y
 // entregarle sus outputs al executor. Por id y NUNCA por `node_key`: el supersede de T0.8

@@ -58,8 +58,16 @@ export function makeDemoExecutor({ shouldFail, recordCost }: DemoExecutorDeps): 
     if (!parsed.success) {
       throw new Error(`config de executor de demo inválida: ${parsed.error.message}`);
     }
-    const { sleepMs, failRate, hang, costCents, costProvider, costQuantity, costUnit } =
-      parsed.data;
+    const {
+      sleepMs,
+      failRate,
+      failMessage,
+      hang,
+      costCents,
+      costProvider,
+      costQuantity,
+      costUnit,
+    } = parsed.data;
 
     // `hang`: nunca resuelve por su cuenta; solo el abort (shutdown/expiración)
     // rechaza la promesa. En T0.7b no hay quien lo aborte → el step queda en
@@ -84,7 +92,10 @@ export function makeDemoExecutor({ shouldFail, recordCost }: DemoExecutorDeps): 
     // `failRate`: decide fallar ESTE intento. El consumer traduce el throw a
     // transition('fail') y gatea el retry contra retry_count/max_retries.
     if (failRate !== undefined && failRate > 0 && shouldFail(failRate)) {
-      throw new Error('demo executor: fallo inyectado');
+      // `failMessage` (T1.16) permite inyectar un error LARGO —como los reales del producto,
+      // p. ej. el volcado de issues de Zod de un `PermanentStepError` de N3—. Sin él, el
+      // default sigue siendo el mensaje corto de siempre.
+      throw new Error(failMessage ?? 'demo executor: fallo inyectado');
     }
 
     // Coste inyectado (T0.12): se registra SOLO tras pasar el gate de fallo — es el

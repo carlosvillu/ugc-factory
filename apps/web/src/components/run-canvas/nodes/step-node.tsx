@@ -15,6 +15,7 @@ import { memo } from 'react';
 import { Handle, Position, type NodeProps } from '@xyflow/react';
 import { cn } from '@/lib/utils';
 import type { StepNode } from '../steps-to-graph';
+import { nodeBadgeLabel, nodeTitle } from '../node-titles';
 import {
   formatCostSplit,
   formatDuration,
@@ -53,25 +54,45 @@ export const StepNodeView = memo(function StepNodeView({ data, selected }: NodeP
       <div className="flex">
         <span aria-hidden className={cn('w-1 shrink-0', visualToneClass[group])} />
         <div className="min-w-0 flex-1 px-3 py-2.5">
-          <header className="mb-1.5 flex items-center justify-between gap-2">
+          <header className="mb-1 flex items-center justify-between gap-2">
+            {/* La CLAVE (`N3`, `demo.canvas.N3`) baja a badge mono secundario: sigue
+                visible (y sigue en el accessible name: API de tests), pero deja de ser
+                lo que el humano lee primero. */}
             <span
+              data-slot="node-key"
               className={cn(
-                'font-mono text-micro font-semibold',
+                'truncate font-mono text-micro font-semibold',
                 isCheckpoint ? 'text-warning' : 'text-text-3',
               )}
             >
-              {data.nodeKey}
+              {/* Patrón del DS: mientras el nodo ESPERA aprobación, el badge dice
+                  `N3 · CP1` (PipelineScreen.jsx: `code={approved ? "N3" : "N3 · CP1"}`);
+                  aprobado, vuelve a ser la clave a secas. El accessible name de arriba
+                  sigue llevando el node_key CRUDO — es la API de los tests. */}
+              {nodeBadgeLabel(data.nodeKey, isCheckpoint)}
             </span>
             {isRunning ? (
               <span
                 aria-hidden
-                className="inline-block size-2.75 animate-spin rounded-full border-2 border-info border-t-transparent"
+                className="inline-block size-2.75 shrink-0 animate-spin rounded-full border-2 border-info border-t-transparent"
               />
             ) : (
-              <span aria-hidden className={cn('size-1.75 rounded-full', visualToneClass[group])} />
+              <span
+                aria-hidden
+                className={cn('size-1.75 shrink-0 rounded-full', visualToneClass[group])}
+              />
             )}
           </header>
-          <div className="mb-0.5 text-mono font-medium text-text-2">{statusLabel[data.status]}</div>
+          {/* TEXTO PRINCIPAL del nodo (T1.16): el título humano del §7.2 — «Análisis
+              visual», no «N2». El estado pasa a línea secundaria. */}
+          <div
+            data-slot="node-title"
+            className="mb-0.5 truncate text-mono font-semibold text-text"
+            title={nodeTitle(data.nodeKey)}
+          >
+            {nodeTitle(data.nodeKey)}
+          </div>
+          <div className="mb-0.5 text-micro text-text-2">{statusLabel[data.status]}</div>
           {data.outputExcerpt ? (
             <p
               data-slot="node-output"

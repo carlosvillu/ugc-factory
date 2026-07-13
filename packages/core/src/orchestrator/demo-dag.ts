@@ -131,9 +131,12 @@ export function demoCheckpointRunDefinition(
  */
 export function demoCanvasRunDefinition(
   projectId: string,
-  opts: { sleepMs?: number; autopilot?: boolean } = {},
+  opts: { sleepMs?: number; autopilot?: boolean; failMessage?: string } = {},
 ): RunDefinitionInput {
-  const { sleepMs = 0, autopilot = false } = opts;
+  // `failMessage` (T1.16): el mensaje con el que falla N4. Por defecto, el corto del executor.
+  // Se inyecta uno LARGO cuando lo que se prueba es que el visor de error sirve el error
+  // ENTERO (el `errorExcerpt` del SSE lo recorta a 200 caracteres).
+  const { sleepMs = 0, autopilot = false, failMessage } = opts;
   return {
     projectId,
     autopilot,
@@ -160,7 +163,13 @@ export function demoCanvasRunDefinition(
         key: 'N4',
         nodeKey: 'demo.canvas.N4',
         dependsOn: ['N3'],
-        config: { sleepMs, failRate: 1 }, // falla siempre → error + retry
+        // falla siempre → error + retry. `failMessage` solo viaja si se pidió (el
+        // `strictObject` de la config acepta la clave, pero un `undefined` explícito
+        // ensuciaría el jsonb persistido).
+        config:
+          failMessage === undefined
+            ? { sleepMs, failRate: 1 }
+            : { sleepMs, failRate: 1, failMessage },
       },
       // N5 depende de N4: mientras N4 no succeeda, N5 está en `awaiting_deps`
       // (skippable desde el panel, transitions.ts). Es el nodo skippable.

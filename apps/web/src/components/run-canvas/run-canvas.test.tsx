@@ -60,3 +60,24 @@ test('pinta un nodo por step con estado, coste y duración visibles', () => {
   // failed NO se colapsa a pending/succeeded: es observablemente distinto.
   expect(within(failed).getByText(/fallido/i)).toBeInTheDocument();
 });
+
+// T1.16: el nodo pinta el TÍTULO HUMANO del §7.2 como texto principal, la clave como
+// badge — y el accessible name SIGUE llevando la clave (es la API de los tests e2e/jsdom:
+// romperlo rompería `getByRole('article', {name:/N3/i})` en toda la suite).
+test('el nodo muestra el título humano y conserva la clave en el accessible name', () => {
+  const steps = [
+    snap({ id: 's1', nodeKey: 'N2', status: 'running' }),
+    // Clave PREFIJADA por el DAG (el de demo emite `demo.canvas.N3`): el título se
+    // resuelve igual, y el accessible name conserva la clave COMPLETA con su prefijo.
+    snap({ id: 's2', nodeKey: 'demo.canvas.N3', status: 'succeeded' }),
+  ];
+  render(<RunCanvas />, { wrapper: withStore(steps) });
+
+  const n2 = screen.getByRole('article', { name: /\bN2\b/ });
+  expect(within(n2).getByText('Análisis visual')).toBeInTheDocument();
+  expect(within(n2).getByText('N2')).toBeInTheDocument(); // la clave sigue visible (badge)
+
+  const n3 = screen.getByRole('article', { name: /demo\.canvas\.N3/ });
+  expect(within(n3).getByText('ProductBrief')).toBeInTheDocument();
+  expect(within(n3).getByText('demo.canvas.N3')).toBeInTheDocument();
+});

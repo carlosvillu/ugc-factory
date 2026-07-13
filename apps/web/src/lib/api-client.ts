@@ -160,6 +160,11 @@ const CreateRunResponseSchema = z.object({ runId: z.string() });
  * `outputExcerpt` de 200 caracteres del SSE. Lo consume CP1, que necesita el ProductBrief entero
  * (con todos los ángulos y sus evidencias) para editarlo campo a campo — un brief truncado no se
  * puede editar. `outputRefs` es `unknown`: quien lo consume lo valida contra SU contrato.
+ *
+ * `error` (T1.16): el mensaje de error ENTERO, por la misma razón y con el mismo criterio — el
+ * `errorExcerpt` del SSE también se corta a 200 caracteres, y los errores que de verdad hay que
+ * leer son largos (el volcado de issues de Zod de un fallo de validación en N3). Lo consume el
+ * visor modal de error del inspector. `null` si el step no falló.
  */
 const StepResponseSchema = z.object({
   id: z.string(),
@@ -168,6 +173,7 @@ const StepResponseSchema = z.object({
   status: z.string(),
   isCheckpoint: z.boolean(),
   outputRefs: z.unknown(),
+  error: z.string().nullable(),
 });
 
 // NOTA: aquí NO hay un `briefActions`/`BriefResponseSchema` para `GET/PATCH /api/briefs/:id`. El

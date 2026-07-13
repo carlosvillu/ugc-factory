@@ -10,7 +10,7 @@
 // Lectura pura ⇒ sin boss ni transacción.
 import { z } from 'zod';
 import { AppError, UlidSchema } from '@ugc/core/contracts';
-import { findStep } from '@ugc/db';
+import { findStepDetail } from '@ugc/db';
 import { withRoute, getDb } from '@/server';
 import { withAuth } from '@/server/with-auth';
 
@@ -19,10 +19,26 @@ export const dynamic = 'force-dynamic';
 
 const ParamsSchema = z.object({ id: UlidSchema });
 
+/**
+ * Mensaje de error PELADO (T1.16). El consumer persiste el error como `{ message: string }`
+ * (step-execute.ts), y el recorte del SSE (`errorExcerptOf`) ya extrae ese `message` para que
+ * el visor muestre "N3: config inválida: …" y no `{"message":"…"}` con llaves JSON. Aquí se
+ * aplica el MISMO criterio, pero SIN recortar: mismo texto, entero. Un shape inesperado cae al
+ * serializado genérico en vez de perderse.
+ */
+function errorMessageOf(error: unknown): string | null {
+  if (error == null) return null;
+  if (typeof error === 'string') return error;
+  if (typeof error === 'object' && 'message' in error && typeof error.message === 'string') {
+    return error.message;
+  }
+  return JSON.stringify(error);
+}
+
 export const GET = withAuth(
   withRoute(
     async ({ params }) => {
-      const step = await findStep(getDb(), params.id);
+      const step = await findStepDetail(getDb(), params.id);
       if (step === undefined) throw new AppError('not_found', 'step no encontrado');
       return Response.json({
         id: step.id,
@@ -33,6 +49,11 @@ export const GET = withAuth(
         // El artefacto COMPLETO (jsonb opaco): quien lo consume lo valida contra SU contrato
         // (CP1 lo parsea con `N3OutputSchema`). El servidor no adivina qué nodo es.
         outputRefs: step.outputRefs ?? null,
+        // El error COMPLETO (T1.16): el `errorExcerpt` del SSE lo trunca a 200 caracteres, y
+        // los errores que de verdad importan son largos (el `PermanentStepError` de N3 lleva
+        // el volcado de issues de Zod: cortado, el usuario ve el prefijo y ningún issue). El
+        // visor modal del inspector lo pide por aquí. `null` si el step no falló.
+        error: errorMessageOf(step.error),
       });
     },
     { params: ParamsSchema },

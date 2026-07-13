@@ -244,6 +244,147 @@ describe('runVisualAnalyze — desync de índice: imagen intermedia que falla al
   });
 });
 
+describe('runVisualAnalyze — AVIF real y URL sin extensión sobreviven al preparador (T1.14)', () => {
+  it('una imagen .avif (bytes AVIF REALES) y una /_next/image?url=… llegan al VLM re-codificadas a PNG', async () => {
+    // Los DOS casos reales del 2026-07-13 que el filtro por extensión raster descartaba:
+    //  - relatio.chat: todas las imágenes .avif → Haiku recibió 0 imágenes → hero null → N3 FAIL.
+    //  - stayforlong.com: /_next/image?url=… (extensión URL-encodeada en el query, no en el path).
+    // Principio 9 de testing: el fixture AVIF son bytes AVIF DE VERDAD (sharp .avif()), no un
+    // PNG renombrado — el fixture cómodo era exactamente lo que tapaba este bug.
+    const avifBytes = await sharp({
+      create: { width: 1400, height: 1000, channels: 3, background: { r: 200, g: 60, b: 60 } },
+    })
+      .avif({ quality: 40 })
+      .toBuffer();
+    // `HttpResponse.arrayBuffer` tipa `ArrayBuffer`, no `Buffer` (que es una VISTA sobre un
+    // pool compartido): el slice extrae los bytes de ESTA imagen. No es boilerplate evitable.
+    const avifBuf = avifBytes.buffer.slice(
+      avifBytes.byteOffset,
+      avifBytes.byteOffset + avifBytes.byteLength,
+    );
+    const nextImagePng = await cdnPng(1600, 900);
+    const nextImageUrl =
+      'https://shop.example/_next/image?url=https%3A%2F%2Fcdn.shop.example%2Fhero.jpg&w=1080&q=75';
+
+    const twoClassifications = {
+      images: [
+        {
+          kind: 'packshot',
+          has_overlay_text: false,
+          background: 'clean',
+          video_suitability: 'hero',
+        },
+        {
+          kind: 'lifestyle',
+          has_overlay_text: false,
+          background: 'busy',
+          video_suitability: 'broll',
+        },
+      ],
+      brand_style: null,
+      rendered_social_proof: null,
+    };
+    let capturedBody: unknown;
+    server.use(
+      http.get('https://cdn.relatio.example/product.avif', () =>
+        HttpResponse.arrayBuffer(avifBuf, { headers: { 'content-type': 'image/avif' } }),
+      ),
+      // msw matchea el path /_next/image sea cual sea el query string.
+      http.get('https://shop.example/_next/image', () =>
+        HttpResponse.arrayBuffer(nextImagePng, { headers: { 'content-type': 'image/png' } }),
+      ),
+      http.post(MESSAGES_ENDPOINT, async ({ request }) => {
+        capturedBody = await request.json();
+        return HttpResponse.json(anthropicMessageResponse(twoClassifications));
+      }),
+    );
+
+    const projectId = await seedProject();
+    const raw = makeRawContent({
+      screenshotRef: null,
+      images: [
+        { url: 'https://cdn.relatio.example/product.avif', alt: 'hero avif' },
+        { url: nextImageUrl, alt: null },
+      ],
+    });
+
+    const res = await runVisualAnalyze(
+      { db: tdb.db, storage, secretsKey, anthropicBaseUrl: ANTHROPIC_BASE },
+      { projectId, raw },
+    );
+
+    // Ambas sobreviven: clasificadas y alineadas con la lista superviviente.
+    expect(res.status).toBe('analyzed');
+    expect(res.visualAnalysis.images).toHaveLength(2);
+    expect(res.visualAnalysis.images[0]?.url).toBe('https://cdn.relatio.example/product.avif');
+    expect(res.visualAnalysis.images[1]?.url).toBe(nextImageUrl);
+    expect(res.visualAnalysis.hero_image_url).toBe('https://cdn.relatio.example/product.avif');
+
+    // Y lo que llegó al VLM son 2 bloques base64 re-codificados a PNG ≤768px (el AVIF ya no es
+    // AVIF: sharp lo decodificó y homogeneizó — el gate real es fetch+decode, no la extensión).
+    const body = capturedBody as {
+      messages: { content: { type: string; source?: { type: string; data?: string } }[] }[];
+    };
+    const imageBlocks = (body.messages[0]?.content ?? []).filter((b) => b.type === 'image');
+    expect(imageBlocks).toHaveLength(2);
+    for (const block of imageBlocks) {
+      expect(block.source?.type).toBe('base64');
+      const bytes = Buffer.from(block.source?.data ?? '', 'base64');
+      const meta = await sharp(bytes).metadata();
+      expect(meta.format).toBe('png');
+      expect(Math.max(meta.width, meta.height)).toBeLessThanOrEqual(768);
+    }
+  });
+});
+
+describe('runVisualAnalyze — el preparador PARA en el tope de 8 imágenes (T1.14)', () => {
+  it('con 12 URLs candidatas solo fetchea las 8 que el analyzer va a mandar (no descarga lo que se descarta)', async () => {
+    // Consecuencia directa de relajar el filtro: antes la lista llegaba corta (solo extensiones
+    // raster); ahora pasa TODA URL http(s) no-SVG y una web Next.js emite decenas. Sin el corte,
+    // el servicio descargaba y re-codificaba con sharp las 12 para que el analyzer tirara 4.
+    const png = await cdnPng(900, 900);
+    const fetched: string[] = [];
+    const urls = Array.from({ length: 12 }, (_, i) => `https://cdn.shop.example/p${String(i)}`);
+    server.use(
+      http.get('https://cdn.shop.example/:slug', ({ request }) => {
+        fetched.push(new URL(request.url).pathname);
+        return HttpResponse.arrayBuffer(png, { headers: { 'content-type': 'image/png' } });
+      }),
+      http.post(MESSAGES_ENDPOINT, () =>
+        HttpResponse.json(
+          anthropicMessageResponse({
+            images: Array.from({ length: 8 }, () => ({
+              kind: 'lifestyle',
+              has_overlay_text: false,
+              background: 'clean',
+              video_suitability: 'broll',
+            })),
+            brand_style: null,
+            rendered_social_proof: null,
+          }),
+        ),
+      ),
+    );
+
+    const projectId = await seedProject();
+    const res = await runVisualAnalyze(
+      { db: tdb.db, storage, secretsKey, anthropicBaseUrl: ANTHROPIC_BASE },
+      {
+        projectId,
+        raw: makeRawContent({
+          screenshotRef: null,
+          images: urls.map((url) => ({ url, alt: null })),
+        }),
+      },
+    );
+
+    // 8 fetches, no 12: las 4 sobrantes ni se descargan ni se decodifican.
+    expect(fetched).toHaveLength(8);
+    expect(res.visualAnalysis.images).toHaveLength(8);
+    expect(res.visualAnalysis.images.map((i) => i.url)).toEqual(urls.slice(0, 8));
+  });
+});
+
 describe('runVisualAnalyze — modo manual sin imágenes: skipped, sin cost_entry (Verificación #3)', () => {
   it('RawContent manual sin screenshot ni subidas → skipped, cero coste, flujo continúa', async () => {
     let called = false;

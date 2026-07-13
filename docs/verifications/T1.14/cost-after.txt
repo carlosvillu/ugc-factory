@@ -1,0 +1,13 @@
+=== cost_entry del run nuevo ===
+ node_key | provider  | amount_cents | quantity |  unit   
+----------+-----------+--------------+----------+---------
+ N1       | firecrawl |            0 |        2 | credits
+ N2       | anthropic |            0 |     3182 | tokens
+ N3       | anthropic |           16 |    23661 | tokens
+(3 rows)
+
+ total_cents 
+-------------
+          16
+(1 row)
+

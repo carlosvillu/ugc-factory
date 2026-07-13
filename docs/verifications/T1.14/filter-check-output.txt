@@ -1,0 +1,12 @@
+OK    pasa=true (esperado true)  https://relatio.chat/mobile-app.avif
+OK    pasa=true (esperado true)  https://relatio.chat/videos/landing_relatio_poster.avif
+OK    pasa=true (esperado true)  https://www.stayforlong.com/_next/image?url=https%3A%2F%2Fcdn%2Fhero.jpg&w=1080&q=75
+OK    pasa=false (esperado false)  data:image/png;base64,iVBORw0KGgo=
+OK    pasa=false (esperado false)  blob:https://x/abc
+OK    pasa=false (esperado false)  https://cdn.example.com/logo.svg
+OK    pasa=false (esperado false)  https://cdn.example.com/LOGO.SVG?v=9
+OK    pasa=false (esperado false)  /relative/hero.jpg
+OK    pasa=true (esperado true)  https://cdn.example.com/hero.JPEG
+OK    pasa=true (esperado true)  https://cdn.example.com/x.heic
+
+TODOS OK

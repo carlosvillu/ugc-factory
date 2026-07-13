@@ -1,0 +1,4 @@
+Consola del navegador (agent-browser console), filtrada quitando HMR / Fast Refresh / React DevTools:
+(vacío — CERO mensajes de código propio: ni error, ni warning)
+
+agent-browser errors → (vacío)

@@ -1,0 +1,22 @@
+{
+    "status": "analyzed",
+    "warnings": [
+    ],
+    "visualAnalysis": {
+        "images": [
+        ],
+        "brand_style": {
+            "palette": [
+                "#4F46E5",
+                "#FBBF24",
+                "#1F2937",
+                "#F3F4F6",
+                "#FFFFFF"
+            ],
+            "aesthetic": "Moderno y corporativo con acentos azul eléctrico y amarillo vibrante, minimalista con enfoque en claridad y confianza",
+            "photography_style": "Captura de pantalla de interfaz digital y producto mockup"
+        },
+        "hero_image_url": null,
+        "rendered_social_proof": null
+    }
+}

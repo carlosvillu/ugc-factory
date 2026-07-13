@@ -1,0 +1,9 @@
+INSPECTOR · N2
+completado
+✕
+Duración
+8.4s
+Coste
+$0.00
+OUTPUT
+{"status":"analyzed","warnings":[],"visualAnalysis":{"images":[{"url":"https://relatio.chat/mobile-app.avif","kind":"lifestyle","background":"clean","has_overlay_text":false,"video_suitability":"hero"

@@ -9,7 +9,7 @@
 //
 // El barrel expone SOLO lo que se consume desde fuera del paquete: los tres servicios
 // invocables. Los helpers internos (`loadAnthropicKey`, `recordAnthropicCost`,
-// `anthropicCostOf`, `sendableProductImageUrls`) y los tipos de sus deps NO salen: sus
+// `anthropicCostOf`, `fetchableProductImageUrls`) y los tipos de sus deps NO salen: sus
 // tests los importan por ruta relativa, y exportarlos "por si acaso" es superficie
 // muerta (knip la caza).
 export { runFirecrawlIngest } from './firecrawl-ingest';

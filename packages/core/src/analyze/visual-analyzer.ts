@@ -48,7 +48,7 @@ const MAX_TOKENS = 2048;
 /** Tope de imágenes de producto a clasificar (research §5 P3: "hasta 8"). Acota tokens de
  *  imagen (coste) y evita mandar galerías enormes. El screenshot NO cuenta contra este tope
  *  (es una entrada aparte, la del tono de marca). */
-const MAX_PRODUCT_IMAGES = 8;
+export const MAX_PRODUCT_IMAGES = 8;
 
 // ── Prompt P3 (research/07 §5 P3, líneas ~506-530) ───────────────────────────────
 // System cacheado (cache_control ephemeral). OJO: el mínimo cacheable de Haiku 4.5 es 4096

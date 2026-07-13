@@ -4,6 +4,10 @@
 export {
   makeVisualAnalyzer,
   mapToVisualAnalysis,
+  // Tope de imágenes de producto que el analyzer manda al VLM. Lo exporta core (T1.14) porque
+  // el SERVICIO también lo necesita: para de descargar/re-codificar en cuanto tiene 8 vivas, y
+  // ese corte debe salir del mismo sitio que el `slice` del analyzer (no duplicar el número).
+  MAX_PRODUCT_IMAGES,
   type VisualAnalyzer,
   type VisualAnalyzerDeps,
   type VisualAnalyzeInput,

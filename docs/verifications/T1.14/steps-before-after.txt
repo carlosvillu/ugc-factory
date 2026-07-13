@@ -1,0 +1,16 @@
+=== ANTES: run 01KXD1MM3ENG6QNZ43YY7M1P6V (relatio.chat, 2026-07-13, pre-T1.14) ===
+ node_key |  status   |                                                     error                                                      
+----------+-----------+----------------------------------------------------------------------------------------------------------------
+ N1       | succeeded | 
+ N2       | succeeded | 
+ N3       | failed    | {"message": "N3: el brief no supera la validación determinista (T1.9): missing_hero_image", "permanent": true}
+(3 rows)
+
+=== DESPUÉS: run 01KXD5XD4AWWRAM28W7EDJTMDT (relatio.chat, verificación T1.14) ===
+ node_key |  status   | error 
+----------+-----------+-------
+ N1       | succeeded | 
+ N2       | succeeded | 
+ N3       | succeeded | 
+(3 rows)
+

@@ -19,6 +19,7 @@ import type { StorageAdapter } from '@ugc/core';
 import {
   makeVisualAnalyzer,
   rescaleImage,
+  MAX_PRODUCT_IMAGES,
   type ImageBytes,
   type VisualAnalyzerImageInput,
   type VisualAnalyzerUsage,
@@ -102,30 +103,36 @@ async function drainStream(stream: ReadableStream<Uint8Array>): Promise<Uint8Arr
   return out;
 }
 
-/** Extensiones de imagen RASTER que la API de visión acepta como bloque `image/url`
- *  (jpeg/png/gif/webp — skill claude-api, vision §). SVG y data-URIs NO son fuentes url
- *  válidas: un bloque url con un SVG o `data:` 400ea la request COMPLETA → FAIL de la única
- *  llamada real del verifier (dinero real perdido). Se filtran ANTES de armar los bloques. */
-const RASTER_IMAGE_EXT = /\.(jpe?g|png|gif|webp)(\?|#|$)/i;
+/** Extensión SVG en el pathname. Un logo vectorial NO es una imagen de producto: sharp lo
+ *  rasterizaría sin quejarse (falso superviviente), así que se excluye por extensión ANTES del
+ *  fetch. El query/hash no vive en `URL.pathname`, así que `hero.svg?v=2` también cae. */
+const SVG_EXT = /\.svg$/i;
 
 /**
  * Filtra las URLs de `raw.images` (de T1.4, SIN sanear — una landing real mete logos SVG,
- * data-URIs y píxeles de tracking) a las que la API de visión puede descargar como bloque url:
- * http(s) + extensión raster soportada. PURA y determinista (sin red). Descartar aquí evita el
- * 400 de un bloque url inválido y acota tokens (menos imágenes basura). Preserva el orden (el
- * mapeo posicional depende de él).
+ * data-URIs y píxeles de tracking) a las FETCHEABLES como imagen de producto: http(s) absoluta
+ * (fuera `data:`/`blob:`) y no-SVG por extensión. NADA MÁS se decide aquí (T1.14): desde el fix
+ * de coste de T1.7 TODAS las imágenes se descargan y se re-codifican a PNG con sharp
+ * (`rescaleImage`), así que el gate real es «¿fetch OK y decodifica?» — un AVIF o una URL sin
+ * extensión (`/_next/image?url=…`, el patrón estándar de Next.js) PASAN y las decide el par
+ * fetch+decode, que ya dropea corruptos sin hueco posicional. Filtrar por extensión raster era
+ * un vestigio de los bloques `image/url` de la API (que ya no se usan para producto) y descartó
+ * imágenes reales (runs de relatio.chat y stayforlong.com, 2026-07-13). Un SVG servido SIN
+ * extensión pasa el filtro y lo resuelve el decode (sharp lo rasteriza — comportamiento
+ * documentado y asertado en tests; no hacemos content-type sniffing). PURA y determinista
+ * (sin red). Preserva el orden (el mapeo posicional depende de él).
  */
-export function sendableProductImageUrls(images: { url: string }[]): string[] {
+export function fetchableProductImageUrls(images: { url: string }[]): string[] {
   const out: string[] = [];
   for (const img of images) {
     let url: URL;
     try {
       url = new URL(img.url);
     } catch {
-      continue; // no es una URL absoluta válida (data:, relativa rota, etc.).
+      continue; // no es una URL absoluta válida (relativa rota, basura, etc.).
     }
     if (url.protocol !== 'http:' && url.protocol !== 'https:') continue; // descarta data:/blob:.
-    if (!RASTER_IMAGE_EXT.test(url.pathname)) continue; // descarta SVG y URLs sin extensión raster.
+    if (SVG_EXT.test(url.pathname)) continue; // descarta SVG explícito (logo vectorial ≠ producto).
     out.push(img.url);
   }
   return out;
@@ -162,8 +169,15 @@ async function fetchImageBytes(
  *    verdad: bloques del prompt Y map de clasificaciones se construyen sobre ELLA en el
  *    analyzer → sin desplazamiento de índice.
  * En modo manual las imágenes vienen con bytes (subidas); en modo url son URLs CDN de
- * `raw.images` (pre-filtradas a raster http(s) para no fetchear SVG/data-URIs/tracking).
- * Pura respecto a BD/storage (solo hace fetch de red vía `doFetch`).
+ * `raw.images` (pre-filtradas a http(s) no-SVG para no fetchear data-URIs/logos vectoriales;
+ * el resto lo decide este fetch+decode). Pura respecto a BD/storage (solo red vía `doFetch`).
+ *
+ * PARA en cuanto tiene `MAX_PRODUCT_IMAGES` supervivientes: el analyzer descarta el resto con
+ * un `slice(0, 8)`, así que descargarlas y re-codificarlas era trabajo tirado. No importaba
+ * cuando el filtro solo dejaba pasar extensiones raster (la lista salía corta); desde T1.14
+ * pasa TODA URL http(s) no-SVG, y una web Next.js emite decenas de `/_next/image?url=…` — sin
+ * el corte, 30 fetches + 30 decodificaciones de sharp para quedarse con 8. El tope se importa
+ * de core: una sola fuente de verdad (subirlo allí no puede dejar aquí un corte más bajo).
  */
 async function prepareProductImages(
   uploads: { url: string; data: Uint8Array; mime: string }[],
@@ -174,10 +188,11 @@ async function prepareProductImages(
   const sources: { url: string; bytes: ImageBytes | null }[] =
     uploads.length > 0
       ? uploads.map((u) => ({ url: u.url, bytes: { data: u.data, mime: u.mime } }))
-      : sendableProductImageUrls(rawImages).map((url) => ({ url, bytes: null }));
+      : fetchableProductImageUrls(rawImages).map((url) => ({ url, bytes: null }));
 
   const prepared: VisualAnalyzerImageInput[] = [];
   for (const src of sources) {
+    if (prepared.length >= MAX_PRODUCT_IMAGES) break; // ya hay 8 vivas: lo demás lo tira el analyzer.
     // Modo url: fetch de los bytes CDN. Modo manual: ya vienen.
     const rawBytes = src.bytes ?? (await fetchImageBytes(src.url, doFetch));
     if (rawBytes === null) continue; // fetch falló → fuera de la lista (no hueco).

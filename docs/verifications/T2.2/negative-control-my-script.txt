@@ -1,0 +1,219 @@
+
+==========================================================================================
+0. BRIEF REAL (T1.8 · Sonnet · allbirds.com)
+==========================================================================================
+producto      : Men's Tree Runners
+idioma        : es | source: https://www.allbirds.com/products/mens-tree-runners
+ángulos       : 8
+  [0] El pie que aguanta todo el día (fw=pain_point, hook_examples=3)
+  [1] No son sintéticas, son de árbol (fw=curiosity, hook_examples=3)
+  [2] El mito de que sostenible es incómodo (fw=myth_busting, hook_examples=3)
+  [3] Zapatillas para hacer maleta ligera (fw=identity, hook_examples=3)
+  [4] Nuestro compromiso con el planeta, explicado (fw=founder_story, hook_examples=3)
+  [5] Desempaquetando los Tree Runners (fw=unboxing_demo, hook_examples=3)
+  [6] Sintéticas vs. naturales (fw=us_vs_them, hook_examples=3)
+  [7] Envío gratis a partir de 100$ (fw=offer_urgency, hook_examples=3)
+avatar_hint[0]: "Hombre de unos 32 años, energía tranquila y natural, en una calle urbana o entrando a una cafetería antes de ir a la oficina"
+  OK   | el brief tiene ≥2 ángulos con hook_examples
+  OK   | el brief tiene avatar_hint en segments[0]
+
+==========================================================================================
+0b. PRE-CONDICIÓN: las personas CASAN de verdad con el avatar_hint (T2.0 matchPersonas)
+==========================================================================================
+  Álvaro: score=6 matched=[energia, tranquila, natural, calle, urbana, oficina]
+  Marc: score=3 matched=[natural, urbana, cafeteria]
+  OK   | personaA es candidata REAL (score > 0) — candidatas=1
+  OK   | personaA + personaB son AMBAS candidatas REALES — candidatas=2
+
+==========================================================================================
+1. LA MATRIZ DE LA VERIFICACIÓN: 2 ángulos × 3 hooks × 1 persona × (es+en), conversion
+==========================================================================================
+
+-- LAS 12 VARIANTES (tier test; la matriz es idéntica en los 3 tiers) --
+   1. men-s-tree-runne-el-pie-que-aguan-hook01-prs-alvaro-es-30s
+      ángulo=0 lang=es persona=Álvaro hook="Llevo estas puestas desde las 7 de la mañana.…" (brief)
+   2. men-s-tree-runne-el-pie-que-aguan-hook02-prs-alvaro-es-30s
+      ángulo=0 lang=es persona=Álvaro hook="A las seis de la tarde mis pies ya no aguantaban…" (brief)
+   3. men-s-tree-runne-el-pie-que-aguan-hook03-prs-alvaro-es-30s
+      ángulo=0 lang=es persona=Álvaro hook="Esto es lo que noto después de un día entero cam…" (brief)
+   4. men-s-tree-runne-el-pie-que-aguan-hook01-prs-alvaro-en-30s
+      ángulo=0 lang=en persona=Álvaro hook="Llevo estas puestas desde las 7 de la mañana.…" (brief)
+   5. men-s-tree-runne-el-pie-que-aguan-hook02-prs-alvaro-en-30s
+      ángulo=0 lang=en persona=Álvaro hook="A las seis de la tarde mis pies ya no aguantaban…" (brief)
+   6. men-s-tree-runne-el-pie-que-aguan-hook03-prs-alvaro-en-30s
+      ángulo=0 lang=en persona=Álvaro hook="Esto es lo que noto después de un día entero cam…" (brief)
+   7. men-s-tree-runne-no-son-sintetica-hook01-prs-alvaro-es-30s
+      ángulo=1 lang=es persona=Álvaro hook="Nadie te cuenta con qué está hecha tu zapatilla.…" (brief)
+   8. men-s-tree-runne-no-son-sintetica-hook02-prs-alvaro-es-30s
+      ángulo=1 lang=es persona=Álvaro hook="Esto no lleva plástico derivado del petróleo.…" (brief)
+   9. men-s-tree-runne-no-son-sintetica-hook03-prs-alvaro-es-30s
+      ángulo=1 lang=es persona=Álvaro hook="¿Sabías que hay zapatillas hechas con fibra de á…" (brief)
+  10. men-s-tree-runne-no-son-sintetica-hook01-prs-alvaro-en-30s
+      ángulo=1 lang=en persona=Álvaro hook="Nadie te cuenta con qué está hecha tu zapatilla.…" (brief)
+  11. men-s-tree-runne-no-son-sintetica-hook02-prs-alvaro-en-30s
+      ángulo=1 lang=en persona=Álvaro hook="Esto no lleva plástico derivado del petróleo.…" (brief)
+  12. men-s-tree-runne-no-son-sintetica-hook03-prs-alvaro-en-30s
+      ángulo=1 lang=en persona=Álvaro hook="¿Sabías que hay zapatillas hechas con fibra de á…" (brief)
+
+  personaSelection: matched | sharedBodyAndCta: false | duración: 30 s
+  OK   | EXACTAMENTE 12 variantes (2×3×2) — n=12
+  OK   | las 12 llevan la persona compatible asignada
+  OK   | personaSelection = matched
+  OK   | 12 filenameCode ÚNICOS
+  OK   | 2 ángulos distintos
+  OK   | 2 idiomas distintos (es, en)
+  OK   | 3 hooks por (ángulo, idioma)
+  OK   | duración = 30 s (preset conversion §8.4)
+
+-- COSTE · tier=test · receta Apéndice B = [30, 170] ¢/30 s --
+  lineItems: 36
+    hook 10s  min=10¢ max=56¢  key=hook:0|es|prs-alvaro|hook01  variants=[1]
+    body 16s  min=16¢ max=91¢  key=body:0|es|prs-alvaro|hook01  variants=[1]
+    cta  4s  min=4¢ max=23¢  key=cta:0|es|prs-alvaro|hook01  variants=[1]
+    hook 10s  min=10¢ max=56¢  key=hook:0|es|prs-alvaro|hook02  variants=[1]
+    body 16s  min=16¢ max=91¢  key=body:0|es|prs-alvaro|hook02  variants=[1]
+    cta  4s  min=4¢ max=23¢  key=cta:0|es|prs-alvaro|hook02  variants=[1]
+    hook 10s  min=10¢ max=56¢  key=hook:0|es|prs-alvaro|hook03  variants=[1]
+    body 16s  min=16¢ max=91¢  key=body:0|es|prs-alvaro|hook03  variants=[1]
+    cta  4s  min=4¢ max=23¢  key=cta:0|es|prs-alvaro|hook03  variants=[1]
+    hook 10s  min=10¢ max=56¢  key=hook:0|en|prs-alvaro|hook01  variants=[1]
+    body 16s  min=16¢ max=91¢  key=body:0|en|prs-alvaro|hook01  variants=[1]
+    cta  4s  min=4¢ max=23¢  key=cta:0|en|prs-alvaro|hook01  variants=[1]
+    hook 10s  min=10¢ max=56¢  key=hook:0|en|prs-alvaro|hook02  variants=[1]
+    body 16s  min=16¢ max=91¢  key=body:0|en|prs-alvaro|hook02  variants=[1]
+    cta  4s  min=4¢ max=23¢  key=cta:0|en|prs-alvaro|hook02  variants=[1]
+    hook 10s  min=10¢ max=56¢  key=hook:0|en|prs-alvaro|hook03  variants=[1]
+    body 16s  min=16¢ max=91¢  key=body:0|en|prs-alvaro|hook03  variants=[1]
+    cta  4s  min=4¢ max=23¢  key=cta:0|en|prs-alvaro|hook03  variants=[1]
+    hook 10s  min=10¢ max=56¢  key=hook:1|es|prs-alvaro|hook01  variants=[1]
+    body 16s  min=16¢ max=91¢  key=body:1|es|prs-alvaro|hook01  variants=[1]
+    cta  4s  min=4¢ max=23¢  key=cta:1|es|prs-alvaro|hook01  variants=[1]
+    hook 10s  min=10¢ max=56¢  key=hook:1|es|prs-alvaro|hook02  variants=[1]
+    body 16s  min=16¢ max=91¢  key=body:1|es|prs-alvaro|hook02  variants=[1]
+    cta  4s  min=4¢ max=23¢  key=cta:1|es|prs-alvaro|hook02  variants=[1]
+    hook 10s  min=10¢ max=56¢  key=hook:1|es|prs-alvaro|hook03  variants=[1]
+    body 16s  min=16¢ max=91¢  key=body:1|es|prs-alvaro|hook03  variants=[1]
+    cta  4s  min=4¢ max=23¢  key=cta:1|es|prs-alvaro|hook03  variants=[1]
+    hook 10s  min=10¢ max=56¢  key=hook:1|en|prs-alvaro|hook01  variants=[1]
+    body 16s  min=16¢ max=91¢  key=body:1|en|prs-alvaro|hook01  variants=[1]
+    cta  4s  min=4¢ max=23¢  key=cta:1|en|prs-alvaro|hook01  variants=[1]
+    hook 10s  min=10¢ max=56¢  key=hook:1|en|prs-alvaro|hook02  variants=[1]
+    body 16s  min=16¢ max=91¢  key=body:1|en|prs-alvaro|hook02  variants=[1]
+    cta  4s  min=4¢ max=23¢  key=cta:1|en|prs-alvaro|hook02  variants=[1]
+    hook 10s  min=10¢ max=56¢  key=hook:1|en|prs-alvaro|hook03  variants=[1]
+    body 16s  min=16¢ max=91¢  key=body:1|en|prs-alvaro|hook03  variants=[1]
+    cta  4s  min=4¢ max=23¢  key=cta:1|en|prs-alvaro|hook03  variants=[1]
+  standaloneVariant : min=30¢  max=170¢
+  TOTAL DEL LOTE    : min=360¢ ($3.60)  max=2040¢ ($20.40)
+  OK   | [test] hay desglose (lineItems) — 36 partidas
+  OK   | [test] 36 partidas = 12 variantes × 3 segmentos (conversion NO comparte nada) — n=36
+  OK   | [test] Σ lineItems == total (min) — 360 vs 360
+  OK   | [test] Σ lineItems == total (max) — 2040 vs 2040
+  OK   | [test] perVariant tiene las 12 variantes — n=12
+  OK   | [test] Σ perVariant == total (min) — 360 vs 360
+  OK   | [test] Σ perVariant == total (max) — 2040 vs 2040
+  CUENTA A MANO (Apéndice B): 12 × [30, 170]¢ = [360, 2040]¢ = [$3.60, $20.40]
+  DESVÍO: min 0.0000 %  ·  max 0.0000 %
+  OK   | [test] total.min cuadra a mano con el Apéndice B (±10 %) — desvío 0.0000 %
+  OK   | [test] total.max cuadra a mano con el Apéndice B (±10 %) — desvío 0.0000 %
+  OK   | [test] a 30 s standaloneVariant == receta EXACTA (el ancla)
+
+-- COSTE · tier=standard · receta Apéndice B = [180, 500] ¢/30 s --
+  lineItems: 36
+  standaloneVariant : min=180¢  max=500¢
+  TOTAL DEL LOTE    : min=2160¢ ($21.60)  max=6000¢ ($60.00)
+  OK   | [standard] hay desglose (lineItems) — 36 partidas
+  OK   | [standard] 36 partidas = 12 variantes × 3 segmentos (conversion NO comparte nada) — n=36
+  OK   | [standard] Σ lineItems == total (min) — 2160 vs 2160
+  OK   | [standard] Σ lineItems == total (max) — 6000 vs 6000
+  OK   | [standard] perVariant tiene las 12 variantes — n=12
+  OK   | [standard] Σ perVariant == total (min) — 2160 vs 2160
+  OK   | [standard] Σ perVariant == total (max) — 6000 vs 6000
+  CUENTA A MANO (Apéndice B): 12 × [180, 500]¢ = [2160, 6000]¢ = [$21.60, $60.00]
+  DESVÍO: min 0.0000 %  ·  max 0.0000 %
+  OK   | [standard] total.min cuadra a mano con el Apéndice B (±10 %) — desvío 0.0000 %
+  OK   | [standard] total.max cuadra a mano con el Apéndice B (±10 %) — desvío 0.0000 %
+  OK   | [standard] a 30 s standaloneVariant == receta EXACTA (el ancla)
+
+-- COSTE · tier=premium · receta Apéndice B = [900, 1300] ¢/30 s --
+  lineItems: 36
+  standaloneVariant : min=900¢  max=1300¢
+  TOTAL DEL LOTE    : min=10800¢ ($108.00)  max=15600¢ ($156.00)
+  OK   | [premium] hay desglose (lineItems) — 36 partidas
+  OK   | [premium] 36 partidas = 12 variantes × 3 segmentos (conversion NO comparte nada) — n=36
+  OK   | [premium] Σ lineItems == total (min) — 10800 vs 10800
+  OK   | [premium] Σ lineItems == total (max) — 15600 vs 15600
+  OK   | [premium] perVariant tiene las 12 variantes — n=12
+  OK   | [premium] Σ perVariant == total (min) — 10800 vs 10800
+  OK   | [premium] Σ perVariant == total (max) — 15600 vs 15600
+  CUENTA A MANO (Apéndice B): 12 × [900, 1300]¢ = [10800, 15600]¢ = [$108.00, $156.00]
+  DESVÍO: min 0.0000 %  ·  max 0.0000 %
+  OK   | [premium] total.min cuadra a mano con el Apéndice B (±10 %) — desvío 0.0000 %
+  OK   | [premium] total.max cuadra a mano con el Apéndice B (±10 %) — desvío 0.0000 %
+  OK   | [premium] a 30 s standaloneVariant == receta EXACTA (el ancla)
+
+==========================================================================================
+2. hook_test: body/CTA COMPARTIDOS → 5 generaciones, no 9 (§16.1)
+==========================================================================================
+
+-- 1 PERSONA --
+  candidatas REALES de matchPersonas: 1 (esperado 1)
+  variantes: 3 | personas asignadas: ["Álvaro"]
+  GENERACIONES (lineItems): 5
+    hook key=hook:0|es|prs-alvaro|hook01    compartida por 1 variante(s)  min=2¢ max=9¢
+    body key=body:0|es|prs-alvaro           compartida por 3 variante(s)  min=2¢ max=14¢
+    cta  key=cta:0|es|prs-alvaro            compartida por 3 variante(s)  min=1¢ max=4¢
+    hook key=hook:0|es|prs-alvaro|hook02    compartida por 1 variante(s)  min=2¢ max=9¢
+    hook key=hook:0|es|prs-alvaro|hook03    compartida por 1 variante(s)  min=2¢ max=9¢
+  TOTAL: min=9¢ max=45¢
+  OK   | [1 PERSONA] la precondición se cumple: 1 candidata(s) REAL(es) — candidatas=1
+  OK   | [1 PERSONA] 3 variantes (3 hooks)
+  OK   | [1 PERSONA] 5 GENERACIONES (1 body + 1 cta + 3 hooks), NO 9 NI 7 — n=5
+  OK   | [1 PERSONA] hay 1 sola partida de body, compartida por las 3
+  OK   | [1 PERSONA] hay 1 sola partida de cta, compartida por las 3
+  OK   | [1 PERSONA] hay 3 partidas de hook (el hook NUNCA se comparte)
+  OK   | [1 PERSONA] Σ lineItems == Σ perVariant == total
+
+-- 2 PERSONAS compatibles (EL BUG DE DINERO: rotación rompía el compartido → 7) --
+  candidatas REALES de matchPersonas: 2 (esperado 2)
+  variantes: 3 | personas asignadas: ["Álvaro"]
+  GENERACIONES (lineItems): 5
+    hook key=hook:0|es|prs-alvaro|hook01    compartida por 1 variante(s)  min=2¢ max=9¢
+    body key=body:0|es|prs-alvaro           compartida por 3 variante(s)  min=2¢ max=14¢
+    cta  key=cta:0|es|prs-alvaro            compartida por 3 variante(s)  min=1¢ max=4¢
+    hook key=hook:0|es|prs-alvaro|hook02    compartida por 1 variante(s)  min=2¢ max=9¢
+    hook key=hook:0|es|prs-alvaro|hook03    compartida por 1 variante(s)  min=2¢ max=9¢
+  TOTAL: min=9¢ max=45¢
+  OK   | [2 PERSONAS compatibles (EL BUG DE DINERO: rotación rompía el compartido → 7)] la precondición se cumple: 2 candidata(s) REAL(es) — candidatas=2
+  OK   | [2 PERSONAS compatibles (EL BUG DE DINERO: rotación rompía el compartido → 7)] 3 variantes (3 hooks)
+  OK   | [2 PERSONAS compatibles (EL BUG DE DINERO: rotación rompía el compartido → 7)] 5 GENERACIONES (1 body + 1 cta + 3 hooks), NO 9 NI 7 — n=5
+  OK   | [2 PERSONAS compatibles (EL BUG DE DINERO: rotación rompía el compartido → 7)] hay 1 sola partida de body, compartida por las 3
+  OK   | [2 PERSONAS compatibles (EL BUG DE DINERO: rotación rompía el compartido → 7)] hay 1 sola partida de cta, compartida por las 3
+  OK   | [2 PERSONAS compatibles (EL BUG DE DINERO: rotación rompía el compartido → 7)] hay 3 partidas de hook (el hook NUNCA se comparte)
+  OK   | [2 PERSONAS compatibles (EL BUG DE DINERO: rotación rompía el compartido → 7)] Σ lineItems == Σ perVariant == total
+
+==========================================================================================
+2b. conversion: NADA se comparte — cada variante lleva sus 3 generaciones
+==========================================================================================
+  3 variantes conversion → lineItems = 9 (esperado 9: 3×3)
+  OK   | conversion: 9 partidas para 3 variantes (ninguna compartida) — n=9
+  OK   | conversion: ninguna partida se comparte
+
+==========================================================================================
+3. REGRESIONES: duración fuera del preset (cobraba de MENOS) y plan vacío en silencio
+==========================================================================================
+  LANZA: "el plan declara 90 s pero el preset de "conversion" (§8.4) son 30 s: plan incoherente"
+  OK   | un plan de 90 s LANZA (ya no se cobra como 30 s)
+  (a 30 s ese mismo plan costaría min=180¢ — cobrar eso por 90 s sería cobrar 1/3)
+
+  composeMatrix sin angleIndices ni angleCount → 24 variantes, ángulos: [0,1,2,3,4,5,6,7]
+  OK   | sin selección de ángulos NO devuelve plan vacío
+  OK   | compone TODOS los ángulos del brief (8)
+  OK   | y las variantes son brief.angles × 3 hooks × 1 idioma
+
+  receta de tier equivocado LANZA: "receta del tier "test" para un lote del tier "standard": el estimador no puede cuadrar"
+  OK   | estimar un lote standard con la receta test LANZA
+
+==========================================================================================
+RESULTADO: TODAS LAS COMPROBACIONES OK (0 fallos)
+==========================================================================================

@@ -138,3 +138,18 @@ export {
   type CheckpointDecision,
   type BriefCheckpointDecision,
 } from './checkpoint-decision';
+// La MATRIZ del lote (T2.2, N4): la frontera `ProductBrief → BatchPlan → AdScript[]` de §7.4.
+// La compone `@ugc/core/strategy`, se persiste en `ad_batch.matrix` (jsonb) y la consumen CP2
+// (T2.3) y el ScriptWriter (T2.4) — cruza módulos, por eso es transversal.
+export {
+  BatchPlanSchema,
+  PlannedVariantSchema,
+  PlannedHookSchema,
+  AdSegmentSchema,
+  HookSourceSchema,
+  type BatchPlan,
+  type PlannedVariant,
+  type PlannedHook,
+  type AdSegment,
+  type HookSource,
+} from './batch-plan';

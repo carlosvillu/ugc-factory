@@ -1,0 +1,41 @@
+
+ RUN  v4.1.10 /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads
+
+ ❯ |core:unit| src/strategy/cost.test.ts (22 tests | 2 failed) 22ms
+     × un anuncio de 12 s (hook_test) cuesta 12/30 del de 30 s — §16.1: «a 15 s ≈ la mitad» 3ms
+     × un anuncio de 45 s (storytelling) cuesta 1,5× el de 30 s — NO lo mismo 1ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |core:unit| src/strategy/cost.test.ts > el escalado por duración: coste lineal en SEGUNDOS de vídeo generado (§16.1) > un anuncio de 12 s (hook_test) cuesta 12/30 del de 30 s — §16.1: «a 15 s ≈ la mitad»
+AssertionError: expected 43 to be less than or equal to 7.2
+ ❯ expectWithin10Percent src/strategy/cost.test.ts:78:39
+     76| /** ±10 %: la tolerancia LITERAL de la Verificación del planning. */
+     77| function expectWithin10Percent(actual: number, expected: number): void…
+     78|   expect(Math.abs(actual - expected)).toBeLessThanOrEqual(expected * 0…
+       |                                       ^
+     79| }
+     80|
+ ❯ src/strategy/cost.test.ts:199:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  |core:unit| src/strategy/cost.test.ts > el escalado por duración: coste lineal en SEGUNDOS de vídeo generado (§16.1) > un anuncio de 45 s (storytelling) cuesta 1,5× el de 30 s — NO lo mismo
+AssertionError: expected 135 to be less than or equal to 27
+ ❯ expectWithin10Percent src/strategy/cost.test.ts:78:39
+     76| /** ±10 %: la tolerancia LITERAL de la Verificación del planning. */
+     77| function expectWithin10Percent(actual: number, expected: number): void…
+     78|   expect(Math.abs(actual - expected)).toBeLessThanOrEqual(expected * 0…
+       |                                       ^
+     79| }
+     80|
+ ❯ src/strategy/cost.test.ts:211:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed | 2 passed (3)
+      Tests  2 failed | 49 passed (51)
+   Start at  08:20:01
+   Duration  1.43s (transform 618ms, setup 69ms, import 3.80s, tests 42ms, environment 0ms)
+

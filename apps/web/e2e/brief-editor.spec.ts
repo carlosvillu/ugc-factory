@@ -30,7 +30,7 @@ import {
 // La URL que hace que el fake de síntesis devuelva el brief de una web de SERVICIO (T1.15): con
 // imágenes, pero sin ninguna que sirva de hero. Se IMPORTA —no se copia— porque el fake y el spec
 // tienen que hablar de LA MISMA url.
-import { FAKE_URL_NO_HERO } from '@ugc/test-utils';
+import { FAKE_URL_NO_HERO, FAKE_FORBIDDEN_IMAGE_PATH } from '@ugc/test-utils';
 // La BD del stack, para el SELECT de aserción de T1.11: la Verificación pide ver la decisión EN
 // LA BD, no en un endpoint que podría estar mintiendo.
 import { queryStack } from './support/stack-db';
@@ -161,10 +161,12 @@ test.describe('CP1 · editor de brief (T1.10b)', () => {
       const candidatas = editor.locator('[data-slot="hero-candidate"]');
       await expect(candidatas).toHaveCount(3);
 
-      // 4) SE PROMUEVE UNA. La elegida es un dato del DOM, no un literal del test: el brief lo
-      //    produce el pipeline (fake de Anthropic → validador → SSE), y hard-codear la URL aquí
+      // 4) SE PROMUEVE UNA — de las PROMOVIBLES (T1.18: las que el servidor SÍ puede descargar;
+      //    ver el test de abajo). La elegida es un dato del DOM, no un literal del test: el brief
+      //    lo produce el pipeline (fake de Anthropic → validador → SSE), y hard-codear la URL aquí
       //    haría pasar el test aunque el editor pintase otra cosa.
-      const elegida = candidatas.first();
+      const elegida = editor.locator('[data-slot="hero-candidate"][data-usable="true"]').first();
+      await expect(elegida).toBeVisible();
       await expect(elegida).toHaveAttribute('data-url', /^https?:\/\//);
       const heroElegido = await elegida.getAttribute('data-url');
       await elegida.getByRole('button', { name: /usar como imagen principal/i }).click();
@@ -209,6 +211,76 @@ test.describe('CP1 · editor de brief (T1.10b)', () => {
       expect(briefs[0]?.version).toBe(2); // promover ES una edición: crea versión nueva
       expect(briefs[0]?.edited_by_user).toBe(true); // la hizo el humano, no la IA
       expect(briefs[0]?.status).toBe('approved');
+    },
+  );
+
+  test(
+    'T1.18 · una candidata que el SERVIDOR no puede descargar NO se ofrece (y la promovible sí funciona)',
+    { tag: ['@f1'] },
+    async ({ page }) => {
+      // EL CASO REAL, la otra mitad del de arriba. De las candidatas de es.stayforlong.com, la de
+      // `/_next/image?url=…` devuelve 403 a cualquier fetch de FUERA de su web (el worker sí la
+      // bajó —por eso N2 la clasificó y está en el brief—, el navegador NO). Hasta T1.18: su
+      // miniatura se veía ROTA en la galería cuyo propósito es «elige con criterio», y seguía
+      // siendo PROMOVIBLE — elegirla persistía decisión + brief v2 con un hero que nadie podría
+      // descargar, y quien lo descubría era N7a (F4) PAGANDO fal.ai.
+      //
+      // El fixture es honesto (principio 9): el fake sirve unas imágenes DE VERDAD (PNG real) y
+      // NIEGA una con 403 — no un mock que "finge" fallar.
+      await runUrlAnalysisToCp1(page, FAKE_URL_NO_HERO);
+      const editor = briefEditor(page);
+
+      const candidatas = editor.locator('[data-slot="hero-candidate"]');
+      await expect(candidatas).toHaveCount(3);
+
+      // 1) LA INSERVIBLE: NO es promovible, y el MOTIVO viaja en el nombre accesible (no en un
+      //    `title`, que no llega ni a teclado ni a lector de pantalla).
+      const inservible = editor.locator(
+        `[data-slot="hero-candidate"][data-url*="${FAKE_FORBIDDEN_IMAGE_PATH}"]`,
+      );
+      await expect(inservible).toHaveCount(1);
+      await expect(inservible).toHaveAttribute('data-usable', 'false', { timeout: 15_000 });
+      const botonInservible = inservible.getByRole('button', {
+        name: /no se puede usar \(el servidor no puede descargarla\)/i,
+      });
+      await expect(botonInservible).toBeVisible();
+      await expect(botonInservible).toBeDisabled();
+
+      // 2) Y SU MINIATURA NO SE VE ROTA: la primitiva `Image` del DS pinta su estado de error
+      //    («⚠ no disponible»), que es lo que el usuario tiene que leer.
+      await expect(inservible.getByText('⚠ no disponible')).toBeVisible();
+
+      // 3) NINGUNA CANDIDATA OFRECIDA tiene la miniatura rota: las que SÍ se ofrecen (promovibles)
+      //    han cargado su imagen de verdad — la del proxy, servida desde nuestro origen. Un <img>
+      //    roto tiene naturalWidth 0; este assert es la cláusula literal de la Verificación.
+      const promovibles = editor.locator('[data-slot="hero-candidate"][data-usable="true"]');
+      await expect(promovibles).toHaveCount(2, { timeout: 15_000 });
+      for (const card of await promovibles.all()) {
+        const img = card.locator('img');
+        await expect(img).toHaveJSProperty('complete', true);
+        expect(await img.evaluate((el: HTMLImageElement) => el.naturalWidth)).toBeGreaterThan(0);
+      }
+
+      // 4) LA PROMOVIBLE SIGUE FUNCIONANDO: elegirla desbloquea la aprobación y el run COMPLETA.
+      const approve = editor.getByRole('button', { name: /aprobar y continuar/i });
+      await expect(approve).toBeDisabled();
+      const elegida = promovibles.first();
+      const heroElegido = await elegida.getAttribute('data-url');
+      await elegida.getByRole('button', { name: /usar como imagen principal/i }).click();
+      await expect(approve).toBeEnabled();
+
+      const stepId = await stepIdOf(page);
+      await approve.click();
+      await waitStatus(page, 'N3', 'succeeded', 30_000);
+
+      // Y el hero persistido es la URL ORIGINAL de la imagen (la del CDN), NO la del proxy: el
+      // proxy es solo para MOSTRAR. N7a la bajará desde el servidor, que sí puede.
+      const decisiones = await queryStack<{ decision: { hero_image_url?: string } }>(
+        `SELECT decision FROM checkpoint_decision WHERE step_run_id = $1`,
+        [stepId],
+      );
+      expect(decisiones[0]?.decision.hero_image_url).toBe(heroElegido);
+      expect(heroElegido).not.toContain('/api/thumbnails');
     },
   );
 

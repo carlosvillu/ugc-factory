@@ -60,3 +60,12 @@ Object.defineProperties(HTMLElement.prototype, {
 });
 (SVGElement.prototype as unknown as { getBBox: () => DOMRect }).getBBox = () =>
   ({ x: 0, y: 0, width: 0, height: 0 }) as DOMRect;
+
+// jsdom no implementa la Object URL API (createObjectURL/revokeObjectURL): es un hueco conocido
+// de jsdom, no una decisión nuestra. La necesita CP1 (T1.18): las miniaturas de las candidatas a
+// hero se piden al proxy `/api/thumbnails` UNA vez y se pintan desde el blob que devuelve (una
+// sola descarga decide qué se ve Y si la imagen se puede promover). El doble devuelve un handle
+// estable y contable; ningún test depende de su contenido, solo de que exista.
+let objectUrlSeq = 0;
+URL.createObjectURL = () => `blob:ugc-test/${String(++objectUrlSeq)}`;
+URL.revokeObjectURL = () => {};

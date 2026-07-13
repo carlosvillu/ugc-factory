@@ -1,0 +1,10 @@
+# RONDA 2 — PROD BUILD — CP1: la OTRA MITAD del fix (el centinela pasa por la misma línea)
+"[\n {\n  \"url\": \"https://static.stayforlong.com/web/images/home_v2-about-us\",\n  \"usable\": \"true\",\n  \"status\": \"loaded\",\n  \"placeholder\": null,\n  \"imgTag\": true,\n  \"naturalW\": 512,\n  \"opacidad\": \"1\",\n  \"botonDisabled\": false,\n  \"aria\": \"Usar como imagen principal: https://static.stayforlong.com/web/images/ho\"\n },\n {\n  \"url\": \"https://static.stayforlong.com/web/images/modal/sfl-revolu\",\n  \"usable\": \"true\",\n  \"status\": \"loaded\",\n  \"placeholder\": null,\n  \"imgTag\": true,\n  \"naturalW\": 512,\n  \"opacidad\": \"1\",\n  \"botonDisabled\": false,\n  \"aria\": \"Usar como imagen principal: https://static.stayforlong.com/web/images/mo\"\n },\n {\n  \"url\": \"https://es.stayforlong.com/_next/image?url=https%3A%2F%2Fs\",\n  \"usable\": \"false\",\n  \"status\": \"error\",\n  \"placeholder\": \"⚠ no disponible\",\n  \"imgTag\": false,\n  \"naturalW\": null,\n  \"opacidad\": null,\n  \"botonDisabled\": true,\n  \"aria\": \"No se puede usar (el servidor no puede descargarla): https://es.stayforl\"\n }\n]"
+# ¿Y el caso CACHEADO DE VERDAD en un navegador real?
+# persona-detail NO lo prueba: /api/assets/:id/download manda 'private, no-store' (comprobado en
+# apps/web/src/app/api/assets/[id]/download/route.ts:52) => el navegador nunca la cachea.
+# Pero el proxy de miniaturas SÍ manda 'private, max-age=300' => en una 2a visita a CP1 el
+# navegador sirve la miniatura DE CACHÉ. Ese es el estado exacto donde vivía el bug.
+
+## 2a carga de CP1 (miniaturas ya en caché del navegador):
+"[{\"status\":\"loaded\",\"complete\":true,\"naturalW\":512,\"opacidad\":\"1\"},{\"status\":\"loaded\",\"complete\":true,\"naturalW\":512,\"opacidad\":\"1\"},{\"status\":\"error\",\"opacidad\":null}]"

@@ -1,0 +1,8 @@
+=== [1] WORKER/PROXY headers: -H 'accept: image/*', NO user-agent, NO -L (proxy uses redirect:'error')
+http_code=202 size=0 ct=text/html; charset=UTF-8
+
+=== [2] BROWSER headers: real Chrome UA
+http_code=403 size=57 ct=
+
+=== [3] the OTHER candidate (static.stayforlong.com), worker headers
+http_code=403 size=111 ct=application/xml

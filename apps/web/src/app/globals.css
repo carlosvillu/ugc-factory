@@ -497,7 +497,19 @@
    stripe of --surface-3 over --stripe, both tokens, so it re-themes. Two pitches
    because the two mirrors differ: VariantCard uses a 10px band (0 10px / 10px
    20px), SafeZoneOverlay a 12px band (0 12px / 12px 24px). Kept as explicit
-   utilities rather than an arbitrary bg-[…] in the component. */
+   utilities rather than an arbitrary bg-[…] in the component.
+
+   `hatch` (T1.18) is the SAME 10px band with a ratio-agnostic name: the Image
+   primitive (structure/Image.jsx in the mirror) paints it at ANY aspect ratio —
+   before load and on error — so consuming `hatch-9x16` there would name the
+   mechanism after a slot it isn't. Same pattern, honest name. */
+@utility hatch {
+  background-image: repeating-linear-gradient(
+    135deg,
+    var(--surface-3) 0 10px,
+    var(--stripe) 10px 20px
+  );
+}
 @utility hatch-9x16 {
   background-image: repeating-linear-gradient(
     135deg,

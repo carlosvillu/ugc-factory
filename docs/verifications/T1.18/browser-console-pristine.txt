@@ -1,0 +1,15 @@
+[log] [Fast Refresh] done in 179ms
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 891ms
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 181ms
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 146ms
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 233ms
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 393ms
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 319ms
+[info] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[log] [HMR] connected

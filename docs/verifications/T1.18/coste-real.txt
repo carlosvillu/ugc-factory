@@ -1,0 +1,27 @@
+# Coste — baseline vs final
+## BASELINE (antes del run de verificación):
+ provider  | cents | count 
+-----------+-------+-------
+ anthropic |    63 |     8
+ firecrawl |     0 |     4
+(2 rows)
+
+## FINAL:
+ provider  | cents | count 
+-----------+-------+-------
+ anthropic |    81 |    10
+ firecrawl |     0 |     5
+(2 rows)
+
+## COSTE DE ESTE RUN (01KXE8A8956H55KBVQSVFK2RQR):
+ provider  | cents 
+-----------+-------
+ anthropic |    18
+ firecrawl |     0
+(2 rows)
+
+   usd_total_del_run    
+------------------------
+ 0.18000000000000000000
+(1 row)
+

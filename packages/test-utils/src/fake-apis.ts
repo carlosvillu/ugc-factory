@@ -26,6 +26,7 @@ import {
 import type { ProductBrief } from '@ugc/core/contracts';
 import { anthropicMessageResponse, anthropicBriefResponse } from './fixtures/anthropic';
 import { makeBrief, makeVisualAnalysis } from './factories';
+import { makeTestPng } from './image-fixtures';
 
 // La imagen que el Firecrawl falso devuelve en el landing (FIRECRAWL_LANDING_RICH). El
 // brief y el análisis visual falsos la referencian: así `suggested_assets ⊆ assets.images`
@@ -34,17 +35,28 @@ import { makeBrief, makeVisualAnalysis } from './factories';
 const FAKE_HERO_IMAGE = 'https://cdn.glow.example/hero.jpg';
 
 /**
- * T1.15 — LAS OTRAS IMÁGENES que el scrape falso SÍ trae (FIRECRAWL_LANDING_RICH: hero, lifestyle,
- * detail, ingredients). El caso `url` SIN HERO (stayforlong) las usa: son imágenes REALES del
- * scrape que N2 clasificó como `broll`/`unusable` — y son, por tanto, las que el usuario puede
- * PROMOVER a hero en CP1. Un fixture con `images: []` no serviría: sin candidatas no habría nada
- * que promover, y el test no ejercitaría el caso que rompió (principio 9 de testing).
+ * T1.15/T1.18 — LAS IMÁGENES CANDIDATAS del caso `url` SIN HERO (el caso stayforlong): las que el
+ * scrape trajo, que N2 clasificó `broll`/`unusable`, y que el usuario puede PROMOVER a hero en
+ * CP1. Un fixture con `images: []` no serviría: sin candidatas no habría nada que promover
+ * (principio 9).
+ *
+ * T1.18 — LAS SIRVE ESTE MISMO FAKE, Y UNA DE ELLAS DA 403. Antes eran URLs de un host inventado
+ * (`cdn.glow.example`), que NO RESUELVE: ni el navegador ni el servidor podían bajarlas. Eso era
+ * invisible mientras la miniatura la pedía el navegador a pelo (una imagen rota más), pero desde
+ * T1.18 la baja el SERVIDOR por el proxy `/api/thumbnails` y su resultado DECIDE si la candidata
+ * se puede promover: con un host muerto, NINGUNA candidata sería promovible y el E2E no podría
+ * distinguir «no se puede bajar» de «el fixture es de mentira».
+ *
+ * Ahora el fake sirve bytes DE VERDAD (`/img/ok/*` → PNG real) y NIEGA una (`/img/forbidden/*` →
+ * 403), que es EXACTAMENTE lo que hace es.stayforlong.com con sus `/_next/image?url=…`: los sirve
+ * a su propia web y responde 403 a cualquier otro. Las paths se resuelven contra el ORIGEN del
+ * propio fake (puerto efímero), así que el brief que devuelve la síntesis lleva URLs vivas.
  */
-const FAKE_SCRAPED_IMAGES = [
-  'https://cdn.glow.example/lifestyle.jpg',
-  'https://cdn.glow.example/detail.jpg',
-  'https://cdn.glow.example/ingredients.jpg',
-] as const;
+const OK_IMAGE_PATHS = ['/img/ok/lifestyle.png', '/img/ok/detail.png'] as const;
+/** La candidata que NI EL SERVIDOR puede bajar (403): la razón de ser de T1.18. Se EXPORTA para
+ *  que el spec de Playwright señale ESA candidata sin copiar el literal (el fake y el spec tienen
+ *  que hablar de la MISMA imagen — el mismo criterio que `FAKE_URL_NO_HERO`). */
+export const FAKE_FORBIDDEN_IMAGE_PATH = '/img/forbidden/next-image.png';
 
 /**
  * La URL que el E2E analiza para provocar el caso `url` SIN HERO USABLE. El fake la reconoce en el
@@ -212,35 +224,39 @@ const FAKE_BRIEF_NO_IMAGES = makeBrief({
  * `images`— haría que el validador emitiera `pruned_suggested_asset` de propina. Ruido que
  * desplazaría los asserts sin aportar nada.
  */
-const FAKE_BRIEF_NO_HERO = makeBrief({
-  assets: {
-    hero_image_url: null,
-    images: [
-      {
-        url: FAKE_SCRAPED_IMAGES[0],
-        kind: 'lifestyle',
-        has_overlay_text: true,
-        background: 'busy',
-        video_suitability: 'broll',
-      },
-      {
-        url: FAKE_SCRAPED_IMAGES[1],
-        kind: 'other',
-        has_overlay_text: false,
-        background: 'busy',
-        video_suitability: 'broll',
-      },
-      {
-        url: FAKE_SCRAPED_IMAGES[2],
-        kind: 'chart_or_text',
-        has_overlay_text: true,
-        background: 'clean',
-        video_suitability: 'unusable',
-      },
-    ],
-  },
-  angles: makeBrief().angles.map((angle) => ({ ...angle, suggested_assets: [] })),
-});
+function fakeBriefNoHero(origin: string): ProductBrief {
+  return makeBrief({
+    assets: {
+      hero_image_url: null,
+      images: [
+        {
+          url: `${origin}${OK_IMAGE_PATHS[0]}`,
+          kind: 'lifestyle',
+          has_overlay_text: true,
+          background: 'busy',
+          video_suitability: 'broll',
+        },
+        {
+          url: `${origin}${OK_IMAGE_PATHS[1]}`,
+          kind: 'other',
+          has_overlay_text: false,
+          background: 'busy',
+          video_suitability: 'broll',
+        },
+        {
+          // LA INSERVIBLE (T1.18): el fake responde 403 a esta URL. CP1 no debe ofrecerla como
+          // promovible — y debe decir por qué.
+          url: `${origin}${FAKE_FORBIDDEN_IMAGE_PATH}`,
+          kind: 'chart_or_text',
+          has_overlay_text: true,
+          background: 'clean',
+          video_suitability: 'unusable',
+        },
+      ],
+    },
+    angles: makeBrief().angles.map((angle) => ({ ...angle, suggested_assets: [] })),
+  });
+}
 
 /**
  * ¿La request de síntesis (N3) es de MODO MANUAL? Se mira el bloque STRUCTURED DATA que el
@@ -276,10 +292,11 @@ function synthesisMessageIncludes(body: Record<string, unknown>, needle: string)
 }
 
 /** El brief que el Anthropic falso devuelve para una síntesis dada. Tres casos, y el orden importa
- *  (manual gana: en manual no hay URL que mirar). */
-function briefForSynthesis(body: Record<string, unknown>): ProductBrief {
+ *  (manual gana: en manual no hay URL que mirar). El `origin` es el del PROPIO fake: el brief del
+ *  caso sin hero lleva URLs de imagen que este servidor sirve de verdad (T1.18). */
+function briefForSynthesis(body: Record<string, unknown>, origin: string): ProductBrief {
   if (isManualSynthesis(body)) return FAKE_BRIEF_NO_IMAGES;
-  if (isUrlNoHeroSynthesis(body)) return FAKE_BRIEF_NO_HERO;
+  if (isUrlNoHeroSynthesis(body)) return fakeBriefNoHero(origin);
   return FAKE_BRIEF;
 }
 
@@ -328,6 +345,16 @@ export async function startFakeExternalApis(): Promise<FakeExternalApis> {
     void handle(req, res);
   });
 
+  // El ORIGEN del propio fake (puerto efímero: solo se sabe tras `listen`). Lo necesitan las URLs
+  // de imagen que el brief del caso sin hero devuelve (T1.18): tienen que apuntar AQUÍ para que el
+  // proxy de miniaturas del servidor pueda bajarlas de verdad.
+  let origin = '';
+
+  // Un PNG REAL (no unos bytes cualquiera): el proxy de miniaturas DECODIFICA la imagen con sharp
+  // antes de servirla, así que un fixture con bytes inventados fallaría el decode y toda candidata
+  // saldría inservible — el test pasaría por la razón equivocada. Se genera una vez, perezosamente.
+  let png: Uint8Array | undefined;
+
   async function handle(
     req: import('node:http').IncomingMessage,
     res: import('node:http').ServerResponse,
@@ -337,6 +364,23 @@ export async function startFakeExternalApis(): Promise<FakeExternalApis> {
       res.writeHead(status, { 'content-type': 'application/json' });
       res.end(JSON.stringify(body));
     };
+
+    // ── Imágenes candidatas del caso SIN HERO (T1.18) ───────────────────────────
+    // El CDN de la web analizada, fingido: unas las sirve y otra las NIEGA. El 403 no es un
+    // capricho del fixture — es lo que hace es.stayforlong.com con sus `/_next/image?url=…`
+    // (los sirve a su propia web y responde 403 a cualquier fetch de fuera). Sin una candidata
+    // que de verdad no se pueda bajar, el E2E de T1.18 no probaría NADA (principio 9).
+    if (req.method === 'GET' && url.pathname.startsWith('/img/forbidden/')) {
+      res.writeHead(403, { 'content-type': 'text/plain' });
+      res.end('Forbidden');
+      return;
+    }
+    if (req.method === 'GET' && url.pathname.startsWith('/img/ok/')) {
+      png ??= await makeTestPng(600, 600);
+      res.writeHead(200, { 'content-type': 'image/png', 'content-length': String(png.byteLength) });
+      res.end(Buffer.from(png));
+      return;
+    }
 
     // ── Anthropic: Messages API (N2 visión + N3 síntesis) ───────────────────────
     // Discrimina por el `model` EXACTO que pide el llamante — un dato explícito y estable
@@ -371,7 +415,7 @@ export async function startFakeExternalApis(): Promise<FakeExternalApis> {
         // body de la request las comillas van escapadas (`{\"source\":\"manual\"}`). Buscar
         // `"source":"manual"` sobre el `JSON.stringify(body)` NO casa nunca. Se mira el TEXTO
         // del mensaje ya des-escapado (que es donde el sintetizador lo escribe).
-        json(anthropicBriefResponse(briefForSynthesis(body)));
+        json(anthropicBriefResponse(briefForSynthesis(body, origin)));
         return;
       }
       json(
@@ -443,6 +487,7 @@ export async function startFakeExternalApis(): Promise<FakeExternalApis> {
 
   const { port } = server.address() as AddressInfo;
   const base = `http://127.0.0.1:${String(port)}`;
+  origin = base; // las URLs de imagen del brief sin hero (T1.18) cuelgan de este origen
 
   return {
     firecrawlBaseUrl: base,

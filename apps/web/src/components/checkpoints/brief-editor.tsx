@@ -20,7 +20,7 @@
 //  - El formulario edita EL ARTEFACTO; el estado del run NO es suyo: aprobar/editar son POSTs a
 //    `/api/steps/:id/{approve,edit}` y la transición real llega por SSE al store del run. Cero
 //    optimistic updates (canvas.md §5).
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useFieldArray, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ProductBriefSchema, type BriefWarning, type ProductBrief } from '@ugc/core/contracts';
@@ -29,6 +29,7 @@ import { applyEnvelopeToForm } from '@/lib/form-errors';
 import { Alert } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Image } from '@/components/ui/image';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import {
@@ -412,6 +413,7 @@ export function BriefEditor({ stepId, brief, warnings, briefId }: BriefEditorPro
                             <HeroCandidateOption
                               key={candidate.url}
                               candidate={candidate}
+                              briefId={briefId}
                               selected={
                                 decision?.images === 'promote_scraped' &&
                                 decision.heroUrl === candidate.url
@@ -711,11 +713,98 @@ export function BriefEditor({ stepId, brief, warnings, briefId }: BriefEditorPro
   );
 }
 
+/** Un `src` que el navegador NO puede cargar: dispara el `onError` de la primitiva `Image` SIN
+ *  emitir ninguna request (no es una URL: son bytes inline que no son una imagen). Es el
+ *  mecanismo con el que el consumidor le pide a `Image` que pinte su estado de ERROR —«⚠ no
+ *  disponible» en `--danger`— sin inventarse una prop fuera del contrato del DS (que no tiene
+ *  `onError` ni `state`: ver `components/ui/image.tsx`). */
+const IMAGE_UNAVAILABLE_SRC = 'data:image/gif;base64,no-es-una-imagen';
+
+/** El veredicto de una candidata: ¿puede el SISTEMA usar esta imagen? */
+type CandidateProbe =
+  { state: 'checking' } | { state: 'usable'; src: string } | { state: 'unusable' };
+
+/**
+ * ¿El servidor puede bajar esta imagen? (T1.18) Pide la miniatura AL PROXY (`/api/thumbnails`,
+ * que la baja, la reescala y la sirve desde nuestro origen) y devuelve el veredicto.
+ *
+ * UNA SOLA petición decide LAS DOS COSAS —lo que se ve y si se puede promover—, y ese es el
+ * punto: con dos requests independientes (un `<img src=proxy>` por un lado y una comprobación
+ * por otro) podrían discrepar, y volveríamos a poder ofrecer como promovible algo que no se ve.
+ * Los bytes que llegan se pintan desde un object URL, así que no hay segunda descarga.
+ *
+ * SIN `briefId` no hay allowlist contra la que el proxy pueda autorizar la URL (su única defensa
+ * frente a SSRF: la url tiene que estar en ESE brief persistido) ⇒ la candidata no se puede
+ * verificar ⇒ no se ofrece. En producción `briefId` SIEMPRE llega (lo pasa `run-shell`); lo que
+ * esto impide es ofrecer una promoción que el sistema no ha podido comprobar.
+ */
+function useThumbnailProbe(url: string, briefId: string | undefined): CandidateProbe {
+  const [probe, setProbe] = useState<CandidateProbe>({ state: 'checking' });
+
+  // Reset AL CAMBIAR de imagen, ajustando el estado DURANTE EL RENDER (el patrón de la doc de
+  // React para «estado que depende de una prop»): hacerlo en el effect pintaría una vez el
+  // veredicto de la imagen ANTERIOR sobre la nueva —justo el estado imposible que esta tarea
+  // existe para eliminar— y encadenaría un render de más.
+  const key = `${url}|${briefId ?? ''}`;
+  const [lastKey, setLastKey] = useState(key);
+  if (key !== lastKey) {
+    setLastKey(key);
+    setProbe({ state: 'checking' });
+  }
+
+  useEffect(() => {
+    if (briefId === undefined) return; // sin allowlist no hay nada que preguntar (ver abajo).
+    let objectUrl: string | undefined;
+    let cancelled = false;
+
+    const query = new URLSearchParams({ url, briefId });
+    fetch(`/api/thumbnails?${query.toString()}`)
+      .then(async (res) => {
+        if (!res.ok) throw new Error(String(res.status));
+        return res.blob();
+      })
+      .then((blob) => {
+        if (cancelled) return;
+        objectUrl = URL.createObjectURL(blob);
+        setProbe({ state: 'usable', src: objectUrl });
+      })
+      .catch(() => {
+        if (!cancelled) setProbe({ state: 'unusable' });
+      });
+
+    return () => {
+      cancelled = true;
+      if (objectUrl !== undefined) URL.revokeObjectURL(objectUrl);
+    };
+  }, [url, briefId]);
+
+  // SIN `briefId` el veredicto se DERIVA, sin estado ni efecto: no hay allowlist contra la que el
+  // proxy pueda autorizar la URL ⇒ el sistema no puede comprobar la imagen ⇒ no es promovible. Es
+  // el default seguro: no se ofrece lo que no se ha podido verificar.
+  return briefId === undefined ? { state: 'unusable' } : probe;
+}
+
 /**
  * Una imagen candidata a hero (T1.15): la miniatura, la clasificación que le puso N2 y el botón
  * que la PROMUEVE. La clasificación se MUESTRA porque es información con la que el usuario decide
  * («banner de fondo», «no usable») — no para filtrar: si filtrásemos por ella no quedaría ni una
  * (fue justamente ese veredicto el que dejó al brief sin hero).
+ *
+ * T1.18 — LA MINIATURA VIENE DEL PROXY, Y SU RESULTADO DECIDE SI SE PUEDE PROMOVER.
+ *
+ * Hasta T1.18 el `<img>` apuntaba a la URL del CDN y la bajaba EL NAVEGADOR. Con la candidata
+ * real de es.stayforlong.com (`/_next/image?url=…`) eso daba 403: la miniatura se veía ROTA —en
+ * la galería cuyo propósito es «elige con criterio»— y, peor, la candidata SEGUÍA SIENDO
+ * PROMOVIBLE, así que se podían persistir decisión + brief v2 con un hero que nadie podría
+ * descargar; quien lo descubriría sería N7a (F4) PAGANDO fal.ai. La lección (principio 9): «se
+ * puede descargar» no es propiedad de la URL, es propiedad de QUIÉN la descarga.
+ *
+ * Ahora la baja el SERVIDOR (`/api/thumbnails`) y su veredicto gobierna las dos mitades:
+ *  - la BAJA → miniatura del proxy (misma-origen, reescalada) y botón HABILITADO.
+ *  - NO la baja (403, DNS muerto, redirect, bytes que no decodifican) → la primitiva `Image` del
+ *    DS pinta su estado de error («⚠ no disponible», no un icono roto) y el botón queda
+ *    DESHABILITADO con el MOTIVO en el nombre accesible. Si el servidor no puede bajarla, el
+ *    pipeline tampoco: ofrecerla sería mentir.
  *
  * El accessible name del botón lleva la URL de la imagen: hay N candidatas y todas tienen el
  * mismo texto, así que sin ella ni un lector de pantalla ni un test podrían decir cuál es cuál —
@@ -723,28 +812,42 @@ export function BriefEditor({ stepId, brief, warnings, briefId }: BriefEditorPro
  */
 function HeroCandidateOption({
   candidate,
+  briefId,
   selected,
   onSelect,
 }: {
   candidate: HeroCandidate;
+  briefId: string | undefined;
   selected: boolean;
   onSelect: () => void;
 }) {
+  const probe = useThumbnailProbe(candidate.url, briefId);
+  const usable = probe.state === 'usable';
+
   return (
     <li
       className="flex w-40 flex-col gap-1.5 rounded-md border border-border bg-surface p-2"
       data-slot="hero-candidate"
       data-url={candidate.url}
       data-selected={selected}
+      // El veredicto, observable: la Verificación (y el spec de Playwright) preguntan por él sin
+      // depender de cómo se pinte.
+      data-usable={usable}
     >
-      {/* eslint-disable-next-line @next/next/no-img-element -- imagen REMOTA del scrape (CDN
-          arbitrario del producto): `next/image` exige declarar el host en `remotePatterns` en
-          build, y aquí el host lo decide la web que el usuario analiza. Misma decisión que las
-          referencias de persona (persona-detail.tsx). */}
-      <img
-        src={candidate.url}
+      <Image
+        // `checking` → sin src: la primitiva reserva la caja con su trama y su etiqueta (nada de
+        // salto de layout). `unusable` → el src imposible que dispara su estado de ERROR.
+        src={
+          probe.state === 'usable'
+            ? probe.src
+            : probe.state === 'unusable'
+              ? IMAGE_UNAVAILABLE_SRC
+              : undefined
+        }
         alt={`Imagen de la página (${candidate.kind})`}
-        className="aspect-square w-full rounded-sm bg-surface-3 object-cover"
+        ratio="1/1"
+        radius="sm"
+        placeholder="cargando"
       />
       <Badge tone="neutral" mono>
         {candidate.kind} · {candidate.video_suitability}
@@ -754,7 +857,17 @@ function HeroCandidateOption({
         size="sm"
         variant={selected ? 'primary' : 'secondary'}
         aria-pressed={selected}
-        aria-label={`Usar como imagen principal: ${candidate.url}`}
+        disabled={!usable}
+        // EL MOTIVO EN EL NOMBRE ACCESIBLE (patrón de T1.13 / persona-detail): un botón inerte
+        // sin explicación es peor que no tenerlo. «no se puede descargar» es exactamente lo que
+        // el sistema sabe, y es lo que evita el gasto en fal.ai.
+        aria-label={
+          usable
+            ? `Usar como imagen principal: ${candidate.url}`
+            : probe.state === 'checking'
+              ? `Comprobando si se puede descargar: ${candidate.url}`
+              : `No se puede usar (el servidor no puede descargarla): ${candidate.url}`
+        }
         onClick={onSelect}
       >
         Usar como principal

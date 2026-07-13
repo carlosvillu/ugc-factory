@@ -1,0 +1,3 @@
+# PROD BUILD (next build && next start — SIN StrictMode dev, SIN HMR)
+# /personas — la misma sonda del DOM que en dev:
+"[\n {\n  \"status\": \"loading\",\n  \"imgComplete\": true,\n  \"naturalW\": 1638,\n  \"opacity\": \"0\",\n  \"placeholderVisible\": true,\n  \"placeholder\": \"referencia\"\n },\n {\n  \"status\": \"loading\",\n  \"imgComplete\": true,\n  \"naturalW\": 1638,\n  \"opacity\": \"0\",\n  \"placeholderVisible\": true,\n  \"placeholder\": \"referencia\"\n }\n]"

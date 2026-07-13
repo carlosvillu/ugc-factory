@@ -1,0 +1,8 @@
+# ORÁCULO — el proxy /api/thumbnails contra la candidata INYECTADA (la del caso original de T1.15)
+# URL: https://es.stayforlong.com/_next/image?url=…&w=1080&q=75   (curl: 403 al navegador, 202 WAF-challenge al worker)
+  respuesta del proxy: {"code":"provider_error","message":"la imagen no se pudo descargar","request_id":"1ad0f474-4aa1-4b53-b3c0-09cc89c0cfec"}
+  --> http=502 ct=application/json bytes=120
+
+# CONTROL — las dos candidatas reales del run (deben seguir 200):
+  about-us.webp      : http=200 ct=image/png
+  sfl-revolut-pay.jpg: http=200 ct=image/png

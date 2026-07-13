@@ -1,0 +1,6 @@
+# PRUEBA DIRECTA del estado en el que vivía el bug, en un NAVEGADOR REAL (prod build):
+# 1) se precarga una URL cacheable (/api/thumbnails, 'private, max-age=300')
+# 2) se crea un <img> NUEVO con esa misma URL y se lee 'complete' EN EL MOMENTO DEL MONTAJE,
+#    antes de que pueda llegar ningun evento. Si complete===true => onLoad NO se dispararia:
+#    es exactamente el agujero. El fix lee esos bits en el ref, asi que resuelve 'loaded'.
+"{\"completeAlMontar\":true,\"naturalWAlMontar\":512,\"elEventoNoLlegaria\":true,\"loQueElFixDecide\":\"loaded\"}"

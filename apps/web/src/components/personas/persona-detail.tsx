@@ -35,6 +35,7 @@ import { ApiError, personaActions } from '@/lib/api-client';
 import { Alert } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Image } from '@/components/ui/image';
 
 const GENDER_LABEL = {
   female: 'femenino',
@@ -124,27 +125,27 @@ export function PersonaDetail({ persona, onChange, onEdit, onDelete }: PersonaDe
               <figure
                 key={assetId}
                 data-testid={`persona-reference-${assetId}`}
-                // La PRIMERA a doble ancho y en 4:5 (el retrato principal del mockup); las
-                // siguientes, cuadradas.
-                className={
-                  index === 0
-                    ? 'relative col-span-2 aspect-4/5 overflow-hidden rounded-lg bg-surface-3'
-                    : 'relative aspect-square overflow-hidden rounded-md bg-surface-3'
-                }
+                // La PRIMERA a doble ancho (el retrato principal del mockup); las siguientes,
+                // cuadradas. El RATIO y el marco (borde, radio, hatch, estado de error) los pone
+                // ya la primitiva `Image` del DS (T1.18): la figure solo hace de contenedor
+                // posicional del botón de quitar.
+                className={index === 0 ? 'relative col-span-2' : 'relative'}
               >
-                {/* eslint-disable-next-line @next/next/no-img-element -- el asset se sirve por el
-                    download proxificado de T0.5 (`/api/assets/:id/download`), que exige la cookie
-                    de sesión; `next/image` lo optimizaría por su loader (otra request, sin
-                    cookie) y además no conocemos las dimensiones en build. Es la misma decisión
-                    que toma el intake manual con sus imágenes. */}
-                <img
+                {/* La primitiva del DS sustituye al `<img>` crudo con `eslint-disable` que había
+                    aquí (deuda que el ds-reviewer anotó en T1.15): el asset se sirve por el
+                    download proxificado de T0.5 (`/api/assets/:id/download`, que exige la cookie
+                    de sesión) y, si no cargara, ahora se ve «⚠ no disponible» en vez de una
+                    imagen ROTA. */}
+                <Image
                   src={`/api/assets/${assetId}/download`}
                   alt={
                     index === 0
                       ? `Retrato principal de ${persona.name}`
                       : `Referencia ${String(index + 1)} de ${persona.name}`
                   }
-                  className="size-full object-cover"
+                  ratio={index === 0 ? '4/5' : '1/1'}
+                  radius={index === 0 ? 'lg' : 'md'}
+                  placeholder="referencia"
                 />
                 <Button
                   variant="ghost"

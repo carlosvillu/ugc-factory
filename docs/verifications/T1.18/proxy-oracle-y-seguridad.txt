@@ -1,0 +1,16 @@
+# EL PROXY ES EL ORÁCULO — /api/thumbnails contra el sistema LEVANTADO (brief 01KXE8D7YF49P6T71A6CH2KNQA)
+
+## 1. Candidatas REALES del run (las dos del brief):
+  about-us.webp      : http=200 ct=image/png bytes=374614
+  sfl-revolut-pay.jpg: http=200 ct=image/png bytes=240169
+
+## 2. SEGURIDAD — allowlist por datos: URL que NO está en el brief (debe ser 404):
+  example.com/x.png            : http=404 ct=application/json bytes=120
+  la URL /_next/image de T1.15 (no en ESTE brief): http=404 ct=application/json bytes=120
+  SSRF metadata AWS            : http=404 ct=application/json bytes=120
+
+## 3. SEGURIDAD — SIN sesión (debe ser 401):
+  sin cookie                   : http=401
+
+## 4. brief inexistente (404):
+  briefId falso                : http=404 ct=application/json bytes=104

@@ -1,0 +1,15 @@
+# T1.18 — curls contra las candidatas REALES del run 01KXE8A8956H55KBVQSVFK2RQR (brief 01KXE8D7YF49P6T71A6CH2KNQA)
+# fecha: 2026-07-13T17:37:03Z
+
+### https://static.stayforlong.com/web/images/home_v2-about-us/about-us.webp
+  [A] CABECERAS DEL WORKER/PROXY (accept: image/*, SIN user-agent, SIN -L pues el proxy usa redirect:error): http=200 ct=image/webp bytes=63782 redirect=0
+  [B] CABECERAS DE NAVEGADOR (Chrome UA):                                                                    http=200 ct=image/webp bytes=63782 redirect=0
+
+### https://static.stayforlong.com/web/images/modal/sfl-revolut-pay.jpg
+  [A] CABECERAS DEL WORKER/PROXY (accept: image/*, SIN user-agent, SIN -L pues el proxy usa redirect:error): http=200 ct=image/jpeg bytes=114475 redirect=0
+  [B] CABECERAS DE NAVEGADOR (Chrome UA):                                                                    http=200 ct=image/jpeg bytes=114475 redirect=0
+
+### CONTROL — la URL /_next/image del caso ORIGINAL de T1.15 (NO apareció en este run; se curl-ea igual porque la Verificación la nombra):
+  [A] cabeceras worker/proxy: http=202 ct=text/html; charset=UTF-8 bytes=0
+  [B] cabeceras navegador:    http=403 ct= bytes=57
+  (el 202 lleva 'x-amzn-waf-action: challenge' y content-length 0 → NO es una imagen; sharp no la decodifica)

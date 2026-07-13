@@ -1,0 +1,3 @@
+# RONDA 2 — PROD BUILD (next build && next start, sin StrictMode ni HMR)
+# /personas — la MISMA sonda que en la ronda 1 (que daba status=loading, opacity=0):
+"[\n {\n  \"status\": \"loaded\",\n  \"imgComplete\": true,\n  \"naturalW\": 1638,\n  \"opacityComputada\": \"1\",\n  \"placeholderVisible\": false\n },\n {\n  \"status\": \"loaded\",\n  \"imgComplete\": true,\n  \"naturalW\": 1638,\n  \"opacityComputada\": \"1\",\n  \"placeholderVisible\": false\n }\n]"

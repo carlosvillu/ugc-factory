@@ -1,0 +1,6 @@
+ provider  | cents | count 
+-----------+-------+-------
+ anthropic |    63 |     8
+ firecrawl |     0 |     4
+(2 rows)
+

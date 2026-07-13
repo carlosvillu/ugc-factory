@@ -1,0 +1,30 @@
+# T1.18 — LO QUE SE PERSISTE tras promover la candidata usable y aprobar CP1
+# run 01KXE8A8956H55KBVQSVFK2RQR · fecha 2026-07-13T17:52:52Z
+
+## Los DOS canales (contrato de T1.15): brief v2 aprobado + decisión
+ version |  status  | edited_by_user |                              hero_image_url                              
+---------+----------+----------------+--------------------------------------------------------------------------
+       1 | draft    | f              | 
+       2 | approved | t              | https://static.stayforlong.com/web/images/home_v2-about-us/about-us.webp
+(2 rows)
+
+## LA COMPROBACIÓN CLAVE: el hero persistido NO puede apuntar al proxy
+ version | apunta_al_proxy_debe_ser_f | es_url_del_cdn_debe_ser_t 
+---------+----------------------------+---------------------------
+       2 | f                          | t
+(1 row)
+
+## checkpoint_decision (canal de T1.11) y coincidencia con el brief v2
+     images      |                           hero_de_la_decision                            | los_dos_canales_coinciden 
+-----------------+--------------------------------------------------------------------------+---------------------------
+ promote_scraped | https://static.stayforlong.com/web/images/home_v2-about-us/about-us.webp | t
+(1 row)
+
+## steps del run
+ node_key |  status   
+----------+-----------
+ N1       | succeeded
+ N2       | succeeded
+ N3       | succeeded
+(3 rows)
+

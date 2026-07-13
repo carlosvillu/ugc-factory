@@ -16,13 +16,32 @@ import type { BriefWarning, ProductBrief } from '@ugc/core/contracts';
 import { BriefEditor } from './brief-editor';
 
 // eslint-disable-next-line react-hooks/rules-of-hooks
-useHttpMocks();
+useHttpMocks(thumbnailOk());
 
 afterEach(() => {
   cleanup();
 });
 
 const STEP_ID = '01J000000000000000000STEP0';
+/** La fila `product_brief` que el editor tiene delante. Desde T1.18 NO es decorativa: es la
+ *  ALLOWLIST del proxy de miniaturas (`/api/thumbnails?url=…&briefId=…` solo sirve URLs que
+ *  estén en ESE brief persistido), así que sin ella el editor no puede comprobar si una
+ *  candidata se puede descargar — y por tanto no la ofrece. */
+const BRIEF_ID = '01J000000000000000000BRIEF';
+
+/** Bytes de una miniatura: da igual QUÉ imagen sea (el DOM de jsdom no la decodifica); lo que
+ *  importa es que el proxy respondió 200 con un blob. */
+const THUMBNAIL_BYTES = new Uint8Array([0x89, 0x50, 0x4e, 0x47]);
+
+/** El proxy de miniaturas de T1.18, contento por defecto: TODAS las candidatas se pueden
+ *  descargar. Los tests que necesitan lo contrario (T1.18) lo sobrescriben con `server.use`. */
+function thumbnailOk() {
+  return http.get('*/api/thumbnails', () =>
+    HttpResponse.arrayBuffer(THUMBNAIL_BYTES.slice().buffer, {
+      headers: { 'content-type': 'image/png' },
+    }),
+  );
+}
 
 /** Un brief con un pain point EXTRAÍDO (con cita) y otro INFERIDO (sin ella): el par que hace
  *  observables los dos badges y la evidencia. */
@@ -53,12 +72,15 @@ const needsImages: BriefWarning = {
  *  sí trajo (award `unusable`, banner `broll`). Es el fixture del caso real, no uno cómodo: con
  *  `images: []` no habría nada que promover y el test no ejercitaría la salida nueva. */
 const BANNER = 'https://es.stayforlong.com/img/hero-banner-hotel.jpg';
+/** La OTRA candidata real: la que el CDN sirve solo a su propia web (403 a cualquier fetch de
+ *  fuera). Es la protagonista de T1.18 — la que el sistema NO puede descargar. */
+const AWARD = 'https://es.stayforlong.com/img/award-2024.png';
 const briefSinHeroConImagenes: ProductBrief = makeBrief({
   assets: {
     hero_image_url: null,
     images: [
       {
-        url: 'https://es.stayforlong.com/img/award-2024.png',
+        url: AWARD,
         kind: 'chart_or_text',
         has_overlay_text: true,
         background: 'clean',
@@ -293,6 +315,7 @@ describe('BriefEditor (CP1)', () => {
     render(
       <BriefEditor
         stepId={STEP_ID}
+        briefId={BRIEF_ID}
         brief={briefSinHeroConImagenes}
         warnings={[needsImagesConCandidatas]}
       />,
@@ -310,11 +333,24 @@ describe('BriefEditor (CP1)', () => {
       screen.getByRole('button', { name: /subir imágenes del producto/i }),
     ).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /generar packshot con ia/i })).toBeInTheDocument();
-    const candidatas = screen.getAllByRole('button', { name: /usar como imagen principal/i });
-    expect(candidatas).toHaveLength(2);
+    // Se OFRECEN las dos que el scrape trajo. Desde T1.18 el botón de cada una solo se llama
+    // «Usar como imagen principal» CUANDO el proxy ha confirmado que se puede descargar, así que
+    // las candidatas se cuentan por su slot (que es lo que la galería pinta) y su promovibilidad
+    // se espera aparte.
+    expect(document.querySelectorAll('[data-slot="hero-candidate"]')).toHaveLength(2);
+    await waitFor(() => {
+      expect(screen.getAllByRole('button', { name: /usar como imagen principal/i })).toHaveLength(
+        2,
+      );
+    });
 
     // Elegir una desbloquea la aprobación.
-    await user.click(screen.getByRole('button', { name: `Usar como imagen principal: ${BANNER}` }));
+    // `findBy`: el botón solo lleva ese nombre CUANDO el proxy ya ha confirmado que la imagen se
+    // puede descargar (T1.18). Mientras comprueba, se llama «Comprobando si se puede descargar» y
+    // está deshabilitado — no se puede promover lo que aún no se sabe si el sistema puede usar.
+    await user.click(
+      await screen.findByRole('button', { name: `Usar como imagen principal: ${BANNER}` }),
+    );
     await waitFor(() => {
       expect(screen.getByRole('button', { name: /aprobar y continuar/i })).toBeEnabled();
     });
@@ -338,12 +374,18 @@ describe('BriefEditor (CP1)', () => {
     render(
       <BriefEditor
         stepId={STEP_ID}
+        briefId={BRIEF_ID}
         brief={briefSinHeroConImagenes}
         warnings={[needsImagesConCandidatas]}
       />,
     );
 
-    await user.click(screen.getByRole('button', { name: `Usar como imagen principal: ${BANNER}` }));
+    // `findBy`: el botón solo lleva ese nombre CUANDO el proxy ya ha confirmado que la imagen se
+    // puede descargar (T1.18). Mientras comprueba, se llama «Comprobando si se puede descargar» y
+    // está deshabilitado — no se puede promover lo que aún no se sabe si el sistema puede usar.
+    await user.click(
+      await screen.findByRole('button', { name: `Usar como imagen principal: ${BANNER}` }),
+    );
     await user.click(screen.getByRole('button', { name: /aprobar y continuar/i }));
 
     await waitFor(() => {
@@ -378,12 +420,18 @@ describe('BriefEditor (CP1)', () => {
     render(
       <BriefEditor
         stepId={STEP_ID}
+        briefId={BRIEF_ID}
         brief={briefSinHeroConImagenes}
         warnings={[needsImagesConCandidatas]}
       />,
     );
 
-    await user.click(screen.getByRole('button', { name: `Usar como imagen principal: ${BANNER}` }));
+    // `findBy`: el botón solo lleva ese nombre CUANDO el proxy ya ha confirmado que la imagen se
+    // puede descargar (T1.18). Mientras comprueba, se llama «Comprobando si se puede descargar» y
+    // está deshabilitado — no se puede promover lo que aún no se sabe si el sistema puede usar.
+    await user.click(
+      await screen.findByRole('button', { name: `Usar como imagen principal: ${BANNER}` }),
+    );
     const hook = screen.getByLabelText(
       `Hook 1 de ${briefSinHeroConImagenes.angles[0]?.name ?? ''}`,
     );
@@ -422,13 +470,19 @@ describe('BriefEditor (CP1)', () => {
     render(
       <BriefEditor
         stepId={STEP_ID}
+        briefId={BRIEF_ID}
         brief={briefSinHeroConImagenes}
         warnings={[needsImagesConCandidatas]}
       />,
     );
 
     const rail = screen.getByLabelText('Trazabilidad');
-    await user.click(screen.getByRole('button', { name: `Usar como imagen principal: ${BANNER}` }));
+    // `findBy`: el botón solo lleva ese nombre CUANDO el proxy ya ha confirmado que la imagen se
+    // puede descargar (T1.18). Mientras comprueba, se llama «Comprobando si se puede descargar» y
+    // está deshabilitado — no se puede promover lo que aún no se sabe si el sistema puede usar.
+    await user.click(
+      await screen.findByRole('button', { name: `Usar como imagen principal: ${BANNER}` }),
+    );
     // Promover ES una edición del brief: el rail lo cuenta.
     await waitFor(() => {
       expect(within(rail).getByText('Editado por ti').parentElement).toHaveTextContent('1');
@@ -449,6 +503,55 @@ describe('BriefEditor (CP1)', () => {
     expect(body.decision).toEqual({ kind: 'brief', images: 'ai_packshot' });
     // Y el brief NO lleva el hero que se descartó: vuelve al de la IA (null).
     expect(body.brief.assets.hero_image_url).toBeNull();
+  });
+
+  // ── T1.18 · UNA CANDIDATA QUE NO SE PUEDE DESCARGAR NO SE OFRECE ─────────────────────────
+  // El caso REAL: de las 2 candidatas de es.stayforlong.com, la de `/_next/image?url=…` devuelve
+  // 403 a cualquier fetch de fuera de su web. Hasta T1.18 su miniatura se veía ROTA y —lo grave—
+  // SEGUÍA SIENDO PROMOVIBLE: elegirla persistía decisión + brief v2 con un hero que nadie podría
+  // descargar, y quien lo descubría era N7a (F4) PAGANDO fal.ai.
+
+  test('T1.18 · la candidata que el servidor NO puede descargar no es promovible (y dice por qué)', async () => {
+    const user = userEvent.setup();
+    // El proxy: sirve el banner y NIEGA el award (403, como el CDN real). El fixture tiene una
+    // URL que de verdad no se puede bajar y otra que sí — principio 9.
+    server.use(
+      http.get('*/api/thumbnails', ({ request }) => {
+        const target = new URL(request.url).searchParams.get('url');
+        if (target === AWARD) return new HttpResponse(null, { status: 403 });
+        return HttpResponse.arrayBuffer(THUMBNAIL_BYTES.slice().buffer, {
+          headers: { 'content-type': 'image/png' },
+        });
+      }),
+    );
+
+    render(
+      <BriefEditor
+        stepId={STEP_ID}
+        briefId={BRIEF_ID}
+        brief={briefSinHeroConImagenes}
+        warnings={[needsImagesConCandidatas]}
+      />,
+    );
+
+    // LA CLÁUSULA: la que no se puede bajar NO se ofrece como promovible, y el MOTIVO viaja en el
+    // nombre accesible (no solo en un `title`, que no llega ni a teclado ni a lector de pantalla).
+    const award = await screen.findByRole('button', {
+      name: `No se puede usar (el servidor no puede descargarla): ${AWARD}`,
+    });
+    expect(award).toBeDisabled();
+    // Y la candidata sigue VISIBLE (con su ficha), marcada como inservible: la galería no miente
+    // ni por omisión — el usuario ve que esa imagen existe y por qué no puede usarla.
+    const ficha = document.querySelector(`[data-url="${AWARD}"]`);
+    expect(ficha).toHaveAttribute('data-usable', 'false');
+
+    // LA OTRA MITAD: la que sí se puede bajar sigue funcionando y completa la decisión.
+    await user.click(
+      await screen.findByRole('button', { name: `Usar como imagen principal: ${BANNER}` }),
+    );
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /aprobar y continuar/i })).toBeEnabled();
+    });
   });
 
   test('T1.15 · modo manual (sin imágenes): NO se ofrece promover lo que no existe', () => {

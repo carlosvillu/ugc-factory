@@ -1,0 +1,3 @@
+# consola en /personas (donde falla la primitiva Image) — sin errores JS: el fallo es de estado, no una excepción
+# DOM de las primitivas (la prueba del fallo):
+"[{\"status\":\"loading\",\"imgComplete\":true,\"naturalW\":1638,\"opacity\":\"0\",\"placeholder\":\"referencia\"},{\"status\":\"loading\",\"imgComplete\":true,\"naturalW\":1638,\"opacity\":\"0\",\"placeholder\":\"referencia\"}]"

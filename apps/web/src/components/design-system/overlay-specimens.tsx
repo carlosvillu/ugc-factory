@@ -37,6 +37,7 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Image } from '@/components/ui/image';
 import { Separator } from '@/components/ui/separator';
 import { ToastProvider, useToast } from '@/components/ui/toast';
 import { Tooltip, TooltipProvider } from '@/components/ui/tooltip';
@@ -379,6 +380,48 @@ function SeparatorSpecimen() {
   );
 }
 
+// ── Image ───────────────────────────────────────────────────────────────────
+// La primitiva de imagen (T1.18, structure/Image del espejo). Los TRES estados que hacen que
+// exista: cargada, sin fuente (trama + etiqueta) y ERROR («⚠ no disponible» en danger) — el
+// último es de primera clase: una imagen rota en una galería es una mentira sobre el estado del
+// mundo. El specimen dibuja los dos placeholders sin red: uno sin `src` y otro con un `src`
+// imposible (que dispara el onError sin emitir petición).
+const IMAGE_UNAVAILABLE_SRC = 'data:image/gif;base64,no-es-una-imagen';
+
+function ImageSpecimen() {
+  return (
+    <Specimen
+      title="Imagen"
+      subtitle="Marco neutro con ratio reservado — trama diagonal antes de cargar y estado de error de primera clase"
+    >
+      <div className="flex flex-wrap items-start gap-4">
+        <div className="flex flex-col gap-1.5">
+          <Image ratio="1/1" placeholder="imagen" style={{ width: 120 }} />
+          <span className="font-mono text-micro text-text-3">sin fuente</span>
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <Image
+            src={IMAGE_UNAVAILABLE_SRC}
+            alt=""
+            ratio="1/1"
+            radius="sm"
+            style={{ width: 120 }}
+          />
+          <span className="font-mono text-micro text-text-3">error</span>
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <Image ratio="9/16" placeholder="sin render" style={{ width: 90 }} />
+          <span className="font-mono text-micro text-text-3">9:16</span>
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <Image ratio="1/1" radius="full" placeholder="avatar" style={{ width: 44 }} />
+          <span className="font-mono text-micro text-text-3">avatar</span>
+        </div>
+      </div>
+    </Specimen>
+  );
+}
+
 export function OverlaySpecimens() {
   return (
     <div className="flex flex-col gap-10">
@@ -391,6 +434,7 @@ export function OverlaySpecimens() {
       <ProgressSpecimen />
       <CardSpecimen />
       <SeparatorSpecimen />
+      <ImageSpecimen />
     </div>
   );
 }

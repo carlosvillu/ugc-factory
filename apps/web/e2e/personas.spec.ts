@@ -192,6 +192,39 @@ test.describe('/personas — librería de personas (T2.0)', () => {
       // Ningún error EN LA FICHA (el `role=alert` global de Next —el route announcer— no cuenta).
       await expect(page.getByRole('article').getByRole('alert')).toHaveCount(0);
 
+      // ── T1.18 · LA IMAGEN SE VE DE VERDAD (no basta con que ESTÉ) ─────────────────────────
+      // La regresión que se coló con la primitiva `Image` (verifier de T1.18): su estado salía de
+      // `loading` SOLO con el evento `onLoad`, y si la imagen ya está completa cuando React
+      // engancha el handler, ese evento no se dispara NUNCA ⇒ la imagen se descargaba bien y el
+      // usuario NO LA VEÍA JAMÁS (se quedaba en `opacity-0`, con la trama pintada encima).
+      //
+      // Y `toBeVisible()` —lo único que este spec afirmaba— NO LO HABRÍA VISTO: Playwright IGNORA
+      // la opacidad, así que un `<img>` en `opacity-0` la pasa tan campante. Por eso aquí se mide
+      // el DOM REAL: el `data-status` de la primitiva, los píxeles y la opacidad computada.
+      //
+      // HONESTIDAD SOBRE EL ALCANCE (principio 9, y esto importa): este bloque NO reproduce el
+      // estado exacto del bug —la imagen YA CACHEADA al montar—. No puede: el download de assets
+      // (T0.5) sirve `Cache-Control: private, no-store`, así que en un reload el navegador SIEMPRE
+      // la vuelve a pedir y el evento SIEMPRE llega. Verificado: con la primitiva rota a propósito,
+      // este caso seguía en VERDE. Quien SÍ reproduce el estado cacheado —y se pone rojo sin el
+      // fix— es el unit de la primitiva (`components/ui/image.test.tsx`), que fuerza el
+      // `complete`/`naturalWidth` que el navegador expone. Lo de aquí es la otra mitad: que en un
+      // navegador REAL la imagen acabe VISIBLE, que es lo que este spec no comprobaba.
+      const retrato = page.getByRole('img', {
+        name: new RegExp(`retrato principal de ${name}`, 'i'),
+      });
+      await expect(retrato).toBeVisible();
+      // La primitiva llegó a `loaded` (el `data-status` es su contrato observable).
+      await expect(retrato.locator('xpath=..')).toHaveAttribute('data-status', 'loaded');
+      // Tiene PÍXELES de verdad.
+      expect(await retrato.evaluate((el: HTMLImageElement) => el.naturalWidth)).toBeGreaterThan(0);
+      // Y NO es transparente. `poll` porque la primitiva hace un fade (`transition-opacity`): la
+      // opacidad está EN CAMINO a 1 (se ha llegado a leer 0.58 aquí). El bug dejaba un 0 CLAVADO
+      // para siempre — la diferencia entre «está apareciendo» y «no va a aparecer nunca».
+      await expect
+        .poll(async () => retrato.evaluate((el) => getComputedStyle(el).opacity))
+        .toBe('1');
+
       // Y la fila `asset` existe de verdad, con kind reference_image.
       const rows = await queryStack<{ n: number }>(
         `SELECT count(*)::int AS n FROM asset a

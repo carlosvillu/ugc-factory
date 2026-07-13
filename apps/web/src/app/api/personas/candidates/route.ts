@@ -14,7 +14,6 @@
 // al dinámico, así que `/api/personas/candidates` NUNCA se confunde con `/api/personas/:id`
 // (que además exige un ULID y rechazaría «candidates» con un 400).
 import { z } from 'zod';
-import { AppError } from '@ugc/core/contracts';
 import { matchPersonas, PersonaCandidateListSchema } from '@ugc/core/persona';
 import { listPersonas } from '@ugc/db';
 import { getDb, withRoute } from '@/server';
@@ -28,27 +27,20 @@ export const dynamic = 'force-dynamic';
  *  nada» no significa nada, y devolver la librería entera sería una respuesta que miente. */
 const QuerySchema = z.object({ avatar_hint: z.string().min(1) });
 
+// LA QUERY SE VALIDA EN LA FRONTERA, VÍA `withRoute` (T1.17). Antes este handler parseaba el
+// querystring A MANO (`new URL(req.url)` + su propio `safeParse` + su propio `AppError`) porque
+// `withRoute` solo sabía de `body` y `params`. Ahora sabe de `query`, y este era el ÚNICO sitio
+// que se lo montaba por su cuenta: dejarlo así serían DOS caminos de validación de query
+// produciendo cuerpos de error DISTINTOS para el mismo tipo de fallo — justo lo que el HOF existe
+// para impedir. El `QuerySchema` no cambia; lo que cambia es quién lo aplica.
 export const GET = withAuth(
-  withRoute(async ({ req }) => {
-    const url = new URL(req.url);
-    const { avatar_hint: avatarHint } = parseQuery(url.searchParams);
+  withRoute(
+    async ({ query }) => {
+      const personas = (await listPersonas(getDb())).map(toPersonaResponse);
+      const candidates = matchPersonas(personas, query.avatar_hint);
 
-    const personas = (await listPersonas(getDb())).map(toPersonaResponse);
-    const candidates = matchPersonas(personas, avatarHint);
-
-    return Response.json(PersonaCandidateListSchema.parse({ candidates }));
-  }),
+      return Response.json(PersonaCandidateListSchema.parse({ candidates }));
+    },
+    { query: QuerySchema },
+  ),
 );
-
-/** `safeParse` sobre la ENTRADA (api.md §1: nunca `.parse` a pelo sobre input del cliente): un
- *  query param ausente es un 400 tipado, no un 500 con stack trace. */
-function parseQuery(params: URLSearchParams): z.infer<typeof QuerySchema> {
-  const result = QuerySchema.safeParse({ avatar_hint: params.get('avatar_hint') ?? undefined });
-  if (!result.success) {
-    throw new AppError('validation_error', 'falta el parámetro `avatar_hint`', {
-      formErrors: ['Indica un `avatar_hint` (la pista de avatar del segmento del brief)'],
-      fieldErrors: {},
-    });
-  }
-  return result.data;
-}

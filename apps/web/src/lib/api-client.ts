@@ -144,7 +144,21 @@ export const RunResponseSchema = z.object({
   startedAt: z.string().nullable(),
   finishedAt: z.string().nullable(),
   totalCostEstimated: z.number().int().nullable(),
+  // ⚠ `totalCostActual` ES UN DATO FALSO: la columna `pipeline_run.total_cost_actual` no la
+  // mantiene nadie (deuda de T0.8) y vale NULL en todos los runs. Se sigue tipando porque el
+  // endpoint la sigue devolviendo, pero **NADIE debe pintarla**: el coste real del run es
+  // `costActualCents` (abajo). Cuando el orquestador mantenga el agregado, este es uno de los
+  // tres sitios a reconciliar contra `deriveRunStatus`/el ledger.
   totalCostActual: z.number().int().nullable(),
+  /**
+   * EL COSTE REAL del run en céntimos, agregado del LEDGER (`cost_entry`) por el servidor (T1.17).
+   *
+   * Existe porque la cabecera del canvas lo calculaba antes en el CLIENTE sumando el `costActual`
+   * de los steps del SSE — y ese campo sale de `step_run.cost_actual`, que se queda **NULL en un
+   * step que falla habiendo gastado** (`rollupStepCost` solo corre al cerrar bien). Los dos runs
+   * que murieron en N3 gastando 16 y 13 céntimos mostraban «Coste real: $0.00».
+   */
+  costActualCents: z.number().int(),
 });
 export type RunResponse = z.infer<typeof RunResponseSchema>;
 

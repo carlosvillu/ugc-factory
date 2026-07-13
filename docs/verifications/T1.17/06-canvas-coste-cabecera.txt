@@ -1,0 +1,4 @@
+01KXD1SPQ8EYKDZ4QXWD3WWX1Z -> "{\"costeReal\":\"$0.13\",\"costeEstimado\":\"$0.00\"}"
+01KXD1MM3ENG6QNZ43YY7M1P6V -> "{\"costeReal\":\"$0.16\",\"costeEstimado\":\"$0.00\"}"
+01KXDDNG2BR2YK8BCS90540T9T -> "{\"costeReal\":\"$0.18\",\"costeEstimado\":\"$0.00\"}"
+01KXD5XD4AWWRAM28W7EDJTMDT -> "{\"costeReal\":\"$0.16\",\"costeEstimado\":\"$0.00\"}"

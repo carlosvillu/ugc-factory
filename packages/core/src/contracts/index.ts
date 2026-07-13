@@ -151,3 +151,21 @@ export {
   type AdSegment,
   type HookSource,
 } from './batch-plan';
+// Listado `GET /api/runs` (T1.17): la vista pública de la lista de runs + LA DERIVACIÓN del
+// estado agregado a partir de los steps (`deriveRunStatus`). El agregado `pipeline_run.status`
+// NO lo mantiene nadie (deuda de T0.8): la verdad son los estados de STEP, igual que en el SSE.
+// La regla de precedencia (failed > cancelled > waiting_approval > running > succeeded >
+// pending, con `superseded` filtrado) vive en `run-list.ts` con su unit test.
+export {
+  RunListSchema,
+  RunListItemSchema,
+  RunListQuerySchema,
+  deriveRunStatus,
+  deriveCurrentStep,
+  RUN_LIST_DEFAULT_LIMIT,
+  RUN_LIST_MAX_LIMIT,
+  type RunList,
+  type RunListItem,
+  type RunStatus,
+  type RunStepStatus,
+} from './run-list';

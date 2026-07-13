@@ -1,0 +1,5 @@
+/  ->  "{\"highlighted\":[\"Inicio\"],\"ariaCurrent\":[\"Inicio\"]}"
+/analyses/new  ->  "{\"highlighted\":[\"Canvas\"],\"ariaCurrent\":[\"Canvas\"]}"
+/runs  ->  "{\"highlighted\":[\"Runs\"],\"ariaCurrent\":[\"Runs\"]}"
+/runs/01KXD1SPQ8EYKDZ4QXWD3WWX1Z  ->  "{\"highlighted\":[\"Runs\"],\"ariaCurrent\":[]}"
+/spend  ->  "{\"highlighted\":[\"Gasto\"],\"ariaCurrent\":[\"Gasto\"]}"

@@ -9,6 +9,7 @@
 //     color `success/warning/danger/info/…`) para el color del borde/dot. NUNCA un
 //     color hardcodeado (design-system.md): el token es la fuente de verdad visual.
 import type { StepSnapshot } from '@ugc/core/orchestrator';
+import type { RunStatus } from '@ugc/core/contracts';
 
 export type StepStatus = StepSnapshot['status'];
 
@@ -67,6 +68,58 @@ export const visualBorderClass: Record<StepVisualGroup, string> = {
   failed: 'border-danger',
   skipped: 'border-border-2',
   pending: 'border-border-2',
+};
+
+// ────────────────────────────────────────────────────────────────────────────────────────
+// El estado del RUN (7 valores, T1.17) proyectado al MISMO vocabulario visual de 6 grupos.
+//
+// Vive AQUÍ, junto al de los steps, por una razón dura: es LA MISMA PALETA. El listado
+// `/runs` y el canvas `/runs/:id` tienen que pintar «fallido» del mismo color, o el usuario
+// que hace click en una fila roja y aterriza en un canvas de otro color deja de fiarse de los
+// dos. Una segunda tabla de tonos en `components/runs/` sería justo eso: dos verdades
+// visuales del mismo estado, condenadas a divergir en el primer retoque.
+//
+// El estado del run lo DERIVA `deriveRunStatus` (core) de los estados de sus steps: la
+// columna `pipeline_run.status` no la mantiene nadie (deuda de T0.8). Ver `run-list.ts`.
+/**
+ * Tono del `Badge` del DS por estado de RUN. **UNA sola tabla**, directa (7 estados → tono).
+ *
+ * Antes iba en DOS saltos —`runVisualGroupOf` (7 estados → 6 grupos visuales) + un
+ * `visualBadgeTone` (6 grupos → 5 tonos)— y el único consumidor del mundo los componía SIEMPRE
+ * juntos. En el lado STEP el grupo visual se gana el sueldo (lo consumen DOS mapas:
+ * `visualToneClass` y `visualBorderClass`, más el pulso del nodo); en el lado RUN era un
+ * pasamanos: dos tablas que mantener para producir un valor que nadie usaba a mitad de camino.
+ *
+ * Lo que importaba de aquel diseño se conserva ENTERO, porque el argumento nunca fueron los dos
+ * saltos sino el SITIO: esta tabla vive JUNTO a la de los steps, en este mismo fichero, y usa
+ * los MISMOS tonos semánticos del DS (success/warning/info/danger/neutral). Un run fallido es
+ * rojo en la fila de `/runs` Y en su canvas — que es la propiedad que se defendía. Si algún día
+ * el listado quiere además el borde/pulso del canvas, se añade el mapa que haga falta AQUÍ,
+ * sobre esta misma tabla.
+ */
+export const runStatusTone: Record<
+  RunStatus,
+  'success' | 'warning' | 'info' | 'danger' | 'neutral'
+> = {
+  succeeded: 'success',
+  waiting_approval: 'warning',
+  running: 'info',
+  failed: 'danger',
+  expired: 'danger',
+  cancelled: 'neutral',
+  pending: 'neutral',
+};
+
+/** Etiqueta legible del estado del RUN (español, UI). El estado CRUDO viaja además en
+ *  `data-status` (la API observable de los tests), igual que en el canvas. */
+export const runStatusLabel: Record<RunStatus, string> = {
+  pending: 'pendiente',
+  running: 'en curso',
+  waiting_approval: 'esperando aprobación',
+  succeeded: 'completado',
+  failed: 'fallido',
+  cancelled: 'cancelado',
+  expired: 'expirado',
 };
 
 // Etiqueta legible del estado (español, UI). El texto CRUDO del estado (13 valores)

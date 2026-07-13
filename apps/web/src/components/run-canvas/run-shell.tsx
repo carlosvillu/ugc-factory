@@ -77,7 +77,13 @@ export function RunShell({ runId }: { runId: string }) {
   );
 }
 
-function RunHeader({ runId }: { runId: string }) {
+/**
+ * La cabecera del run (KPIs + toggle autopilot + cancelar). Se EXPORTA —y no solo la consume
+ * `RunShell`— para poder testear su «Coste real» sin montar el canvas ni el SSE: es donde vivió
+ * un bug de dinero (ver el comentario de `costActual` abajo) y el test tiene que aterrizar
+ * exactamente ahí, no dos capas más arriba.
+ */
+export function RunHeader({ runId }: { runId: string }) {
   const run = useRunStore((s) => s.run);
   const autopilot = useRunStore((s) => s.autopilot);
   const setAutopilot = useRunStore((s) => s.setAutopilot);
@@ -89,7 +95,34 @@ function RunHeader({ runId }: { runId: string }) {
   const stepList = Object.values(steps);
   const total = stepList.length;
   const done = stepList.filter((s) => s.status === 'succeeded' || s.status === 'skipped').length;
-  const costActual = stepList.reduce((acc, s) => acc + (s.costActual ?? 0), 0);
+
+  // ────────────────────────────────────────────────────────────────────────────────────────
+  // EL «COSTE REAL» SALE DEL LEDGER (servidor), **NO** DE SUMAR LOS STEPS DEL SSE.
+  //
+  // Aquí había un BUG DE DINERO REAL. Esta línea era:
+  //
+  //     const costActual = stepList.reduce((acc, s) => acc + (s.costActual ?? 0), 0)
+  //
+  // y `s.costActual` es `step_run.cost_actual`, que **se queda NULL cuando un step FALLA**:
+  // `rollupStepCost` (T1.10b) solo recomputa esa columna al cerrar BIEN un step. Un step que
+  // muere HABIENDO GASTADO no la escribe nunca. Resultado observable en la BD del usuario: los
+  // dos runs que murieron en N3 gastaron 16 y 13 céntimos de Sonnet, y al abrir su canvas la
+  // cabecera decía **«Coste real: $0.00»**. Dinero real, invisible, justo en los runs que más
+  // interesa auditar (los que fallaron).
+  //
+  // La verdad del dinero es el LEDGER (`cost_entry`, append-only) — y ahora la computa el
+  // SERVIDOR (`runLedgerCost`, la MISMA función que alimenta el listado `/runs`), así que el
+  // canvas y la lista no pueden contradecirse sobre lo que costó un run.
+  //
+  // TRADEOFF ACEPTADO Y CONSCIENTE: este número llega por REST al cargar la página, así que es
+  // una FOTO, no un contador vivo — durante un run en curso no sube con cada step, sube al
+  // recargar. Hacerlo vivo exigiría que el SSE llevara coste honesto por step (o un total de
+  // run), lo que toca el stream: es tarea aparte. Un total honesto-y-estático es estrictamente
+  // mejor que uno vivo-y-mentiroso, y en los runs TERMINALES —que son los que se auditan— es
+  // exacto. El coste ESTIMADO sí se sigue sumando de los steps: `cost_estimated` lo escribe la
+  // creación del run y NO depende de que el step acabe bien, así que no miente.
+  // ────────────────────────────────────────────────────────────────────────────────────────
+  const costActual = run.costActualCents;
   const costEstimated = stepList.reduce((acc, s) => acc + (s.costEstimated ?? 0), 0);
 
   // Toggle autopilot: actualiza el store LOCALMENTE (el SSE no ecoa el objeto run —

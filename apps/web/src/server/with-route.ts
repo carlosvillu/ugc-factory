@@ -16,9 +16,9 @@ interface Ctx {
   params: Promise<Record<string, string>>; // params asíncrono en Next 16
 }
 
-export function withRoute<B = undefined, P = Record<string, string>>(
-  handler: (input: { req: Request; body: B; params: P }) => Promise<Response>,
-  schemas: { body?: z.ZodType<B>; params?: z.ZodType<P> } = {},
+export function withRoute<B = undefined, P = Record<string, string>, Q = undefined>(
+  handler: (input: { req: Request; body: B; params: P; query: Q }) => Promise<Response>,
+  schemas: { body?: z.ZodType<B>; params?: z.ZodType<P>; query?: z.ZodType<Q> } = {},
 ): (req: Request, ctx: Ctx) => Promise<Response> {
   return async (req: Request, ctx: Ctx): Promise<Response> => {
     const requestId = req.headers.get('x-request-id') ?? crypto.randomUUID();
@@ -27,10 +27,21 @@ export function withRoute<B = undefined, P = Record<string, string>>(
       try {
         const raw = await ctx.params;
         const params = (schemas.params ? parseOrThrow(schemas.params, raw) : raw) as P;
+        // El QUERYSTRING es una frontera de entrada más (T1.17: `GET /api/runs?limit&offset`),
+        // y se trata EXACTAMENTE igual que body y params: safeParse contra su schema → 400
+        // tipado. Vive aquí y no en el handler para que la regla «nada de `.parse()` a pelo
+        // sobre la entrada» (api.md §1) siga teniendo UN solo guardián — si cada ruta parsease
+        // su query por su cuenta, la primera que se despistara devolvería un 500 con stack en
+        // vez de un `validation_error`. `?limit=abc` es culpa del caller, no un bug nuestro.
+        const query = (
+          schemas.query
+            ? parseOrThrow(schemas.query, Object.fromEntries(new URL(req.url).searchParams))
+            : undefined
+        ) as Q;
         const body = (
           schemas.body ? parseOrThrow(schemas.body, await readJson(req)) : undefined
         ) as B;
-        return await handler({ req, body, params });
+        return await handler({ req, body, params, query });
       } catch (err) {
         return toErrorResponse(err);
       }

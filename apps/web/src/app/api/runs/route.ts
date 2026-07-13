@@ -8,8 +8,8 @@
 // vía toErrorResponse). Así esta ruta ya no lleva molde de error local ni deriva la
 // correlación a mano — la comparten todas las rutas.
 import { RunDefinitionSchema, InvalidRunDefinitionError, createRun } from '@ugc/core/orchestrator';
-import { AppError } from '@ugc/core/contracts';
-import { makeWithTransaction } from '@ugc/db';
+import { AppError, RunListQuerySchema, RunListSchema } from '@ugc/core/contracts';
+import { listRuns, makeWithTransaction } from '@ugc/db';
 import { withRoute, getBoss, getDb, getRequestLogger } from '@/server';
 import { withAuth } from '@/server/with-auth';
 
@@ -17,6 +17,32 @@ import { withAuth } from '@/server/with-auth';
 export const runtime = 'nodejs';
 // Muta la BD en cada request: jamás se cachea.
 export const dynamic = 'force-dynamic';
+
+// `GET /api/runs` (T1.17, Apéndice E): el LISTADO de runs que pinta la página `/runs`.
+// Paginado simple (`?limit&offset`, sin filtros ni búsqueda: eso es el dashboard de T5.10),
+// orden DESC por creación.
+//
+// Handler fino (api.md §1): delega en el repo (`listRuns`) y serializa con el contrato Zod de
+// core — el MISMO que valida la página. La query se valida en la frontera vía el schema
+// `query` de `withRoute` (`?limit=abc` ⇒ 400 tipado, no 500).
+//
+// OJO CON LO QUE ESTE ENDPOINT **NO** DEVUELVE: `pipeline_run.status` ni `total_cost_actual`.
+// Ninguna de las dos columnas la mantiene nadie (deuda de T0.8) — los 4 runs reales de la BD
+// local dicen `pending` incluidos los que completaron. El estado se DERIVA de los steps y el
+// coste se agrega del LEDGER. La regla y el porqué, en `run-list.repo.ts` y en
+// `core/contracts/run-list.ts`.
+export const GET = withAuth(
+  withRoute(
+    async ({ query }) => {
+      const page = await listRuns(getDb(), query);
+      // Serializar = contrato de core (un drift repo↔contrato revienta aquí, en test).
+      return Response.json(
+        RunListSchema.parse({ ...page, limit: query.limit, offset: query.offset }),
+      );
+    },
+    { query: RunListQuerySchema },
+  ),
+);
 
 // `withAuth` por fuera (api.md §6): esta ruta NO está en la allowlist, así que un
 // request sin sesión válida es 401 JSON tipado ANTES de parsear el body.

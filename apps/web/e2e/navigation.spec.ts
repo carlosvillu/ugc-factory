@@ -58,6 +58,10 @@ test.describe('base URL del fetch de servidor y navegación global (T1.13)', () 
       // título, así que se ancla con `^`.
       const entries = [
         { link: /^nuevo análisis/i, heading: 'Nuevo análisis' },
+        // «Runs» (T1.17): otra tarjeta que aparece SOLA por tener `href` — la misma promesa,
+        // cobrada por segunda vez. Es el listado de pipelines lanzados: sin él, tras arrancar un
+        // run no había forma de volver a él.
+        { link: /^runs/i, heading: 'Runs' },
         // «Personas» (T2.0): la tarjeta NO se escribió a mano en la home — aparece sola porque el
         // destino tiene `href`. Es la promesa de T1.13 cobrada, y por eso se comprueba de verdad
         // que se llega a la página a golpe de click.
@@ -78,7 +82,7 @@ test.describe('base URL del fetch de servidor y navegación global (T1.13)', () 
   );
 
   test(
-    'la nav global muestra los 7 destinos; los de fases futuras, deshabilitados',
+    'la nav global muestra los 8 destinos; los de fases futuras, deshabilitados',
     {
       tag: ['@f1'],
     },
@@ -86,15 +90,21 @@ test.describe('base URL del fetch de servidor y navegación global (T1.13)', () 
       await page.goto('/');
       const nav = page.getByRole('navigation', { name: 'Navegación principal' });
 
-      // ⚠ SON 7 Y NO 6 DESDE T2.0, a propósito y con aprobación del usuario: el mockup 2a dibuja
-      // seis destinos y «Personas» es el séptimo, porque su página existe hoy y está completa
-      // (dejarla accesible solo tecleando la URL es la queja que originó T1.13). NO se fusiona con
-      // «Biblioteca»: esa es el área de F2 (guiones y variantes) y sigue deshabilitada — son dos
-      // cosas distintas. La lista se sigue enumerando ENTERA: su trabajo es cazar el próximo
-      // destino que alguien añada sin pensarlo.
+      // ⚠ SON 8 Y NO 6, y las dos desviaciones del mockup 2a son deliberadas:
+      //   · «Personas» (T2.0, aprobada por el usuario): su página existe hoy y está completa;
+      //     dejarla accesible solo tecleando la URL es la queja que originó T1.13. NO se fusiona
+      //     con «Biblioteca» (área de F2, guiones y variantes, aún deshabilitada): son dos cosas
+      //     distintas.
+      //   · «Runs» (T1.17): el listado de pipelines lanzados. Sin él, tras arrancar un run no
+      //     había forma de volver a él ni de ver los anteriores — solo existía `/runs/[id]`, al
+      //     que se llegaba TECLEANDO el ULID. El dashboard del mockup es T5.10 (F5), demasiado
+      //     lejos para algo que bloquea el uso diario.
+      // La lista se sigue enumerando ENTERA: su trabajo es cazar el próximo destino que alguien
+      // añada sin pensarlo.
       await expect(nav.getByRole('link')).toHaveText([
         'Inicio',
         'Canvas',
+        'Runs',
         'Personas',
         'Biblioteca',
         'Galería',
@@ -129,26 +139,38 @@ test.describe('base URL del fetch de servidor y navegación global (T1.13)', () 
   );
 
   test(
-    'dentro de un run, «Canvas» se RESALTA pero NO se anuncia como página actual',
+    'dentro de un run se RESALTA «Runs» (su área) y NO se anuncia como página actual',
     { tag: ['@f1'] },
     async ({ page, request }) => {
-      // Regresión de a11y: «resaltado» y «página actual» son dos preguntas distintas. El
-      // href de «Canvas» es `/analyses/new` (el intake), y dentro de un run NO es donde
-      // estás: anunciar `aria-current="page"` ahí haría que un lector de pantalla dijera
-      // «Canvas, página actual» y, al activarlo, el usuario aterrizaría en un formulario
-      // VACÍO. Se resalta (estás en su área) pero no se declara actual.
+      // Regresión de a11y: «resaltado» y «página actual» son dos preguntas distintas. Estando
+      // DENTRO del área de un destino (no en su href exacto), anunciar `aria-current="page"`
+      // haría que un lector de pantalla dijera «X, página actual» y, al activar el enlace, el
+      // usuario aterrizaría en OTRO sitio.
+      //
+      // ⚠ EL ÁREA DE `/runs/:id` CAMBIÓ DE DUEÑO EN T1.17, a propósito. Antes la reclamaba
+      // «Canvas» porque era el único destino que podía (no había listado). Ahora «Runs» existe,
+      // y el canvas de un run ES un run: le pertenece. Dejar el prefijo también en «Canvas»
+      // resaltaría DOS entradas a la vez estando en `/runs`, y «estás por aquí» dejaría de
+      // señalar UN sitio. El caso de «Runs» lo cubre `runs-list.spec.ts`; aquí se prueba el
+      // MISMO invariante sobre el área que le queda a «Canvas»: el intake.
       const runId = await launchDemoCanvasRun(request, { sleepMs: 200 });
       await page.goto(`/runs/${runId}`);
 
       const nav = page.getByRole('navigation', { name: 'Navegación principal' });
       const canvas = nav.getByRole('link', { name: 'Canvas' });
-      await expect(canvas).toHaveAttribute('data-highlighted', 'true'); // señal VISUAL: sí
-      await expect(canvas).not.toHaveAttribute('aria-current', 'page'); // señal a11y: NO
+      const runs = nav.getByRole('link', { name: 'Runs' });
 
-      // Y en su href literal sí es, a la vez, resaltado Y página actual.
+      // El área de `/runs/:id` es de «Runs», y de NADIE MÁS: resaltado exactamente UNO.
+      await expect(runs).toHaveAttribute('data-highlighted', 'true'); // señal VISUAL: sí
+      await expect(runs).not.toHaveAttribute('aria-current', 'page'); // señal a11y: NO (su href
+      // es el LISTADO: activarlo te sacaría del run en el que estás)
+      await expect(canvas).not.toHaveAttribute('data-highlighted', 'true'); // ya no es su área
+
+      // Y «Canvas» en su href literal sí es, a la vez, resaltado Y página actual.
       await page.goto('/analyses/new');
       await expect(canvas).toHaveAttribute('data-highlighted', 'true');
       await expect(canvas).toHaveAttribute('aria-current', 'page');
+      await expect(runs).not.toHaveAttribute('data-highlighted', 'true');
     },
   );
 

@@ -12,7 +12,7 @@
 // que este UPDATE afecta a los checkpoints por venir. NO toca los steps.
 import { z } from 'zod';
 import { AppError, UlidSchema } from '@ugc/core/contracts';
-import { findRun, updateRunAutopilot } from '@ugc/db';
+import { findRun, runLedgerCost, updateRunAutopilot } from '@ugc/db';
 import { withRoute, getDb, getRequestLogger } from '@/server';
 import { withAuth } from '@/server/with-auth';
 
@@ -25,7 +25,18 @@ const PatchBodySchema = z.object({ autopilot: z.boolean() });
 export const GET = withAuth(
   withRoute(
     async ({ params }) => {
-      const run = await findRun(getDb(), params.id);
+      const db = getDb();
+      const [run, costActualCents] = await Promise.all([
+        findRun(db, params.id),
+        // EL COSTE HONESTO DEL RUN, DEL LEDGER (T1.17). Antes la cabecera del canvas lo
+        // calculaba en el cliente sumando `step_run.cost_actual` de los steps del SSE… que es
+        // NULL en un step que FALLÓ habiendo gastado (`rollupStepCost` solo corre al cerrar bien
+        // un step). Resultado: los dos runs que murieron en N3 gastando 16 y 13 céntimos de
+        // Sonnet mostraban **«Coste real: $0.00»** al abrirlos. Ahora el número lo computa el
+        // servidor desde `cost_entry` —la misma función que usa el listado (`runLedgerCost`)—,
+        // así que las dos pantallas no pueden contradecirse.
+        runLedgerCost(db, params.id),
+      ]);
       if (run === undefined) throw new AppError('not_found', 'run no encontrado');
       // Serializa las fechas a ISO (JSON no tiene Date): la UI las parsea si las
       // necesita; en F0 la cabecera solo usa autopilot/kind/status/id.
@@ -38,7 +49,13 @@ export const GET = withAuth(
         startedAt: run.startedAt?.toISOString() ?? null,
         finishedAt: run.finishedAt?.toISOString() ?? null,
         totalCostEstimated: run.totalCostEstimated,
+        // ⚠ `totalCostActual` (la COLUMNA) se sigue exponiendo tal cual, y sigue siendo NULL
+        // siempre: nadie la mantiene (deuda de T0.8, misma familia que `pipeline_run.status`).
+        // NO se toca aquí a propósito —es el inventario de datos falsos que hay que reconciliar
+        // cuando el orquestador mantenga el agregado—, pero YA NO LA PINTA NADIE: la cabecera
+        // usa `costActualCents`, que es el ledger.
         totalCostActual: run.totalCostActual,
+        costActualCents,
       });
     },
     { params: ParamsSchema },

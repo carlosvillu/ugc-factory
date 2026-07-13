@@ -187,3 +187,14 @@ export type { Persona as PersonaRow } from './schema/gallery';
 // `cost_entry` (SUM por step_run_id). Lo llama el ORQUESTADOR (consumer del worker) al cerrar
 // un step — nunca `@ugc/services` (la columna del step es territorio del step, T1.10a).
 export { rollupStepCost } from './repos/spend.repo';
+// El LISTADO de runs (T1.17): la lectura que alimenta `GET /api/runs`. Deriva el estado
+// agregado de los STEPS (las columnas `pipeline_run.status`/`total_cost_actual` no las
+// mantiene nadie) y agrega el coste desde el LEDGER (`cost_entry`, la única verdad del dinero:
+// `step_run.cost_actual` queda NULL cuando un step FALLA habiendo gastado). Ver su cabecera.
+export { listRuns } from './repos/run-list.repo';
+// El coste REAL de UN run desde el LEDGER (T1.17): lo consume `GET /api/runs/:id`, que alimenta
+// la cabecera del canvas. Antes esa cabecera SUMABA `step_run.cost_actual` y enseñaba **$0.00 en
+// los runs que murieron habiendo gastado** (el rollup de esa columna solo corre al cerrar BIEN un
+// step). Misma función que usa el listado: dos sitios que responden «cuánto costó este run» tienen
+// que responder LO MISMO. Ver `run-list.repo.ts`.
+export { runLedgerCost } from './repos/run-list.repo';

@@ -40,7 +40,8 @@ export interface Destination {
 }
 
 /**
- * Los 7 destinos de la nav: los 6 DEL MOCKUP 2a (`docs/mockups/dashboard.html`) + «Personas».
+ * Los 8 destinos de la nav: los 6 DEL MOCKUP 2a (`docs/mockups/dashboard.html`) + «Personas»
+ * (T2.0) + «Runs» (T1.17).
  *
  * Se muestran todos aunque 3 no existan aún (decisión del usuario): el mockup es vinculante,
  * enseñan a dónde va el producto, y —al ir deshabilitados— nunca llevan a una página rota.
@@ -59,9 +60,17 @@ export interface Destination {
  * (los avatares que protagonizan los anuncios, y los guiones/variantes que los visten), frente a
  * los destinos de flujo (Canvas) y de resultado (Galería, Métricas, Gasto).
  *
- * «Canvas» no tiene índice propio (un canvas es SIEMPRE el de un run concreto, `/runs/:id`):
- * su entrada apunta al intake, que es la puerta REAL por la que se llega hoy a un canvas
- * (`/analyses/new` → POST /api/runs → `/runs/:id`).
+ * ⚠ «RUNS» ES LA SEGUNDA DESVIACIÓN DEL MOCKUP (T1.17), y nace de un fallo de uso REAL: tras
+ * lanzar un run no había forma de volver a él ni de ver los anteriores — solo existía
+ * `/runs/[id]`, al que se llegaba TECLEANDO el ULID. Exactamente la misma queja que originó
+ * T1.13, un nivel más abajo. El dashboard completo (que sí dibuja el mockup) es T5.10, en F5:
+ * demasiado lejos para algo que bloquea el uso diario.
+ *
+ * «Canvas» y «Runs» NO son lo mismo y por eso son dos entradas: **Canvas es el VERBO, Runs es
+ * el SUSTANTIVO.** Canvas apunta al intake (`/analyses/new` → POST /api/runs → `/runs/:id`):
+ * es la puerta por la que NACE un pipeline. Runs es dónde VIVEN los que ya lanzaste. Fundirlas
+ * obligaría a elegir una sola URL para la entrada, y cualquiera de las dos dejaría la otra mitad
+ * del flujo sin acceso desde la nav.
  */
 export const DESTINATIONS: Destination[] = [
   { label: 'Inicio', href: '/' },
@@ -69,9 +78,29 @@ export const DESTINATIONS: Destination[] = [
     label: 'Canvas',
     cardTitle: 'Nuevo análisis',
     href: '/analyses/new',
-    matches: ['/analyses', '/runs'],
+    // ⚠ `/runs` YA NO ESTÁ AQUÍ (T1.17), y es un cambio deliberado. Hasta ahora «Canvas» se
+    // resaltaba dentro de un run porque era el único destino que reclamaba esa área — no había
+    // otro. Con «Runs» existiendo, `/runs/:id` pertenece a SU área: es un run del listado, al
+    // que se llega DESDE el listado. Si «Canvas» conservara el prefijo, DOS entradas de la nav
+    // se resaltarían a la vez estando en `/runs` (Canvas por prefijo, Runs por igualdad) — y
+    // «estás por aquí» dejaría de señalar UN sitio, que es lo único que la señal significa.
+    matches: ['/analyses'],
     description:
       'Pega la URL del producto (o descríbelo con tus palabras) y arranca el pipeline: se extrae la landing, se miran las imágenes y se sintetiza el brief.',
+  },
+  {
+    // «Runs» (T1.17): el listado de pipelines lanzados. Es la entrada que faltaba — la nota 2 de
+    // T1.13 ya declaró el hueco: tras lanzar un run no había forma de VOLVER a él ni de ver los
+    // anteriores (solo existía `/runs/[id]`, y solo se llegaba tecleando el ULID).
+    //
+    // Va JUSTO DESPUÉS de «Canvas» porque es su continuación natural en el flujo: Canvas lanza
+    // un pipeline, Runs es dónde viven todos los que lanzaste. `matches: ['/runs']` hace que el
+    // canvas de un run (`/runs/:id`) resalte ESTA entrada — el canvas de un run es un run.
+    label: 'Runs',
+    href: '/runs',
+    matches: ['/runs'],
+    description:
+      'Los pipelines lanzados: en qué estado está cada uno, qué ha costado y acceso directo a su canvas.',
   },
   {
     label: 'Personas',

@@ -1,0 +1,78 @@
+- banner
+  - link "UGC Factory" [ref=e1]
+  - navigation "Navegación principal" [ref=e2]
+    - list
+      - listitem [level=1]
+        - link "Inicio" [ref=e25]
+      - listitem [level=1]
+        - link "Canvas" [ref=e26]
+      - listitem [level=1]
+        - link "Runs" [ref=e27]
+      - listitem [level=1]
+        - link "Personas" [ref=e28]
+      - listitem [level=1]
+        - link "Biblioteca · llega en la fase F2 (guiones y variantes)" [disabled, ref=e29]
+          - StaticText "Biblioteca"
+      - listitem [level=1]
+        - link "Galería · llega en la fase F5 (composición y export)" [disabled, ref=e30]
+          - StaticText "Galería"
+      - listitem [level=1]
+        - link "Métricas · llega en la fase F6 (publicación y métricas)" [disabled, ref=e31]
+          - StaticText "Métricas"
+      - listitem [level=1]
+        - link "Gasto" [ref=e32]
+  - navigation "Configuración" [ref=e3]
+    - list
+      - listitem [level=1]
+        - link "Design system" [ref=e33]
+      - listitem [level=1]
+        - link "Ajustes" [ref=e34]
+- main
+  - sectionheader
+    - heading "Runs" [level=1, ref=e4]
+    - paragraph
+      - StaticText "4 pipelines lanzados. Entra en cualquiera para ver su canvas."
+  - table
+    - rowgroup
+      - row
+        - columnheader "ORIGEN" [ref=e35]
+        - columnheader "ESTADO" [ref=e36]
+        - columnheader "PASO" [ref=e37]
+        - columnheader "COSTE" [ref=e38]
+        - columnheader "LANZADO" [ref=e39]
+    - row
+      - cell "https://es.stayforlong.com 01KXDDNG2BR2YK8BCS90540T9T" [ref=e5]
+        - link "https://es.stayforlong.com" [ref=e40]
+        - StaticText "01KXDDNG2BR2YK8BCS90540T9T"
+      - cell "completado" [ref=e6]
+      - cell "—" [ref=e7]
+      - cell "$0.18" [ref=e8]
+      - cell "13 jul, 11:41" [ref=e9]
+    - row
+      - cell "https://relatio.chat 01KXD5XD4AWWRAM28W7EDJTMDT" [ref=e10]
+        - link "https://relatio.chat" [ref=e41]
+        - StaticText "01KXD5XD4AWWRAM28W7EDJTMDT"
+      - cell "completado" [ref=e11]
+      - cell "—" [ref=e12]
+      - cell "$0.16" [ref=e13]
+      - cell "13 jul, 09:26" [ref=e14]
+    - row
+      - cell "https://es.stayforlong.com/es-es?tid=01kxd1se2sa0mmebdk9vywkykr N3: el brief no supera la validación determinista (T1.9): missing_hero_image, hook_too_long" [ref=e15]
+        - link "https://es.stayforlong.com/es-es?tid=01kxd1se2sa0mmebdk9vywkykr" [ref=e42]
+        - StaticText "N3: el brief no supera la validación determinista (T1.9): missing_hero_image, hook_too_long"
+      - cell "fallido" [ref=e16]
+      - cell "N3" [ref=e17]
+      - cell "$0.13" [ref=e18]
+      - cell "13 jul, 08:14" [ref=e19]
+    - row
+      - cell "https://relatio.chat/ N3: el brief no supera la validación determinista (T1.9): missing_hero_image" [ref=e20]
+        - link "https://relatio.chat/" [ref=e43]
+        - StaticText "N3: el brief no supera la validación determinista (T1.9): missing_hero_image"
+      - cell "fallido" [ref=e21]
+      - cell "N3" [ref=e22]
+      - cell "$0.16" [ref=e23]
+      - cell "13 jul, 08:11" [ref=e24]
+- button "Open Next.js Dev Tools" [expanded=false, ref=e44]
+  - image
+- alert
+  - StaticText "Runs · UGC Factory"

@@ -1,0 +1,42 @@
+Pager usage is off.
+             id             | kind | col_status_mentirosa | col_cost_mentirosa |          created_at           
+----------------------------+------+----------------------+--------------------+-------------------------------
+ 01KXDDNG2BR2YK8BCS90540T9T | full | pending              |                    | 2026-07-13 09:41:53.356315+00
+ 01KXD5XD4AWWRAM28W7EDJTMDT | full | pending              |                    | 2026-07-13 07:26:23.897503+00
+ 01KXD1SPQ8EYKDZ4QXWD3WWX1Z | full | pending              |                    | 2026-07-13 06:14:28.350486+00
+ 01KXD1MM3ENG6QNZ43YY7M1P6V | full | pending              |                    | 2026-07-13 06:11:41.823646+00
+(4 rows)
+
+           run_id           | node_key |  status   | col_step_cost |                                             err                                             
+----------------------------+----------+-----------+---------------+---------------------------------------------------------------------------------------------
+ 01KXDDNG2BR2YK8BCS90540T9T | N1       | succeeded |             0 | 
+ 01KXDDNG2BR2YK8BCS90540T9T | N2       | succeeded |             0 | 
+ 01KXDDNG2BR2YK8BCS90540T9T | N3       | succeeded |            18 | 
+ 01KXD5XD4AWWRAM28W7EDJTMDT | N1       | succeeded |             0 | 
+ 01KXD5XD4AWWRAM28W7EDJTMDT | N2       | succeeded |             0 | 
+ 01KXD5XD4AWWRAM28W7EDJTMDT | N3       | succeeded |            16 | 
+ 01KXD1SPQ8EYKDZ4QXWD3WWX1Z | N1       | succeeded |             0 | 
+ 01KXD1SPQ8EYKDZ4QXWD3WWX1Z | N2       | succeeded |             0 | 
+ 01KXD1SPQ8EYKDZ4QXWD3WWX1Z | N3       | failed    |               | N3: el brief no supera la validación determinista (T1.9): missing_hero_image, hook_too_long
+ 01KXD1MM3ENG6QNZ43YY7M1P6V | N1       | succeeded |             0 | 
+ 01KXD1MM3ENG6QNZ43YY7M1P6V | N2       | succeeded |             0 | 
+ 01KXD1MM3ENG6QNZ43YY7M1P6V | N3       | failed    |               | N3: el brief no supera la validación determinista (T1.9): missing_hero_image
+(12 rows)
+
+           run_id           | ledger_cents | entries 
+----------------------------+--------------+---------
+ 01KXDDNG2BR2YK8BCS90540T9T |           18 |       3
+ 01KXD5XD4AWWRAM28W7EDJTMDT |           16 |       3
+ 01KXD1SPQ8EYKDZ4QXWD3WWX1Z |           13 |       3
+ 01KXD1MM3ENG6QNZ43YY7M1P6V |           16 |       3
+(4 rows)
+
+Pager usage is off.
+           run_id           |                                                                 config                                                                 
+----------------------------+----------------------------------------------------------------------------------------------------------------------------------------
+ 01KXDDNG2BR2YK8BCS90540T9T | {"url": "https://es.stayforlong.com", "source": "url", "projectId": "01KXBQB430CWP8P3M1VS3JKDZE"}
+ 01KXD5XD4AWWRAM28W7EDJTMDT | {"url": "https://relatio.chat", "source": "url", "projectId": "01KXBQB430CWP8P3M1VS3JKDZE"}
+ 01KXD1SPQ8EYKDZ4QXWD3WWX1Z | {"url": "https://es.stayforlong.com/es-es?tid=01kxd1se2sa0mmebdk9vywkykr", "source": "url", "projectId": "01KXBQB430CWP8P3M1VS3JKDZE"}
+ 01KXD1MM3ENG6QNZ43YY7M1P6V | {"url": "https://relatio.chat/", "source": "url", "projectId": "01KXBQB430CWP8P3M1VS3JKDZE"}
+(4 rows)
+

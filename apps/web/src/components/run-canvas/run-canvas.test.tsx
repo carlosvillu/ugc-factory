@@ -16,6 +16,7 @@ const run: RunResponse = {
   finishedAt: null,
   totalCostEstimated: null,
   totalCostActual: null,
+  costActualCents: 0, // el coste REAL del run: lo agrega el servidor desde el ledger (T1.17)
 };
 
 function snap(

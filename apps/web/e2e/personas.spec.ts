@@ -185,7 +185,18 @@ test.describe('/personas — librería de personas (T2.0)', () => {
       await page.getByLabel(/añadir imagen de referencia/i).setInputFiles(bigImage);
 
       // La imagen entra: la ficha la pinta (identity lock) y el contador sube.
-      await expect(page.getByRole('article')).toContainText('1 imagen de referencia');
+      //
+      // TIMEOUT LOCALIZADO (T1.19, e2e.md §12.6 — «sube el timeout del `expect` CONCRETO que
+      // espera una operación lenta, nunca el global»): subir un PNG de 2048 px y procesarlo en el
+      // servidor (sharp: dimensiones + derivados) es trabajo REAL, y bajo `fullyParallel` (10
+      // navegadores + worker + Postgres en la misma máquina) se pasa de los 15 s por defecto. Con
+      // 15 s el test caía en rojo con la ficha diciendo literalmente «Subiendo imagen…» — o sea,
+      // el producto iba bien y el presupuesto de reloj del test iba mal. No es un reintento ni un
+      // assert más flojo: es la MISMA condición observable, esperada el tiempo que la operación
+      // tarda de verdad.
+      await expect(page.getByRole('article')).toContainText('1 imagen de referencia', {
+        timeout: 60_000,
+      });
       await expect(
         page.getByRole('img', { name: new RegExp(`retrato principal de ${name}`, 'i') }),
       ).toBeVisible();
@@ -234,9 +245,12 @@ test.describe('/personas — librería de personas (T2.0)', () => {
       );
       expect(rows[0]!.n).toBe(1);
 
-      // Una segunda imagen ≥2K se acumula (§11: 2–3 encuadres del mismo sujeto).
+      // Una segunda imagen ≥2K se acumula (§11: 2–3 encuadres del mismo sujeto). Mismo timeout
+      // localizado que el primer upload (T1.19): el trabajo del servidor es el mismo.
       await page.getByLabel(/añadir imagen de referencia/i).setInputFiles(bigImage);
-      await expect(page.getByRole('article')).toContainText('2 imágenes de referencia');
+      await expect(page.getByRole('article')).toContainText('2 imágenes de referencia', {
+        timeout: 60_000,
+      });
     },
   );
 
@@ -263,7 +277,10 @@ test.describe('/personas — librería de personas (T2.0)', () => {
       // el error aparece en la ficha de la persona, que es donde el usuario está mirando— en vez
       // de "en algún sitio de la página".
       const alert = page.getByRole('article').getByRole('alert');
-      await expect(alert).toBeVisible();
+      // Timeout localizado (T1.19): el veredicto también viaja al SERVIDOR (sube el fichero y lee
+      // sus dimensiones), así que bajo `fullyParallel` hereda la misma lentitud real que el
+      // upload que sí se acepta. Es la misma condición observable, esperada lo que tarda.
+      await expect(alert).toBeVisible({ timeout: 60_000 });
       await expect(alert).toContainText('512');
       await expect(alert).toContainText('2048');
 

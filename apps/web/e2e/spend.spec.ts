@@ -15,6 +15,15 @@
 // que la premisa "este spec posee el ledger" vuelve a ser cierta por CONSTRUCCIÓN en vez
 // de por suerte de ordenación. Las sumas siguen siendo exactas — no se relaja ni un
 // assert.
+//
+// T1.19 — ese DELETE NO BASTABA, y era el SEGUNDO flaky del gate: bajo `fullyParallel` los
+// specs de análisis corren en OTROS workers y siguen insertando `cost_entry` DESPUÉS del
+// DELETE. Medido: 2 de 5 pasadas rojas con «Anthropic … $1.17» donde este spec sembró
+// $0.99 (los ~18 céntimos de un run de análisis concurrente). La exclusividad real se
+// consigue en la CONFIG: este fichero tiene su propio proyecto de Playwright
+// (`name: 'spend'`, `dependencies: ['chromium']`) ⇒ arranca cuando TODOS los specs que
+// escriben coste han terminado. El DELETE de abajo sigue siendo necesario (limpia lo que
+// ellos dejaron), pero ahora nadie escribe detrás.
 import { test, expect } from '@playwright/test';
 import { createDb, recordCost, seedMonthlyBudgetIfAbsent } from '@ugc/db';
 // La BD del stack en UN solo sitio (`support/stack-db.ts`): la URL para el cliente TIPADO (que es

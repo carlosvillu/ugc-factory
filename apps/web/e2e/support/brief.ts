@@ -8,6 +8,7 @@
 // uno de los tres se queda atrás y el fallo sale como un timeout OPACO de Playwright, no como
 // "cambió el contrato".
 import { expect, type APIRequestContext, type Page } from '@playwright/test';
+import { apiCall } from './http';
 
 /** El formulario de CP1. Su accessible name ES el contrato de testabilidad del editor. */
 export function briefEditor(page: Page) {
@@ -46,7 +47,11 @@ export async function fetchBrief(
   request: APIRequestContext,
   briefId: string,
 ): Promise<BriefApiResponse> {
-  const res = await request.get(`/api/briefs/${briefId}`);
+  // `apiCall`: reintenta SOLO el corte de transporte del `next dev` local (T1.19, support/http.ts).
+  const res = await apiCall(
+    () => request.get(`/api/briefs/${briefId}`),
+    `GET /api/briefs/${briefId}`,
+  );
   expect(res.ok()).toBe(true);
   return (await res.json()) as BriefApiResponse;
 }

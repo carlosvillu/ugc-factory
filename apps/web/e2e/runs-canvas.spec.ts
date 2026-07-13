@@ -156,6 +156,20 @@ test.describe('canvas del run (T0.11)', () => {
       // ventana ataca la CAUSA (la carrera) sin tocar un solo assert: lo que se prueba
       // —que el cancel barre los nodos no-terminales a `cancelled`— es idéntico. No se
       // reintenta el test: se le quita la carrera.
+      //
+      // T1.19 (auditoría del flaky de este fichero): la ventana de este test es
+      // IRREDUCIBLE — probar "cancelar un step EN VUELO" exige un step en vuelo, y un step
+      // en vuelo ocupa un slot del worker mientras dura. Un gate perfectamente estable
+      // (`hang: true`, que deja el step `running` para siempre) costaría un slot de los 10
+      // del worker durante TODA la suite (cancelRun cambia el estado del step, NO aborta el
+      // job de pg-boss), o sea: cambiaría un flaky por menos paralelismo para los 55 tests
+      // sanos. Se queda en ventana ACOTADA CON MARGEN: tras el gate observable (`running`)
+      // quedan ~20 s para el click + POST, y la peor latencia medida bajo carga en T1.19
+      // (un PATCH con compilación en frío de la ruta) fue 5,7 s ⇒ ~3,5× de margen. HONESTIDAD
+      // sobre lo que se sabe: el flaky que T1.19 CONSIGUIÓ reproducir (con traza) fue el de
+      // autopilot, el test de aquí abajo; ÉSTE no falló ni una vez en las pasadas de T1.19 —
+      // lo cual NO demuestra que su carrera sea imposible, solo que con 20 s de margen no se
+      // manifestó. Si algún día vuelve a caer, la causa está aquí escrita.
       const otherRunId = await launchDemoCanvasRun(request, { sleepMs: 20_000 });
       await page.goto(`/runs/${otherRunId}`);
       await expect(node(page, 'N0')).toBeVisible({ timeout: 30_000 });
@@ -171,23 +185,80 @@ test.describe('canvas del run (T0.11)', () => {
     },
   );
 
+  // ── T1.19 — el autopilot, sin carreras contra el reloj ───────────────────────────────
+  //
+  // El test ORIGINAL («activar el toggle → el run completa sin pausas») era una CARRERA y
+  // fue el flaky que ensució los gates de T1.15–T1.18 (la causa raíz está en el journal de
+  // T1.19): lanzaba el run con `sleepMs: 3000` y confiaba en que el humano simulado —cargar
+  // la página + hidratar + clicar el toggle + PATCH— cupiera dentro de la VENTANA de tiempo
+  // que N0 y N1 tardaban en dormir. Bajo `fullyParallel` (10 workers, `next dev` compilando
+  // rutas en frío) el PATCH llegó a tardar 5,7 s: N1 terminó ANTES de que el autopilot
+  // estuviera PERSISTIDO, `shouldPause` leyó `autopilot=false` de la BD y N1 pausó — que es
+  // el comportamiento CORRECTO del producto (§7.1: la decisión de pausa se toma al alcanzar
+  // el checkpoint; un PATCH posterior no la deshace). El test mentía dos veces:
+  //
+  //  1. Esperaba por TIEMPO disfrazado de estado (la ventana del sleep).
+  //  2. Su «prueba» de que el autopilot estaba activo —`data-run-autopilot=true`— es un
+  //     OPTIMISTIC UPDATE del store (run-shell.tsx lo pinta ANTES de que el PATCH responda):
+  //     afirmaba el optimismo del cliente, no el estado del servidor.
+  //
+  // Se parte en dos tests con GATES DE ESTADO ESTABLES (ningún reloj):
+  //  (a) el toggle PERSISTE en el servidor (se comprueba contra `GET /api/runs/:id`, la BD,
+  //      no contra el atributo optimista), partiendo de un run PARADO en el checkpoint de N1;
+  //  (b) el autopilot SALTA el checkpoint normal y RESPETA el candado, con el run lanzado ya
+  //      en autopilot (`POST /api/runs` con `autopilot: true`) — no hay nada que "llegar a
+  //      tiempo" a clicar.
+  // Entre los dos se conserva TODA la cobertura del original.
+
   test(
-    'autopilot: activar el toggle → el run completa sin pausas, respetando el candado',
+    'autopilot: el toggle de la cabecera PERSISTE en el run (no solo en el cliente)',
     { tag: ['@f0'] },
     async ({ page, request }) => {
-      // sleep largo en N0 para que dé tiempo a activar autopilot ANTES de que N1
-      // alcance su checkpoint (la decisión de pausa se toma al llegar al step).
-      const runId = await launchDemoCanvasRun(request, { sleepMs: 3000 });
+      const runId = await launchDemoCanvasRun(request, { sleepMs: 200 });
       await page.goto(`/runs/${runId}`);
-      await expect(node(page, 'N0')).toBeVisible({ timeout: 30_000 });
 
-      // Activa autopilot desde la cabecera (PATCH → persiste en el run).
-      const toggle = page.locator('[data-slot="autopilot-toggle"]');
-      await toggle.click();
+      // GATE ESTABLE (no una ventana de tiempo): el run se para en el checkpoint de N1 y
+      // ahí se queda indefinidamente. Da igual lo cargada que vaya la máquina.
+      await waitStatus(page, 'N1', 'waiting_approval');
+
+      await page.locator('[data-slot="autopilot-toggle"]').click();
+      // El atributo de la cabecera es un OPTIMISTIC UPDATE: se afirma (es lo que el usuario
+      // ve) pero NO demuestra nada del servidor…
       await expect(page.locator('[data-slot="run-header"]')).toHaveAttribute(
         'data-run-autopilot',
         'true',
       );
+      // …la observable REAL es la fila del run en la BD, vía la misma API que la lee.
+      //
+      // `toPass` y NO `expect.poll`: bajo `fullyParallel`, `next dev` llega a CORTAR una
+      // conexión (`read ECONNRESET`) cuando compila rutas bajo carga, y `expect.poll` NO
+      // reintenta si el callback LANZA — un reset transitorio tumbaba el test (visto en la
+      // 4ª pasada de T1.19). `toPass` reintenta también ante excepción, que es el
+      // comportamiento de una web-first assertion: si el estado nunca llega, sigue fallando
+      // al agotar el timeout (no tapa nada, solo tolera el corte de una lectura).
+      await expect(async () => {
+        const res = await request.get(`/api/runs/${runId}`);
+        const body = (await res.json()) as { autopilot: boolean };
+        expect(body.autopilot).toBe(true);
+      }).toPass({ timeout: 30_000 });
+
+      // Y con el autopilot YA PERSISTIDO, el run reanudado no vuelve a pararse hasta el
+      // candado: aprobar N1 lleva el run hasta N3 (alwaysPause) sin intervención humana.
+      const panel = await openPanel(page, 'N1');
+      await panel.getByRole('button', { name: /^aprobar$/i }).click();
+      await waitStatus(page, 'N2', 'succeeded');
+      await waitStatus(page, 'N3', 'waiting_approval');
+    },
+  );
+
+  test(
+    'autopilot: el checkpoint NORMAL no pausa, pero el candado alwaysPause gana igual',
+    { tag: ['@f0'] },
+    async ({ page, request }) => {
+      // El run ARRANCA en autopilot (persistido por `POST /api/runs`): no hay ninguna
+      // carrera entre un click humano y el avance del worker.
+      const runId = await launchDemoCanvasRun(request, { sleepMs: 200, autopilot: true });
+      await page.goto(`/runs/${runId}`);
 
       // N1 (checkpoint NORMAL) NO pausa con autopilot: pasa a succeeded sin approve.
       await waitStatus(page, 'N1', 'succeeded');

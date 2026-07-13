@@ -23,6 +23,7 @@
 import { test, expect } from '@playwright/test';
 import { waitCanvasStatus as waitStatus, canvasNode as node } from '../support/canvas';
 import { briefEditor, fetchBrief } from '../support/brief';
+import { apiCall } from '../support/http';
 
 test.describe('F1 · journey de análisis: URL → N1/N2/N3 → CP1 → aprobar y avanzar', () => {
   test(
@@ -97,7 +98,10 @@ test.describe('F1 · journey de análisis: URL → N1/N2/N3 → CP1 → aprobar 
       // Y el v2 es el del usuario: `edited_by_user:true`, `approved`, CON su edición dentro.
       // Se llega a él por el artefacto EDITADO del step (el `editStep` de T0.8 reemplazó el
       // `output_refs` de N3 para que apunte a la versión nueva).
-      const stepRes = await request.get(`/api/steps/${stepId}`);
+      const stepRes = await apiCall(
+        () => request.get(`/api/steps/${stepId}`),
+        'GET /api/steps/:id',
+      );
       expect(stepRes.ok()).toBe(true);
       const step = (await stepRes.json()) as { outputRefs: { briefId: string } };
       const v2Id = step.outputRefs.briefId;

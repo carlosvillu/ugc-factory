@@ -34,6 +34,7 @@ import { FAKE_URL_NO_HERO, FAKE_FORBIDDEN_IMAGE_PATH } from '@ugc/test-utils';
 // La BD del stack, para el SELECT de aserción de T1.11: la Verificación pide ver la decisión EN
 // LA BD, no en un endpoint que podría estar mintiendo.
 import { queryStack } from './support/stack-db';
+import { apiCall } from './support/http';
 
 test.describe('CP1 · editor de brief (T1.10b)', () => {
   test(
@@ -165,10 +166,24 @@ test.describe('CP1 · editor de brief (T1.10b)', () => {
       //    ver el test de abajo). La elegida es un dato del DOM, no un literal del test: el brief
       //    lo produce el pipeline (fake de Anthropic → validador → SSE), y hard-codear la URL aquí
       //    haría pasar el test aunque el editor pintase otra cosa.
-      const elegida = editor.locator('[data-slot="hero-candidate"][data-usable="true"]').first();
-      await expect(elegida).toBeVisible();
-      await expect(elegida).toHaveAttribute('data-url', /^https?:\/\//);
-      const heroElegido = await elegida.getAttribute('data-url');
+      //
+      //    T1.19 — CARRERA ARREGLADA (era un flaky del gate): `data-usable` lo escribe un PROBE
+      //    ASÍNCRONO por candidata (`useThumbnailProbe` → `/api/thumbnails`), así que el conjunto
+      //    `[data-usable="true"]` CRECE mientras los probes van resolviendo. Un locator de
+      //    Playwright se RE-EVALÚA en cada uso: `.first()` se resolvía a una candidata al LEER su
+      //    `data-url` y a OTRA (una anterior en el DOM, que acababa de volverse usable) al CLICAR
+      //    → el test guardaba `detail.png` y promovía `lifestyle.png`, y el assert contra la BD
+      //    reventaba. Se FIJA la elegida por su URL antes de tocarla: el locator ya no puede
+      //    apuntar a otra fila aunque el DOM siga cambiando debajo.
+      const primeraUsable = editor
+        .locator('[data-slot="hero-candidate"][data-usable="true"]')
+        .first();
+      await expect(primeraUsable).toBeVisible();
+      await expect(primeraUsable).toHaveAttribute('data-url', /^https?:\/\//);
+      const heroElegido = await primeraUsable.getAttribute('data-url');
+      const elegida = editor.locator(
+        `[data-slot="hero-candidate"][data-url="${heroElegido ?? ''}"]`,
+      );
       await elegida.getByRole('button', { name: /usar como imagen principal/i }).click();
       await expect(approve).toBeEnabled();
 
@@ -349,7 +364,10 @@ test.describe('CP1 · versionado standalone del brief (Apéndice E)', () => {
       const editado = structuredClone(aprobado.brief);
       editado.product.name = 'Sérum Vitamina C 15% (editado sin run)';
 
-      const patch = await request.patch(`/api/briefs/${briefId}`, { data: { brief: editado } });
+      const patch = await apiCall(
+        () => request.patch(`/api/briefs/${briefId}`, { data: { brief: editado } }),
+        'PATCH /api/briefs/:id',
+      );
       expect(patch.ok()).toBe(true);
       const v2 = (await patch.json()) as { version: number; editedByUser: boolean; id: string };
 

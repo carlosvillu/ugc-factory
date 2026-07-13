@@ -9,12 +9,35 @@ import type { APIRequestContext } from '@playwright/test';
 import { createDb, createProject } from '@ugc/db';
 import { makeProject } from '@ugc/test-utils';
 import { analysisRunDefinition, demoCanvasRunDefinition } from '@ugc/core/orchestrator';
+import { apiCall } from './http';
 
 const runtime = JSON.parse(
   readFileSync(fileURLToPath(new URL('../.runtime.json', import.meta.url)), 'utf8'),
 ) as { databaseUrl: string };
 
 const db = createDb(runtime.databaseUrl);
+
+/**
+ * `POST /api/runs` a prueba del corte de transporte del `next dev` local (T1.19: ver
+ * `support/http.ts` — el reintento es de la PETICIÓN, no del test). Reintentar este POST es
+ * seguro: si el corte ocurrió DESPUÉS de que el servidor lo procesara, el reintento crea otro
+ * run y el spec usa el que se le devuelve (cada spec filtra por SU runId; un run huérfano no
+ * molesta a nadie). Un 201 que no llega, o un status distinto de 201, siguen siendo un fallo
+ * ruidoso.
+ */
+async function postRun(request: APIRequestContext, def: unknown, what: string): Promise<string> {
+  const res = await apiCall(
+    () => request.post('/api/runs', { data: def }),
+    `POST /api/runs (${what})`,
+  );
+  if (res.status() !== 201) {
+    throw new Error(
+      `POST /api/runs (${what}) falló (${String(res.status())}): ${await res.text()}`,
+    );
+  }
+  const body = (await res.json()) as { runId: string };
+  return body.runId;
+}
 
 /**
  * Siembra un project y lanza un run del DAG de demo del canvas vía `POST /api/runs`
@@ -35,12 +58,7 @@ export async function launchDemoCanvasRun(
     // visor que truncara pasaría igual.
     ...(opts.failMessage === undefined ? {} : { failMessage: opts.failMessage }),
   });
-  const res = await request.post('/api/runs', { data: def });
-  if (res.status() !== 201) {
-    throw new Error(`POST /api/runs falló (${String(res.status())}): ${await res.text()}`);
-  }
-  const body = (await res.json()) as { runId: string; steps: { key: string; stepId: string }[] };
-  return body.runId;
+  return postRun(request, def, 'demo canvas');
 }
 
 /**
@@ -61,12 +79,5 @@ export async function launchAnalysisRun(
 ): Promise<string> {
   const project = await createProject(db, makeProject());
   const def = analysisRunDefinition(project.id, { source: 'url', url });
-  const res = await request.post('/api/runs', { data: def });
-  if (res.status() !== 201) {
-    throw new Error(
-      `POST /api/runs (análisis) falló (${String(res.status())}): ${await res.text()}`,
-    );
-  }
-  const body = (await res.json()) as { runId: string };
-  return body.runId;
+  return postRun(request, def, 'análisis');
 }

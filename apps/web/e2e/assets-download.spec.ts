@@ -16,6 +16,7 @@ import { test, expect } from '@playwright/test';
 import { newUlid } from '@ugc/core/contracts';
 import { createDb, createAsset, makeLocalStorageAdapter } from '@ugc/db';
 import { makeAsset } from '@ugc/test-utils';
+import { apiCall } from './support/http';
 
 const runtime = JSON.parse(
   readFileSync(fileURLToPath(new URL('./.runtime.json', import.meta.url)), 'utf8'),
@@ -57,7 +58,11 @@ test.describe('descarga proxificada de assets (T0.5)', () => {
       const asset = await seedAsset();
 
       // page.request hereda la cookie de sesión del storageState (setup project).
-      const res = await request.get(`/api/assets/${asset.id}/download`);
+      // `apiCall`: reintenta SOLO el corte de transporte del `next dev` local (T1.19).
+      const res = await apiCall(
+        () => request.get(`/api/assets/${asset.id}/download`),
+        'GET /api/assets/:id/download',
+      );
       expect(res.status()).toBe(200);
       expect(res.headers()['content-type']).toBe('video/mp4');
 
@@ -73,7 +78,10 @@ test.describe('descarga proxificada de assets (T0.5)', () => {
     test('devuelve 401 sin exponer la ruta de storage', { tag: ['@f0'] }, async ({ request }) => {
       const asset = await seedAsset();
 
-      const res = await request.get(`/api/assets/${asset.id}/download`);
+      const res = await apiCall(
+        () => request.get(`/api/assets/${asset.id}/download`),
+        'GET /api/assets/:id/download (sin sesión)',
+      );
       expect(res.status()).toBe(401);
       const raw = await res.text();
       expect(JSON.parse(raw).code).toBe('unauthorized');

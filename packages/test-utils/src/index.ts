@@ -38,7 +38,12 @@ export { startPostgresContainer, type PostgresHarness } from './postgres-contain
 // Jina y Anthropic para el stack E2E. Lo consume el `webServer` de Playwright (que es un
 // proceso normal, no vitest) para que la suite NUNCA gaste dinero real. Emite lo que
 // emiten los productores reales: reutiliza los fixtures y las factories, no inventa.
-export { startFakeExternalApis, FAKE_BRIEF, FAKE_VISUAL_ANALYSIS } from './fake-apis';
+export {
+  startFakeExternalApis,
+  FAKE_BRIEF,
+  FAKE_VISUAL_ANALYSIS,
+  FAKE_URL_NO_HERO,
+} from './fake-apis';
 export type { FakeExternalApis } from './fake-apis';
 
 // Fixtures de IMAGEN reales (T2.0): PNGs generados con sharp cuyas dimensiones son de verdad las

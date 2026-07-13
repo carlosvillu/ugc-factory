@@ -2,41 +2,69 @@
 // React): la lógica de "qué se muestra, con qué tono y qué bloquea" es testeable sin DOM, y el
 // componente solo la RENDERIZA.
 //
-// LA DISTINCIÓN QUE HAY QUE ENTENDER (y que se nos puede escapar si no está escrita):
+// QUÉ BLOQUEA LA APROBACIÓN — y ya no hay dos preguntas, sino UNA (T1.15):
 //
-//   - `isBlockingWarning` (core, T1.9) responde a "¿el BRIEF es inválido?" → hoy solo
-//     `missing_hero_image` (perfil url). Un brief así NI SIQUIERA LLEGA a CP1: N3 falla el step
-//     (`ok:false` ⇒ PermanentStepError). Es decir: en CP1 no vas a ver nunca uno.
-//   - Lo que SÍ llega a CP1 y BLOQUEA LA APROBACIÓN es otra cosa: `needs_user_decision` — la
-//     petición BLOQUEANTE de imágenes del modo manual (§9.2, §7.2 N3). El brief es VÁLIDO (por
-//     eso el step no falló y estamos aquí), pero el pipeline no puede seguir sin que el usuario
-//     DECIDA: o sube fotos del producto, o deriva la generación del frame inicial a packshot-IA
-//     (N7a). T1.9 lo dejó tipado y sin UI a propósito, "porque lo decide T1.10b". Esto es T1.10b.
-//
-// O sea: "bloqueante para el brief" (core) y "bloqueante para aprobar" (aquí) son dos preguntas
-// distintas y NO se pueden fusionar en un solo booleano. Fusionarlas dejaría pasar el checkpoint
-// manual sin decisión — exactamente lo que la Verificación exige ver.
+// Hasta T1.15 esta cabecera distinguía "bloqueante para el BRIEF" (`isBlockingWarning`, core: el
+// brief es inválido y el step MUERE antes de llegar aquí) de "bloqueante para APROBAR" (aquí:
+// `needs_user_decision`, el brief es válido pero el pipeline no sigue sin que el usuario decida).
+// El primero se ha ELIMINADO: la falta de hero image en perfil `url` mataba el run con la
+// síntesis ya pagada (stayforlong.com) en vez de preguntarle al usuario, que es lo que el perfil
+// `manual` ya hacía bien. Hoy NINGÚN warning invalida el brief; todos llegan a CP1, y el único
+// que BLOQUEA LA APROBACIÓN es `needs_user_decision` — hasta que el usuario elige.
 //
 // `hook_too_long` NO bloquea, y esto NO es un descuido: los hooks auténticos de Sonnet 5 exceden
 // el techo de ≤12 palabras con frecuencia (8 casos en briefs reales de T1.9). Si bloqueara,
 // CP1 estaría bloqueado en casi cualquier análisis real. Se AVISA (el usuario reescribe el copy
 // si quiere, en el mismo editor) y se deja aprobar.
-import type { BriefCheckpointDecision, BriefWarning } from '@ugc/core/contracts';
+import type { BriefCheckpointDecision, BriefWarning, ProductBrief } from '@ugc/core/contracts';
 
-/** Las dos salidas de la petición bloqueante de imágenes (§7.2 N3): subir fotos del producto, o
- *  derivar el frame inicial de i2v a un packshot generado por IA (N7a).
+/** Las TRES salidas de la petición bloqueante de imágenes (§7.2 N3, T1.15): subir fotos del
+ *  producto, PROMOVER a hero una de las imágenes que el scrape sí trajo, o derivar el frame
+ *  inicial de i2v a un packshot generado por IA (N7a).
  *
- *  DERIVADO del contrato de core (T1.11), no redeclarado: esta decisión ya no es estado local que
- *  se evapora — VIAJA al servidor en el body del `/approve` (y del `/edit`) y se persiste en
+ *  DERIVADO del contrato de core (T1.11), no redeclarado: esta decisión no es estado local que se
+ *  evapora — VIAJA al servidor en el body del `/approve` (y del `/edit`) y se persiste en
  *  `checkpoint_decision`. Si el contrato añade una salida, esto no compila hasta que la UI la
- *  pinte, que es exactamente lo que queremos. */
-export type ImageDecision = BriefCheckpointDecision['images'];
+ *  pinte, que es exactamente lo que queremos (y es lo que pasó al añadir `promote_scraped`).
+ *
+ *  NO se exporta: fuera de este módulo lo que circula es la ELECCIÓN ENTERA (`ChosenImageDecision`,
+ *  abajo), nunca el enum suelto — que es precisamente lo que permitía tener un `promote_scraped`
+ *  sin su imagen. */
+type ImageDecision = BriefCheckpointDecision['images'];
+
+/** Una imagen del brief que el usuario puede PROMOVER a hero (T1.15). Son las que N2 clasificó y
+ *  el sintetizador dejó en `assets.images[]`: en una web de servicio no hay packshot, pero sí hay
+ *  fotos —y el usuario, que sí sabe cuál sirve, no tenía forma de decirlo. */
+export type HeroCandidate = ProductBrief['assets']['images'][number];
+
+/**
+ * LO QUE EL USUARIO HA ELEGIDO en CP1, tal como lo guarda el editor mientras está en el
+ * checkpoint. Es una UNIÓN DISCRIMINADA por `images`, y esa forma es el punto: `heroUrl` existe
+ * —y es obligatoria— EXACTAMENTE en la rama que la necesita.
+ *
+ * POR QUÉ ASÍ Y NO `{images, heroUrl: string | null}`: el invariante «promover exige URL» lo impone
+ * el contrato de core con un refine (una decisión de promover que no dice QUÉ imagen es una
+ * decisión que N7a no podría ejecutar, y el servidor la rechaza con 400). Si el tipo de aquí
+ * admitiera `promote_scraped` sin url, el invariante quedaría repartido entre DOS funciones que
+ * tienen que estar de acuerdo —la que CONSTRUYE el payload y la que decide si se puede aprobar— y
+ * bastaría un llamante futuro que se saltase la segunda para meter el 400 en producción. Es el
+ * patrón de los dos canales que este proyecto ya se ha comido varias veces. Aquí lo hace imposible
+ * el TIPO: si no hay url, no hay `ChosenImageDecision` que construir.
+ */
+export type ChosenImageDecision =
+  | { images: Exclude<ImageDecision, 'promote_scraped'> }
+  | { images: 'promote_scraped'; heroUrl: string };
 
 /** La DECISIÓN de CP1 en la forma del contrato genérico (`kind` discrimina el checkpoint). Es lo
  *  que el editor manda al servidor; construirla aquí —y no inline en el componente— mantiene el
- *  componente ignorante del transporte. */
-export function toBriefDecision(decision: ImageDecision): BriefCheckpointDecision {
-  return { kind: 'brief', images: decision };
+ *  componente ignorante del transporte.
+ *
+ *  Recibe la elección ENTERA (no dos params sueltos): así no hay ningún `?? ''` que fabricar
+ *  cuando falta la url — el tipo garantiza que está. */
+export function toBriefDecision(chosen: ChosenImageDecision): BriefCheckpointDecision {
+  return chosen.images === 'promote_scraped'
+    ? { kind: 'brief', images: chosen.images, hero_image_url: chosen.heroUrl }
+    : { kind: 'brief', images: chosen.images };
 }
 
 /** Tono visual del warning (mapea a los tonos del DS: Alert/Badge). */
@@ -50,7 +78,7 @@ export interface WarningView {
   /** Copy ACCIONABLE: qué pasó y qué puede hacer el usuario. */
   detail: string;
   /** `true` si este warning EXIGE una decisión del usuario antes de aprobar (hoy solo
-   *  `needs_user_decision`). Ver la cabecera: NO es `isBlockingWarning` de core. */
+   *  `needs_user_decision`). */
   requiresDecision: boolean;
 }
 
@@ -102,20 +130,11 @@ export function toWarningView(warning: BriefWarning): WarningView {
       return {
         code: warning.code,
         tone: 'warning',
-        title: 'Necesitamos imágenes del producto',
+        title: 'Necesitamos una imagen principal del producto',
         // El `message` del warning ya es accionable (lo escribe el validador, T1.9): se muestra
         // TAL CUAL. El wording no es contrato, pero es el canal por el que el servidor explica
-        // el caso concreto — reescribirlo aquí duplicaría la verdad.
-        detail: warning.message,
-        requiresDecision: true,
-      };
-    case 'missing_hero_image':
-      // No debería llegar nunca a CP1 (el step falla antes, ver cabecera). Si llega, se muestra
-      // en vez de tragárselo: un warning bloqueante invisible es lo peor de los dos mundos.
-      return {
-        code: warning.code,
-        tone: 'warning',
-        title: 'Sin imagen principal usable',
+        // el caso concreto —si la página trajo imágenes o no, las salidas son otras— y
+        // reescribirlo aquí duplicaría la verdad.
         detail: warning.message,
         requiresDecision: true,
       };
@@ -126,8 +145,15 @@ export function toWarningView(warning: BriefWarning): WarningView {
  * ¿Puede aprobarse el brief? `false` mientras quede alguna decisión pendiente (un warning que la
  * exige y para el que el usuario aún no ha elegido). Función pura: el componente la consulta,
  * no la reimplementa.
+ *
+ * Un solo criterio: ¿hay elección? Y NO tiene que comprobar además que una promoción traiga su
+ * imagen —que era el segundo canal de la versión anterior de T1.15—: un `ChosenImageDecision`
+ * `promote_scraped` SIEMPRE la trae, porque el tipo no permite construirlo sin ella. El
+ * invariante vive en UN sitio (el tipo), no en el acuerdo entre esta función y `toBriefDecision`.
  */
-export function canApprove(warnings: BriefWarning[], decision: ImageDecision | null): boolean {
-  const pending = warnings.some(requiresUserDecision);
-  return !pending || decision !== null;
+export function canApprove(
+  warnings: BriefWarning[],
+  decision: ChosenImageDecision | null,
+): boolean {
+  return !warnings.some(requiresUserDecision) || decision !== null;
 }

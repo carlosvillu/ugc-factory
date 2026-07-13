@@ -356,28 +356,18 @@ export function makeN3Executor(deps: AnalysisExecutorDeps): StepExecutor {
     // ignora.
     const validated = validateBrief(result.brief, validationOpts);
 
-    // `ok:false` ⇒ FALLO del step, y PERMANENTE.
+    // NINGÚN warning del validador MATA el step (T1.15) — y aquí había justo lo contrario: un
+    // `if (!validated.ok) throw new PermanentStepError(...)` que hacía terminal el brief sin hero
+    // en perfil `url`. La razón que se escribió entonces (una tienda scrapeada sin ni una imagen
+    // usable = algo va mal, y CP1 no puede arreglarlo) era falsa para el uso real: en el run de
+    // stayforlong.com el step murió con la síntesis de Sonnet YA PAGADA, dejando al usuario sin
+    // más salida que leer logs — mientras las imágenes de la página (un about-us, un banner)
+    // estaban en el brief, esperando a que alguien las promoviera a hero. El mecanismo bueno ya
+    // existía en el perfil manual: `needs_user_decision` → CP1 → el usuario decide (subir fotos,
+    // promover una imagen scrapeada, o derivar a packshot IA) y su decisión viaja por
+    // `checkpoint_decision` (T1.11) hasta N7a (T4.4). PRD §7.2 N3 y §9.2.
     //
-    // ¿Por qué `failed` y no `reach_checkpoint` (que CP1 lo resuelva con el usuario)? Lo
-    // decide el contrato de T1.9, no la intuición: `ok` se DERIVA de `isBlockingWarning`
-    // (contracts/brief-warning.ts), y el único código bloqueante de hoy es
-    // `missing_hero_image` — cuya definición dice literalmente que en perfil `url` "NO es
-    // una decisión de CP1 como en manual (§9.2)", y que `ok:false` significa "el paso no
-    // puede continuar NI DELEGAR EN CP1". Los problemas que SÍ son decisión de CP1 (p. ej.
-    // `needs_user_decision` del perfil manual: sin hero, el usuario sube imágenes o deriva
-    // a packshot IA) NO ponen `ok:false` — viajan como warnings con el brief y llegan a CP1
-    // por el camino normal (el `succeed` de abajo). O sea: el mecanismo de "que lo decida
-    // CP1" ya existe y ya funciona; `ok:false` es justo el caso en el que NO sirve.
-    //
-    // PERMANENTE por el mismo motivo de dinero que arriba: la validación es DETERMINISTA
-    // sobre un brief dado. Reintentar = pagar otra síntesis para que el validador diga
-    // exactamente lo mismo.
-    if (!validated.ok) {
-      const codes = validated.warnings.map((w) => w.code).join(', ');
-      throw new PermanentStepError(
-        `N3: el brief no supera la validación determinista (T1.9): ${codes}`,
-      );
-    }
+    // Los warnings viajan con el brief al `succeed` de abajo, que es el ÚNICO camino de N3.
 
     // T1.10b — PERSISTENCIA DEL BRIEF (v1, el de la IA). Hasta aquí el brief vivía SOLO inline
     // en `output_refs`, sin fila ni versión: no había nada que versionar en CP1 ni nada que

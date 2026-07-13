@@ -505,6 +505,61 @@ describe('CP1 · el efecto sobre product_brief es ATÓMICO con la transición (T
       expect(await decisionsOf(stepId)).toEqual([]);
     });
 
+    // ── T1.15 · `/approve` RECHAZA la promoción a hero ───────────────────────────────────────
+    it('promote_scraped en /approve → 400: promover EDITA el brief, y /approve no lo toca', async () => {
+      // EL INVARIANTE, y es de CONTRATO, no de UI. `/approve` aprueba el brief de la IA TAL CUAL
+      // (`approveBriefForStep` solo marca la v1 `approved`: no crea versión ni cambia contenido).
+      // Si aceptase una decisión `promote_scraped`, persistiría una decisión que dice «promoví
+      // ESTA imagen» contra un brief cuyo `hero_image_url` sigue siendo `null` — los dos canales
+      // (decisión y artefacto) diciendo cosas distintas, y N7a (T4.4) descubriéndolo en F4
+      // gastando dinero en fal.ai contra un hero que no existe.
+      //
+      // El `if` del editor (que redirige la promoción a `/edit`) protege a UN llamante; esto para
+      // a cualquier otro — un curl, un test, el MCP de F8. Es el control negativo del guard: si
+      // alguien quita el `.refine()` del BodySchema, este test se pone rojo.
+      const { stepId } = await seedBriefCheckpoint('waiting_approval');
+
+      const res = await call(approvePost, stepId, `/api/steps/${stepId}/approve`, {
+        decision: {
+          kind: 'brief',
+          images: 'promote_scraped',
+          hero_image_url: 'https://es.stayforlong.com/img/banner.jpg',
+        },
+      });
+
+      expect(res.status).toBe(400);
+      // Y NADA se ha tocado: ni la transición, ni la decisión. El borde para antes de la BD.
+      expect(await statusOf(stepId)).toBe('waiting_approval');
+      expect(await decisionsOf(stepId)).toEqual([]);
+    });
+
+    it('promote_scraped SÍ es válida en /edit: es donde el hero elegido entra en la v2', async () => {
+      // La otra mitad: el 400 de arriba NO es "esta decisión es inválida", es "por esta puerta no".
+      // Por `/edit` sí pasa —y tiene que pasar—: es el camino que crea la v2 con el hero elegido.
+      const { stepId, analysisId } = await seedBriefCheckpoint('waiting_approval');
+      const hero = makeBrief().assets.images[0]?.url ?? '';
+      const promovido = makeBrief();
+      promovido.assets.hero_image_url = hero;
+
+      const res = await call(editPost, stepId, `/api/steps/${stepId}/edit`, {
+        brief: promovido,
+        decision: { kind: 'brief', images: 'promote_scraped', hero_image_url: hero },
+      });
+
+      expect(res.status).toBe(200);
+      // Las DOS mitades commitean juntas: la v2 con su hero, y la decisión que dice de dónde salió.
+      expect(await briefRows(analysisId)).toEqual([
+        { version: 1, status: 'draft' },
+        { version: 2, status: 'approved' },
+      ]);
+      expect(await decisionsOf(stepId)).toEqual([
+        {
+          kind: 'brief',
+          decision: { kind: 'brief', images: 'promote_scraped', hero_image_url: hero },
+        },
+      ]);
+    });
+
     it('body VACÍO (curl sin -d) sigue siendo una aprobación válida; body BASURA → 400', async () => {
       // T1.11 tocó `readJson` (withRoute) para que `/approve` pudiera declarar un body schema sin
       // romper a quien no manda body: un POST SIN body no es "JSON malformado", es "sin body" ⇒

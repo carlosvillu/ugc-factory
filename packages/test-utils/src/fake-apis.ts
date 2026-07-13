@@ -23,6 +23,7 @@ import {
   FIRECRAWL_INTERNAL_FAQ,
   JINA_MARKDOWN,
 } from './fixtures/firecrawl';
+import type { ProductBrief } from '@ugc/core/contracts';
 import { anthropicMessageResponse, anthropicBriefResponse } from './fixtures/anthropic';
 import { makeBrief, makeVisualAnalysis } from './factories';
 
@@ -31,6 +32,26 @@ import { makeBrief, makeVisualAnalysis } from './factories';
 // (validación T1.9) se cumple con la MISMA url que el scrape produjo, en vez de con una
 // inventada que el pipeline real nunca vería.
 const FAKE_HERO_IMAGE = 'https://cdn.glow.example/hero.jpg';
+
+/**
+ * T1.15 — LAS OTRAS IMÁGENES que el scrape falso SÍ trae (FIRECRAWL_LANDING_RICH: hero, lifestyle,
+ * detail, ingredients). El caso `url` SIN HERO (stayforlong) las usa: son imágenes REALES del
+ * scrape que N2 clasificó como `broll`/`unusable` — y son, por tanto, las que el usuario puede
+ * PROMOVER a hero en CP1. Un fixture con `images: []` no serviría: sin candidatas no habría nada
+ * que promover, y el test no ejercitaría el caso que rompió (principio 9 de testing).
+ */
+const FAKE_SCRAPED_IMAGES = [
+  'https://cdn.glow.example/lifestyle.jpg',
+  'https://cdn.glow.example/detail.jpg',
+  'https://cdn.glow.example/ingredients.jpg',
+] as const;
+
+/**
+ * La URL que el E2E analiza para provocar el caso `url` SIN HERO USABLE. El fake la reconoce en el
+ * bloque STRUCTURED DATA del user message (`{"url": ...}`, que el sintetizador REAL escribe) —el
+ * mismo mecanismo explícito que `isManualSynthesis`, no una heurística sobre el contenido.
+ */
+export const FAKE_URL_NO_HERO = 'https://services.example/no-hero/hoteles';
 
 // Los modelos EXACTOS que piden los clientes reales: `MODEL` de visual-analyzer.ts (N2,
 // T1.7) y `BRIEF_SYNTHESIZER_MODEL` de brief-synthesizer.ts (N3, T1.8). Es lo que usa el
@@ -101,10 +122,10 @@ export const FAKE_BRIEF = makeBrief({
     },
   ],
   assets: {
-    // `hero_image_url` NO nulo: la validación de T1.9 en perfil `url` exige ≥1 imagen
-    // hero usable, y su ausencia es un warning BLOQUEANTE (ok:false) que haría fallar a
-    // N3. Con la imagen que el scrape falso sí produce, el camino feliz es feliz de
-    // verdad — no por haberle quitado el examen.
+    // `hero_image_url` NO nulo: es el CAMINO FELIZ (una tienda con su packshot), y lo es con la
+    // imagen que el scrape falso sí produce — no por haberle quitado el examen. Su ausencia ya no
+    // mata el run (T1.15): lleva la decisión a CP1, y ESE camino tiene su propio fixture
+    // (`FAKE_BRIEF_NO_HERO`, la web de servicio).
     hero_image_url: FAKE_HERO_IMAGE,
     images: [
       {
@@ -125,8 +146,8 @@ export const FAKE_BRIEF = makeBrief({
   // override es LOCAL (aquí), no en `makeBrief`: su default corto lo comparten decenas de tests
   // que no van de esto.
   //
-  // 14 palabras ⇒ `hook_too_long` (MAX_HOOK_WORDS = 12). NO bloquea la aprobación (no está en
-  // BLOCKING_WARNING_CODES): se avisa y el usuario reescribe el copy si quiere, en el editor.
+  // 14 palabras ⇒ `hook_too_long` (MAX_HOOK_WORDS = 12). NO bloquea la aprobación (ningún warning
+  // lo hace, T1.15): se avisa y el usuario reescribe el copy si quiere, en el editor.
   angles: makeBrief().angles.map((angle, i) =>
     i === 0
       ? {
@@ -174,6 +195,54 @@ const FAKE_BRIEF_NO_IMAGES = makeBrief({
 });
 
 /**
+ * T1.15 — EL BRIEF DE UNA WEB DE SERVICIO: origen `url`, SIN hero usable, pero CON las imágenes
+ * que el scrape SÍ trajo. Es el caso REAL que motivó la tarea (`es.stayforlong.com`): Haiku
+ * clasificó honestamente las 3 imágenes que le llegaron —un sello de award, un about-us, un
+ * banner— como `broll`/`unusable`, ninguna era `hero`, y el sintetizador dejó
+ * `hero_image_url: null`. Hasta T1.15 eso MATABA el run en N3 (warning bloqueante) con la síntesis
+ * de Sonnet ya pagada; ahora llega a CP1 y el usuario decide.
+ *
+ * LA DIFERENCIA CON `FAKE_BRIEF_NO_IMAGES` (y es la que hace que este fixture valga): aquí SÍ hay
+ * `assets.images[]`. Son las candidatas que el editor ofrece PROMOVER a hero — con `images: []` no
+ * habría nada que elegir y el E2E no ejercitaría la salida nueva. Y son URLs que el Firecrawl
+ * falso REALMENTE devuelve en su landing, no inventadas: el pipeline de verdad nunca vería otras.
+ *
+ * OJO al `suggested_assets: []`: el sintetizador real no puede sugerir assets que no existen
+ * (regla 8.7), y dejarlos apuntando a la hero.jpg del brief canónico —que aquí NO está en
+ * `images`— haría que el validador emitiera `pruned_suggested_asset` de propina. Ruido que
+ * desplazaría los asserts sin aportar nada.
+ */
+const FAKE_BRIEF_NO_HERO = makeBrief({
+  assets: {
+    hero_image_url: null,
+    images: [
+      {
+        url: FAKE_SCRAPED_IMAGES[0],
+        kind: 'lifestyle',
+        has_overlay_text: true,
+        background: 'busy',
+        video_suitability: 'broll',
+      },
+      {
+        url: FAKE_SCRAPED_IMAGES[1],
+        kind: 'other',
+        has_overlay_text: false,
+        background: 'busy',
+        video_suitability: 'broll',
+      },
+      {
+        url: FAKE_SCRAPED_IMAGES[2],
+        kind: 'chart_or_text',
+        has_overlay_text: true,
+        background: 'clean',
+        video_suitability: 'unusable',
+      },
+    ],
+  },
+  angles: makeBrief().angles.map((angle) => ({ ...angle, suggested_assets: [] })),
+});
+
+/**
  * ¿La request de síntesis (N3) es de MODO MANUAL? Se mira el bloque STRUCTURED DATA que el
  * sintetizador REAL escribe en el user message (`brief-synthesizer.ts` buildUserMessage:
  * `{source: raw.source, url, product, branding}`), que es un dato EXPLÍCITO y estable — no una
@@ -184,12 +253,34 @@ const FAKE_BRIEF_NO_IMAGES = makeBrief({
  * ESCAPADAS (`{\"source\":\"manual\"}`) y el patrón nunca casaría.
  */
 function isManualSynthesis(body: Record<string, unknown>): boolean {
+  return synthesisMessageIncludes(body, '"source":"manual"');
+}
+
+/**
+ * ¿La request de síntesis es la del caso `url` SIN HERO (T1.15)? Mismo mecanismo explícito: la
+ * URL analizada viaja en el STRUCTURED DATA (`{"source":"url","url":"…"}`) y el E2E la elige a
+ * propósito (`FAKE_URL_NO_HERO`). Nada de heurísticas sobre el markdown.
+ */
+function isUrlNoHeroSynthesis(body: Record<string, unknown>): boolean {
+  return synthesisMessageIncludes(body, FAKE_URL_NO_HERO);
+}
+
+/** El user message del sintetizador es un STRING con JSON dentro: se busca sobre su TEXTO. */
+function synthesisMessageIncludes(body: Record<string, unknown>, needle: string): boolean {
   const messages = Array.isArray(body.messages) ? body.messages : [];
   return messages.some((m: unknown) => {
     if (typeof m !== 'object' || m === null || !('content' in m)) return false;
     const { content } = m;
-    return typeof content === 'string' && content.includes('"source":"manual"');
+    return typeof content === 'string' && content.includes(needle);
   });
+}
+
+/** El brief que el Anthropic falso devuelve para una síntesis dada. Tres casos, y el orden importa
+ *  (manual gana: en manual no hay URL que mirar). */
+function briefForSynthesis(body: Record<string, unknown>): ProductBrief {
+  if (isManualSynthesis(body)) return FAKE_BRIEF_NO_IMAGES;
+  if (isUrlNoHeroSynthesis(body)) return FAKE_BRIEF_NO_HERO;
+  return FAKE_BRIEF;
 }
 
 export interface FakeExternalApis {
@@ -262,22 +353,25 @@ export async function startFakeExternalApis(): Promise<FakeExternalApis> {
         return;
       }
       if (model === SYNTHESIS_MODEL) {
-        // T1.10b — EL FAKE RESPONDE SEGÚN LO QUE SE LE PIDE, como haría el modelo real.
+        // T1.10b / T1.15 — EL FAKE RESPONDE SEGÚN LO QUE SE LE PIDE, como haría el modelo real.
         //
-        // El user message del sintetizador lleva el bloque STRUCTURED DATA con `source` del
-        // RawContent (`brief-synthesizer.ts` buildUserMessage: `{source: raw.source, ...}`). En
-        // modo MANUAL sin imágenes no hay NADA visual que el modelo pueda poner en `assets`, así
-        // que devuelve un brief SIN hero (FAKE_BRIEF_NO_IMAGES) — que es lo que dispara el
-        // `needs_user_decision` del validador y lleva la petición bloqueante de imágenes a CP1.
+        // El user message del sintetizador lleva el bloque STRUCTURED DATA con el `source` y la
+        // `url` del RawContent (`brief-synthesizer.ts` buildUserMessage). Tres respuestas:
+        //   - MANUAL sin imágenes: no hay NADA visual que el modelo pueda poner en `assets` ⇒
+        //     brief sin hero Y SIN IMÁGENES (FAKE_BRIEF_NO_IMAGES).
+        //   - URL de una web de SERVICIO (T1.15, `FAKE_URL_NO_HERO`): hay imágenes, pero ninguna
+        //     sirve de hero ⇒ FAKE_BRIEF_NO_HERO. Es el caso stayforlong, y el único en el que el
+        //     usuario puede PROMOVER una imagen scrapeada.
+        //   - Resto: el camino feliz, con hero (FAKE_BRIEF).
         //
-        // Devolver siempre el brief CON hero (lo que hacía antes) era el fixture cómodo de
-        // T1.8/T1.9 otra vez: hacía inobservable el único warning que CP1 tiene que resolver.
+        // Devolver siempre el brief CON hero (lo que hacía antes de T1.10b) era el fixture cómodo
+        // de T1.8/T1.9: hacía inobservable el warning que CP1 tiene que resolver.
         //
         // OJO al escapado: el user message es un STRING que CONTIENE JSON, así que dentro del
         // body de la request las comillas van escapadas (`{\"source\":\"manual\"}`). Buscar
         // `"source":"manual"` sobre el `JSON.stringify(body)` NO casa nunca. Se mira el TEXTO
         // del mensaje ya des-escapado (que es donde el sintetizador lo escribe).
-        json(anthropicBriefResponse(isManualSynthesis(body) ? FAKE_BRIEF_NO_IMAGES : FAKE_BRIEF));
+        json(anthropicBriefResponse(briefForSynthesis(body)));
         return;
       }
       json(

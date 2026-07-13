@@ -5,9 +5,15 @@
 // viajan en el retorno (los consume el step de T1.10a y el editor de CP1 de T1.10b).
 //
 // Perfiles por origen (§9.2):
-//   - `url`    : checks completos. Cross-check de precio N1==N3 y hero image OBLIGATORIA.
-//   - `manual` : texto libre. Se OMITE el cross-check de precio (no hay fast path con el que
-//                cruzar) y la falta de hero image es DECISIÓN DE CP1, no un error.
+//   - `url`    : checks completos. Cross-check de precio N1==N3.
+//   - `manual` : texto libre. Se OMITE el cross-check de precio (no hay fast path con el que cruzar).
+//
+// La falta de hero image NO ramifica por perfil (T1.15): en los dos es DECISIÓN DE CP1, nunca un
+// error del run. Ver el bloque 2) y la cabecera de `NeedsUserDecisionWarningSchema`.
+//
+// NINGÚN check de aquí puede INVALIDAR el brief: el validador emite warnings, y todos ellos
+// (corrección, aviso, decisión) dejan pasar el brief a CP1. No hay `ok` que devolver — lo hubo
+// hasta T1.15, cuando el único código bloqueante que existía dejó de serlo.
 //
 // Cardinalidades (5–10 ángulos, 2–3 hooks, ≤4 segments, ≤5 quotes) Y ENUMS — los otros dos
 // checks que §9.2 lista: NO se re-implementan aquí. Su única fuente de verdad es la capa Zod
@@ -17,7 +23,6 @@
 // crearía una segunda fuente de verdad que derivaría en silencio.
 import type { ProductBrief } from '../contracts/product-brief';
 import type { RawContent } from '../contracts/raw-content';
-import { isBlockingWarning } from '../contracts/brief-warning';
 import type { BriefValidationProfile, BriefWarning } from '../contracts/brief-warning';
 
 /**
@@ -37,19 +42,11 @@ export interface ValidateBriefOptions {
 }
 
 export interface ValidateBriefResult {
-  /**
-   * `false` SOLO cuando el brief tiene un problema que el pipeline no puede resolver solo ni
-   * delegar en CP1 (hoy: perfil `url` sin hero image usable). Los warnings de corrección
-   * (precio, poda), de aviso (hooks) y de decisión de CP1 (`needs_user_decision`) dejan
-   * `ok = true`: el brief sigue siendo VÁLIDO y el paso NO falla (§9.2).
-   *
-   * DERIVADO de `warnings` vía `isBlockingWarning` — no es un canal independiente. Para hacer
-   * bloqueante un código nuevo se marca en `BLOCKING_WARNING_CODES` (contrato) y `ok` se entera
-   * solo; no hay ningún sitio más que tocar.
-   */
-  ok: boolean;
-  /** Copia CORREGIDA del brief (precio del fast path, `suggested_assets` podadas). */
+  /** Copia CORREGIDA del brief (precio del fast path, `suggested_assets` podadas, hero alucinado
+   *  podado a null). SIEMPRE válido: ningún check del validador puede invalidarlo (T1.15). */
   brief: ProductBrief;
+  /** Los hallazgos. Los que exigen una DECISIÓN del usuario los resuelve CP1 (`needs_user_decision`);
+   *  el resto son informativos. Ninguno hace fallar el step. */
   warnings: BriefWarning[];
 }
 
@@ -193,10 +190,15 @@ export function validateBrief(
   // `assets.images[]` — el mismo criterio de pertenencia que `suggested_assets` (§9.2). Un hero
   // ALUCINADO por el LLM (URL que no está en el set de imágenes reales) es tan inservible como
   // no tener hero: N7a lo usaría de frame inicial de i2v y gastaría dinero contra una imagen
-  // inexistente. Los dos casos (ausente / fuera del set) se tratan IGUAL, según el perfil (§9.2):
-  //   - `manual`: decisión de CP1 (subir fotos o derivar N7a a packshot IA) → warning tipado,
-  //     brief VÁLIDO, el paso NO falla.
-  //   - `url`   : sí es un problema (hemos scrapeado y no ha salido ninguna imagen usable) → ok=false.
+  // inexistente. Los dos casos (ausente / fuera del set) se tratan IGUAL.
+  //
+  // Y EN LOS DOS PERFILES IGUAL (T1.15): es una DECISIÓN DE CP1 (`needs_user_decision`), nunca un
+  // fallo del run. Hasta T1.15, la rama `url` emitía un warning BLOQUEANTE que mataba el step con
+  // la síntesis de Sonnet ya pagada. La regla se escribió pensando en e-commerce (una tienda sin
+  // ni una foto usable = algo va mal), pero el uso real incluye webs de servicio/SaaS donde NO
+  // tener packshot es lo NORMAL: stayforlong.com clasificó honestamente sus 3 imágenes (un sello
+  // de award `unusable`, un about-us y un banner `broll`) → sin hero → run muerto, sin nada que
+  // el usuario pudiera hacer. Ahora el brief llega a CP1 y el usuario elige (PRD §7.2 N3, §9.2).
   const validImageUrls = new Set(brief.assets.images.map((image) => image.url));
   const heroUrl = brief.assets.hero_image_url;
   const heroIsUsable = heroUrl !== null && validImageUrls.has(heroUrl);
@@ -208,25 +210,20 @@ export function validateBrief(
       // existe en el brief sería enviar aguas abajo un puntero roto.
       assets = { ...brief.assets, hero_image_url: null };
     }
-    if (profile === 'manual') {
-      warnings.push({
-        code: 'needs_user_decision',
-        reason: 'missing_hero_image',
-        message:
-          'No hay imagen de producto: sube al menos una foto o elige generar un packshot con IA.',
-      });
-    } else {
-      // DIVERGENCIA DELIBERADA con testing/unit-core.md §5, que dice "url sin hero image →
-      // error (NO warning)". Aquí es un warning tipado BLOQUEANTE: da el "error" que pide la
-      // skill (`ok = false`, derivado abajo) Y ADEMÁS dice POR QUÉ — un `ok=false` sin motivo
-      // es un fallo silencioso. Ni el PRD (§9.2/§7.2 N3) ni la Verificación de T1.9 lo prohíben,
-      // y la jerarquía es PRD/planning > skill.
-      warnings.push({
-        code: 'missing_hero_image',
-        message:
-          'No pudimos leer una imagen de producto usable de la página; sube 3 imágenes y una descripción.',
-      });
-    }
+    // El MENSAJE es lo único que ramifica por perfil, y solo porque las salidas ACCIONABLES no
+    // son las mismas: con imágenes scrapeadas (rama url) el usuario puede PROMOVER una a hero —
+    // la salida que descubrió stayforlong.com— y sin ninguna (manual, o una url de la que no
+    // salió ni una imagen) solo puede subir fotos o derivar a packshot IA. El wording no es
+    // contrato; el `code` y el `reason`, sí.
+    const hasCandidates = brief.assets.images.length > 0;
+    warnings.push({
+      code: 'needs_user_decision',
+      reason: 'missing_hero_image',
+      message: hasCandidates
+        ? 'No hay una imagen de producto clara: elige una de las imágenes de la página como principal, ' +
+          'sube tus propias fotos, o genera un packshot con IA.'
+        : 'No hay imagen de producto: sube al menos una foto o elige generar un packshot con IA.',
+    });
   }
 
   // ── 3) Poda de `suggested_assets[]` + longitud de hooks ────────────────────────────────
@@ -272,12 +269,12 @@ export function validateBrief(
     };
   });
 
+  // Sin `ok` (T1.15): no hay ningún camino por el que este validador pueda decir "este brief no
+  // sirve". Cuando lo había, se DERIVABA de los warnings (`isBlockingWarning`) y nunca se acumuló
+  // en paralelo — el patrón sigue siendo el bueno si algún día vuelve a hacer falta. Devolver hoy
+  // un `ok: true` constante sería peor que no devolverlo: un booleano que nunca es false le hace
+  // creer al llamante que tiene algo que comprobar.
   return {
-    // DERIVADO, nunca acumulado en paralelo: la severidad viaja con el warning
-    // (`isBlockingWarning`). Un `let ok` aparte era un segundo canal para "el brief no sirve",
-    // y dos canales divergen en silencio: bastaba olvidar un `ok = false` al añadir un código
-    // bloqueante nuevo para que el paso aceptara un brief que revienta aguas abajo.
-    ok: !warnings.some(isBlockingWarning),
     brief: { ...brief, pricing, assets, angles },
     warnings,
   };

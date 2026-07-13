@@ -15,10 +15,12 @@
 import { z } from 'zod';
 
 /**
- * Perfil de validación por ORIGEN (§9.2). `url`: checks completos (hay fast path con precio
- * y un scraping del que salió la imagen hero). `manual`: texto libre — se OMITE el cross-check
- * de precio (no hay N1 con el que cruzar) y la falta de hero image es una decisión de CP1,
- * no un error.
+ * Perfil de validación por ORIGEN (§9.2). `url`: checks completos (hay fast path con precio con
+ * el que cruzar el del LLM). `manual`: texto libre — se OMITE el cross-check de precio (no hay
+ * N1 con el que cruzar).
+ *
+ * La falta de hero image NO depende del perfil (T1.15): en LOS DOS es una decisión de CP1
+ * (`needs_user_decision`), nunca un error del run. Ver la cabecera de `NeedsUserDecisionWarningSchema`.
  */
 export const BriefValidationProfileSchema = z.enum(['url', 'manual']);
 export type BriefValidationProfile = z.infer<typeof BriefValidationProfileSchema>;
@@ -72,25 +74,24 @@ export const HookTooLongWarningSchema = z.object({
 });
 
 /**
- * Decisión que el pipeline NO toma solo: la delega en el usuario en CP1. Hoy un único
- * `reason` (`missing_hero_image` en perfil `manual`: sin imagen hero, N7a deriva a packshot IA
- * O el usuario sube fotos — §7.2 N3). El brief queda VÁLIDO y el paso NO falla.
+ * Decisión que el pipeline NO toma solo: la delega en el usuario en CP1. Hoy un único `reason`
+ * (`missing_hero_image`): sin imagen hero usable, el usuario sube fotos, promueve una de las
+ * imágenes scrapeadas, o deriva a packshot IA (N7a) — §7.2 N3. El brief queda VÁLIDO y el paso
+ * NO falla.
+ *
+ * T1.15 — EN LOS DOS PERFILES, y esto REVIERTE la asimetría de T1.9 (que hacía de la falta de
+ * hero un fallo TERMINAL del run en perfil `url`). El fallo duro se diseñó pensando en
+ * e-commerce («scrapeé una tienda y no salió ni una foto» = algo va mal), pero el uso real
+ * incluye webs de servicio/SaaS donde NO tener packshot es lo normal: el run de stayforlong.com
+ * murió en N3 con la síntesis de Sonnet YA PAGADA y sin nada que el usuario pudiera hacer salvo
+ * leer logs, mientras las 3 imágenes que sí había (un sello de award, un about-us, un banner)
+ * estaban ahí, esperando a que alguien las mirase. El mecanismo bueno ya existía en `manual`:
+ * llevar la decisión a CP1 (PRD §7.2 N3 y §9.2, cambio de alcance menor).
  */
 export const NeedsUserDecisionWarningSchema = z.object({
   code: z.literal('needs_user_decision'),
   reason: NeedsUserDecisionReasonSchema,
   /** Mensaje ACCIONABLE (patrón de doble entrada de Prizmad, §9.2). Wording nunca es contrato. */
-  message: z.string(),
-});
-
-/**
- * Perfil `url` sin imagen hero USABLE (ausente, o apuntando a una URL que no está en
- * `assets.images[]`): aquí SÍ es un problema real — hemos scrapeado la página y no ha salido ni
- * una imagen que sirva de frame inicial de i2v. NO es una decisión de CP1 como en manual (§9.2).
- * Es el único warning BLOQUEANTE de hoy (ver `isBlockingWarning`).
- */
-export const MissingHeroImageWarningSchema = z.object({
-  code: z.literal('missing_hero_image'),
   message: z.string(),
 });
 
@@ -100,24 +101,18 @@ export const BriefWarningSchema = z.discriminatedUnion('code', [
   PrunedSuggestedAssetWarningSchema,
   HookTooLongWarningSchema,
   NeedsUserDecisionWarningSchema,
-  MissingHeroImageWarningSchema,
 ]);
 export type BriefWarning = z.infer<typeof BriefWarningSchema>;
 export type BriefWarningCode = BriefWarning['code'];
 
-/**
- * Códigos que INVALIDAN el brief (el paso no puede continuar ni delegar en CP1). La severidad
- * viaja CON EL WARNING, y el `ok` del validador se DERIVA de aquí (`isBlockingWarning`) en vez
- * de mantenerse en paralelo: así, añadir un código bloqueante nuevo es imposible de olvidar —
- * antes había dos canales (`ok` y `warnings[]`) que podían divergir en silencio.
- *
- * Ojo con la asimetría deliberada de §9.2: la MISMA falta de hero image es bloqueante en perfil
- * `url` (`missing_hero_image`) y NO bloqueante en `manual` (`needs_user_decision`, decisión de
- * CP1). Quien decide cuál emitir es el validador, según el perfil; la severidad es del código.
- */
-const BLOCKING_WARNING_CODES = new Set<BriefWarningCode>(['missing_hero_image']);
-
-/** `true` si este warning invalida el brief. Único criterio de "el brief no sirve". */
-export function isBlockingWarning(warning: BriefWarning): boolean {
-  return BLOCKING_WARNING_CODES.has(warning.code);
-}
+// NO HAY WARNINGS BLOQUEANTES (T1.15). Aquí vivían `BLOCKING_WARNING_CODES` +
+// `isBlockingWarning`: la maquinaria que derivaba el `ok` del validador y que el executor de N3
+// traducía en un `PermanentStepError`. Con `missing_hero_image` fuera, el Set quedaba VACÍO y la
+// función devolvía `false` siempre — un mecanismo MUERTO. Se elimina entero (con el `ok` del
+// validador, que ya nadie podía poner a false) en vez de dejarlo «por si acaso»: un Set vacío es
+// una promesa de que existe un camino que ya no existe, y el siguiente lector tendría que
+// demostrarse a sí mismo que ningún warning lo activa.
+//
+// SI ALGÚN DÍA vuelve a hacer falta invalidar un brief, el sitio es este y el patrón está escrito
+// arriba (la severidad viaja CON el warning; el `ok` se DERIVA, jamás se acumula en paralelo).
+// Pero que vuelva sea una decisión deliberada, no la inercia de un hueco que quedó abierto.

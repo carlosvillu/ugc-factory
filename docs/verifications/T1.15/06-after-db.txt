@@ -1,0 +1,40 @@
+### RUN NUEVO 01KXDDNG2BR2YK8BCS90540T9T — steps
+             id             | node_key |  status   | is_checkpoint 
+----------------------------+----------+-----------+---------------
+ 01KXDDNG287ERP5NMHK895FSPQ | N1       | succeeded | f
+ 01KXDDNG2AZ0Y4T33DB36BHT16 | N3       | succeeded | t
+ 01KXDDNG29042SBY4DRPFH7YP8 | N2       | succeeded | f
+(3 rows)
+
+### CANAL 1 — checkpoint_decision (step de CP1)
+        step_run_id         | node_key | is_checkpoint | kind  |     images      |                              hero_image_url                              
+----------------------------+----------+---------------+-------+-----------------+--------------------------------------------------------------------------
+ 01KXDDNG2AZ0Y4T33DB36BHT16 | N3       | t             | brief | promote_scraped | https://static.stayforlong.com/web/images/home_v2-about-us/about-us.webp
+(1 row)
+
+### CANAL 2 — product_brief (todas las versiones del análisis de stayforlong)
+             id             | version | edited_by_user |  status  |     origin_step_run_id     |                                   hero                                   
+----------------------------+---------+----------------+----------+----------------------------+--------------------------------------------------------------------------
+ 01KXDDRD57W035GSMEDWHQ1A9J |       1 | f              | draft    | 01KXDDNG2AZ0Y4T33DB36BHT16 | 
+ 01KXDEQ5J753G56A3C3GKS5A5Y |       2 | t              | approved |                            | https://static.stayforlong.com/web/images/home_v2-about-us/about-us.webp
+(2 rows)
+
+### CRUCE de los DOS canales (decision.hero == brief v2 approved .assets.hero)
+     images      | urls_coinciden | version | edited_by_user |  status  
+-----------------+----------------+---------+----------------+----------
+ promote_scraped | t              |       2 | t              | approved
+(1 row)
+
+### COSTE REAL del run nuevo (cost_entry por step)
+ provider  | amount_cents | quantity |  unit   | node_key 
+-----------+--------------+----------+---------+----------
+ firecrawl |            0 |        4 | credits | N1
+ anthropic |            0 |     3699 | tokens  | N2
+ anthropic |           18 |    29356 | tokens  | N3
+(3 rows)
+
+ total_cents 
+-------------
+          18
+(1 row)
+

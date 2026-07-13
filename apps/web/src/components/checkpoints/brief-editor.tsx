@@ -36,7 +36,8 @@ import {
   requiresUserDecision,
   toBriefDecision,
   toWarningView,
-  type ImageDecision,
+  type ChosenImageDecision,
+  type HeroCandidate,
 } from './brief-warnings';
 
 export interface BriefEditorProps {
@@ -168,7 +169,7 @@ function FieldRow({
 }
 
 export function BriefEditor({ stepId, brief, warnings, briefId }: BriefEditorProps) {
-  const { control, register, handleSubmit, setError, clearErrors, watch, formState } =
+  const { control, register, handleSubmit, setError, clearErrors, setValue, watch, formState } =
     useForm<ProductBrief>({
       // EL schema de core (no una copia derivada a mano): el mismo objeto con el que re-valida el
       // route handler. Un cambio del contrato rompe la compilación de este form — que es el punto.
@@ -183,26 +184,72 @@ export function BriefEditor({ stepId, brief, warnings, briefId }: BriefEditorPro
   const angles = useFieldArray({ control, name: 'angles' });
   const objections = useFieldArray({ control, name: 'objections' });
 
-  // La decisión del usuario ante la petición BLOQUEANTE de imágenes (modo manual sin hero:
-  // `needs_user_decision`, §7.2 N3). NO es un campo del brief — es una decisión sobre CÓMO seguir
-  // el pipeline (subir fotos o derivar a packshot-IA en N7a), y por eso no vive en el form.
+  // La decisión del usuario ante la petición BLOQUEANTE de imágenes (`needs_user_decision`, §7.2
+  // N3: sin hero usable). NO es un campo del brief — es una decisión sobre CÓMO seguir el
+  // pipeline (subir fotos, promover una imagen scrapeada, o derivar a packshot-IA en N7a), y por
+  // eso no vive en el form.
   //
   // El `useState` es solo el estado de la ELECCIÓN mientras el usuario está en el checkpoint: al
   // aprobar (o al guardar) VIAJA al servidor en el body (T1.11) y se persiste en
   // `checkpoint_decision`, en la misma tx que la transición. Hasta T1.11 se evaporaba aquí: el
   // botón se habilitaba y la decisión no salía nunca del cliente — y su consumidor real (N7a,
   // T4.4) no habría tenido nada que leer.
-  const [decision, setDecision] = useState<ImageDecision | null>(null);
+  //
+  // El TIPO es una unión discriminada (`ChosenImageDecision`, T1.15): `heroUrl` existe —y es
+  // obligatoria— exactamente en la rama `promote_scraped`, que es la única que la necesita. Ni un
+  // `heroUrl: string | null` que hubiera que comprobar en cada uso, ni dos `useState` que deben
+  // moverse juntos y acaban moviéndose por separado: el estado imposible no se puede escribir.
+  const [decision, setDecision] = useState<ChosenImageDecision | null>(null);
   const [busy, setBusy] = useState(false);
 
   const views = useMemo(() => warnings.map(toWarningView), [warnings]);
   const needsDecision = warnings.some(requiresUserDecision);
+  // Las imágenes que el scrape SÍ trajo y que el usuario puede promover a hero (T1.15). En modo
+  // manual (sin fotos) están vacías y solo se pintan las otras dos salidas: la UI no ramifica por
+  // PERFIL (que nunca llega hasta aquí) sino por lo que HAY — que es el criterio honesto.
+  //
+  // TODAS, sin filtrar por `video_suitability`, y esto ES la política: quien clasificó estas
+  // imágenes fue Haiku (N2), y su veredicto (`broll`, `unusable`) es justo el que dejó al brief sin
+  // hero. Filtrar por él aquí volvería a esconder del usuario las imágenes que el modelo descartó
+  // —que son LAS ÚNICAS que hay— y le devolvería al callejón sin salida del que T1.15 lo saca. La
+  // clasificación se MUESTRA (para que elija con criterio), no se usa para ocultar.
+  const candidates = brief.assets.images;
   const approvable = canApprove(warnings, decision);
   // La decisión EN LA FORMA DEL CONTRATO, lista para el body — o `undefined` si el usuario no
-  // tenía nada que decidir (rama URL). Se deriva UNA vez: los dos caminos de salida del
-  // checkpoint (aprobar y guardar-y-aprobar) la mandan, y tenerlo escrito dos veces es el par
-  // clásico que se desincroniza el día que la decisión gane un campo.
+  // tenía nada que decidir. Se deriva UNA vez: los dos caminos de salida del checkpoint (aprobar
+  // y guardar-y-aprobar) la mandan, y tenerlo escrito dos veces es el par clásico que se
+  // desincroniza el día que la decisión gane un campo (justo lo que acaba de pasar en T1.15).
   const decisionPayload = decision === null ? undefined : toBriefDecision(decision);
+
+  /**
+   * EL USUARIO ELIGE una de las tres salidas de la petición de imágenes (T1.15). UNA sola función
+   * para las tres, porque las tres hacen LO MISMO en los mismos dos sitios — y tenerlas separadas
+   * era invitar a que un día una de ellas se olvidara de la mitad:
+   *
+   *  - la DECISIÓN (`setDecision`) → viaja al servidor y se persiste en `checkpoint_decision`,
+   *    para N7a (T4.4). Es lo que el usuario RESUELVE sobre cómo sigue el pipeline.
+   *  - el ARTEFACTO (`setValue`) → el `assets.hero_image_url` del brief. Al PROMOVER pasa a ser la
+   *    imagen elegida (el brief aprobado tiene hero: es lo que lee el resto del pipeline, y por eso
+   *    la promoción sale por `/edit` ⇒ v2, no por el `/approve` sin cambios, que por definición no
+   *    toca el artefacto). Con cualquier otra salida vuelve al del brief de la IA — lo que DESHACE
+   *    una promoción anterior si el usuario cambia de idea. Sin ese deshacer, promover → arrepen-
+   *    tirse → guardar persistía una v2 con el hero que él mismo había descartado (lo caza el test
+   *    «cambiar de idea tras promover»), y el rail contaría un campo «editado por ti» que ya no lo
+   *    está. Ahora es POR CONSTRUCCIÓN: el mismo `setValue`, sin rama que se pueda olvidar.
+   *
+   * `setValue` y NO `resetField`: `assets.hero_image_url` no es un input REGISTRADO (el editor no
+   * lo pinta como campo; solo lo escribe esta función), y `resetField` sobre un path sin registrar
+   * no restaura el valor del form. `shouldDirty: true` con el valor por defecto hace que RHF
+   * recalcule y RETIRE la marca dirty (compara contra `defaultValues`).
+   */
+  function choose(next: ChosenImageDecision) {
+    setDecision(next);
+    setValue(
+      'assets.hero_image_url',
+      next.images === 'promote_scraped' ? next.heroUrl : brief.assets.hero_image_url,
+      { shouldDirty: true },
+    );
+  }
 
   // Trazabilidad (rail del mockup): contadores de campos con cita vs sin ella. Se cuentan sobre
   // el brief ORIGINAL (el de la IA), no sobre los valores editados: el rail responde "¿de dónde
@@ -258,9 +305,19 @@ export function BriefEditor({ stepId, brief, warnings, briefId }: BriefEditorPro
 
   // APROBAR SIN EDITAR: el brief de la IA se aprueba tal cual. NO crea versión nueva (sería
   // mentir sobre quién escribió el contenido): solo marca el v1 `approved`. La DECISIÓN (si la
-  // hubo) SÍ viaja: aprobar sin editar es el camino normal del modo manual (el brief está bien;
-  // lo que falta es decir de dónde salen las imágenes).
+  // hubo) SÍ viaja: aprobar sin editar es el camino normal cuando el brief está bien y lo único
+  // que falta es decir de dónde salen las imágenes.
+  //
+  // EXCEPCIÓN (T1.15): si el usuario PROMOVIÓ una imagen a hero, el brief YA NO es el de la IA —
+  // `assets.hero_image_url` cambió. Aprobarlo por `/approve` persistiría la decisión pero dejaría
+  // el brief aprobado SIN hero: el usuario habría elegido una imagen que ningún consumidor podría
+  // leer. Se sale por el mismo camino que cualquier otra edición humana (`/edit` ⇒ v2,
+  // `edited_by_user:true`), que es lo que la promoción ES.
   function onApprove() {
+    if (decision?.images === 'promote_scraped') {
+      void onSubmit();
+      return;
+    }
     void runAction(() => runActions.approve(stepId, decisionPayload));
   }
 
@@ -302,39 +359,71 @@ export function BriefEditor({ stepId, brief, warnings, briefId }: BriefEditorPro
                     <strong className="font-semibold">{w.title}.</strong> {w.detail}
                   </span>
                 </Alert>
-                {/* La PETICIÓN BLOQUEANTE de imágenes del modo manual (§7.2 N3): el usuario
-                    elige. Hasta que elija, «Aprobar» está deshabilitado. */}
+                {/* La PETICIÓN BLOQUEANTE de imágenes (§7.2 N3): el usuario elige. Hasta que
+                    elija, «Aprobar» está deshabilitado. TRES salidas desde T1.15 — la tercera
+                    (promover una imagen de la página) solo aparece si la página trajo imágenes. */}
                 {w.requiresDecision ? (
                   <fieldset
-                    className="mt-2 flex flex-wrap items-center gap-2 rounded-md border border-border bg-surface-2 px-3 py-2.5"
+                    className="mt-2 rounded-md border border-border bg-surface-2 px-3 py-2.5"
                     data-slot="image-decision"
                   >
                     <legend className="sr-only">Decisión sobre las imágenes del producto</legend>
-                    <span className="text-mono text-text-2">
-                      Elige cómo seguir para poder aprobar:
-                    </span>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant={decision === 'upload_images' ? 'primary' : 'secondary'}
-                      aria-pressed={decision === 'upload_images'}
-                      onClick={() => {
-                        setDecision('upload_images');
-                      }}
-                    >
-                      Subir imágenes del producto
-                    </Button>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant={decision === 'ai_packshot' ? 'primary' : 'secondary'}
-                      aria-pressed={decision === 'ai_packshot'}
-                      onClick={() => {
-                        setDecision('ai_packshot');
-                      }}
-                    >
-                      Generar packshot con IA
-                    </Button>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-mono text-text-2">
+                        Elige cómo seguir para poder aprobar:
+                      </span>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant={decision?.images === 'upload_images' ? 'primary' : 'secondary'}
+                        aria-pressed={decision?.images === 'upload_images'}
+                        onClick={() => {
+                          choose({ images: 'upload_images' });
+                        }}
+                      >
+                        Subir imágenes del producto
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant={decision?.images === 'ai_packshot' ? 'primary' : 'secondary'}
+                        aria-pressed={decision?.images === 'ai_packshot'}
+                        onClick={() => {
+                          choose({ images: 'ai_packshot' });
+                        }}
+                      >
+                        Generar packshot con IA
+                      </Button>
+                    </div>
+
+                    {/* PROMOVER una imagen scrapeada a hero (T1.15). Es la salida que faltaba: en
+                        una web de servicio no hay packshot, pero sí hay fotos —y el usuario, que
+                        sí sabe cuál sirve, no tenía forma de decirlo. Se muestran TODAS las que
+                        el scrape trajo, con la clasificación de N2 a la vista (que se enseña, no
+                        se usa para ocultarlas: fue justamente esa clasificación la que dejó al
+                        brief sin hero). */}
+                    {candidates.length > 0 ? (
+                      <div className="mt-3" data-slot="hero-candidates">
+                        <p className="mb-2 text-mono text-text-2">
+                          …o promueve una de las imágenes de la página a imagen principal:
+                        </p>
+                        <ul className="flex flex-wrap gap-2.5">
+                          {candidates.map((candidate) => (
+                            <HeroCandidateOption
+                              key={candidate.url}
+                              candidate={candidate}
+                              selected={
+                                decision?.images === 'promote_scraped' &&
+                                decision.heroUrl === candidate.url
+                              }
+                              onSelect={() => {
+                                choose({ images: 'promote_scraped', heroUrl: candidate.url });
+                              }}
+                            />
+                          ))}
+                        </ul>
+                      </div>
+                    ) : null}
                   </fieldset>
                 ) : null}
               </div>
@@ -619,6 +708,58 @@ export function BriefEditor({ stepId, brief, warnings, briefId }: BriefEditorPro
         </div>
       </aside>
     </form>
+  );
+}
+
+/**
+ * Una imagen candidata a hero (T1.15): la miniatura, la clasificación que le puso N2 y el botón
+ * que la PROMUEVE. La clasificación se MUESTRA porque es información con la que el usuario decide
+ * («banner de fondo», «no usable») — no para filtrar: si filtrásemos por ella no quedaría ni una
+ * (fue justamente ese veredicto el que dejó al brief sin hero).
+ *
+ * El accessible name del botón lleva la URL de la imagen: hay N candidatas y todas tienen el
+ * mismo texto, así que sin ella ni un lector de pantalla ni un test podrían decir cuál es cuál —
+ * el mismo criterio que los hooks del formulario.
+ */
+function HeroCandidateOption({
+  candidate,
+  selected,
+  onSelect,
+}: {
+  candidate: HeroCandidate;
+  selected: boolean;
+  onSelect: () => void;
+}) {
+  return (
+    <li
+      className="flex w-40 flex-col gap-1.5 rounded-md border border-border bg-surface p-2"
+      data-slot="hero-candidate"
+      data-url={candidate.url}
+      data-selected={selected}
+    >
+      {/* eslint-disable-next-line @next/next/no-img-element -- imagen REMOTA del scrape (CDN
+          arbitrario del producto): `next/image` exige declarar el host en `remotePatterns` en
+          build, y aquí el host lo decide la web que el usuario analiza. Misma decisión que las
+          referencias de persona (persona-detail.tsx). */}
+      <img
+        src={candidate.url}
+        alt={`Imagen de la página (${candidate.kind})`}
+        className="aspect-square w-full rounded-sm bg-surface-3 object-cover"
+      />
+      <Badge tone="neutral" mono>
+        {candidate.kind} · {candidate.video_suitability}
+      </Badge>
+      <Button
+        type="button"
+        size="sm"
+        variant={selected ? 'primary' : 'secondary'}
+        aria-pressed={selected}
+        aria-label={`Usar como imagen principal: ${candidate.url}`}
+        onClick={onSelect}
+      >
+        Usar como principal
+      </Button>
+    </li>
   );
 }
 

@@ -2,18 +2,66 @@
 // tiene un caso que lo dispara y, para cada perfil, se fija que las reglas AJENAS no se
 // disparan — la diferencia entre perfiles es exactamente lo que un refactor descuidado rompe.
 // Las cláusulas deterministas de la Verificación de T1.9 quedan aquí como test permanente
-// (regla de trabajo 8): precio discrepante → warning tipado + gana el fast path; manual sin
-// hero → `needs_user_decision: missing_hero_image`, brief VÁLIDO y el paso NO falla.
+// (regla de trabajo 8): precio discrepante → warning tipado + gana el fast path; sin hero →
+// `needs_user_decision: missing_hero_image`, brief VÁLIDO y el paso NO falla.
+//
+// T1.15 — CAMBIO DE CONTRATO (PRD §7.2 N3 y §9.2, cambio de alcance menor ya anotado): la falta
+// de hero image en perfil `url` ERA un warning BLOQUEANTE (`missing_hero_image`, `ok:false` ⇒ N3
+// terminal). Ya no: es la MISMA decisión de CP1 que en `manual`. Los tests que asertaban `ok:false`
+// se han reescrito contra el contrato nuevo — no es debilitar un test, es que el comportamiento
+// que fijaban se ha revertido a conciencia (regla de oro 5).
 import { describe, expect, it } from 'vitest';
 import { makeBrief, makeRawContent } from '@ugc/test-utils';
 import { ProductBriefSchema } from '../contracts/product-brief';
-import { isBlockingWarning } from '../contracts/brief-warning';
 import { validateBrief, parsePriceValue, MAX_HOOK_WORDS } from './brief-validator';
 
-/** Brief sin hero image: `hero_image_url` a null Y sin imágenes (el override de `makeBrief` es
- *  SHALLOW — hay que dar el objeto `assets` entero o el hero canónico sobreviviría). */
+/** Brief sin hero image NI imágenes: el caso del modo MANUAL sin fotos (el usuario escribió texto
+ *  libre). El override de `makeBrief` es SHALLOW — hay que dar el objeto `assets` entero o el hero
+ *  canónico sobreviviría. */
 const briefWithoutHero = () =>
   makeBrief({ assets: { hero_image_url: null, images: [], video_urls: [] } });
+
+/**
+ * EL CASO REAL DE T1.15 (principio 9 de testing: el fixture no puede ser más cómodo que la
+ * realidad). El run de `https://es.stayforlong.com` que motivó esta tarea: una web de SERVICIO,
+ * donde no hay packshot porque no hay producto físico. Haiku (N2) clasificó honestamente las 3
+ * imágenes que le llegaron —un sello de award (`unusable`), una foto de about-us y un banner
+ * (`broll`)— y ninguna era `hero`, así que el sintetizador dejó `hero_image_url: null`.
+ *
+ * Un fixture con `images: []` (el del modo manual) NO sirve para esto: sin candidatas, la salida
+ * nueva de CP1 (PROMOVER una imagen scrapeada a hero) no existiría y el test pasaría sin
+ * ejercitar el caso que rompió. Aquí SÍ hay imágenes; lo que no hay es hero.
+ */
+const briefUrlWithoutUsableHero = () =>
+  makeBrief({
+    assets: {
+      hero_image_url: null,
+      images: [
+        {
+          url: 'https://es.stayforlong.com/img/award-2024.png',
+          kind: 'chart_or_text',
+          has_overlay_text: true,
+          background: 'clean',
+          video_suitability: 'unusable',
+        },
+        {
+          url: 'https://es.stayforlong.com/img/about-us-team.jpg',
+          kind: 'other',
+          has_overlay_text: false,
+          background: 'busy',
+          video_suitability: 'broll',
+        },
+        {
+          url: 'https://es.stayforlong.com/img/hero-banner-hotel.jpg',
+          kind: 'lifestyle',
+          has_overlay_text: true,
+          background: 'busy',
+          video_suitability: 'broll',
+        },
+      ],
+      video_urls: [],
+    },
+  });
 
 describe('parsePriceValue (normalización de los DOS idiomas del precio)', () => {
   it('lee el formato CRUDO del fast path real (String(amount) / string de la tienda)', () => {
@@ -63,7 +111,6 @@ describe('BriefValidator · cross-check de precio N1==N3 (§9.2)', () => {
 
     const res = validateBrief(brief, { profile: 'url', rawContent: raw });
 
-    expect(res.ok).toBe(true); // discrepancia de precio: se CORRIGE, no invalida el brief
     expect(res.warnings).toContainEqual({
       code: 'price_mismatch',
       synthesized: '34,90 €',
@@ -146,14 +193,13 @@ describe('BriefValidator · cross-check de precio N1==N3 (§9.2)', () => {
   });
 });
 
-describe('BriefValidator · hero image por perfil (§9.2)', () => {
+describe('BriefValidator · hero image: decisión de CP1 en LOS DOS perfiles (§9.2, T1.15)', () => {
   it('manual sin hero → needs_user_decision:missing_hero_image, brief VÁLIDO y el paso NO falla', () => {
     const brief = briefWithoutHero();
     expect(brief.assets.hero_image_url).toBeNull(); // el fixture dispara de verdad el check
 
     const res = validateBrief(brief, { profile: 'manual' });
 
-    expect(res.ok).toBe(true); // decisión de CP1, NO error (§9.2)
     expect(res.warnings).toContainEqual(
       expect.objectContaining({ code: 'needs_user_decision', reason: 'missing_hero_image' }),
     );
@@ -161,67 +207,76 @@ describe('BriefValidator · hero image por perfil (§9.2)', () => {
     expect(ProductBriefSchema.safeParse(res.brief).success).toBe(true);
   });
 
-  it('url sin hero → missing_hero_image con ok=false (aquí SÍ es un problema real)', () => {
-    const res = validateBrief(briefWithoutHero(), {
-      profile: 'url',
-      rawContent: makeRawContent(),
-    });
-
-    expect(res.ok).toBe(false);
-    expect(res.warnings.map((w) => w.code)).toContain('missing_hero_image');
-    // Y NO se disfraza de decisión de CP1: eso es exclusivo del perfil manual.
-    expect(res.warnings.map((w) => w.code)).not.toContain('needs_user_decision');
-  });
-
-  it('url: hero ALUCINADO (URL fuera de assets.images) se trata como hero ausente', () => {
-    // El LLM inventa una hero_image_url que no está en el set de imágenes reales. Sin este
-    // check, N7a la usaría como frame inicial de image-to-video y gastaría dinero contra una
-    // imagen inexistente. Mismo criterio de pertenencia que `suggested_assets`.
-    const base = makeBrief();
-    const brief = makeBrief({
-      assets: {
-        hero_image_url: 'https://cdn.example.com/inventada-por-el-llm.jpg',
-        images: base.assets.images, // el set REAL no la contiene
-        video_urls: [],
-      },
-    });
+  it('T1.15 · url SIN hero usable (el caso stayforlong) → needs_user_decision, NO un fallo del run', () => {
+    // EL CASO QUE MOTIVÓ LA TAREA. Una web de servicio: 3 imágenes reales (award `unusable`,
+    // about-us y banner `broll`), ninguna `hero`. Hasta T1.15 esto emitía el warning BLOQUEANTE
+    // `missing_hero_image` (ok:false) y N3 moría con la síntesis de Sonnet YA PAGADA. Ahora es la
+    // MISMA decisión de CP1 que en manual: el brief es válido, el step llega al checkpoint y el
+    // usuario elige (promover una de estas imágenes, subir fotos, o packshot IA).
+    const brief = briefUrlWithoutUsableHero();
+    expect(brief.assets.hero_image_url).toBeNull();
+    expect(brief.assets.images).toHaveLength(3); // hay candidatas: lo que NO hay es hero
 
     const res = validateBrief(brief, { profile: 'url', rawContent: makeRawContent() });
 
-    expect(res.ok).toBe(false);
-    expect(res.warnings.map((w) => w.code)).toContain('missing_hero_image');
-    // Y el puntero roto se PODA: no viaja aguas abajo.
-    expect(res.brief.assets.hero_image_url).toBeNull();
-    expect(brief.assets.hero_image_url).toBe('https://cdn.example.com/inventada-por-el-llm.jpg'); // PURA
-  });
-
-  it('manual: hero ALUCINADO → needs_user_decision (decisión de CP1, el paso NO falla)', () => {
-    const base = makeBrief();
-    const brief = makeBrief({
-      assets: {
-        hero_image_url: 'https://cdn.example.com/fantasma.jpg',
-        images: base.assets.images,
-        video_urls: [],
-      },
-    });
-
-    const res = validateBrief(brief, { profile: 'manual' });
-
-    expect(res.ok).toBe(true);
     expect(res.warnings).toContainEqual(
       expect.objectContaining({ code: 'needs_user_decision', reason: 'missing_hero_image' }),
     );
-    expect(res.brief.assets.hero_image_url).toBeNull();
+    // El brief es VÁLIDO: el step NO falla y llega a CP1 con sus imágenes intactas — que son las
+    // que el editor ofrece PROMOVER (si el validador las podase, no habría nada que elegir).
     expect(ProductBriefSchema.safeParse(res.brief).success).toBe(true);
+    expect(res.brief.assets.images).toHaveLength(3);
   });
 
-  it('con hero image: ninguno de los dos warnings, en ambos perfiles', () => {
+  it('T1.15 · el mensaje de la rama url nombra las TRES salidas cuando hay imágenes que promover', () => {
+    // El wording no es contrato, pero SÍ lo es que el mensaje sea ACCIONABLE (§9.2, patrón de
+    // doble entrada): con candidatas, "elige una de las imágenes de la página" es una salida real
+    // que el usuario no tenía forma de descubrir por su cuenta.
+    const conCandidatas = validateBrief(briefUrlWithoutUsableHero(), {
+      profile: 'url',
+      rawContent: makeRawContent(),
+    });
+    const w = conCandidatas.warnings.find((x) => x.code === 'needs_user_decision');
+    expect(w?.code === 'needs_user_decision' ? w.message : '').toMatch(/imágenes de la página/i);
+
+    // Sin imágenes (manual, o una url de la que no salió ninguna) NO se ofrece lo que no existe.
+    const sinCandidatas = validateBrief(briefWithoutHero(), { profile: 'manual' });
+    const w2 = sinCandidatas.warnings.find((x) => x.code === 'needs_user_decision');
+    expect(w2?.code === 'needs_user_decision' ? w2.message : '').not.toMatch(
+      /imágenes de la página/i,
+    );
+  });
+
+  it('hero ALUCINADO (URL fuera de assets.images) se trata como hero ausente, en los dos perfiles', () => {
+    // El LLM inventa una hero_image_url que no está en el set de imágenes reales. Sin este
+    // check, N7a la usaría como frame inicial de image-to-video y gastaría dinero contra una
+    // imagen inexistente. Mismo criterio de pertenencia que `suggested_assets`.
+    for (const profile of ['url', 'manual'] as const) {
+      const base = makeBrief();
+      const brief = makeBrief({
+        assets: {
+          hero_image_url: 'https://cdn.example.com/inventada-por-el-llm.jpg',
+          images: base.assets.images, // el set REAL no la contiene
+          video_urls: [],
+        },
+      });
+
+      const res = validateBrief(brief, { profile, rawContent: makeRawContent() });
+
+      expect(res.warnings).toContainEqual(
+        expect.objectContaining({ code: 'needs_user_decision', reason: 'missing_hero_image' }),
+      );
+      // Y el puntero roto se PODA: no viaja aguas abajo.
+      expect(res.brief.assets.hero_image_url).toBeNull();
+      expect(brief.assets.hero_image_url).toBe('https://cdn.example.com/inventada-por-el-llm.jpg'); // PURA
+      expect(ProductBriefSchema.safeParse(res.brief).success).toBe(true);
+    }
+  });
+
+  it('con hero image usable: NINGÚN warning de decisión, en ambos perfiles', () => {
     for (const profile of ['url', 'manual'] as const) {
       const res = validateBrief(makeBrief(), { profile, rawContent: makeRawContent() });
-      const codes = res.warnings.map((w) => w.code);
-      expect(codes).not.toContain('missing_hero_image');
-      expect(codes).not.toContain('needs_user_decision');
-      expect(res.ok).toBe(true);
+      expect(res.warnings.map((w) => w.code)).not.toContain('needs_user_decision');
     }
   });
 });
@@ -251,7 +306,6 @@ describe('BriefValidator · suggested_assets ⊆ assets.images (§9.2)', () => {
       angleName: 'Ángulo sucio',
       url: 'https://cdn.example.com/no-existe.jpg',
     });
-    expect(res.ok).toBe(true); // se corrige, no invalida
     // PURA: el ángulo de entrada conserva su asset inválido.
     expect(dirty.angles[0]?.suggested_assets).toHaveLength(2);
   });
@@ -306,7 +360,6 @@ describe('BriefValidator · longitud de hooks (≤12 palabras)', () => {
     });
     // AVISA, no reescribe: el copy lo arregla el usuario en CP1.
     expect(res.brief.angles[0]?.hook_examples[0]).toBe(longHook);
-    expect(res.ok).toBe(true);
   });
 
   it('un hook de exactamente 12 palabras NO dispara el warning (el techo es inclusivo)', () => {
@@ -393,66 +446,64 @@ describe('BriefValidator · pureza del retorno (copia, no referencia)', () => {
   });
 });
 
-describe('BriefValidator · `ok` es DERIVADO de los warnings, no un canal paralelo', () => {
-  // El invariante: la severidad viaja CON el warning (`isBlockingWarning`) y `ok` se deriva.
-  // Cuando `ok` era un `let` acumulado aparte, había DOS canales para "el brief no sirve" que
-  // podían divergir en silencio: bastaba olvidar un `ok = false` al añadir un código bloqueante
-  // para que el paso aceptara un brief que revienta aguas abajo. Estos tests fijan la derivación.
+describe('BriefValidator · NINGÚN warning invalida el brief (T1.15)', () => {
+  // EL INVARIANTE NUEVO, y el que sustituye a los de `ok` (que fijaban la derivación
+  // `ok = !warnings.some(isBlockingWarning)`): el validador NO puede matar un run. Emite hallazgos;
+  // los que exigen decisión los resuelve el humano en CP1. La maquinaria de severidad
+  // (`BLOCKING_WARNING_CODES` + `isBlockingWarning` + el `ok` derivado + el `PermanentStepError`
+  // del executor) se ha eliminado entera: con `missing_hero_image` fuera, el Set quedaba vacío y
+  // `ok` no podía ser false ni por accidente — mecanismo muerto.
+  //
+  // Estos tests son la barrera contra su vuelta silenciosa: un brief SIN NADA que ofrecer (sin
+  // hero, sin imágenes, con precio discrepante, con asset fantasma y con hook largo) sigue siendo
+  // un ProductBrief válido que llega a CP1 con sus warnings.
   it.each([
     {
-      nombre: 'url sin hero (bloqueante)',
-      sinHero: true,
+      nombre: 'url sin hero pero CON imágenes (stayforlong)',
       profile: 'url' as const,
-      esperado: false,
+      // En `url` se dispara ADEMÁS el cross-check de precio (hay fast path con el que cruzar).
+      esperados: [
+        'hook_too_long',
+        'needs_user_decision',
+        'price_mismatch',
+        'pruned_suggested_asset',
+      ],
     },
     {
-      nombre: 'manual sin hero (NO bloqueante: decisión de CP1)',
-      sinHero: true,
+      nombre: 'manual sin hero y sin imágenes',
       profile: 'manual' as const,
-      esperado: true,
+      // En `manual` NO hay cross-check de precio (no hay N1 con el que cruzar).
+      esperados: ['hook_too_long', 'needs_user_decision', 'pruned_suggested_asset'],
     },
-    { nombre: 'brief limpio', sinHero: false, profile: 'url' as const, esperado: true },
   ])(
-    'ok === false SI Y SOLO SI hay warning bloqueante — $nombre',
-    ({ sinHero, profile, esperado }) => {
-      const brief = sinHero ? briefWithoutHero() : makeBrief();
+    'el peor brief posible sigue siendo VÁLIDO y llega a CP1 — $nombre',
+    ({ profile, esperados }) => {
+      const base = profile === 'url' ? briefUrlWithoutUsableHero() : briefWithoutHero();
+      const worst = {
+        ...base,
+        angles: [
+          {
+            ...base.angles[0]!,
+            hook_examples: [
+              Array.from({ length: MAX_HOOK_WORDS + 1 }, (_u, i) => `p${String(i)}`).join(' '),
+              'Hook corto',
+            ],
+            suggested_assets: ['https://cdn.example.com/fantasma.jpg'],
+          },
+          ...base.angles.slice(1),
+        ],
+      };
+      const raw = makeRawContent({ product: { price: '19.90', currency: 'EUR' } });
 
-      const res = validateBrief(brief, { profile, rawContent: makeRawContent() });
+      const res = validateBrief(worst, { profile, rawContent: raw });
 
-      expect(res.ok).toBe(esperado);
-      // Y la derivación se cumple: `ok` NO es un canal independiente de los warnings.
-      expect(res.ok).toBe(!res.warnings.some(isBlockingWarning));
+      // TODAS las clases de warning a la vez (la decisión de CP1 entre ellas).
+      expect([...new Set(res.warnings.map((w) => w.code))].sort()).toEqual(esperados);
+
+      // Y AUN ASÍ: brief VÁLIDO. No hay `ok`, no hay código bloqueante, no hay forma de que este
+      // validador haga fallar el step — que es exactamente el cambio de T1.15.
+      expect(ProductBriefSchema.safeParse(res.brief).success).toBe(true);
+      expect(res).not.toHaveProperty('ok');
     },
   );
-
-  it('los warnings NO bloqueantes (corrección, aviso, decisión de CP1) dejan ok=true', () => {
-    // Un brief con las TRES clases de warning no bloqueante a la vez: precio discrepante
-    // (corrige), asset fantasma (poda), hook largo (avisa). El brief sigue siendo válido.
-    const brief = makeBrief();
-    const dirty = {
-      ...brief,
-      angles: [
-        {
-          ...brief.angles[0]!,
-          hook_examples: [
-            Array.from({ length: MAX_HOOK_WORDS + 1 }, (_u, i) => `p${String(i)}`).join(' '),
-            'Hook corto',
-          ],
-          suggested_assets: ['https://cdn.example.com/fantasma.jpg'],
-        },
-        ...brief.angles.slice(1),
-      ],
-    };
-    const raw = makeRawContent({ product: { price: '19.90', currency: 'EUR' } });
-
-    const res = validateBrief(dirty, { profile: 'url', rawContent: raw });
-
-    expect(res.warnings.map((w) => w.code).sort()).toEqual([
-      'hook_too_long',
-      'price_mismatch',
-      'pruned_suggested_asset',
-    ]);
-    expect(res.warnings.some(isBlockingWarning)).toBe(false);
-    expect(res.ok).toBe(true); // ninguno invalida el brief (§9.2)
-  });
 });

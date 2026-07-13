@@ -36,6 +36,9 @@ export interface BriefApiResponse {
     product: { name: string };
     benefits: { benefit: string }[];
     angles: { hook_examples: string[] }[];
+    /** T1.15: la Verificación observa que el hero del brief APROBADO es la imagen que el usuario
+     *  promovió en CP1 — el artefacto, no solo la decisión. */
+    assets: { hero_image_url: string | null; images: { url: string }[] };
   };
 }
 
@@ -60,12 +63,29 @@ export async function stepIdOf(page: Page): Promise<string> {
   return id ?? '';
 }
 
-/** Arranca un análisis por URL y espera a que CP1 tome la vista (N3 pausa en el checkpoint). */
-export async function runUrlAnalysisToCp1(page: Page): Promise<void> {
+/**
+ * Arranca un análisis por URL y espera a que CP1 tome la vista (N3 pausa en el checkpoint).
+ *
+ * La `url` PARAMETRIZA el fixture que el fake de síntesis devuelve (`fake-apis.ts` discrimina por
+ * ella), no el flujo — que es el mismo siempre. Con `FAKE_URL_NO_HERO` es el caso de T1.15: una
+ * web de SERVICIO con imágenes pero ninguna que sirva de hero (el caso `es.stayforlong.com`, donde
+ * Haiku clasificó honestamente las 3 que había como `broll`/`unusable`). Hasta T1.15 ese run MORÍA
+ * en N3 con la síntesis ya pagada; ahora llega a CP1 y el usuario decide.
+ *
+ * Un SEGUNDO helper con el mismo goto/fill/click/waitForURL y otra URL era justo la copia-con-
+ * variación contra la que avisa la cabecera de este fichero: cambiar el intake (ruta, label del
+ * campo, nombre del botón) obligaría a tocar los dos, y el que se olvide falla como un timeout
+ * opaco de Playwright.
+ *
+ * OJO: el `toBeVisible` del editor es LA PRIMERA CLÁUSULA, implícita — si un run muriera en N3
+ * (el bug que T1.15 arregla), es este assert el que falla, y falla por la razón correcta.
+ */
+export async function runUrlAnalysisToCp1(
+  page: Page,
+  url = 'https://glow.example/products/serum',
+): Promise<void> {
   await page.goto('/analyses/new');
-  await page
-    .getByRole('textbox', { name: /url del producto/i })
-    .fill('https://glow.example/products/serum');
+  await page.getByRole('textbox', { name: /url del producto/i }).fill(url);
   await page.getByRole('button', { name: /analizar/i }).click();
   await page.waitForURL(/\/runs\/[^/]+$/, { timeout: 30_000 });
   await expect(briefEditor(page)).toBeVisible({ timeout: 90_000 });

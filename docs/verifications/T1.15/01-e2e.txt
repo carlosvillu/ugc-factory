@@ -1,0 +1,371 @@
+
+> ugc-factory@0.0.0 test:e2e /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads
+> pnpm --filter @ugc/web test:e2e
+
+
+> @ugc/web@0.0.0 test:e2e /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/web
+> playwright test
+
+[WebServer] ▲ Next.js 16.2.10 (Turbopack)
+[WebServer] - Local:         http://localhost:3100
+[WebServer] - Network:       http://192.168.1.132:3100
+[WebServer] ✓ Ready in 274ms
+[WebServer] {"level":30,"time":1783935501479,"pid":78659,"hostname":"MBP-de-Carlos","name":"worker","intervalMs":5000,"msg":"sweeper de timeouts arrancado"}
+[WebServer] {"level":30,"time":1783935501479,"pid":78659,"hostname":"MBP-de-Carlos","name":"worker","queue":"demo.noop","msg":"pg-boss arrancado: colas y consumers listos"}
+[WebServer] {"level":30,"time":1783935501479,"pid":78659,"hostname":"MBP-de-Carlos","name":"worker","health":{"ok":true,"db":true},"msg":"worker ready"}
+[WebServer] {"level":30,"time":1783935501865,"pid":78660,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","msg":"running startup migrations"}
+[WebServer] {"level":30,"time":1783935502050,"pid":78660,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","msg":"startup migrations applied"}
+[WebServer] {"level":30,"time":1783935502125,"pid":78660,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","seeded":true,"msg":"auth.password_hash sembrado (first boot)"}
+[WebServer] {"level":30,"time":1783935502172,"pid":78660,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","provider":"fal","seeded":true,"msg":"secret.fal sembrado cifrado desde env (first boot)"}
+[WebServer] {"level":30,"time":1783935502179,"pid":78660,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","provider":"firecrawl","seeded":false,"msg":"secret.firecrawl ya existía en BD (env ignorada; la BD es la fuente)"}
+[WebServer] {"level":30,"time":1783935502179,"pid":78660,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","provider":"anthropic","seeded":false,"msg":"secret.anthropic ya existía en BD (env ignorada; la BD es la fuente)"}
+[WebServer] 
+
+Running 47 tests using 5 workers
+
+[WebServer]  GET /login 200 in 350ms (next.js: 181ms, application-code: 169ms)
+[WebServer]  POST /api/login 200 in 232ms (next.js: 126ms, application-code: 107ms)
+[WebServer]  GET / 200 in 140ms (next.js: 17ms, proxy.ts: 36ms, application-code: 87ms)
+  ✓   1 [setup] › e2e/auth.setup.ts:10:1 › login y persistir sesión (1.5s)
+[WebServer]  GET /login 200 in 295ms (next.js: 15ms, application-code: 281ms)
+[WebServer]  GET /analyses/new 200 in 926ms (next.js: 66ms, proxy.ts: 9ms, application-code: 851ms)
+[WebServer]  GET /analyses/new 200 in 942ms (next.js: 181ms, proxy.ts: 12ms, application-code: 749ms)
+  ✓   3 [chromium] › e2e/auth.spec.ts:19:5 › auth single-user (T0.4) › sin sesión › acceder a / sin sesión redirige a /login @f0 (1.7s)
+[WebServer]  GET /login 200 in 88ms (next.js: 3ms, application-code: 84ms)
+[WebServer] {"level":30,"time":1783935507504,"pid":78660,"hostname":"MBP-de-Carlos","name":"web","request_id":"8a674eb0-1fdc-4070-833c-4de3bc6feba1","run_id":"01KXDDF6W3SAKZQWY23QWBR8NM","steps":3,"msg":"run creado"}
+[WebServer]  POST /api/runs 201 in 286ms (next.js: 24ms, application-code: 262ms)
+[WebServer] {"level":30,"time":1783935507530,"pid":78660,"hostname":"MBP-de-Carlos","name":"web","request_id":"aee80fe8-9cf9-419c-8900-de456f9bcd33","analysis_id":"01KXDDF724H26R744YHJK6Z1ES","project_id":"01KXDDF5HQHNS0F3ZC2S33D69F","reused":false,"source":"manual","msg":"intake manual creado"}
+[WebServer]  POST /api/analyses 201 in 175ms (next.js: 118ms, application-code: 57ms)
+[WebServer] {"level":30,"time":1783935507630,"pid":78660,"hostname":"MBP-de-Carlos","name":"web","request_id":"40ea651e-e8d7-4103-872e-2929554e12e2","run_id":"01KXDDF73MM30KAHCMGY6XZB5A","steps":3,"msg":"run creado"}
+[WebServer]  POST /api/runs 201 in 73ms (next.js: 7ms, application-code: 66ms)
+[WebServer]  POST /api/login 401 in 66ms (next.js: 19ms, application-code: 47ms)
+[WebServer]  GET /api/assets/01KXDDF60CAM0V9D506QT9FQ4G/download 401 in 1296ms (next.js: 1290ms, application-code: 6ms)
+[WebServer]  GET /api/assets/01KXDDF60PZA2WPXQQMSVG1M2H/download 200 in 1298ms (next.js: 1287ms, application-code: 11ms)
+  ✓   5 [chromium] › e2e/assets-download.spec.ts:73:5 › descarga proxificada de assets (T0.5) › sin sesión › devuelve 401 sin exponer la ruta de storage @f0 (1.5s)
+  ✓   6 [chromium] › e2e/assets-download.spec.ts:53:3 › descarga proxificada de assets (T0.5) › con sesión: descarga el stream y el checksum coincide @f0 (1.5s)
+[WebServer]  POST /api/login 401 in 75ms (next.js: 3ms, application-code: 72ms)
+[WebServer]  POST /api/login 429 in 10ms (next.js: 1068µs, application-code: 9ms)
+  ✓   7 [chromium] › e2e/auth.spec.ts:34:5 › auth single-user (T0.4) › rate limit › password incorrecto 3 veces muestra el aviso de rate limit @f0 (1.3s)
+[WebServer]  GET /login 200 in 357ms (next.js: 3ms, application-code: 354ms)
+[WebServer]  GET /analyses/new 200 in 462ms (next.js: 62ms, proxy.ts: 14ms, application-code: 386ms)
+[WebServer]  POST /api/login 200 in 202ms (next.js: 1941µs, application-code: 200ms)
+[WebServer] {"level":30,"time":1783935509684,"pid":78660,"hostname":"MBP-de-Carlos","name":"web","request_id":"92129d1e-3f31-43bf-915c-acb6969985d5","run_id":"01KXDDF928KBVF01ZK7K0VYR2V","steps":3,"msg":"run creado"}
+[WebServer]  POST /api/runs 201 in 121ms (next.js: 4ms, application-code: 117ms)
+[WebServer]  GET / 200 in 399ms (next.js: 6ms, proxy.ts: 26ms, application-code: 367ms)
+[WebServer]  GET / 200 in 452ms (next.js: 58ms, proxy.ts: 27ms, application-code: 367ms)
+[WebServer]  GET /api/runs/01KXDDF6W3SAKZQWY23QWBR8NM 200 in 1834ms (next.js: 1806ms, application-code: 28ms)
+[WebServer]  GET /api/runs/01KXDDF73MM30KAHCMGY6XZB5A 200 in 1829ms (next.js: 1797ms, application-code: 32ms)
+  ✓   8 [chromium] › e2e/auth.spec.ts:68:5 › auth single-user (T0.4) › login correcto › password correcto entra a / y la sesión sobrevive a un reload @f0 (2.3s)
+[WebServer]  GET /runs/01KXDDF6W3SAKZQWY23QWBR8NM 200 in 3.1s (next.js: 1016ms, proxy.ts: 10ms, application-code: 2.1s)
+[WebServer]  GET /runs/01KXDDF73MM30KAHCMGY6XZB5A 200 in 3.0s (next.js: 901ms, proxy.ts: 6ms, application-code: 2.1s)
+[WebServer]  GET /api/runs/01KXDDF928KBVF01ZK7K0VYR2V 200 in 772ms (next.js: 533ms, application-code: 239ms)
+[WebServer]  GET /runs/01KXDDF928KBVF01ZK7K0VYR2V 200 in 1087ms (next.js: 85ms, proxy.ts: 86ms, application-code: 916ms)
+[WebServer]  GET /analyses/new 200 in 473ms (next.js: 39ms, proxy.ts: 25ms, application-code: 409ms)
+[WebServer]  GET /analyses/new 200 in 53ms (next.js: 3ms, proxy.ts: 2ms, application-code: 48ms)
+[WebServer] {"level":30,"time":1783935511933,"pid":78660,"hostname":"MBP-de-Carlos","name":"web","request_id":"b5cf454c-8a05-4cd8-8cc8-a994d06af8b2","analysis_id":"01KXDDF724H26R744YHJK6Z1ES","project_id":"01KXDDF5HQHNS0F3ZC2S33D69F","reused":true,"source":"manual","msg":"intake manual reutilizado (caché)"}
+[WebServer]  POST /api/analyses 200 in 12ms (next.js: 1521µs, application-code: 10ms)
+[WebServer] {"level":30,"time":1783935511960,"pid":78660,"hostname":"MBP-de-Carlos","name":"web","request_id":"996fc890-e95c-4639-867d-1e5e5e09a81e","run_id":"01KXDDFBCBND60QRXF3RN755S1","steps":3,"msg":"run creado"}
+[WebServer]  POST /api/runs 201 in 23ms (next.js: 1288µs, application-code: 22ms)
+[WebServer]  GET /api/runs/01KXDDFBCBND60QRXF3RN755S1 200 in 78ms (next.js: 64ms, application-code: 14ms)
+[WebServer]  GET /runs/01KXDDFBCBND60QRXF3RN755S1 200 in 176ms (next.js: 10ms, proxy.ts: 3ms, application-code: 163ms)
+[WebServer] {"level":30,"time":1783935512268,"pid":78660,"hostname":"MBP-de-Carlos","name":"web","request_id":"d8f6f449-107a-414f-9538-69a73e363036","run_id":"01KXDDFBMGQZ6VRXGY19AE3ZY1","steps":3,"msg":"run creado"}
+[WebServer]  POST /api/runs 201 in 71ms (next.js: 5ms, application-code: 66ms)
+[WebServer]  GET /api/runs/01KXDDFBMGQZ6VRXGY19AE3ZY1 200 in 20ms (next.js: 4ms, application-code: 16ms)
+[WebServer]  GET /runs/01KXDDFBMGQZ6VRXGY19AE3ZY1 200 in 105ms (next.js: 14ms, proxy.ts: 5ms, application-code: 86ms)
+[WebServer]  GET /api/steps/01KXDDF6VWE04KFA7R6R43WDFX 200 in 2.8s (next.js: 2.7s, application-code: 68ms)
+[WebServer]  GET /api/steps/01KXDDF73KF4NQS81BAR9Z3P7A 200 in 2.8s (next.js: 2.7s, application-code: 75ms)
+[WebServer]  GET /api/steps/01KXDDF9277B33Q9TBDQYHY7NG 200 in 2.5s (next.js: 2.5s, application-code: 85ms)
+[WebServer]  GET /api/steps/01KXDDFBMFDYH5R1D4RHYVRRGE 200 in 1503ms (next.js: 1313ms, application-code: 191ms)
+[WebServer]  GET /api/steps/01KXDDFBCAQE7A2QPEATT8V629 200 in 2.1s (next.js: 1948ms, application-code: 192ms)
+[WebServer]  GET /api/runs/01KXDDF73MM30KAHCMGY6XZB5A/events 200 in 4.5s (next.js: 1184ms, application-code: 3.3s)
+  ✓   4 [chromium] › e2e/analysis-pipeline.spec.ts:70:3 › pipeline de análisis N1→N2→N3 (T1.10a) › texto libre SIN imágenes: N2 aparece `skipped` en el grafo y el run completa @f1 (10.3s)
+[WebServer]  GET /api/runs/01KXDDF928KBVF01ZK7K0VYR2V/events 200 in 4.6s (next.js: 1035ms, application-code: 3.5s)
+  ✓   9 [chromium] › e2e/brief-editor.spec.ts:39:3 › CP1 · editor de brief (T1.10b) › los campos extraídos muestran su badge Y SU CITA; los inferidos, badge sin cita @f1 (7.8s)
+  ✓  11 [chromium] › e2e/brief-editor.spec.ts:63:3 › CP1 · editor de brief (T1.10b) › el hook demasiado largo de la IA se AVISA en CP1 y NO bloquea la aprobación @f1 (4.5s)
+[WebServer]  GET /api/runs/01KXDDFBMGQZ6VRXGY19AE3ZY1/events 200 in 3.6s (next.js: 14ms, application-code: 3.6s)
+[WebServer]  GET /analyses/new 200 in 107ms (next.js: 1878µs, proxy.ts: 4ms, application-code: 101ms)
+[WebServer]  GET /analyses/new 200 in 146ms (next.js: 4ms, proxy.ts: 10ms, application-code: 132ms)
+[WebServer]  POST /api/runs 201 in 95ms (next.js: 3ms, application-code: 92ms)
+[WebServer] {"level":30,"time":1783935516735,"pid":78660,"hostname":"MBP-de-Carlos","name":"web","request_id":"95a53c34-fe99-47b0-9898-4982f0816f6b","run_id":"01KXDDFFZQFM1PX6VMF0AVK2Y5","steps":3,"msg":"run creado"}
+[WebServer]  POST /api/steps/01KXDDF6VWE04KFA7R6R43WDFX/approve 200 in 1082ms (next.js: 973ms, application-code: 109ms)
+[WebServer] {"level":30,"time":1783935516749,"pid":78660,"hostname":"MBP-de-Carlos","name":"web","request_id":"51302e05-0327-46f6-a79d-473d7effce23","step_id":"01KXDDF6VWE04KFA7R6R43WDFX","msg":"checkpoint aprobado"}
+[WebServer]  POST /api/steps/01KXDDFBCAQE7A2QPEATT8V629/approve 200 in 886ms (next.js: 773ms, application-code: 113ms)
+[WebServer] {"level":30,"time":1783935516753,"pid":78660,"hostname":"MBP-de-Carlos","name":"web","request_id":"4337130d-d83d-4be8-a966-c3f18f09da12","step_id":"01KXDDFBCAQE7A2QPEATT8V629","decision_kind":"brief","msg":"checkpoint aprobado"}
+[WebServer]  POST /api/runs 201 in 75ms (next.js: 1035µs, application-code: 74ms)
+[WebServer] {"level":30,"time":1783935516923,"pid":78660,"hostname":"MBP-de-Carlos","name":"web","request_id":"b86dd1c1-aeba-4d04-87ca-4f5bf7f3849d","run_id":"01KXDDFG60E21EJ5SAR95XQHJ1","steps":3,"msg":"run creado"}
+[WebServer]  GET /api/runs/01KXDDFFZQFM1PX6VMF0AVK2Y5 200 in 9ms (next.js: 4ms, application-code: 6ms)
+[WebServer]  GET /runs/01KXDDFFZQFM1PX6VMF0AVK2Y5 200 in 207ms (next.js: 22ms, proxy.ts: 103ms, application-code: 82ms)
+[WebServer]  GET /api/runs/01KXDDFG60E21EJ5SAR95XQHJ1 200 in 59ms (next.js: 49ms, application-code: 9ms)
+[WebServer]  GET /api/runs/01KXDDF6W3SAKZQWY23QWBR8NM/events 200 in 5.9s (next.js: 1229ms, application-code: 4.7s)
+[WebServer]  GET /runs/01KXDDFG60E21EJ5SAR95XQHJ1 200 in 247ms (next.js: 7ms, proxy.ts: 17ms, application-code: 224ms)
+  ✓   2 [chromium] › e2e/analysis-pipeline.spec.ts:30:3 › pipeline de análisis N1→N2→N3 (T1.10a) › intake por URL: los nodos progresan en vivo y el brief aparece como output de N3 @f1 (11.7s)
+[WebServer]  GET /api/runs/01KXDDFBCBND60QRXF3RN755S1 200 in 29ms (next.js: 14ms, application-code: 15ms)
+[WebServer]  GET /api/runs/01KXDDFBCBND60QRXF3RN755S1/events 200 in 6.0s (next.js: 151ms, application-code: 5.9s)
+[WebServer]  GET /api/steps/01KXDDFFZKJQM96N4P1JR4D913 200 in 253ms (next.js: 70ms, application-code: 183ms)
+[WebServer]  GET /runs/01KXDDFBCBND60QRXF3RN755S1 200 in 1545ms (next.js: 206ms, proxy.ts: 9ms, application-code: 1330ms)
+[WebServer]  GET /api/steps/01KXDDFG5YEXC8HXBMCVPXNMG2 200 in 376ms (next.js: 60ms, application-code: 316ms)
+[WebServer]  GET /analyses/new 200 in 1042ms (next.js: 8ms, proxy.ts: 16ms, application-code: 1018ms)
+  ✓  10 [chromium] › e2e/brief-editor.spec.ts:79:3 › CP1 · editor de brief (T1.10b) › modo manual SIN imágenes: la petición BLOQUEANTE de imágenes con su derivación a packshot-IA @f1 (9.5s)
+[WebServer]  GET /api/runs/01KXDDFBCBND60QRXF3RN755S1/events 200 in 791ms (next.js: 47ms, application-code: 744ms)
+[WebServer]  GET /design-system 200 in 5.4s (next.js: 197ms, proxy.ts: 17ms, application-code: 5.2s)
+[WebServer] {"level":30,"time":1783935523234,"pid":78660,"hostname":"MBP-de-Carlos","name":"web","request_id":"d1b83710-1b04-494a-a1d0-b10c2f61a9d8","run_id":"01KXDDFP5PWESYK9MAFA184PV4","steps":3,"msg":"run creado"}
+[WebServer]  POST /api/runs 201 in 301ms (next.js: 47ms, application-code: 254ms)
+  ✓  14 [chromium] › e2e/design-system.spec.ts:12:3 › design system (FD backfill) › /design-system abre y muestra los tres switchers @f0 (6.3s)
+[WebServer]  GET /api/runs/01KXDDFP5PWESYK9MAFA184PV4 200 in 73ms (next.js: 26ms, application-code: 47ms)
+[WebServer]  GET /api/briefs/01KXDDFH18ZHX6D8Q1RDV84TY5 200 in 3.8s (next.js: 3.8s, application-code: 23ms)
+[WebServer]  GET /runs/01KXDDFP5PWESYK9MAFA184PV4 200 in 508ms (next.js: 95ms, proxy.ts: 22ms, application-code: 390ms)
+[WebServer]  POST /api/steps/01KXDDFG5YEXC8HXBMCVPXNMG2/approve 200 in 475ms (next.js: 20ms, application-code: 455ms)
+[WebServer] {"level":30,"time":1783935524488,"pid":78660,"hostname":"MBP-de-Carlos","name":"web","request_id":"cc8d46da-e7e6-43df-9417-f9f987d66e88","step_id":"01KXDDFG5YEXC8HXBMCVPXNMG2","msg":"checkpoint aprobado"}
+[WebServer] {"level":30,"time":1783935524964,"pid":78660,"hostname":"MBP-de-Carlos","name":"web","request_id":"bc054206-7171-423d-a440-b29b82513116","step_id":"01KXDDFFZKJQM96N4P1JR4D913","msg":"checkpoint editado + sub-grafo invalidado"}
+[WebServer]  POST /api/steps/01KXDDFFZKJQM96N4P1JR4D913/edit 200 in 4.9s (next.js: 4.4s, application-code: 548ms)
+[WebServer]  GET /api/briefs/01KXDDFH18ZHX6D8Q1RDV84TY5 200 in 310ms (next.js: 94ms, application-code: 216ms)
+[WebServer]  GET /design-system 200 in 5.1s (next.js: 8ms, proxy.ts: 23ms, application-code: 5.1s)
+[WebServer] {"level":30,"time":1783935525518,"pid":78660,"hostname":"MBP-de-Carlos","name":"web","request_id":"1cf8c187-a9de-4902-a273-45ccc26bc194","brief_id":"01KXDDFRJMCEARHWQ0P6MQ3EPR","previous_brief_id":"01KXDDFH18ZHX6D8Q1RDV84TY5","url_analysis_id":"01KXDDFGQDF0PJ9NBWSXBQ0P4W","version":2,"msg":"brief editado fuera de run: versión nueva"}
+[WebServer]  PATCH /api/briefs/01KXDDFH18ZHX6D8Q1RDV84TY5 200 in 146ms (next.js: 3ms, application-code: 143ms)
+[WebServer]  GET /api/briefs/01KXDDFH18ZHX6D8Q1RDV84TY5 200 in 298ms (next.js: 21ms, application-code: 277ms)
+[WebServer]  GET /api/steps/01KXDDFP5HDCQ3GRMNWT56QKED 200 in 277ms (next.js: 50ms, application-code: 227ms)
+[WebServer]  GET /api/runs/01KXDDFFZQFM1PX6VMF0AVK2Y5/events 200 in 8.7s (next.js: 6ms, application-code: 8.7s)
+  ✓  12 [chromium] › e2e/brief-editor.spec.ts:215:3 › CP1 · editor de brief (T1.10b) › editar un beneficio y un hook, guardar → el brief se versiona (v2) y el run avanza @f1 (10.2s)
+[WebServer]  GET /design-system 200 in 2.5s (next.js: 65ms, proxy.ts: 43ms, application-code: 2.4s)
+  ✓  16 [chromium] › e2e/design-system.spec.ts:19:3 › design system (FD backfill) › el switcher de tema estampa data-theme=light y vuelve a dark @f0 (6.4s)
+  ✓  13 [chromium] › e2e/brief-editor.spec.ts:250:3 › CP1 · versionado standalone del brief (Apéndice E) › PATCH /api/briefs/:id fuera del run crea una versión nueva (el v1 de la IA sigue intacto) @f1 (10.5s)
+[WebServer]  GET /api/runs/01KXDDFG60E21EJ5SAR95XQHJ1/events 200 in 9.2s (next.js: 15ms, application-code: 9.2s)
+  ✓  17 [chromium] › e2e/design-system.spec.ts:35:3 › design system (FD backfill) › el switcher de acento estampa data-accent y vuelve a indigo @f0 (3.3s)
+[WebServer] {"level":30,"time":1783935527006,"pid":78660,"hostname":"MBP-de-Carlos","name":"web","request_id":"5c38420f-1f53-44de-af49-4cce922cb55b","step_id":"01KXDDFP5HDCQ3GRMNWT56QKED","decision_kind":"brief","msg":"checkpoint editado + sub-grafo invalidado"}
+[WebServer]  POST /api/steps/01KXDDFP5HDCQ3GRMNWT56QKED/edit 200 in 157ms (next.js: 7ms, application-code: 150ms)
+[WebServer]  GET /analyses/new 200 in 338ms (next.js: 19ms, proxy.ts: 15ms, application-code: 304ms)
+[WebServer]  GET /analyses/new 200 in 307ms (next.js: 9ms, proxy.ts: 13ms, application-code: 285ms)
+[WebServer]  GET /analyses/new 200 in 426ms (next.js: 29ms, proxy.ts: 16ms, application-code: 381ms)
+  ✓  15 [chromium] › e2e/brief-editor.spec.ts:131:3 › CP1 · editor de brief (T1.10b) › T1.15 · URL de web de servicio SIN hero: el run NO muere, CP1 ofrece las 3 salidas y se promueve una imagen @f1 (11.1s)
+[WebServer]  GET /api/runs/01KXDDFP5PWESYK9MAFA184PV4/events 200 in 3.8s (next.js: 92ms, application-code: 3.7s)
+[WebServer]  GET /design-system 200 in 2.7s (next.js: 15ms, proxy.ts: 12ms, application-code: 2.6s)
+  ✓  18 [chromium] › e2e/design-system.spec.ts:50:3 › design system (FD backfill) › el switcher de densidad estampa data-density y vuelve a balanced @f0 (3.9s)
+  ✓  19 [chromium] › e2e/intake-manual.spec.ts:73:3 › intake manual por texto libre (T1.6) › validación visible: un texto demasiado corto muestra error y no navega @f1 (3.6s)
+[WebServer] {"level":30,"time":1783935530220,"pid":78660,"hostname":"MBP-de-Carlos","name":"web","request_id":"7624cf99-b390-4ecb-988b-9dd8f5b3f168","analysis_id":"01KXDDFX74C9VC8E7R4Y05S9WY","project_id":"01KXDDF5HQHNS0F3ZC2S33D69F","reused":false,"source":"manual","msg":"intake manual creado"}
+[WebServer]  POST /api/analyses 201 in 188ms (next.js: 159ms, application-code: 29ms)
+[WebServer]  POST /api/assets 201 in 198ms (next.js: 143ms, application-code: 55ms)
+[WebServer]  POST /api/assets 201 in 58ms (next.js: 7ms, application-code: 51ms)
+[WebServer] {"level":30,"time":1783935530336,"pid":78660,"hostname":"MBP-de-Carlos","name":"web","request_id":"f4bd97b1-2932-4f16-a639-acd82e3059cf","run_id":"01KXDDFX81KJHPZB000ZWF1TRW","steps":3,"msg":"run creado"}
+[WebServer]  POST /api/runs 201 in 108ms (next.js: 6ms, application-code: 103ms)
+[WebServer]  GET /analyses/new 200 in 809ms (next.js: 122ms, proxy.ts: 93ms, application-code: 594ms)
+[WebServer]  GET /api/runs/01KXDDFX81KJHPZB000ZWF1TRW 200 in 115ms (next.js: 38ms, application-code: 76ms)
+[WebServer]  GET /runs/01KXDDFX81KJHPZB000ZWF1TRW 200 in 438ms (next.js: 70ms, proxy.ts: 8ms, application-code: 361ms)
+[WebServer]  GET /api/settings 200 in 458ms (next.js: 44ms, application-code: 414ms)
+[WebServer]  GET /api/spend 200 in 569ms (next.js: 45ms, application-code: 524ms)
+[WebServer] {"level":30,"time":1783935531243,"pid":78660,"hostname":"MBP-de-Carlos","name":"web","request_id":"873835ec-4a02-4b23-a840-3eab90e71caf","analysis_id":"01KXDDFY6AEJS912AADHQ5G7ES","project_id":"01KXDDF5HQHNS0F3ZC2S33D69F","reused":false,"source":"manual","msg":"intake manual creado"}
+[WebServer]  POST /api/analyses 201 in 53ms (next.js: 9ms, application-code: 45ms)
+[WebServer]  GET /settings 200 in 1382ms (next.js: 31ms, proxy.ts: 10ms, application-code: 1340ms)
+[WebServer]  POST /api/runs 201 in 478ms (next.js: 8ms, application-code: 470ms)
+[WebServer] {"level":30,"time":1783935531901,"pid":78660,"hostname":"MBP-de-Carlos","name":"web","request_id":"a21ad0c1-8997-4eed-82a9-f90332d11b46","run_id":"01KXDDFYHM5S9QWMTNCDXFF06G","steps":3,"msg":"run creado"}
+[WebServer]  GET /spend 200 in 1573ms (next.js: 105ms, proxy.ts: 29ms, application-code: 1440ms)
+[WebServer] {"level":30,"time":1783935532258,"pid":78660,"hostname":"MBP-de-Carlos","name":"web","request_id":"335f1bd4-bbe9-45f7-90f7-95769ae2faa6","analysis_id":"01KXDDFZ3ZNYVN554PF7BP5E0X","project_id":"01KXDDF5HQHNS0F3ZC2S33D69F","reused":false,"source":"manual","msg":"intake manual creado"}
+[WebServer]  POST /api/analyses 201 in 113ms (next.js: 6ms, application-code: 106ms)
+  ✓  20 [chromium] › e2e/intake-manual.spec.ts:88:3 › intake manual por texto libre (T1.6) › envío SÓLO texto (sin imágenes) crea el análisis manual en `done` y arranca su pipeline @f1 (5.6s)
+[WebServer]  GET /api/runs/01KXDDFX81KJHPZB000ZWF1TRW/events 200 in 269ms (next.js: 9ms, application-code: 260ms)
+[WebServer]  GET /api/runs/01KXDDFYHM5S9QWMTNCDXFF06G 200 in 183ms (next.js: 39ms, application-code: 144ms)
+[WebServer] {"level":30,"time":1783935532721,"pid":78660,"hostname":"MBP-de-Carlos","name":"web","request_id":"107634d5-8ffa-47d9-b492-535954a72443","run_id":"01KXDDFZBVF870ZE9ATAMEV5X9","steps":3,"msg":"run creado"}
+[WebServer]  POST /api/runs 201 in 339ms (next.js: 21ms, application-code: 318ms)
+[WebServer]  GET /runs/01KXDDFYHM5S9QWMTNCDXFF06G 200 in 774ms (next.js: 49ms, proxy.ts: 155ms, application-code: 569ms)
+[WebServer]  GET /api/runs/01KXDDFZBVF870ZE9ATAMEV5X9 200 in 150ms (next.js: 98ms, application-code: 52ms)
+[WebServer]  GET /runs/01KXDDFZBVF870ZE9ATAMEV5X9 200 in 1336ms (next.js: 338ms, proxy.ts: 112ms, application-code: 886ms)
+  ✓  23 [chromium] › e2e/navigation.spec.ts:36:5 › base URL del fetch de servidor y navegación global (T1.13) › /spend renderiza sirviendo en un puerto distinto del 3000 y sin INTERNAL_API_URL @f1 (4.0s)
+[WebServer]  GET / 200 in 1259ms (next.js: 83ms, proxy.ts: 259ms, application-code: 917ms)
+  ✓  24 [chromium] › e2e/navigation.spec.ts:36:5 › base URL del fetch de servidor y navegación global (T1.13) › /settings renderiza sirviendo en un puerto distinto del 3000 y sin INTERNAL_API_URL @f1 (4.3s)
+  ✓  21 [chromium] › e2e/intake-manual.spec.ts:115:3 › intake manual por texto libre (T1.6) › envío CON imágenes (fixtures locales) adjunta las referencias al análisis @f1 (7.8s)
+[WebServer]  GET /api/runs/01KXDDFYHM5S9QWMTNCDXFF06G/events 200 in 247ms (next.js: 24ms, application-code: 222ms)
+[WebServer]  GET / 200 in 238ms (next.js: 24ms, proxy.ts: 32ms, application-code: 182ms)
+[WebServer] {"level":30,"time":1783935534822,"pid":78660,"hostname":"MBP-de-Carlos","name":"web","request_id":"c95d1b94-61ad-4435-b6fb-da853e9ff2f5","run_id":"01KXDDG1M5ADF2HA7GAFF0C7MH","steps":6,"msg":"run creado"}
+[WebServer]  POST /api/runs 201 in 117ms (next.js: 11ms, application-code: 106ms)
+[WebServer]  GET /api/steps/01KXDDFZBS4XDJ0PK1DR067RQK 200 in 119ms (next.js: 11ms, application-code: 108ms)
+[WebServer]  GET /api/runs/01KXDDG1M5ADF2HA7GAFF0C7MH 200 in 37ms (next.js: 9ms, application-code: 28ms)
+[WebServer]  GET / 200 in 351ms (next.js: 14ms, proxy.ts: 14ms, application-code: 322ms)
+[WebServer]  GET /runs/01KXDDG1M5ADF2HA7GAFF0C7MH 200 in 795ms (next.js: 69ms, proxy.ts: 33ms, application-code: 693ms)
+[WebServer]  GET /analyses/new 200 in 370ms (next.js: 12ms, proxy.ts: 6ms, application-code: 352ms)
+[WebServer]  GET /api/runs/01KXDDFZBVF870ZE9ATAMEV5X9/events 200 in 994ms (next.js: 9ms, application-code: 986ms)
+[WebServer]  GET /analyses/new 200 in 446ms (next.js: 22ms, proxy.ts: 25ms, application-code: 399ms)
+[WebServer]  GET /analyses/new 200 in 951ms (next.js: 35ms, proxy.ts: 8ms, application-code: 908ms)
+[WebServer] {"level":30,"time":1783935537089,"pid":78660,"hostname":"MBP-de-Carlos","name":"web","request_id":"4cf6ab3d-3698-445f-8623-612f1d6e87e4","analysis_id":"01KXDDFZ3ZNYVN554PF7BP5E0X","project_id":"01KXDDF5HQHNS0F3ZC2S33D69F","reused":true,"source":"manual","msg":"intake manual reutilizado (caché)"}
+[WebServer]  POST /api/analyses 200 in 212ms (next.js: 92ms, application-code: 120ms)
+[WebServer]  GET / 200 in 366ms (next.js: 58ms, proxy.ts: 213ms, application-code: 96ms)
+[WebServer] {"level":30,"time":1783935537242,"pid":78660,"hostname":"MBP-de-Carlos","name":"web","request_id":"122521f9-d784-4e6a-9c21-142bceb9c8f5","run_id":"01KXDDG40XACVEC9HS1AMPNQ1C","steps":3,"msg":"run creado"}
+[WebServer]  POST /api/runs 201 in 106ms (next.js: 17ms, application-code: 89ms)
+  ✓  26 [chromium] › e2e/navigation.spec.ts:80:3 › base URL del fetch de servidor y navegación global (T1.13) › la nav global muestra los 7 destinos; los de fases futuras, deshabilitados @f1 (3.3s)
+[WebServer]  GET /api/runs/01KXDDG40XACVEC9HS1AMPNQ1C 200 in 47ms (next.js: 7ms, application-code: 39ms)
+[WebServer]  GET /runs/01KXDDG40XACVEC9HS1AMPNQ1C 200 in 622ms (next.js: 85ms, proxy.ts: 121ms, application-code: 416ms)
+[WebServer]  GET /api/runs/01KXDDG1M5ADF2HA7GAFF0C7MH/events 200 in 784ms (next.js: 39ms, application-code: 745ms)
+[WebServer]  GET / 200 in 909ms (next.js: 13ms, proxy.ts: 22ms, application-code: 874ms)
+  ✓  22 [chromium] › e2e/intake-manual.spec.ts:143:3 › intake manual por texto libre (T1.6) › reutilización observable: reenviar el MISMO texto reutiliza el MISMO análisis (caché §7.4) @f1 (9.5s)
+[WebServer]  GET /api/runs/01KXDDG40XACVEC9HS1AMPNQ1C/events 200 in 154ms (next.js: 92ms, application-code: 62ms)
+[WebServer]  GET /api/personas 200 in 112ms (next.js: 94ms, application-code: 18ms)
+[WebServer]  GET /analyses/new 200 in 1156ms (next.js: 15ms, proxy.ts: 28ms, application-code: 1113ms)
+[WebServer]  GET /api/personas 200 in 46ms (next.js: 9ms, application-code: 37ms)
+[WebServer]  GET /personas 200 in 947ms (next.js: 112ms, proxy.ts: 155ms, application-code: 680ms)
+[WebServer]  GET /api/personas 200 in 80ms (next.js: 30ms, application-code: 49ms)
+[WebServer]  GET /personas 200 in 1427ms (next.js: 143ms, proxy.ts: 164ms, application-code: 1120ms)
+[WebServer]  GET /personas 200 in 949ms (next.js: 66ms, proxy.ts: 17ms, application-code: 866ms)
+  ✓  27 [chromium] › e2e/navigation.spec.ts:131:3 › base URL del fetch de servidor y navegación global (T1.13) › dentro de un run, «Canvas» se RESALTA pero NO se anuncia como página actual @f1 (5.8s)
+[WebServer]  GET / 200 in 690ms (next.js: 17ms, proxy.ts: 457ms, application-code: 215ms)
+[WebServer]  GET /api/personas 200 in 127ms (next.js: 22ms, application-code: 105ms)
+[WebServer]  GET /login 200 in 561ms (next.js: 42ms, application-code: 518ms)
+[WebServer]  GET /personas 200 in 1110ms (next.js: 55ms, proxy.ts: 13ms, application-code: 1041ms)
+[WebServer]  POST /api/personas 201 in 164ms (next.js: 37ms, application-code: 127ms)
+[WebServer]  GET / 200 in 1045ms (next.js: 36ms, proxy.ts: 159ms, application-code: 849ms)
+[WebServer]  POST /api/personas 201 in 297ms (next.js: 14ms, application-code: 283ms)
+  ✓  31 [chromium] › e2e/navigation.spec.ts:155:3 › base URL del fetch de servidor y navegación global (T1.13) › /login NO lleva la nav global (aún no hay sesión que navegar) @f1 (2.8s)
+[WebServer]  GET /api/spend 200 in 451ms (next.js: 35ms, application-code: 416ms)
+  ✓  29 [chromium] › e2e/personas.spec.ts:141:3 › /personas — librería de personas (T2.0) › las acciones de fases futuras se VEN pero están DESHABILITADAS, y dicen por qué @f2 (5.2s)
+[WebServer]  GET /spend 200 in 1279ms (next.js: 10ms, proxy.ts: 164ms, application-code: 1105ms)
+[WebServer]  GET /api/personas 200 in 11ms (next.js: 1672µs, application-code: 9ms)
+[WebServer]  GET /personas 200 in 433ms (next.js: 8ms, proxy.ts: 8ms, application-code: 417ms)
+[WebServer]  GET / 200 in 218ms (next.js: 55ms, proxy.ts: 44ms, application-code: 119ms)
+[WebServer]  GET /analyses/new 200 in 416ms (next.js: 11ms, proxy.ts: 110ms, application-code: 295ms)
+[WebServer]  POST /api/personas 201 in 36ms (next.js: 8ms, application-code: 28ms)
+[WebServer]  GET / 200 in 1412ms (next.js: 12ms, proxy.ts: 25ms, application-code: 1375ms)
+[WebServer]  PATCH /api/personas/01KXDDG8VY4FCSD3218TPHSGKW 200 in 2.2s (next.js: 2.1s, application-code: 121ms)
+[WebServer]  GET /api/personas 200 in 115ms (next.js: 48ms, application-code: 68ms)
+[WebServer]  GET /personas 200 in 1346ms (next.js: 122ms, proxy.ts: 90ms, application-code: 1134ms)
+[WebServer]  GET /api/settings 200 in 852ms (next.js: 68ms, application-code: 784ms)
+[WebServer]  GET /settings 200 in 1526ms (next.js: 247ms, proxy.ts: 126ms, application-code: 1154ms)
+[WebServer]  POST /api/personas 201 in 110ms (next.js: 54ms, application-code: 56ms)
+[WebServer] {"level":30,"time":1783935548199,"pid":78660,"hostname":"MBP-de-Carlos","name":"web","request_id":"e3f817bf-a5c3-4ee4-8b60-013408b0ab06","run_id":"01KXDDGECERSZ3030FPSDP2XCC","steps":3,"msg":"run creado"}
+[WebServer]  POST /api/runs 201 in 490ms (next.js: 49ms, application-code: 441ms)
+[WebServer]  GET /api/runs/01KXDDGECERSZ3030FPSDP2XCC 200 in 149ms (next.js: 35ms, application-code: 114ms)
+[WebServer]  GET /runs/01KXDDGECERSZ3030FPSDP2XCC 200 in 342ms (next.js: 25ms, proxy.ts: 17ms, application-code: 299ms)
+[WebServer]  GET / 200 in 225ms (next.js: 44ms, proxy.ts: 17ms, application-code: 164ms)
+[WebServer]  DELETE /api/personas/01KXDDG8VY4FCSD3218TPHSGKW 200 in 255ms (next.js: 64ms, application-code: 191ms)
+[WebServer]  GET / 200 in 576ms (next.js: 74ms, proxy.ts: 7ms, application-code: 495ms)
+[WebServer]  POST /api/personas/01KXDDGEJ7TSFENFDD4S2R92CK/reference-images 400 in 1265ms (next.js: 1204ms, application-code: 62ms)
+[WebServer]  GET /api/steps/01KXDDGECAF74047DSRH4PA11W 200 in 108ms (next.js: 93ms, application-code: 15ms)
+  ✓  28 [chromium] › e2e/personas.spec.ts:70:3 › /personas — librería de personas (T2.0) › CRUD completo: crear con voice map es/en, ver la ficha, editar y eliminar @f2 (12.0s)
+[WebServer]  POST /api/personas/01KXDDGB73AS7PXK8JABF9YWE0/reference-images 201 in 4.8s (next.js: 4.4s, application-code: 382ms)
+[WebServer]  GET /api/briefs/01KXDDGFJ1MD9C24WRE9076Y2V 200 in 30ms (next.js: 18ms, application-code: 12ms)
+[WebServer]  GET /api/assets/01KXDDGG17SN05CG01Y3ECYRA7/download 200 in 373ms (next.js: 42ms, application-code: 331ms)
+  ✓  32 [chromium] › e2e/personas.spec.ts:210:3 › /personas — librería de personas (T2.0) › una imagen <2K es RECHAZADA con un mensaje VISIBLE y no se añade @f2 (6.6s)
+[WebServer]  POST /api/personas/01KXDDGB73AS7PXK8JABF9YWE0/reference-images 201 in 361ms (next.js: 12ms, application-code: 349ms)
+[WebServer]  POST /api/runs 201 in 214ms (next.js: 5ms, application-code: 210ms)
+[WebServer] {"level":30,"time":1783935550724,"pid":78660,"hostname":"MBP-de-Carlos","name":"web","request_id":"7dafc8c9-93eb-43b9-997f-2cfd6d901771","run_id":"01KXDDGH26Z88EDKBG31ERTXJG","steps":6,"msg":"run creado"}
+[WebServer]  GET /api/assets/01KXDDGGTKXZRBR4MH8BN45J78/download 200 in 96ms (next.js: 10ms, application-code: 86ms)
+[WebServer] {"level":30,"time":1783935550780,"pid":78660,"hostname":"MBP-de-Carlos","name":"web","request_id":"6ebf5a21-ad10-4a9e-a3ea-55682e244004","step_id":"01KXDDGECAF74047DSRH4PA11W","msg":"checkpoint editado + sub-grafo invalidado"}
+[WebServer]  POST /api/steps/01KXDDGECAF74047DSRH4PA11W/edit 200 in 492ms (next.js: 113ms, application-code: 379ms)
+[WebServer]  GET /design-system 200 in 1700ms (next.js: 113ms, proxy.ts: 29ms, application-code: 1557ms)
+  ✓  30 [chromium] › e2e/personas.spec.ts:170:3 › /personas — librería de personas (T2.0) › upload de una imagen ≥2K: se acepta y aparece en la ficha @f2 (10.7s)
+[WebServer]  GET /api/runs/01KXDDGH26Z88EDKBG31ERTXJG 200 in 43ms (next.js: 24ms, application-code: 19ms)
+[WebServer]  POST /api/runs 201 in 625ms (next.js: 46ms, application-code: 579ms)
+[WebServer] {"level":30,"time":1783935551413,"pid":78660,"hostname":"MBP-de-Carlos","name":"web","request_id":"fa30e216-8959-4efa-9e2c-46152dd3dd58","run_id":"01KXDDGHC12Q2CB0XD1V8D7ZKT","steps":6,"msg":"run creado"}
+[WebServer]  GET /api/briefs/01KXDDGFJ1MD9C24WRE9076Y2V 200 in 190ms (next.js: 136ms, application-code: 54ms)
+[WebServer]  GET /runs/01KXDDGH26Z88EDKBG31ERTXJG 200 in 1430ms (next.js: 98ms, proxy.ts: 11ms, application-code: 1321ms)
+[WebServer]  GET /api/steps/01KXDDGECAF74047DSRH4PA11W 200 in 142ms (next.js: 92ms, application-code: 50ms)
+[WebServer]  GET / 200 in 719ms (next.js: 70ms, proxy.ts: 61ms, application-code: 588ms)
+[WebServer]  POST /api/runs 201 in 666ms (next.js: 50ms, application-code: 616ms)
+[WebServer] {"level":30,"time":1783935552282,"pid":78660,"hostname":"MBP-de-Carlos","name":"web","request_id":"bba10d36-82e5-494a-b756-d7e50a56ce92","run_id":"01KXDDGJ607W7D7D0HSJT9TK83","steps":6,"msg":"run creado"}
+[WebServer]  GET /api/runs/01KXDDGHC12Q2CB0XD1V8D7ZKT 200 in 44ms (next.js: 35ms, application-code: 9ms)
+[WebServer]  GET /api/briefs/01KXDDGH4TJTW5HM92C7EAVE1H 200 in 19ms (next.js: 8ms, application-code: 11ms)
+[WebServer]  GET /api/runs/01KXDDGJ607W7D7D0HSJT9TK83 200 in 20ms (next.js: 11ms, application-code: 8ms)
+[WebServer]  GET /runs/01KXDDGHC12Q2CB0XD1V8D7ZKT 200 in 990ms (next.js: 487ms, proxy.ts: 20ms, application-code: 482ms)
+  ✓  25 [chromium] › e2e/navigation.spec.ts:47:3 › base URL del fetch de servidor y navegación global (T1.13) › desde la home se llega a las páginas existentes sin escribir ninguna URL @f1 (20.0s)
+  ✓  33 [chromium] › e2e/phases/f1-brief.spec.ts:28:3 › F1 · journey de análisis: URL → N1/N2/N3 → CP1 → aprobar y avanzar › un usuario pega una URL, edita el brief en CP1 y lo aprueba: el brief se versiona y el run avanza @f1 @phase (8.9s)
+[WebServer]  GET /api/runs/01KXDDGECERSZ3030FPSDP2XCC/events 200 in 3.7s (next.js: 59ms, application-code: 3.6s)
+[WebServer]  GET /runs/01KXDDGJ607W7D7D0HSJT9TK83 200 in 638ms (next.js: 41ms, proxy.ts: 34ms, application-code: 563ms)
+[WebServer] {"level":30,"time":1783935553086,"pid":78660,"hostname":"MBP-de-Carlos","name":"web","request_id":"da4984ff-34a5-46ad-a1d4-c8b9577d5722","run_id":"01KXDDGKGABQ9R3MKKRVQXZD29","steps":6,"msg":"run creado"}
+[WebServer]  POST /api/runs 201 in 74ms (next.js: 8ms, application-code: 65ms)
+[WebServer]  GET /api/runs/01KXDDGKGABQ9R3MKKRVQXZD29 200 in 124ms (next.js: 28ms, application-code: 95ms)
+[WebServer]  GET /runs/01KXDDGKGABQ9R3MKKRVQXZD29 200 in 1010ms (next.js: 101ms, proxy.ts: 46ms, application-code: 863ms)
+[WebServer] {"level":30,"time":1783935554126,"pid":78660,"hostname":"MBP-de-Carlos","name":"web","request_id":"20bfa7c3-7471-43b4-9963-7e7296c52d2c","run_id":"01KXDDGMGGYZ5VE24F3YVDJZWK","steps":6,"msg":"run creado"}
+[WebServer]  POST /api/runs 201 in 126ms (next.js: 23ms, application-code: 103ms)
+[WebServer]  GET /api/steps/01KXDDGHBT2K0EH0NNJX20FH5B 200 in 134ms (next.js: 102ms, application-code: 32ms)
+[WebServer]  GET /api/runs/01KXDDGMGGYZ5VE24F3YVDJZWK 200 in 32ms (next.js: 9ms, application-code: 23ms)
+[WebServer]  GET /api/steps/01KXDDGH1QE6TKY0G9ADJ6J00A 200 in 84ms (next.js: 32ms, application-code: 52ms)
+  ✓  34 [chromium] › e2e/runs-canvas.spec.ts:34:3 › canvas del run (T0.11) › los nodos cambian de estado en vivo por SSE (sin reload) @f0 (5.6s)
+[WebServer]  GET /api/runs/01KXDDGH26Z88EDKBG31ERTXJG/events 200 in 2.5s (next.js: 19ms, application-code: 2.5s)
+[WebServer]  GET /api/steps/01KXDDGJ5RVKG9JR6Q34MRV5ZS 200 in 612ms (next.js: 53ms, application-code: 559ms)
+[WebServer]  GET /runs/01KXDDGMGGYZ5VE24F3YVDJZWK 200 in 2.1s (next.js: 25ms, proxy.ts: 40ms, application-code: 2.0s)
+[WebServer] {"level":30,"time":1783935557126,"pid":78660,"hostname":"MBP-de-Carlos","name":"web","request_id":"d61886aa-91a6-4bf4-8a60-8543ad38467c","step_id":"01KXDDGHBT2K0EH0NNJX20FH5B","msg":"checkpoint aprobado"}
+[WebServer]  POST /api/steps/01KXDDGHBT2K0EH0NNJX20FH5B/approve 200 in 1779ms (next.js: 53ms, application-code: 1726ms)
+[WebServer] {"level":30,"time":1783935557192,"pid":78660,"hostname":"MBP-de-Carlos","name":"web","request_id":"1c2f66f2-8509-4bad-9d00-2666a4294560","run_id":"01KXDDGQ2KVXW23X4407RTQ9JE","steps":6,"msg":"run creado"}
+[WebServer]  POST /api/runs 201 in 762ms (next.js: 56ms, application-code: 706ms)
+[WebServer]  GET /api/steps/01KXDDGKG4MREQ0K5RSQN1WF09 200 in 244ms (next.js: 117ms, application-code: 127ms)
+[WebServer]  GET /api/runs/01KXDDGQ2KVXW23X4407RTQ9JE 200 in 138ms (next.js: 42ms, application-code: 96ms)
+[WebServer]  GET /api/runs/01KXDDGHC12Q2CB0XD1V8D7ZKT/events 200 in 6.1s (next.js: 54ms, application-code: 6.0s)
+[WebServer]  GET /runs/01KXDDGQ2KVXW23X4407RTQ9JE 200 in 2.5s (next.js: 184ms, proxy.ts: 125ms, application-code: 2.2s)
+  ✓  35 [chromium] › e2e/runs-canvas.spec.ts:52:3 › canvas del run (T0.11) › checkpoint: aprobar desde el panel avanza el run @f0 (9.7s)
+[WebServer]  GET /api/steps/01KXDDGMG22X2006FK5GBY9MY5 200 in 33ms (next.js: 10ms, application-code: 23ms)
+[WebServer] {"level":30,"time":1783935561248,"pid":78660,"hostname":"MBP-de-Carlos","name":"web","request_id":"f4811ad4-5877-4e26-afee-db7611faa3ba","run_id":"01KXDDGV5QDN1Z56737E6PECDS","steps":6,"msg":"run creado"}
+[WebServer]  POST /api/runs 201 in 410ms (next.js: 26ms, application-code: 384ms)
+[WebServer]  POST /api/steps/01KXDDGKG4MREQ0K5RSQN1WF09/edit 200 in 1461ms (next.js: 55ms, application-code: 1406ms)
+[WebServer] {"level":30,"time":1783935561307,"pid":78660,"hostname":"MBP-de-Carlos","name":"web","request_id":"3519dcb4-3793-432b-8fd0-e5aba4f96b0a","step_id":"01KXDDGKG4MREQ0K5RSQN1WF09","msg":"checkpoint editado + sub-grafo invalidado"}
+[WebServer]  GET /api/runs/01KXDDGKGABQ9R3MKKRVQXZD29/events 200 in 5.2s (next.js: 37ms, application-code: 5.2s)
+  ✓  37 [chromium] › e2e/runs-canvas.spec.ts:79:3 › canvas del run (T0.11) › checkpoint: editar el output JSON y aprobar @f0 (9.4s)
+[WebServer]  GET /api/runs/01KXDDGV5QDN1Z56737E6PECDS 200 in 37ms (next.js: 9ms, application-code: 28ms)
+[WebServer] {"level":30,"time":1783935562334,"pid":78660,"hostname":"MBP-de-Carlos","name":"web","request_id":"a0afa392-8bf4-4363-b702-1d2c05934b10","step_id":"01KXDDGJ5RVKG9JR6Q34MRV5ZS","msg":"checkpoint rechazado"}
+[WebServer]  POST /api/steps/01KXDDGJ5RVKG9JR6Q34MRV5ZS/reject 200 in 5.1s (next.js: 4.9s, application-code: 132ms)
+[WebServer] {"level":30,"time":1783935562434,"pid":78660,"hostname":"MBP-de-Carlos","name":"web","request_id":"f6e9937f-6cf0-4c70-8302-2b99de4ee726","step_id":"01KXDDGMG22X2006FK5GBY9MY5","msg":"checkpoint aprobado"}
+[WebServer]  POST /api/steps/01KXDDGMG22X2006FK5GBY9MY5/approve 200 in 1400ms (next.js: 52ms, application-code: 1348ms)
+[WebServer]  GET /runs/01KXDDGV5QDN1Z56737E6PECDS 200 in 1008ms (next.js: 77ms, proxy.ts: 96ms, application-code: 835ms)
+[WebServer]  POST /api/runs 201 in 233ms (next.js: 7ms, application-code: 226ms)
+[WebServer] {"level":30,"time":1783935562673,"pid":78660,"hostname":"MBP-de-Carlos","name":"web","request_id":"bfcc5a87-b374-471a-9893-ec4a9ca1b6be","run_id":"01KXDDGWQFFQ7A19Y8KS9H4HHS","steps":6,"msg":"run creado"}
+[WebServer]  GET /api/steps/01KXDDGQ1F99ZE2A601FD59KFJ 200 in 56ms (next.js: 13ms, application-code: 43ms)
+[WebServer]  GET /api/runs/01KXDDGJ607W7D7D0HSJT9TK83/events 200 in 8.8s (next.js: 8ms, application-code: 8.8s)
+  ✓  36 [chromium] › e2e/runs-canvas.spec.ts:69:3 › canvas del run (T0.11) › checkpoint: rechazar desde el panel @f0 (11.8s)
+[WebServer]  GET /api/runs/01KXDDGWQFFQ7A19Y8KS9H4HHS 200 in 52ms (next.js: 17ms, application-code: 35ms)
+[WebServer]  GET /runs/01KXDDGWQFFQ7A19Y8KS9H4HHS 200 in 845ms (next.js: 132ms, proxy.ts: 32ms, application-code: 681ms)
+[WebServer]  GET /api/settings 200 in 24ms (next.js: 4ms, application-code: 20ms)
+[WebServer] {"level":30,"time":1783935563983,"pid":78660,"hostname":"MBP-de-Carlos","name":"web","request_id":"7eb74954-a006-4323-a10f-5beb0d9e194c","step_id":"01KXDDGQ1F99ZE2A601FD59KFJ","msg":"checkpoint aprobado"}
+[WebServer]  POST /api/steps/01KXDDGQ1F99ZE2A601FD59KFJ/approve 200 in 145ms (next.js: 19ms, application-code: 126ms)
+[WebServer]  GET /settings 200 in 636ms (next.js: 129ms, proxy.ts: 37ms, application-code: 470ms)
+[WebServer]  GET /api/steps/01KXDDGMG9GCREJPPMQ7ATW10H 200 in 170ms (next.js: 27ms, application-code: 143ms)
+[WebServer] {"level":30,"time":1783935565840,"pid":78660,"hostname":"MBP-de-Carlos","name":"web","request_id":"5b52df78-1aa5-44e6-987a-7fd706cecf0a","step_id":"01KXDDGMG9GCREJPPMQ7ATW10H","msg":"checkpoint aprobado"}
+[WebServer]  POST /api/steps/01KXDDGMG9GCREJPPMQ7ATW10H/approve 200 in 591ms (next.js: 11ms, application-code: 580ms)
+[WebServer]  PATCH /api/settings 200 in 345ms (next.js: 7ms, application-code: 338ms)
+[WebServer] {"level":30,"time":1783935566163,"pid":78660,"hostname":"MBP-de-Carlos","name":"web","request_id":"5a12f627-9c28-44ab-984a-140287de00f4","run_id":"01KXDDGWQFFQ7A19Y8KS9H4HHS","autopilot":true,"msg":"autopilot del run actualizado"}
+[WebServer]  PATCH /api/runs/01KXDDGWQFFQ7A19Y8KS9H4HHS 200 in 153ms (next.js: 41ms, application-code: 112ms)
+[WebServer]  GET /api/settings 200 in 54ms (next.js: 2ms, application-code: 51ms)
+[WebServer]  GET /api/steps/01KXDDGQ1KSF96M3GBTXTB3835 200 in 707ms (next.js: 20ms, application-code: 687ms)
+[WebServer] {"level":40,"time":1783935566976,"pid":78659,"hostname":"MBP-de-Carlos","name":"worker","queue":"step.execute","job_id":"40f3ec11-3806-4fe1-97c5-63052327afeb","run_id":"01KXDDGMGGYZ5VE24F3YVDJZWK","step_id":"01KXDDGMGEKNSAH2WTMDRE2S32","node_key":"demo.canvas.N4","err":{"type":"Error","message":"demo executor: fallo inyectado","stack":"Error: demo executor: fallo inyectado\n    at <anonymous> (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/worker/src/executors/demo.ts:87:13)\n    at async <anonymous> (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/worker/src/consumers/step-execute.ts:167:9)\n    at async resolveWithinSeconds (file:///Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/pg-boss@12.25.1/node_modules/pg-boss/dist/tools.js:38:18)\n    at async #processJobs (file:///Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/pg-boss@12.25.1/node_modules/pg-boss/dist/manager.js:421:28)\n    at async Worker.onFetch (file:///Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/pg-boss@12.25.1/node_modules/pg-boss/dist/manager.js:577:21)\n    at async Worker.run (file:///Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/pg-boss@12.25.1/node_modules/pg-boss/dist/worker.js:60:21)"},"msg":"step.execute: executor falló; evaluando retry"}
+[WebServer] {"level":30,"time":1783935567584,"pid":78659,"hostname":"MBP-de-Carlos","name":"worker","queue":"step.execute","job_id":"40f3ec11-3806-4fe1-97c5-63052327afeb","run_id":"01KXDDGMGGYZ5VE24F3YVDJZWK","step_id":"01KXDDGMGEKNSAH2WTMDRE2S32","node_key":"demo.canvas.N4","outcome":"retried","msg":"step.execute: reencolado para reintento"}
+[WebServer]  GET /settings 200 in 2.5s (next.js: 33ms, proxy.ts: 83ms, application-code: 2.4s)
+[WebServer] {"level":40,"time":1783935568709,"pid":78659,"hostname":"MBP-de-Carlos","name":"worker","queue":"step.execute","job_id":"d2cdf94c-bfd5-4f41-8af1-ab06535cb294","run_id":"01KXDDGMGGYZ5VE24F3YVDJZWK","step_id":"01KXDDGMGEKNSAH2WTMDRE2S32","node_key":"demo.canvas.N4","err":{"type":"Error","message":"demo executor: fallo inyectado","stack":"Error: demo executor: fallo inyectado\n    at <anonymous> (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/worker/src/executors/demo.ts:87:13)\n    at async <anonymous> (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/worker/src/consumers/step-execute.ts:167:9)\n    at async resolveWithinSeconds (file:///Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/pg-boss@12.25.1/node_modules/pg-boss/dist/tools.js:38:18)\n    at async #processJobs (file:///Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/pg-boss@12.25.1/node_modules/pg-boss/dist/manager.js:421:28)\n    at async Worker.onFetch (file:///Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/pg-boss@12.25.1/node_modules/pg-boss/dist/manager.js:577:21)\n    at async Worker.run (file:///Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/pg-boss@12.25.1/node_modules/pg-boss/dist/worker.js:60:21)"},"msg":"step.execute: executor falló; evaluando retry"}
+[WebServer] {"level":30,"time":1783935568829,"pid":78659,"hostname":"MBP-de-Carlos","name":"worker","queue":"step.execute","job_id":"d2cdf94c-bfd5-4f41-8af1-ab06535cb294","run_id":"01KXDDGMGGYZ5VE24F3YVDJZWK","step_id":"01KXDDGMGEKNSAH2WTMDRE2S32","node_key":"demo.canvas.N4","outcome":"retried","msg":"step.execute: reencolado para reintento"}
+[WebServer] {"level":40,"time":1783935569800,"pid":78659,"hostname":"MBP-de-Carlos","name":"worker","queue":"step.execute","job_id":"be5846b5-377c-45cf-b3d7-c847a4b1162d","run_id":"01KXDDGMGGYZ5VE24F3YVDJZWK","step_id":"01KXDDGMGEKNSAH2WTMDRE2S32","node_key":"demo.canvas.N4","err":{"type":"Error","message":"demo executor: fallo inyectado","stack":"Error: demo executor: fallo inyectado\n    at <anonymous> (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/worker/src/executors/demo.ts:87:13)\n    at async <anonymous> (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/worker/src/consumers/step-execute.ts:167:9)\n    at async resolveWithinSeconds (file:///Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/pg-boss@12.25.1/node_modules/pg-boss/dist/tools.js:38:18)\n    at async #processJobs (file:///Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/pg-boss@12.25.1/node_modules/pg-boss/dist/manager.js:421:28)\n    at async Worker.onFetch (file:///Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/pg-boss@12.25.1/node_modules/pg-boss/dist/manager.js:577:21)\n    at async Worker.run (file:///Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/pg-boss@12.25.1/node_modules/pg-boss/dist/worker.js:60:21)"},"msg":"step.execute: executor falló; evaluando retry"}
+[WebServer] {"level":30,"time":1783935570004,"pid":78659,"hostname":"MBP-de-Carlos","name":"worker","queue":"step.execute","job_id":"be5846b5-377c-45cf-b3d7-c847a4b1162d","run_id":"01KXDDGMGGYZ5VE24F3YVDJZWK","step_id":"01KXDDGMGEKNSAH2WTMDRE2S32","node_key":"demo.canvas.N4","outcome":"retried","msg":"step.execute: reencolado para reintento"}
+  ✓  42 [chromium] › e2e/settings.spec.ts:19:3 › /settings (T0.14) › guardar una API key la enmascara, limpia el input y persiste tras reload @f0 (6.9s)
+[WebServer] {"level":30,"time":1783935570241,"pid":78660,"hostname":"MBP-de-Carlos","name":"web","request_id":"04045e34-041d-4ef7-bb74-29ba76dbd0f6","run_id":"01KXDDGV5QDN1Z56737E6PECDS","cancelled":6,"msg":"run cancelado"}
+[WebServer]  POST /api/runs/01KXDDGV5QDN1Z56737E6PECDS/cancel 200 in 5.4s (next.js: 5.2s, application-code: 222ms)
+[WebServer]  GET /api/settings 200 in 13ms (next.js: 2ms, application-code: 10ms)
+[WebServer]  GET /settings 200 in 224ms (next.js: 18ms, proxy.ts: 29ms, application-code: 177ms)
+[WebServer] {"level":40,"time":1783935570892,"pid":78659,"hostname":"MBP-de-Carlos","name":"worker","queue":"step.execute","job_id":"ec2f7260-bcd5-4369-ae83-29b3fa96f638","run_id":"01KXDDGMGGYZ5VE24F3YVDJZWK","step_id":"01KXDDGMGEKNSAH2WTMDRE2S32","node_key":"demo.canvas.N4","err":{"type":"Error","message":"demo executor: fallo inyectado","stack":"Error: demo executor: fallo inyectado\n    at <anonymous> (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/worker/src/executors/demo.ts:87:13)\n    at async <anonymous> (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/worker/src/consumers/step-execute.ts:167:9)\n    at async resolveWithinSeconds (file:///Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/pg-boss@12.25.1/node_modules/pg-boss/dist/tools.js:38:18)\n    at async #processJobs (file:///Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/pg-boss@12.25.1/node_modules/pg-boss/dist/manager.js:421:28)\n    at async Worker.onFetch (file:///Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/pg-boss@12.25.1/node_modules/pg-boss/dist/manager.js:577:21)\n    at async Worker.run (file:///Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/pg-boss@12.25.1/node_modules/pg-boss/dist/worker.js:60:21)"},"msg":"step.execute: executor falló; evaluando retry"}
+[WebServer] {"level":30,"time":1783935570909,"pid":78659,"hostname":"MBP-de-Carlos","name":"worker","queue":"step.execute","job_id":"ec2f7260-bcd5-4369-ae83-29b3fa96f638","run_id":"01KXDDGMGGYZ5VE24F3YVDJZWK","step_id":"01KXDDGMGEKNSAH2WTMDRE2S32","node_key":"demo.canvas.N4","outcome":"exhausted","msg":"step.execute: reintentos agotados, failed terminal"}
+[WebServer]  GET /api/runs/01KXDDGV5QDN1Z56737E6PECDS/events 200 in 7.1s (next.js: 10ms, application-code: 7.1s)
+  ✓  40 [chromium] › e2e/runs-canvas.spec.ts:145:3 › canvas del run (T0.11) › cancelar OTRO run en curso desde el botón del panel @f0 (10.8s)
+[WebServer] {"level":30,"time":1783935570997,"pid":78660,"hostname":"MBP-de-Carlos","name":"web","request_id":"deb49dc9-6a29-47a7-8bf9-f9615bacae44","step_id":"01KXDDGQ295XXNQZQF8HZ3VN4E","msg":"step saltado"}
+[WebServer]  POST /api/steps/01KXDDGQ295XXNQZQF8HZ3VN4E/skip 200 in 3.4s (next.js: 3.4s, application-code: 29ms)
+[WebServer]  GET /api/spend 200 in 18ms (next.js: 6ms, application-code: 12ms)
+[WebServer]  PATCH /api/settings 200 in 94ms (next.js: 3ms, application-code: 92ms)
+[WebServer]  GET /spend 200 in 336ms (next.js: 4ms, proxy.ts: 7ms, application-code: 325ms)
+[WebServer]  GET /api/runs/01KXDDGQ2KVXW23X4407RTQ9JE/events 200 in 9.3s (next.js: 10ms, application-code: 9.2s)
+[WebServer]  GET /api/settings 200 in 14ms (next.js: 4ms, application-code: 10ms)
+  ✓  39 [chromium] › e2e/runs-canvas.spec.ts:126:3 › canvas del run (T0.11) › skip: saltar un nodo skippable desde el panel @f0 (16.1s)
+[WebServer]  GET /settings 200 in 367ms (next.js: 16ms, proxy.ts: 12ms, application-code: 340ms)
+  ✓  44 [chromium] › e2e/spend.spec.ts:78:3 › panel de gasto /spend (T0.12) › muestra totales por proveedor con la suma exacta @f0 (927ms)
+  ✓  43 [chromium] › e2e/settings.spec.ts:52:3 › /settings (T0.14) › editar la key la reemplaza (nuevo last4 tras guardar) @f0 (2.0s)
+[WebServer]  GET /api/spend 200 in 24ms (next.js: 4ms, application-code: 20ms)
+[WebServer]  GET /api/settings 200 in 9ms (next.js: 4ms, application-code: 5ms)
+[WebServer]  GET /settings 200 in 96ms (next.js: 1485µs, proxy.ts: 6ms, application-code: 88ms)
+[WebServer]  GET /spend 200 in 141ms (next.js: 2ms, proxy.ts: 3ms, application-code: 136ms)
+  ✓  45 [chromium] › e2e/spend.spec.ts:89:3 › panel de gasto /spend (T0.12) › muestra totales por día con la suma exacta @f0 (496ms)
+[WebServer]  GET /api/spend 200 in 11ms (next.js: 3ms, application-code: 8ms)
+[WebServer] {"level":30,"time":1783935572752,"pid":78660,"hostname":"MBP-de-Carlos","name":"web","request_id":"f59551bd-8145-4aa9-98ea-5208bd61e118","step_id":"01KXDDGMGEKNSAH2WTMDRE2S32","msg":"step reintentado manualmente"}
+[WebServer]  POST /api/steps/01KXDDGMGEKNSAH2WTMDRE2S32/retry 200 in 1087ms (next.js: 1009ms, application-code: 78ms)
+[WebServer]  GET /api/settings 200 in 12ms (next.js: 4ms, application-code: 8ms)
+[WebServer]  GET /spend 200 in 243ms (next.js: 4ms, proxy.ts: 2ms, application-code: 237ms)
+[WebServer]  GET /settings 200 in 177ms (next.js: 4ms, proxy.ts: 9ms, application-code: 163ms)
+[WebServer]  GET /api/runs/01KXDDGMGGYZ5VE24F3YVDJZWK/events 200 in 13.1s (next.js: 51ms, application-code: 13.1s)
+  ✓  38 [chromium] › e2e/runs-canvas.spec.ts:98:3 › canvas del run (T0.11) › fallo: ver el error en el visor y reintentar con éxito @f0 (20.0s)
+  ✓  47 [chromium] › e2e/spend.spec.ts:100:3 › panel de gasto /spend (T0.12) › un presupuesto por debajo del gasto dispara la alerta in-app @f0 (711ms)
+[WebServer]  GET /api/settings 200 in 14ms (next.js: 2ms, application-code: 11ms)
+[WebServer]  GET /settings 200 in 137ms (next.js: 1996µs, proxy.ts: 3ms, application-code: 132ms)
+  ✓  46 [chromium] › e2e/settings.spec.ts:66:3 › /settings (T0.14) › tema, acento y densidad se aplican en vivo y persisten tras reload @f0 (1.5s)
+[WebServer]  GET /api/steps/01KXDDGWQA24HRG1PAX40HXWZ4 200 in 6ms (next.js: 3ms, application-code: 4ms)
+[WebServer]  GET /api/runs/01KXDDGWQFFQ7A19Y8KS9H4HHS/events 200 in 11.7s (next.js: 15ms, application-code: 11.7s)
+  ✓  41 [chromium] › e2e/runs-canvas.spec.ts:174:3 › canvas del run (T0.11) › autopilot: activar el toggle → el run completa sin pausas, respetando el candado @f0 (14.1s)
+
+  47 passed (1.3m)

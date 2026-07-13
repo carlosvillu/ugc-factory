@@ -1,12 +1,20 @@
 // La lógica de warnings de CP1 (T1.10b), probada como función PURA — sin DOM.
 //
-// LO QUE FIJA (y por qué importa): "bloqueante para el BRIEF" (core, `isBlockingWarning`) y
-// "bloqueante para APROBAR en CP1" (aquí) son dos preguntas DISTINTAS, y fusionarlas dejaría
-// pasar el checkpoint manual sin la decisión de imágenes — que es justo lo que la Verificación
-// exige ver. Estos tests son la barrera contra esa fusión.
+// LO QUE FIJA (y por qué importa): que la petición de imágenes BLOQUEA la aprobación hasta que el
+// usuario decide — y que «promover una imagen scrapeada» (T1.15) SIN elegir cuál es un estado que
+// NO SE PUEDE ESCRIBIR: lo impide el tipo (`ChosenImageDecision`), no un acuerdo en runtime entre
+// `canApprove` y `toBriefDecision`. La primera versión de T1.15 sí lo repartía entre las dos
+// funciones (una fabricaba `hero_image_url: ''` y la otra evitaba que se enviara) — el patrón de
+// los dos canales que este proyecto ya se ha comido varias veces, y que aquí acaba en un 400.
 import { describe, expect, it } from 'vitest';
-import type { BriefWarning } from '@ugc/core/contracts';
-import { canApprove, requiresUserDecision, toWarningView } from './brief-warnings';
+import { CheckpointDecisionSchema, type BriefWarning } from '@ugc/core/contracts';
+import {
+  canApprove,
+  requiresUserDecision,
+  toBriefDecision,
+  toWarningView,
+  type ChosenImageDecision,
+} from './brief-warnings';
 
 const needsDecision: BriefWarning = {
   code: 'needs_user_decision',
@@ -61,11 +69,81 @@ describe('canApprove', () => {
   });
 
   it('resuelta con «subir imágenes», se desbloquea', () => {
-    expect(canApprove([needsDecision], 'upload_images')).toBe(true);
+    expect(canApprove([needsDecision], { images: 'upload_images' })).toBe(true);
   });
 
   it('resuelta con «packshot IA» (la derivación a N7a), se desbloquea', () => {
-    expect(canApprove([needsDecision], 'ai_packshot')).toBe(true);
+    expect(canApprove([needsDecision], { images: 'ai_packshot' })).toBe(true);
+  });
+
+  // ── T1.15 · la TERCERA salida: promover una imagen scrapeada ────────────────────────────
+  it('«promover una imagen scrapeada» CON imagen elegida desbloquea', () => {
+    expect(
+      canApprove([needsDecision], {
+        images: 'promote_scraped',
+        heroUrl: 'https://es.stayforlong.com/img/banner.jpg',
+      }),
+    ).toBe(true);
+  });
+
+  it('«promover» SIN imagen elegida NO COMPILA: el estado inválido no se puede escribir', () => {
+    // ESTE ES EL TEST, y su aserción es el `@ts-expect-error` — no hay `expect()` porque el
+    // caso ya no existe en tiempo de ejecución: el invariante «promover exige URL» (que el
+    // contrato de core impone con un refine, y que el servidor haría cumplir con un 400) NO
+    // depende de que `canApprove` y `toBriefDecision` se pongan de acuerdo. Lo impone el TIPO.
+    //
+    // La barrera se avisa a sí misma: si alguien relaja `ChosenImageDecision` a
+    // `{images, heroUrl?: string}`, esta línea deja de dar error y la compilación FALLA (un
+    // `@ts-expect-error` que no expecta ningún error es, él mismo, un error).
+    // @ts-expect-error -- `promote_scraped` EXIGE `heroUrl`: sin ella no hay decisión que construir.
+    const imposible: ChosenImageDecision = { images: 'promote_scraped' };
+    void imposible;
+
+    // Y sin decisión imposible que vigilar, `canApprove` tiene UN solo criterio: ¿hay elección?
+    expect(
+      canApprove([needsDecision], { images: 'promote_scraped', heroUrl: 'https://x.dev/a.jpg' }),
+    ).toBe(true);
+  });
+});
+
+describe('toBriefDecision (el canal genérico de T1.11)', () => {
+  it('las salidas sin imagen NO llevan `hero_image_url` (el contrato lo prohíbe)', () => {
+    expect(toBriefDecision({ images: 'ai_packshot' })).toEqual({
+      kind: 'brief',
+      images: 'ai_packshot',
+    });
+    expect(toBriefDecision({ images: 'upload_images' })).toEqual({
+      kind: 'brief',
+      images: 'upload_images',
+    });
+  });
+
+  it('`promote_scraped` lleva la imagen elegida', () => {
+    expect(
+      toBriefDecision({
+        images: 'promote_scraped',
+        heroUrl: 'https://es.stayforlong.com/img/banner.jpg',
+      }),
+    ).toEqual({
+      kind: 'brief',
+      images: 'promote_scraped',
+      hero_image_url: 'https://es.stayforlong.com/img/banner.jpg',
+    });
+  });
+
+  it('lo que construye es SIEMPRE una decisión válida para el contrato de core', () => {
+    // La garantía de punta a punta: `toBriefDecision` no puede fabricar la decisión que el
+    // servidor rechaza (era el `hero_image_url: heroUrl ?? ''` de la primera versión de T1.15 —
+    // una URL vacía que pasaba el `canApprove` de al lado y moría con un 400 `Invalid URL`).
+    // Ahora el tipo no le deja: sin `heroUrl` no hay input que darle. Se comprueba contra el
+    // MISMO schema que valida el route handler, no contra una copia.
+    for (const chosen of [
+      { images: 'upload_images' },
+      { images: 'ai_packshot' },
+      { images: 'promote_scraped', heroUrl: 'https://es.stayforlong.com/img/banner.jpg' },
+    ] as const) {
+      expect(CheckpointDecisionSchema.safeParse(toBriefDecision(chosen)).success).toBe(true);
+    }
   });
 });
 

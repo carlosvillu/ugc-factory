@@ -44,7 +44,28 @@ const ParamsSchema = z.object({ id: UlidSchema });
 // decisión que se pierde en silencio (el strip por defecto de Zod). Aquí importa especialmente:
 // perder la decisión no rompe la aprobación —el step avanza igual—, así que el usuario se
 // enteraría en F4, cuando N7a no encuentre la decisión que él cree haber tomado.
-const BodySchema = z.strictObject({ decision: CheckpointDecisionSchema.optional() });
+//
+// T1.15 — `promote_scraped` NO SE APRUEBA POR AQUÍ. Promover una imagen scrapeada a hero produce
+// DOS efectos que no valen nada por separado: la DECISIÓN (esta fila) y el ARTEFACTO (el brief
+// con `assets.hero_image_url` = esa imagen). `/approve` es, por definición, «aprobar SIN cambios»:
+// no toca el artefacto. Aceptar aquí un `promote_scraped` persistiría una decisión que dice
+// «promoví esta imagen» contra un brief cuyo hero sigue siendo `null` — los dos canales
+// contradiciéndose, y N7a (T4.4) descubriéndolo en F4, gastando dinero en fal.ai. Promover ES una
+// edición del brief y sale por `/edit` (⇒ v2, `edited_by_user:true`), que sí versiona el artefacto
+// en la misma tx que la decisión.
+//
+// El guard vive AQUÍ y no solo en el editor de CP1 (que ya redirige al `/edit`): un `if` en un
+// componente de React protege a UN llamante. El invariante es del CONTRATO, y este es el borde
+// donde se para a cualquier otro (un curl, un test, el MCP de F8).
+const BodySchema = z
+  .strictObject({
+    decision: CheckpointDecisionSchema.optional(),
+  })
+  .refine((b) => !(b.decision?.kind === 'brief' && b.decision.images === 'promote_scraped'), {
+    message:
+      'Promover una imagen a hero EDITA el brief: usa POST /api/steps/:id/edit (crea la v2 con ese hero), no /approve',
+    path: ['decision', 'images'],
+  });
 
 export const POST = withAuth(
   withRoute(

@@ -23,15 +23,39 @@
 import { z } from 'zod';
 
 /**
- * CP1 · BRIEF — la petición BLOQUEANTE de imágenes del modo manual (§7.2 N3). El brief es VÁLIDO
- * pero el pipeline no puede seguir sin que el usuario decida de dónde sale el frame inicial del
- * i2v: de fotos reales que él sube, o de un packshot que genera la IA (N7a, T4.4 — que es el
- * CONSUMIDOR de esta decisión y quien creará el flag `synthetic_product`).
+ * CP1 · BRIEF — la petición BLOQUEANTE de imágenes (§7.2 N3). El brief es VÁLIDO pero el pipeline
+ * no puede seguir sin que el usuario decida de dónde sale el frame inicial del i2v. TRES salidas
+ * (T1.15):
+ *   - `upload_images`  : el usuario sube fotos reales del producto.
+ *   - `ai_packshot`    : se deriva a un packshot generado por IA (N7a, T4.4 — el CONSUMIDOR de
+ *                        esta decisión y quien creará el flag `synthetic_product`).
+ *   - `promote_scraped`: se PROMUEVE a hero una de las imágenes que el scrape SÍ trajo (las que
+ *                        N2 clasificó como `broll`/secundarias). Es la salida que faltaba: en una
+ *                        web de servicio (stayforlong.com) no hay packshot, pero sí hay imágenes
+ *                        —y el usuario, que sí sabe cuál sirve, no tenía forma de decirlo.
+ *
+ * `hero_image_url` acompaña SOLO a `promote_scraped` (la imagen elegida, que debe pertenecer al
+ * `assets.images[]` del brief). El invariante se impone AQUÍ y no en el llamante: una decisión
+ * `promote_scraped` sin URL es una decisión que N7a no podría ejecutar, y descubrirlo en F4
+ * —gastando dinero en fal.ai— es exactamente lo que este contrato existe para impedir.
+ *
+ * El EFECTO sobre el brief (poner esa imagen en `assets.hero_image_url`) lo aplica el editor de
+ * CP1 al versionar el brief: es una edición del ARTEFACTO. Esto de aquí es la DECISIÓN — se
+ * persisten las dos, por sus dos canales, y la cabecera de este fichero explica por qué no son la
+ * misma cosa.
  */
-export const BriefCheckpointDecisionSchema = z.object({
-  kind: z.literal('brief'),
-  images: z.enum(['upload_images', 'ai_packshot']),
-});
+export const BriefCheckpointDecisionSchema = z
+  .object({
+    kind: z.literal('brief'),
+    images: z.enum(['upload_images', 'ai_packshot', 'promote_scraped']),
+    /** La imagen scrapeada elegida como hero. OBLIGATORIA con `promote_scraped`, ausente en el resto. */
+    hero_image_url: z.url().optional(),
+  })
+  .refine((d) => (d.images === 'promote_scraped') === (d.hero_image_url !== undefined), {
+    message:
+      '`hero_image_url` es obligatoria con `promote_scraped` (y solo con ella): es la imagen que el usuario eligió',
+    path: ['hero_image_url'],
+  });
 export type BriefCheckpointDecision = z.infer<typeof BriefCheckpointDecisionSchema>;
 
 /**

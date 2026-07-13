@@ -1,0 +1,76 @@
+### RUN MUERTO (antes de T1.15) — 01KXD1SPQ8EYKDZ4QXWD3WWX1Z
+ERROR:  column "input_ref" does not exist
+LINE 1: SELECT id, status, jsonb_pretty(input_ref) AS input FROM pip...
+                                        ^
+### STEPS
+ node_key |  status   |                                             err                                             
+----------+-----------+---------------------------------------------------------------------------------------------
+ N3       | failed    | N3: el brief no supera la validación determinista (T1.9): missing_hero_image, hook_too_long
+ N1       | succeeded | 
+ N2       | succeeded | 
+(3 rows)
+
+### N2 output (clasificación de imágenes)
+                                                                                jsonb_pretty                                                                                 
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ {                                                                                                                                                                          +
+     "status": "analyzed",                                                                                                                                                  +
+     "warnings": [                                                                                                                                                          +
+     ],                                                                                                                                                                     +
+     "visualAnalysis": {                                                                                                                                                    +
+         "images": [                                                                                                                                                        +
+             {                                                                                                                                                              +
+                 "url": "https://static.stayforlong.com/web/images/world-travel-awards-nominee-2026/20260330-europes-leading-online-travel-agency-2026-nominee-shield.webp",+
+                 "kind": "other",                                                                                                                                           +
+                 "background": "transparent",                                                                                                                               +
+                 "has_overlay_text": false,                                                                                                                                 +
+                 "video_suitability": "unusable"                                                                                                                            +
+             },                                                                                                                                                             +
+             {                                                                                                                                                              +
+                 "url": "https://static.stayforlong.com/web/images/home_v2-about-us/about-us.webp",                                                                         +
+                 "kind": "lifestyle",                                                                                                                                       +
+                 "background": "busy",                                                                                                                                      +
+                 "has_overlay_text": false,                                                                                                                                 +
+                 "video_suitability": "broll"                                                                                                                               +
+             },                                                                                                                                                             +
+             {                                                                                                                                                              +
+                 "url": "https://static.stayforlong.com/web/images/banners/img_block_banner_summer_2_2026.jpg",                                                             +
+                 "kind": "lifestyle",                                                                                                                                       +
+                 "background": "transparent",                                                                                                                               +
+                 "has_overlay_text": true,                                                                                                                                  +
+                 "video_suitability": "broll"                                                                                                                               +
+             }                                                                                                                                                              +
+         ],                                                                                                                                                                 +
+         "brand_style": {                                                                                                                                                   +
+             "palette": [                                                                                                                                                   +
+                 "#E91E8C",                                                                                                                                                 +
+                 "#0052CC",                                                                                                                                                 +
+                 "#B8E034",                                                                                                                                                 +
+                 "#2C3E50",                                                                                                                                                 +
+                 "#6B7280"                                                                                                                                                  +
+             ],                                                                                                                                                             +
+             "aesthetic": "dinámico y colorido con acentos neón, enfoque en experiencias de viaje y ocio",                                                                  +
+             "photography_style": "aspirational lifestyle con tonos cálidos y composiciones aéreas"                                                                         +
+         },                                                                                                                                                                 +
+         "hero_image_url": null,                                                                                                                                            +
+         "rendered_social_proof": {                                                                                                                                         +
+             "quotes": [                                                                                                                                                    +
+                 "Más de 3 millones de viajeros han encontrado su estancia perfecta con nosotros"                                                                           +
+             ],                                                                                                                                                             +
+             "rating": null,                                                                                                                                                +
+             "review_count": null                                                                                                                                           +
+         }                                                                                                                                                                  +
+     }                                                                                                                                                                      +
+ }
+(1 row)
+
+### checkpoint_decision del run muerto
+ count 
+-------
+     0
+(1 row)
+
+### product_brief del run muerto
+ERROR:  column "run_id" does not exist
+LINE 1: SELECT count(*) FROM product_brief WHERE run_id='01KXD1SPQ8E...
+                                                 ^

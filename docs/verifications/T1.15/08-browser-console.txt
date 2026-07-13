@@ -1,0 +1,16 @@
+[info] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[log] [HMR] connected
+[info] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[log] [HMR] connected
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 136ms
+[info] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[log] [HMR] connected
+[warning] [React Flow]: The parent container needs a width and a height to render the graph. Help: https://reactflow.dev/error#004
+[warning] [React Flow]: The parent container needs a width and a height to render the graph. Help: https://reactflow.dev/error#004
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 105ms
+[info] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[log] [HMR] connected
+[warning] [React Flow]: The parent container needs a width and a height to render the graph. Help: https://reactflow.dev/error#004
+[warning] [React Flow]: The parent container needs a width and a height to render the graph. Help: https://reactflow.dev/error#004

@@ -100,14 +100,12 @@ export {
 // datos accionables de cada check. NO confundir con `ProductBrief.meta.warnings` (string[],
 // canal de observabilidad del sintetizador).
 export {
-  isBlockingWarning,
   BriefWarningSchema,
   BriefValidationProfileSchema,
   PriceMismatchWarningSchema,
   PrunedSuggestedAssetWarningSchema,
   HookTooLongWarningSchema,
   NeedsUserDecisionWarningSchema,
-  MissingHeroImageWarningSchema,
   NeedsUserDecisionReasonSchema,
   type BriefWarning,
   type BriefWarningCode,

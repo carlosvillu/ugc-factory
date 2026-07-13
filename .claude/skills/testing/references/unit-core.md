@@ -209,12 +209,15 @@ it("url: precio N1≠N3 → warning price_mismatch y gana el precio del fast pat
   expect(res.brief.pricing.price).toBe("29,90 €"); // corrección determinista, no solo aviso
 });
 
-it("manual: sin hero image → needs_user_decision, el brief queda válido y NO falla", () => {
-  const res = validateBrief(makeBrief({ assets: { images: [] } }), { profile: "manual" });
-  expect(res.ok).toBe(true); // decisión de CP1, no error (PRD §9.2)
-  expect(res.warnings).toContainEqual(
-    expect.objectContaining({ code: "needs_user_decision", reason: "missing_hero_image" }),
-  );
+it("sin hero image → needs_user_decision, el brief queda válido y NO falla (LOS DOS perfiles)", () => {
+  // T1.15: la falta de hero NO ramifica por perfil. El validador NO devuelve `ok` — ningún
+  // warning invalida el brief, así que no hay nada que comprobar salvo el warning tipado.
+  for (const profile of ["manual", "url"] as const) {
+    const res = validateBrief(makeBrief({ assets: { images: [] } }), { profile });
+    expect(res.warnings).toContainEqual(
+      expect.objectContaining({ code: "needs_user_decision", reason: "missing_hero_image" }),
+    );
+  }
 });
 
 it("manual: NUNCA emite price_mismatch (el cross-check de precio no aplica sin fast path)", () => {
@@ -234,7 +237,9 @@ it("suggested_assets fuera de assets.images se podan CON warning", () => {
 });
 ```
 
-Cubre además: `url` sin hero image → error (no warning), hooks >12 palabras, cardinalidades (5–10 ángulos) — recuerda que el validador es la red de seguridad de las cardinalidades que Anthropic no aplica (§3).
+Cubre además: hooks >12 palabras, cardinalidades (5–10 ángulos) — recuerda que el validador es la red de seguridad de las cardinalidades que Anthropic no aplica (§3).
+
+> **Cambio de contrato (T1.15, 2026-07-13)**: aquí decía «`url` sin hero image → **error** (no warning)». Ya no: la falta de hero es **decisión de CP1 en los dos perfiles** y el validador **no puede invalidar un brief** (no devuelve `ok`; `isBlockingWarning`/`BLOCKING_WARNING_CODES` se eliminaron). El fallo duro mataba el run **con la síntesis de Sonnet ya pagada** en webs de servicio sin packshot (stayforlong.com) — PRD §7.2 N3 y §9.2. Un test que asserte `ok:false` o un `PermanentStepError` de N3 por este motivo está probando un contrato que ya no existe.
 
 ## 6. Compositor de matriz y estimador de coste (T2.2)
 

@@ -13,6 +13,10 @@
 //   5. DECISIÓN DEL CHECKPOINT (T1.11): la decisión del modo manual (packshot-IA) VIAJA al
 //      servidor, se PERSISTE con la transición y SOBREVIVE a un reload (hasta T1.11 era un
 //      `useState` que se evaporaba: habilitaba el botón y no salía nunca del cliente).
+//   6. PERFIL URL SIN HERO (T1.15): una web de SERVICIO (el caso stayforlong) ya NO mata el run en
+//      N3 — llega a CP1 con las TRES salidas, y PROMOVER una de sus imágenes scrapeadas a hero
+//      persiste las dos mitades: la decisión (`checkpoint_decision`) y el artefacto (el brief v2,
+//      cuyo `hero_image_url` es la imagen elegida).
 import { test, expect } from '@playwright/test';
 import { waitCanvasStatus as waitStatus } from './support/canvas';
 import {
@@ -23,6 +27,10 @@ import {
   runUrlAnalysisToCp1,
   stepIdOf,
 } from './support/brief';
+// La URL que hace que el fake de síntesis devuelva el brief de una web de SERVICIO (T1.15): con
+// imágenes, pero sin ninguna que sirva de hero. Se IMPORTA —no se copia— porque el fake y el spec
+// tienen que hablar de LA MISMA url.
+import { FAKE_URL_NO_HERO } from '@ugc/test-utils';
 // La BD del stack, para el SELECT de aserción de T1.11: la Verificación pide ver la decisión EN
 // LA BD, no en un endpoint que podría estar mintiendo.
 import { queryStack } from './support/stack-db';
@@ -117,6 +125,90 @@ test.describe('CP1 · editor de brief (T1.10b)', () => {
         [stepId],
       );
       expect(trasReload[0]?.decision.images).toBe('ai_packshot');
+    },
+  );
+
+  test(
+    'T1.15 · URL de web de servicio SIN hero: el run NO muere, CP1 ofrece las 3 salidas y se promueve una imagen',
+    { tag: ['@f1'] },
+    async ({ page }) => {
+      // EL CASO REAL (es.stayforlong.com): una web de SERVICIO. Sus imágenes existen —un sello de
+      // award, un about-us, un banner— pero ninguna es un packshot, así que Haiku (N2) las
+      // clasificó honestamente `broll`/`unusable` y el brief salió sin hero. Hasta T1.15 eso era
+      // un warning BLOQUEANTE: N3 moría con la síntesis de Sonnet YA PAGADA y el usuario no tenía
+      // NADA que hacer salvo leer logs. El fallo duro se diseñó para e-commerce; el uso real
+      // incluye SaaS/servicios, donde no tener packshot es lo normal.
+      //
+      // 1) EL RUN LLEGA A CP1. Si esta línea falla, el run murió en N3 — que es exactamente la
+      //    regresión que este test existe para impedir.
+      await runUrlAnalysisToCp1(page, FAKE_URL_NO_HERO);
+      const editor = briefEditor(page);
+
+      // 2) LA PETICIÓN DE DECISIÓN, la misma que ya funcionaba en modo manual (es el mismo warning
+      //    tipado: `needs_user_decision`). Y BLOQUEA la aprobación hasta que el usuario elija.
+      const decision = editor.locator('[data-slot="warning-needs_user_decision"]');
+      await expect(decision).toBeVisible();
+      const approve = editor.getByRole('button', { name: /aprobar y continuar/i });
+      await expect(approve).toBeDisabled();
+
+      // 3) LAS TRES SALIDAS — la nueva es PROMOVER una de las imágenes que el scrape SÍ trajo.
+      //    Se ofrecen TODAS (incluidas las que N2 descartó): fue justamente ese veredicto el que
+      //    dejó al brief sin hero, y filtrarlas aquí volvería a esconder las únicas que hay.
+      await expect(
+        editor.getByRole('button', { name: /subir imágenes del producto/i }),
+      ).toBeVisible();
+      await expect(editor.getByRole('button', { name: /generar packshot con ia/i })).toBeVisible();
+      const candidatas = editor.locator('[data-slot="hero-candidate"]');
+      await expect(candidatas).toHaveCount(3);
+
+      // 4) SE PROMUEVE UNA. La elegida es un dato del DOM, no un literal del test: el brief lo
+      //    produce el pipeline (fake de Anthropic → validador → SSE), y hard-codear la URL aquí
+      //    haría pasar el test aunque el editor pintase otra cosa.
+      const elegida = candidatas.first();
+      await expect(elegida).toHaveAttribute('data-url', /^https?:\/\//);
+      const heroElegido = await elegida.getAttribute('data-url');
+      await elegida.getByRole('button', { name: /usar como imagen principal/i }).click();
+      await expect(approve).toBeEnabled();
+
+      // 5) SE APRUEBA → el run COMPLETA (N3 sale del checkpoint).
+      const stepId = await stepIdOf(page);
+      // El brief v1 (el de la IA) que este CP1 tiene delante: es la ANCLA del linaje. La v2 que
+      // crea la promoción cuelga del mismo `url_analysis_id`, y filtrar por él —en vez de coger
+      // «la última fila de la tabla»— hace el assert inmune a los otros specs que corren en
+      // paralelo contra la MISMA base de datos del stack.
+      const briefV1 = await briefIdOf(page);
+      await approve.click();
+      await waitStatus(page, 'N3', 'succeeded', 30_000);
+
+      // 6) LA DECISIÓN está en la BD, asociada al step de CP1, con la imagen elegida (el canal de
+      //    T1.11: `checkpoint_decision`, NUNCA `output_refs`). La leerá N7a en T4.4.
+      const decisiones = await queryStack<{
+        kind: string;
+        decision: { images: string; hero_image_url?: string };
+      }>(`SELECT kind, decision FROM checkpoint_decision WHERE step_run_id = $1`, [stepId]);
+      expect(decisiones).toHaveLength(1);
+      expect(decisiones[0]?.kind).toBe('brief');
+      expect(decisiones[0]?.decision.images).toBe('promote_scraped');
+      expect(decisiones[0]?.decision.hero_image_url).toBe(heroElegido);
+
+      // 7) Y EL ARTEFACTO: el brief APROBADO tiene ESA imagen como hero. Es la otra mitad, y sin
+      //    ella la decisión sería papel mojado — el resto del pipeline lee el brief, no la
+      //    decisión. Se mira la ÚLTIMA versión (promover es una edición humana ⇒ v2).
+      const briefs = await queryStack<{
+        version: number;
+        edited_by_user: boolean;
+        status: string;
+        data: { assets: { hero_image_url: string | null } };
+      }>(
+        `SELECT version, edited_by_user, status, data FROM product_brief
+          WHERE url_analysis_id = (SELECT url_analysis_id FROM product_brief WHERE id = $1)
+          ORDER BY version DESC LIMIT 1`,
+        [briefV1],
+      );
+      expect(briefs[0]?.data.assets.hero_image_url).toBe(heroElegido);
+      expect(briefs[0]?.version).toBe(2); // promover ES una edición: crea versión nueva
+      expect(briefs[0]?.edited_by_user).toBe(true); // la hizo el humano, no la IA
+      expect(briefs[0]?.status).toBe('approved');
     },
   );
 

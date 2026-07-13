@@ -1,0 +1,58 @@
+<!-- @dsCard group="Structure" viewport="720x420" name="Image" subtitle="Marco neutro con placeholder de trama diagonal: cargada, ratio bloqueado, avatar y error" -->
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="stylesheet" href="../../styles.css">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<style>
+  body{margin:0;background:var(--bg);font-family:var(--font-sans);}
+  #root{padding:22px;display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap;}
+  .col{display:flex;flex-direction:column;gap:8px;}
+  .lbl{font-size:10px;font-family:var(--font-mono);color:var(--text-3);letter-spacing:.04em;}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { Image } = window.UGCFactoryDesignSystem_d126b2;
+// Inline SVG data URI so the "loaded" state renders offline.
+const loaded =
+  "data:image/svg+xml;utf8," +
+  encodeURIComponent(
+    "<svg xmlns='http://www.w3.org/2000/svg' width='180' height='320'>" +
+    "<rect width='180' height='320' fill='#2b2b34'/>" +
+    "<rect x='0' y='0' width='180' height='320' fill='#6366f1' opacity='0.5'/>" +
+    "<circle cx='90' cy='120' r='42' fill='#e6e6ea'/>" +
+    "<rect x='30' y='210' width='120' height='16' rx='4' fill='#e6e6ea'/>" +
+    "<rect x='30' y='236' width='84' height='12' rx='4' fill='#b6b6c0'/>" +
+    "</svg>"
+  );
+function Demo(){
+  return (
+    <React.Fragment>
+      <div className="col">
+        <span className="lbl">cargada · 9/16</span>
+        <Image src={loaded} alt="Frame generado N7" ratio="9/16" style={{ width: 150 }} />
+      </div>
+      <div className="col">
+        <span className="lbl">avatar · full</span>
+        <Image src={loaded} alt="Persona" ratio="1/1" radius="full" style={{ width: 88 }} />
+      </div>
+      <div className="col">
+        <span className="lbl">placeholder · 16/9</span>
+        <Image ratio="16/9" placeholder="sin render" style={{ width: 220 }} />
+      </div>
+      <div className="col">
+        <span className="lbl">error · 1/1</span>
+        <Image src="broken://nope" ratio="1/1" style={{ width: 120 }} />
+      </div>
+    </React.Fragment>
+  );
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<Demo/>);
+</script>
+</body>
+</html>

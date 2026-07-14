@@ -24,8 +24,11 @@ import {
   FIRECRAWL_SCRAPE_RICH,
   FIRECRAWL_SCREENSHOT_BYTES,
   FIRECRAWL_SCREENSHOT_URL,
+  FIRECRAWL_SCRAPE_REDIRECTED_TO_ROOT,
   JINA_MARKDOWN,
   JINA_MARKDOWN_BODY,
+  JINA_MARKDOWN_ECHOED_SOURCE,
+  REDIRECTED_PRODUCT_URL,
 } from '@ugc/test-utils/fixtures/firecrawl';
 
 import { RawContentSchema } from '../contracts/raw-content';
@@ -34,6 +37,7 @@ import {
   FIRECRAWL_CENTS_PER_CREDIT,
   makeFirecrawlIngester,
 } from './firecrawl';
+import { detectRedirectMismatch } from './url';
 
 beforeAll(() => {
   server.listen({ onUnhandledRequest: 'error' });
@@ -582,5 +586,88 @@ describe('mini-crawl de páginas internas — ingest() (Verificación T1.5)', ()
     expect(res.internalPages).toEqual([]);
     expect(res.raw.markdown).toContain(JINA_MARKDOWN_BODY);
     expect(res.raw.markdown).not.toContain('## /');
+  });
+});
+
+// ── T2.7 · captura de la URL FINAL en los DOS caminos del ingester N2 ─────────
+//
+// Los dos caminos NO son simétricos, y por eso hay un test por camino: Firecrawl la publica en
+// `metadata.url` (campo que HASTA T2.7 nuestro tipo de la respuesta NI DECLARABA — llegaba y se
+// tiraba con el resto del `metadata`), mientras que Jina NO la publica en NINGÚN canal (su
+// `URL Source:` ECHOEA la pedida) y se declara NO-DETECTOR. El fixture que MUERDE es el `301` a
+// la raíz (dr-squatch), no una redirección benigna.
+describe('ingester N2 — URL final tras redirección (T2.7)', () => {
+  it('Firecrawl: `metadata.url` (la HOME) se guarda como `urlFinal` junto a la pedida', async () => {
+    server.use(
+      http.post(FIRECRAWL_SCRAPE, () => HttpResponse.json(FIRECRAWL_SCRAPE_REDIRECTED_TO_ROOT)),
+    );
+
+    const res = await ingester.ingest(REDIRECTED_PRODUCT_URL);
+
+    expect(res.provider).toBe('firecrawl');
+    expect(res.raw.url).toBe(REDIRECTED_PRODUCT_URL); // la PEDIDA, intacta.
+    expect(res.raw.urlFinal).toBe('https://descatalogado.example/'); // la SERVIDA, capturada.
+    expect(RawContentSchema.safeParse(res.raw).success).toBe(true);
+    // Y con las dos guardadas, el mismatch queda MARCADO por el único detector del sistema
+    // (el mismo que consume el validador y que alimenta el aviso de CP1).
+    expect(detectRedirectMismatch(res.raw.url ?? '', res.raw.urlFinal)).toEqual(
+      expect.objectContaining({ reason: 'path_to_root' }),
+    );
+  });
+
+  it('Jina (fallback): `urlFinal` SIEMPRE null — el reader ECHOEA la pedida, no puede detectarlo', async () => {
+    // HECHO VERIFICADO contra `r.jina.ai` REAL (2026-07-14) con la URL viva que redirige a la
+    // home: el preámbulo trae `Title: SELAYAR88…` (¡el título de la HOME!) y, aun así,
+    // `URL Source: …/products/pine-tar-bar-soap` — LA PEDIDA. Igual que `metadata.sourceURL` de
+    // Firecrawl. Así que ese preámbulo NO es un canal válido para la URL final, y el camino Jina
+    // se declara NO-DETECTOR: `null` (dato no observado), nunca la pedida (que AFIRMARÍA que no
+    // hubo redirección). El fixture emite el preámbulo REAL con la pedida ecoada, no uno cómodo.
+    server.use(
+      http.post(FIRECRAWL_SCRAPE, () => new HttpResponse(null, { status: 401 })),
+      http.get(`${JINA_BASE}/*`, () => HttpResponse.text(JINA_MARKDOWN_ECHOED_SOURCE)),
+    );
+
+    const res = await ingester.ingest(REDIRECTED_PRODUCT_URL);
+
+    expect(res.provider).toBe('jina');
+    expect(res.raw.urlFinal).toBeNull();
+    // Y por tanto NO se avisa desde este camino (sin dato, sin aviso — jamás uno inventado).
+    expect(detectRedirectMismatch(res.raw.url ?? '', res.raw.urlFinal)).toBeNull();
+  });
+
+  it('Firecrawl sin `metadata.url` → `urlFinal` null (NO se rellena con la pedida)', async () => {
+    server.use(
+      http.post(FIRECRAWL_SCRAPE, () =>
+        HttpResponse.json({
+          success: true,
+          data: { markdown: '# X', metadata: { statusCode: 200 } },
+        }),
+      ),
+    );
+    const res = await ingester.ingest(REDIRECTED_PRODUCT_URL);
+    // Sin el dato NO se afirma "no hubo redirección": se declara la ignorancia.
+    expect(res.raw.urlFinal).toBeNull();
+  });
+
+  // EL TEST QUE CAZA EL ERROR NATURAL de esta tarea. `sourceURL` PARECE la URL final (y las docs
+  // no lo desmienten: su ejemplo no tiene redirección), pero la API real la ECHOEA — es la
+  // PEDIDA. Un ingester que leyera `sourceURL` creería que nunca hay redirecciones, y ningún
+  // aviso saldría JAMÁS en producción con la suite en verde. Aquí `sourceURL` lleva la pedida y
+  // NO hay `url`: si alguien vuelve a leer `sourceURL`, `urlFinal` dejaría de ser null y esto
+  // se pone rojo.
+  it('`metadata.sourceURL` NO es la URL final (la echoea): leerla sería el bug — no se lee', async () => {
+    server.use(
+      http.post(FIRECRAWL_SCRAPE, () =>
+        HttpResponse.json({
+          success: true,
+          data: {
+            markdown: '# Home',
+            metadata: { sourceURL: REDIRECTED_PRODUCT_URL, statusCode: 200 },
+          },
+        }),
+      ),
+    );
+    const res = await ingester.ingest(REDIRECTED_PRODUCT_URL);
+    expect(res.raw.urlFinal).toBeNull();
   });
 });

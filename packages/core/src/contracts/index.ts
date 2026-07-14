@@ -107,6 +107,8 @@ export {
   HookTooLongWarningSchema,
   NeedsUserDecisionWarningSchema,
   NeedsUserDecisionReasonSchema,
+  // T2.7 — «se analizó otra página»: la web redirigió a una URL significativamente distinta.
+  UrlRedirectedWarningSchema,
   type BriefWarning,
   type BriefWarningCode,
   type BriefValidationProfile,

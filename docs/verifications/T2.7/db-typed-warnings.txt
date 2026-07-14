@@ -1,0 +1,6 @@
+         caso         |            warning_codes             
+----------------------+--------------------------------------
+ POSITIVO(dr-squatch) | ["url_redirected", "url_redirected"]
+ NEGATIVO(allbirds)   | ["hook_too_long", "hook_too_long"]
+(2 rows)
+

@@ -507,3 +507,94 @@ describe('BriefValidator · NINGÚN warning invalida el brief (T1.15)', () => {
     },
   );
 });
+
+// ── T2.7 · «se analizó otra página» ──────────────────────────────────────────
+//
+// El check es del VALIDADOR (no del executor) por dos razones que estos tests fijan: es
+// determinista y gratis sobre el par (brief, RawContent), y SOBREVIVE al camino de reuso del
+// brief de N3 (que revalida). Los casos que muerden son los mismos que los del comparador: aquí
+// se comprueba que el validador los CONVIERTE en el warning tipado que CP1 pinta, y que una
+// redirección benigna NO ensucia CP1 con una señal falsa.
+describe('validateBrief — redirección significativa (T2.7)', () => {
+  it('ruta profunda → RAÍZ: warning `url_redirected` con las DOS URLs (el caso dr-squatch)', () => {
+    const raw = makeRawContent({
+      url: 'https://www.dr-squatch.com/products/pine-tar-bar-soap',
+      urlFinal: 'https://www.dr-squatch.com/',
+    });
+
+    const res = validateBrief(makeBrief(), { profile: 'url', rawContent: raw });
+
+    expect(res.warnings).toContainEqual({
+      code: 'url_redirected',
+      reason: 'path_to_root',
+      requested: 'https://www.dr-squatch.com/products/pine-tar-bar-soap',
+      final: 'https://www.dr-squatch.com',
+    });
+  });
+
+  it('producto descatalogado → CATEGORÍA: warning `url_redirected` (reason path_diverged)', () => {
+    // La otra mitad del caso real (planning F2b: los descatalogados redirigen a la home O A LA
+    // CATEGORÍA). Mismo host y path NO vacío: el criterio "solo raíz desnuda" lo tragaba.
+    const raw = makeRawContent({
+      url: 'https://www.dr-squatch.com/products/pine-tar-bar-soap',
+      urlFinal: 'https://www.dr-squatch.com/collections/soaps',
+    });
+    const res = validateBrief(makeBrief(), { profile: 'url', rawContent: raw });
+    expect(res.warnings).toContainEqual({
+      code: 'url_redirected',
+      reason: 'path_diverged',
+      requested: 'https://www.dr-squatch.com/products/pine-tar-bar-soap',
+      final: 'https://www.dr-squatch.com/collections/soaps',
+    });
+  });
+
+  it('RENAME del slug (mismo padre) → NO avisa: es la redirección legítima más frecuente', () => {
+    const raw = makeRawContent({
+      url: 'https://glow.example/products/serum',
+      urlFinal: 'https://glow.example/products/serum-hidratante-24h',
+    });
+    const res = validateBrief(makeBrief(), { profile: 'url', rawContent: raw });
+    expect(res.warnings.map((w) => w.code)).not.toContain('url_redirected');
+  });
+
+  it('cambio de HOST → warning `url_redirected` (reason host_changed)', () => {
+    const raw = makeRawContent({
+      url: 'https://glow.example/products/serum',
+      urlFinal: 'https://otro-sitio.com/landing',
+    });
+    const res = validateBrief(makeBrief(), { profile: 'url', rawContent: raw });
+    expect(res.warnings).toContainEqual(
+      expect.objectContaining({ code: 'url_redirected', reason: 'host_changed' }),
+    );
+  });
+
+  it('redirección BENIGNA (http→https + www) → NINGÚN warning (la señal no puede ser ruido)', () => {
+    const raw = makeRawContent({
+      url: 'http://glow.example/products/serum',
+      urlFinal: 'https://www.glow.example/products/serum',
+    });
+    const res = validateBrief(makeBrief(), { profile: 'url', rawContent: raw });
+    expect(res.warnings.map((w) => w.code)).not.toContain('url_redirected');
+  });
+
+  it('sin `urlFinal` (análisis anterior a T2.7 o camino que no la expone) → no avisa', () => {
+    const res = validateBrief(makeBrief(), { profile: 'url', rawContent: makeRawContent() });
+    expect(res.warnings.map((w) => w.code)).not.toContain('url_redirected');
+  });
+
+  it('el aviso NO bloquea: el brief sigue válido y no hay `ok` que ponga a false', () => {
+    const raw = makeRawContent({
+      url: 'https://glow.example/products/serum',
+      urlFinal: 'https://glow.example/',
+    });
+    const res = validateBrief(makeBrief(), { profile: 'url', rawContent: raw });
+    expect(ProductBriefSchema.safeParse(res.brief).success).toBe(true);
+    expect(res).not.toHaveProperty('ok');
+  });
+
+  it('perfil manual: nunca avisa (no hay URL que redirigir)', () => {
+    const raw = makeRawContent({ source: 'manual', url: null, platform: 'manual' });
+    const res = validateBrief(makeBrief(), { profile: 'manual', rawContent: raw });
+    expect(res.warnings.map((w) => w.code)).not.toContain('url_redirected');
+  });
+});

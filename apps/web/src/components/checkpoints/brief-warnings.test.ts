@@ -169,3 +169,47 @@ describe('toWarningView', () => {
     expect(view.detail).toContain('34,90 €'); // el de la página (ganó)
   });
 });
+
+// ── T2.7 · «se analizó otra página» en CP1 ───────────────────────────────────
+describe('url_redirected (T2.7) — el aviso que convierte un fallo tragado en un hecho visible', () => {
+  const redirected: BriefWarning = {
+    code: 'url_redirected',
+    reason: 'path_to_root',
+    requested: 'https://www.dr-squatch.com/products/pine-tar-bar-soap',
+    final: 'https://www.dr-squatch.com',
+  };
+
+  it('el copy muestra LAS DOS URLs (la pedida y la analizada): sin ellas el aviso no sirve', () => {
+    const view = toWarningView(redirected);
+    expect(view.detail).toContain('https://www.dr-squatch.com/products/pine-tar-bar-soap');
+    expect(view.detail).toContain('https://www.dr-squatch.com');
+    expect(view.tone).toBe('warning');
+  });
+
+  it('AVISA, NO BLOQUEA (precedente T1.15): no exige decisión y deja aprobar', () => {
+    expect(toWarningView(redirected).requiresDecision).toBe(false);
+    expect(requiresUserDecision(redirected)).toBe(false);
+    expect(canApprove([redirected], null)).toBe(true);
+  });
+
+  it('la CATEGORÍA no se describe como «portada» (el copy sigue al `reason`, no lo aplana)', () => {
+    const view = toWarningView({
+      code: 'url_redirected',
+      reason: 'path_diverged',
+      requested: 'https://www.dr-squatch.com/products/pine-tar-bar-soap',
+      final: 'https://www.dr-squatch.com/collections/soaps',
+    });
+    expect(view.detail).toContain('otra sección');
+    expect(view.detail).not.toContain('portada'); // decirle «portada» a quien acabó en la categoría sería mentirle.
+  });
+
+  it('el cambio de HOST se explica como tal (es otro dominio, no un producto retirado)', () => {
+    const view = toWarningView({
+      code: 'url_redirected',
+      reason: 'host_changed',
+      requested: 'https://glow.example/products/serum',
+      final: 'https://otro-sitio.com/landing',
+    });
+    expect(view.detail).toContain('otro dominio');
+  });
+});

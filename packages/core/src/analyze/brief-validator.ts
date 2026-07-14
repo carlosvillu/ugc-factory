@@ -24,6 +24,9 @@
 import type { ProductBrief } from '../contracts/product-brief';
 import type { RawContent } from '../contracts/raw-content';
 import type { BriefValidationProfile, BriefWarning } from '../contracts/brief-warning';
+// T2.7 — el comparador de redirección significativa vive en `ingest` (junto a `normalizeUrl`,
+// que reutiliza): es LÓGICA DE URL, no de validación de brief. Aquí solo se consume.
+import { detectRedirectMismatch } from '../ingest/url';
 
 /**
  * Techo de palabras de un hook (§7.2 N3: "hooks ≤12 palabras"). El hook ocupa los 0–3 s del
@@ -34,9 +37,13 @@ export const MAX_HOOK_WORDS = 12;
 export interface ValidateBriefOptions {
   profile: BriefValidationProfile;
   /**
-   * El `RawContent` de N1. Aporta el precio del FAST PATH para el cross-check N1==N3 (perfil
-   * `url`). Opcional: en perfil `manual` no aplica, y una página sin fast path de precio
-   * (`product.price` null/ausente) simplemente NO dispara el check.
+   * El `RawContent` de N1. Aporta DOS datos al validador:
+   *  - el precio del FAST PATH para el cross-check N1==N3 (perfil `url`);
+   *  - el par (`url` pedida, `urlFinal` servida) para la comprobación de redirección de T2.7.
+   *
+   * Opcional, pero omitirlo desactiva los dos checks EN SILENCIO — el fallo que costó T1.9. El
+   * executor de N3 lo pasa SIEMPRE (también en perfil `manual`, donde el propio validador lo
+   * ignora: sin precio scrapeado que cruzar y con `url: null`, no hay nada que comprobar).
    */
   rawContent?: RawContent | null;
 }
@@ -182,6 +189,34 @@ export function validateBrief(
       };
     }
     // Mismo valor en distinto formato ⇒ NO hay discrepancia: se conserva el del LLM (más legible).
+  }
+
+  // ── 1b) ¿SE ANALIZÓ LA PÁGINA QUE EL USUARIO PIDIÓ? (T2.7) ──────────────────────────────
+  // Comprobación determinista y GRATIS sobre el RawContent: si la web sirvió otra URL tras una
+  // redirección SIGNIFICATIVA (`detectRedirectMismatch`: cambio de host, o ruta profunda →
+  // raíz), el brief describe otra página — y hasta T2.7 nadie se enteraba (el caso
+  // dr-squatch: `/products/pine-tar-bar-soap` → `301` → la home).
+  //
+  // POR QUÉ VIVE EN EL VALIDADOR y no en el executor: (a) es exactamente su naturaleza —un check
+  // determinista post-síntesis sobre el par (brief, RawContent)—, y (b) sus warnings SOBREVIVEN
+  // AL REUSO del brief (N3 revalida al reusar un brief ya pagado: los del sintetizador se
+  // pierden, los del validador se regeneran). Un aviso que se evaporase en el camino de reuso
+  // sería un aviso que a veces no sale, que es peor que no tenerlo.
+  //
+  // La detección la hace el COMPARADOR de core (una función, un sitio); aquí solo se traduce su
+  // hallazgo al warning tipado que CP1 pinta. AVISA, NO BLOQUEA (precedente T1.15).
+  //
+  // El comparador ya devuelve `null` sin URL final, así que un camino de ingesta que no la
+  // expone (o un análisis anterior a T2.7, sin `urlFinal` en su jsonb) simplemente no avisa.
+  const redirect =
+    rawContent?.url != null ? detectRedirectMismatch(rawContent.url, rawContent.urlFinal) : null;
+  if (redirect !== null) {
+    warnings.push({
+      code: 'url_redirected',
+      reason: redirect.reason,
+      requested: redirect.requested,
+      final: redirect.final,
+    });
   }
 
   // ── 2) Hero image ──────────────────────────────────────────────────────────────────────

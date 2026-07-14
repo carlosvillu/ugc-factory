@@ -67,7 +67,15 @@ export const FIRECRAWL_SCRAPE_RICH = {
       ],
     },
     screenshot: 'https://storage.firecrawl.dev/screenshots/glow-abc123.png',
-    metadata: { title: 'GlowSerum', sourceURL: 'https://glow.example/serum', statusCode: 200 },
+    // Forma REAL de `metadata` (T2.7, verificado contra `/v2/scrape`): `sourceURL` echoea la URL
+    // PEDIDA y `url` es la que la web SIRVIÓ. Aquí no hay redirección: las dos son la pedida
+    // (`TARGET_URL` de los tests del ingester).
+    metadata: {
+      title: 'GlowSerum',
+      sourceURL: 'https://glow.example/products/serum',
+      url: 'https://glow.example/products/serum',
+      statusCode: 200,
+    },
   },
 } as const;
 
@@ -138,6 +146,63 @@ export const JINA_MARKDOWN =
 
 /** El cuerpo (sin preámbulo) que los asserts buscan con `.toContain`. */
 export const JINA_MARKDOWN_BODY = 'Hidratación clínica en 24h. Contenido leído por Jina Reader.';
+
+// ── T2.7 · la web SIRVIÓ otra página (redirección silenciosa) ─────────────────
+// El caso REAL que abrió F2b: `dr-squatch.com/products/pine-tar-bar-soap` devuelve `301` a la
+// home y el scraper analiza la home creyendo que analiza el jabón. Los dos fixtures reproducen
+// ese salto TAL COMO LO EMITE CADA PROVEEDOR REAL, que no es simétrico:
+//   - Firecrawl SÍ publica la URL servida, en `metadata.url` (y ECHOEA la pedida en
+//     `metadata.sourceURL`, que es la trampa: ver el docstring del fixture).
+//   - Jina NO la publica por ningún canal: su `URL Source:` ECHOEA la pedida aunque haya
+//     servido otra página. Su fixture existe justamente para fijar ese no-canal.
+
+/** La URL de PRODUCTO que se pide en los tests de redirección de T2.7. */
+export const REDIRECTED_PRODUCT_URL = 'https://descatalogado.example/products/serum';
+
+/**
+ * Scrape de Firecrawl de un producto DESCATALOGADO: la web redirigió a la HOME, y el markdown
+ * que vuelve es el de la home, no el del producto pedido.
+ *
+ * LA FORMA DE `metadata` ES LA REAL, y es CONTRAINTUITIVA — se verificó con una llamada de 1
+ * crédito a `/v2/scrape` sobre la URL viva del caso (`www.dr-squatch.com/products/pine-tar-bar-soap`,
+ * `301` → home) el 2026-07-14:
+ *
+ *    "sourceURL": "https://www.dr-squatch.com/products/pine-tar-bar-soap"   ← la PEDIDA (echo)
+ *    "url":       "https://www.dr-squatch.com/"                             ← la SERVIDA
+ *
+ * O sea: `sourceURL` NO es la URL final pese a su nombre; la final es `url`. Un fixture que
+ * pusiera la home en `sourceURL` (el error natural leyendo solo las docs) dejaría la suite verde
+ * con la feature ROTA en producción. Este fixture emite las DOS, como el productor real.
+ */
+export const FIRECRAWL_SCRAPE_REDIRECTED_TO_ROOT = {
+  success: true,
+  data: {
+    markdown: '# Descatalogado Store\n\nBienvenido a nuestra tienda. Envíos gratis.',
+    images: ['https://cdn.descatalogado.example/banner.jpg'],
+    metadata: {
+      title: 'Descatalogado Store',
+      sourceURL: 'https://descatalogado.example/products/serum', // la PEDIDA (echo de Firecrawl)
+      url: 'https://descatalogado.example/', // la SERVIDA (la home): el salto que hay que detectar
+      statusCode: 200,
+    },
+  },
+} as const;
+
+/**
+ * Markdown de Jina para la MISMA redirección — y la prueba de que Jina NO puede detectarla.
+ *
+ * FORMA REAL, verificada contra `r.jina.ai` el 2026-07-14 pidiendo la URL viva del caso
+ * (`www.dr-squatch.com/products/pine-tar-bar-soap`, que hace `301` a la home):
+ *
+ *    Title: SELAYAR88 : Tempat Seru Bermain…                            ← el título de la HOME
+ *    URL Source: https://www.dr-squatch.com/products/pine-tar-bar-soap  ← ¡la URL PEDIDA!
+ *
+ * Jina sirvió la home (lo delata su propio `Title:`) y ECHOEA la pedida en `URL Source:`, igual
+ * que `metadata.sourceURL` de Firecrawl. Por eso el fixture ECHOEA la pedida: un fixture "cómodo"
+ * que pusiera ahí la home habría confirmado una asunción FALSA y dejado el camino Jina
+ * "detectando" algo que en producción no detecta jamás (principio 9 de la skill testing).
+ */
+export const JINA_MARKDOWN_ECHOED_SOURCE = `Title: Descatalogado Store\n\nURL Source: ${REDIRECTED_PRODUCT_URL}\n\nMarkdown Content:\n# Descatalogado Store\n\nBienvenido a nuestra tienda.`;
 
 // ── Fixtures del mini-crawl de páginas internas (T1.5, research §3.5) ─────────────
 // El mini-crawl usa DOS scrapes del landing (fix del verify): el scrape RICO

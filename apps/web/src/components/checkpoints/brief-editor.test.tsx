@@ -582,4 +582,22 @@ describe('BriefEditor (CP1)', () => {
     // NO bloquea: si lo hiciera, CP1 estaría bloqueado en casi cualquier análisis real.
     expect(screen.getByRole('button', { name: /aprobar y continuar/i })).toBeEnabled();
   });
+
+  // T2.7 — CP1 es el suelo honesto: si la web sirvió OTRA página, el usuario lo VE aquí (y no
+  // enterándose tres pasos después de que su anuncio habla de otro producto).
+  test('una redirección significativa se MUESTRA con las dos URLs y NO bloquea la aprobación', () => {
+    const redirected: BriefWarning = {
+      code: 'url_redirected',
+      reason: 'path_to_root',
+      requested: 'https://www.dr-squatch.com/products/pine-tar-bar-soap',
+      final: 'https://www.dr-squatch.com',
+    };
+    render(<BriefEditor stepId={STEP_ID} brief={brief} warnings={[redirected]} />);
+
+    expect(screen.getByText(/se analizó otra página/i)).toBeInTheDocument();
+    // Las DOS URLs, visibles (el aviso sin ellas no le sirve a nadie).
+    expect(screen.getByText(/dr-squatch\.com\/products\/pine-tar-bar-soap/)).toBeInTheDocument();
+    // AVISA, no bloquea (precedente T1.15): el humano decide.
+    expect(screen.getByRole('button', { name: /aprobar y continuar/i })).toBeEnabled();
+  });
 });

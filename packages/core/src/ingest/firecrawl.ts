@@ -193,7 +193,29 @@ interface FirecrawlData {
   // `links` (format T1.5): la respuesta v2 lo devuelve como array<string> de hrefs
   // absolutos. Se admite `null`/ausente (el format solo aparece si se pidió).
   links?: string[] | null;
-  metadata?: { creditsUsed?: number };
+  // T2.7 — `metadata` traía SOLO `creditsUsed` declarado, y el resto de la respuesta se
+  // descartaba con él. Firecrawl v2 publica ahí DOS URLs, y CUÁL ES CUÁL importa más que
+  // ninguna otra cosa de esta tarea:
+  //
+  //   `sourceURL` → la URL que se PIDIÓ (Firecrawl la ECHOEA tal cual).
+  //   `url`       → la URL que la web SIRVIÓ de verdad, tras las redirecciones.
+  //
+  // VERIFICADO CONTRA LA API REAL (llamada de 1 crédito a `/v2/scrape`, 2026-07-14, con la URL
+  // viva del caso: `www.dr-squatch.com/products/pine-tar-bar-soap`, que hace `301` a la home):
+  //
+  //   {"sourceURL": "https://www.dr-squatch.com/products/pine-tar-bar-soap",
+  //    "url":       "https://www.dr-squatch.com/",
+  //    "statusCode": 200, "title": "SELAYAR88 : Tempat Seru Bermain…"}
+  //
+  // El nombre `sourceURL` ENGAÑA (parece "la fuente de la que salió el contenido") y las docs no
+  // lo desambiguan: su ejemplo no tiene redirección, así que leerlas no basta. Un fixture que
+  // pusiera la URL final en `sourceURL` habría dado una suite VERDE con la feature ROTA en
+  // producción — el anti-patrón nº1 de la skill testing («¿el doble emite lo que emite el
+  // productor REAL? → ve a leer el productor»). Por eso se consume `url` y NUNCA `sourceURL`.
+  //
+  // `statusCode` se declara porque viaja con ellas y documenta la forma real, aunque hoy no lo
+  // consumamos (la decisión de T2.7 es AVISAR, no bloquear por status).
+  metadata?: { creditsUsed?: number; sourceURL?: string; url?: string; statusCode?: number };
 }
 interface FirecrawlResponse {
   success?: boolean;
@@ -296,6 +318,40 @@ function mapCredits(data: FirecrawlData | undefined): number {
   const reported = data?.metadata?.creditsUsed;
   return typeof reported === 'number' && reported > 0 ? reported : DEFAULT_FIRECRAWL_CREDITS;
 }
+
+/** T2.7 — La URL que Firecrawl SIRVIÓ de verdad: `metadata.url`, NUNCA `metadata.sourceURL`
+ *  (que ECHOEA la pedida — verificado contra la API real, ver el tipo `FirecrawlData`). `null`
+ *  si la respuesta no la trae: NO se sustituye por la pedida (eso afirmaría "no hubo
+ *  redirección" sin saberlo — ver el contrato de `RawContent.urlFinal`). */
+function mapFinalUrl(data: FirecrawlData | undefined): string | null {
+  const finalUrl = data?.metadata?.url;
+  return typeof finalUrl === 'string' && finalUrl.trim() !== '' ? finalUrl : null;
+}
+
+// ── T2.7 · EL FALLBACK JINA **NO PUEDE** DETECTAR LA REDIRECCIÓN. Es un HECHO, no una deuda ──
+//
+// VERIFICADO CONTRA `r.jina.ai` REAL (2026-07-14, tier gratis, con la URL viva del caso —
+// `www.dr-squatch.com/products/pine-tar-bar-soap`, que hace `301` a la home):
+//
+//     Title: SELAYAR88 : Tempat Seru Bermain & Menang Setiap Hari      ← el título de la HOME
+//     URL Source: https://www.dr-squatch.com/products/pine-tar-bar-soap ← ¡la URL PEDIDA!
+//
+// O sea: Jina SIRVIÓ la home (lo delata su propio `Title:`) y aun así ECHOEA la URL pedida en
+// `URL Source:`. Exactamente el mismo engaño que `metadata.sourceURL` de Firecrawl — y por eso
+// esta comprobación no era opcional: la primera versión de T2.7 parseaba ese preámbulo creyendo
+// que traía la URL final, con un fixture DE AUTORÍA PROPIA que confirmaba la asunción. Suite
+// verde, camino incapaz de detectar nada, y el `urlFinal == url` resultante habría AFIRMADO
+// ACTIVAMENTE que no hubo redirección — la mentira que esta tarea existe para no contar.
+//
+// La respuesta de texto plano de Jina no expone NINGÚN otro canal con la URL final (no hay
+// cabecera ni campo JSON). Conclusión: en el camino Jina, `urlFinal` es SIEMPRE `null` (dato NO
+// observado), y el comparador —que devuelve `null` sin URL final— simplemente no avisa. Sin
+// dato, no hay aviso; jamás se inventa uno.
+//
+// IMPACTO ACOTADO: Jina es el camino DEGRADADO (solo entra si Firecrawl falla: key inválida,
+// 5xx, 429). El camino de producción es Firecrawl, que sí lo expone (`metadata.url`). Si algún
+// día se quiere cobertura ahí, la vía honesta es un HEAD/GET propio a la URL para observar la
+// cadena de redirección — trabajo de otra tarea, no una heurística sobre texto ajeno.
 
 // ── Mini-crawl de páginas internas (T1.5, research §3.5) ─────────────────────────
 
@@ -652,6 +708,9 @@ export function makeFirecrawlIngester(deps: FirecrawlDeps) {
       raw = {
         source: 'url',
         url: rawUrl,
+        // T2.7: la URL que Firecrawl sirvió de verdad (`metadata.url` — NUNCA `sourceURL`, que
+        // ECHOEA la pedida), junto a la pedida.
+        urlFinal: mapFinalUrl(data),
         platform,
         markdown: crawl.markdown,
         images: mapImages(data.images),
@@ -669,6 +728,10 @@ export function makeFirecrawlIngester(deps: FirecrawlDeps) {
       raw = {
         source: 'url',
         url: rawUrl,
+        // T2.7: SIEMPRE `null` en el camino Jina — el reader ECHOEA la URL pedida en su
+        // `URL Source:` (verificado contra el servicio real; ver el bloque de arriba). No hay
+        // dato que capturar, y afirmar `urlFinal = rawUrl` mentiría diciendo que no hubo salto.
+        urlFinal: null,
         platform,
         markdown: landingMarkdown,
         images: [],
@@ -684,7 +747,8 @@ export function makeFirecrawlIngester(deps: FirecrawlDeps) {
     // por scrape rompería el dedupe). Además usa el markdown PROPIO del landing, NO el
     // enriquecido con páginas internas (FIX 3): el hash debe ser determinista respecto al
     // landing — un fallo transitorio de una interna no debe cambiar la identidad del análisis.
-    const { url: _omitUrl, screenshotRef: _omitRef, ...rest } = raw;
+    // (T2.7: `urlFinal` se omite igual que `url` — identidad de la PETICIÓN, no del contenido.)
+    const { url: _omitUrl, urlFinal: _omitFinal, screenshotRef: _omitRef, ...rest } = raw;
     const content = { ...rest, markdown: landingMarkdown };
 
     return {

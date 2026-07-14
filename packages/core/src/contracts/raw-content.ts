@@ -45,8 +45,29 @@ export type RawProduct = z.infer<typeof RawProductSchema>;
 
 const RawContentBaseSchema = z.object({
   source: z.enum(['url', 'manual']),
-  // null en modo manual (texto libre sin dominio); presente en modo url.
+  // La URL que el usuario PIDIÓ analizar. null en modo manual (texto libre sin dominio).
   url: z.string().nullable(),
+  /**
+   * T2.7 — La URL que la web SIRVIÓ de verdad, tras seguir las redirecciones. Va JUNTO a `url`,
+   * NUNCA en su lugar: la pedida es lo que el usuario quiso y la final es lo que se analizó, y
+   * el defecto que esta tarea cierra era precisamente tirar la segunda y no poder contrastarlas
+   * (`dr-squatch.com/products/pine-tar-bar-soap` → `301` → la home: el pipeline analizó la home
+   * en silencio). Es la ENTRADA del comparador `detectRedirectMismatch` (ingest/url.ts).
+   *
+   * `.nullable().optional()`, y las dos cosas por razones distintas:
+   *  - `nullable`: hay un camino de ingesta que NO puede saberla — un fallback de Jina que no
+   *    devuelve el preámbulo, o un fast path cuyo fetch del HTML falló. Ausencia de dato, y se
+   *    declara como tal: NO se rellena con la pedida (eso fabricaría la MENTIRA de que no hubo
+   *    redirección, que es exactamente el bug que cerramos).
+   *  - `optional`: las filas de `url_analysis` ANTERIORES a T2.7 tienen un `raw_content` sin
+   *    este campo, y N1 las relee con `RawContentSchema.parse` en cada modo manual/reuso. Un
+   *    campo requerido las rompería TODAS. Al ser `raw_content` un jsonb opaco, no hace falta
+   *    migración: el schema tolera su ausencia (un análisis viejo simplemente no sabe si hubo
+   *    salto, que es la verdad).
+   *
+   * En modo `manual` es SIEMPRE null (no hay red que redirija) — lo fija el `superRefine`.
+   */
+  urlFinal: z.string().nullable().optional(),
   // Plataforma clasificada (P0, research §5). En modo manual es `manual`.
   platform: PlatformSchema,
   // Contenido textual base. En modo manual ES el texto que pegó el usuario.
@@ -78,6 +99,15 @@ export const RawContentSchema = RawContentBaseSchema.superRefine((raw, ctx) => {
         code: 'custom',
         path: ['platform'],
         message: 'platform debe ser manual en modo manual',
+      });
+    }
+    // T2.7: sin red no hay redirección que registrar. Un `urlFinal` en modo manual sería un
+    // dato inventado (el texto libre no se sirvió desde ninguna parte).
+    if (raw.urlFinal != null) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['urlFinal'],
+        message: 'urlFinal debe ser null/ausente en modo manual',
       });
     }
   } else {

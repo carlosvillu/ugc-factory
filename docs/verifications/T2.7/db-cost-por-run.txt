@@ -1,0 +1,10 @@
+         caso         | node_key | provider  | quantity |  unit   | amount_cents 
+----------------------+----------+-----------+----------+---------+--------------
+ NEGATIVO(allbirds)   | N1       | firecrawl |        2 | credits |            0
+ NEGATIVO(allbirds)   | N2       | anthropic |     6946 | tokens  |            1
+ NEGATIVO(allbirds)   | N3       | anthropic |    32490 | tokens  |           19
+ POSITIVO(dr-squatch) | N1       | firecrawl |        3 | credits |            0
+ POSITIVO(dr-squatch) | N2       | anthropic |     3712 | tokens  |            0
+ POSITIVO(dr-squatch) | N3       | anthropic |    27291 | tokens  |           16
+(6 rows)
+

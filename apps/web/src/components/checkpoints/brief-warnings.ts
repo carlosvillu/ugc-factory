@@ -82,6 +82,19 @@ export interface WarningView {
   requiresDecision: boolean;
 }
 
+/** Copy por MOTIVO de la redirección (T2.7). El `Record` está tipado por el enum del contrato:
+ *  un `reason` nuevo NO compila hasta que alguien escriba su frase — el mismo mecanismo que el
+ *  `switch` exhaustivo de `toWarningView`. Y son frases distintas de verdad: decirle «te devolvió
+ *  su portada» a quien acabó en una CATEGORÍA sería mentirle sobre lo que pasó. */
+const REDIRECT_REASON_COPY: Record<
+  Extract<BriefWarning, { code: 'url_redirected' }>['reason'],
+  string
+> = {
+  host_changed: ' (es otro dominio)',
+  path_to_root: ' (la página del producto ya no existe y la web devolvió su portada)',
+  path_diverged: ' (la página que pediste ya no existe y la web devolvió otra sección del sitio)',
+};
+
 /** ¿Este warning exige una decisión del usuario antes de poder aprobar CP1? */
 export function requiresUserDecision(warning: BriefWarning): boolean {
   return warning.code === 'needs_user_decision';
@@ -124,6 +137,21 @@ export function toWarningView(warning: BriefWarning): WarningView {
           `«${warning.hook}» (${String(warning.wordCount)} palabras) en el ángulo ` +
           `«${warning.angleName}». Un hook largo no cabe en los primeros 3 s del anuncio: ` +
           'acórtalo aquí si quieres.',
+        requiresDecision: false,
+      };
+    case 'url_redirected':
+      return {
+        code: warning.code,
+        tone: 'warning',
+        title: 'Se analizó otra página',
+        // Las DOS URLs, literales y visibles: el usuario pidió una y la web sirvió otra. Es el
+        // hecho, no una interpretación — y solo él puede juzgar si el destino vale (un producto
+        // renombrado sí; la home de una tienda que descatalogó el producto, no). AVISA, no
+        // bloquea (T2.7, precedente T1.15): puede aprobar si el destino era el correcto.
+        detail:
+          `Pediste analizar ${warning.requested}, pero la web redirigió a ${warning.final} ` +
+          `y el brief describe ESA página${REDIRECT_REASON_COPY[warning.reason]}. ` +
+          'Si no es lo que querías, cancela y analiza la URL correcta.',
         requiresDecision: false,
       };
     case 'needs_user_decision':

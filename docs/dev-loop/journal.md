@@ -1303,3 +1303,29 @@ El REVIEW cazó el mismo error de FORMA en tres capas distintas. En los tres, **
 - **[T2.0]** `matchPersonas` da 0 candidatas con `avatar_hint` largos y descriptivos. **MATIZADO por el verifier**: con «estilo urbano-casual», Lucía SÍ casó y Marcus fue correctamente excluido ⇒ **la regla funciona; lo pobre es la librería** (2 personas placeholder). No es bug de la lógica.
 - **[DS]** Faltan dos primitivas que CP2 necesitó: un `Card` **sin sombra** (`Card` fuerza `shadow-sm` que los mockups no dibujan — `persona-detail.tsx` ya se topó con lo mismo) y un **`variant="success"`** en `Button` (hoy se sobreescribe con `bg-success`).
 - **[Menor]** El segmento de persona del `filename_code` es un **prefijo ULID**, no un slug del nombre: trazable, pero un humano en Ads Manager no ve «Lucía».
+
+## 2026-07-14 · T2.7 (redirección silenciosa) CERRADA — PASS
+- Coste: **$0,36** (estimado $0,20 → **+80 %**, dentro del cap) · Ciclos verifier: **1** · Gate: **1372 tests + e2e 60/60** · Evidencia: `docs/verifications/T2.7/`
+- **Recalibración (regla 5)**: una Verificación que exige **2 análisis reales completos** cuesta **~$0,35–0,40**, no $0,20. Anotado en la tarea.
+
+### LA LECCIÓN, Y ES GRANDE: LA DOCUMENTACIÓN DE DOS PROVEEDORES MIENTE, Y LOS DOS MIENTEN IGUAL
+Esta tarea se salvó **tres veces** por ir al servicio REAL en vez de fiarse de la doc o del propio fixture. Es el principio 9 de la skill `testing` («el doble emite lo que le conviene al test, no lo que emite el productor REAL») en estado puro:
+1. **Firecrawl: `metadata.sourceURL` NO es la URL final — la ECHOEA.** **Mi brief mandaba al implementer a ese campo** (siguiendo las docs, cuyo ejemplo no lleva redirección). Fue a la API real con la URL viva y obtuvo: `{"sourceURL": ".../products/pine-tar-bar-soap", "url": "https://www.dr-squatch.com/"}`. La buena es **`metadata.url`**. El nombre `sourceURL` ENGAÑA (parece «la fuente de la que salió el contenido»). De haberme hecho caso: **suite VERDE con la feature ROTA en producción**. Hay test que se pone rojo si alguien vuelve a leer `sourceURL`.
+2. **Jina miente IGUAL, y su fixture de autoría propia lo habría tapado para siempre.** El implementer asumió que el preámbulo `URL Source:` traía la final. Le exigí verificarlo contra `r.jina.ai` real: **sirve la home** (lo delata su propio `Title: SELAYAR88…`) **y aun así dice `URL Source: .../products/pine-tar-bar-soap`**. Ese camino queda declarado **NO-DETECTOR** (`urlFinal = null`): sin dato observado, **no se inventa un aviso**. El fixture ahora emite el preámbulo REAL (con la pedida ecoada) y el test asserta que por ahí no se detecta nada.
+3. **`simplify` cazó 3 comentarios que nombraban `metadata.sourceURL`** mientras el código leía `metadata.url`. En este repo el comentario es documentación load-bearing: uno falso ahí **invita al siguiente lector a «arreglar» el código hacia el bug exacto** que la tarea existe para impedir.
+
+### EL IMPLEMENTER REFUTÓ MI CRITERIO CON DATOS (y tenía razón)
+- El `code-review` destapó que `path_to_root` **no cubría la mitad del caso de uso**: solo avisaba si el destino era la raíz EXACTA, pero un producto descatalogado también redirige **a la categoría** (`/products/x` → `/collections/y`) — y no había ni un test de eso.
+- **Yo propuse** detectarlo por «el último segmento del path cambia». **Lo probó y demostró que rompe los renames legítimos** (`/products/serum` → `/products/serum-v2` también cambia el último segmento) ⇒ habría sido la máquina de falsos positivos que yo mismo le pedí evitar.
+- **Su criterio es mejor**: el **directorio PADRE**. Se avisa cuando el padre pedido NO es sufijo del padre final (el sufijo absorbe el prefijo de locale, que es aditivo por delante). Separa limpiamente: home (avisa) · categoría (avisa) · rename (calla) · locale (calla). Red de seguridad ampliada de 11 a **15 casos benignos** que deben seguir callados.
+
+### Otros
+- **El fast path fabricaba la URL final** (`res.url !== '' ? res.url : rawUrl`) — contradiciendo su PROPIO contrato, que dice dos veces que nunca se rellena con la pedida. Ahora `null` (dato no observado). Es la 4.ª aparición del patrón «colapsar un dato ausente en un valor que significa otra cosa» en dos tareas.
+- **El verifier eligió su propio control negativo** y descartó tres candidatos que habrían sido **positivos disfrazados** (ollie/oatly daban 404; tushy saltaba a otro host). Y encontró la prueba que faltaba: como **ambos runs se sirvieron por Firecrawl** (visible en `cost_entry`), el aviso apareciendo es **evidencia directa contra la API real** de que se lee `metadata.url` — el hallazgo ya no se apoya solo en un test unitario.
+- **`ds-reviewer`: LIMPIO** (el módulo de warnings es puro, sin JSX; el render ya usaba `Alert` del DS).
+- **Fuera de alcance, declarado**: el redirect a un HERMANO (`/products/a` → `/products/b`) es indistinguible de un rename desde la URL sola. No se persigue.
+
+### Deuda anotada
+- **[BUG, ajeno a T2.7 — mirar]** `pipeline_run.status` **se queda en `pending`** mientras sus `step_run` ya están en `succeeded`/`waiting_approval` (reproducido en 2 runs). Un `/runs` que liste por ese campo mostraría «pending» a runs que están en checkpoint.
+- **[DS]** `Alert` es `flex items-center` sin `min-w-0`/`break-words`: una URL larga **sin espacios** puede ensanchar la línea. **Preexistente** (`pruned_suggested_asset` ya interpola una URL cruda desde T1.9), no lo introduce T2.7. Arreglo en la primitiva.
+- **[Deuda T1.9 citada, no arreglada]** `sameSite` trata `x.github.io` ↔ `github.io` como el mismo sitio (misma trampa last-two-labels que `registrableDomain`). El impacto va en la **dirección segura**: solo puede CALLAR un aviso, nunca inventarlo. Se arregla con una PSL, no con una segunda heurística.

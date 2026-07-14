@@ -20,12 +20,17 @@ import { deriveSecretsKey, encryptSecret } from '@ugc/core/secrets';
 import { createTestDatabase, makeProject, server, type TestDatabase } from '@ugc/test-utils';
 import type { StorageAdapter } from '@ugc/core';
 import {
+  FIRECRAWL_SCRAPE_REDIRECTED_TO_ROOT,
   FIRECRAWL_SCRAPE_RICH,
   FIRECRAWL_SCREENSHOT_BYTES,
   FIRECRAWL_SCREENSHOT_URL,
   JINA_MARKDOWN,
   JINA_MARKDOWN_BODY,
+  REDIRECTED_PRODUCT_URL,
 } from '@ugc/test-utils/fixtures/firecrawl';
+import { validateBrief } from '@ugc/core/analyze';
+import { RawContentSchema } from '@ugc/core/contracts';
+import { makeBrief } from '@ugc/test-utils';
 
 import { runFirecrawlIngest } from '../../src/firecrawl-ingest';
 
@@ -272,5 +277,75 @@ describe('cadena ingester N2 → persistencia (Verificación T1.4)', () => {
     const firecrawlRow = rows.find((r) => r.provider === 'firecrawl');
     expect(firecrawlRow).toBeDefined();
     expect(Number(firecrawlRow!.quantity)).toBeGreaterThanOrEqual(5);
+  });
+});
+
+// ── T2.7 · la redirección silenciosa, de la scrape a la fila de BD y al aviso ─
+//
+// LA CADENA ENTERA sobre el caso que MUERDE (un `301` de `/products/x` a la raíz, el de
+// dr-squatch/producto descatalogado — NO una redirección benigna, que un ingester roto pasaría
+// igual): Firecrawl sirve la home → el servicio persiste `url_analysis` → se relee de la BD y la
+// fila lleva LAS DOS URLs (la pedida y la servida) → el validador que corre en N3 (el MISMO
+// código de producción, no una reimplementación) emite el `url_redirected` que CP1 pinta.
+describe('T2.7 — se analizó otra página: las DOS URLs en `url_analysis` y el aviso de CP1', () => {
+  it('301 a la raíz: la fila guarda pedida + servida, y el validador emite `url_redirected`', async () => {
+    const projectId = await seedProject();
+    server.use(
+      http.post(FIRECRAWL_SCRAPE, () => HttpResponse.json(FIRECRAWL_SCRAPE_REDIRECTED_TO_ROOT)),
+    );
+
+    const result = await runFirecrawlIngest(
+      { db: tdb.db, storage, secretsKey },
+      { projectId, url: REDIRECTED_PRODUCT_URL },
+    );
+
+    // La fila RELEÍDA de la BD (no el objeto en memoria): es lo que verá N3 y lo que la
+    // Verificación mira con psql.
+    const { rows } = await tdb.pool.query<{ url_normalized: string; raw_content: unknown }>(
+      `SELECT url_normalized, raw_content FROM url_analysis WHERE id = $1`,
+      [result.analysis.id],
+    );
+    const raw = RawContentSchema.parse(rows[0]!.raw_content);
+
+    expect(raw.url).toBe(REDIRECTED_PRODUCT_URL); // la PEDIDA (lo que el usuario quiso)
+    expect(raw.urlFinal).toBe('https://descatalogado.example/'); // la SERVIDA (lo que se analizó)
+    expect(rows[0]!.url_normalized).toBe(REDIRECTED_PRODUCT_URL);
+
+    // Y el aviso que CP1 pinta lo produce el código de PRODUCCIÓN (validateBrief, el que corre
+    // en N3), no una comprobación reimplementada en el test.
+    const validated = validateBrief(makeBrief(), { profile: 'url', rawContent: raw });
+    expect(validated.warnings).toContainEqual({
+      code: 'url_redirected',
+      reason: 'path_to_root',
+      requested: REDIRECTED_PRODUCT_URL,
+      final: 'https://descatalogado.example',
+    });
+  });
+
+  it('scrape SIN redirección: la fila guarda las dos iguales y NO hay aviso (la señal no es ruido)', async () => {
+    const projectId = await seedProject();
+    server.use(
+      http.post(FIRECRAWL_SCRAPE, () => HttpResponse.json(FIRECRAWL_SCRAPE_RICH)),
+      http.get(FIRECRAWL_SCREENSHOT_URL, () =>
+        HttpResponse.arrayBuffer(FIRECRAWL_SCREENSHOT_BYTES.buffer, {
+          headers: { 'content-type': 'image/png' },
+        }),
+      ),
+    );
+
+    const result = await runFirecrawlIngest(
+      { db: tdb.db, storage, secretsKey },
+      { projectId, url: TARGET_URL },
+    );
+
+    const { rows } = await tdb.pool.query<{ raw_content: unknown }>(
+      `SELECT raw_content FROM url_analysis WHERE id = $1`,
+      [result.analysis.id],
+    );
+    const raw = RawContentSchema.parse(rows[0]!.raw_content);
+    expect(raw.urlFinal).toBe(TARGET_URL);
+
+    const validated = validateBrief(makeBrief(), { profile: 'url', rawContent: raw });
+    expect(validated.warnings.map((w) => w.code)).not.toContain('url_redirected');
   });
 });

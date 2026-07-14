@@ -91,20 +91,34 @@ export function makeFastPathIngester(deps: FastPathDeps = {}) {
     // 2) HTML → JSON-LD + OpenGraph. Se intenta SIEMPRE (también en shopify: el
     //    `.json` puede haber fallado o traer poco). Un fallo de infra al traer el
     //    HTML se registra como warning; si ya tenemos algo del `.json` seguimos.
+    //    T2.7: este fetch es TAMBIÉN el que nos da la URL FINAL — `fetch` sigue las
+    //    redirecciones (`redirect: 'follow'`, el default) y `response.url` es la URL de la
+    //    respuesta final, no la pedida. Es gratis: no hay una segunda request.
     const html = await tryFetchHtml(rawUrl, warnings);
     if (html !== null) {
-      const jsonLd = parseJsonLd(html);
+      const jsonLd = parseJsonLd(html.body);
       if (jsonLd !== null) partials.push(jsonLd);
-      const og = parseOpenGraph(html);
+      const og = parseOpenGraph(html.body);
       if (og !== null) partials.push(og);
     }
 
-    const raw = mergeRawContent({ url: rawUrl, platform, partials, warnings });
+    // `null` si el HTML no se pudo traer: NO se rellena con la pedida (fabricaría la mentira
+    // de que no hubo redirección — ver el contrato de `RawContent.urlFinal`).
+    const raw = mergeRawContent({
+      url: rawUrl,
+      urlFinal: html?.finalUrl ?? null,
+      platform,
+      partials,
+      warnings,
+    });
     // El cache key (§12) es `url_normalizada + content_hash`: la URL ya viaja aparte
     // en `urlNormalized`, así que el hash cubre SOLO el contenido, excluyendo el `url`
     // crudo del RawContent. Si no, dos variantes de la misma URL (barra final, orden
     // de query) del MISMO contenido darían hashes distintos y romperían el dedupe.
-    const { url: _omitUrl, ...content } = raw;
+    // T2.7: `urlFinal` se omite del hash por la MISMA razón que `url` — es la identidad de la
+    // petición, no del contenido (y el mismo contenido servido desde la URL canónica o desde la
+    // pedida debe colisionar por hash).
+    const { url: _omitUrl, urlFinal: _omitFinal, ...content } = raw;
     return {
       raw,
       platform,
@@ -138,8 +152,15 @@ export function makeFastPathIngester(deps: FastPathDeps = {}) {
 
   /** Descarga el HTML de la URL. Un fallo REAL de infra (red/DNS/no-200) se anota
    *  como warning y devuelve `null` — el merge seguirá con lo que tenga del `.json`.
-   *  No lanza. */
-  async function tryFetchHtml(rawUrl: string, warnings: string[]): Promise<string | null> {
+   *  No lanza.
+   *
+   *  T2.7: devuelve TAMBIÉN la URL FINAL (`response.url`), que es la que la web sirvió tras
+   *  seguir las redirecciones (`fetch` las sigue por defecto). Es el único punto del fast path
+   *  donde ese dato existe, y sin él la comprobación de T2.7 es imposible. */
+  async function tryFetchHtml(
+    rawUrl: string,
+    warnings: string[],
+  ): Promise<{ body: string; finalUrl: string | null } | null> {
     let res: Response;
     try {
       res = await fetchWithTimeout(rawUrl, { headers: { accept: 'text/html' } });
@@ -161,7 +182,12 @@ export function makeFastPathIngester(deps: FastPathDeps = {}) {
       return null;
     }
     try {
-      return await res.text();
+      // `res.url` es la URL de la respuesta FINAL (tras redirecciones). Si viene VACÍA (un
+      // runtime/polyfill/mock que no la puebla), el valor honesto es `null` — dato NO OBSERVADO
+      // — y NO la pedida: rellenar con la pedida AFIRMARÍA que no hubo redirección basándose en
+      // un fetch cuya URL final justamente no pudimos observar, que es el bug de T2.7
+      // reintroducido por la única puerta que el contrato blindaba. Sin dato, sin aviso.
+      return { body: await res.text(), finalUrl: res.url !== '' ? res.url : null };
     } catch {
       warnings.push('html_body_read_failed');
       return null;

@@ -1,0 +1,8 @@
+   caso   |                                    pedida                                    |                                 final_servida                                 
+----------+------------------------------------------------------------------------------+-------------------------------------------------------------------------------
+ NEGATIVO | http://www.allbirds.com/products/mens-cruiser-shadow-blue-natural-white-sole | https://www.allbirds.com/products/mens-cruiser-shadow-blue-natural-white-sole
+ POSITIVO | https://www.dr-squatch.com/products/pine-tar-bar-soap                        | https://www.dr-squatch.com/
+ POSITIVO | https://www.dr-squatch.com/products/pine-tar-bar-soap                        | 
+ POSITIVO | https://www.dr-squatch.com/products/pine-tar-bar-soap                        | 
+(4 rows)
+

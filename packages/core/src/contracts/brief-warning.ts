@@ -95,12 +95,40 @@ export const NeedsUserDecisionWarningSchema = z.object({
   message: z.string(),
 });
 
+/**
+ * T2.7 — SE ANALIZÓ OTRA PÁGINA. El usuario pidió una URL, la web sirvió otra tras una
+ * redirección, y el cambio es SIGNIFICATIVO (cambio de host, o ruta profunda → raíz desnuda:
+ * el criterio estrecho de `detectRedirectMismatch`, ingest/url.ts). El caso vivo:
+ * `dr-squatch.com/products/pine-tar-bar-soap` → `301` → la home, y el brief describía la home.
+ *
+ * AVISA, NO BLOQUEA — y es el MISMO precedente que T1.15: el run sigue, CP1 lo enseña y el
+ * humano decide. Hay redirecciones legítimas que solo un humano puede juzgar (un producto
+ * renombrado, una web reestructurada), y matar el run le quitaría la decisión que el checkpoint
+ * existe para darle. Por eso NO es un `needs_user_decision` (que bloquea la aprobación): es un
+ * HECHO que se pone delante de los ojos del usuario, sobre un brief que sí se puede aprobar si
+ * el destino era el correcto. PRD §7.2 N1 / §9.2.
+ *
+ * Las URLs viajan NORMALIZADAS (`normalizeUrl`): es lo que la BD guarda y lo que CP1 enseña.
+ */
+export const UrlRedirectedWarningSchema = z.object({
+  code: z.literal('url_redirected'),
+  /** Por qué la redirección es significativa (union cerrada del comparador `detectRedirectMismatch`):
+   *  `host_changed` (otro sitio), `path_to_root` (la home desnuda) o `path_diverged` (otra rama del
+   *  sitio — la CATEGORÍA a la que la tienda manda un producto descatalogado). */
+  reason: z.enum(['host_changed', 'path_to_root', 'path_diverged']),
+  /** La URL que el usuario PIDIÓ analizar (normalizada). */
+  requested: z.string(),
+  /** La URL que la web SIRVIÓ y que de verdad se analizó (normalizada). */
+  final: z.string(),
+});
+
 /** La union discriminada completa. Un `code` nuevo aquí rompe el `switch` exhaustivo del consumidor. */
 export const BriefWarningSchema = z.discriminatedUnion('code', [
   PriceMismatchWarningSchema,
   PrunedSuggestedAssetWarningSchema,
   HookTooLongWarningSchema,
   NeedsUserDecisionWarningSchema,
+  UrlRedirectedWarningSchema,
 ]);
 export type BriefWarning = z.infer<typeof BriefWarningSchema>;
 export type BriefWarningCode = BriefWarning['code'];

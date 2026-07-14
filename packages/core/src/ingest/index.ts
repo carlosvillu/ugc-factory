@@ -3,7 +3,16 @@
 // JSON-LD, OpenGraph), merge a `RawContent` y el cliente HTTP fino que orquesta el
 // fast path con fallback transparente. Firecrawl/Jina (T1.4), mini-crawl (T1.5) y
 // síntesis (T1.8) llegan en tareas posteriores sobre este mismo módulo.
-export { classifyUrl, normalizeUrl, contentHash, type FastPathPlatform } from './url';
+export {
+  classifyUrl,
+  normalizeUrl,
+  contentHash,
+  // T2.7 — el comparador de redirección significativa (lo consume el BriefValidator).
+  detectRedirectMismatch,
+  type FastPathPlatform,
+  type RedirectMismatch,
+  type RedirectMismatchReason,
+} from './url';
 export { parseShopifyJson } from './parsers/shopify';
 export { parseJsonLd } from './parsers/json-ld';
 export { parseOpenGraph } from './parsers/opengraph';

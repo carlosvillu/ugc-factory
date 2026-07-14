@@ -68,6 +68,9 @@ function stripHtml(value: string): string {
 
 export interface MergeInput {
   url: string;
+  /** T2.7 — la URL que la web SIRVIÓ (tras redirecciones), o `null` si este ingester no pudo
+   *  saberla (el fetch del HTML falló). Nunca se sustituye por la pedida cuando falta. */
+  urlFinal?: string | null;
   platform: FastPathPlatform;
   partials: RawContentPartial[];
   /** Avisos acumulados por el cliente (p. ej. infra degradada); nunca "fuente
@@ -120,6 +123,7 @@ export function mergeRawContent(input: MergeInput): RawContent {
   const raw: RawContent = {
     source: 'url',
     url: input.url,
+    urlFinal: input.urlFinal ?? null,
     platform: input.platform,
     markdown,
     images,

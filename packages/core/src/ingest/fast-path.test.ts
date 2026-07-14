@@ -207,3 +207,73 @@ describe('fast path — FIX 1: timeout no cuelga ingest()', () => {
     expect(res.raw.platform).toBe('shopify');
   });
 });
+
+// ── T2.7 · captura de la URL FINAL ───────────────────────────────────────────
+//
+// El fast path la trae GRATIS: `fetch` sigue las redirecciones (`redirect: 'follow'`) y
+// `response.url` es la URL de la respuesta final. El fixture que MUERDE es el `301` a la raíz
+// (el caso dr-squatch), NO una redirección benigna: con esta última, un ingester que siguiera
+// guardando la URL pedida como final pasaría el test igual.
+describe('fast path — URL final tras redirección (T2.7)', () => {
+  const REDIRECT_ROOT_URL = 'https://descatalogado.example/products/serum';
+
+  it('301 de /products/x → RAÍZ: el RawContent guarda la PEDIDA y la SERVIDA (las dos)', async () => {
+    server.use(
+      // El `.json` de Shopify también redirige (la tienda entera lo hace): 404 tras el salto.
+      http.get(`${REDIRECT_ROOT_URL}.json`, () => new HttpResponse(null, { status: 404 })),
+      http.get(REDIRECT_ROOT_URL, () =>
+        HttpResponse.text(null, {
+          status: 301,
+          headers: { location: 'https://descatalogado.example/' },
+        }),
+      ),
+      http.get('https://descatalogado.example/', () => HttpResponse.text(HTML_JSONLD_SIMPLE)),
+    );
+
+    const res = await ingester.ingest(REDIRECT_ROOT_URL);
+
+    expect(res.raw.url).toBe(REDIRECT_ROOT_URL); // la PEDIDA se conserva.
+    expect(res.raw.urlFinal).toBe('https://descatalogado.example/'); // la SERVIDA, capturada.
+    expect(RawContentSchema.safeParse(res.raw).success).toBe(true);
+  });
+
+  it('sin redirección: urlFinal == la pedida (no hay salto que ocultar)', async () => {
+    server.use(
+      http.get(SHOPIFY_JSON_URL, () => new HttpResponse(null, { status: 404 })),
+      http.get(SHOPIFY_URL, () => HttpResponse.text(HTML_JSONLD_SIMPLE)),
+    );
+    const res = await ingester.ingest(SHOPIFY_URL);
+    expect(res.raw.urlFinal).toBe(SHOPIFY_URL);
+  });
+
+  it('un fetch que NO puebla `res.url` → urlFinal `null`, NUNCA la pedida (dato no observado)', async () => {
+    // EL AGUJERO QUE ESTO TAPA: si un runtime/polyfill/mock deja `res.url` vacío DESPUÉS de haber
+    // seguido un 301 real, rellenar con la pedida AFIRMARÍA que no hubo redirección — el bug de
+    // T2.7 reintroducido por la única puerta que el contrato blindaba. El valor honesto es null.
+    // El fetch inyectado devuelve una Response cruda (sin `url`), que es exactamente ese caso.
+    const blindFetch: typeof globalThis.fetch = (input) => {
+      const url = input instanceof Request ? input.url : input.toString();
+      if (url.endsWith('.json')) return Promise.resolve(new Response(null, { status: 404 }));
+      // `new Response(...)` tiene `url === ''` (la URL solo la puebla la capa de red).
+      return Promise.resolve(new Response(HTML_JSONLD_SIMPLE, { status: 200 }));
+    };
+    const blindIngester = makeFastPathIngester({ fetch: blindFetch });
+
+    const res = await blindIngester.ingest(SHOPIFY_URL);
+
+    expect(res.raw.urlFinal).toBeNull();
+    // Y el markdown/producto SÍ se extrajeron: la ingesta funciona; lo único que falta es el dato.
+    expect(res.raw.product?.title).not.toBeUndefined();
+  });
+
+  it('si el HTML no se pudo traer, urlFinal queda `null` — NO se rellena con la pedida', async () => {
+    server.use(
+      http.get(SHOPIFY_JSON_URL, () => new HttpResponse(null, { status: 404 })),
+      http.get(SHOPIFY_URL, () => new HttpResponse(null, { status: 500 })),
+    );
+    const res = await ingester.ingest(SHOPIFY_URL);
+    // Sin fetch del HTML no sabemos qué sirvió la web: afirmar "no hubo redirección" sería
+    // fabricar el dato que esta tarea existe para no fabricar.
+    expect(res.raw.urlFinal).toBeNull();
+  });
+});

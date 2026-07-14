@@ -1,0 +1,12 @@
+== CASO POSITIVO (dr-squatch, producto descatalogado/dominio secuestrado)
+HTTP/2 301 
+location: https://www.dr-squatch.com/
+HTTP/2 200 
+  final=https://www.dr-squatch.com/ code=200 hops=1
+
+== CONTROL NEGATIVO (allbirds, SOLO http->https, mismo host, mismo path)
+HTTP/1.1 301 Moved Permanently
+Location: https://www.allbirds.com/products/mens-cruiser-shadow-blue-natural-white-sole
+HTTP/2 103 
+HTTP/2 200 
+  final=https://www.allbirds.com/products/mens-cruiser-shadow-blue-natural-white-sole code=200 hops=1

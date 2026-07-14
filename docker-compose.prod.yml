@@ -99,8 +99,22 @@ services:
       context: .
       dockerfile: apps/worker/Dockerfile
     restart: unless-stopped
+    # El worker EJECUTA los steps del pipeline ⇒ descifra credenciales (las API
+    # keys viven cifradas en `app_setting`) ⇒ necesita EXACTAMENTE las mismas
+    # variables de secreto que web. Mismo env_file, misma master key.
+    #
+    # BUG DE T0.13 (aflorado en el primer pipeline real, 2026-07-14): este bloque
+    # NO tenía ni `env_file` ni `APP_MASTER_KEY`, así que el worker era el ÚNICO
+    # servicio sin la clave. Y no se cazó al desplegar porque la clave se lee de
+    # forma PEREZOSA (`packages/core/src/secrets/env.ts`: memoizada, «solo revienta
+    # quien de verdad la necesita»): el worker arrancó sano, loggeó «worker ready»,
+    # pasó el healthcheck… y murió en el primer step que descifró algo. Un fallo
+    # latente que solo aflora en el primer uso REAL — el healthcheck no lo ve.
+    env_file:
+      - .env
     environment:
       DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      APP_MASTER_KEY: ${APP_MASTER_KEY:?APP_MASTER_KEY missing in .env}
       ASSETS_DIR: /data/assets
       LOG_LEVEL: ${LOG_LEVEL:-info}
     volumes:

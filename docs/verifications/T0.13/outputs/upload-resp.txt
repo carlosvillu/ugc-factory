@@ -1,0 +1,2 @@
+{"id":"01KXGHPREDMW4DSR0AGPM5WCR5","url":"/api/assets/01KXGHPREDMW4DSR0AGPM5WCR5/download"}
+(http 201)

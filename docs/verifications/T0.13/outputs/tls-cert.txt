@@ -1,0 +1,4 @@
+subject=CN = carlosvillu.dev
+issuer=C = US, O = Google Trust Services, CN = WE1
+notBefore=Jun 23 07:28:49 2026 GMT
+notAfter=Sep 21 08:26:33 2026 GMT

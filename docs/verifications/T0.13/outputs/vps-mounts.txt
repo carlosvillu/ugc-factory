@@ -1,0 +1,29 @@
+                "ugc-assets:/data/assets:rw"
+            ],
+            "ContainerIDFile": "",
+            "LogConfig": {
+--
+                "Destination": "/data/assets",
+                "Driver": "local",
+                "Mode": "rw",
+                "RW": true,
+--
+                "ASSETS_DIR=/data/assets",
+                "POSTGRES_USER=ugc",
+                "APP_MASTER_KEY=784d37b31f32726c14189785955b573b59f548740cd868e73a9852f2abefdeb9",
+                "TRUST_PROXY=1",
+--- worker ---
+                "ugc-assets:/data/assets:rw"
+            ],
+            "ContainerIDFile": "",
+            "LogConfig": {
+--
+                "Destination": "/data/assets",
+                "Driver": "local",
+                "Mode": "rw",
+                "RW": true,
+--
+                "ASSETS_DIR=/data/assets",
+                "LOG_LEVEL=info",
+                "POSTGRES_DB=ugc",
+                "POSTGRES_USER=ugc",

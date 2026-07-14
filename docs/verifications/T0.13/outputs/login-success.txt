@@ -1,0 +1,15 @@
+HTTP/2 200 
+date: Tue, 14 Jul 2026 14:39:13 GMT
+content-type: application/json
+alt-svc: h3=":443"; ma=86400
+set-cookie: ugc_session=1786631953935.LkoBm-jXvW8661hfNveeZ0o3Va_KzxF3IxEGQowBUwA; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=2592000
+vary: rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch
+via: 1.1 Caddy
+cf-cache-status: DYNAMIC
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=VtFPIX%2F0BqiRUqmu6ZrsiuUWLsWeggg12S9HvZV3g2ZWWrwWx5cCMct6kdSnxoIML7WNhXIwcs%2BJ19Cemic4bphKjJNH6OAp9CJ0EHbjlP%2FnbGdIB07UNWLoc9PPr7p9JoHNF4In"}]}
+nel: {"report_to":"cf-nel","success_fraction":0.0,"max_age":604800}
+server: cloudflare
+cf-ray: a1b1468cdf663429-MAD
+
+{"ok":true}
+(http 200)

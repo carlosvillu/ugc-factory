@@ -1,0 +1,32 @@
++  0.24s | id: 1
++  0.24s | event: snapshot
++  0.24s | data: {"event":"snapshot","runId":"01KXGH5QJ1KZ46CEVGVR3R20MR","steps":[{"id":"01KXGH5QJ0GY7SWBZQ6SC816C1","nodeKey":"demo.canvas.N0","status":"running","cost":null,"outputExcerpt":null,"dependsOn":[],"isCheckpoint":false,"costEstimated":null,"costActual":null,"durationMs":279,"errorExcerpt":null},{"id":"01KXGH5QJ1EM3430A3GB7TBM67","nodeKey":"demo.canvas.N1","status":"awaiting_deps","cost":null,"outputExcerpt":null,"dependsOn":["01KXGH5QJ0GY7SWBZQ6SC816C1"],"isCheckpoint":true,"costEstimated":null,"costActual":null,"durationMs":null,"errorExcerpt":null}]}
++  0.24s | 
++  6.01s | id: 2
++  6.01s | event: step_changed
++  6.01s | data: {"event":"step_changed","stepId":"01KXGH5QJ0GY7SWBZQ6SC816C1","nodeKey":"demo.canvas.N0","status":"succeeded","cost":0,"outputExcerpt":null,"dependsOn":[],"isCheckpoint":false,"costEstimated":null,"costActual":0,"durationMs":6020,"errorExcerpt":null}
++  6.01s | 
++  6.01s | id: 3
++  6.01s | event: step_changed
++  6.01s | data: {"event":"step_changed","stepId":"01KXGH5QJ1EM3430A3GB7TBM67","nodeKey":"demo.canvas.N1","status":"queued","cost":null,"outputExcerpt":null,"dependsOn":["01KXGH5QJ0GY7SWBZQ6SC816C1"],"isCheckpoint":true,"costEstimated":null,"costActual":null,"durationMs":null,"errorExcerpt":null}
++  6.01s | 
++  6.04s | id: 4
++  6.04s | event: step_changed
++  6.04s | data: {"event":"step_changed","stepId":"01KXGH5QJ0GY7SWBZQ6SC816C1","nodeKey":"demo.canvas.N0","status":"succeeded","cost":0,"outputExcerpt":null,"dependsOn":[],"isCheckpoint":false,"costEstimated":null,"costActual":0,"durationMs":6020,"errorExcerpt":null}
++  6.04s | 
++  6.04s | id: 5
++  6.04s | event: step_changed
++  6.04s | data: {"event":"step_changed","stepId":"01KXGH5QJ1EM3430A3GB7TBM67","nodeKey":"demo.canvas.N1","status":"running","cost":null,"outputExcerpt":null,"dependsOn":["01KXGH5QJ0GY7SWBZQ6SC816C1"],"isCheckpoint":true,"costEstimated":null,"costActual":null,"durationMs":16,"errorExcerpt":null}
++  6.04s | 
++  6.07s | id: 6
++  6.07s | event: step_changed
++  6.07s | data: {"event":"step_changed","stepId":"01KXGH5QJ0GY7SWBZQ6SC816C1","nodeKey":"demo.canvas.N0","status":"succeeded","cost":0,"outputExcerpt":null,"dependsOn":[],"isCheckpoint":false,"costEstimated":null,"costActual":0,"durationMs":6020,"errorExcerpt":null}
++  6.07s | 
++  6.07s | id: 7
++  6.07s | event: step_changed
++  6.07s | data: {"event":"step_changed","stepId":"01KXGH5QJ1EM3430A3GB7TBM67","nodeKey":"demo.canvas.N1","status":"waiting_approval","cost":0,"outputExcerpt":null,"dependsOn":["01KXGH5QJ0GY7SWBZQ6SC816C1"],"isCheckpoint":true,"costEstimated":null,"costActual":0,"durationMs":41,"errorExcerpt":null}
++  6.07s | 
++ 25.25s | id: 8
++ 25.25s | event: heartbeat
++ 25.25s | data: {"event":"heartbeat","ts":1784040079694}
++ 25.25s | 

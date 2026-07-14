@@ -1,0 +1,6 @@
+attempt 1 | XFF=9.9.9.1 -> HTTP 401
+attempt 2 | XFF=9.9.9.2 -> HTTP 401
+attempt 3 | XFF=9.9.9.3 -> HTTP 401
+attempt 4 | XFF=9.9.9.4 -> HTTP 401
+attempt 5 | XFF=9.9.9.5 -> HTTP 401
+attempt 6 | XFF=9.9.9.6 -> HTTP 429

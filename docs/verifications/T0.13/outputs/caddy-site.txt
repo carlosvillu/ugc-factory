@@ -1,0 +1,25 @@
+# UGC Factory — puerto 3100 según el registro de puertos de ~/AGENTS.md.
+# T0.13:
+#  - flush_interval -1 en la ruta SSE: sin él Caddy bufferiza y los eventos del
+#    canvas llegan a ráfagas (la ruta no lleva encode: comprimir un event-stream
+#    también bufferiza).
+#  - header_up X-Forwarded-For {client_ip}: SOBRESCRIBE el header con la IP del
+#    socket — deja de ser client-controllable (trust boundary del rate-limit del
+#    login; la app corre con TRUST_PROXY=1 y toma la última entrada). Es además
+#    el default de Caddy para clientes no confiables; explícito aquí porque es
+#    un control de seguridad, no una casualidad de defaults.
+ugc.carlosvillu.dev {
+	@sse path /api/runs/*/events
+	handle @sse {
+		reverse_proxy 127.0.0.1:3100 {
+			flush_interval -1
+			header_up X-Forwarded-For {client_ip}
+		}
+	}
+	handle {
+		encode gzip
+		reverse_proxy 127.0.0.1:3100 {
+			header_up X-Forwarded-For {client_ip}
+		}
+	}
+}

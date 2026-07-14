@@ -1,0 +1,5 @@
+16:39:48.3N | id: 1
+16:39:48.3N | event: snapshot
+16:39:48.3N | data: {"event":"snapshot","runId":"01KXGH393XW4TS6M6FBJ3ZDVB2","steps":[{"id":"01KXGH393VQVN6R1EJ1Y3H73A6","nodeKey":"demo.canvas.N1","status":"waiting_approval","cost":0,"outputExcerpt":null,"dependsOn":["01KXGH393VYYVQJ1XNZPP93P6V"],"isCheckpoint":true,"costEstimated":null,"costActual":0,"durationMs":6439,"errorExcerpt":null},{"id":"01KXGH393VYYVQJ1XNZPP93P6V","nodeKey":"demo.canvas.N0","status":"succeeded","cost":0,"outputExcerpt":null,"dependsOn":[],"isCheckpoint":false,"costEstimated":null,"costActual":0,"durationMs":8030,"errorExcerpt":null},{"id":"01KXGH393W7EMYJ790H7R5ATYA","nodeKey":"demo.canvas.N2","status":"awaiting_deps","cost":null,"outputExcerpt":null,"dependsOn":["01KXGH393VQVN6R1EJ1Y3H73A6"],"isCheckpoint":false,"costEstimated":null,"costActual":null,"durationMs":null,"errorExcerpt":null}]}
+16:39:48.3N | 
+16:40:02.3N | curl: (28) Operation timed out after 14004 milliseconds with 841 bytes received

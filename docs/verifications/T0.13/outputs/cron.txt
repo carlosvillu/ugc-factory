@@ -1,0 +1,1 @@
+15 4 * * * /home/developer/projects/ugc-factory/scripts/vps-backup-db.sh >> /home/developer/backups/ugc-factory/backup.log 2>&1

@@ -1,0 +1,4 @@
+NAME                     IMAGE                COMMAND                  SERVICE    CREATED          STATUS                    PORTS
+ugc-factory-postgres-1   postgres:16          "docker-entrypoint.s…"   postgres   4 hours ago      Up 4 hours (healthy)      5432/tcp
+ugc-factory-web-1        ugc-factory-web      "docker-entrypoint.s…"   web        30 minutes ago   Up 28 minutes (healthy)   127.0.0.1:3100->3000/tcp
+ugc-factory-worker-1     ugc-factory-worker   "docker-entrypoint.s…"   worker     30 minutes ago   Up 30 minutes             

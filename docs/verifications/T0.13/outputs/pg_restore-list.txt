@@ -1,0 +1,18 @@
+dump=/home/developer/backups/ugc-factory/ugc-20260714T145053Z.dump  size=124K
+--- pg_restore --list ---
+exit=0
+TABLE DATA entries: 30
+stderr (should be empty):
+--- sample tables ---
+3858; 0 16387 TABLE DATA drizzle __drizzle_migrations ugc
+3882; 0 16951 TABLE DATA pgboss bam ugc
+3883; 0 16984 TABLE DATA pgboss job_common ugc
+3887; 0 17082 TABLE DATA pgboss job_dependency ugc
+3879; 0 16898 TABLE DATA pgboss queue ugc
+3885; 0 17050 TABLE DATA pgboss queue_stats_20260714 ugc
+3886; 0 17066 TABLE DATA pgboss queue_stats_20260715 ugc
+3880; 0 16922 TABLE DATA pgboss schedule ugc
+3881; 0 16937 TABLE DATA pgboss subscription ugc
+3878; 0 16893 TABLE DATA pgboss version ugc
+3884; 0 17026 TABLE DATA pgboss warning ugc
+3871; 0 16747 TABLE DATA public ad_batch ugc

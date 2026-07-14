@@ -171,11 +171,11 @@ El desarrollo va por fases, tarea a tarea, con verificación observable en cada 
 
 <!-- STATUS-TABLE:BEGIN — generado por `pnpm readme:status`, no editar a mano -->
 
-**45 de 102 tareas cerradas (44 %).**
+**46 de 102 tareas cerradas (45 %).**
 
 | Fase                                     | Qué entrega                                                         | Estado         |
 | ---------------------------------------- | ------------------------------------------------------------------- | -------------- |
-| **F0** · Fundaciones                     | Orquestador DAG, auth, storage, colas, SSE, canvas, ledger de gasto | 🔨 14/15       |
+| **F0** · Fundaciones                     | Orquestador DAG, auth, storage, colas, SSE, canvas, ledger de gasto | ✅ Completa    |
 | **FD** · Design system                   | Design system: ~26 primitivas, dark/light, 4 acentos                | ✅ Completa    |
 | **F1** · Análisis                        | URL/texto → ProductBrief editable y aprobable en CP1                | ✅ Completa    |
 | **F1b** · Deuda de cierre de F1          | Deuda de cierre de F1                                               | ✅ Completa    |

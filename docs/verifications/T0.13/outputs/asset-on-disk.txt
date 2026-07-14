@@ -1,0 +1,2 @@
+-rw-r--r-- 1 node node 94 Jul 14 14:50 /data/assets/intake/01KXGHPREDMW4DSR0AGPM5WCR5.png
+2074f7dbbc731663a179fdabd635c146  /data/assets/intake/01KXGHPREDMW4DSR0AGPM5WCR5.png

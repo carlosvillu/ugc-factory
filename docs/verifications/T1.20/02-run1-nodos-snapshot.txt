@@ -1,0 +1,57 @@
+        - SvgRoot
+          - group "Edge from 01KXD1MM3B34QTXG5YY08PYK2P to 01KXD1MM3DNDPS8RQKAS5H7YVD" [ref=e27] clickable [cursor:pointer, onclick, tabindex]
+      - generic
+        - group [ref=e22] clickable [cursor:pointer, onclick, tabindex]
+          - article "N1 completado" [ref=e28]
+            - generic [ref=e31] clickable [onclick]
+            - sectionheader
+              - StaticText "N1"
+            - StaticText "Ingesta"
+            - StaticText "completado"
+            - paragraph
+              - StaticText "{\"raw\":{\"url\":\"https://relatio.chat/\",\"images\":[{\"alt\":null,\"url\":\"https://relatio.chat/videos/landing_relatio_poster.avif\"},{\"alt\":null,\"url\":\"https://relatio.chat/mobile-app.avif\"}],\"source\":\"url\",\""
+            - sectionfooter
+              - StaticText "17.2s"
+              - StaticText "$0.00"
+            - generic [ref=e32] clickable [onclick]
+        - group [ref=e23] clickable [cursor:pointer, onclick, tabindex]
+          - article "N2 completado" [ref=e29]
+            - generic [ref=e33] clickable [onclick]
+            - sectionheader
+              - StaticText "N2"
+            - StaticText "Análisis visual"
+            - StaticText "completado"
+            - paragraph
+              - StaticText "{\"status\":\"analyzed\",\"warnings\":[],\"visualAnalysis\":{\"images\":[],\"brand_style\":{\"palette\":[\"#4F46E5\",\"#FBBF24\",\"#1F2937\",\"#F3F4F6\",\"#FFFFFF\"],\"aesthetic\":\"Moderno y corporativo con acentos azul eléctr"
+            - sectionfooter
+              - StaticText "4.3s"
+              - StaticText "$0.00"
+            - generic [ref=e34] clickable [onclick]
+        - group [ref=e24] clickable [cursor:pointer, onclick, tabindex]
+          - article "N3 fallido" [ref=e30]
+            - generic [ref=e35] clickable [onclick]
+            - sectionheader
+              - StaticText "N3"
+            - StaticText "ProductBrief"
+            - StaticText "fallido"
+            - sectionfooter
+              - StaticText "58.3s"
+              - StaticText "$0.16"
+            - generic [ref=e36] clickable [onclick]
+  - image
+  - generic "Controles del lienzo"
+    - button "Acercar" [ref=e8]
+      - image
+    - button "Alejar" [ref=e9]
+      - image
+    - button "Ajustar a la vista" [ref=e10]
+      - image
+- complementary "Inspector del paso"
+  - StaticText "INSPECTOR"
+  - paragraph
+    - StaticText "Selecciona un nodo del grafo para ver su detalle."
+- status "conexión"
+  - StaticText "open"
+- button "Open Next.js Dev Tools" [expanded=false, ref=e21]
+  - image
+- alert

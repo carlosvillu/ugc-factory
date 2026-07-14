@@ -1,0 +1,17 @@
+  - StaticText "Progreso · 2/3"
+  - StaticText "$0.13"
+  - StaticText "Coste real"
+  - StaticText "$0.00"
+  - StaticText "Coste estimado"
+          - article "N1 completado" [ref=e28]
+              - StaticText "N1"
+            - StaticText "completado"
+              - StaticText "$0.00"
+          - article "N2 completado" [ref=e29]
+              - StaticText "N2"
+            - StaticText "completado"
+              - StaticText "$0.00"
+          - article "N3 fallido" [ref=e30]
+              - StaticText "N3"
+            - StaticText "fallido"
+              - StaticText "$0.13"

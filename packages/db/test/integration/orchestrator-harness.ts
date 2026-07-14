@@ -81,9 +81,15 @@ export class OrchestratorEnv {
     if (this.tdbInstance !== undefined) await this.tdbInstance.close();
   }
 
-  /** beforeEach: tablas limpias + sin jobs residuales de `step.execute`. */
+  /** beforeEach: tablas limpias + sin jobs residuales de `step.execute`.
+   *  `cost_entry` va en el TRUNCATE aunque NO tenga FK a step_run (el ledger es
+   *  append-only y no cuelga del ciclo de vida del run, a propósito): sin él, los cargos
+   *  de un test anterior sobrevivirían al reset y el rollup de T1.20 sumaría dinero de
+   *  otro test. Se lista explícitamente porque el CASCADE no lo alcanza. */
   async reset(): Promise<void> {
-    await this.tdb.pool.query('TRUNCATE step_run, pipeline_run, project, audit_log CASCADE');
+    await this.tdb.pool.query(
+      'TRUNCATE step_run, pipeline_run, project, audit_log, cost_entry CASCADE',
+    );
     await this.tdb.pool.query(`DELETE FROM pgboss.job WHERE name = $1`, [stepExecuteJob.name]);
   }
 

@@ -18,13 +18,16 @@ import {
 import { findExpiredRunningStepIds, makeWithTransaction } from '../../src/index';
 import { stepRun } from '../../src/schema/pipeline';
 import { OrchestratorEnv } from './orchestrator-harness';
+import { makeTestLogger } from '@ugc/test-utils';
 
 const env = new OrchestratorEnv('db:timeout-sweep');
 const tdb = () => env.tdb;
 const activeBoss = () => env.activeBoss();
 const seed = (steps: Parameters<OrchestratorEnv['seed']>[0]) => env.seed(steps);
 const countJobs = (singletonKey?: string) => env.countJobs(singletonKey);
-const deps = () => ({ withTransaction: makeWithTransaction(tdb().db, activeBoss()) });
+const deps = () => ({
+  withTransaction: makeWithTransaction(tdb().db, activeBoss(), makeTestLogger()),
+});
 const silentLogger = makeLogger({ name: 'worker', level: 'silent' });
 const sweepDeps = () => ({
   ...deps(),

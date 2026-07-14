@@ -11,6 +11,7 @@ import {
   type TransitionDeps,
 } from './transition';
 import type { StepPatch, StepRow, TxStores } from './ports';
+import type { StepEvent, StepStatus } from './transitions';
 
 interface EnqueuedJob {
   name: string;
@@ -29,6 +30,11 @@ function makeWorld(rows: StepRow[]) {
   const steps = new Map<string, StoredStep>(rows.map((r) => [r.id, { ...r }]));
   const enqueued: EnqueuedJob[] = [];
   const notified: string[] = [];
+  // T1.20: qué steps/runs pidió recomputar la transición (el puerto CostStore). Aquí solo se
+  // registra la LLAMADA — el SQL del rollup se prueba contra Postgres real (db/test/integration/
+  // cost-rollup.test.ts). Lo que este nivel fija es el GATE: qué eventos liquidan el coste.
+  const rolledSteps: string[] = [];
+  const rolledRuns: string[] = [];
 
   const deps: TransitionDeps = {
     withTransaction: async (fn) => {
@@ -36,6 +42,8 @@ function makeWorld(rows: StepRow[]) {
       const snapshot = new Map([...steps].map(([k, v]) => [k, { ...v }]));
       const enqLen = enqueued.length;
       const notLen = notified.length;
+      const rolledStepsLen = rolledSteps.length;
+      const rolledRunsLen = rolledRuns.length;
       // Fakes SÍNCRONOS envueltos en Promise.resolve: no hay I/O, así que no hay
       // nada que `await` (evita require-await sin desactivarlo). Cumplen la firma
       // async de los puertos igual.
@@ -107,6 +115,16 @@ function makeWorld(rows: StepRow[]) {
         audit: {
           write: () => Promise.reject(new Error('audit.write no debe usarse en transition()')),
         },
+        costs: {
+          rollupStep: (stepId) => {
+            rolledSteps.push(stepId);
+            return Promise.resolve();
+          },
+          rollupRun: (runId) => {
+            rolledRuns.push(runId);
+            return Promise.resolve();
+          },
+        },
       };
       try {
         return await fn(stores);
@@ -116,12 +134,14 @@ function makeWorld(rows: StepRow[]) {
         for (const [k, v] of snapshot) steps.set(k, v);
         enqueued.length = enqLen;
         notified.length = notLen;
+        rolledSteps.length = rolledStepsLen;
+        rolledRuns.length = rolledRunsLen;
         throw err;
       }
     },
   };
 
-  return { deps, steps, enqueued, notified };
+  return { deps, steps, enqueued, notified, rolledSteps, rolledRuns };
 }
 
 function step(overrides: Partial<StepRow> & Pick<StepRow, 'id'>): StepRow {
@@ -227,5 +247,59 @@ describe('transition(): transición ILEGAL → throw SIN efectos (rollback)', ()
     const w = makeWorld([]);
     await expect(transition(w.deps, 'missing', 'start')).rejects.toBeInstanceOf(StepNotFoundError);
     expect(w.notified).toHaveLength(0);
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────────────────
+// T1.20 — EL GATE DEL ROLLUP DEL COSTE: qué eventos LIQUIDAN el dinero del step.
+//
+// El fix de T1.20 no es "llamar al rollup en el fail": es meterlo en el EMBUDO ÚNICO
+// (`applyTransition`) por el que pasan TODOS los cierres, para que ningún camino futuro
+// pueda olvidarse. Esta tabla es esa garantía, machine-checked: recorre el conjunto COMPLETO
+// de eventos de §7.1 desde el estado en que cada uno es legal y afirma si el rollup corrió.
+// Un evento NUEVO en la máquina de estados rompe la exhaustividad de este mapa y obliga a
+// decidir, conscientemente, si liquida coste o no.
+// ─────────────────────────────────────────────────────────────────────────────────────────
+describe('transition(): rollup del coste real (T1.20) — todos los caminos de cierre', () => {
+  // [evento, estado desde el que es legal, ¿debe liquidar el coste?]
+  const EVENTS: [StepEvent, StepStatus, boolean][] = [
+    // NO liquidan: el trabajo no ha terminado (o se está reabriendo).
+    ['deps_satisfied', 'awaiting_deps', false],
+    ['enqueue', 'pending', false],
+    ['start', 'queued', false],
+    ['retry', 'failed', false], // REABRE el trabajo; el siguiente cierre recomputará
+    // Liquidan: el gasto del step ya está en el ledger y el step no vuelve a trabajar…
+    ['succeed', 'running', true],
+    ['fail', 'running', true], // ← EL BUG DE T1.20: gastó y murió, y la columna decía NULL
+    ['expire', 'running', true], // sweeper (T0.9)
+    ['skip_inapplicable', 'running', true], // auto-skip (T1.10a)
+    ['cancel', 'running', true],
+    ['supersede', 'running', true],
+    ['approve', 'waiting_approval', true],
+    ['approve_edited', 'waiting_approval', true],
+    ['reject', 'waiting_approval', true],
+    ['skip', 'pending', true],
+    // …Y el que NO es terminal pero SÍ liquida: un checkpoint real hace su trabajo y LO PAGA
+    // antes de pausar. Si no se liquidara aquí, el nodo mostraría $0,00 durante toda la
+    // ventana de aprobación (lo que tarde el humano) con el dinero ya gastado.
+    ['reach_checkpoint', 'running', true],
+  ];
+
+  for (const [event, from, settles] of EVENTS) {
+    it(`${from} --(${event})--> ${settles ? 'RECOMPUTA' : 'no toca'} el coste`, async () => {
+      const w = makeWorld([step({ id: 's1', status: from, maxRetries: 5 })]);
+      await transition(w.deps, 's1', event);
+      expect(w.rolledSteps).toEqual(settles ? ['s1'] : []);
+      // El AGREGADO del run se recomputa en el mismo sitio y en la misma tx: si el step
+      // liquida, `pipeline_run.total_cost_actual` también (T1.20).
+      expect(w.rolledRuns).toEqual(settles ? ['run1'] : []);
+    });
+  }
+
+  it('una transición ILEGAL no recomputa nada (rollback total: tampoco el coste)', async () => {
+    const w = makeWorld([step({ id: 's1', status: 'succeeded' })]);
+    await expect(transition(w.deps, 's1', 'fail')).rejects.toBeInstanceOf(IllegalTransitionError);
+    expect(w.rolledSteps).toHaveLength(0);
+    expect(w.rolledRuns).toHaveLength(0);
   });
 });

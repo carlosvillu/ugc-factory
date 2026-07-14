@@ -1,0 +1,21 @@
+    check     
+--------------
+ CUADRE FINAL
+(1 row)
+
+           run_id           | node_key |  status   | columna | ledger | cuadra 
+----------------------------+----------+-----------+---------+--------+--------
+ 01KXD1MM3ENG6QNZ43YY7M1P6V | N1       | succeeded |       0 |      0 | t
+ 01KXD1MM3ENG6QNZ43YY7M1P6V | N2       | succeeded |       0 |      0 | t
+ 01KXD1MM3ENG6QNZ43YY7M1P6V | N3       | failed    |      16 |     16 | t
+ 01KXD1SPQ8EYKDZ4QXWD3WWX1Z | N1       | succeeded |       0 |      0 | t
+ 01KXD1SPQ8EYKDZ4QXWD3WWX1Z | N2       | succeeded |       0 |      0 | t
+ 01KXD1SPQ8EYKDZ4QXWD3WWX1Z | N3       | failed    |      13 |     13 | t
+(6 rows)
+
+             id             | columna_run | suma_nodos | ledger 
+----------------------------+-------------+------------+--------
+ 01KXD1MM3ENG6QNZ43YY7M1P6V |          16 |         16 |     16
+ 01KXD1SPQ8EYKDZ4QXWD3WWX1Z |          13 |         13 |     13
+(2 rows)
+

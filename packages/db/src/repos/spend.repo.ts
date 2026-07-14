@@ -6,7 +6,7 @@
 import { eq, sql } from 'drizzle-orm';
 import type { Db } from '../client';
 import { budget, costEntry, type Budget, type CostEntry } from '../schema/ops';
-import { stepRun } from '../schema/pipeline';
+import { pipelineRun, stepRun } from '../schema/pipeline';
 
 /** Datos de un cargo. `amountCents`/`quantity`/`unit` describen la facturación;
  *  las refs son opcionales (en F0 casi siempre ausentes). `occurredAt` default
@@ -84,6 +84,48 @@ export async function rollupStepCost(db: Db, stepRunId: string): Promise<void> {
       )`,
     })
     .where(eq(stepRun.id, stepRunId));
+}
+
+/**
+ * ROLLUP de `pipeline_run.total_cost_actual` desde el ledger (T1.20). El AGREGADO del run,
+ * hermano del rollup por step: misma disciplina (RECOMPUTA, no acumula) y mismo momento (la
+ * transición que liquida un step del run, vía el puerto `CostStore`).
+ *
+ * SE AGREGA DEL LEDGER, NO SUMANDO `step_run.cost_actual`. Es deliberado: sumar la columna
+ * de los steps haría que el agregado heredase cualquier mentira de la proyección (que es
+ * justo el bug que T1.20 arregla), y encima dependería del orden en que se cerraron. El
+ * ledger es la verdad; los dos rollups la leen del mismo sitio, así que cuadran al céntimo
+ * por construcción, no por coincidencia.
+ *
+ * Se suma por `run_id` recorriendo `step_run` (el `cost_entry` guarda `step_run_id`, no
+ * `run_id`). Un cargo sin step (`step_run_id` NULL — hoy no los hay) NO cuenta para ningún
+ * run: no pertenece a ninguno.
+ *
+ * DEDUPLICADO POR TRANSACCIÓN en el adaptador (cost-store.ts §2).
+ */
+export async function rollupRunCost(db: Db, runId: string): Promise<void> {
+  await db
+    .update(pipelineRun)
+    .set({
+      // `coalesce(..., 0)`: un run sin cargos queda en 0 ("corrió y no gastó"), no en NULL.
+      // Coherente con `rollupStepCost`.
+      //
+      // El `::int` NO es "seguro" en el mismo sentido que el de un step: aquí se suma el gasto
+      // de TODOS los steps del run, y un lote de F2 (decenas de generaciones de fal.ai) tiene
+      // mucho menos margen contra el techo de int4 (~$21,4 M en céntimos) que un solo step. Se
+      // castea igualmente porque `total_cost_actual` ES una columna `integer`: sin el cast, el
+      // `sum()` (que Postgres agrega en bigint) ni siquiera encajaría. El día que el techo
+      // apriete, lo que hay que cambiar es el TIPO de la columna — y eso es una migración, no un
+      // cast. Mientras tanto, un overflow aquí NO tumba nada: el rollup corre dentro de un
+      // savepoint (cost-store.ts) y su fallo solo deja la columna sin actualizar, con traza.
+      totalCostActual: sql<number>`(
+        select coalesce(sum(${costEntry.amountCents}), 0)::int
+        from ${costEntry}
+        join ${stepRun} on ${stepRun.id} = ${costEntry.stepRunId}
+        where ${stepRun.runId} = ${runId}
+      )`,
+    })
+    .where(eq(pipelineRun.id, runId));
 }
 
 /** Total gastado por PROVEEDOR (con nº de filas y suma de cantidad). Ordenado por

@@ -51,7 +51,7 @@ export const POST = withAuth(
     async ({ req, params }) => {
       const { config } = await readOptionalConfig(req);
       const boss = await getBoss();
-      const withTransaction = makeWithTransaction(getDb(), boss);
+      const withTransaction = makeWithTransaction(getDb(), boss, getRequestLogger());
       try {
         await retryStep({ withTransaction }, params.id, { config });
       } catch (err) {

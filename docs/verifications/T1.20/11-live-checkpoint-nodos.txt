@@ -1,0 +1,9 @@
+  - StaticText "Progreso · 0/2"
+  - StaticText "$0.00"
+  - StaticText "Coste real"
+  - StaticText "$0.00"
+          - article "demo.sleep.N0 esperando aprobación" [ref=e24]
+            - StaticText "esperando aprobación"
+              - StaticText "$0.00"
+          - article "demo.sleep.N1 esperando deps" [ref=e25]
+            - StaticText "esperando deps"

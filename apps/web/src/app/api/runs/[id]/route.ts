@@ -29,12 +29,14 @@ export const GET = withAuth(
       const [run, costActualCents] = await Promise.all([
         findRun(db, params.id),
         // EL COSTE HONESTO DEL RUN, DEL LEDGER (T1.17). Antes la cabecera del canvas lo
-        // calculaba en el cliente sumando `step_run.cost_actual` de los steps del SSE… que es
-        // NULL en un step que FALLÓ habiendo gastado (`rollupStepCost` solo corre al cerrar bien
-        // un step). Resultado: los dos runs que murieron en N3 gastando 16 y 13 céntimos de
-        // Sonnet mostraban **«Coste real: $0.00»** al abrirlos. Ahora el número lo computa el
-        // servidor desde `cost_entry` —la misma función que usa el listado (`runLedgerCost`)—,
-        // así que las dos pantallas no pueden contradecirse.
+        // calculaba en el cliente sumando `step_run.cost_actual` de los steps del SSE… que
+        // ENTONCES era NULL en un step que FALLÓ habiendo gastado (el rollup de T1.10b solo
+        // corría al cerrar bien un step). Resultado: los dos runs que murieron en N3 gastando 16
+        // y 13 céntimos de Sonnet mostraban **«Coste real: $0.00»** al abrirlos. T1.20 arregló
+        // esa columna en origen, pero el número lo sigue computando el SERVIDOR desde
+        // `cost_entry` —la misma función que usa el listado (`runLedgerCost`)—: el ledger es el
+        // original y la columna una proyección suya, y así las dos pantallas no pueden
+        // contradecirse ni aunque la proyección volviera a desviarse.
         runLedgerCost(db, params.id),
       ]);
       if (run === undefined) throw new AppError('not_found', 'run no encontrado');

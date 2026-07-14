@@ -4,7 +4,7 @@
 import { makeLogger } from '@ugc/core/observability';
 import type { StepExecutor, TransitionDeps } from '@ugc/core/orchestrator';
 import { stepExecuteJob } from '@ugc/core/jobs';
-import { makeProject } from '@ugc/test-utils';
+import { makeProject, makeTestLogger } from '@ugc/test-utils';
 import type { TestDatabase } from '@ugc/test-utils';
 import { createDbPool, ensureQueue, makeWithTransaction } from '@ugc/db';
 import { project } from '@ugc/db/schema';
@@ -87,7 +87,7 @@ export async function startWorkerWith(
   await boss.start();
   await ensureQueue(boss, stepExecuteJob);
   const { db, pool } = createDbPool(tdb.connectionString);
-  const deps: TransitionDeps = { withTransaction: makeWithTransaction(db, boss) };
+  const deps: TransitionDeps = { withTransaction: makeWithTransaction(db, boss, makeTestLogger()) };
   await registerStepConsumer({
     boss,
     db,

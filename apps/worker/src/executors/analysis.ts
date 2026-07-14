@@ -165,8 +165,10 @@ export function makeN1Executor(deps: AnalysisExecutorDeps): StepExecutor {
         jinaBaseUrl: deps.jinaBaseUrl,
       },
       // `stepRunId` (T1.10b): el `cost_entry` de los créditos de Firecrawl se ATRIBUYE a este
-      // step, para que el rollup (`rollupStepCost`, en el consumer) pueda escribir
-      // `step_run.cost_actual` y el KPI del canvas deje de mostrar $0,00 con dinero gastado.
+      // step, para que el rollup pueda escribir `step_run.cost_actual` y el nodo del canvas deje
+      // de mostrar $0,00 con dinero gastado. Desde T1.20 ese rollup lo hace la TRANSICIÓN de
+      // cierre (core, `applyTransition` → puerto `CostStore`), no el consumer: así también se
+      // recomputa cuando el step MUERE habiendo gastado, que es justo cuando más importa.
       { projectId: cfg.projectId, url: cfg.url, stepRunId: stepId },
     );
 

@@ -74,17 +74,22 @@ export const POST = withAuth(
       const boss = await getBoss();
 
       try {
-        await withDomainTransaction(db, boss, async ({ db: tx, withTransaction }) => {
-          // El artefacto se lee ANTES de aprobar: `approveStep` no lo devuelve, y tras la
-          // transición el `output_refs` es el mismo (aprobar sin editar no lo toca).
-          const step = await findStep(tx, params.id);
-          await approveStep({ withTransaction }, params.id);
-          // No-op si el step no es CP1 (se discrimina por SCHEMA del artefacto).
-          await approveBriefForStep(tx, step?.outputRefs);
-          // No-op si el body no trajo decisión. Dentro de la tx ⇒ si la transición hubiera
-          // fallado (409: el step ya no está en `waiting_approval`), no queda fila de decisión.
-          await persistCheckpointDecision(tx, params.id, body.decision);
-        });
+        await withDomainTransaction(
+          db,
+          boss,
+          getRequestLogger(),
+          async ({ db: tx, withTransaction }) => {
+            // El artefacto se lee ANTES de aprobar: `approveStep` no lo devuelve, y tras la
+            // transición el `output_refs` es el mismo (aprobar sin editar no lo toca).
+            const step = await findStep(tx, params.id);
+            await approveStep({ withTransaction }, params.id);
+            // No-op si el step no es CP1 (se discrimina por SCHEMA del artefacto).
+            await approveBriefForStep(tx, step?.outputRefs);
+            // No-op si el body no trajo decisión. Dentro de la tx ⇒ si la transición hubiera
+            // fallado (409: el step ya no está en `waiting_approval`), no queda fila de decisión.
+            await persistCheckpointDecision(tx, params.id, body.decision);
+          },
+        );
       } catch (err) {
         throw toCheckpointError(err);
       }

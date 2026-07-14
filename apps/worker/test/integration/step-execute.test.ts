@@ -12,7 +12,7 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from
 import { makeLogger } from '@ugc/core/observability';
 import { createRun, demoRunDefinition } from '@ugc/core/orchestrator';
 import type { StepExecutor, TransitionDeps } from '@ugc/core/orchestrator';
-import { createTestDatabase } from '@ugc/test-utils';
+import { createTestDatabase, makeTestLogger } from '@ugc/test-utils';
 import type { TestDatabase } from '@ugc/test-utils';
 import { stepExecuteJob } from '@ugc/core/jobs';
 import { PgBoss } from 'pg-boss';
@@ -144,7 +144,7 @@ async function makeDeps(): Promise<{
   await ensureQueue(enqueueBoss, stepExecuteJob);
   const { db, pool } = createDbPool(tdb.connectionString);
   return {
-    deps: { withTransaction: makeWithTransaction(db, enqueueBoss) },
+    deps: { withTransaction: makeWithTransaction(db, enqueueBoss, makeTestLogger()) },
     enqueueBoss,
     cleanup: async () => {
       await stopBossAndWait(enqueueBoss);
@@ -454,7 +454,9 @@ describe('consumer: éxito del executor + succeed que falla (FIX 1)', () => {
     // Deps reales, pero interceptamos el `succeed`: la primera vez que una
     // transición mueve un step a `succeeded`, lanzamos un error de INFRA simulado
     // (no IllegalTransitionError). El resto de transiciones (start) pasan normales.
-    const realDeps: TransitionDeps = { withTransaction: makeWithTransaction(db, workerBoss) };
+    const realDeps: TransitionDeps = {
+      withTransaction: makeWithTransaction(db, workerBoss, makeTestLogger()),
+    };
     const wrappedDeps: TransitionDeps = {
       withTransaction: (fn) =>
         realDeps.withTransaction(async (stores) => {
@@ -486,7 +488,9 @@ describe('consumer: éxito del executor + succeed que falla (FIX 1)', () => {
 
     // Encolamos el step vía createRun (root queued + job) con deps SIN interceptar
     // (el encolado del root no toca `succeed`).
-    const enqueueDeps: TransitionDeps = { withTransaction: makeWithTransaction(db, workerBoss) };
+    const enqueueDeps: TransitionDeps = {
+      withTransaction: makeWithTransaction(db, workerBoss, makeTestLogger()),
+    };
     try {
       const projectId = await seedProject(tdb);
       const { runId } = await createRun(enqueueDeps, {

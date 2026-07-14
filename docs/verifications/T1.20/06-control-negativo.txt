@@ -1,0 +1,105 @@
+### CONTROL NEGATIVO A — settlesCost degradado a solo 'succeed'
+--- diff aplicado ---
++  return event === 'succeed'; // CONTROL NEGATIVO T1.20 (temporal)
+
+--- pnpm --filter @ugc/core test ---
+ FAIL  |core:unit| src/orchestrator/transition.test.ts > transition(): rollup del coste real (T1.20) — todos los caminos de cierre > running --(supersede)--> RECOMPUTA el coste
+ FAIL  |core:unit| src/orchestrator/transition.test.ts > transition(): rollup del coste real (T1.20) — todos los caminos de cierre > waiting_approval --(approve)--> RECOMPUTA el coste
+ FAIL  |core:unit| src/orchestrator/transition.test.ts > transition(): rollup del coste real (T1.20) — todos los caminos de cierre > waiting_approval --(approve_edited)--> RECOMPUTA el coste
+ FAIL  |core:unit| src/orchestrator/transition.test.ts > transition(): rollup del coste real (T1.20) — todos los caminos de cierre > waiting_approval --(reject)--> RECOMPUTA el coste
+ FAIL  |core:unit| src/orchestrator/transition.test.ts > transition(): rollup del coste real (T1.20) — todos los caminos de cierre > pending --(skip)--> RECOMPUTA el coste
+ FAIL  |core:unit| src/orchestrator/transition.test.ts > transition(): rollup del coste real (T1.20) — todos los caminos de cierre > running --(reach_checkpoint)--> RECOMPUTA el coste
+AssertionError: expected [] to deeply equal [ 's1' ]
+
+- Expected
++ Received
+
+- [
+-   "s1",
+- ]
++ []
+
+ ❯ src/orchestrator/transition.test.ts:292:29
+    290|       const w = makeWorld([step({ id: 's1', status: from, maxRetries: …
+    291|       await transition(w.deps, 's1', event);
+    292|       expect(w.rolledSteps).toEqual(settles ? ['s1'] : []);
+       |                             ^
+    293|       // El AGREGADO del run se recomputa en el mismo sitio y en la mi…
+    294|       // liquida, `pipeline_run.total_cost_actual` también (T1.20).
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/10]⎯
+
+
+ Test Files  1 failed | 40 passed (41)
+      Tests  10 failed | 695 passed (705)
+   Start at  08:50:55
+   Duration  3.47s (transform 3.24s, setup 427ms, import 21.22s, tests 1.94s, environment 2ms)
+
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/core:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @ugc/core@0.0.0 test: `vitest run`
+Exit status 1
+
+--- pnpm --filter @ugc/db test (integración, Postgres real) ---
+ Test Files  2 passed (2)
+      Tests  17 passed (17)
+failed to load config from /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/db/packages/db/vitest.config.integration.ts
+
+⎯⎯⎯⎯⎯⎯⎯ Startup Error ⎯⎯⎯⎯⎯⎯⎯⎯
+Error: Build failed with 1 error:
+
+[31m[UNRESOLVED_ENTRY] [0mCannot resolve entry module packages/db/packages/db/vitest.config.integration.ts.
+
+    at aggregateBindingErrorsIntoJsError (file:///Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/rolldown@1.1.4/node_modules/rolldown/dist/shared/error-BlQ0-ek7.mjs:48:18)
+    at unwrapBindingResult (file:///Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/rolldown@1.1.4/node_modules/rolldown/dist/shared/error-BlQ0-ek7.mjs:18:128)
+    at #build (file:///Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/rolldown@1.1.4/node_modules/rolldown/dist/shared/rolldown-build-aV0QeeTW.mjs:3256:34)
+    at async bundleConfigFile (file:///Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/vite@8.1.3_@types+node@24.13.2_esbuild@0.28.1_jiti@2.7.0_tsx@4.23.0_yaml@2.9.0/node_modules/vite/dist/node/chunks/node.js:35685:17)
+    at async bundleAndLoadConfigFile (file:///Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/vite@8.1.3_@types+node@24.13.2_esbuild@0.28.1_jiti@2.7.0_tsx@4.23.0_yaml@2.9.0/node_modules/vite/dist/node/chunks/node.js:35593:18)
+    at async loadConfigFromFile (file:///Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/vite@8.1.3_@types+node@24.13.2_esbuild@0.28.1_jiti@2.7.0_tsx@4.23.0_yaml@2.9.0/node_modules/vite/dist/node/chunks/node.js:35554:42)
+    at async resolveConfig (file:///Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/vite@8.1.3_@types+node@24.13.2_esbuild@0.28.1_jiti@2.7.0_tsx@4.23.0_yaml@2.9.0/node_modules/vite/dist/node/chunks/node.js:35170:22)
+    at async _createServer (file:///Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/vite@8.1.3_@types+node@24.13.2_esbuild@0.28.1_jiti@2.7.0_tsx@4.23.0_yaml@2.9.0/node_modules/vite/dist/node/chunks/node.js:25332:65)
+    at async createViteServer (file:///Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/vitest@4.1.10_@types+node@24.13.2_jsdom@29.1.1_msw@2.14.6_@types+node@24.13.2_typescrip_c2550d877087472fe3cb6e124691187c/node_modules/vitest/dist/chunks/cli-api.BK8pd4xc.js:8835:17)
+    at async createVitest (file:///Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/vitest@4.1.10_@types+node@24.13.2_jsdom@29.1.1_msw@2.14.6_@types+node@24.13.2_typescrip_c2550d877087472fe3cb6e124691187c/node_modules/vitest/dist/chunks/cli-api.BK8pd4xc.js:14221:18) {
+  errors: [Getter/Setter]
+}
+
+
+
+--- test:integration (db:integration, Postgres real via Testcontainers) con el break ---
+     × un step que FALLA habiendo gastado deja `cost_actual` con el dinero REAL (no NULL) 105ms
+     × `expire` (→ expired) recomputa cost_actual desde el ledger 45ms
+     × `cancel` (→ cancelled) recomputa cost_actual desde el ledger 22ms
+     × `supersede` (→ superseded) recomputa cost_actual desde el ledger 22ms
+     × `skip_inapplicable` (→ skipped) recomputa cost_actual desde el ledger 44ms
+     × `reach_checkpoint` (→ waiting_approval) recomputa cost_actual desde el ledger 37ms
+     × `approve` / `reject` de un checkpoint también liquidan (el gasto ya estaba hecho) 85ms
+     × el rollup RECOMPUTA (no acumula): dos cierres seguidos no duplican el gasto 46ms
+     × LA CLÁUSULA DE LA VERIFICACIÓN: la suma de los nodos cuadra con el ledger AL CÉNTIMO 97ms
+     × un `cancelRun` de N steps recomputa el agregado del run UNA sola vez (dedup por tx) 94ms
+     × el rollup que falla DEJA TRAZA estructurada (un fallo tragado sin señal es el bug otra vez) 124ms
+     × un step CHECKPOINT que gasta también hace rollup: N3 paga Y pausa 597ms
+ FAIL  |web:integration| test/integration/server/sse-contract.test.ts [ apps/web/test/integration/server/sse-contract.test.ts ]
+ FAIL  |web:integration| test/integration/server/sse-contract.test.ts [ apps/web/test/integration/server/sse-contract.test.ts ]
+ FAIL  |worker:integration| test/integration/checkpoint-artifact.test.ts > rollup del coste real (T1.10b): cost_entry → step_run.cost_actual > un step CHECKPOINT que gasta también hace rollup: N3 paga Y pausa
+ FAIL  |db:integration| test/integration/cost-rollup.test.ts > rollup del coste en la transición — TODOS los caminos de cierre (T1.20) > un step que FALLA habiendo gastado deja `cost_actual` con el dinero REAL (no NULL)
+ FAIL  |db:integration| test/integration/cost-rollup.test.ts > rollup del coste en la transición — TODOS los caminos de cierre (T1.20) > `expire` (→ expired) recomputa cost_actual desde el ledger
+ FAIL  |db:integration| test/integration/cost-rollup.test.ts > rollup del coste en la transición — TODOS los caminos de cierre (T1.20) > `cancel` (→ cancelled) recomputa cost_actual desde el ledger
+ FAIL  |db:integration| test/integration/cost-rollup.test.ts > rollup del coste en la transición — TODOS los caminos de cierre (T1.20) > `supersede` (→ superseded) recomputa cost_actual desde el ledger
+ FAIL  |db:integration| test/integration/cost-rollup.test.ts > rollup del coste en la transición — TODOS los caminos de cierre (T1.20) > `skip_inapplicable` (→ skipped) recomputa cost_actual desde el ledger
+ FAIL  |db:integration| test/integration/cost-rollup.test.ts > rollup del coste en la transición — TODOS los caminos de cierre (T1.20) > `reach_checkpoint` (→ waiting_approval) recomputa cost_actual desde el ledger
+ FAIL  |db:integration| test/integration/cost-rollup.test.ts > rollup del coste en la transición — TODOS los caminos de cierre (T1.20) > `approve` / `reject` de un checkpoint también liquidan (el gasto ya estaba hecho)
+ FAIL  |db:integration| test/integration/cost-rollup.test.ts > rollup del coste en la transición — TODOS los caminos de cierre (T1.20) > el rollup RECOMPUTA (no acumula): dos cierres seguidos no duplican el gasto
+ FAIL  |db:integration| test/integration/cost-rollup.test.ts > rollup del coste en la transición — TODOS los caminos de cierre (T1.20) > LA CLÁUSULA DE LA VERIFICACIÓN: la suma de los nodos cuadra con el ledger AL CÉNTIMO
+ FAIL  |db:integration| test/integration/cost-rollup.test.ts > rollup del coste en la transición — TODOS los caminos de cierre (T1.20) > un `cancelRun` de N steps recomputa el agregado del run UNA sola vez (dedup por tx)
+ FAIL  |db:integration| test/integration/cost-rollup.test.ts > rollup del coste en la transición — TODOS los caminos de cierre (T1.20) > el rollup que falla DEJA TRAZA estructurada (un fallo tragado sin señal es el bug otra vez)
+ Test Files  3 failed | 39 passed (42)
+      Tests  12 failed | 302 passed | 2 skipped (316)
+
+### CONTROL NEGATIVO B — savepoint eliminado de bestEffort (solo try/catch JS)
+     × un rollup que REVIENTA no tumba la transición (el savepoint la salva): el step CIERRA igual 75ms
+     × el rollup que falla DEJA TRAZA estructurada (un fallo tragado sin señal es el bug otra vez) 39ms
+ FAIL  |web:integration| test/integration/server/sse-contract.test.ts [ apps/web/test/integration/server/sse-contract.test.ts ]
+ FAIL  |web:integration| test/integration/server/sse-contract.test.ts [ apps/web/test/integration/server/sse-contract.test.ts ]
+ FAIL  |db:integration| test/integration/cost-rollup.test.ts > rollup del coste en la transición — TODOS los caminos de cierre (T1.20) > un rollup que REVIENTA no tumba la transición (el savepoint la salva): el step CIERRA igual
+ FAIL  |db:integration| test/integration/cost-rollup.test.ts > rollup del coste en la transición — TODOS los caminos de cierre (T1.20) > el rollup que falla DEJA TRAZA estructurada (un fallo tragado sin señal es el bug otra vez)
+ Test Files  2 failed | 40 passed (42)
+      Tests  2 failed | 312 passed | 2 skipped (316)

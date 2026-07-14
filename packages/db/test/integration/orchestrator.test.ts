@@ -11,6 +11,7 @@ import { transition, IllegalTransitionError, StepNotFoundError } from '@ugc/core
 import { makeWithTransaction } from '../../src/index';
 import { stepRun } from '../../src/schema/pipeline';
 import { OrchestratorEnv } from './orchestrator-harness';
+import { makeTestLogger } from '@ugc/test-utils';
 
 // Harness compartido (arranque boss + Testcontainers, limpieza, seed). Los
 // helpers ligados al entorno se aliasan para no reescribir cada test.
@@ -28,7 +29,7 @@ describe('transition() contra la BD real — Verificación T0.7a', () => {
   it('secuencia LEGAL: pending→queued→running→succeeded deja estados y timestamps esperados', async () => {
     const { stepIds } = await seed([{ status: 'pending', nodeKey: 'N0' }]);
     const id = stepIds[0]!;
-    const deps = { withTransaction: makeWithTransaction(tdb().db, activeBoss()) };
+    const deps = { withTransaction: makeWithTransaction(tdb().db, activeBoss(), makeTestLogger()) };
 
     await transition(deps, id, 'enqueue');
     await transition(deps, id, 'start');
@@ -43,7 +44,7 @@ describe('transition() contra la BD real — Verificación T0.7a', () => {
   it('retry (failed→queued) LIMPIA finished_at que fijó el fail (no queda obsoleto)', async () => {
     const { runId, stepIds } = await seed([{ status: 'running', nodeKey: 'N0' }]);
     const id = stepIds[0]!;
-    const deps = { withTransaction: makeWithTransaction(tdb().db, activeBoss()) };
+    const deps = { withTransaction: makeWithTransaction(tdb().db, activeBoss(), makeTestLogger()) };
 
     // fail fija finished_at.
     await transition(deps, id, 'fail');
@@ -66,7 +67,7 @@ describe('transition() contra la BD real — Verificación T0.7a', () => {
   it('transición ILEGAL lanza IllegalTransitionError SIN tocar la BD (rollback total)', async () => {
     const { stepIds } = await seed([{ status: 'succeeded' }]);
     const id = stepIds[0]!;
-    const deps = { withTransaction: makeWithTransaction(tdb().db, activeBoss()) };
+    const deps = { withTransaction: makeWithTransaction(tdb().db, activeBoss(), makeTestLogger()) };
 
     const [before] = await tdb().db.select().from(stepRun).where(eq(stepRun.id, id));
 
@@ -79,7 +80,7 @@ describe('transition() contra la BD real — Verificación T0.7a', () => {
   });
 
   it('step inexistente → StepNotFoundError', async () => {
-    const deps = { withTransaction: makeWithTransaction(tdb().db, activeBoss()) };
+    const deps = { withTransaction: makeWithTransaction(tdb().db, activeBoss(), makeTestLogger()) };
     await expect(transition(deps, '00000000000000000000000000', 'start')).rejects.toBeInstanceOf(
       StepNotFoundError,
     );
@@ -94,7 +95,7 @@ describe('transition() — resolución de depends_on aguas abajo (§7.1.a)', () 
       { id: a, status: 'running', nodeKey: 'N0' },
       { id: b, status: 'awaiting_deps', nodeKey: 'N1', dependsOn: [a] },
     ]);
-    const deps = { withTransaction: makeWithTransaction(tdb().db, activeBoss()) };
+    const deps = { withTransaction: makeWithTransaction(tdb().db, activeBoss(), makeTestLogger()) };
 
     await transition(deps, a, 'succeed');
 
@@ -114,7 +115,7 @@ describe('transition() — resolución de depends_on aguas abajo (§7.1.a)', () 
       { id: a2, status: 'pending', nodeKey: 'N0b' },
       { id: b, status: 'awaiting_deps', nodeKey: 'N1', dependsOn: [a1, a2] },
     ]);
-    const deps = { withTransaction: makeWithTransaction(tdb().db, activeBoss()) };
+    const deps = { withTransaction: makeWithTransaction(tdb().db, activeBoss(), makeTestLogger()) };
 
     await transition(deps, a1, 'succeed');
 
@@ -136,7 +137,7 @@ describe('transition() — encolado transaccional: rollback DES-ENCOLA (jobs.md 
     // withTransaction que inyecta un fallo TRAS el callback del orquestador
     // (después de encolar + notify, antes del commit): fuerza el ROLLBACK y
     // prueba que el INSERT del job (fromDrizzle) se deshace con la tx.
-    const base = makeWithTransaction(tdb().db, activeBoss());
+    const base = makeWithTransaction(tdb().db, activeBoss(), makeTestLogger());
     const failing = <T>(fn: (s: Parameters<Parameters<typeof base>[0]>[0]) => Promise<T>) =>
       base(async (stores) => {
         await fn(stores);
@@ -170,7 +171,7 @@ describe('transition() — NOTIFY pipeline_events se entrega en COMMIT', () => {
     const { runId: runB, stepIds: bSteps } = await seed([{ status: 'pending', nodeKey: 'N0' }]);
     const idA = aSteps[0]!;
     const idB = bSteps[0]!;
-    const deps = { withTransaction: makeWithTransaction(tdb().db, activeBoss()) };
+    const deps = { withTransaction: makeWithTransaction(tdb().db, activeBoss(), makeTestLogger()) };
 
     const listener = new Client({ connectionString: tdb().connectionString });
     await listener.connect();

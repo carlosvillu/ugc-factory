@@ -88,6 +88,47 @@ function clearsFinishedAt(event: StepEvent): boolean {
 }
 
 /**
+ * T1.20 — eventos que LIQUIDAN el coste del step: tras ellos, lo que el step gastó ya
+ * está en el ledger y no va a cambiar mientras siga en ese estado, así que la columna
+ * `cost_actual` (que es la que pinta el nodo del canvas) debe recomputarse AQUÍ, en la
+ * MISMA transacción que la transición.
+ *
+ * POR QUÉ ESTE EMBUDO Y NO EL CONSUMER (que es donde estaba, T1.10b). El consumer solo ve
+ * los cierres que él mismo provoca (`succeed`/`reach_checkpoint`/`skip_inapplicable`) — y
+ * el resto de caminos por los que un step TERMINA HABIENDO GASTADO no pasan por él:
+ * `fail` (el executor gastó y luego reventó: es EXACTAMENTE el caso de los dos runs
+ * muertos del usuario, 16¢ y 13¢ en el ledger y $0,00 en el nodo), `expire` (sweeper),
+ * `cancel` (cancelación del run), `reject`/`approve`/`approve_edited` (checkpoints, desde
+ * los route handlers de web), `skip`, `supersede`. Enumerar los caminos de cierre uno a
+ * uno es garantizar que alguien olvide el siguiente; `applyTransition` es el ÚNICO sitio
+ * por el que pasan todos.
+ *
+ * = `setsFinishedAt` ∪ {`reach_checkpoint`}, y esa unión NO es cosmética:
+ *  - Todos los terminales (`setsFinishedAt`) liquidan por definición: el step no volverá a
+ *    trabajar (salvo el `retry`, que reabre — ver abajo).
+ *  - `reach_checkpoint` (running→waiting_approval) NO es terminal y por eso no está en
+ *    `setsFinishedAt`, pero un checkpoint REAL (N3/CP1) HACE SU TRABAJO Y LO PAGA antes de
+ *    pausar: si no liquidáramos aquí, el nodo mostraría $0,00 durante toda la ventana de
+ *    aprobación —que dura lo que el humano tarde— habiendo gastado ya. Quitarlo de esta
+ *    lista reintroduce el bug de T1.20 desplazado en el tiempo.
+ *
+ * NO incluye `retry` (failed→queued): reabre el trabajo, no lo liquida.
+ *
+ * ASIMETRÍA DECLARADA (no es un olvido): el `retry` LIMPIA `finished_at` y `error`, pero NO
+ * limpia `cost_actual` — durante la re-ejecución la columna conserva el gasto del intento
+ * anterior. Es lo correcto y es distinto de los otros dos a propósito: `finished_at`/`error`
+ * describen el intento FALLIDO (arrastrarlos al intento nuevo sería incoherente), mientras que
+ * el dinero del intento fallido SE GASTÓ DE VERDAD y sigue siendo cierto — el ledger es
+ * append-only justo por eso. Ponerla a NULL/0 mientras se reintenta ocultaría gasto real
+ * (el bug de T1.20 otra vez, en miniatura). Y no hace falta tocarla: el rollup es
+ * RECOMPUTABLE, así que el cierre siguiente la recalcula desde el ledger, que para entonces
+ * ACUMULA el gasto de AMBOS intentos — que es la verdad.
+ */
+function settlesCost(event: StepEvent): boolean {
+  return setsFinishedAt(event) || event === 'reach_checkpoint';
+}
+
+/**
  * Encola un step para su ejecución (jobs.md §5): crea el job `step.execute` en la
  * MISMA tx (rollback des-encola). Se llama SIEMPRE que un step alcanza `queued` —
  * así `queued` (§7.1) significa de verdad "en la cola con un job", no un estado
@@ -163,7 +204,7 @@ async function resolveDownstream(
  * para fail+retry en una tx coherente). Devuelve el estado destino aplicado.
  */
 export async function applyTransition(
-  { steps, jobs, events }: TxStores,
+  { steps, jobs, events, costs }: TxStores,
   stepId: string,
   event: StepEvent,
   // T0.11: contexto opcional del error para el evento `fail`. El consumer pasa el
@@ -279,7 +320,33 @@ export async function applyTransition(
     await resolveDownstream(steps, jobs, stepId);
   }
 
-  // 6) NOTIFY pipeline_events, '<run_id>' — solo se entrega en COMMIT (db.md §6).
+  // 6) T1.20 — ROLLUP DEL COSTE REAL, en la MISMA transacción y ANTES del NOTIFY.
+  //
+  //    El evento que LIQUIDA el step (settlesCost: todos los terminales + el
+  //    reach_checkpoint) es el momento en que su gasto ya está en el ledger. Se recomputan
+  //    `step_run.cost_actual` (lo que pinta el nodo) y `pipeline_run.total_cost_actual` (el
+  //    agregado del run) desde `cost_entry`, que es la ÚNICA verdad del dinero. Recomputar
+  //    (no acumular) es lo que garantiza que la columna no pueda derivar del ledger.
+  //
+  //    DENTRO de la tx y no después: el cierre es lo que dispara el NOTIFY → SSE. Un rollup
+  //    posterior al commit dejaría al frontend recibiendo el step ya `failed`/`succeeded`
+  //    con el coste todavía viejo, sin un segundo evento que lo corrigiera. Y ANTES del
+  //    notify por lo mismo: cuando el evento sale, la columna ya dice la verdad.
+  //
+  //    NO se envuelve en try/catch aquí: el puerto `CostStore` GARANTIZA que no lanza (el
+  //    adaptador lo aísla con un SAVEPOINT, que es la única forma real de que un fallo del
+  //    rollup no envenene esta transacción — un try/catch en JS no salva una tx de Postgres
+  //    ya abortada). Ver el contrato en ports.ts. La propiedad que se conserva de T1.10b es
+  //    ésta: un fallo del rollup es una columna desactualizada, JAMÁS una transición perdida.
+  //
+  //    `rollupRun` (el AGREGADO del run) se llama en CADA cierre sin llevar aquí ninguna
+  //    contabilidad: el ADAPTADOR lo DEDUPLICA por transacción (cost-store.ts §2).
+  if (settlesCost(event)) {
+    await costs.rollupStep(stepId);
+    await costs.rollupRun(step.runId);
+  }
+
+  // 7) NOTIFY pipeline_events, '<run_id>' — solo se entrega en COMMIT (db.md §6).
   await events.notify(step.runId);
   return to;
 }

@@ -1,0 +1,12 @@
+  ✓  53 [chromium] › e2e/settings.spec.ts:66:3 › /settings (T0.14) › tema, acento y densidad se aplican en vivo y persisten tras reload @f0 (1.1s)
+[WebServer]  GET /api/spend 200 in 7ms (next.js: 1392µs, application-code: 5ms)
+[WebServer]  GET /spend 200 in 74ms (next.js: 2ms, proxy.ts: 1453µs, application-code: 70ms)
+  ✓  54 [spend] › e2e/spend.spec.ts:87:3 › panel de gasto /spend (T0.12) › muestra totales por proveedor con la suma exacta @f0 (406ms)
+[WebServer]  GET /api/spend 200 in 4ms (next.js: 957µs, application-code: 4ms)
+[WebServer]  GET /spend 200 in 57ms (next.js: 1112µs, proxy.ts: 1315µs, application-code: 55ms)
+  ✓  55 [spend] › e2e/spend.spec.ts:98:3 › panel de gasto /spend (T0.12) › muestra totales por día con la suma exacta @f0 (363ms)
+[WebServer]  GET /api/spend 200 in 6ms (next.js: 1125µs, application-code: 4ms)
+[WebServer]  GET /spend 200 in 50ms (next.js: 1489µs, proxy.ts: 1703µs, application-code: 47ms)
+  ✓  56 [spend] › e2e/spend.spec.ts:109:3 › panel de gasto /spend (T0.12) › un presupuesto por debajo del gasto dispara la alerta in-app @f0 (383ms)
+
+  56 passed (2.7m)

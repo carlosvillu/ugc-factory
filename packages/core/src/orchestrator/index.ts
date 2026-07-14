@@ -14,6 +14,7 @@ export type {
   NewSupersedingStepRow,
   AuditStore,
   AuditEntry,
+  CostStore,
   TxStores,
   WithTransaction,
 } from './ports';

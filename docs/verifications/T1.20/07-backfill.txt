@@ -1,0 +1,41 @@
+=== TEST BACKFILL 0013 aislado (db bf_test) === 2026-07-14T06:52:54Z
+Escenario: 1 run, 3 steps: A(cargos 5+11=16, failed), B(sin cargos, succeeded), C(sin cargos, pending). Y un run SIN cargos.
+INSERT 0 4
+INSERT 0 2
+
+--- PASADA 1 del SQL REAL de 0013 ---
+UPDATE 1
+UPDATE 1
+--- estado tras pasada 1 ---
+ id |  status   | cost_actual 
+----+-----------+-------------
+ A  | failed    |          16
+ B  | succeeded |            
+ C  | pending   |            
+ D  | succeeded |            
+(4 rows)
+
+ id | total_cost_actual 
+----+-------------------
+ R1 |                16
+ R2 |                  
+(2 rows)
+
+--- PASADA 2 (idempotencia) ---
+UPDATE 1
+UPDATE 1
+--- estado tras pasada 2 (debe ser IDÉNTICO) ---
+ id |  status   | cost_actual 
+----+-----------+-------------
+ A  | failed    |          16
+ B  | succeeded |            
+ C  | pending   |            
+ D  | succeeded |            
+(4 rows)
+
+ id | total_cost_actual 
+----+-------------------
+ R1 |                16
+ R2 |                  
+(2 rows)
+

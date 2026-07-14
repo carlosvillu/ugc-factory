@@ -18,7 +18,7 @@ export const POST = withAuth(
   withRoute(
     async ({ params }) => {
       const boss = await getBoss();
-      const withTransaction = makeWithTransaction(getDb(), boss);
+      const withTransaction = makeWithTransaction(getDb(), boss, getRequestLogger());
       try {
         await skipStep({ withTransaction }, params.id);
       } catch (err) {

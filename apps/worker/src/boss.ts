@@ -75,7 +75,7 @@ export async function createBoss(deps: CreateBossDeps): Promise<PgBoss> {
       void pool.end();
     });
     const transitionDeps: TransitionDeps = {
-      withTransaction: makeWithTransaction(db, boss),
+      withTransaction: makeWithTransaction(db, boss, deps.logger),
     };
     const executors = makeExecutorRegistry({
       demoShouldFail: deps.demoShouldFail ?? randomDemoFail,

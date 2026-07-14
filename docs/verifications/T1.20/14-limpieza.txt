@@ -1,0 +1,17 @@
+=== LIMPIEZA de la contaminación del verifier ===
+Run de prueba 01KXFPTQF57S8W4PXH9WNSRF92 (demo, checkpoint) + su cost_entry huérfano de 7c.
+DELETE 1
+DELETE 2
+DELETE 1
+DROP DATABASE
+--- estado final de la BD (debe volver a los 5 runs originales, ledger intacto) ---
+ runs 
+------
+    5
+(1 row)
+
+ cost_entries | total_cents | huerfanos 
+--------------+-------------+-----------
+           15 |          81 |         0
+(1 row)
+

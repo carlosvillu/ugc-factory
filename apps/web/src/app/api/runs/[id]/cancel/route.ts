@@ -21,7 +21,7 @@ export const POST = withAuth(
   withRoute(
     async ({ params }) => {
       const boss = await getBoss();
-      const withTransaction = makeWithTransaction(getDb(), boss);
+      const withTransaction = makeWithTransaction(getDb(), boss, getRequestLogger());
       const cancelled = await cancelRun({ withTransaction }, params.id);
       getRequestLogger().info({ run_id: params.id, cancelled }, 'run cancelado');
       return Response.json({ ok: true, cancelled });

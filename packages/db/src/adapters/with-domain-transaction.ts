@@ -27,11 +27,13 @@
 import { sql } from 'drizzle-orm';
 import type { PgBoss } from 'pg-boss';
 import type { WithTransaction } from '@ugc/core/orchestrator';
+import type { Logger } from '@ugc/core';
 import type { Db, DbClient } from '../client';
 import { makeStepStore } from './step-store';
 import { makeTxJobQueue } from './job-queue';
 import { makeRunStore } from './run-store';
 import { makeAuditStore } from './audit-store';
+import { makeCostStore } from './cost-store';
 
 /** Lo que el callback recibe: el executor de la tx (para los repos) y el `withTransaction` que
  *  hay que pasarle a la operación del orquestador para que corra DENTRO de ella. */
@@ -43,6 +45,7 @@ export interface DomainTxScope {
 export async function withDomainTransaction<T>(
   db: DbClient,
   boss: PgBoss,
+  logger: Logger,
   fn: (scope: DomainTxScope) => Promise<T>,
 ): Promise<T> {
   return db.transaction(async (tx) =>
@@ -58,6 +61,12 @@ export async function withDomainTransaction<T>(
             jobs: makeTxJobQueue(boss, tx2),
             runs: makeRunStore(tx2),
             audit: makeAuditStore(tx2),
+            // T1.20: mismo rollup que en `makeWithTransaction` (el checkpoint que se aprueba
+            // liquida el coste del step igual que cualquier otro cierre). El savepoint del
+            // cost-store anida sobre tx2, que ya es un savepoint de la tx de dominio: correcto,
+            // los savepoints anidan. La dedup del agregado es tx2-scoped, que es lo que quiere
+            // un `editStep` (supersede el sub-grafo entero: N cierres, UN rollup del run).
+            costs: makeCostStore(tx2, logger),
             events: {
               notify: async (runId) => {
                 await tx2.execute(sql`SELECT pg_notify('pipeline_events', ${runId})`);

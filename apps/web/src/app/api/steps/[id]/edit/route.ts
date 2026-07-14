@@ -70,32 +70,37 @@ export const POST = withAuth(
       const boss = await getBoss();
 
       try {
-        await withDomainTransaction(db, boss, async ({ db: tx, withTransaction }) => {
-          // CP1: el body trae un ProductBrief tipado ⇒ se versiona (v2) y el artefacto editado
-          // del step pasa a referenciar esa versión nueva. El resto de nodos siguen por el canal
-          // opaco.
-          let editedOutputRefs: unknown = body.outputRefs;
-          if (body.brief !== undefined) {
-            const step = await findStep(tx, params.id);
-            if (step === undefined) throw new AppError('not_found', 'step no encontrado');
-            try {
-              editedOutputRefs = await createEditedBriefVersion(tx, step.outputRefs, body.brief);
-            } catch (err) {
-              // El step no es un checkpoint de brief (o su brief no existe): no es un 500 opaco,
-              // es una petición mal dirigida. `AppError` cruza el catch de fuera intacto
-              // (`toCheckpointError` solo traduce los errores del orquestador).
-              throw new AppError(
-                'validation_error',
-                err instanceof Error ? err.message : 'el step no admite una edición de brief',
-              );
+        await withDomainTransaction(
+          db,
+          boss,
+          getRequestLogger(),
+          async ({ db: tx, withTransaction }) => {
+            // CP1: el body trae un ProductBrief tipado ⇒ se versiona (v2) y el artefacto editado
+            // del step pasa a referenciar esa versión nueva. El resto de nodos siguen por el canal
+            // opaco.
+            let editedOutputRefs: unknown = body.outputRefs;
+            if (body.brief !== undefined) {
+              const step = await findStep(tx, params.id);
+              if (step === undefined) throw new AppError('not_found', 'step no encontrado');
+              try {
+                editedOutputRefs = await createEditedBriefVersion(tx, step.outputRefs, body.brief);
+              } catch (err) {
+                // El step no es un checkpoint de brief (o su brief no existe): no es un 500 opaco,
+                // es una petición mal dirigida. `AppError` cruza el catch de fuera intacto
+                // (`toCheckpointError` solo traduce los errores del orquestador).
+                throw new AppError(
+                  'validation_error',
+                  err instanceof Error ? err.message : 'el step no admite una edición de brief',
+                );
+              }
             }
-          }
 
-          await editStep({ withTransaction }, params.id, editedOutputRefs);
-          // T1.11 — la DECISIÓN del checkpoint (si la hubo), en la MISMA tx: si `editStep` lanza,
-          // ni versión nueva del brief, ni transición, ni decisión. No-op sin `decision`.
-          await persistCheckpointDecision(tx, params.id, body.decision);
-        });
+            await editStep({ withTransaction }, params.id, editedOutputRefs);
+            // T1.11 — la DECISIÓN del checkpoint (si la hubo), en la MISMA tx: si `editStep` lanza,
+            // ni versión nueva del brief, ni transición, ni decisión. No-op sin `decision`.
+            await persistCheckpointDecision(tx, params.id, body.decision);
+          },
+        );
       } catch (err) {
         throw toCheckpointError(err);
       }

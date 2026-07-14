@@ -183,10 +183,14 @@ export {
 // El tipo de fila `persona` (retorno de los repos de arriba): lo consumen los route handlers de
 // web para serializar la respuesta contra el contrato `PersonaSchema` de core.
 export type { Persona as PersonaRow } from './schema/gallery';
-// Rollup del coste real de un step (T1.10b): recomputa `step_run.cost_actual` desde
-// `cost_entry` (SUM por step_run_id). Lo llama el ORQUESTADOR (consumer del worker) al cerrar
-// un step — nunca `@ugc/services` (la columna del step es territorio del step, T1.10a).
-export { rollupStepCost } from './repos/spend.repo';
+// T1.20: `rollupStepCost`/`rollupRunCost` YA NO salen al barrel — y su ausencia es el fix.
+// El rollup del coste dejó de ser algo que un llamante (el consumer del worker) recuerda hacer
+// al cerrar bien un step, precisamente porque olvidarse en los DEMÁS caminos de cierre (`fail`,
+// `expire`, `cancel`, `reject`, `supersede`…) era lo que dejaba la columna mintiendo con dinero
+// REAL gastado. Ahora corre SIEMPRE, dentro de `applyTransition` (el embudo único de core), vía
+// el puerto `CostStore` que implementa `adapters/cost-store.ts`. Los repos quedan INTERNOS al
+// paquete: nadie de fuera debe volver a invocarlos a mano (si vuelve a hacer falta exportarlos,
+// pregúntate primero por qué el camino de cierre no pasa por la transición).
 // El LISTADO de runs (T1.17): la lectura que alimenta `GET /api/runs`. Deriva el estado
 // agregado de los STEPS (las columnas `pipeline_run.status`/`total_cost_actual` no las
 // mantiene nadie) y agrega el coste desde el LEDGER (`cost_entry`, la única verdad del dinero:

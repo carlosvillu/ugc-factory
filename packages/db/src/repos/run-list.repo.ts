@@ -11,16 +11,18 @@
 //    que la pintara mentiría en el 100 % de las filas.
 //    ⇒ el estado se DERIVA de los steps con `deriveRunStatus` (core, función pura con test).
 //
-// 2. `pipeline_run.total_cost_actual` — la misma historia: NULL en los 4 runs reales. Nadie
-//    hace el rollup a nivel de run.
-//
-// 3. `step_run.cost_actual` — la trampa MÁS CARA, y la menos obvia: `rollupStepCost` (T1.10b)
-//    solo corre al CERRAR BIEN un step. Un step que FALLA deja `cost_actual` NULL… habiendo
-//    GASTADO. Comprobado en la BD local: los dos N3 muertos tienen `cost_actual = NULL` y
-//    16 y 13 céntimos en `cost_entry`. Sumar la columna del step pintaría **$0.00 en los dos
-//    runs muertos**: exactamente el fallo que esta tarea existe para no cometer, mudado de la
-//    columna de estado a la de dinero (y en la dirección peor: ocultar gasto real).
-//    ⇒ el coste se agrega del LEDGER (`cost_entry`, append-only), que es la verdad del dinero.
+// 2 y 3. LAS COLUMNAS DE DINERO (`pipeline_run.total_cost_actual`, `step_run.cost_actual`) —
+//    ARREGLADAS EN T1.20, pero el listado sigue leyendo el LEDGER, y a propósito.
+//    Historia: hasta T1.20 el rollup (T1.10b) vivía en el consumer del worker y solo corría al
+//    CERRAR BIEN un step, así que un step que FALLABA dejaba `cost_actual` NULL… habiendo
+//    GASTADO (los dos N3 muertos: NULL en la columna, 16 y 13 céntimos en `cost_entry`), y
+//    `total_cost_actual` no lo mantenía nadie. T1.20 movió el rollup a `applyTransition` (el
+//    embudo único: TODOS los cierres) y backfilló los datos históricos, así que las dos
+//    columnas ya dicen la verdad.
+//    ⇒ AUN ASÍ el coste se agrega del LEDGER (`cost_entry`, append-only): es la VERDAD del
+//    dinero, y las columnas son una proyección de él. Preferir la proyección al original solo
+//    añadiría una forma de que las dos vuelvan a discrepar; el ledger no puede discrepar
+//    consigo mismo. (Y da gratis la asimetría de abajo con `superseded`.)
 //
 // ASIMETRÍA DELIBERADA CON `superseded` (T0.8): el ESTADO ignora los steps superseded (la
 // verdad de un nodo es su fila VIVA: un retry con éxito no debe arrastrar el fallo viejo),
@@ -50,9 +52,10 @@ export interface RunListPage {
  *
  * Existe como función compartida —y no copiada— precisamente porque la alternativa fácil ya
  * causó un bug REAL: la cabecera del canvas sumaba `step_run.cost_actual` y enseñaba **$0.00 en
- * los dos runs que murieron en N3 habiendo gastado 16 y 13 céntimos** (`rollupStepCost` solo
- * corre al cerrar BIEN un step ⇒ un step que falla deja la columna NULL). Dos sitios que
- * responden «cuánto costó este run» tienen que responder LO MISMO, y con el mismo dato.
+ * los dos runs que murieron en N3 habiendo gastado 16 y 13 céntimos** (el rollup de T1.10b solo
+ * corría al cerrar BIEN un step ⇒ un step que fallaba dejaba la columna NULL; T1.20 lo arregló
+ * en origen). Dos sitios que responden «cuánto costó este run» tienen que responder LO MISMO, y
+ * con el mismo dato — el del ledger, que es el original y no una proyección de él.
  *
  * `cost_entry` NO tiene `run_id`: el rollup es el join `cost_entry → step_run → run_id`. SUM de
  * enteros (exacto, sin float) y `::int` obligatorio — `sum()` en Postgres devuelve `bigint`, que

@@ -15,7 +15,7 @@ import { createRun, transition, demoRunDefinition, RunEventSchema } from '@ugc/c
 import { newUlid } from '@ugc/core/contracts';
 import { stepExecuteJob } from '@ugc/core/jobs';
 import { ensureQueue, makeWithTransaction } from '@ugc/db';
-import { createTestDatabase, makeProject } from '@ugc/test-utils';
+import { createTestDatabase, makeProject, makeTestLogger } from '@ugc/test-utils';
 import type { TestDatabase } from '@ugc/test-utils';
 import { createSessionValue, SESSION_COOKIE } from '@/server/session';
 import { startWebServer, type RunningServer } from '../../helpers/server';
@@ -37,7 +37,7 @@ function cookieHeader(): string {
 // se siembra el run (createRun) y se dispara la transición (transition). Necesita su
 // propio pg-boss porque createRun/transition encolan jobs en la MISMA tx.
 function withTx() {
-  return makeWithTransaction(tdb.db, boss);
+  return makeWithTransaction(tdb.db, boss, makeTestLogger());
 }
 
 async function seedProject(): Promise<string> {

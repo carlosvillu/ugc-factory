@@ -103,16 +103,20 @@ export function RunHeader({ runId }: { runId: string }) {
   //
   //     const costActual = stepList.reduce((acc, s) => acc + (s.costActual ?? 0), 0)
   //
-  // y `s.costActual` es `step_run.cost_actual`, que **se queda NULL cuando un step FALLA**:
-  // `rollupStepCost` (T1.10b) solo recomputa esa columna al cerrar BIEN un step. Un step que
-  // muere HABIENDO GASTADO no la escribe nunca. Resultado observable en la BD del usuario: los
-  // dos runs que murieron en N3 gastaron 16 y 13 céntimos de Sonnet, y al abrir su canvas la
-  // cabecera decía **«Coste real: $0.00»**. Dinero real, invisible, justo en los runs que más
-  // interesa auditar (los que fallaron).
+  // y `s.costActual` es `step_run.cost_actual`, que ENTONCES (T1.17) **se quedaba NULL cuando un
+  // step FALLABA**: el rollup (T1.10b) vivía en el consumer del worker y solo corría al cerrar
+  // BIEN un step, así que un step que moría HABIENDO GASTADO no la escribía nunca. Los dos runs
+  // que murieron en N3 gastaron 16 y 13 céntimos de Sonnet y la cabecera decía «Coste real:
+  // $0.00»: dinero real, invisible, justo en los runs que más interesa auditar.
   //
-  // La verdad del dinero es el LEDGER (`cost_entry`, append-only) — y ahora la computa el
-  // SERVIDOR (`runLedgerCost`, la MISMA función que alimenta el listado `/runs`), así que el
-  // canvas y la lista no pueden contradecirse sobre lo que costó un run.
+  // T1.20 ARREGLÓ LA COLUMNA EN ORIGEN (el rollup corre ahora dentro de `applyTransition`, en
+  // TODOS los caminos de cierre, y una migración de backfill reparó los datos históricos), así
+  // que `s.costActual` ya NO miente. Aun así **esta línea sigue leyendo del LEDGER vía servidor**,
+  // y a propósito: `runLedgerCost` es la MISMA función que alimenta el listado `/runs`, de modo
+  // que canvas y lista no pueden contradecirse sobre lo que costó un run; y el ledger es la
+  // verdad del dinero, mientras que la columna es una proyección de él (recomputable, pero
+  // proyección). Sumar la proyección para obtener un total que el ledger ya sabe dar es
+  // preferir la copia al original.
   //
   // TRADEOFF ACEPTADO Y CONSCIENTE: este número llega por REST al cargar la página, así que es
   // una FOTO, no un contador vivo — durante un run en curso no sube con cada step, sube al

@@ -233,6 +233,48 @@ export interface AuditStore {
 }
 
 /**
+ * ROLLUP DEL COSTE REAL (T1.20). El puerto por el que el orquestador recomputa el dinero
+ * ya gastado y lo deja escrito en las columnas que la UI lee (`step_run.cost_actual`,
+ * `pipeline_run.total_cost_actual`) — SIN saber que existe una tabla `cost_entry`, ni
+ * Drizzle, ni SQL. La VERDAD del dinero es siempre el ledger (`cost_entry`, append-only,
+ * record-first en los servicios): estas columnas son una PROYECCIÓN recomputable de él.
+ *
+ * POR QUÉ ES UN PUERTO Y NO UNA LLAMADA DEL CONSUMER (el diseño de T1.20). Antes, el
+ * rollup lo invocaba el consumer del worker justo antes de cerrar el step. Eso deja la
+ * columna MINTIENDO en todos los caminos de cierre que NO pasan por el consumer: el
+ * `fail` con retries agotados, el `expire` del sweeper, el `cancel` de un run, el
+ * `reject` de un checkpoint, el `supersede` de una invalidación… Un step que falló
+ * HABIENDO GASTADO se quedaba con `cost_actual` NULL (los dos runs muertos del usuario:
+ * 16¢ y 13¢ en el ledger, $0,00 en el nodo del canvas). Parchear los caminos uno a uno es
+ * enumerar; el embudo único por el que pasan TODOS es `applyTransition`, y ahí es donde el
+ * rollup corre ahora — por construcción, no por enumeración.
+ *
+ * CONTRATO CRÍTICO: **estas operaciones NUNCA lanzan**. El rollup es una proyección
+ * recomputable; su fallo es "una columna desactualizada", jamás "dinero perdido" ni una
+ * transición perdida. Un throw abortaría la transición (el step no cerraría, el NOTIFY no
+ * saldría) — al revés de lo que importa. Y no basta con un try/catch en core: dentro de una
+ * transacción de Postgres, un statement que falla ENVENENA la transacción entera (todo lo
+ * siguiente da 25P02), así que capturarlo en JS no la salvaría. El aislamiento tiene que ser
+ * una propiedad de Postgres —un SAVEPOINT— y por eso vive en el ADAPTADOR (`packages/db`), que
+ * es la única capa que puede darla. Core solo declara la garantía y confía en ella.
+ *
+ * SEGUNDO CONTRATO, y por eso `rollupRun` puede llamarse en CADA cierre sin miedo: el
+ * adaptador DEDUPLICA `rollupRun` por transacción (recomputa el agregado de un run UNA vez por
+ * tx, aunque se le pida N veces). Core no tiene que llevar esa contabilidad: llama y ya. Por qué
+ * es correcto y qué ahorra: cost-store.ts §2, que es donde vive el `Set`.
+ */
+export interface CostStore {
+  /** Recomputa `step_run.cost_actual` del step desde el ledger. Toca solo la fila de `step_run`,
+   *  que el llamante YA tiene lockeada. Best-effort: no lanza. */
+  rollupStep(stepId: string): Promise<void>;
+  /** Recomputa `pipeline_run.total_cost_actual` del run desde el ledger. Best-effort: no lanza.
+   *  DEDUPLICADO por transacción en el adaptador: llamarlo N veces con el mismo runId dentro de
+   *  una tx ejecuta UN solo UPDATE (los caminos que cierran N steps —cancel, invalidación— lo
+   *  invocan una vez por step, y basta con la primera). */
+  rollupRun(runId: string): Promise<void>;
+}
+
+/**
  * Emite `NOTIFY pipeline_events, '<run_id>'` (db.md §6, paso 5). Tx-scoped: el
  * NOTIFY va DENTRO de la tx y Postgres lo entrega solo en COMMIT — un rollback
  * lo silencia sin código de compensación. El consumidor del canal es el cliente
@@ -255,6 +297,9 @@ export interface TxStores {
   runs: RunStore;
   /** Writer de audit_log (§19.1, T0.8): diff artefacto-IA vs editado en checkpoints. */
   audit: AuditStore;
+  /** Rollup del coste real desde el ledger (T1.20). Corre DENTRO de la transición que
+   *  liquida el step; nunca lanza (ver CostStore). */
+  costs: CostStore;
 }
 
 /**

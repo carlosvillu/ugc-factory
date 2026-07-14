@@ -9,7 +9,7 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from
 import { makeLogger } from '@ugc/core/observability';
 import { approveStep, createRun, demoCheckpointRunDefinition } from '@ugc/core/orchestrator';
 import type { TransitionDeps } from '@ugc/core/orchestrator';
-import { createTestDatabase } from '@ugc/test-utils';
+import { createTestDatabase, makeTestLogger } from '@ugc/test-utils';
 import type { TestDatabase } from '@ugc/test-utils';
 import { stepExecuteJob } from '@ugc/core/jobs';
 import { PgBoss } from 'pg-boss';
@@ -80,7 +80,7 @@ async function makeDeps(): Promise<{ deps: TransitionDeps; cleanup: () => Promis
   await ensureQueue(enqueueBoss, stepExecuteJob);
   const { db, pool } = createDbPool(tdb.connectionString);
   return {
-    deps: { withTransaction: makeWithTransaction(db, enqueueBoss) },
+    deps: { withTransaction: makeWithTransaction(db, enqueueBoss, makeTestLogger()) },
     cleanup: async () => {
       await stopBossAndWait(enqueueBoss);
       await pool.end();

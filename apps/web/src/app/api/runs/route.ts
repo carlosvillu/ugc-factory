@@ -26,11 +26,14 @@ export const dynamic = 'force-dynamic';
 // core — el MISMO que valida la página. La query se valida en la frontera vía el schema
 // `query` de `withRoute` (`?limit=abc` ⇒ 400 tipado, no 500).
 //
-// OJO CON LO QUE ESTE ENDPOINT **NO** DEVUELVE: `pipeline_run.status` ni `total_cost_actual`.
-// Ninguna de las dos columnas la mantiene nadie (deuda de T0.8) — los 4 runs reales de la BD
-// local dicen `pending` incluidos los que completaron. El estado se DERIVA de los steps y el
-// coste se agrega del LEDGER. La regla y el porqué, en `run-list.repo.ts` y en
-// `core/contracts/run-list.ts`.
+// OJO CON LO QUE ESTE ENDPOINT **NO** DEVUELVE: `pipeline_run.status` ni `total_cost_actual`,
+// pero por razones DISTINTAS (no las confundas):
+//   · `status` — NADIE lo mantiene (deuda viva de T0.8): los runs reales de la BD local dicen
+//     `pending` incluidos los que completaron. Por eso se DERIVA de los steps (`deriveRunStatus`).
+//   · `total_cost_actual` — desde T1.20 SÍ se mantiene (la recomputa `applyTransition` desde el
+//     ledger en cada cierre de step). Aun así el listado agrega del LEDGER: es el original, y la
+//     columna una proyección suya, así que las dos pantallas no pueden contradecirse.
+// La regla y el porqué, en `run-list.repo.ts` y en `core/contracts/run-list.ts`.
 export const GET = withAuth(
   withRoute(
     async ({ query }) => {
@@ -52,7 +55,7 @@ export const POST = withAuth(
       // Cableado lazy (composition root de web): withTransaction sobre la BD real y
       // el boss de web (encolado transaccional). Sin conexiones en module scope.
       const boss = await getBoss();
-      const withTransaction = makeWithTransaction(getDb(), boss);
+      const withTransaction = makeWithTransaction(getDb(), boss, getRequestLogger());
 
       // Creación atómica del run. `InvalidRunDefinitionError` (ciclo/dep colgante/
       // sin root) es culpa de la entrada ⇒ 400 validation_error; cualquier otro

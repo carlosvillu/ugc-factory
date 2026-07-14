@@ -1,0 +1,37 @@
+=== AUDITORÍA: cualquier escritura de step_run.status fuera de applyTransition ===
+--- 1) raw SQL: UPDATE step_run / sql`...` ---
+packages/db/drizzle/0013_backfill_cost_actual.sql:23:UPDATE "step_run"
+packages/db/drizzle/0013_backfill_cost_actual.sql:37:UPDATE "pipeline_run"
+
+--- 2) drizzle: .update(stepRun) / .update(pipelineRun) ---
+packages/db/src/repos/steps.repo.ts:162:    .update(stepRun)
+packages/db/src/repos/runs.repo.ts:77:    .update(pipelineRun)
+packages/db/src/repos/spend.repo.ts:75:    .update(stepRun)
+packages/db/src/repos/spend.repo.ts:108:    .update(pipelineRun)
+
+--- 3) db.execute( con SQL crudo en src (no tests) ---
+packages/db/src/repos/project.repo.ts:44:    await tx.execute(sql`SELECT pg_advisory_xact_lock(${DEFAULT_PROJECT_LOCK_KEY})`);
+packages/db/src/adapters/with-transaction.ts:37:            await tx.execute(sql`SELECT pg_notify('pipeline_events', ${runId})`);
+packages/db/src/adapters/with-domain-transaction.ts:72:                await tx2.execute(sql`SELECT pg_notify('pipeline_events', ${runId})`);
+
+--- 4) quién asigna 'status:' sobre stepRun en src ---
+packages/db/src/repos/steps.repo.ts:164:      status: patch.status,
+
+--- 5) runs.repo.ts:77 — ¿qué escribe? (debe ser autopilot, no status) ---
+ */
+export async function updateRunAutopilot(
+  db: Db,
+  runId: string,
+  autopilot: boolean,
+): Promise<number> {
+  const rows = await db
+    .update(pipelineRun)
+    .set({ autopilot })
+    .where(eq(pipelineRun.id, runId))
+    .returning({ id: pipelineRun.id });
+  return rows.length;
+}
+
+CONCLUSIÓN: el ÚNICO escritor de step_run.status es updateStep (steps.repo.ts:164),
+alcanzable solo por StepStore.update (adaptador de core) cuyo único llamante es applyTransition.
+No hay SQL crudo que toque status. La tesis 'por construcción' es CIERTA.

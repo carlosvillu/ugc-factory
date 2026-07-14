@@ -144,19 +144,23 @@ export const RunResponseSchema = z.object({
   startedAt: z.string().nullable(),
   finishedAt: z.string().nullable(),
   totalCostEstimated: z.number().int().nullable(),
-  // ⚠ `totalCostActual` ES UN DATO FALSO: la columna `pipeline_run.total_cost_actual` no la
-  // mantiene nadie (deuda de T0.8) y vale NULL en todos los runs. Se sigue tipando porque el
-  // endpoint la sigue devolviendo, pero **NADIE debe pintarla**: el coste real del run es
-  // `costActualCents` (abajo). Cuando el orquestador mantenga el agregado, este es uno de los
-  // tres sitios a reconciliar contra `deriveRunStatus`/el ledger.
+  // `pipeline_run.total_cost_actual`: hasta T1.20 era un DATO FALSO (nadie hacía el rollup por
+  // run: NULL en todos). T1.20 la mantiene —el orquestador la recomputa desde el ledger en cada
+  // cierre de step, y una migración backfilló los runs viejos—, así que ya no miente. Aun así,
+  // lo que la cabecera PINTA es `costActualCents` (abajo), que viene del ledger: una sola fuente
+  // para el número que se enseña, y esta columna como proyección auditable contra ella.
+  // Sigue pendiente `pipeline_run.status`, que NADIE mantiene (deuda de T0.8; el oráculo es
+  // `deriveRunStatus`) — no la pintes.
   totalCostActual: z.number().int().nullable(),
   /**
    * EL COSTE REAL del run en céntimos, agregado del LEDGER (`cost_entry`) por el servidor (T1.17).
    *
    * Existe porque la cabecera del canvas lo calculaba antes en el CLIENTE sumando el `costActual`
-   * de los steps del SSE — y ese campo sale de `step_run.cost_actual`, que se queda **NULL en un
-   * step que falla habiendo gastado** (`rollupStepCost` solo corre al cerrar bien). Los dos runs
-   * que murieron en N3 gastando 16 y 13 céntimos mostraban «Coste real: $0.00».
+   * de los steps del SSE — y ese campo sale de `step_run.cost_actual`, que ENTONCES se quedaba
+   * **NULL en un step que fallaba habiendo gastado** (el rollup de T1.10b solo corría al cerrar
+   * bien). Los dos runs que murieron en N3 gastando 16 y 13 céntimos mostraban «Coste real:
+   * $0.00». T1.20 arregló la columna en origen (rollup en TODOS los cierres + backfill), pero
+   * este total sigue viniendo del LEDGER: es el original, no una proyección de él.
    */
   costActualCents: z.number().int(),
 });

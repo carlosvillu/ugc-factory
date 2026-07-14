@@ -22,15 +22,17 @@
 // queda como deuda explícita, y el día que se haga, esta derivación seguirá siendo el
 // oráculo contra el que comprobar que la columna dice la verdad.
 //
-// LA MISMA REGLA VALE PARA EL COSTE, Y AHÍ HAY **DOS** COLUMNAS QUE MIENTEN:
-//   · `pipeline_run.total_cost_actual` — NULL en los 4 runs reales. Nadie hace el rollup por run.
-//   · `step_run.cost_actual` — la trampa MENOS obvia: `rollupStepCost` (T1.10b) solo corre al
-//     CERRAR BIEN un step, así que un step que FALLA deja la columna NULL **habiendo gastado**.
-//     Comprobado: los dos N3 muertos tienen `cost_actual` NULL y 16 y 13 céntimos en `cost_entry`.
-//     Sumar la columna del step pintaría **$0.00 en los dos runs muertos** — el mismo fallo que
-//     esta tarea existe para no cometer, mudado a la columna del dinero (y ocultando gasto REAL).
-// Por eso el coste se agrega del LEDGER (`cost_entry`, append-only): es la verdad del dinero.
-// Ver `packages/db/src/repos/run-list.repo.ts`.
+// LAS COLUMNAS DEL DINERO (`pipeline_run.total_cost_actual`, `step_run.cost_actual`) MENTÍAN
+// IGUAL — y eso SÍ se arregló, en T1.20. Hasta entonces, el rollup (T1.10b) vivía en el consumer
+// del worker y solo corría al CERRAR BIEN un step, de modo que un step que FALLABA dejaba la
+// columna NULL **habiendo gastado** (los dos N3 muertos: NULL en la columna, 16 y 13 céntimos en
+// `cost_entry`), y el agregado por run no lo mantenía nadie. T1.20 movió el rollup a
+// `applyTransition` —el embudo por el que pasan TODOS los cierres— y backfilló los datos viejos.
+//
+// AUN ASÍ el coste de este listado se agrega del LEDGER (`cost_entry`, append-only), no de las
+// columnas: el ledger es la VERDAD del dinero y las columnas una proyección de él. Ver
+// `packages/db/src/repos/run-list.repo.ts`. El ESTADO agregado sigue derivándose (arriba), porque
+// esa columna sigue sin mantenerse.
 import { z } from 'zod';
 
 /**

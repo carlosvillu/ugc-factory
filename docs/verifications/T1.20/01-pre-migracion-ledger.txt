@@ -1,0 +1,66 @@
+=== ESTADO PRE-MIGRACIÓN (0013 aún no aplicada) === 2026-07-14T06:44:59Z
+--- migraciones aplicadas (últimas) ---
+ id |      to_timestamp      
+----+------------------------
+ 14 | 2026-07-13 16:59:13+00
+ 13 | 2026-07-12 16:59:13+00
+ 12 | 2026-07-12 15:25:11+00
+(3 rows)
+
+--- pipeline_run ---
+             id             | status  | total_cost_actual 
+----------------------------+---------+-------------------
+ 01KXD1MM3ENG6QNZ43YY7M1P6V | pending |                16
+ 01KXD1SPQ8EYKDZ4QXWD3WWX1Z | pending |                13
+ 01KXD5XD4AWWRAM28W7EDJTMDT | pending |                16
+ 01KXDDNG2BR2YK8BCS90540T9T | pending |                18
+ 01KXE8A8956H55KBVQSVFK2RQR | pending |                18
+(5 rows)
+
+--- steps de los dos runs muertos ---
+           run_id           | node_key |  status   | cost_actual | cost_estimated 
+----------------------------+----------+-----------+-------------+----------------
+ 01KXD1MM3ENG6QNZ43YY7M1P6V | N1       | succeeded |           0 |               
+ 01KXD1MM3ENG6QNZ43YY7M1P6V | N2       | succeeded |           0 |               
+ 01KXD1MM3ENG6QNZ43YY7M1P6V | N3       | failed    |          16 |               
+ 01KXD1SPQ8EYKDZ4QXWD3WWX1Z | N1       | succeeded |           0 |               
+ 01KXD1SPQ8EYKDZ4QXWD3WWX1Z | N2       | succeeded |           0 |               
+ 01KXD1SPQ8EYKDZ4QXWD3WWX1Z | N3       | failed    |          13 |               
+(6 rows)
+
+--- LEDGER (verdad) por step ---
+           run_id           | node_key |        step_run_id         | ledger_cents | entries 
+----------------------------+----------+----------------------------+--------------+---------
+ 01KXD1MM3ENG6QNZ43YY7M1P6V | N1       | 01KXD1MM396AJ3R38DW02B47AX |            0 |       1
+ 01KXD1MM3ENG6QNZ43YY7M1P6V | N2       | 01KXD1MM3B34QTXG5YY08PYK2P |            0 |       1
+ 01KXD1MM3ENG6QNZ43YY7M1P6V | N3       | 01KXD1MM3DNDPS8RQKAS5H7YVD |           16 |       1
+ 01KXD1SPQ8EYKDZ4QXWD3WWX1Z | N1       | 01KXD1SPQ43RR60X35T7GW9853 |            0 |       1
+ 01KXD1SPQ8EYKDZ4QXWD3WWX1Z | N2       | 01KXD1SPQ5SVV1TT8FJSHZJ9YX |            0 |       1
+ 01KXD1SPQ8EYKDZ4QXWD3WWX1Z | N3       | 01KXD1SPQ6MECPN3HBPJN4VKS9 |           13 |       1
+ 01KXD5XD4AWWRAM28W7EDJTMDT | N1       | 01KXD5XD462Q1QYXH9CVG9X0K7 |            0 |       1
+ 01KXD5XD4AWWRAM28W7EDJTMDT | N2       | 01KXD5XD48MQSB2VZCW62TGQX8 |            0 |       1
+ 01KXD5XD4AWWRAM28W7EDJTMDT | N3       | 01KXD5XD49XCM1ST072YYBVA7A |           16 |       1
+ 01KXDDNG2BR2YK8BCS90540T9T | N1       | 01KXDDNG287ERP5NMHK895FSPQ |            0 |       1
+ 01KXDDNG2BR2YK8BCS90540T9T | N2       | 01KXDDNG29042SBY4DRPFH7YP8 |            0 |       1
+ 01KXDDNG2BR2YK8BCS90540T9T | N3       | 01KXDDNG2AZ0Y4T33DB36BHT16 |           18 |       1
+ 01KXE8A8956H55KBVQSVFK2RQR | N1       | 01KXE8A891NNFHH0EGMSN394H3 |            0 |       1
+ 01KXE8A8956H55KBVQSVFK2RQR | N2       | 01KXE8A893ZKXTGHESBDB3F1K7 |            0 |       1
+ 01KXE8A8956H55KBVQSVFK2RQR | N3       | 01KXE8A8943Q7MQJK3AMAG124K |           18 |       1
+(15 rows)
+
+--- LEDGER (verdad) por run ---
+           run_id           | ledger_cents 
+----------------------------+--------------
+ 01KXD1MM3ENG6QNZ43YY7M1P6V |           16
+ 01KXD1SPQ8EYKDZ4QXWD3WWX1Z |           13
+ 01KXD5XD4AWWRAM28W7EDJTMDT |           16
+ 01KXDDNG2BR2YK8BCS90540T9T |           18
+ 01KXE8A8956H55KBVQSVFK2RQR |           18
+(5 rows)
+
+--- cargos huerfanos (step_run_id NULL) ---
+ count 
+-------
+     0
+(1 row)
+

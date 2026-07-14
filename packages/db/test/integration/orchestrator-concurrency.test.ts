@@ -18,6 +18,7 @@ import { makeWithTransaction } from '../../src/index';
 import { findDependents, findStepForUpdate } from '../../src/repos/steps.repo';
 import { stepRun } from '../../src/schema/pipeline';
 import { OrchestratorEnv, type SeedStep } from './orchestrator-harness';
+import { makeTestLogger } from '@ugc/test-utils';
 
 // Harness compartido (mismo cableado que orchestrator.test.ts).
 const env = new OrchestratorEnv('db:orchestrator-conc');
@@ -42,7 +43,7 @@ describe('transition() — carrera sobre el MISMO step: FOR UPDATE serializa', (
       { id: a, status: 'running', nodeKey: 'N0' },
       { id: b, status: 'awaiting_deps', nodeKey: 'N1', dependsOn: [a] },
     ]);
-    const deps = { withTransaction: makeWithTransaction(tdb().db, activeBoss()) };
+    const deps = { withTransaction: makeWithTransaction(tdb().db, activeBoss(), makeTestLogger()) };
 
     // Dos transiciones idénticas a la vez sobre el step `a`. La primera en tomar
     // el lock aplica running→succeeded; la segunda BLOQUEA en FOR UPDATE, y al

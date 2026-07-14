@@ -25,7 +25,7 @@ import {
   transition,
 } from '@ugc/core/orchestrator';
 import type { Logger } from '@ugc/core';
-import { findRunAutopilot, findStep, findStepsByIds, rollupStepCost } from '@ugc/db';
+import { findRunAutopilot, findStep, findStepsByIds } from '@ugc/db';
 import type { DbClient } from '@ugc/db';
 import type { PgBoss } from 'pg-boss';
 
@@ -268,32 +268,22 @@ export async function registerStepConsumer({
           ? 'reach_checkpoint'
           : 'succeed';
 
-      // T1.10b — ROLLUP DEL COSTE REAL, ANTES de la transición de cierre.
+      // T1.20 — AQUÍ YA NO SE HACE EL ROLLUP DEL COSTE (y no es una omisión: es EL fix).
       //
-      // El servicio que gastó (Firecrawl/Anthropic) YA escribió su `cost_entry` con
-      // `step_run_id = este step` (record-first, T1.4: la fila del gasto se escribe DENTRO del
-      // servicio, ANTES de retornar — nunca se mueve de ahí, o un throw intermedio perdería
-      // dinero ya gastado). Lo que faltaba —y lo que hacía que el canvas mostrase $0,00 con 20
-      // céntimos gastados— es la columna `step_run.cost_actual`, que es la que suma el KPI. Se
-      // RECOMPUTA aquí desde `cost_entry` (rollup, no acumulador: recalculable ⇒ no puede
-      // derivar de la verdad granular del ledger).
+      // Hasta T1.20, el consumer recomputaba `step_run.cost_actual` justo antes de cerrar. El
+      // problema no era ese rollup, sino DÓNDE estaba: el consumer solo ve los cierres que él
+      // provoca (`succeed`/`reach_checkpoint`/`skip_inapplicable`). Todos los DEMÁS caminos por
+      // los que un step termina HABIENDO GASTADO —el `fail` con retries agotados (el caso real:
+      // dos runs del usuario con 16¢ y 13¢ en el ledger y $0,00 en el nodo), el `expire` del
+      // sweeper, el `cancel`, el `reject`, el `supersede`— no pasan por aquí y dejaban la columna
+      // mintiendo. Arreglar la mitad de una mentira no la arregla.
       //
-      // FRONTERA (T1.10a): la columna del step la escribe el ORQUESTADOR (esto), nunca
-      // `@ugc/services` — los servicios solo escriben SU gasto.
-      //
-      // ANTES del cierre y no después: el cierre es lo que dispara el NOTIFY → SSE, así que si
-      // el rollup fuese después, el frontend recibiría el step ya `succeeded`/`waiting_approval`
-      // con `cost_actual` todavía a NULL y no habría un segundo evento que lo corrigiera (el KPI
-      // se quedaría a 0 hasta el siguiente cambio del run).
-      //
-      // Su fallo NO tumba el step (el trabajo está hecho y el gasto está registrado en
-      // `cost_entry`, que es la verdad del ledger): se loguea y se sigue. El rollup es
-      // RECOMPUTABLE — un fallo aquí es una columna desactualizada, no dinero perdido.
-      try {
-        await rollupStepCost(db, stepId);
-      } catch (err) {
-        log.warn({ err }, 'step.execute: rollup de cost_actual falló (el cost_entry sí está)');
-      }
+      // El rollup vive ahora en `applyTransition` (packages/core), el EMBUDO ÚNICO por el que
+      // pasan TODOS los cierres, gateado por `settlesCost(event)` y ejecutado en la MISMA
+      // transacción que la transición (vía el puerto `CostStore`, aislado con un SAVEPOINT en el
+      // adaptador para que su fallo no tumbe la transición — la propiedad que T1.10b estableció
+      // aquí y que T1.20 conserva). Cubre los N caminos por construcción, no por enumeración.
+      // Volver a llamarlo aquí sería redundante y, peor, sugeriría que este camino es especial.
 
       try {
         // T1.10a: `outputRefs` capturado del executor (si lo hubo) viaja en la MISMA

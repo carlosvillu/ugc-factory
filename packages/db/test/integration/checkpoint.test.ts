@@ -19,13 +19,16 @@ import { makeWithTransaction } from '../../src/index';
 import { stepRun } from '../../src/schema/pipeline';
 import { auditLog } from '../../src/schema/ops';
 import { OrchestratorEnv } from './orchestrator-harness';
+import { makeTestLogger } from '@ugc/test-utils';
 
 const env = new OrchestratorEnv('db:checkpoint');
 const tdb = () => env.tdb;
 const activeBoss = () => env.activeBoss();
 const seed = (steps: Parameters<OrchestratorEnv['seed']>[0]) => env.seed(steps);
 const countJobs = (singletonKey?: string) => env.countJobs(singletonKey);
-const makeDeps = () => ({ withTransaction: makeWithTransaction(tdb().db, activeBoss()) });
+const makeDeps = () => ({
+  withTransaction: makeWithTransaction(tdb().db, activeBoss(), makeTestLogger()),
+});
 
 async function rowsOfRun(runId: string) {
   return tdb().db.select().from(stepRun).where(eq(stepRun.runId, runId));

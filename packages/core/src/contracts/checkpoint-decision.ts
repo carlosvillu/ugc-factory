@@ -21,6 +21,7 @@
 // tocar ni la tabla (jsonb + `kind` texto) ni el route handler (que trata la decisión como una
 // unidad opaca y solo la valida contra este schema). Hoy solo existe la de CP1.
 import { z } from 'zod';
+import { BatchConfigSchema } from './batch-config';
 
 /**
  * CP1 · BRIEF — la petición BLOQUEANTE de imágenes (§7.2 N3). El brief es VÁLIDO pero el pipeline
@@ -59,11 +60,32 @@ export const BriefCheckpointDecisionSchema = z
 export type BriefCheckpointDecision = z.infer<typeof BriefCheckpointDecisionSchema>;
 
 /**
- * La decisión de CUALQUIER checkpoint. Unión discriminada de un solo miembro HOY: `z.discriminatedUnion`
- * con un miembro es legal y expresa la intención (CP2/CP3/CP4 entran aquí como miembros nuevos),
- * a diferencia de un `z.unknown()` que aceptaría cualquier basura en el body de `/approve`.
+ * CP2 · MATRIZ (T2.3, §7.2 N4) — lo que el humano RESUELVE al confirmar el gasto: **con qué
+ * config se compone el lote**. La `BatchConfig` es exactamente la misma forma con la que se pidió
+ * la ESTIMACIÓN (`POST /api/batches/estimate`), y eso es el invariante que hace que el lote creado
+ * sea el lote presupuestado: si la confirmación viajara con otro shape, el usuario aprobaría un
+ * número y el sistema crearía otro.
+ *
+ * El ARTEFACTO de N4 (`ad_batch.matrix`, el `BatchPlan`) NO viaja aquí — y esa es la distinción
+ * que este fichero defiende: el plan lo RECOMPONE el servidor con `composeMatrix` sobre la config
+ * decidida (y con el `batchDiscriminator` del lote nuevo, que el cliente no puede conocer porque
+ * el `ad_batch.id` no existe hasta la transacción). Aceptar la matriz del cliente sería dejarle
+ * escribir directamente las filas de `ad_variant` que se van a facturar.
+ */
+export const MatrixCheckpointDecisionSchema = z.object({
+  kind: z.literal('matrix'),
+  config: BatchConfigSchema,
+});
+export type MatrixCheckpointDecision = z.infer<typeof MatrixCheckpointDecisionSchema>;
+
+/**
+ * La decisión de CUALQUIER checkpoint. Unión discriminada por `kind`: CP3/CP4 entran aquí como
+ * miembros nuevos, a diferencia de un `z.unknown()` que aceptaría cualquier basura en el body de
+ * `/approve`. T1.11 prometió que añadir CP2 costaría **una línea** (sin migración, sin tocar el
+ * repo, sin tocar los route handlers) — T2.3 lo ha cobrado: la genericidad era real.
  */
 export const CheckpointDecisionSchema = z.discriminatedUnion('kind', [
   BriefCheckpointDecisionSchema,
+  MatrixCheckpointDecisionSchema,
 ]);
 export type CheckpointDecision = z.infer<typeof CheckpointDecisionSchema>;

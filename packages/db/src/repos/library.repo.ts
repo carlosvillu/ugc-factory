@@ -23,8 +23,9 @@
 //     la PK (las FKs de `ad_variant.hook_line_id` siguen apuntando a la misma línea).
 //   - `text` es la CLAVE: cambiar el texto crea una línea NUEVA (es otra línea de copy), no
 //     edita la vieja. Retirar copy obsoleta es una decisión explícita, no un efecto del seed.
-import { count, sql } from 'drizzle-orm';
-import type { CtaLineSeed, HookLineSeed, RecipeSeed } from '@ugc/core/library';
+import { count, eq, sql } from 'drizzle-orm';
+import { HookLineSeedSchema, RecipeSeedSchema } from '@ugc/core/library';
+import type { CtaLineSeed, HookLineSeed, RecipeSeed, RecipeTier } from '@ugc/core/library';
 import type { Db } from '../client';
 import { ctaLine, hookLine, recipe, type Recipe } from '../schema/gallery';
 
@@ -135,11 +136,65 @@ export async function countLibrary(db: Db): Promise<SeedLibraryCounts> {
 }
 
 /** Las 3 recetas por tier: el `SELECT` de la Verificación de T2.1 y la fuente del estimador
- *  de coste de T2.2 (que lee la horquilla min/max en céntimos).
- *
- *  Las lecturas de la librería de copy (hooks por ángulo+idioma, CTAs por objetivo) NO se
- *  escriben aquí todavía: su consumidor es el compositor de matriz de T2.2 y un repo empieza
- *  con la query que necesitas HOY (db.md §4). */
+ *  de coste de T2.2 (que lee la horquilla min/max en céntimos). */
 export async function listRecipes(db: Db): Promise<Recipe[]> {
   return db.select().from(recipe).orderBy(recipe.id);
+}
+
+/**
+ * La receta de UN tier — la fila REAL contra la que se estima el coste de un lote (T2.3), YA en
+ * el shape que el estimador consume (`RecipeSeed`).
+ *
+ * Existe como query propia (y no como `listRecipes().find()`) porque el ESTIMADOR necesita
+ * exactamente una y `estimateBatchCost` LANZA si le llega la de otro tier: pedirla por su PK es
+ * la forma de que "la receta del tier elegido" sea una consulta, no un filtro en memoria que
+ * alguien pueda equivocar. `undefined` si no está sembrada (⇒ el handler da un error explícito
+ * en vez de estimar con una receta inventada).
+ *
+ * Devuelve `RecipeSeed` (parseado) y no la FILA cruda: `recipe.steps` es jsonb OPACO en la BD, así
+ * que el consumidor tendría que castearlo — y un cast es exactamente donde una receta corrupta
+ * (escrita a mano, o por una recalibración de T3.4 con un bug) entraría al estimador sin que nadie
+ * mirase. El `parse` la rechaza ruidosamente, que es lo correcto cuando lo que sigue es autorizar
+ * un gasto.
+ */
+export async function getRecipe(db: Db, tier: RecipeTier): Promise<RecipeSeed | undefined> {
+  const [row] = await db.select().from(recipe).where(eq(recipe.id, tier));
+  if (!row) return undefined;
+  return RecipeSeedSchema.parse({
+    tier: row.id,
+    steps: row.steps,
+    estCost30sMinCents: row.estCost30sMinCents,
+    estCost30sMaxCents: row.estCost30sMaxCents,
+    notes: row.notes ?? undefined,
+  });
+}
+
+/**
+ * TODA la librería de hooks (T2.1), en el shape que consume el compositor de matriz
+ * (`HookLineSeed`: es lo que `composeMatrix` pide, y filtra él por ángulo + idioma).
+ *
+ * Sin paginar y sin filtrar en SQL A PROPÓSITO: la librería sembrada son ~decenas de líneas
+ * (§17: «el seed inicial cubre es + en»), el compositor las cruza con TODOS los ángulos e idiomas
+ * del lote en una sola pasada, y filtrar aquí exigiría replicar en SQL el PUENTE
+ * framework→ángulo (`BRIEF_FRAMEWORK_TO_HOOK_ANGLE`) que vive en core. Un `WHERE` que duplique
+ * una tabla de traducción de core es exactamente el drift silencioso que db.md §4 evita.
+ *
+ * Orden estable (id) para que dos composiciones de la misma config den la MISMA matriz: el
+ * compositor toma los primeros N que casan, así que un orden no determinista haría que el mismo
+ * lote produjera hooks distintos entre corridas.
+ */
+export async function listHookLines(db: Db): Promise<HookLineSeed[]> {
+  const rows = await db.select().from(hookLine).orderBy(hookLine.id);
+  // El `angle`/`language` de la BD son `text` (no enums nativos): se PARSEAN contra el contrato,
+  // no se castean. Una línea con un ángulo que el compositor no conoce no puede colarse en la
+  // matriz — sería un hook que ningún ángulo del brief podría reclamar.
+  return rows.flatMap((row) => {
+    const parsed = HookLineSeedSchema.safeParse({
+      angle: row.angle,
+      text: row.text,
+      verticals: row.verticals,
+      language: row.language,
+    });
+    return parsed.success ? [parsed.data] : [];
+  });
 }

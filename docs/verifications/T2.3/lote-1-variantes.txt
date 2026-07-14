@@ -1,0 +1,26 @@
+             id             | status  |   tier   | objective | languages | cost_estimated_cents 
+----------------------------+---------+----------+-----------+-----------+----------------------
+ 01KXGW39RABCDQZV0MAZR0CAWB | planned | standard | hook_test | {es,en}   |                 1602
+(1 row)
+
+ total | codes_unicos | en_planned 
+-------+--------------+------------
+    12 |           12 |         12
+(1 row)
+
+                               filename_code                               | status  | language 
+---------------------------------------------------------------------------+---------+----------
+ topi-tanpa-bingk-detalle-de-produ-hook01-01kxgv0hs4bt-en-12s-01kxgw39rabc | planned | en
+ topi-tanpa-bingk-detalle-de-produ-hook01-01kxgv0hs4bt-es-12s-01kxgw39rabc | planned | es
+ topi-tanpa-bingk-detalle-de-produ-hook02-01kxgv0hs4bt-en-12s-01kxgw39rabc | planned | en
+ topi-tanpa-bingk-detalle-de-produ-hook02-01kxgv0hs4bt-es-12s-01kxgw39rabc | planned | es
+ topi-tanpa-bingk-envio-y-devoluci-hook01-01kxgv0hs4bt-en-12s-01kxgw39rabc | planned | en
+ topi-tanpa-bingk-envio-y-devoluci-hook01-01kxgv0hs4bt-es-12s-01kxgw39rabc | planned | es
+ topi-tanpa-bingk-envio-y-devoluci-hook02-01kxgv0hs4bt-en-12s-01kxgw39rabc | planned | en
+ topi-tanpa-bingk-envio-y-devoluci-hook02-01kxgv0hs4bt-es-12s-01kxgw39rabc | planned | es
+ topi-tanpa-bingk-estilo-casual-to-hook01-01kxgv0hs4bt-en-12s-01kxgw39rabc | planned | en
+ topi-tanpa-bingk-estilo-casual-to-hook01-01kxgv0hs4bt-es-12s-01kxgw39rabc | planned | es
+ topi-tanpa-bingk-estilo-casual-to-hook02-01kxgv0hs4bt-en-12s-01kxgw39rabc | planned | en
+ topi-tanpa-bingk-estilo-casual-to-hook02-01kxgv0hs4bt-es-12s-01kxgw39rabc | planned | es
+(12 rows)
+

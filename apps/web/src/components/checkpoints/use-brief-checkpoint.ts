@@ -29,7 +29,6 @@
 // CONTRATO DEL HOOK: mientras no haya CONFIRMACIÓN de que el artefacto es un brief, devuelve
 // `null` — y el llamante se queda con el panel genérico. O sea: en la duda, NO se secuestra la UI
 // de nadie. Solo un brief confirmado abre CP1.
-import { useEffect, useState } from 'react';
 import {
   BriefWarningSchema,
   N3OutputSchema,
@@ -37,8 +36,7 @@ import {
   type BriefWarning,
   type ProductBrief,
 } from '@ugc/core/contracts';
-import { runActions } from '@/lib/api-client';
-import { useRunStore } from '@/stores/run-store';
+import { usePausedCheckpoint } from './use-paused-checkpoint';
 
 export interface BriefCheckpoint {
   /** El step de CP1 (el que hay que aprobar/editar). */
@@ -72,54 +70,15 @@ function parseBriefArtifact(outputRefs: unknown): Omit<BriefCheckpoint, 'stepId'
   return { briefId: output.data.briefId, brief: brief.data, warnings };
 }
 
-/** El primer checkpoint PAUSADO del run, si lo hay. Es solo el CANDIDATO: que sea un brief lo
- *  decide el artefacto, no esto. Se ordena por id para que el ganador sea DETERMINISTA (un
- *  `.find()` sobre el store no lo era) — y por `isCheckpoint`, nunca por `node_key`. */
-function usePausedCheckpointId(): string | null {
-  return useRunStore((s) => {
-    const paused = Object.values(s.steps)
-      .filter((st) => st.isCheckpoint && st.status === 'waiting_approval')
-      .sort((a, b) => a.id.localeCompare(b.id));
-    return paused[0]?.id ?? null;
-  });
-}
-
 /**
  * El checkpoint del brief que está esperando decisión, o `null` (no hay checkpoint pausado, aún
- * no sabemos qué es, o no es un brief). Pide el step ENTERO por REST porque el excerpt del SSE no
- * sirve para editar; el fetch se dispara UNA vez por step.
+ * no sabemos qué es, o no es un brief).
+ *
+ * La plomería —qué checkpoint está pausado, pedir su step ENTERO por REST (el excerpt del SSE va
+ * recortado y no sirve para editar), no escribir estado para descartar un hallazgo de otro step—
+ * vive en `usePausedCheckpoint` desde T2.3, compartida con CP2. Lo ESPECÍFICO de CP1 es lo único
+ * que queda aquí: qué forma de artefacto reconoce y qué saca de ella.
  */
 export function useBriefCheckpoint(): BriefCheckpoint | null {
-  const stepId = usePausedCheckpointId();
-  // El hallazgo se guarda JUNTO al step que lo produjo, en vez de resetearse al principio del
-  // effect: un `setState` síncrono dentro de un effect dispara renders en cascada (y el linter lo
-  // veta con razón). Al llevar el `stepId` dentro, el RENDER decide si lo que tiene en la mano
-  // sigue siendo válido — sin escribir estado para descartarlo.
-  const [found, setFound] = useState<BriefCheckpoint | null>(null);
-
-  useEffect(() => {
-    if (stepId === null) return;
-    let cancelled = false;
-    runActions
-      .getStep(stepId)
-      .then((step) => {
-        if (cancelled) return;
-        const parsed = parseBriefArtifact(step.outputRefs);
-        // Solo se ESCRIBE cuando hay brief confirmado. Un `null` no hace falta persistirlo: la
-        // comparación de abajo ya descarta lo que no sea de este step.
-        if (parsed !== null) setFound({ stepId, ...parsed });
-      })
-      .catch(() => {
-        // No se pudo leer el artefacto: NO se abre CP1. El panel genérico sigue ahí y el usuario
-        // conserva las acciones del checkpoint (aprobar/rechazar en crudo) — degradar a "no puedo
-        // editar el brief" es mucho mejor que dejarle una pantalla de error sin salida.
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [stepId]);
-
-  // El hallazgo solo vale si es DE ESTE step: si el step pausado cambió (o dejó de haberlo, o
-  // resultó no ser un brief), lo que tenemos guardado es de otro momento del run y NO se muestra.
-  return found !== null && found.stepId === stepId ? found : null;
+  return usePausedCheckpoint(parseBriefArtifact);
 }

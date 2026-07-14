@@ -12,6 +12,8 @@ import { useRunStore } from '@/stores/run-store';
 import { ApiError, runActions } from '@/lib/api-client';
 import { BriefEditor } from '@/components/checkpoints/brief-editor';
 import { useBriefCheckpoint } from '@/components/checkpoints/use-brief-checkpoint';
+import { MatrixPanel } from '@/components/checkpoints/matrix-panel';
+import { useMatrixCheckpoint } from '@/components/checkpoints/use-matrix-checkpoint';
 import { RunCanvas } from './run-canvas';
 import { StepPanel } from './step-panel';
 import { formatCost } from './status';
@@ -45,7 +47,13 @@ export function RunShell({ runId }: { runId: string }) {
   // Mientras no haya CONFIRMACIÓN de brief, el hook devuelve `null` y la vista es la cockpit de
   // siempre: en la duda no se secuestra la UI de nadie.
   const cp1 = useBriefCheckpoint();
-  const cp1Open = cp1 !== null;
+  // CP2 (T2.3): el checkpoint de la MATRIZ. Mismo trato que CP1 —el canvas sigue montado, el
+  // inspector genérico se retira— y por las mismas razones. Los dos NUNCA están abiertos a la vez:
+  // N4 depende de N3, así que mientras CP1 pausa, N4 está en `awaiting_deps`. El `cp1 !== null`
+  // manda igualmente en el orden de comprobación: si por lo que fuera hubiera dos artefactos
+  // reconocibles, gana el que bloquea al otro.
+  const cp2 = useMatrixCheckpoint();
+  const checkpointOpen = cp1 !== null || cp2 !== null;
 
   return (
     // `h-full` (no `h-dvh`): desde T1.13 el viewport lo fija el layout del grupo `(app)`,
@@ -54,8 +62,8 @@ export function RunShell({ runId }: { runId: string }) {
     <div className="flex h-full flex-col bg-bg-subtle">
       <RunHeader runId={runId} />
       <div className="flex min-h-0 flex-1">
-        {/* El canvas NUNCA se desmonta: con CP1 abierto se estrecha, no desaparece. */}
-        <div className={cp1Open ? 'w-64 shrink-0 border-r border-border' : 'min-w-0 flex-1'}>
+        {/* El canvas NUNCA se desmonta: con un checkpoint abierto se estrecha, no desaparece. */}
+        <div className={checkpointOpen ? 'w-64 shrink-0 border-r border-border' : 'min-w-0 flex-1'}>
           <RunCanvas />
         </div>
         {cp1 !== null ? (
@@ -65,6 +73,8 @@ export function RunShell({ runId }: { runId: string }) {
             brief={cp1.brief}
             warnings={cp1.warnings}
           />
+        ) : cp2 !== null ? (
+          <MatrixPanel stepId={cp2.stepId} brief={cp2.brief} config={cp2.config} />
         ) : (
           <StepPanel />
         )}

@@ -1,0 +1,11 @@
+             id             | autopilot | status  
+----------------------------+-----------+---------
+ 01KXGVEQYKFH5EWEEVKCSN0XTX | t         | pending
+(1 row)
+
+ node_key |      status      |   checkpoint_config   
+----------+------------------+-----------------------
+ N4       | waiting_approval | {"alwaysPause": true}
+ N3       | succeeded        | 
+(2 rows)
+

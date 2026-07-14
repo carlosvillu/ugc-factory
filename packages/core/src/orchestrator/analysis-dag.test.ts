@@ -6,7 +6,9 @@
 import { describe, expect, it } from 'vitest';
 import { analysisRunDefinition, DEFAULT_ANALYSIS_LANGUAGE } from './analysis-dag';
 import type { AnalysisN1Config, AnalysisN3Config } from './analysis-dag';
+import { shouldPause } from './checkpoint';
 import { RunDefinitionSchema } from './run-definition';
+import type { RunNodeInput } from './run-definition';
 
 const URL_INTAKE = { source: 'url', url: 'https://example.com/p/1' } as const;
 const MANUAL_INTAKE = { source: 'manual', analysisId: 'anl_01' } as const;
@@ -23,11 +25,12 @@ describe('analysisRunDefinition', () => {
     ).not.toThrow();
   });
 
-  it('encadena N1 → N2 → N3 (la dep es lo que ordena el pipeline)', () => {
+  it('encadena N1 → N2 → N3 → N4 (la dep es lo que ordena el pipeline)', () => {
     const def = analysisRunDefinition('proj_01', URL_INTAKE);
     const byKey = Object.fromEntries(def.nodes.map((n) => [n.nodeKey, n]));
 
-    expect(def.nodes).toHaveLength(3);
+    // T2.3 añadió N4 (estrategia del lote, CP2): son CUATRO nodos.
+    expect(def.nodes).toHaveLength(4);
     // N1 es el root: no espera a nadie.
     expect(byKey.N1?.dependsOn).toEqual([]);
     // N2 espera a N1 (necesita su RawContent para decidir si hay imágenes).
@@ -39,6 +42,51 @@ describe('analysisRunDefinition', () => {
     // NO identifica una fila tras un supersede (T0.8). Si N2 se salta, `skipped` satisface
     // igualmente su dep (T0.8) y N3 avanza.
     expect(byKey.N3?.dependsOn).toEqual(['N1', 'N2']);
+    // N4 depende SOLO de N3: la matriz se compone del BRIEF (sus ángulos, sus hooks, el
+    // `avatar_hint` de su audiencia). Ni el RawContent ni el VisualAnalysis entran en ella.
+    expect(byKey.N4?.dependsOn).toEqual(['N3']);
+  });
+
+  it('N4 es el CHECKPOINT de CP2, con los idiomas del lote en su config (T2.3)', () => {
+    const def = analysisRunDefinition('proj_01', URL_INTAKE);
+    const byKey = Object.fromEntries(def.nodes.map((n) => [n.nodeKey, n]));
+
+    // Sin `isCheckpoint`, N4 compondría la matriz y el run seguiría hacia el ScriptWriter SIN que
+    // nadie confirme el gasto — que es exactamente lo que CP2 existe para impedir (§7.2 N4).
+    expect(byKey.N4?.isCheckpoint).toBe(true);
+    // Los idiomas del LOTE por defecto son el del ANÁLISIS: proponer uno más duplicaría la matriz
+    // —y el gasto— sin que nadie lo pida.
+    expect(byKey.N4?.config).toEqual({ languages: [DEFAULT_ANALYSIS_LANGUAGE] });
+
+    const bilingual = analysisRunDefinition('proj_01', { ...URL_INTAKE, languages: ['es', 'en'] });
+    const n4 = bilingual.nodes.find((n) => n.nodeKey === 'N4');
+    expect(n4?.config).toEqual({ languages: ['es', 'en'] });
+  });
+
+  it('N4 pausa AUNQUE el run vaya en autopilot: es la puerta del gasto (§7.1.b)', () => {
+    // El agujero que esto tapa: la creación del lote vive en el efecto de dominio de `/approve`.
+    // Si N4 fuese un checkpoint NORMAL, con autopilot pasaría directo a `succeeded`, `/approve`
+    // nunca se llamaría y el run acabaría SIN `ad_batch` y SIN que nadie autorice un céntimo — la
+    // confirmación de coste saltada en silencio (y el autopilot se puede encender A MITAD del run
+    // desde el RunHeader, así que no es hipotético). `alwaysPause` es lo que lo impide.
+    const byKey = Object.fromEntries(
+      analysisRunDefinition('proj_01', URL_INTAKE).nodes.map((n) => [n.nodeKey, n]),
+    );
+    const pauses = (node: RunNodeInput | undefined, autopilot: boolean): boolean =>
+      shouldPause({
+        isCheckpoint: node?.isCheckpoint ?? false,
+        checkpointConfig: node?.checkpointConfig,
+        autopilot,
+      });
+
+    expect(pauses(byKey.N4, true)).toBe(true);
+    expect(pauses(byKey.N4, false)).toBe(true);
+
+    // Y el contraste que demuestra que el override es REAL y no que `shouldPause` pause siempre:
+    // CP1 (N3) sí es un checkpoint normal — el autopilot se lo salta, porque revisar el brief es
+    // opinión, no dinero. Lo que el autopilot NO puede saltarse es la firma del gasto.
+    expect(pauses(byKey.N3, true)).toBe(false);
+    expect(pauses(byKey.N3, false)).toBe(true);
   });
 
   it('N3 es el CHECKPOINT de CP1, y solo N3 (T1.10b)', () => {

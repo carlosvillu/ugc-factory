@@ -122,20 +122,37 @@ export {
   N1OutputSchema,
   N2OutputSchema,
   N3OutputSchema,
+  N4OutputSchema,
   type SkippedOutput,
   type N1Output,
   type N2Output,
   type N3Output,
+  type N4Output,
 } from './step-outputs';
 // La DECISIÓN de un checkpoint (T1.11): lo que el humano RESUELVE (CP1: subir fotos vs generar
-// packshot-IA), que NO es el artefacto que edita. Canal genérico: unión discriminada por `kind`,
-// a la que CP2/CP3/CP4 añaden su miembro. Ver la cabecera de `checkpoint-decision.ts`.
+// packshot-IA; CP2: con qué config se compone el lote), que NO es el artefacto que edita. Canal
+// genérico: unión discriminada por `kind`, a la que CP3/CP4 añaden su miembro. Ver la cabecera de
+// `checkpoint-decision.ts`.
 export {
   CheckpointDecisionSchema,
   BriefCheckpointDecisionSchema,
+  MatrixCheckpointDecisionSchema,
   type CheckpointDecision,
   type BriefCheckpointDecision,
+  type MatrixCheckpointDecision,
 } from './checkpoint-decision';
+// La CONFIG de CP2 (T2.3): lo que el usuario elige en el panel de la matriz. La MISMA forma sirve
+// para estimar (`POST /api/batches/estimate`) y para confirmar (la `decision` del checkpoint) —
+// que es lo que garantiza que el lote creado sea el lote presupuestado.
+export {
+  BatchConfigSchema,
+  PersonaModeSchema,
+  type BatchConfig,
+  type PersonaMode,
+} from './batch-config';
+// La RESPUESTA de la estimación (T2.3): la matriz que saldría de una config + lo que costaría. Es
+// el contrato del número que CP2 pinta en grande — y el dinero viaja en CÉNTIMOS ENTEROS.
+export { BatchEstimateSchema, type BatchEstimate } from './batch-estimate';
 // La MATRIZ del lote (T2.2, N4): la frontera `ProductBrief → BatchPlan → AdScript[]` de §7.4.
 // La compone `@ugc/core/strategy`, se persiste en `ad_batch.matrix` (jsonb) y la consumen CP2
 // (T2.3) y el ScriptWriter (T2.4) — cruza módulos, por eso es transversal.

@@ -31,7 +31,7 @@ import { CheckpointDecisionSchema, UlidSchema } from '@ugc/core/contracts';
 import { approveStep } from '@ugc/core/orchestrator';
 import { findStep, withDomainTransaction } from '@ugc/db';
 import { withRoute, getBoss, getDb, getRequestLogger } from '@/server';
-import { approveBriefForStep } from '@/server/brief-checkpoint';
+import { applyDomainEffect } from '@/server/domain-effects';
 import { persistCheckpointDecision } from '@/server/checkpoint-decision';
 import { withAuth } from '@/server/with-auth';
 import { toCheckpointError } from '../checkpoint-errors';
@@ -83,8 +83,12 @@ export const POST = withAuth(
             // transición el `output_refs` es el mismo (aprobar sin editar no lo toca).
             const step = await findStep(tx, params.id);
             await approveStep({ withTransaction }, params.id);
-            // No-op si el step no es CP1 (se discrimina por SCHEMA del artefacto).
-            await approveBriefForStep(tx, step?.outputRefs);
+            // EL EFECTO DE DOMINIO del checkpoint, resuelto por la FORMA de su artefacto (T2.3):
+            // CP1 (brief) aprueba el `product_brief`; CP2 (matriz) CREA el `ad_batch` y sus
+            // `ad_variant` en `planned`. No-op para cualquier otro step. El registro vive en
+            // `server/domain-effects.ts` — el handler ya no encadena un `await xForStep()` por
+            // checkpoint (deuda que T1.11 anotó y esta tarea paga).
+            await applyDomainEffect(tx, step?.outputRefs, body.decision);
             // No-op si el body no trajo decisión. Dentro de la tx ⇒ si la transición hubiera
             // fallado (409: el step ya no está en `waiting_approval`), no queda fila de decisión.
             await persistCheckpointDecision(tx, params.id, body.decision);

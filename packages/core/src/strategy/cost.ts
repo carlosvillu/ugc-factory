@@ -119,6 +119,32 @@ export interface BatchCostEstimate {
    * contra la que se lee el ahorro. A 30 s ES la horquilla de la receta, literalmente.
    */
   standaloneVariant: CostRangeCents;
+  /**
+   * ROLLUP POR SEGMENTO: lo que se paga de hook, de body y de cta EN TODO EL LOTE (con los
+   * segmentos compartidos cobrados UNA vez), más cuántas generaciones son. Es el desglose que
+   * CP2 pinta debajo del total.
+   *
+   * POR QUÉ VIVE AQUÍ Y NO EN EL PANEL (hallazgo de `simplify`): el panel lo derivaba a mano
+   * filtrando `lineItems` y sumando con un `reduce`, lo que (a) violaba la decisión vinculante de
+   * T2.3 —«ningún número de dinero se calcula en el navegador»— y (b) sumaba SOLO `maxCents`,
+   * tirando el mínimo: el desglose salía como un PUNTO máximo debajo de un total que es HORQUILLA,
+   * y el usuario comparaba peras con manzanas en la pantalla donde autoriza el gasto. El rollup se
+   * calcula donde se calcula todo lo demás, con la misma aritmética de céntimos enteros.
+   *
+   * Por construcción `Σ bySegment == total` (los `lineItems` particionan el lote por segmento y
+   * cada partida pertenece a UN segmento), y lo fija un test.
+   */
+  bySegment: Record<AdSegment, SegmentRollup>;
+}
+
+/** Lo que cuesta un segmento EN TODO EL LOTE y en cuántas generaciones se paga. NO se exporta: la
+ *  superficie pública es `BatchCostEstimate`, y quien necesite esta forma la deriva de ella
+ *  (`BatchCostEstimate['bySegment']`) — así no puede desincronizarse del todo. knip veta el export
+ *  sin consumidor, y con razón. */
+interface SegmentRollup {
+  cost: CostRangeCents;
+  /** Nº de generaciones reales (partidas) de este segmento: en hook-testing, 3 hooks → 1 body. */
+  generations: number;
 }
 
 /**
@@ -254,6 +280,21 @@ export function estimateBatchCost(plan: BatchPlan, recipe: RecipeSeed): BatchCos
     maxCents: lineItems.reduce((s, li) => s + li.cost.maxCents, 0),
   };
 
+  // El rollup por segmento sale de las MISMAS partidas que el total (ya deduplicadas), así que
+  // `Σ bySegment == total` por construcción: cada partida pertenece a un único segmento. Se agrega
+  // la horquilla ENTERA (min y max), no solo el techo — que es el bug que esto vino a matar.
+  const bySegment: Record<AdSegment, SegmentRollup> = {
+    hook: { cost: { minCents: 0, maxCents: 0 }, generations: 0 },
+    body: { cost: { minCents: 0, maxCents: 0 }, generations: 0 },
+    cta: { cost: { minCents: 0, maxCents: 0 }, generations: 0 },
+  };
+  for (const item of lineItems) {
+    const roll = bySegment[item.segment];
+    roll.cost.minCents += item.cost.minCents;
+    roll.cost.maxCents += item.cost.maxCents;
+    roll.generations += 1;
+  }
+
   // ── Imputación por variante ────────────────────────────────────────────────────────────
   // Una partida compartida por N variantes se reparte entre las N (mayor resto sobre pesos
   // iguales → los céntimos sueltos caen en las primeras, de forma determinista). La suma de
@@ -274,5 +315,5 @@ export function estimateBatchCost(plan: BatchPlan, recipe: RecipeSeed): BatchCos
     });
   }
 
-  return { tier: recipe.tier, total, lineItems, perVariant, standaloneVariant };
+  return { tier: recipe.tier, total, lineItems, perVariant, standaloneVariant, bySegment };
 }

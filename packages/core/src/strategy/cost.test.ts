@@ -163,6 +163,25 @@ describe('la Verificación de T2.2: 2 ángulos × 3 hooks × 1 persona × es+en 
     expect(est.lineItems).toHaveLength(36);
     expect(est.lineItems.every((li) => li.variantFilenameCodes.length === 1)).toBe(true);
   });
+
+  it('EL ROLLUP POR SEGMENTO CUADRA con sus partidas (min Y max) y suma el total', () => {
+    // El rollup existe para que el PANEL no sume céntimos (decisión vinculante de T2.3). El bug que
+    // mata: el panel sumaba a mano y solo `maxCents`, así que el desglose salía como un PUNTO
+    // máximo debajo de un total que es HORQUILLA. Aquí se fija que el rollup lleva la horquilla
+    // ENTERA y que cuadra con las partidas de su segmento, al céntimo.
+    for (const segment of ['hook', 'body', 'cta'] as const) {
+      const items = est.lineItems.filter((li) => li.segment === segment);
+      const roll = est.bySegment[segment];
+      expect(roll.generations).toBe(items.length);
+      expect(roll.cost.minCents).toBe(items.reduce((s, li) => s + li.cost.minCents, 0));
+      expect(roll.cost.maxCents).toBe(items.reduce((s, li) => s + li.cost.maxCents, 0));
+    }
+
+    // Y los tres segmentos particionan el lote: Σ bySegment == total, exacto.
+    const segments = Object.values(est.bySegment);
+    expect(segments.reduce((s, r) => s + r.cost.minCents, 0)).toBe(est.total.minCents);
+    expect(segments.reduce((s, r) => s + r.cost.maxCents, 0)).toBe(est.total.maxCents);
+  });
 });
 
 // ═══════════════════════════════════════════════════════════════════════════════════════════
@@ -260,6 +279,23 @@ describe('hook-testing: los segmentos compartidos se cobran UNA vez (§7.2 N7, d
     // La partida compartida declara a QUIÉN sirve: las 3 variantes.
     const body = est.lineItems.find((li) => li.segment === 'body');
     expect(body?.variantFilenameCodes).toHaveLength(3);
+  });
+
+  it('el ROLLUP enseña la dedup: 3 generaciones de hook, 1 de body, 1 de cta', () => {
+    // Es lo que el panel PINTA en el desglose («body — 1 generación(es)»): la economía de §16.1,
+    // legible. Si el rollup contara variantes en vez de generaciones, el usuario vería 3 bodies y
+    // creería estar pagando 3 — y el número grande de al lado le diría otra cosa.
+    expect(est.bySegment.hook.generations).toBe(3);
+    expect(est.bySegment.body.generations).toBe(1);
+    expect(est.bySegment.cta.generations).toBe(1);
+
+    // Y el rollup del segmento COMPARTIDO cuesta UNA generación, no tres.
+    const body = est.lineItems.find((li) => li.segment === 'body');
+    expect(est.bySegment.body.cost).toEqual(body?.cost);
+
+    const segments = Object.values(est.bySegment);
+    expect(segments.reduce((s, r) => s + r.cost.minCents, 0)).toBe(est.total.minCents);
+    expect(segments.reduce((s, r) => s + r.cost.maxCents, 0)).toBe(est.total.maxCents);
   });
 
   it('el lote CUESTA MENOS que 3 anuncios sueltos — y ese ahorro es la economía del PRD', () => {

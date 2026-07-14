@@ -1,0 +1,2 @@
+Unknown subcommand: console
+Valid options: route, unroute, requests, request, har

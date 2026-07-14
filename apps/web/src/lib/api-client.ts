@@ -7,11 +7,18 @@
 // decisión de la UI (NUNCA branch sobre `message`, texto para humanos).
 import { z } from 'zod';
 import {
+  BatchEstimateSchema,
   ErrorEnvelopeSchema,
+  type BatchConfig,
   type CheckpointDecision,
   type ErrorEnvelope,
 } from '@ugc/core/contracts';
-import { PersonaSchema, type PersonaBody, type PersonaPatch } from '@ugc/core/persona';
+import {
+  PersonaCandidateListSchema,
+  PersonaSchema,
+  type PersonaBody,
+  type PersonaPatch,
+} from '@ugc/core/persona';
 
 export class ApiError extends Error {
   constructor(
@@ -204,6 +211,15 @@ const StepResponseSchema = z.object({
 // El CRUD de `/personas` + el upload de imágenes de referencia. Todo contra la API REST del
 // Apéndice E, con los contratos de `@ugc/core/persona` (los mismos que re-valida el handler).
 export const personaActions = {
+  /** Las personas COMPATIBLES con un `avatar_hint` (T2.0, §11). La REGLA de matching es pura y
+   *  vive en core, pero se ejecuta en el SERVIDOR: CP2 pide las candidatas, no la librería entera
+   *  para filtrarla en el navegador — sería reimplementar la regla en el cliente (dos verdades) y
+   *  bajarse personas que no va a enseñar. */
+  candidates: (avatarHint: string) =>
+    api.get(
+      `/api/personas/candidates?avatar_hint=${encodeURIComponent(avatarHint)}`,
+      PersonaCandidateListSchema,
+    ),
   create: (body: PersonaBody) => api.post('/api/personas', PersonaSchema, body),
   update: (id: string, patch: PersonaPatch) =>
     api.patch(`/api/personas/${id}`, PersonaSchema, patch),
@@ -224,6 +240,19 @@ export const personaActions = {
     apiFetch(`/api/personas/${id}/reference-images/${assetId}`, PersonaSchema, {
       method: 'DELETE',
     }),
+};
+
+// ── CP2 · matriz y coste del lote (T2.3) ─────────────────────────────────────
+// EL COSTE NO SE CALCULA EN EL NAVEGADOR (decisión vinculante de T2.3): cada cambio del panel
+// (tier, ángulos, idiomas, persona) pide al servidor la matriz y su coste, que salen de
+// `composeMatrix` + `estimateBatchCost` sobre la `recipe` REAL de la BD. Es la MISMA función que
+// usa la confirmación ⇒ lo que se estima es lo que se crea. La respuesta se valida contra el
+// contrato de core: un total que no cumple el contrato es un error, no un número que pintar.
+export const batchActions = {
+  /** Se manda el `stepId` del checkpoint, NO el `briefId`: el servidor saca el brief del artefacto
+   *  del step (la misma procedencia que la confirmación), en vez de fiarse del que diga el cliente. */
+  estimate: (stepId: string, config: BatchConfig) =>
+    api.post('/api/batches/estimate', BatchEstimateSchema, { stepId, config }),
 };
 
 export const runActions = {

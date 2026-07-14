@@ -1,0 +1,13 @@
+           batch            | batch_status | variantes | codigos_unicos | en_planned 
+----------------------------+--------------+-----------+----------------+------------
+ 01KXGW39RABCDQZV0MAZR0CAWB | planned      |        12 |             12 |         12
+ 01KXGWEASY4XC69JA3H3TNE9V4 | planned      |        12 |             12 |         12
+ 01KXGWRJG6J1DPFWYQ4BQM2XQK | planned      |         6 |              6 |          6
+ 01KXGWV7MGZK59WS9EJ90X6PKF | planned      |         6 |              6 |          6
+(4 rows)
+
+ total_variantes | total_codigos_unicos 
+-----------------+----------------------
+              36 |                   36
+(1 row)
+

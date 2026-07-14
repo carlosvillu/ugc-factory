@@ -6,6 +6,15 @@
 // (T2.0); su salida es el `BatchPlan` (contrato transversal, `contracts/batch-plan.ts`) y el
 // desglose de coste que CP2 (T2.3) enseña antes de gastar un céntimo.
 export { composeMatrix, type ComposeMatrixInput, type PlannablePersona } from './matrix';
+// La resolución CONFIG → MATRIZ + COSTE (T2.3): la usan el executor de N4 (que propone la matriz
+// inicial), el endpoint de estimación de CP2 y el efecto de dominio que crea el lote. Una sola
+// aritmética para los tres ⇒ lo que se estima es lo que se crea.
+export {
+  planBatch,
+  defaultBatchConfig,
+  type PlanBatchInput,
+  type PlannedBatch,
+} from './plan-batch';
 export {
   estimateBatchCost,
   type BatchCostEstimate,

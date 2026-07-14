@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="_ds/ugc-factory-design-system-d126b2f1-3ada-48c5-84fa-914e891fea6f/tokens/colors.css">
+  <link rel="stylesheet" href="_ds/ugc-factory-design-system-d126b2f1-3ada-48c5-84fa-914e891fea6f/tokens/typography.css">
+  <link rel="stylesheet" href="_ds/ugc-factory-design-system-d126b2f1-3ada-48c5-84fa-914e891fea6f/tokens/spacing.css">
+  <link rel="stylesheet" href="_ds/ugc-factory-design-system-d126b2f1-3ada-48c5-84fa-914e891fea6f/tokens/radii-shadows.css">
+  <link rel="stylesheet" href="_ds/ugc-factory-design-system-d126b2f1-3ada-48c5-84fa-914e891fea6f/tokens/motion.css">
+  <link rel="stylesheet" href="_ds/ugc-factory-design-system-d126b2f1-3ada-48c5-84fa-914e891fea6f/styles.css">
+  <script src="_ds/ugc-factory-design-system-d126b2f1-3ada-48c5-84fa-914e891fea6f/_ds_bundle.js"></script>
+  <style>
+    html,body{margin:0}
+    body{background:#08080a;color:var(--text);font-family:var(--font-sans);-webkit-font-smoothing:antialiased}
+    a{color:var(--accent);text-decoration:none}
+    a:hover{color:var(--accent-hover)}
+    *{box-sizing:border-box}
+    ::-webkit-scrollbar{width:10px;height:10px}
+    ::-webkit-scrollbar-thumb{background:var(--border-2);border-radius:var(--r-full);border:3px solid #08080a}
+  </style>
+</helmet>
+<div style="padding:32px;display:flex;justify-content:center">
+  <div style="width:1280px;max-width:100%;background:var(--bg);border:1px solid var(--border-2);border-radius:12px;overflow:hidden;box-shadow:var(--shadow-lg)">
+
+    <div style="display:flex;align-items:center;gap:14px;padding:9px 14px;background:var(--surface);border-bottom:1px solid var(--border)">
+      <div style="display:flex;gap:6px">
+        <span style="width:10px;height:10px;border-radius:50%;background:var(--surface-3);border:1px solid var(--border-2)"></span>
+        <span style="width:10px;height:10px;border-radius:50%;background:var(--surface-3);border:1px solid var(--border-2)"></span>
+        <span style="width:10px;height:10px;border-radius:50%;background:var(--surface-3);border:1px solid var(--border-2)"></span>
+      </div>
+      <div style="font:400 11px/1 var(--font-mono);color:var(--text-3);background:var(--bg-subtle);border:1px solid var(--border);border-radius:var(--r-full);padding:5px 12px">ugcfactory.local/runs/8f21 · CP2</div>
+    </div>
+
+    <div style="display:flex;align-items:stretch">
+      <!-- ============ COLUMNA DE CONFIGURACIÓN ============ -->
+      <div style="flex:1;min-width:0;padding:24px 28px;background:var(--bg)">
+        <div style="font:600 11px/1 var(--font-mono);color:var(--warning);letter-spacing:0.08em;margin-bottom:9px">◆ CP2 · MATRIZ Y CONFIRMACIÓN DE GASTO</div>
+        <div style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap">
+          <h2 style="font:600 22px/1.05 var(--font-sans);letter-spacing:-0.015em;margin:0">Sérum Vitamina C 15%</h2>
+          <span style="font:400 12px/1 var(--font-mono);color:var(--text-3)">lote #8f21</span>
+        </div>
+        <p style="font:400 13px/1.5 var(--font-sans);color:var(--text-3);margin:8px 0 22px;max-width:640px">Brief aprobado en CP1. Configura la matriz de variantes y autoriza el gasto de generarla. Al confirmar se crean las filas <span style="font-family:var(--font-mono);color:var(--text-2)">ad_variant</span> en estado <span style="font-family:var(--font-mono);color:var(--text-2)">planned</span> y el pipeline sigue hacia el ScriptWriter.</p>
+
+        <!-- OBJETIVO -->
+        <div style="margin-bottom:24px">
+          <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:11px">
+            <div style="font:600 12px/1 var(--font-mono);color:var(--text-3);letter-spacing:0.05em;text-transform:uppercase">Objetivo · preset de duración</div>
+            <div style="font:400 11.5px/1 var(--font-sans);color:var(--text-3)">duración objetivo <span style="font-family:var(--font-mono);color:var(--text-2)">{{ preset.durationLabel }}</span></div>
+          </div>
+          <div style="display:flex;gap:10px">
+            <sc-for list="{{ objectives }}" as="o" hint-placeholder-count="3">
+              <div onClick="{{ o.onClick }}" style="flex:1;padding:12px 14px;border-radius:var(--r-md);cursor:pointer;background:{{ o.bg }};border:1px solid {{ o.bd }};transition:background .15s,border-color .15s">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+                  <span style="font:600 13px/1 var(--font-sans);color:{{ o.fg }}">{{ o.label }}</span>
+                  <span style="font:500 10.5px/1 var(--font-mono);color:var(--text-3)">{{ o.sub }}</span>
+                </div>
+                <div style="font:400 11px/1.35 var(--font-sans);color:var(--text-3)">{{ o.desc }}</div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+
+        <!-- ÁNGULOS -->
+        <div style="margin-bottom:24px">
+          <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:11px">
+            <div style="font:600 12px/1 var(--font-mono);color:var(--text-3);letter-spacing:0.05em;text-transform:uppercase">Ángulos del brief · elige hooks</div>
+            <div style="font:400 11.5px/1 var(--font-sans);color:var(--text-3)"><span style="font-family:var(--font-mono);color:var(--accent)">{{ sel.angleCount }}</span> ángulos · <span style="font-family:var(--font-mono);color:var(--accent)">{{ sel.hookCount }}</span> hooks</div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <sc-for list="{{ angles }}" as="a" hint-placeholder-count="4">
+              <div style="border-radius:var(--r-lg);background:var(--surface);border:1px solid {{ a.bd }};overflow:hidden;transition:border-color .15s">
+                <div style="display:flex;align-items:center;gap:10px;padding:13px 15px 12px;border-left:3px solid {{ a.bar }}">
+                  <div style="flex:1;min-width:0">
+                    <div style="display:flex;align-items:center;gap:9px;flex-wrap:wrap">
+                      <span style="font:600 14px/1.15 var(--font-sans);color:var(--text)">{{ a.name }}</span>
+                      <span style="font:600 10px/1 var(--font-mono);padding:3px 8px;border-radius:var(--r-full);background:var(--surface-3);border:1px solid var(--border-2);color:var(--text-2)">{{ a.framework }}</span>
+                    </div>
+                    <div style="font:400 11px/1.3 var(--font-sans);color:var(--text-3);margin-top:5px">segmento <span style="color:var(--text-2)">{{ a.segment }}</span> · avatar_hint: {{ a.avatarHint }}</div>
+                  </div>
+                  <span onClick="{{ a.onToggleAll }}" style="font:500 11px/1 var(--font-sans);color:var(--accent);cursor:pointer;white-space:nowrap;padding:6px 10px;border-radius:var(--r-sm);border:1px solid var(--accent-border);background:var(--accent-soft)">{{ a.allLabel }}</span>
+                </div>
+                <div style="display:flex;flex-wrap:wrap;gap:8px;padding:0 15px 14px">
+                  <sc-for list="{{ a.hooks }}" as="h" hint-placeholder-count="3">
+                    <span onClick="{{ h.onClick }}" style="display:inline-flex;align-items:center;gap:8px;padding:7px 11px;border-radius:var(--r-full);cursor:pointer;background:{{ h.bg }};border:1px solid {{ h.bd }};transition:background .15s,border-color .15s">
+                      <span style="width:14px;height:14px;border-radius:4px;display:inline-flex;align-items:center;justify-content:center;font:700 9px/1 var(--font-mono);background:{{ h.boxBg }};border:1px solid {{ h.boxBd }};color:#fff">{{ h.check }}</span>
+                      <span style="font:500 12px/1.2 var(--font-sans);color:{{ h.fg }}">{{ h.text }}</span>
+                      <span style="font:500 9px/1 var(--font-mono);color:var(--text-4);text-transform:uppercase;letter-spacing:0.04em">{{ h.source }}</span>
+                    </span>
+                  </sc-for>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+
+        <!-- PERSONAS -->
+        <div style="margin-bottom:24px">
+          <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:11px">
+            <div style="font:600 12px/1 var(--font-mono);color:var(--text-3);letter-spacing:0.05em;text-transform:uppercase">Persona · sugerida por avatar_hint</div>
+            <div style="display:flex;gap:7px">
+              <span onClick="{{ persona.onFixed }}" style="font:600 11px/1 var(--font-sans);padding:6px 11px;border-radius:var(--r-full);cursor:pointer;background:{{ persona.fixedBg }};border:1px solid {{ persona.fixedBd }};color:{{ persona.fixedFg }}">Fijar una</span>
+              <span onClick="{{ persona.onRotate }}" style="font:600 11px/1 var(--font-sans);padding:6px 11px;border-radius:var(--r-full);cursor:pointer;background:{{ persona.rotBg }};border:1px solid {{ persona.rotBd }};color:{{ persona.rotFg }}">Dejar que rote (A/B)</span>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;padding:9px 13px;background:var(--success-soft);border:1px solid var(--success-border);border-radius:var(--r-md);margin-bottom:12px">
+            <span style="color:var(--success);font-size:13px">✓</span>
+            <span style="font:400 11.5px/1.4 var(--font-sans);color:var(--text-2)">{{ persona.note }}</span>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:11px">
+            <sc-for list="{{ persona.pool }}" as="p" hint-placeholder-count="2">
+              <div onClick="{{ p.onClick }}" style="display:flex;align-items:center;gap:12px;padding:12px 13px;border-radius:var(--r-lg);cursor:pointer;background:{{ p.bg }};border:1px solid {{ p.bd }};transition:background .15s,border-color .15s">
+                <span style="width:44px;height:52px;flex:none;border-radius:var(--r-md);background:repeating-linear-gradient(135deg,var(--surface-3) 0 8px,var(--stripe) 8px 16px)"></span>
+                <div style="flex:1;min-width:0">
+                  <div style="display:flex;align-items:center;gap:8px">
+                    <span style="font:600 13.5px/1 var(--font-sans);color:var(--text)">{{ p.name }}</span>
+                    <span style="font:600 9px/1 var(--font-mono);padding:3px 7px;border-radius:var(--r-full);background:{{ p.tagBg }};border:1px solid {{ p.tagBd }};color:{{ p.tagFg }}">{{ p.tag }}</span>
+                  </div>
+                  <div style="font:400 11px/1.3 var(--font-sans);color:var(--text-3);margin-top:5px">{{ p.demo }}</div>
+                  <div style="font:400 10px/1 var(--font-mono);color:var(--text-4);margin-top:5px">voz {{ p.voice }} · es/en</div>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+          <div style="margin-top:11px">
+            <span onClick="{{ persona.onToggleIncompat }}" style="font:500 11px/1 var(--font-sans);color:var(--text-3);cursor:pointer">{{ persona.incompatLabel }}</span>
+            <sc-if value="{{ persona.showIncompat }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;align-items:center;gap:12px;padding:12px 13px;border-radius:var(--r-lg);background:var(--surface);border:1px dashed var(--border-2);margin-top:10px;opacity:.7">
+                <span style="width:44px;height:52px;flex:none;border-radius:var(--r-md);background:repeating-linear-gradient(135deg,var(--surface-3) 0 8px,var(--stripe) 8px 16px)"></span>
+                <div style="flex:1;min-width:0">
+                  <div style="display:flex;align-items:center;gap:8px">
+                    <span style="font:600 13.5px/1 var(--font-sans);color:var(--text-2)">Mateo</span>
+                    <span style="font:600 9px/1 var(--font-mono);padding:3px 7px;border-radius:var(--r-full);background:var(--surface-3);border:1px solid var(--border-2);color:var(--text-3)">no compatible</span>
+                  </div>
+                  <div style="font:400 11px/1.3 var(--font-sans);color:var(--text-3);margin-top:5px">34 · masculino · latino · urbano</div>
+                  <div style="font:400 10.5px/1.35 var(--font-sans);color:var(--text-4);margin-top:5px">descartado por matchPersonas: el segmento del brief es skincare femenino</div>
+                </div>
+              </div>
+            </sc-if>
+          </div>
+        </div>
+
+        <!-- TIER + IDIOMAS -->
+        <div style="display:grid;grid-template-columns:1.5fr 1fr;gap:22px">
+          <div>
+            <div style="font:600 12px/1 var(--font-mono);color:var(--text-3);letter-spacing:0.05em;text-transform:uppercase;margin-bottom:11px">Tier · receta de generación</div>
+            <div style="display:flex;flex-direction:column;gap:9px">
+              <sc-for list="{{ tiers }}" as="t" hint-placeholder-count="3">
+                <div onClick="{{ t.onClick }}" style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:var(--r-lg);cursor:pointer;background:{{ t.bg }};border:1px solid {{ t.bd }};transition:background .15s,border-color .15s">
+                  <span style="width:16px;height:16px;flex:none;border-radius:50%;background:{{ t.dotBg }};border:2px solid {{ t.dotBd }}"></span>
+                  <div style="flex:1;min-width:0">
+                    <div style="display:flex;align-items:center;gap:9px">
+                      <span style="font:600 13.5px/1 var(--font-sans);color:var(--text)">{{ t.label }}</span>
+                      <span style="font:600 11px/1 var(--font-mono);color:{{ t.cogsFg }}">{{ t.cogs }}</span>
+                    </div>
+                    <div style="font:400 10.5px/1.3 var(--font-mono);color:var(--text-4);margin-top:5px">{{ t.models }}</div>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+          <div>
+            <div style="font:600 12px/1 var(--font-mono);color:var(--text-3);letter-spacing:0.05em;text-transform:uppercase;margin-bottom:11px">Idiomas</div>
+            <div style="display:flex;flex-direction:column;gap:9px">
+              <sc-for list="{{ languages }}" as="l" hint-placeholder-count="2">
+                <div onClick="{{ l.onClick }}" style="display:flex;align-items:center;justify-content:space-between;padding:11px 13px;border-radius:var(--r-md);cursor:pointer;background:{{ l.bg }};border:1px solid {{ l.bd }};transition:background .15s,border-color .15s">
+                  <span style="font:600 12.5px/1 var(--font-sans);color:{{ l.fg }}">{{ l.label }}</span>
+                  <span style="width:16px;height:16px;border-radius:4px;display:inline-flex;align-items:center;justify-content:center;font:700 10px/1 var(--font-mono);background:{{ l.boxBg }};border:1px solid {{ l.boxBd }};color:#fff">{{ l.check }}</span>
+                </div>
+              </sc-for>
+              <div style="font:400 10.5px/1.4 var(--font-sans);color:var(--text-4);margin-top:2px">Cada idioma se genera nativo (no traducido) y multiplica las variantes.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ RAIL DE COSTE ============ -->
+      <div style="width:340px;flex:none;background:var(--surface);border-left:1px solid var(--border);display:flex;flex-direction:column">
+        <div style="padding:24px 22px;position:sticky;top:0">
+          <sc-if value="{{ confirmed }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;flex-direction:column;gap:14px">
+              <div style="width:44px;height:44px;border-radius:var(--r-md);background:var(--success-soft);border:1px solid var(--success-border);display:flex;align-items:center;justify-content:center;color:var(--success);font-size:20px">✓</div>
+              <div>
+                <div style="font:600 16px/1.2 var(--font-sans);color:var(--text)">Lote creado</div>
+                <div style="font:400 12.5px/1.5 var(--font-sans);color:var(--text-2);margin-top:6px"><span style="font-family:var(--font-mono);color:var(--text)">{{ cost.variantsCount }}</span> variantes en estado <span style="font-family:var(--font-mono);color:var(--text)">planned</span>. El pipeline avanza a N5 · ScriptWriter.</div>
+              </div>
+              <div style="padding:12px 14px;background:var(--bg-subtle);border:1px solid var(--border);border-radius:var(--r-md);font:400 11px/1.5 var(--font-mono);color:var(--text-3)">POST /api/runs/8f21/steps/n4/approve<br>→ decision: batch_matrix<br>→ {{ cost.variantsCount }} × ad_variant.status = planned</div>
+              <span onClick="{{ onReset }}" style="display:inline-flex;align-items:center;justify-content:center;padding:9px;border-radius:var(--r-md);background:var(--surface-3);border:1px solid var(--border-2);color:var(--text);font:500 12.5px/1 var(--font-sans);cursor:pointer">Volver a editar la matriz</span>
+            </div>
+          </sc-if>
+          <sc-if value="{{ notConfirmed }}" hint-placeholder-val="{{ true }}">
+            <div>
+              <div style="font:600 11px/1 var(--font-mono);color:var(--text-3);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:12px">Coste estimado del lote</div>
+
+              <sc-if value="{{ cost.empty }}" hint-placeholder-val="{{ false }}">
+                <div style="display:flex;align-items:baseline;gap:10px">
+                  <span style="font:600 44px/1 var(--font-mono);letter-spacing:-0.03em;color:var(--text-4)">$0.00</span>
+                  <span style="font:600 10px/1 var(--font-sans);padding:4px 9px;border-radius:var(--r-full);color:var(--text-3);border:1px dashed var(--border-strong)">estimado</span>
+                </div>
+                <div style="margin-top:16px;padding:14px 15px;background:var(--info-soft);border:1px solid var(--info-border);border-radius:var(--r-md);font:400 12px/1.5 var(--font-sans);color:var(--text-2)"><span style="color:var(--info)">i</span> Aún no has elegido nada. Selecciona al menos un ángulo con un hook para estimar el coste.</div>
+              </sc-if>
+
+              <sc-if value="{{ cost.hasVariants }}" hint-placeholder-val="{{ true }}">
+                <div style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap">
+                  <span style="font:600 46px/1 var(--font-mono);letter-spacing:-0.03em;color:{{ cost.totalFg }}">{{ cost.totalDisplay }}</span>
+                  <span style="font:600 10px/1 var(--font-mono);padding:4px 9px;border-radius:var(--r-full);background:var(--surface-3);border:1px solid var(--border-2);color:var(--text-2)">{{ cost.tierLabel }}</span>
+                </div>
+                <div style="font:400 12px/1.4 var(--font-sans);color:var(--text-3);margin-top:8px">{{ cost.perVariantDisplay }} por variante aprobada · {{ preset.durationLabel }} · {{ cost.langLabel }}</div>
+
+                <sc-if value="{{ cost.high }}" hint-placeholder-val="{{ false }}">
+                  <div style="margin-top:14px;display:flex;align-items:center;gap:9px;padding:11px 13px;background:var(--warning-soft);border:1px solid var(--warning-border);border-radius:var(--r-md)">
+                    <span style="color:var(--warning);font-size:14px">⚠</span>
+                    <span style="font:400 11.5px/1.4 var(--font-sans);color:var(--text-2)">Gasto elevado. Revisa el tier o reduce hooks antes de confirmar.</span>
+                  </div>
+                </sc-if>
+
+                <div style="height:1px;background:var(--border);margin:18px 0"></div>
+
+                <div style="font:600 10px/1 var(--font-mono);color:var(--text-3);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:12px">Desglose por segmento</div>
+                <div style="display:flex;flex-direction:column;gap:11px">
+                  <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+                    <div style="white-space:nowrap"><span style="font:500 12.5px/1 var(--font-sans);color:var(--text)">Hook</span> <span style="font:400 11px/1 var(--font-mono);color:var(--text-3)">{{ cost.hookClips }} clips avatar</span></div>
+                    <span style="font:600 12.5px/1 var(--font-mono);color:var(--text)">{{ cost.hookCostDisplay }}</span>
+                  </div>
+                  <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+                    <div style="white-space:nowrap"><span style="font:500 12.5px/1 var(--font-sans);color:var(--text)">Body</span> <span style="font:400 11px/1 var(--font-mono);color:var(--text-3)">{{ cost.bodyClips }} clips b-roll</span></div>
+                    <span style="font:600 12.5px/1 var(--font-mono);color:var(--text)">{{ cost.bodyCostDisplay }}</span>
+                  </div>
+                  <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+                    <div style="white-space:nowrap"><span style="font:500 12.5px/1 var(--font-sans);color:var(--text)">CTA</span> <span style="font:400 11px/1 var(--font-mono);color:var(--text-3)">{{ cost.ctaClips }} shots</span></div>
+                    <span style="font:600 12.5px/1 var(--font-mono);color:var(--text)">{{ cost.ctaCostDisplay }}</span>
+                  </div>
+                </div>
+
+                <sc-if value="{{ cost.shared }}" hint-placeholder-val="{{ false }}">
+                  <div style="margin-top:14px;padding:12px 14px;background:var(--accent-soft);border:1px solid var(--accent-border);border-radius:var(--r-md)">
+                    <div style="font:600 11.5px/1.3 var(--font-sans);color:var(--accent);margin-bottom:5px">Hook-testing: body y CTA compartidos por ángulo</div>
+                    <div style="font:400 11px/1.45 var(--font-sans);color:var(--text-2)">Se cobran <span style="font-family:var(--font-mono)">una sola vez</span> por ángulo/idioma, no por variante. Ahorro sobre generación completa: <span style="font-family:var(--font-mono);color:var(--success)">{{ cost.savingsDisplay }}</span>.</div>
+                  </div>
+                </sc-if>
+
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-top:14px;font:400 11px/1.4 var(--font-sans);color:var(--text-3)">
+                  <span>Análisis del brief · ya ejecutado en CP1</span>
+                  <span style="font-family:var(--font-mono)">{{ cost.analysisDisplay }}</span>
+                </div>
+              </sc-if>
+
+              <div style="height:1px;background:var(--border);margin:20px 0 18px"></div>
+
+              <span onClick="{{ onConfirm }}" style="display:flex;align-items:center;justify-content:center;gap:9px;padding:14px;border-radius:var(--r-md);cursor:{{ confirm.cursor }};background:{{ confirm.bg }};border:1px solid {{ confirm.bd }};color:{{ confirm.fg }};font:600 14px/1.1 var(--font-sans);text-align:center">{{ confirm.label }}</span>
+              <div style="font:400 10.5px/1.4 var(--font-sans);color:var(--text-4);text-align:center;margin-top:9px">Confirmar autoriza el gasto y crea las variantes. No se genera nada hasta este paso.</div>
+            </div>
+          </sc-if>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ MATRIZ PLANIFICADA ============ -->
+    <div style="border-top:1px solid var(--border);background:var(--bg-subtle);padding:22px 28px">
+      <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:14px">
+        <div style="font:600 12px/1 var(--font-mono);color:var(--text-3);letter-spacing:0.05em;text-transform:uppercase">Matriz planificada · {{ cost.variantsCount }} variantes</div>
+        <div style="font:400 11px/1 var(--font-sans);color:var(--text-4)">filename_code legible y trazable en Ads Manager (§8.3)</div>
+      </div>
+
+      <sc-if value="{{ cost.empty }}" hint-placeholder-val="{{ false }}">
+        <div style="padding:26px;border:1px dashed var(--border-2);border-radius:var(--r-lg);text-align:center;font:400 12.5px/1.5 var(--font-sans);color:var(--text-3)">La matriz está vacía. Selecciona ángulos y hooks arriba para ver las variantes que se crearán.</div>
+      </sc-if>
+
+      <sc-if value="{{ cost.hasVariants }}" hint-placeholder-val="{{ true }}">
+        <div style="border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden">
+          <div style="display:grid;grid-template-columns:34px 1.3fr 2fr 0.9fr 52px 56px 2.1fr;gap:0;background:var(--surface);border-bottom:1px solid var(--border);padding:9px 14px;font:600 10px/1 var(--font-mono);color:var(--text-3);letter-spacing:0.04em;text-transform:uppercase">
+            <span>#</span><span>Ángulo</span><span>Hook</span><span>Persona</span><span>Idi.</span><span>Dur.</span><span>filename_code</span>
+          </div>
+          <sc-for list="{{ variants }}" as="v" hint-placeholder-count="6">
+            <div style="display:grid;grid-template-columns:34px 1.3fr 2fr 0.9fr 52px 56px 2.1fr;gap:0;align-items:center;padding:10px 14px;border-bottom:1px solid var(--border);background:{{ v.rowBg }}">
+              <span style="font:400 11px/1 var(--font-mono);color:var(--text-4)">{{ v.n }}</span>
+              <span style="font:500 12px/1.25 var(--font-sans);color:var(--text-2);padding-right:10px">{{ v.angleName }}</span>
+              <span style="font:400 12px/1.3 var(--font-sans);color:var(--text);padding-right:10px">{{ v.hookText }}</span>
+              <span style="display:flex;align-items:center;gap:6px"><span style="width:6px;height:6px;border-radius:50%;background:{{ v.personaDot }}"></span><span style="font:400 12px/1 var(--font-sans);color:var(--text-2)">{{ v.persona }}</span></span>
+              <span style="font:600 10px/1 var(--font-mono);color:var(--text-2);text-transform:uppercase">{{ v.language }}</span>
+              <span style="font:400 11px/1 var(--font-mono);color:var(--text-3)">{{ v.duration }}s</span>
+              <span style="display:flex;flex-direction:column;gap:3px"><span style="font:400 11px/1.2 var(--font-mono);color:var(--accent)">{{ v.filenameCode }}</span><span style="font:400 9.5px/1 var(--font-mono);color:var(--text-4)">{{ v.shareTag }}</span></span>
+            </div>
+          </sc-for>
+        </div>
+      </sc-if>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1344,&quot;height&quot;:1180}}">
+class Component extends DCLogic {
+  state = {
+    objective: 'hook_test',
+    angleSel: { 0: [0, 1, 2], 1: [0, 1, 2] },
+    personaMode: 'rotate',
+    fixedPersona: 'Lucía',
+    tier: 'standard',
+    langs: { es: true, en: true },
+    showIncompat: false,
+    confirmed: false,
+  };
+
+  ANGLES = [
+    { name: 'Piel apagada al despertar', slug: 'apagada', framework: 'problem-solution', segment: 'problem-aware', avatarHint: 'mujer 25-35 · piel latina/mediterránea · rutina de mañana',
+      hooks: [
+        { text: 'Llevo años con la piel apagada y nadie me dijo esto', source: 'brief' },
+        { text: 'Tu piel se ve cansada aunque duermas ocho horas', source: 'brief' },
+        { text: 'El error que arruina tu piel cada mañana', source: 'library' } ] },
+    { name: 'Vitamina C sin irritación', slug: 'sinirrit', framework: 'objection', segment: 'solution-aware', avatarHint: 'piel sensible · 25-40 · ya probó activos',
+      hooks: [
+        { text: 'Probé cinco vitaminas C y todas me irritaron, menos esta', source: 'brief' },
+        { text: 'Sí, hay una vitamina C para piel sensible', source: 'brief' },
+        { text: 'Dejé la vitamina C por las manchas, hasta esta', source: 'library' } ] },
+    { name: 'Resultados en 14 días', slug: '14dias', framework: 'before-after', segment: 'product-aware', avatarHint: 'mujer 25-35 · busca prueba visual',
+      hooks: [
+        { text: 'Catorce días, sin filtros, mira la diferencia', source: 'brief' },
+        { text: 'Le di dos semanas a este sérum y esto pasó', source: 'brief' },
+        { text: 'El glow no es maquillaje, es esto', source: 'library' } ] },
+    { name: 'Rutina de diez segundos', slug: '10seg', framework: 'time-saving', segment: 'unaware', avatarHint: 'vida ocupada · odia rutinas largas',
+      hooks: [
+        { text: 'Mi rutina de piel entera dura diez segundos', source: 'brief' },
+        { text: 'No tengo tiempo para siete pasos de skincare', source: 'brief' },
+        { text: 'Un paso, por la mañana, listo', source: 'library' } ] },
+  ];
+
+  POOL = [
+    { name: 'Lucía', slug: 'lucia', demo: '29 · femenino · latina · casual', voice: 'ElevenLabs Turbo', dot: 'var(--accent)' },
+    { name: 'Nora', slug: 'nora', demo: '33 · femenino · mediterránea · natural', voice: 'ElevenLabs Turbo', dot: 'var(--violet)' },
+  ];
+
+  PRESETS = {
+    hook_test: { label: 'Hook testing', sub: '8–15 s', duration: 12, desc: 'Body y CTA compartidos por ángulo', shared: true, clips: { avatar: 1, broll: 1, cta: 1 } },
+    conversion: { label: 'Conversión', sub: '21–34 s', duration: 28, desc: 'Guion completo por variante', shared: false, clips: { avatar: 1, broll: 2, cta: 1 } },
+    story: { label: 'Storytelling', sub: '35–60 s', duration: 48, desc: 'Hook → problema → objeciones → CTA', shared: false, clips: { avatar: 2, broll: 4, cta: 1 } },
+  };
+
+  TIERS = {
+    test: { label: 'Test', cogs: '$0.3–1.7 / var.', models: 'VEED · Grok · Kokoro', clip: { avatar: 0.14, broll: 0.16, cta: 0.08 } },
+    standard: { label: 'Standard', cogs: '$1.8–5 / var.', models: 'Kling Avatar v2 · Wan 2.6 · ElevenLabs', clip: { avatar: 0.34, broll: 0.42, cta: 0.30 } },
+    premium: { label: 'Premium', cogs: '$9–13 / var.', models: 'OmniHuman · Veo 3.1 · Eleven v3', clip: { avatar: 1.70, broll: 2.60, cta: 1.30 } },
+  };
+
+  ANALYSIS = 0.16;
+
+  fmt(n) { return '$' + n.toFixed(2); }
+
+  selectedHooks(ai) { return this.state.angleSel[ai] || []; }
+
+  toggleHook(ai, hi) {
+    this.setState((s) => {
+      const cur = (s.angleSel[ai] || []).slice();
+      const at = cur.indexOf(hi);
+      if (at >= 0) cur.splice(at, 1); else cur.push(hi);
+      const next = Object.assign({}, s.angleSel);
+      if (cur.length) next[ai] = cur.sort((a, b) => a - b); else delete next[ai];
+      return { angleSel: next, confirmed: false };
+    });
+  }
+
+  toggleAngleAll(ai) {
+    this.setState((s) => {
+      const total = this.ANGLES[ai].hooks.length;
+      const cur = s.angleSel[ai] || [];
+      const next = Object.assign({}, s.angleSel);
+      if (cur.length >= total) delete next[ai];
+      else next[ai] = this.ANGLES[ai].hooks.map((_, i) => i);
+      return { angleSel: next, confirmed: false };
+    });
+  }
+
+  toggleLang(code) {
+    this.setState((s) => ({ langs: Object.assign({}, s.langs, { [code]: !s.langs[code] }), confirmed: false }));
+  }
+
+  compute() {
+    const s = this.state;
+    const preset = this.PRESETS[s.objective];
+    const tier = this.TIERS[s.tier];
+    const langs = ['es', 'en'].filter((l) => s.langs[l]);
+    const langCount = langs.length;
+
+    const selAngles = this.ANGLES
+      .map((a, i) => ({ a, i, hooks: this.selectedHooks(i) }))
+      .filter((x) => x.hooks.length > 0);
+
+    let totalHooks = 0;
+    selAngles.forEach((x) => { totalHooks += x.hooks.length; });
+
+    const variantsCount = totalHooks * langCount;
+    const anglesCount = selAngles.length;
+
+    // clip counts per segment
+    const hookClips = variantsCount * preset.clips.avatar;
+    const bodyUnits = preset.shared ? anglesCount * langCount : variantsCount;
+    const ctaUnits = preset.shared ? anglesCount * langCount : variantsCount;
+    const bodyClips = bodyUnits * preset.clips.broll;
+    const ctaClips = ctaUnits * preset.clips.cta;
+
+    const hookCost = hookClips * tier.clip.avatar;
+    const bodyCost = bodyClips * tier.clip.broll;
+    const ctaCost = ctaClips * tier.clip.cta;
+    const total = hookCost + bodyCost + ctaCost;
+
+    const fullBody = variantsCount * preset.clips.broll * tier.clip.broll;
+    const fullCta = variantsCount * preset.clips.cta * tier.clip.cta;
+    const savings = preset.shared ? (fullBody + fullCta) - (bodyCost + ctaCost) : 0;
+
+    return {
+      preset, tier, langs, langCount, selAngles, totalHooks, variantsCount, anglesCount,
+      hookClips, bodyClips, ctaClips, hookCost, bodyCost, ctaCost, total, savings,
+      empty: variantsCount === 0, high: total > 20,
+    };
+  }
+
+  buildVariants(c) {
+    const s = this.state;
+    const rows = [];
+    let n = 1;
+    let rot = 0;
+    c.selAngles.forEach((x) => {
+      x.hooks.forEach((hi) => {
+        c.langs.forEach((lang) => {
+          let persona;
+          if (s.personaMode === 'fixed') persona = this.POOL.find((p) => p.name === s.fixedPersona) || this.POOL[0];
+          else { persona = this.POOL[rot % this.POOL.length]; rot++; }
+          const dur = c.preset.duration;
+          const code = 'serumvitc-' + x.a.slug + '-h' + (hi + 1) + '-' + persona.slug + '-' + lang + '-' + dur + 's';
+          rows.push({
+            n: n, angleName: x.a.name, hookText: x.a.hooks[hi].text,
+            persona: persona.name, personaDot: persona.dot, language: lang, duration: dur,
+            filenameCode: code,
+            shareTag: c.preset.shared ? ('body/cta ⇄ ' + x.a.slug + '·' + lang) : 'hook·body·cta propios',
+            rowBg: n % 2 === 0 ? 'var(--surface)' : 'transparent',
+          });
+          n++;
+        });
+      });
+    });
+    return rows;
+  }
+
+  renderVals() {
+    const s = this.state;
+    const c = this.compute();
+    const set = (patch) => this.setState(Object.assign({ confirmed: false }, patch));
+
+    const SEL = { bg: 'var(--accent-soft)', bd: 'var(--accent-border)', fg: 'var(--accent)' };
+    const UNSEL = { bg: 'var(--surface-2)', bd: 'var(--border-2)', fg: 'var(--text-2)' };
+
+    // objectives
+    const objectives = Object.keys(this.PRESETS).map((k) => {
+      const p = this.PRESETS[k];
+      const on = s.objective === k;
+      return { label: p.label, sub: p.sub, desc: p.desc,
+        bg: on ? 'var(--accent-soft)' : 'var(--surface)', bd: on ? 'var(--accent-border)' : 'var(--border)', fg: on ? 'var(--accent)' : 'var(--text)',
+        onClick: () => set({ objective: k }) };
+    });
+
+    // angles
+    const angles = this.ANGLES.map((a, ai) => {
+      const sel = this.selectedHooks(ai);
+      const anySel = sel.length > 0;
+      const allSel = sel.length >= a.hooks.length;
+      return {
+        name: a.name, framework: a.framework, segment: a.segment, avatarHint: a.avatarHint,
+        bd: anySel ? 'var(--accent-border)' : 'var(--border)',
+        bar: anySel ? 'var(--accent)' : 'var(--border-2)',
+        allLabel: allSel ? 'Quitar todos' : 'Todos',
+        onToggleAll: () => this.toggleAngleAll(ai),
+        hooks: a.hooks.map((h, hi) => {
+          const on = sel.indexOf(hi) >= 0;
+          const st = on ? SEL : UNSEL;
+          return { text: h.text, source: h.source, fg: on ? 'var(--text)' : 'var(--text-2)',
+            bg: st.bg, bd: st.bd,
+            check: on ? '✓' : '',
+            boxBg: on ? 'var(--accent)' : 'transparent', boxBd: on ? 'var(--accent)' : 'var(--border-strong)',
+            onClick: () => this.toggleHook(ai, hi) };
+        }),
+      };
+    });
+
+    // personas
+    const isFixed = s.personaMode === 'fixed';
+    const pool = this.POOL.map((p) => {
+      const on = isFixed && s.fixedPersona === p.name;
+      return { name: p.name, demo: p.demo, voice: p.voice,
+        bg: on ? 'var(--accent-soft)' : 'var(--surface-2)', bd: on ? 'var(--accent-border)' : 'var(--border-2)',
+        tag: isFixed ? (on ? 'fijada' : 'compatible') : 'en rotación',
+        tagBg: on ? 'var(--accent-soft)' : (isFixed ? 'var(--success-soft)' : 'var(--violet-soft)'),
+        tagBd: on ? 'var(--accent-border)' : (isFixed ? 'var(--success-border)' : 'var(--violet-border)'),
+        tagFg: on ? 'var(--accent)' : (isFixed ? 'var(--success)' : 'var(--violet)'),
+        onClick: () => set({ personaMode: 'fixed', fixedPersona: p.name }) };
+    });
+    const persona = {
+      note: isFixed
+        ? ('Persona fijada: todas las variantes usan ' + s.fixedPersona + '. matchPersonas encontró 2 compatibles con el segmento.')
+        : 'matchPersonas encontró 2 personas compatibles con avatar_hint. Rotan entre variantes para el A/B (§11).',
+      onFixed: () => set({ personaMode: 'fixed' }),
+      onRotate: () => set({ personaMode: 'rotate' }),
+      fixedBg: isFixed ? 'var(--accent)' : 'var(--surface-3)', fixedBd: isFixed ? 'var(--accent)' : 'var(--border-2)', fixedFg: isFixed ? 'var(--text-on-accent)' : 'var(--text-2)',
+      rotBg: !isFixed ? 'var(--accent)' : 'var(--surface-3)', rotBd: !isFixed ? 'var(--accent)' : 'var(--border-2)', rotFg: !isFixed ? 'var(--text-on-accent)' : 'var(--text-2)',
+      pool: pool,
+      showIncompat: s.showIncompat,
+      incompatLabel: s.showIncompat ? '− Ocultar personas no compatibles' : '+ Ver personas no compatibles (1)',
+      onToggleIncompat: () => this.setState({ showIncompat: !s.showIncompat }),
+    };
+
+    // tiers
+    const tiers = Object.keys(this.TIERS).map((k) => {
+      const t = this.TIERS[k];
+      const on = s.tier === k;
+      return { label: t.label, cogs: t.cogs, models: t.models,
+        bg: on ? 'var(--accent-soft)' : 'var(--surface)', bd: on ? 'var(--accent-border)' : 'var(--border)',
+        dotBg: on ? 'var(--accent)' : 'transparent', dotBd: on ? 'var(--accent)' : 'var(--border-strong)',
+        cogsFg: on ? 'var(--accent)' : 'var(--text-3)',
+        onClick: () => set({ tier: k }) };
+    });
+
+    // languages
+    const LANGS = [{ code: 'es', label: 'Español' }, { code: 'en', label: 'English' }];
+    const languages = LANGS.map((l) => {
+      const on = !!s.langs[l.code];
+      return { label: l.label, fg: on ? 'var(--text)' : 'var(--text-2)',
+        bg: on ? 'var(--accent-soft)' : 'var(--surface-2)', bd: on ? 'var(--accent-border)' : 'var(--border-2)',
+        check: on ? '✓' : '', boxBg: on ? 'var(--accent)' : 'transparent', boxBd: on ? 'var(--accent)' : 'var(--border-strong)',
+        onClick: () => this.toggleLang(l.code) };
+    });
+
+    // cost view
+    const langLabel = c.langs.map((l) => l.toUpperCase()).join('+') || '—';
+    const cost = {
+      empty: c.empty, hasVariants: !c.empty, high: c.high, shared: c.preset.shared,
+      variantsCount: c.variantsCount,
+      totalDisplay: this.fmt(c.total),
+      totalFg: c.high ? 'var(--warning)' : 'var(--text)',
+      tierLabel: c.tier.label,
+      perVariantDisplay: c.variantsCount ? this.fmt(c.total / c.variantsCount) : '$0.00',
+      langLabel: langLabel,
+      hookClips: c.hookClips, bodyClips: c.bodyClips, ctaClips: c.ctaClips,
+      hookCostDisplay: this.fmt(c.hookCost), bodyCostDisplay: this.fmt(c.bodyCost), ctaCostDisplay: this.fmt(c.ctaCost),
+      savingsDisplay: this.fmt(c.savings),
+      analysisDisplay: this.fmt(this.ANALYSIS),
+    };
+
+    const disabled = c.empty;
+    const confirm = {
+      label: disabled ? 'Elige al menos un hook' : ('Confirmar y crear ' + c.variantsCount + ' variantes · ' + this.fmt(c.total)),
+      bg: disabled ? 'var(--surface-3)' : 'var(--success)', bd: disabled ? 'var(--border-2)' : 'var(--success)',
+      fg: disabled ? 'var(--text-4)' : 'var(--success-on)', cursor: disabled ? 'not-allowed' : 'pointer',
+    };
+
+    return {
+      objectives, angles, persona, tiers, languages, cost,
+      preset: { durationLabel: c.preset.duration + ' s' },
+      sel: { angleCount: c.anglesCount, hookCount: c.totalHooks },
+      variants: this.buildVariants(c),
+      confirm,
+      confirmed: s.confirmed, notConfirmed: !s.confirmed,
+      onConfirm: () => { if (!disabled) this.setState({ confirmed: true }); },
+      onReset: () => this.setState({ confirmed: false }),
+    };
+  }
+}
+</script>
+</body>
+</html>

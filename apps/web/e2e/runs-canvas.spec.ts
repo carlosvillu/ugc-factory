@@ -343,12 +343,19 @@ test.describe('canvas: títulos, visor del artefacto y controles (T1.16)', () =>
       const runId = await launchAnalysisRun(request);
       await page.goto(`/runs/${runId}`);
 
-      // CP1 aparece → se aprueba sin editar para que vuelva la vista cockpit (con CP1 abierto
-      // el inspector genérico se retira: es el editor de brief quien manda).
+      // CP1 aparece → se aprueba sin editar. Y DESPUÉS **CP2** (T2.3: N4 compone la matriz y pausa
+      // en `waiting_approval`), que también se confirma: los paneles de checkpoint RETIRAN el
+      // inspector genérico mientras están abiertos (es el patrón de CP1 desde T1.10b), así que la
+      // vista cockpit —la que este spec necesita— no vuelve hasta que NINGÚN checkpoint está
+      // pausado. Antes de T2.3 el run se quedaba sin checkpoints tras CP1; ahora hay dos.
       await waitCanvasStatus(page, 'N3', 'waiting_approval', 60_000);
       const editor = page.getByRole('form', { name: /editor de brief/i });
       await editor.getByRole('button', { name: /aprobar y continuar/i }).click();
       await waitCanvasStatus(page, 'N3', 'succeeded');
+
+      await waitCanvasStatus(page, 'N4', 'waiting_approval', 60_000);
+      await page.getByRole('button', { name: /confirmar y crear/i }).click();
+      await waitCanvasStatus(page, 'N4', 'succeeded', 30_000);
 
       // El inspector de N3: su caja de output enseña el EXCERPT (200 chars del servidor).
       const panel = await openCanvasPanel(page, 'N3');

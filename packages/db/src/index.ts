@@ -141,6 +141,9 @@ export {
 export {
   createBriefVersion,
   getBrief,
+  // T2.3: el brief + su PROYECTO (JOIN vía `url_analysis`). Lo necesita CP2 para crear el lote:
+  // `ad_batch.project_id` es NOT NULL y el proyecto no es una columna de `product_brief`.
+  getBriefWithProject,
   approveBrief,
   findBriefByOriginStep,
 } from './repos/brief.repo';
@@ -154,16 +157,34 @@ export type { ProductBrief as ProductBriefRow } from './schema/project';
 // todavía: su consumidor de runtime es N7a (T4.4) y hoy solo lo usan los tests de integración
 // (import relativo) — knip veta el export sin consumidor.
 export { recordCheckpointDecision } from './repos/checkpoint-decision.repo';
-// Librería sembrada (T2.1): `seedLibrary` (escritura idempotente de hook_line/cta_line/recipe)
-// y `listRecipes` (el `SELECT` de las 3 recetas por tier) NO salen al barrel todavía: sus
-// únicos consumidores viven DENTRO del paquete (el script `pnpm seed` y los tests de
-// integración, que importan relativo). El barrel expone solo lo que se consume desde FUERA;
-// `listRecipes` volverá aquí cuando el estimador de coste de T2.2 lo llame desde web/services.
+// LAS ENTRADAS DE `planBatch` QUE VIVEN EN LA BD, en UNA sola lectura (T2.3). La consumen los DOS
+// brazos que componen la matriz —el worker en N4 (que la PROPONE) y web (que la ESTIMA y la CREA)—
+// y ese es justo el punto: mantenidas a mano eran dos listas de lecturas que había que acordarse de
+// tocar a la vez, y una entrada añadida en un solo brazo haría que el usuario apruebe una matriz y
+// el sistema cree otra. Ver `repos/planning.repo.ts`.
 //
+// `getRecipe`/`listHookLines` vuelven a ser INTERNAS del paquete (las llama `listPlanningInputs`, y
+// el test de integración las importa por ruta relativa): sacarlas al barrel ya no tiene consumidor
+// de fuera, y knip veta el export sin consumidor. `seedLibrary` sigue interna (su consumidor es el
+// script `pnpm seed`); `listRecipes` también (el seed y su test).
+export { listPlanningInputs } from './repos/planning.repo';
+// LA SIEMBRA, ahora también desde FUERA del paquete (T2.3). `seedLibrary`/`seedPersonas` eran
+// internas («su único consumidor es el script `pnpm seed`»): ya no. **El stack E2E las necesita**,
+// y no por comodidad: N4 (CP2) compone la matriz con la librería de hooks y estima su coste con la
+// fila `recipe` — sin sembrarlas, el checkpoint que la suite tiene que ejercitar ni siquiera
+// puede abrirse. Un E2E que se saltara el seed probaría un sistema que no es el que se despliega.
+export { seedLibrary } from './repos/library.repo';
+export { seedPersonas } from './repos/persona-seed';
+// El LOTE (T2.3, CP2): la creación TRANSACCIONAL de `ad_batch` + sus `ad_variant` en `planned`. La
+// matriz se compone DENTRO de la función, con el id del lote ya asignado (es el
+// `batchDiscriminator` que hace globalmente único el `filename_code`, §12) — ver la cabecera del
+// repo. Las LECTURAS del lote (`getBatch`, `listBatchVariants`, `findBatchesByBrief`) NO salen al
+// barrel todavía: sus únicos consumidores viven DENTRO del paquete (los tests de integración, que
+// importan relativo) — knip veta el export sin consumidor de runtime, y saldrán con la pantalla del
+// lote de F2/F5, que es quien los va a llamar.
+export { createBatchWithVariants, type CreatedBatch } from './repos/batch.repo';
 // Tipos de fila de las tablas del LOTE (T2.1): los consumen las factories makeAdBatch/
 // makeAdVariant/makeAdScript de @ugc/test-utils (los tests de constraints los insertan).
-// Sus repos de caso de uso llegan con sus consumidores (T2.2 compone la matriz, T2.3 crea
-// las variantes, T2.4 escribe los guiones) — mismo criterio que T1.2 con el análisis.
 export type { NewAdBatch, NewAdVariant, NewAdScript } from './schema/batch';
 // Librería de PERSONAS (T2.0): el CRUD que consume `/api/personas` en web, la gestión de sus
 // imágenes de referencia y la lista que alimenta el endpoint de candidatas (la REGLA de
@@ -179,6 +200,12 @@ export {
   removePersona,
   addReferenceImage,
   removeReferenceImage,
+  // T2.3: `upsertPersonaByName` SÍ sale ahora. Su segundo consumidor es el spec E2E de CP2, que
+  // siembra una persona compatible con el `avatar_hint` del brief del fake — y lo hace por el REPO
+  // y no con SQL crudo porque la PK de `persona` es un ULID que genera la APLICACIÓN (`ulidPk()`),
+  // no un default de Postgres: un INSERT a mano sin `id` muere con un NOT NULL. El upsert además lo
+  // hace idempotente entre corridas de la suite.
+  upsertPersonaByName,
 } from './repos/persona.repo';
 // El tipo de fila `persona` (retorno de los repos de arriba): lo consumen los route handlers de
 // web para serializar la respuesta contra el contrato `PersonaSchema` de core.

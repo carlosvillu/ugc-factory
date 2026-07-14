@@ -1,0 +1,8 @@
+                   base_code                    | filas | lotes |                      codigos_completos                      
+------------------------------------------------+-------+-------+-------------------------------------------------------------
+ sonik-pro-el-cepillo-manua-hook01-norot-es-12s |     2 |     2 | sonik-pro-el-cepillo-manua-hook01-norot-es-12s-01kxgwrjg6j1+
+                                                |       |       | sonik-pro-el-cepillo-manua-hook01-norot-es-12s-01kxgwv7mgzk
+ sonik-pro-el-cepillo-manua-hook02-norot-es-12s |     2 |     2 | sonik-pro-el-cepillo-manua-hook02-norot-es-12s-01kxgwrjg6j1+
+                                                |       |       | sonik-pro-el-cepillo-manua-hook02-norot-es-12s-01kxgwv7mgzk
+(2 rows)
+

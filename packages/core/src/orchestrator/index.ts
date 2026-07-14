@@ -62,8 +62,8 @@ export {
   demoCanvasRunDefinition,
   demoCostRunDefinition,
 } from './demo-dag';
-// DAG del análisis N1→N2→N3 (T1.10a): el intake en modo URL lo usa para crear el
-// run real (ingesta → visión con skip → síntesis+validación).
+// DAG del análisis N1→N2→N3→N4 (T1.10a + T2.3): el intake lo usa para crear el run real
+// (ingesta → visión con skip → síntesis+validación [CP1] → estrategia del lote [CP2]).
 export {
   analysisRunDefinition,
   DEFAULT_ANALYSIS_LANGUAGE,
@@ -71,9 +71,11 @@ export {
   // el jsonb `step_run.config` — una sola verdad productor/consumidor (patrón DemoConfigSchema).
   AnalysisN1ConfigSchema,
   AnalysisN3ConfigSchema,
+  AnalysisN4ConfigSchema,
   type AnalysisIntake,
   type AnalysisN1Config,
   type AnalysisN3Config,
+  type AnalysisN4Config,
 } from './analysis-dag';
 export {
   shouldPause,

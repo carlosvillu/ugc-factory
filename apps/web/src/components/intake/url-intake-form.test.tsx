@@ -80,6 +80,8 @@ describe('UrlIntakeForm (intake por URL)', () => {
         { nodeKey: 'N1', dependsOn: [], config: { source: 'url', url: URL_OK } },
         { nodeKey: 'N2', dependsOn: ['N1'] },
         { nodeKey: 'N3', dependsOn: ['N1', 'N2'], config: { targetLanguage: 'es' } },
+        // T2.3: N4 (estrategia del lote, CP2). Sus idiomas por defecto son el del análisis.
+        { nodeKey: 'N4', dependsOn: ['N3'], config: { languages: ['es'] } },
       ],
     });
   });

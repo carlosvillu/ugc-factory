@@ -59,14 +59,31 @@ export const AnalysisN3ConfigSchema = z.object({
 });
 export type AnalysisN3Config = z.infer<typeof AnalysisN3ConfigSchema>;
 
+/**
+ * Config del step N4 (estrategia del lote, T2.3): los IDIOMAS del lote.
+ *
+ * No es lo mismo que el `targetLanguage` de N3 —y por eso es un campo aparte, no una reutilización
+ * "que se entiende": N3 sintetiza el brief EN UN idioma (el del análisis); N4 compone variantes
+ * EN VARIOS (§17: «cada idioma se genera nativo, no traducido», y cada uno MULTIPLICA la matriz).
+ * Un lote analizado en `es` puede perfectamente producir anuncios en `es` + `en`.
+ *
+ * Son un DEFAULT, no una decisión final: es la propuesta con la que N4 compone la matriz inicial
+ * que CP2 abre. El usuario los cambia en el panel y la config que se confirma es la suya.
+ */
+export const AnalysisN4ConfigSchema = z.object({
+  languages: z.array(z.string().min(1)).min(1),
+});
+export type AnalysisN4Config = z.infer<typeof AnalysisN4ConfigSchema>;
+
 /** Idioma de análisis por defecto (usuario hispanohablante, PRD mono-usuario). */
 export const DEFAULT_ANALYSIS_LANGUAGE = 'es';
 
 /** Lo que N0 (el intake) aporta para armar el run, en cualquiera de sus dos modos.
- *  `targetLanguage` es config del LOTE (N0), no del scraping. */
+ *  `targetLanguage` es config del LOTE (N0), no del scraping. `languages` son los idiomas que N4
+ *  propone para el lote; por defecto, el del análisis (ver `analysisRunDefinition`). */
 export type AnalysisIntake =
-  | { source: 'url'; url: string; targetLanguage?: string }
-  | { source: 'manual'; analysisId: string; targetLanguage?: string };
+  | { source: 'url'; url: string; targetLanguage?: string; languages?: string[] }
+  | { source: 'manual'; analysisId: string; targetLanguage?: string; languages?: string[] };
 
 /**
  * Construye la definición del run de análisis N1→N2→N3 para un proyecto.
@@ -88,6 +105,10 @@ export function analysisRunDefinition(
   intake: AnalysisIntake,
 ): RunDefinitionInput {
   const targetLanguage = intake.targetLanguage ?? DEFAULT_ANALYSIS_LANGUAGE;
+  // Los idiomas del LOTE (N4) por defecto son el del ANÁLISIS: proponer de oficio un idioma más
+  // (p. ej. `en`) DUPLICARÍA la matriz —y el gasto— sin que nadie lo haya pedido. Añadir idiomas
+  // es una decisión del usuario, y la toma en CP2 con el coste delante.
+  const languages = intake.languages ?? [targetLanguage];
 
   const n1Config: AnalysisN1Config =
     intake.source === 'url'
@@ -130,6 +151,37 @@ export function analysisRunDefinition(
         // `reach_checkpoint` tuvo que aprender a persistir `output_refs` (transition.ts): sin ese
         // fix, CP1 abriría un editor VACÍO sobre un brief que sí se sintetizó y se pagó.
         isCheckpoint: true,
+      },
+      {
+        // N4 · ESTRATEGIA DEL LOTE (T2.3, §7.2 N4: determinista y **$0**). Compone la matriz
+        // PROPUESTA a partir del brief que CP1 aprobó y pausa: es CP2, «selección de matriz +
+        // confirmación de coste» (§7.2, columna «Checkpoint»).
+        //
+        // POR QUÉ N4 ES UN STEP DEL RUN Y NO UNA PÁGINA APARTE: §7.1.b lo dice sin ambigüedad
+        // —«cada checkpoint (CP1–CP5) es un estado `waiting_approval` del step»— y toda la
+        // maquinaria que CP2 necesita ya existe por serlo: la pausa, la aprobación transaccional,
+        // la decisión persistida (`checkpoint_decision`), la invalidación aguas abajo al editar y
+        // el override «parar siempre aquí» de §7.1.b (que el PRD ejemplifica JUSTO con CP2:
+        // «dejar CP2 activo aunque el lote vaya en autopilot, porque es donde se confirma el
+        // gasto»). Un panel fuera del run tendría que reimplementarlo todo.
+        //
+        key: 'N4',
+        nodeKey: 'N4',
+        // Depende SOLO de N3: la matriz se compone del BRIEF (sus ángulos, sus hooks, el
+        // `avatar_hint` de su audiencia). Ni el RawContent ni el VisualAnalysis entran en N4.
+        dependsOn: ['N3'],
+        config: { languages } satisfies AnalysisN4Config,
+        isCheckpoint: true,
+        // ── POR QUÉ `alwaysPause` NO ES OPCIONAL AQUÍ ─────────────────────────────────────────
+        // Es EL ejemplo del PRD (§7.1.b): «dejar CP2 activo aunque el lote vaya en autopilot,
+        // porque es donde se confirma el gasto». Y no es cosmético: la creación del lote vive en
+        // el efecto de dominio de `/approve`. Un checkpoint NORMAL con autopilot ON no pausa
+        // (`shouldPause` → `!autopilot`), así que N4 pasaría directo a `succeeded`, `/approve`
+        // NUNCA se llamaría, y el run terminaría **sin `ad_batch`, sin `ad_variant` y sin que
+        // nadie autorizara un céntimo** — la puerta del gasto saltada en silencio. El autopilot
+        // es un toggle del RunHeader que se puede encender A MITAD del run, así que esto no es
+        // hipotético. Autopilot significa «no me preguntes por lo gratis», no «gasta sin pedir».
+        checkpointConfig: { alwaysPause: true },
       },
     ],
   };

@@ -10,6 +10,7 @@ import {
   makeN2Executor,
   makeN3Executor,
 } from './analysis';
+import { makeN4Executor } from './strategy';
 
 export interface ExecutorRegistryDeps {
   /** Decisor de fallo de los executors de demo, resuelto por bootstrap. */
@@ -40,6 +41,11 @@ export function makeExecutorRegistry({
     N1: makeN1Executor(analysis),
     N2: makeN2Executor(analysis),
     N3: makeN3Executor(analysis),
+    // N4 · ESTRATEGIA DEL LOTE (T2.3): determinista y $0 (§7.2). Solo necesita la BD —ni red, ni
+    // secretos, ni storage—, así que toma el `db` de las deps del análisis en vez de estrenar un
+    // grupo de deps de un solo campo. Cuando F2 traiga N5 (que sí paga Sonnet), ese grupo nacerá
+    // con su primera dep de verdad.
+    N4: makeN4Executor({ db: analysis.db }),
     'demo.sleep': demo,
     'demo.fail': demo,
     // `demo.hang` (T0.9): el executor no retorna nunca (espera al abort) — es el

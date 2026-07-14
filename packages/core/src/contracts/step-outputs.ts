@@ -7,6 +7,8 @@
 // roots hermanos, architecture.md §1) — si el schema viviera en el executor, web acabaría
 // redeclarando la misma forma y tendríamos DOS verdades divergiendo en silencio.
 import { z } from 'zod';
+import { BatchConfigSchema } from './batch-config';
+import { BatchPlanSchema } from './batch-plan';
 import { UlidSchema } from './ids';
 import { RawContentSchema } from './raw-content';
 import { VisualAnalysisSchema } from './visual-analysis';
@@ -83,3 +85,31 @@ export const N3OutputSchema = z.object({
   warnings: z.array(z.unknown()),
 });
 export type N3Output = z.infer<typeof N3OutputSchema>;
+
+/**
+ * N4 · ESTRATEGIA DEL LOTE (T2.3, §7.2 N4: determinista y **$0**): la matriz PROPUESTA por el
+ * sistema y la config con la que se compuso. Es lo que abre CP2 (§7.1.b: el step pausa en
+ * `waiting_approval` con su artefacto ya escrito) y lo que el panel pinta como punto de partida.
+ *
+ * ES UNA PROPUESTA, NO UN COMPROMISO. El plan de aquí se compone SIN `batchDiscriminator` (el
+ * `ad_batch` todavía no existe), así que sus `filenameCode` solo son únicos DENTRO del plan —
+ * exactamente lo que dice el contrato de `PlannedVariant.filenameCode` que hay que hacer para
+ * PREVISUALIZAR. El plan que se PERSISTE lo recompone el servidor al confirmar, con el id del
+ * lote nuevo como discriminante. Por eso este artefacto **no se puede insertar tal cual**: es la
+ * pantalla inicial de CP2, no las filas de `ad_variant`.
+ *
+ * `briefId` es la fuente de verdad (la fila de `product_brief` que CP1 aprobó); `brief` viaja
+ * inline por la misma razón que en N3 —el panel y el excerpt del SSE lo leen sin ir a la BD— y
+ * como `unknown` por la misma razón también: quien lo necesite tipado lo parsea con
+ * `ProductBriefSchema` en su punto de uso, en vez de re-validar un objeto grande en cada lectura
+ * del artefacto.
+ */
+export const N4OutputSchema = z.object({
+  briefId: UlidSchema,
+  brief: z.unknown(),
+  /** La config por defecto que el compositor usó (la que el panel pre-selecciona). */
+  config: BatchConfigSchema,
+  /** El `BatchPlan` propuesto (preview, sin `batchDiscriminator`). */
+  plan: BatchPlanSchema,
+});
+export type N4Output = z.infer<typeof N4OutputSchema>;

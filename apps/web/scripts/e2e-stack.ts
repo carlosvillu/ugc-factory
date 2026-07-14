@@ -24,7 +24,15 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { startPostgresContainer, createTestDatabase, startFakeExternalApis } from '@ugc/test-utils';
 import { deriveSecretsKey, encryptSecret } from '@ugc/core/secrets';
-import { createDbPool, seedSecretIfAbsent } from '@ugc/db';
+import { SEED_LIBRARY, validateSeeds } from '@ugc/core/library';
+import { PERSONA_SEEDS } from '@ugc/core/persona/server';
+import {
+  createDbPool,
+  makeLocalStorageAdapter,
+  seedLibrary,
+  seedPersonas,
+  seedSecretIfAbsent,
+} from '@ugc/db';
 
 const PORT = 3100;
 // Password de bootstrap del stack: el nombre de la env es el que LEE nuestro
@@ -73,6 +81,32 @@ const { db: seedDb, pool: seedPool } = createDbPool(connectionString);
 const secretsKey = deriveSecretsKey(masterKey);
 await seedSecretIfAbsent(seedDb, 'firecrawl', encryptSecret('fake-firecrawl-key', secretsKey));
 await seedSecretIfAbsent(seedDb, 'anthropic', encryptSecret('fake-anthropic-key', secretsKey));
+
+// LA LIBRERÍA Y LAS PERSONAS (T2.1/T2.0), sembradas con LOS SEEDS REALES — no con fixtures de
+// juguete. Esto no es decoración del stack: **CP2 (T2.3) no existe sin ellas.**
+//
+//   · La `recipe` del tier es de donde sale el COSTE que N4 estima y que el usuario autoriza. Sin
+//     fila, el executor de N4 falla en seco ("no hay receta sembrada") y el checkpoint no abre.
+//   · La `hook_line` es lo que el compositor usa para completar los hooks del brief.
+//   · Las `persona` son las candidatas que el `avatar_hint` sugiere (§11) — la mitad de la
+//     Entrega de T2.3.
+//
+// Se siembran las MISMAS que `pnpm seed` (SEED_LIBRARY + PERSONA_SEEDS, validadas antes de tocar
+// la BD, igual que en producción). Un stack que sembrara recetas inventadas probaría un coste que
+// el sistema real no cobra — el principio 9 de la skill testing, y el error que este proyecto ya
+// ha cometido cinco veces.
+const validation = validateSeeds(SEED_LIBRARY);
+if (!validation.ok || !validation.library) {
+  console.error('e2e-stack: la librería real NO valida — el stack no puede sembrar CP2');
+  process.exit(1);
+}
+await seedLibrary(seedDb, validation.library);
+// Las imágenes de referencia de las personas van al MISMO almacén que usa web. Se pasa el `root`
+// EXPLÍCITO (y no `…FromEnv()`): en ESTE proceso `ASSETS_DIR` aún no está en el env —solo se le
+// fija al hijo, más abajo—, así que el adapter caería al default de producción (`/data/assets`) y
+// escribiría fuera del sandbox del stack.
+await seedPersonas(seedDb, makeLocalStorageAdapter({ root: assetsDir }), PERSONA_SEEDS);
+
 await seedPool.end();
 
 const env: NodeJS.ProcessEnv = {

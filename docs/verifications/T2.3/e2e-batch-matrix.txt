@@ -1,0 +1,4 @@
+  ✓   9 [chromium] › e2e/batch-matrix.spec.ts:100:3 › CP2 · matriz y confirmación de gasto (T2.3) › cambiar el tier de Test a Standard actualiza el coste AL VUELO (sin recargar) @f2 @checkpoint (10.8s)
+  ✓  11 [chromium] › e2e/batch-matrix.spec.ts:159:3 › CP2 · matriz y confirmación de gasto (T2.3) › seleccionar ángulos e idiomas mueve el número de variantes de la matriz @f2 (8.3s)
+  ✓  10 [chromium] › e2e/batch-matrix.spec.ts:127:3 › CP2 · matriz y confirmación de gasto (T2.3) › el selector muestra las personas COMPATIBLES con el segmento del brief @f2 (11.0s)
+  ✓  12 [chromium] › e2e/batch-matrix.spec.ts:182:3 › CP2 · matriz y confirmación de gasto (T2.3) › confirmar crea EXACTAMENTE las variantes de la matriz, con `filename_code` únicos @f2 @checkpoint (5.6s)

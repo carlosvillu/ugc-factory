@@ -1,0 +1,51 @@
+CONTRASTE TEXTO/FONDO (WCAG) DEL PANEL DE CP2 — medido con getComputedStyle (color + fondo
+EFECTIVO componiendo capas semitransparentes) sobre el sistema levantado, run 01KXGXHE6VCVHEK9W56ZGKQH47.
+Umbral: 4.5:1 texto normal · 3:1 texto grande/negrita (>=24px, o >=18.66px con font-weight>=700).
+
+================================ TEMA DARK (por defecto) ================================
+      ratio  min  px/fw     fg -> bg                           elemento
+ OK   16.74    3  30/600    rgb(244,244,245) -> rgb(20,20,22)  COSTE total (role=status "Coste del lote") <-- el numero EN GRANDE
+ OK    6.54  4.5  13/600    rgb(5,46,22) -> rgb(34,197,94)     Boton primario "Confirmar y crear N variantes"
+ OK      18  4.5  14/400    rgb(244,244,245) -> rgb(10,10,11)  Banner info personas (no_match / compatibles)
+FAIL   3.81  4.5  11/600    rgb(113,113,122) -> rgb(20,20,22)  Heading "COSTE ESTIMADO DEL LOTE"        [token --text-3]
+FAIL   4.09  4.5  11/600    rgb(113,113,122) -> rgb(10,10,11)  Heading "PERSONA · SUGERIDA POR AVATAR_HINT" [token --text-3]
+FAIL   3.59  4.5  11/600    rgb(113,113,122) -> rgb(26,26,29)  Cabecera de tabla "FILENAME_CODE"        [token --text-3]
+ OK   16.74  4.5  13/400    rgb(244,244,245) -> rgb(20,20,22)  Celda FILENAME_CODE de la matriz
+ OK   16.74  4.5  13/400    rgb(244,244,245) -> rgb(20,20,22)  Celda COSTE de la matriz
+FAIL   3.28  4.5  14/400    rgb(84,87,229) -> rgb(21,22,44)    Radio seleccionado  [tokens --accent sobre --accent-soft]
+ OK   16.74  4.5  14/400    rgb(244,244,245) -> rgb(20,20,22)  Label del angulo marcado
+ OK      18  4.5  14/400    rgb(244,244,245) -> rgb(10,10,11)  Sub-linea "N variantes · tier X"
+
+================================ TEMA LIGHT ================================
+ OK   17.72    3  30/600    rgb(24,24,27) -> rgb(255,255,255)  COSTE total (role=status)
+ OK     6.1  4.5  13/600    rgb(255,255,255) -> rgb(20,113,54) Boton primario "Confirmar y crear N variantes"
+ OK   17.13  4.5  14/400    rgb(24,24,27) -> rgb(251,251,252)  Banner info personas
+ OK    4.83  4.5  11/600    rgb(113,113,122) -> rgb(255,255,255) Heading "COSTE ESTIMADO DEL LOTE"      [--text-3, raspa AA]
+ OK    4.67  4.5  11/600    rgb(113,113,122) -> rgb(251,251,252) Heading "PERSONA · SUGERIDA…"          [--text-3, raspa AA]
+ OK    4.52  4.5  11/600    rgb(113,113,122) -> rgb(247,247,249) Cabecera de tabla "FILENAME_CODE"      [--text-3, raspa AA]
+ OK   17.72  4.5  13/400    rgb(24,24,27) -> rgb(255,255,255)  Celda FILENAME_CODE
+ OK   17.72  4.5  13/400    rgb(24,24,27) -> rgb(255,255,255)  Celda COSTE
+FAIL   4.27  4.5  14/400    rgb(84,87,229) -> rgb(226,226,249) Radio seleccionado  [--accent sobre --accent-soft]
+ OK   17.72  4.5  14/400    rgb(24,24,27) -> rgb(255,255,255)  Label del angulo marcado
+ OK   17.13  4.5  14/400    rgb(24,24,27) -> rgb(251,251,252)  Sub-linea "N variantes · tier X"
+
+================================ PROCEDENCIA DE LOS FALLOS ================================
+Los CUATRO fallos vienen de TOKENS DEL DESIGN SYSTEM usados por sus clases de utilidad, NO de
+colores inventados por CP2:
+
+  --text-3    = #71717a   -> clases `text-text-3` (headings de seccion + cabeceras de tabla)
+  --accent    = #5457e5   -> clase `text-accent`
+  --accent-soft = #5457e526 (alpha 0x26) -> clase `bg-accent-soft`   (globals.css:75)
+
+CONTROL NEGATIVO — el mismo token falla IGUAL en superficies PREEXISTENTES ajenas a T2.3.
+En /spend (pagina de T0.12), los items de la nav con `text-text-3`, tema dark:
+
+   3.81  rgb(113,113,122) -> rgb(20,20,22)  'Inicio'    <-- MISMO 3.81 que en CP2
+   3.81  rgb(113,113,122) -> rgb(20,20,22)  'Canvas'
+   3.81  rgb(113,113,122) -> rgb(20,20,22)  'Runs'
+   3.81  rgb(113,113,122) -> rgb(20,20,22)  'Personas'
+
+Es EXACTAMENTE el mismo 3,81:1 que el verifier de T1.13 ya reporto como deuda del DS
+("el token compartido --text-3 ... que ya se usa igual en 15 sitios previos").
+=> T2.3 NO introduce el defecto: lo HEREDA. Hallazgo RUTEADO al DS (cua.md paso 3: "el defecto
+   esta en los valores del DS, decision del usuario, pero se REPORTA con la tabla de ratios").

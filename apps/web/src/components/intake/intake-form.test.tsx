@@ -92,6 +92,8 @@ describe('IntakeForm (intake manual)', () => {
         },
         { nodeKey: 'N2', dependsOn: ['N1'] },
         { nodeKey: 'N3', dependsOn: ['N1', 'N2'] },
+        // T2.3: N4 (estrategia del lote, CP2) cierra el DAG del análisis. Determinista y $0.
+        { nodeKey: 'N4', dependsOn: ['N3'] },
       ],
     });
   });

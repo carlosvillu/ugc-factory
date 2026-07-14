@@ -20,7 +20,12 @@
 // hay reintentos: se probaron y eran flaky (thundering herd), ver el docstring.
 import { and, desc, eq, sql } from 'drizzle-orm';
 import type { Db } from '../client';
-import { productBrief, type NewProductBrief, type ProductBrief } from '../schema/project';
+import {
+  productBrief,
+  urlAnalysis,
+  type NewProductBrief,
+  type ProductBrief,
+} from '../schema/project';
 
 /**
  * Namespace del advisory lock del bump (el primer `int4` de `pg_advisory_xact_lock(a, b)`). Un
@@ -130,6 +135,27 @@ export async function findBriefByOriginStep(
 /** Lee un brief por su id; `undefined` si no existe. */
 export async function getBrief(db: Db, id: string): Promise<ProductBrief | undefined> {
   const [row] = await db.select().from(productBrief).where(eq(productBrief.id, id));
+  return row;
+}
+
+/**
+ * El brief + el PROYECTO al que pertenece (T2.3): lo que CP2 necesita para crear el lote
+ * (`ad_batch.project_id` es NOT NULL).
+ *
+ * El proyecto NO está en `product_brief` —cuelga de `url_analysis`, que es quien lo referencia—,
+ * así que es un JOIN, no una columna. Se hace en SQL y en UNA query (en vez de leer el brief,
+ * mirar su `url_analysis_id` y hacer un segundo SELECT): dos viajes para un dato que la BD sabe
+ * unir es exactamente el N+1 en miniatura que db.md §7 pide evitar.
+ */
+export async function getBriefWithProject(
+  db: Db,
+  id: string,
+): Promise<{ brief: ProductBrief; projectId: string } | undefined> {
+  const [row] = await db
+    .select({ brief: productBrief, projectId: urlAnalysis.projectId })
+    .from(productBrief)
+    .innerJoin(urlAnalysis, eq(productBrief.urlAnalysisId, urlAnalysis.id))
+    .where(eq(productBrief.id, id));
   return row;
 }
 

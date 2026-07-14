@@ -1,0 +1,13 @@
+{
+    "not_for": "Personas que buscan un producto con especificaciones técnicas detalladas y garantía de autenticidad claramente verificable",
+    "segments": [
+        {
+            "name": "Compradores de moda casual y streetwear",
+            "avatar_hint": "Persona joven de estilo urbano-casual, tono desenfadado, grabando en un dormitorio o calle",
+            "demographics": "Adultos jóvenes, 18-30 años, compradores online de accesorios deportivos/casuales",
+            "psychographics": "Buscan piezas básicas de vestuario para completar looks urbanos, sensibles al precio",
+            "awareness_level": "product_aware"
+        }
+    ],
+    "primary_segment": "Compradores de moda casual y streetwear"
+}

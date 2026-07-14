@@ -433,10 +433,12 @@ Decisiones del usuario (2026-07-07): la fase se ejecuta tras T0.1 y **antes** de
 - **Entrega**: `BatchPlan` (contrato Zod): ángulos × hooks (brief + librería) × personas × duración (preset §8.4) × idiomas × tier; modo hook-testing con body/CTA compartidos por ángulo (§7.5); estimador de coste basado en `recipe` con desglose por variante.
 - **Verificación**: para un brief real, componer una matriz 2 ángulos × 3 hooks × 1 persona × es+en → 12 variantes con coste estimado desglosado que cuadra a mano con las recetas del Apéndice B (±10 %).
 
-#### T2.3 · CP2: UI de matriz y confirmación de gasto
+#### T2.3 · CP2: UI de matriz y confirmación de gasto [x] 2026-07-14 — PASS, ver docs/verifications/T2.3/ (coste real $0,70 — todo de N3 en los 5 runs de la verificación; N4 es $0)
 - **Depende de**: T2.2
 - **Entrega**: panel de CP2: selección de ángulos (cards con hooks del brief), **selector de personas sugeridas por `avatar_hint`** (T2.0), preset de duración/objetivo, tier, idiomas, coste total estimado en grande, confirmación que crea las `ad_variant` en `planned`.
+- **Mockup**: `docs/mockups/batch-matrix.dc.html` (Claude Design, 2026-07-14). Dos desviaciones acordadas contra el CONTRATO (el mockup se equivocaba): sus presets eran 12/28/48 s → los reales son **12/30/45** (`strategy/presets.ts`), y dibujaba un checkbox por HOOK → `ComposeMatrixInput` acepta `angleIndices` + `hooksPerAngle` (los hooks se MUESTRAN, se selecciona el ángulo). Su `<script>` traía un modelo de coste INVENTADO: **no se portó ni una línea** (todo el dinero sale de `estimateBatchCost` sobre la tabla `recipe`).
 - **Playwright permanente**: `apps/web/e2e/batch-matrix.spec.ts` cubre selección de ángulos/persona/idiomas, recálculo al cambiar tier y confirmación con el número exacto de variantes visible tras crear el lote.
+- **Implementación**: CP2 es el **step N4 del DAG** (§7.1.b: cada checkpoint es un `waiting_approval` de un step), no una página aparte. N4 es determinista y **$0**. Lleva **`checkpointConfig: { alwaysPause: true }`** — el override de §7.1.b, ejemplificado en el PRD justo con CP2: sin él, con autopilot ON el step pasaba a `succeeded`, `/approve` nunca se llamaba y el run terminaba **sin lote y sin que nadie autorizara un céntimo**.
 - **Verificación**: en navegador, cambiar tier de Test a Standard actualiza el coste al vuelo; el selector muestra las personas compatibles con el segmento; aprobar crea exactamente las variantes de la matriz (filas con `filename_code` únicos y legibles).
 
 #### T2.4 · ScriptWriter (N5)

@@ -64,11 +64,14 @@ services:
       # última entrada del header y nunca el valor crudo del cliente.
       TRUST_PROXY: '1'
     volumes:
-      # §18: web solo LEE assets (previews/downloads proxificados); la escritura
-      # es del worker. [Nota T0.13: los endpoints de upload de T1.5/T1.13
-      # escriben desde web y fallarán con EROFS — contradicción PRD§18↔T1
-      # reportada al bucle; ver DEPLOY.md «Limitaciones conocidas».]
-      - ugc-assets:/data/assets:ro
+      # RW (reconciliación 2026-07-14, regla 6). El PRD §18 decía «solo el worker
+      # escribe», pero se escribió ANTES de que existieran los uploads: hoy TRES
+      # rutas de web escriben en el StorageAdapter — `POST /api/assets`,
+      # `POST /api/personas/:id/reference-images` y el `storage.delete()` al borrar
+      # una persona. Son subidas del USUARIO desde el navegador; en una app
+      # mono-usuario, encolarlas al worker sería complejidad sin dueño. Montado
+      # `ro`, esas tres rutas mueren con EROFS en producción.
+      - ugc-assets:/data/assets
     depends_on:
       postgres:
         condition: service_healthy

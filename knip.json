@@ -28,7 +28,10 @@
       // pero el bundle de tsup los deja external: el artefacto dist/ los requiere
       // en runtime. Declararlos como dependency es lo que fuerza esa
       // externalización (sin ellos, tsup inlinea pg CJS en ESM y dist/ no arranca).
-      "ignoreDependencies": ["pino", "pg"]
+      // sharp, ídem (llega vía @ugc/core y @ugc/services): es un módulo NATIVO y
+      // sin declararlo tsup lo inlineaba SIN sus binarios — el boot del worker en
+      // modo prod crasheaba (detectado en T0.13, primera vez que se probó).
+      "ignoreDependencies": ["pino", "pg", "sharp"]
     },
     "packages/core": {
       // pino-pretty solo se referencia como string de transport en makeLogger

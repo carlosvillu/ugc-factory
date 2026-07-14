@@ -31,13 +31,17 @@ function posIntEnv(raw: string | undefined, fallback: number): number {
 //
 // Memoizado: las env vars son constantes en la vida del proceso, así que no se
 // reparsean en cada intento de login. Se invalida en resetRateLimitForTests (los
-// tests fijan LOGIN_MAX_ATTEMPTS/LOGIN_WINDOW_MS por caso).
-let configCache: { max: number; windowMs: number } | undefined;
+// tests fijan LOGIN_MAX_ATTEMPTS/LOGIN_WINDOW_MS/TRUST_PROXY por caso).
+let configCache: { max: number; windowMs: number; trustProxy: boolean } | undefined;
 
-function config(): { max: number; windowMs: number } {
+function config(): { max: number; windowMs: number; trustProxy: boolean } {
   configCache ??= {
     max: posIntEnv(process.env.LOGIN_MAX_ATTEMPTS, 2),
     windowMs: posIntEnv(process.env.LOGIN_WINDOW_MS, 15 * 60 * 1000),
+    // Trust boundary (T0.13): TRUST_PROXY=1 declara que hay EXACTAMENTE un proxy
+    // de confianza delante (Caddy) que sobrescribe x-forwarded-for con la IP del
+    // socket. Solo el compose de producción lo activa.
+    trustProxy: process.env.TRUST_PROXY === '1',
   };
   return configCache;
 }
@@ -81,10 +85,34 @@ export function clearAttempts(ip: string): void {
   failures.delete(ip);
 }
 
-/** La IP del request. Detrás de Caddy (T0.13) llega en `x-forwarded-for`; en
- *  local/tests cae a un literal estable. */
+/**
+ * La IP del request, con trust boundary explícito (T0.13, deuda de T0.4).
+ *
+ * `x-forwarded-for` es client-controllable hasta que un proxy DE CONFIANZA lo
+ * reescriba: sin frontera, un atacante rota el header y cada request cae en un
+ * bucket distinto → fuerza bruta ilimitada contra el login.
+ *
+ * - **TRUST_PROXY=1 (producción, detrás de Caddy)**: Caddy sobrescribe (no
+ *   append) `x-forwarded-for` con la IP del socket (`header_up X-Forwarded-For
+ *   {client_ip}` en el site file; además es el default de Caddy para clientes
+ *   no confiables). El header que llega es SUYO, no del cliente — y solo Caddy
+ *   puede alcanzar la app (web publicado únicamente en 127.0.0.1:3100). Se toma
+ *   la ÚLTIMA entrada como defensa en profundidad: si un hop futuro hiciera
+ *   append en vez de overwrite, la última sigue siendo la escrita por el hop
+ *   más cercano (el confiable); la primera sería la del atacante. `x-real-ip`
+ *   se IGNORA: Caddy no lo sanea, sería un bypass del boundary.
+ * - **Sin TRUST_PROXY (dev/tests, sin proxy delante)**: no hay control de
+ *   seguridad que proteger (la app escucha en localhost); el header se usa como
+ *   bucketing de conveniencia — es lo que los tests y el stack E2E usan para
+ *   aislar contadores por caso (primera entrada, comportamiento histórico).
+ */
 export function clientIp(req: Request): string {
   const fwd = req.headers.get('x-forwarded-for');
+  if (config().trustProxy) {
+    const last = fwd?.split(',').at(-1)?.trim();
+    if (last) return last;
+    return 'local'; // sin header (healthcheck local, smoke directo a 127.0.0.1)
+  }
   const first = fwd?.split(',')[0]?.trim();
   if (first) return first;
   return req.headers.get('x-real-ip') ?? 'local';

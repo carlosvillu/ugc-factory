@@ -16,7 +16,8 @@
     "@ugc/services": "workspace:*",
     "pg-boss": "catalog:",
     "pino": "catalog:",
-    "pg": "catalog:"
+    "pg": "catalog:",
+    "sharp": "^0.35.3"
   },
   "devDependencies": {
     "@types/node": "catalog:",

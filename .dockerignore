@@ -1,0 +1,37 @@
+# Contexto de build de las imágenes de producción (T0.13). Ambos Dockerfiles
+# (apps/web, apps/worker) usan la raíz del repo como contexto: lo que no está
+# aquí ignorado viaja al daemon en cada build.
+
+# Dependencias y artefactos de build: se regeneran DENTRO de la imagen.
+node_modules
+**/node_modules
+**/.next
+**/dist
+**/coverage
+*.tsbuildinfo
+
+# Entornos con secretos reales — JAMÁS dentro de una imagen. Los .env.test
+# committeados (claves falsas) tampoco hacen falta: los tests no corren en la imagen.
+.env*
+**/.env*
+
+# Git, arnés de agentes y documentación: no afectan al build.
+.git
+.claude
+.agents
+.codex
+docs
+research
+skills-lock.json
+*.md
+**/*.md
+
+# Artefactos de test/e2e locales.
+**/test-results
+**/playwright-report
+apps/web/e2e/.auth
+apps/web/e2e/.runtime.json
+
+# Datos de runtime locales.
+data
+.DS_Store

@@ -1,0 +1,126 @@
+# Docker Compose de PRODUCCIÓN (T0.13, §18). Tres servicios: web (Next
+# standalone), worker (bundle tsup) y postgres 16. El TLS/reverse-proxy NO vive
+# aquí: el VPS es multi-proyecto y trae un Caddy central (contenedor edge-caddy,
+# ~/infra/caddy; guía en ~/AGENTS.md del VPS) que termina TLS para todos los
+# subdominios y proxifica a 127.0.0.1:3100. Ver DEPLOY.md para el flujo completo.
+#
+# Convenciones de la plataforma (~/AGENTS.md §4): puertos SOLO en 127.0.0.1
+# (un puerto en 0.0.0.0 salta UFW), restart: unless-stopped y logging acotado en
+# cada servicio. Postgres NO publica puerto: red interna del compose (el backup
+# usa `docker compose exec postgres pg_dump`, sin tocar el host).
+#
+# Secretos: en el `.env` junto a este fichero EN el VPS (gitignored, jamás en el
+# repo). Compose lo lee para interpolar `${...}`. Variables en DEPLOY.md.
+
+services:
+  postgres:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USER missing in .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD missing in .env}
+      POSTGRES_DB: ${POSTGRES_DB:?POSTGRES_DB missing in .env}
+      # UTC como en dev: todo el sistema compara instantes (timestamptz).
+      TZ: UTC
+      PGTZ: UTC
+    volumes:
+      - ugc-postgres-prod-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    logging:
+      driver: json-file
+      options:
+        max-size: '10m'
+        max-file: '3'
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    restart: unless-stopped
+    ports:
+      # SOLO loopback: el único camino desde fuera es el Caddy central (3100 =
+      # puerto web del bloque 3100-3109 reservado a ugc-factory en ~/AGENTS.md §3).
+      - '127.0.0.1:3100:3000'
+    # Las variables OPCIONALES (AUTH_BOOTSTRAP_PASSWORD, FAL_KEY,
+    # ANTHROPIC_API_KEY, FIRECRAWL_API_KEY, BUDGET_MONTHLY_LIMIT_CENTS,
+    # LOG_LEVEL) entran por env_file: solo llegan al contenedor si existen en el
+    # .env. JAMÁS con `VAR: ${VAR:-}` en environment — eso define la env como
+    # cadena VACÍA aunque no esté en el .env, y los seeds first-boot distinguen
+    # ausente de vacío (Number('')===0 sembró un presupuesto de 0 céntimos en el
+    # primer deploy; corregido en T0.13).
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      APP_MASTER_KEY: ${APP_MASTER_KEY:?APP_MASTER_KEY missing in .env}
+      ASSETS_DIR: /data/assets
+      # Trust boundary del rate-limit (deuda de T0.4): detrás del Caddy central,
+      # que SOBRESCRIBE x-forwarded-for con la IP del socket. La app toma la
+      # última entrada del header y nunca el valor crudo del cliente.
+      TRUST_PROXY: '1'
+    volumes:
+      # §18: web solo LEE assets (previews/downloads proxificados); la escritura
+      # es del worker. [Nota T0.13: los endpoints de upload de T1.5/T1.13
+      # escriben desde web y fallarán con EROFS — contradicción PRD§18↔T1
+      # reportada al bucle; ver DEPLOY.md «Limitaciones conocidas».]
+      - ugc-assets:/data/assets:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      # La imagen runtime no trae curl/wget: fetch de Node. 200 = vivo (el campo
+      # db del payload puede degradar a false sin tumbar el contenedor; la
+      # semántica de /api/health es de T0.2).
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://127.0.0.1:3000/api/health').then((r)=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      # Margen para migraciones + seeds del primer arranque (instrumentation).
+      start_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: '10m'
+        max-file: '3'
+
+  worker:
+    build:
+      context: .
+      dockerfile: apps/worker/Dockerfile
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      ASSETS_DIR: /data/assets
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    volumes:
+      # §18: el worker es quien ESCRIBE los assets (rw).
+      - ugc-assets:/data/assets
+    depends_on:
+      postgres:
+        condition: service_healthy
+      # web migra el schema on-boot (advisory lock, T0.3): esperar a que esté
+      # healthy garantiza que las tablas existen antes de que un consumer las toque.
+      web:
+        condition: service_healthy
+    logging:
+      driver: json-file
+      options:
+        max-size: '10m'
+        max-file: '3'
+
+volumes:
+  ugc-postgres-prod-data:
+    name: ugc-postgres-prod-data
+  ugc-assets:
+    name: ugc-assets

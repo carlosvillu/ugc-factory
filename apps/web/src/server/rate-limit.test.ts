@@ -16,11 +16,13 @@ beforeEach(() => {
   resetRateLimitForTests();
   process.env.LOGIN_MAX_ATTEMPTS = '2';
   process.env.LOGIN_WINDOW_MS = '60000';
+  delete process.env.TRUST_PROXY; // default de dev/tests: sin proxy de confianza
 });
 afterEach(() => {
   resetRateLimitForTests();
   delete process.env.LOGIN_MAX_ATTEMPTS;
   delete process.env.LOGIN_WINDOW_MS;
+  delete process.env.TRUST_PROXY;
 });
 
 // Simula la secuencia del handler para una IP: assert (puede lanzar) + registrar
@@ -116,13 +118,72 @@ describe('assertNotRateLimited + recordFailure', () => {
   });
 });
 
-describe('clientIp', () => {
-  it('toma la primera IP de x-forwarded-for', () => {
+describe('clientIp sin proxy de confianza (dev/tests)', () => {
+  it('toma la primera IP de x-forwarded-for (bucketing de conveniencia)', () => {
     const req = new Request('http://x/', { headers: { 'x-forwarded-for': '9.9.9.9, 10.0.0.1' } });
     expect(clientIp(req)).toBe('9.9.9.9');
   });
   it('cae a un literal estable sin cabeceras de proxy', () => {
     expect(clientIp(new Request('http://x/'))).toBe('local');
+  });
+});
+
+// Trust boundary (T0.13, deuda de T0.4): con TRUST_PROXY=1 la app confía SOLO en
+// el hop de Caddy, que SOBRESCRIBE x-forwarded-for con la IP del socket. La app
+// toma la ÚLTIMA entrada (la del hop confiable si algo hiciera append) y nunca
+// el header crudo del cliente ni x-real-ip.
+describe('clientIp con TRUST_PROXY=1 (producción, detrás de Caddy)', () => {
+  beforeEach(() => {
+    process.env.TRUST_PROXY = '1';
+    resetRateLimitForTests(); // invalida el config memoizado para releer TRUST_PROXY
+  });
+
+  it('usa el valor único que Caddy escribió (overwrite: un solo valor)', () => {
+    const req = new Request('http://x/', { headers: { 'x-forwarded-for': '203.0.113.9' } });
+    expect(clientIp(req)).toBe('203.0.113.9');
+  });
+
+  it('ignora entradas prepended por el cliente: toma la ÚLTIMA, no la primera', () => {
+    // Si un hop hiciera append en vez de overwrite, lo que precede a la última
+    // entrada es client-controllable — jamás debe ser la clave del rate limit.
+    const req = new Request('http://x/', {
+      headers: { 'x-forwarded-for': '6.6.6.6, 7.7.7.7, 203.0.113.9' },
+    });
+    expect(clientIp(req)).toBe('203.0.113.9');
+  });
+
+  it('ignora x-real-ip (client-controllable; Caddy no lo sanea)', () => {
+    const req = new Request('http://x/', { headers: { 'x-real-ip': '6.6.6.6' } });
+    expect(clientIp(req)).toBe('local');
+  });
+
+  it('sin header cae al literal estable (healthcheck/smoke directo)', () => {
+    expect(clientIp(new Request('http://x/'))).toBe('local');
+  });
+
+  it('rotar la parte client-controllable del header NO abre buckets nuevos: 3.er intento → 429', () => {
+    // Escenario de ataque completo: el atacante rota IPs falsas al principio del
+    // header; Caddy (append hipotético) deja su IP de socket al final. Todos los
+    // intentos caen en el MISMO bucket y el limiter bloquea igual.
+    const attempt = (spoofed: string) => {
+      const req = new Request('http://x/', {
+        headers: { 'x-forwarded-for': `${spoofed}, 198.51.100.7` },
+      });
+      const ip = clientIp(req);
+      assertNotRateLimited(ip);
+      recordFailure(ip);
+    };
+    expect(() => {
+      attempt('1.1.1.1');
+    }).not.toThrow();
+    expect(() => {
+      attempt('2.2.2.2');
+    }).not.toThrow();
+    const err = getThrown(() => {
+      attempt('3.3.3.3');
+    });
+    expect(err).toBeInstanceOf(AppError);
+    expect((err as AppError).code).toBe('rate_limited');
   });
 });
 

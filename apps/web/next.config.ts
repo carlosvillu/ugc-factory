@@ -29,6 +29,16 @@ if (process.env.NODE_ENV === 'development' && existsSync(rootEnv)) {
 // envenenaría el fallback require.resolve del CLI/tests) → ese canal no la lleva.
 
 const nextConfig: NextConfig = {
+  // Salida standalone SOLO para la imagen Docker de producción (T0.13): su
+  // Dockerfile exporta NEXT_OUTPUT=standalone en el stage de build. Se gatea por
+  // env porque con `output: 'standalone'` fijo, `next start` local (el flujo de
+  // T0.14 y de cualquier smoke de prod en el host) deja de funcionar — el server
+  // pasa a ser `node .next/standalone/apps/web/server.js`.
+  ...(process.env.NEXT_OUTPUT === 'standalone' ? { output: 'standalone' as const } : {}),
+  // Monorepo: raíz explícita del file tracing (standalone copia desde aquí los
+  // node_modules trazados). Sin esto Next la infiere del lockfile — explícito es
+  // determinista y no depende de qué haya alrededor del repo.
+  outputFileTracingRoot: fileURLToPath(new URL('../../', import.meta.url)),
   // Los paquetes internos exportan TS fuente (JIT): Next los transpila
   // (architecture.md §7). @ugc/db entra en T0.2: web consume su ping de conexión
   // (@ugc/db → pingDb) en /api/health.

@@ -464,6 +464,28 @@ Decisiones del usuario (2026-07-07): la fase se ejecuta tras T0.1 y **antes** de
 
 ---
 
+## F2b — Deuda destapada por la verificación de T2.3 (acordada con el usuario el 2026-07-14)
+
+> Sale de la verificación de T2.3: el verifier analizó `https://www.dr-squatch.com/products/pine-tar-bar-soap` (un jabón) y obtuvo briefs de **«Topi Tanpa Bingkai»** (una gorra) y **«selayar88»** (una plataforma de juegos indonesia). **El scraper NO tiene ningún bug**: ese dominio está secuestrado y sirve spam SEO, la URL de producto devuelve **`301 → https://www.dr-squatch.com/`**, y el pipeline analizó fielmente lo que la web le dio. Verificado a mano con `curl` (UA de Chrome real): `HTTP=200`, `final=https://www.dr-squatch.com/`, `<title>SELAYAR88 : Tempat Seru Bermain…</title>`.
+>
+> **El defecto NUESTRO es otro, y es real**: el usuario pide analizar UNA página y el sistema analiza OTRA **sin decírselo**. La URL final post-redirección **se descarta** en los tres caminos de ingesta (`urlNormalized` es `normalizeUrl(rawUrl)`: la URL PEDIDA, no la servida), así que ni el brief, ni CP1, ni la BD registran que hubo un salto. No es exclusivo de un dominio comprometido: pasa con **productos descatalogados** (redirigen a la home o a la categoría) y con dominios caducados — casos normales del uso real.
+>
+> **Alcance honesto**: se arregla el subconjunto **detectable** (URL pedida ≠ URL analizada). NO se intenta el caso general «el contenido es incorrecto / el dominio está comprometido»: eso no tiene ground truth y fingir que se resuelve sería peor que no tocarlo. Severidad: **arista real y recurrente, no incendio** — F1 se verificó bien contra URLs reales (oatly.com, ollie.com); esta URL la eligió el verifier y el dominio está genuinamente secuestrado.
+
+#### T2.7 · Una redirección silenciosa no puede cambiar lo que el usuario pidió analizar
+- **Depende de**: T1.11 (el canal de decisiones de checkpoint), T1.15 (que fijó el precedente: «web sin hero» no es fallo terminal sino decisión de CP1)
+- **Origen**: verificación de T2.3 (2026-07-14). Diagnóstico verificado con `curl` en la sesión, no inferido.
+- **Entrega**:
+  1. **CAPTURAR la URL final** (hoy se tira, y sin ella la comprobación es imposible: este es el paso 1). En los **tres** caminos, que la exponen de forma distinta: el **fast path** (fetch directo, T1.3) la trae gratis en `response.url`; **Firecrawl** la publica en `metadata.sourceURL` + `metadata.statusCode` (hoy nuestro tipo de su respuesta **solo declara `metadata.creditsUsed`** y descarta el resto); el **fallback Jina** hay que ver qué expone (si no la expone, se declara y se documenta — un camino que no puede detectarlo es un hecho, no un fallo a tapar). Persistirla en el `RawContent` (`url_analysis`) junto a la pedida.
+  2. **Detectar el mismatch con criterio ESTRECHO** — o esto se convierte en una máquina de falsos positivos. Las redirecciones benignas son la norma (`http→https`, `www`, barra final, canonicalización, locale/geo) y **no se marcan**. Lo que SÍ se marca: **cambio de host**, y **ruta profunda → raíz desnuda** (el caso de dr-squatch: `/products/pine-tar-bar-soap` → `/`).
+  3. **Mostrarlo en CP1**, que es el suelo honesto y la mitad que de verdad importa: «Analizado: `dr-squatch.com/` — **redirigido desde** `/products/pine-tar-bar-soap`». Convierte un fallo tragado en un hecho visible y deja que lo cace el humano, que es exactamente para lo que existe el checkpoint.
+- **Decisión de producto a tomar EN la tarea (y anotar en el PRD, como hizo T1.15)**: ¿un mismatch **avisa** (el run sigue, CP1 lo enseña, el humano decide) o **bloquea** (el run para)? **Recomendación: avisar**, por el precedente de T1.15 — matar el run le quita al humano la decisión que el checkpoint existe para darle, y hay redirecciones legítimas que solo un humano puede juzgar (un producto renombrado). El bloqueo heurístico es opcional encima de ese suelo, no en su lugar.
+- **Coste estimado**: ~$0,20 (la verificación necesita ≥2 análisis reales con API)
+- **Tests**: unit del comparador con los casos REALES en ambas direcciones — benignos que NO deben avisar (`http→https`, `www.`, barra final, `?utm_*`) y malignos que SÍ (`/products/x` → `/`, cambio de host); integración del ingester con un servidor de fixture que emite un `301` a la raíz → el `RawContent` guarda las DOS URLs y marca el mismatch. **El fixture cómodo aquí sería una redirección benigna: el principio 9 de la skill `testing` exige el caso que muerde.**
+- **Verificación**: análisis por URL de una página que redirige a la raíz (`https://www.dr-squatch.com/products/pine-tar-bar-soap` sirve hoy como caso vivo; si el dominio se limpia, vale cualquier producto descatalogado que redirija) → **CP1 muestra visiblemente que se analizó otra URL**, con la pedida y la final; en BD, `url_analysis` guarda las dos. Y el control negativo: un análisis de una URL que solo redirige `http→https` **NO** dispara ningún aviso (la señal no puede ser ruido).
+
+---
+
 ## F3 — Galería de prompts y compilador
 
 #### T3.1 · Migraciones y modelo de galería

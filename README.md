@@ -167,20 +167,28 @@ La economía también es una decisión de diseño: en un lote de _hook-testing_,
 
 ## Estado del proyecto
 
-El desarrollo va por fases, tarea a tarea, con verificación observable en cada una ([`planning.md`](planning.md) es la fuente de verdad). **45 de 102 tareas cerradas.**
+El desarrollo va por fases, tarea a tarea, con verificación observable en cada una. [`planning.md`](planning.md) es la fuente de verdad, y esta tabla se genera desde él (`pnpm readme:status`): no puede desfasarse sin que el gate lo cace.
 
-| Fase                          | Qué entrega                                                         | Estado                      |
-| ----------------------------- | ------------------------------------------------------------------- | --------------------------- |
-| **F0** · Fundaciones          | Orquestador DAG, auth, storage, colas, SSE, canvas, ledger de gasto | 13/14 — falta el despliegue |
-| **FD** · Design system        | ~26 primitivas fieles al diseño, dark/light, 4 acentos              | ✅ Completa                 |
-| **F1** · Análisis             | URL/texto → ProductBrief editable y aprobable en CP1                | ✅ Completa                 |
-| **F2** · Estrategia y guiones | Matriz con coste → guiones aprobados                                | 3/7 — en curso              |
-| **F3** · Galería y compilador | Templates facetados → prompts auditables                            | ⬜ No empezada              |
-| **F4** · Generación fal.ai    | Los assets de una variante, generados de verdad                     | ⬜ No empezada              |
-| **F5** · Composición y export | El anuncio 9:16 completo, con C2PA y QA                             | ⬜ No empezada              |
-| **F6** · Publicación          | Publicar en TikTok/IG y crear el ad draft                           | ⬜ No empezada              |
-| **F7** · Medición y flywheel  | Métricas por variante + kill/scale + scoring                        | ⬜ No empezada              |
-| **F8** · Operación            | Backups, retención, observabilidad, MCP                             | ⬜ Backlog                  |
+<!-- STATUS-TABLE:BEGIN — generado por `pnpm readme:status`, no editar a mano -->
+
+**45 de 102 tareas cerradas (44 %).**
+
+| Fase                                     | Qué entrega                                                         | Estado         |
+| ---------------------------------------- | ------------------------------------------------------------------- | -------------- |
+| **F0** · Fundaciones                     | Orquestador DAG, auth, storage, colas, SSE, canvas, ledger de gasto | 🔨 14/15       |
+| **FD** · Design system                   | Design system: ~26 primitivas, dark/light, 4 acentos                | ✅ Completa    |
+| **F1** · Análisis                        | URL/texto → ProductBrief editable y aprobable en CP1                | ✅ Completa    |
+| **F1b** · Deuda de cierre de F1          | Deuda de cierre de F1                                               | ✅ Completa    |
+| **F1c** · Deuda del primer uso real      | Deuda del primer uso real                                           | ✅ Completa    |
+| **F2** · Estrategia y guiones            | Matriz con coste estimado → guiones aprobados                       | 🔨 3/7         |
+| **F3** · Galería de prompts y compilador | Templates facetados → prompts auditables                            | ⬜ No empezada |
+| **F4** · Generación fal.ai               | Los assets de una variante, generados de verdad en fal.ai           | ⬜ No empezada |
+| **F5** · Composición, QA y export        | El anuncio 9:16 completo, con subtítulos, C2PA y QA                 | ⬜ No empezada |
+| **F6** · Publicación                     | Publicar en TikTok/IG y crear el ad draft                           | ⬜ No empezada |
+| **F7** · Medición y flywheel             | Métricas por variante + kill/scale + scoring                        | ⬜ No empezada |
+| **F8** · Operación y extensiones         | Backups, retención, observabilidad, MCP                             | ⬜ No empezada |
+
+<!-- STATUS-TABLE:END -->
 
 **Lo que funciona hoy**, de verdad y verificado: el monorepo con Postgres y Drizzle · auth mono-usuario · storage con descarga proxificada · colas pg-boss · **el orquestador transaccional del DAG** (checkpoints, retries, timeouts, cancelación, invalidación con linaje) · SSE en vivo · el canvas de React Flow · el ledger de gasto con credenciales cifradas · el design system completo · **el pipeline de análisis real N1→N2→N3** (Firecrawl/Jina + Haiku 4.5 + Sonnet 5) que produce un ProductBrief editable y aprobable · el listado de runs · la librería de personas · y el compositor de la matriz de lote con su estimador de coste.
 

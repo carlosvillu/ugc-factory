@@ -13,6 +13,7 @@ Plataforma personal (mono-usuario, self-hosted) de generación de anuncios UGC c
 | `docs/design-system/` | Espejo de solo-lectura del proyecto «UGC Factory Design System» de Claude Design (la fuente de verdad visual). Se regenera con la tool `DesignSync`; JAMÁS se edita a mano |
 | `docs/verifications/<TASK-ID>/` | Evidencia de cierre de cada tarea (report.md + capturas/outputs) |
 | `docs/dev-loop/journal.md` | Diario del bucle: qué se cerró/bloqueó, cuándo, coste, rarezas |
+| `README.md` + `<paquete>/README.md` | La cara pública del proyecto (el repo es **open source**, AGPL-3.0). Su tabla de estado se **genera** desde `planning.md` con `pnpm readme:status` y el gate la verifica; la prosa se revisa al cerrar cada fase (dev-loop paso 9) |
 
 **Jerarquía cuando algo contradiga algo**: PRD/planning > skills propias (testing/backend/frontend) > skills externas > costumbre. Si una pieza no encaja en las skills propias, o está mal planteada o la skill necesita actualización deliberada — nunca las dos cosas en silencio.
 
@@ -45,6 +46,7 @@ Antes de tocar nada: (1) `git log --oneline -5`, (2) estado de `planning.md` (pr
 ## Convenciones transversales
 
 - Código, identificadores y mensajes de commit en inglés; docs del proyecto, UI y comunicación en español.
-- Commits solo en verde (gate local), como mínimo uno por tarea cerrada: `T<ID>: <resumen imperativo>`. Nunca `git push` (no hay remote; cuando exista, activar CI + branch protection será una tarea explícita).
+- Commits solo en verde (gate local), como mínimo uno por tarea cerrada: `T<ID>: <resumen imperativo>`. **El bucle nunca hace `git push`**: el repo es público (`github.com/carlosvillu/ugc-factory`, AGPL-3.0) desde 2026-07-14 y publicar es del usuario — `settings.json` lo deniega a nivel de harness. Activar CI + branch protection sigue siendo una tarea explícita pendiente.
+- **Repo público ⇒ ningún secreto en el árbol.** Las credenciales reales viven solo en `.env` / `.env.test.local` (gitignored) o cifradas en `app_setting`. Todo lo que parezca una clave en un fichero committeado debe ser un literal de test evidente (`test-…-not-a-secret`).
 - Stack y scripts canónicos: los define la skill backend (`references/tooling.md` §8) + testing (`stack-setup.md` §6). `pnpm gate` es el único script propiedad del arnés.
 - Los `[verificar]` del PRD se cierran en la tarea que los nombra y se anotan en PRD y planning (regla de trabajo 3).

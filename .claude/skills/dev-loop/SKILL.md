@@ -89,19 +89,35 @@ Lanza el subagente **`verifier`** (contexto fresco, escéptico) con: el ID de la
 ### 7 · CLOSE
 Solo con PASS:
 1. Marca en `planning.md`: subtareas `[x]` y heading `#### T<ID> · … [x] <fecha> — PASS, ver docs/verifications/T<ID>/` (+ coste si relevante). El hook `guard-planning` bloqueará si falta el report — es la doble condición de cierre.
-2. Si la tarea cerraba una deuda `[verificar]`: anota el resultado en PRD.md y planning.md (regla 3).
-3. Entrada en `docs/dev-loop/journal.md` (formato abajo).
-4. Commit: `T<ID>: <resumen imperativo en inglés>` (incluye evidencia y planning.md). Solo en verde. Sin push.
-5. **Re-corre `pnpm gate` DESPUÉS del commit, sobre lo COMMITEADO.** El hook de pre-commit (lefthook) **reformatea ficheros con prettier DESPUÉS de que el gate haya pasado**: el gate corrió sobre una versión y se commiteó otra. Pasó en T1.10a (`6714f30` quedó con el typecheck roto — el reformateo convirtió un import de valores en `import type` y rompió `tsc`, con el gate verde minutos antes). Es el mismo invariante que rige el REVIEW —*lo que se verifica == lo que se commitea*—, aplicado al último tramo. Si sale rojo: arreglar y `--amend` (o commit de fix inmediato), nunca dejarlo para la tarea siguiente.
+2. **`pnpm readme:status`** — regenera la tabla de estado del README raíz desde `planning.md` (el repo es público: su portada no puede mentir sobre en qué punto está el desarrollo). Va DESPUÉS de marcar el `[x]` y ANTES del commit, y el resultado entra en ese mismo commit. No es opcional ni cuestión de criterio: `pnpm gate` incluye `readme:status:check` y te bloqueará el cierre si te lo saltas. Solo toca el bloque entre los marcadores `STATUS-TABLE`; el resto del README es prosa y no se toca aquí (eso es el paso 8).
+3. Si la tarea cerraba una deuda `[verificar]`: anota el resultado en PRD.md y planning.md (regla 3).
+4. Entrada en `docs/dev-loop/journal.md` (formato abajo).
+5. Commit: `T<ID>: <resumen imperativo en inglés>` (incluye evidencia, planning.md y README.md). Solo en verde. Sin push.
+6. **Re-corre `pnpm gate` DESPUÉS del commit, sobre lo COMMITEADO.** El hook de pre-commit (lefthook) **reformatea ficheros con prettier DESPUÉS de que el gate haya pasado**: el gate corrió sobre una versión y se commiteó otra. Pasó en T1.10a (`6714f30` quedó con el typecheck roto — el reformateo convirtió un import de valores en `import type` y rompió `tsc`, con el gate verde minutos antes). Es el mismo invariante que rige el REVIEW —*lo que se verifica == lo que se commitea*—, aplicado al último tramo. Si sale rojo: arreglar y `--amend` (o commit de fix inmediato), nunca dejarlo para la tarea siguiente.
 
 ### 8 · STOP-CHECK
 Para (informa al usuario con el resumen de lo hecho + estado + siguiente paso) si:
 - La siguiente tarea tiene **⚠** sin resolver, o su Verificación exige **juicio humano** ("revisión humana", "a juicio humano") — en ese caso prepara lo automatizable y pide el juicio.
-- Acabas de cerrar el **E2E de fase** (TD.7, T1.10b, T2.6, T4.11, T5.9…) → resumen de fase y esperar OK.
+- Acabas de cerrar el **E2E de fase** (TD.7, T1.10b, T2.6, T4.11, T5.9…) → **revisión de READMEs** (abajo), luego resumen de fase y esperar OK.
 - **Gasto**: la verificación de la siguiente tarea puede superar el cap (estimado del planning ×3, mín. $1) o no hay estimación y usará APIs de pago.
 - **Circuit breaker**: 2 FAIL consecutivos del verifier en la misma tarea, o 2 tareas seguidas sin poder cerrarse, o detectas que no hay progreso real entre ciclos (mismo error dos veces).
 - **Cambio de alcance mayor** (el PRD necesita un ajuste que altera decisiones de producto). Los menores se editan en la misma sesión y se anotan (regla 6).
 Si no aplica ninguna → siguiente ciclo (según alcance del argumento).
+
+### 9 · REVISIÓN DE READMEs (solo al cerrar fase)
+
+El repo es **público** (`github.com/carlosvillu/ugc-factory`, AGPL-3.0): los READMEs son la cara del proyecto y envejecen en silencio. La tabla de estado ya se regenera sola en cada CLOSE (paso 7.2) — **esto es lo otro: la prosa, que ningún script puede escribir.**
+
+Corre solo al cerrar una fase, no en cada tarea. Lee el README raíz y el de cada paquete que la fase haya tocado, y busca **afirmaciones que la fase acaba de volver falsas**:
+
+- **Las frases de "todavía no".** El README raíz dice hoy que el sistema *«analiza y planifica pero todavía no fabrica ni un solo vídeo»*; `apps/worker/README.md` dice que *«los executors de fal.ai aún no existen»*. Al cerrar F4 ambas son mentira. Son la deuda más visible del repo: un visitante las lee en los primeros diez segundos.
+- **El diagrama del pipeline.** Los nodos que aún no existen van pintados de otro color (`style N7 fill:#6b2d5c`). Cuando un nodo se construye, deja de ser morado. Si tocas el Mermaid, **valídalo** — un diagrama roto en la portada es peor que no tenerlo: `npx -y @mermaid-js/mermaid-cli@11 -i <fichero.mmd> -o /tmp/out.svg`.
+- **Los avisos `[!WARNING]` / `[!IMPORTANT]`.** Hoy hay uno que dice que producción nunca ha arrancado (`next start` crashea). Muere con T0.13 — y dejarlo puesto después sería mentir al revés.
+- **La superficie del paquete**, si la fase la cambió: endpoints nuevos en `apps/web`, executors nuevos en `apps/worker`, un export nuevo de `core`. No hace falta un inventario exhaustivo (el código es la verdad); sí que lo que el README *afirma* siga siendo cierto.
+
+**No reescribas por reescribir.** Si la fase no invalidó nada, el veredicto correcto es "sin cambios" y se dice en el journal. El objetivo es que ninguna frase del repo público sea falsa, no engordar la documentación.
+
+Si hay cambios: van en su propio commit (`docs: <qué se actualizó> tras cerrar F<n>`), con el gate en verde, y se anotan en la entrada de journal de la fase.
 
 ## Presupuesto por tarea
 

@@ -20,11 +20,24 @@ export type RetryStepDeps = TransitionDeps;
 
 export interface RetryStepInput {
   /**
-   * Patch de `config` a aplicar antes de re-encolar (opcional). Si se pasa,
-   * REEMPLAZA la `config` del step. La Verificación lo usa para `fail_rate: 0`.
-   * `undefined` = conservar la config actual.
+   * Patch de `config` a aplicar antes de re-encolar (opcional). Cuando tanto el
+   * config actual como el patch son OBJETOS planos, se hace MERGE superficial
+   * (`{ ...actual, ...patch }`): las claves del patch pisan las homónimas y el
+   * resto de la config actual SOBREVIVE. Esto es defensa en profundidad: un patch
+   * parcial (p. ej. `{ failRate: 0 }`) nunca borra claves obligatorias del nodo
+   * (p. ej. `targetLanguage` de N3) — la causa raíz del bug de retry en prod.
+   *
+   * Si el config actual NO es objeto (null/escalar) o el patch NO es objeto, se
+   * REEMPLAZA (no hay sobre qué mergear). La Verificación de demo lo usa para
+   * `fail_rate: 0` sobre nodos cuyo config ya es objeto → merge, y funciona igual.
+   * `undefined` = conservar la config actual intacta.
    */
   config?: unknown;
+}
+
+/** ¿Es un objeto plano sobre el que tiene sentido mergear (no null, no array)? */
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
 /**
@@ -53,10 +66,24 @@ export async function retryStep(
     //    `queued` y LOCKEADA por el paso 1 (applyTransition ya hizo findForUpdate y
     //    habría lanzado StepNotFoundError si no existiera), en la MISMA tx. El status
     //    no cambia; solo retry_count y config.
+    let configPatch: { config: unknown } | undefined;
+    if (input.config !== undefined) {
+      // MERGE (no reemplazo) cuando ambos son objetos planos: leemos el config actual
+      // bajo el MISMO lock (la fila ya está lockeada por el paso 1, así que este
+      // findForUpdate reentra sobre el lock sin nueva contención) y superponemos el
+      // patch. Así un patch parcial preserva las claves obligatorias del nodo. Si no
+      // hay sobre qué mergear (config actual no-objeto o patch no-objeto), reemplaza.
+      const current = await stores.steps.findForUpdate(stepId);
+      const merged =
+        isPlainObject(current?.config) && isPlainObject(input.config)
+          ? { ...current.config, ...input.config }
+          : input.config;
+      configPatch = { config: merged };
+    }
     await stores.steps.update(stepId, {
       status: 'queued',
       resetRetryCount: true,
-      ...(input.config !== undefined && { config: input.config }),
+      ...configPatch,
     });
   });
 }

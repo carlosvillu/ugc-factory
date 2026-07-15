@@ -276,10 +276,22 @@ export function StepPanel() {
             variant="primary"
             disabled={busy}
             data-slot="retry-action"
-            // Retry con patch de config `failRate=0` para que el reintento complete
-            // (mismo criterio que la Verificación de T0.9). El body opcional del
-            // endpoint acepta este patch en la misma tx.
-            onClick={() => void run(() => runActions.retry(stepId, { failRate: 0 }))}
+            // Reintentar CONSERVANDO la config original del step (retry sin patch).
+            // El `failRate: 0` es un parámetro EXCLUSIVO de los executors de demo
+            // (`demo.*`): su Verificación (T0.9/T0.11) lo usa para que el nodo que
+            // falla siempre (failRate=1) complete al reintentar. Enviárselo a un nodo
+            // REAL (N1/N2/N3…) REEMPLAZA su config por `{ failRate: 0 }` y le borra
+            // claves obligatorias (p. ej. `targetLanguage` de N3) → el reintento
+            // muere en el `safeParse` de la config. Por eso el patch es CONDICIONAL
+            // al prefijo `demo.` del nodeKey: solo los nodos de demo lo reciben.
+            onClick={() =>
+              void run(() =>
+                runActions.retry(
+                  stepId,
+                  step.nodeKey.startsWith('demo.') ? { failRate: 0 } : undefined,
+                ),
+              )
+            }
           >
             Reintentar
           </Button>

@@ -23,6 +23,7 @@ import { z } from 'zod';
 import {
   ManualIntakeConfigSchema,
   MANUAL_IMAGE_REFS_MAX,
+  ANALYSIS_LANGUAGES,
   type IntakeImageRef,
 } from '@ugc/core/contracts';
 import { analysisRunDefinition } from '@ugc/core/orchestrator';
@@ -30,6 +31,7 @@ import { api, ApiError, runActions } from '@/lib/api-client';
 import { applyEnvelopeToForm } from '@/lib/form-errors';
 import { Alert } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
+import { Select } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 
 // Respuesta de `/api/analyses` (id del análisis + estado); el cliente valida lo que
@@ -70,6 +72,11 @@ export function IntakeForm({ projectId }: IntakeFormProps) {
   const imageRefs: IntakeImageRef[] = watch('imageRefs') ?? [];
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  // Idioma del ANÁLISIS (config de N3). No es parte de `ManualIntakeConfigSchema` —
+  // ese schema es el body de `/api/analyses`, que crea el análisis, NO el run. El
+  // idioma solo entra al construir el `analysisRunDefinition` en el submit (paso 2),
+  // igual que en el modo URL. Estado local con default 'es' (usuario hispanohablante).
+  const [targetLanguage, setTargetLanguage] = useState<(typeof ANALYSIS_LANGUAGES)[number]>('es');
 
   async function onFilesSelected(files: FileList | null) {
     if (!files || files.length === 0) return;
@@ -125,6 +132,7 @@ export function IntakeForm({ projectId }: IntakeFormProps) {
       const definition = analysisRunDefinition(config.projectId, {
         source: 'manual',
         analysisId: analysis.id,
+        targetLanguage,
       });
       const run = await runActions.createRun(definition);
       router.push(`/runs/${run.runId}`);
@@ -218,6 +226,22 @@ export function IntakeForm({ projectId }: IntakeFormProps) {
           </p>
         )}
       </fieldset>
+
+      <div className="flex flex-col gap-1.75">
+        <label htmlFor="intake-language" className="text-small font-medium text-text-2">
+          Idioma del análisis
+        </label>
+        <Select
+          id="intake-language"
+          value={targetLanguage}
+          onChange={(e) => {
+            setTargetLanguage(e.target.value as (typeof ANALYSIS_LANGUAGES)[number]);
+          }}
+        >
+          <option value="es">Español</option>
+          <option value="en">Inglés</option>
+        </Select>
+      </div>
 
       {errors.root?.server && <Alert tone="danger">{errors.root.server.message}</Alert>}
 

@@ -50,16 +50,20 @@ COPY --from=build /app/apps/web/.next/static ./apps/web/.next/static
 # arrastra hoy (Turbopack detecta la lectura), pero el COPY explícito hace el
 # contrato de UGC_DB_MIGRATIONS_DIR independiente de ese detalle del tracer.
 COPY --from=build /app/packages/db/drizzle ./packages/db/drizzle
-# sharp (nativo, libvips) se INSTALA aquí para linux-x64, en vez de confiar en que
-# el file tracing de Next lo copie al standalone — que no lo hace de forma fiable
-# con pnpm (dos versiones de sharp en el lockfile → el `.so` que el bundle carga en
-# runtime, libvips 8.18.3, quedaba fuera y el arranque moría con ERR_DLOPEN_FAILED).
-# Se instala en `node_modules/sharp` de la RAÍZ del standalone (`outputFileTracingRoot`
-# es la raíz del repo), donde la resolución de Node lo encuentra por fallback. La
-# versión se ancla a la del repo (0.35.3) y `--os/--cpu/--libc` traen el prebuilt
-# correcto para node:24-slim (Debian = glibc). Es el método que la propia doc de
-# sharp recomienda para deploy. `--no-save`: no queremos un package.json aquí.
-RUN npm install --no-save --os=linux --cpu=x64 --libc=glibc sharp@0.35.3
+# sharp (nativo, libvips): el `.so` de libvips NO lo copia el file tracing de Next.
+# Turbopack externaliza sharp (serverExternalPackages en next.config.ts) y lo resuelve
+# desde el árbol pnpm `sharp@0.35.3.../@img/sharp-libvips-linux-x64` (ver los .nft.json).
+# El tracer copia el `index.js` de ese paquete pero NO su `libvips-cpp.so.8.18.3` (un
+# binario que ningún grafo JS referencia), así que el `dlopen` del `.node` moría con
+# ERR_DLOPEN_FAILED. Un `npm install sharp` en la raíz del standalone NO lo arregla: la
+# resolución de Node lo encontraría por fallback (require('sharp') funcionaba), pero el
+# EXTERNAL de Turbopack NO mira ahí — mira el árbol pnpm trazado. El fix es traer del
+# build stage ESE árbol completo (con el `.so`), a donde el external ya resuelve.
+# Las versiones van pinneadas SIN el sufijo `_@types+node@…` (estable); si un bump de
+# sharp las cambia, este COPY falla en build (fuente inexistente) — el fallo ruidoso
+# correcto, no un standalone silenciosamente roto.
+COPY --from=build /app/node_modules/.pnpm/@img+sharp-libvips-linux-x64@1.3.2 \
+     ./node_modules/.pnpm/@img+sharp-libvips-linux-x64@1.3.2
 # Punto de montaje del volumen de assets (web lo monta ro; §18). Se crea con
 # owner node por si web fuera el primero en inicializar el volumen compartido:
 # la propiedad del dir de la imagen es la que hereda el volumen nombrado.

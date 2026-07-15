@@ -39,13 +39,22 @@ const nextConfig: NextConfig = {
   // node_modules trazados). Sin esto Next la infiere del lockfile — explícito es
   // determinista y no depende de qué haya alrededor del repo.
   outputFileTracingRoot: fileURLToPath(new URL('../../', import.meta.url)),
+  // serverExternalPackages: se dejan FUERA del bundle del server para que se
+  // resuelvan de sus ficheros reales en runtime.
+  //   · pino / pino-pretty: resuelven sus workers (thread-stream) en runtime.
+  //   · sharp: binario NATIVO (libvips). Su `.so` NO lo copia el file tracing de
+  //     Next al standalone de forma fiable con el layout de pnpm (dos versiones de
+  //     sharp coexisten en el lockfile → el `.so` que el bundle carga en runtime,
+  //     libvips 8.18.3, quedaba fuera y el arranque moría con ERR_DLOPEN_FAILED).
+  //     En vez de perseguir el trace, la imagen Docker INSTALA sharp para linux-x64
+  //     en el stage runtime (ver apps/web/Dockerfile) — el método que la propia doc
+  //     de sharp recomienda para deploy. Externalizarlo aquí hace que esa instalación
+  //     runtime sea la que resuelve.
+  serverExternalPackages: ['pino', 'pino-pretty', 'sharp'],
   // Los paquetes internos exportan TS fuente (JIT): Next los transpila
   // (architecture.md §7). @ugc/db entra en T0.2: web consume su ping de conexión
   // (@ugc/db → pingDb) en /api/health.
   transpilePackages: ['@ugc/core', '@ugc/db', '@ugc/services'],
-  // pino resuelve pino-pretty y sus workers (thread-stream) en runtime:
-  // fuera del bundle del server o el transport no encuentra sus ficheros.
-  serverExternalPackages: ['pino', 'pino-pretty'],
 };
 
 export default nextConfig;

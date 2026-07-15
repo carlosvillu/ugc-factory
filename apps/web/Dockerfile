@@ -50,6 +50,16 @@ COPY --from=build /app/apps/web/.next/static ./apps/web/.next/static
 # arrastra hoy (Turbopack detecta la lectura), pero el COPY explícito hace el
 # contrato de UGC_DB_MIGRATIONS_DIR independiente de ese detalle del tracer.
 COPY --from=build /app/packages/db/drizzle ./packages/db/drizzle
+# sharp (nativo, libvips) se INSTALA aquí para linux-x64, en vez de confiar en que
+# el file tracing de Next lo copie al standalone — que no lo hace de forma fiable
+# con pnpm (dos versiones de sharp en el lockfile → el `.so` que el bundle carga en
+# runtime, libvips 8.18.3, quedaba fuera y el arranque moría con ERR_DLOPEN_FAILED).
+# Se instala en `node_modules/sharp` de la RAÍZ del standalone (`outputFileTracingRoot`
+# es la raíz del repo), donde la resolución de Node lo encuentra por fallback. La
+# versión se ancla a la del repo (0.35.3) y `--os/--cpu/--libc` traen el prebuilt
+# correcto para node:24-slim (Debian = glibc). Es el método que la propia doc de
+# sharp recomienda para deploy. `--no-save`: no queremos un package.json aquí.
+RUN npm install --no-save --os=linux --cpu=x64 --libc=glibc sharp@0.35.3
 # Punto de montaje del volumen de assets (web lo monta ro; §18). Se crea con
 # owner node por si web fuera el primero en inicializar el volumen compartido:
 # la propiedad del dir de la imagen es la que hereda el volumen nombrado.

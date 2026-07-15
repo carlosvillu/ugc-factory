@@ -12,12 +12,14 @@
 // el validador MUERDA en runtime, no que el fixture ni siquiera compile. Por eso el cast a
 // `unknown[]`: el validador es quien decide si la forma es válida.
 import guardPacksJson from '../../gallery-seed/guard-packs.json';
+import modelProfilesJson from '../../gallery-seed/model-profiles.json';
 import promptTemplatesJson from '../../gallery-seed/prompt-templates.json';
 
 /** El seed SIN TIPAR, tal cual sale de los `.json`. El validador es la frontera. */
 export interface RawGallerySeed {
   templates: unknown[];
   guardPacks: unknown[];
+  modelProfiles: unknown[];
 }
 
 // Sin `as`: el tipo inferido del JSON ya es asignable a `unknown[]` (la frontera). El shape
@@ -27,4 +29,5 @@ export interface RawGallerySeed {
 export const RAW_GALLERY_SEED: RawGallerySeed = {
   templates: promptTemplatesJson,
   guardPacks: guardPacksJson,
+  modelProfiles: modelProfilesJson,
 };

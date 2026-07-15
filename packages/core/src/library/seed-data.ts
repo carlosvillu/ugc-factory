@@ -588,46 +588,61 @@ export const CTA_LINE_SEEDS: CtaLineSeed[] = [...CTAS_ES, ...CTAS_EN];
 //
 // El consumidor es el estimador de coste de T2.2, cuya Verificación exige cuadrar con el
 // Apéndice B ±10 % — por eso se guarda la horquilla, no un punto medio (ver contracts.ts).
-// T3.4 recalibra estas filas con los `model_profile` reales de F3.
+//
+// ── RECALIBRACIÓN T3.4 (2026-07-15) ─────────────────────────────────────────
+// T3.4 verificó los precios de los `model_profile` contra el `llms.txt` público de fal y recableó
+// las etiquetas de texto libre de los steps a los `falEndpoint` REALES del catálogo
+// (`gallery-seed/model-profiles.json`) donde el endpoint está confirmado. Las HORQUILLAS de coste
+// (min/max) NO cambian: son el COGS de 30 s del Apéndice B (§16.1), un RANGO que refleja cuánto
+// b-roll lleva la receta, NO la suma de un modelo por unidad. Los dos precios que SÍ derivaron
+// respecto a §13.1 —OmniHuman $0,14→$0,16/s y ace-step ~$0,005→$0,0002/s— quedan MUY dentro de las
+// horquillas del Apéndice B, así que el rango del tier sigue correcto y la invariante de T2.2
+// (±10 % vs Apéndice B) se mantiene. Los b-roll cuyo endpoint fal NO se pudo resolver (Wan 2.6,
+// Kling v3, Seedance 2.0 — 404 en fal el 2026-07-15) siguen como ETIQUETA: deuda `[verificar]` de
+// §13.1 l.600 que se cierra en su integración de F4, no aquí (no se inventa un endpoint que
+// rompería la clave natural de `model_profile`). `model` guarda ahora el `falEndpoint` cuando existe.
 export const RECIPE_SEEDS: RecipeSeed[] = [
   {
     tier: 'test',
     steps: [
-      { component: 'avatar', model: 'VEED Avatars (librería)' },
-      { component: 'broll', model: 'Grok Imagine / Wan 2.6 Flash' },
-      { component: 'voice', model: 'Kokoro' },
-      { component: 'shots', model: 'Seedream 4.5 edit' },
+      { component: 'avatar', model: 'veed/avatars/text-to-video' },
+      { component: 'broll', model: 'Grok Imagine / Wan 2.6 Flash [endpoint pendiente F4]' },
+      { component: 'voice', model: 'fal-ai/kokoro' },
+      { component: 'shots', model: 'fal-ai/bytedance/seedream/v4.5/edit' },
     ],
     estCost30sMinCents: 30,
     estCost30sMaxCents: 170,
-    notes: 'Apéndice B — hook-testing masivo y borradores. COGS 30 s: $0,3–1,7.',
+    notes:
+      'Apéndice B — hook-testing masivo y borradores. COGS 30 s: $0,3–1,7. Endpoints recableados en T3.4 (broll pendiente F4).',
   },
   {
     tier: 'standard',
     steps: [
-      { component: 'avatar', model: 'Kling AI Avatar v2 Std + Persona propia' },
+      { component: 'avatar', model: 'fal-ai/kling-video/ai-avatar/v2/standard' },
       {
         component: 'broll',
-        model: 'Kling v3 Std / Wan 2.6 (+ R2V Seedance si hay producto en escena)',
+        model: 'Kling v3 Std / Wan 2.6 (+ R2V Seedance) [endpoint pendiente F4]',
       },
-      { component: 'voice', model: 'ElevenLabs Turbo v2.5' },
-      { component: 'shots', model: 'Seedream 4.5 / NB2 edit' },
+      { component: 'voice', model: 'fal-ai/elevenlabs/tts/turbo-v2.5' },
+      { component: 'shots', model: 'fal-ai/nano-banana-2/edit' },
     ],
     estCost30sMinCents: 180,
     estCost30sMaxCents: 500,
-    notes: 'Apéndice B — producción por defecto. COGS 30 s: $1,8–5.',
+    notes:
+      'Apéndice B — producción por defecto. COGS 30 s: $1,8–5. Endpoints recableados en T3.4 (broll pendiente F4).',
   },
   {
     tier: 'premium',
     steps: [
-      { component: 'avatar', model: 'OmniHuman v1.5' },
-      { component: 'broll', model: 'Veo 3.1 / Seedance 2.0 Std' },
-      { component: 'voice', model: 'ElevenLabs Eleven v3' },
-      { component: 'shots', model: 'Nano Banana Pro' },
+      { component: 'avatar', model: 'fal-ai/bytedance/omnihuman/v1.5' },
+      { component: 'broll', model: 'fal-ai/veo3.1' },
+      { component: 'voice', model: 'fal-ai/elevenlabs/tts/eleven-v3' },
+      { component: 'shots', model: 'fal-ai/nano-banana-pro/edit' },
     ],
     estCost30sMinCents: 900,
     estCost30sMaxCents: 1300,
-    notes: 'Apéndice B — ganadores y campañas de presupuesto alto. COGS 30 s: $9–13.',
+    notes:
+      'Apéndice B — ganadores y campañas de presupuesto alto. COGS 30 s: $9–13. Endpoints recableados en T3.4.',
   },
 ];
 

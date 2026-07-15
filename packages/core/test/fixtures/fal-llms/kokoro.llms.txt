@@ -1,0 +1,165 @@
+# Kokoro
+
+> Kokoro API endpoint
+
+
+## Overview
+
+- **Endpoint**: `https://fal.run/fal-ai/kokoro`
+- **Model ID**: `fal-ai/kokoro`
+- **Category**: unknown
+- **Kind**: inference
+
+
+## Pricing
+
+- **Price**: $0.02 per 1000 characters
+
+For more details, see [fal.ai pricing](https://fal.ai/pricing).
+
+## API Information
+
+This model can be used via our HTTP API or more conveniently via our client libraries.
+See the input and output schema below, as well as the usage examples.
+
+
+### Input Schema
+
+The API accepts the following input parameters:
+
+
+- **`prompt`** (`string`, _optional_):
+   Default value: `""`
+  - Default: `""`
+  - Examples: "The future belongs to those who believe in the beauty of their dreams. So, dream big, work hard, and make it happen!"
+
+- **`voice`** (`VoiceEnum`, _optional_):
+  Voice ID for the desired voice. Default value: `"af_heart"`
+  - Default: `"af_heart"`
+  - Options: `"af_heart"`, `"af_alloy"`, `"af_aoede"`, `"af_bella"`, `"af_jessica"`, `"af_kore"`, `"af_nicole"`, `"af_nova"`, `"af_river"`, `"af_sarah"`, `"af_sky"`, `"am_adam"`, `"am_echo"`, `"am_eric"`, `"am_fenrir"`, `"am_liam"`, `"am_michael"`, `"am_onyx"`, `"am_puck"`, `"am_santa"`
+  - Examples: "af_heart"
+
+- **`speed`** (`float`, _optional_):
+  Speed of the generated audio. Default is 1.0. Default value: `1`
+  - Default: `1`
+  - Range: `0.1` to `5`
+
+
+
+**Required Parameters Example**:
+
+```json
+{}
+```
+
+**Full Example**:
+
+```json
+{
+  "prompt": "The future belongs to those who believe in the beauty of their dreams. So, dream big, work hard, and make it happen!",
+  "voice": "af_heart",
+  "speed": 1
+}
+```
+
+
+### Output Schema
+
+The API returns the following output format:
+
+- **`audio`** (`File`, _required_):
+  The generated music
+  - Examples: {"url":"https://fal.media/files/elephant/dXVMqWsBDG9yan3kaOT0Z_tmp0vvkha3s.wav"}
+
+
+
+**Example Response**:
+
+```json
+{
+  "audio": {
+    "url": "https://fal.media/files/elephant/dXVMqWsBDG9yan3kaOT0Z_tmp0vvkha3s.wav"
+  }
+}
+```
+
+
+## Usage Examples
+
+### cURL
+
+```bash
+curl --request POST \
+  --url https://fal.run/fal-ai/kokoro \
+  --header "Authorization: Key $FAL_KEY" \
+  --header "Content-Type: application/json" \
+  --data '{}'
+```
+
+### Python
+
+Ensure you have the Python client installed:
+
+```bash
+pip install fal-client
+```
+
+Then use the API client to make requests:
+
+```python
+import fal_client
+
+def on_queue_update(update):
+    if isinstance(update, fal_client.InProgress):
+        for log in update.logs:
+           print(log["message"])
+
+result = fal_client.subscribe(
+    "fal-ai/kokoro",
+    arguments={},
+    with_logs=True,
+    on_queue_update=on_queue_update,
+)
+print(result)
+```
+
+### JavaScript
+
+Ensure you have the JavaScript client installed:
+
+```bash
+npm install --save @fal-ai/client
+```
+
+Then use the API client to make requests:
+
+```javascript
+import { fal } from "@fal-ai/client";
+
+const result = await fal.subscribe("fal-ai/kokoro", {
+  input: {},
+  logs: true,
+  onQueueUpdate: (update) => {
+    if (update.status === "IN_PROGRESS") {
+      update.logs.map((log) => log.message).forEach(console.log);
+    }
+  },
+});
+console.log(result.data);
+console.log(result.requestId);
+```
+
+
+## Additional Resources
+
+### Documentation
+
+- [Model Playground](https://fal.ai/models/fal-ai/kokoro)
+- [API Documentation](https://fal.ai/models/fal-ai/kokoro/api)
+- [OpenAPI Schema](https://fal.ai/api/openapi/queue/openapi.json?endpoint_id=fal-ai/kokoro)
+
+### fal.ai Platform
+
+- [Platform Documentation](https://docs.fal.ai)
+- [Python Client](https://docs.fal.ai/clients/python)
+- [JavaScript Client](https://docs.fal.ai/clients/javascript)

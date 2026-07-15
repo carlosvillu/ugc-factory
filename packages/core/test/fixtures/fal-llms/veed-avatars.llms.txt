@@ -1,0 +1,180 @@
+# Avatars
+
+> Generate high-quality videos with UGC-like avatars from text
+
+
+## Overview
+
+- **Endpoint**: `https://fal.run/veed/avatars/text-to-video`
+- **Model ID**: `veed/avatars/text-to-video`
+- **Category**: text-to-video
+- **Kind**: inference
+**Tags**: lipsync, text-to-video
+
+
+
+## Pricing
+
+- **Price**: $0.35 per minutes
+
+For more details, see [fal.ai pricing](https://fal.ai/pricing).
+
+## API Information
+
+This model can be used via our HTTP API or more conveniently via our client libraries.
+See the input and output schema below, as well as the usage examples.
+
+
+### Input Schema
+
+The API accepts the following input parameters:
+
+
+- **`avatar_id`** (`AvatarIdEnum`, _required_):
+  The avatar to use for the video
+  - Options: `"emily_vertical_primary"`, `"emily_vertical_secondary"`, `"marcus_vertical_primary"`, `"marcus_vertical_secondary"`, `"mira_vertical_primary"`, `"mira_vertical_secondary"`, `"jasmine_vertical_primary"`, `"jasmine_vertical_secondary"`, `"jasmine_vertical_walking"`, `"aisha_vertical_walking"`, `"elena_vertical_primary"`, `"elena_vertical_secondary"`, `"any_male_vertical_primary"`, `"any_female_vertical_primary"`, `"any_male_vertical_secondary"`, `"any_female_vertical_secondary"`, `"any_female_vertical_walking"`, `"emily_primary"`, `"emily_side"`, `"marcus_primary"`, `"marcus_side"`, `"aisha_walking"`, `"elena_primary"`, `"elena_side"`, `"any_male_primary"`, `"any_female_primary"`, `"any_male_side"`, `"any_female_side"`
+
+- **`text`** (`string`, _required_)
+  - Examples: "\nEver wondered how to get that flawless glow? \nIntroducing our new skincare line, designed for real life. \nStep one: Cleanse with our gentle, nourishing formula. \nStep two: Apply our hydrating serum for that dewy look. \nStep three: Lock it in with our lightweight moisturizer. \nFeel the difference with every application. \nSee the glow? That's the magic of our skincare. \nUse code 'GLOW20' for an exclusive discount. \nJoin the skincare revolution today!\n"
+
+
+
+**Required Parameters Example**:
+
+```json
+{
+  "avatar_id": "emily_vertical_primary",
+  "text": "\nEver wondered how to get that flawless glow? \nIntroducing our new skincare line, designed for real life. \nStep one: Cleanse with our gentle, nourishing formula. \nStep two: Apply our hydrating serum for that dewy look. \nStep three: Lock it in with our lightweight moisturizer. \nFeel the difference with every application. \nSee the glow? That's the magic of our skincare. \nUse code 'GLOW20' for an exclusive discount. \nJoin the skincare revolution today!\n"
+}
+```
+
+
+### Output Schema
+
+The API returns the following output format:
+
+- **`video`** (`File`, _required_)
+  - Examples: {"content_type":"video/mp4","url":"https://v3.fal.media/files/panda/kt9d4vZ8Mfw_WzYnvr2Q0_tmp0ir4znsr.mp4"}
+
+
+
+**Example Response**:
+
+```json
+{
+  "video": {
+    "content_type": "video/mp4",
+    "url": "https://v3.fal.media/files/panda/kt9d4vZ8Mfw_WzYnvr2Q0_tmp0ir4znsr.mp4"
+  }
+}
+```
+
+
+## Usage Examples
+
+### cURL
+
+```bash
+curl --request POST \
+  --url https://fal.run/veed/avatars/text-to-video \
+  --header "Authorization: Key $FAL_KEY" \
+  --header "Content-Type: application/json" \
+  --data '{
+     "avatar_id": "emily_vertical_primary",
+     "text": "\nEver wondered how to get that flawless glow? \nIntroducing our new skincare line, designed for real life. \nStep one: Cleanse with our gentle, nourishing formula. \nStep two: Apply our hydrating serum for that dewy look. \nStep three: Lock it in with our lightweight moisturizer. \nFeel the difference with every application. \nSee the glow? That's the magic of our skincare. \nUse code 'GLOW20' for an exclusive discount. \nJoin the skincare revolution today!\n"
+   }'
+```
+
+### Python
+
+Ensure you have the Python client installed:
+
+```bash
+pip install fal-client
+```
+
+Then use the API client to make requests:
+
+```python
+import fal_client
+
+def on_queue_update(update):
+    if isinstance(update, fal_client.InProgress):
+        for log in update.logs:
+           print(log["message"])
+
+result = fal_client.subscribe(
+    "veed/avatars/text-to-video",
+    arguments={
+        "avatar_id": "emily_vertical_primary",
+        "text": "
+    Ever wondered how to get that flawless glow?
+    Introducing our new skincare line, designed for real life.
+    Step one: Cleanse with our gentle, nourishing formula.
+    Step two: Apply our hydrating serum for that dewy look.
+    Step three: Lock it in with our lightweight moisturizer.
+    Feel the difference with every application.
+    See the glow? That's the magic of our skincare.
+    Use code 'GLOW20' for an exclusive discount.
+    Join the skincare revolution today!
+    "
+    },
+    with_logs=True,
+    on_queue_update=on_queue_update,
+)
+print(result)
+```
+
+### JavaScript
+
+Ensure you have the JavaScript client installed:
+
+```bash
+npm install --save @fal-ai/client
+```
+
+Then use the API client to make requests:
+
+```javascript
+import { fal } from "@fal-ai/client";
+
+const result = await fal.subscribe("veed/avatars/text-to-video", {
+  input: {
+    avatar_id: "emily_vertical_primary",
+    text: "
+  Ever wondered how to get that flawless glow?
+  Introducing our new skincare line, designed for real life.
+  Step one: Cleanse with our gentle, nourishing formula.
+  Step two: Apply our hydrating serum for that dewy look.
+  Step three: Lock it in with our lightweight moisturizer.
+  Feel the difference with every application.
+  See the glow? That's the magic of our skincare.
+  Use code 'GLOW20' for an exclusive discount.
+  Join the skincare revolution today!
+  "
+  },
+  logs: true,
+  onQueueUpdate: (update) => {
+    if (update.status === "IN_PROGRESS") {
+      update.logs.map((log) => log.message).forEach(console.log);
+    }
+  },
+});
+console.log(result.data);
+console.log(result.requestId);
+```
+
+
+## Additional Resources
+
+### Documentation
+
+- [Model Playground](https://fal.ai/models/veed/avatars/text-to-video)
+- [API Documentation](https://fal.ai/models/veed/avatars/text-to-video/api)
+- [OpenAPI Schema](https://fal.ai/api/openapi/queue/openapi.json?endpoint_id=veed/avatars/text-to-video)
+
+### fal.ai Platform
+
+- [Platform Documentation](https://docs.fal.ai)
+- [Python Client](https://docs.fal.ai/clients/python)
+- [JavaScript Client](https://docs.fal.ai/clients/javascript)

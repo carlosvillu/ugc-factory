@@ -510,8 +510,9 @@ Decisiones del usuario (2026-07-07): la fase se ejecuta tras T0.1 y **antes** de
 - **Entrega**: packs `general`, `fidelity`, `platform.{tiktok,reels}` y verticales (beauty, finance, health, apps, food, fashion) con líneas de redacción propia (§10.1) + regla de lookup (§9.5).
 - **Verificación**: el lookup para brief vertical beauty + plataforma tiktok devuelve exactamente {general, fidelity, vertical.beauty, platform.tiktok}; ninguna línea del seed coincide textualmente con las librerías de Cliprise: clonar los repos públicos (`cliprise/awesome-ai-ugc-video-prompts`, `cliprise/awesome-ai-video-ads-prompts`) y contrastar por n-gramas/grep, con el output del contraste en la evidencia.
 
-#### T3.4 · Model profiles seed + verificación de catálogo
+#### T3.4 · Model profiles seed + verificación de catálogo [x] 2026-07-15 — PASS (15/15 OK contra fal real, control negativo probado, coste $0), ver docs/verifications/T3.4/
 - **Depende de**: T3.1, T2.1 *(recalibra las `recipe` sembradas en T2.1)*
+- **`[verificar]` de §13.1 CERRADOS (regla 3, anotados en PRD §13.1)**: OmniHuman $0,14→$0,16/s; ace-step ~$0,005→$0,0002/s; LatentSync $0,20/vídeo; sync-lipsync v2 $3/min, v2 pro $5/min; Veo 3.1 base $0,20/s. Recipes recableadas a endpoints reales; horquillas COGS-30s sin cambio (dentro del Apéndice B).
 - **Entrega**: seed de `model_profile` (catálogo §13.1: endpoints completos, capabilities, costes) y comando `pnpm fal:verify` que contrasta cada perfil contra la model page/`llms.txt` de fal (marca `verified_at`/desviaciones) y **recalibra los costes de las `recipe`** con los datos verificados (regla de trabajo 5).
 - **Verificación**: `pnpm fal:verify` corre contra fal.ai real y reporta OK o divergencia por perfil; introducir un precio falso en el seed hace que lo detecte; las recetas quedan recalculadas si hubo cambios.
 

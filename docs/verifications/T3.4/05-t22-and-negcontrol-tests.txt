@@ -1,0 +1,13 @@
+
+> @ugc/core@0.0.0 test /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/core
+> vitest run -- --run src/strategy/cost.test.ts src/gallery/fal-catalog-verify.test.ts
+
+
+ RUN  v4.1.10 /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/core
+
+
+ Test Files  52 passed (52)
+      Tests  897 passed (897)
+   Start at  18:30:39
+   Duration  4.31s (transform 4.60s, setup 661ms, import 25.67s, tests 1.69s, environment 3ms)
+

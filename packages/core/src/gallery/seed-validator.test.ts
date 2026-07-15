@@ -32,6 +32,23 @@ describe('el seed REAL que siembra `pnpm seed:gallery`', () => {
     expect(count).toBeLessThanOrEqual(3);
   });
 
+  it('siembra el catálogo REAL de model_profile (§13.1) y valida entero', () => {
+    const result = validateGallerySeed(RAW_GALLERY_SEED);
+    if (!result.seed) throw new Error('el seed real no valida');
+    // El catálogo §13.1 con endpoints CONFIRMADOS contra fal (avatares, TTS, ASR, shots, música,
+    // lipsync). No fijamos el número exacto (crecerá en F4), pero sí el mínimo y las claves clave.
+    expect(result.seed.modelProfiles.length).toBeGreaterThanOrEqual(10);
+    const endpoints = result.seed.modelProfiles.map((m) => m.falEndpoint);
+    expect(endpoints).toContain('fal-ai/bytedance/omnihuman/v1.5');
+    expect(endpoints).toContain('fal-ai/kokoro');
+    expect(endpoints).toContain('fal-ai/elevenlabs/speech-to-text');
+    // Ninguno viene con verifiedAt/status en el seed: los posee `fal:verify` (no están en el contrato).
+    for (const m of result.seed.modelProfiles) {
+      expect(m).not.toHaveProperty('verifiedAt');
+      expect(m).not.toHaveProperty('status');
+    }
+  });
+
   it('todos los slots del body de cada template REAL son canónicos §10.4', () => {
     // Barrido independiente (red de seguridad), además del que corre `validateGallerySeed`.
     const result = validateGallerySeed(RAW_GALLERY_SEED);
@@ -178,6 +195,58 @@ describe('validateGallerySeed: los fixtures INVÁLIDOS que la Verificación nomb
     });
     expect(result.ok).toBe(false);
     expect(result.issues.map((i) => i.code)).toContain('duplicate_guard_pack');
+  });
+
+  // ── model_profile (T3.4) ──────────────────────────────────────────────────────
+  function validProfile(over: Record<string, unknown> = {}): Record<string, unknown> {
+    return {
+      falEndpoint: 'fal-ai/kokoro',
+      kind: 'tts',
+      cost: { unit: '1k_chars', amountCents: 2 },
+      ...over,
+    };
+  }
+
+  it('control positivo: un model_profile bien formado pasa', () => {
+    const result = validateGallerySeed({
+      templates: [],
+      guardPacks: [],
+      modelProfiles: [validProfile()],
+    });
+    expect(result.ok).toBe(true);
+    expect(result.seed?.modelProfiles).toHaveLength(1);
+  });
+
+  it('model_profile con `kind` fuera del enum → rojo con `schema_invalid` (entity model_profile)', () => {
+    const result = validateGallerySeed({
+      templates: [],
+      guardPacks: [],
+      modelProfiles: [validProfile({ kind: 'hologram' })],
+    });
+    expect(result.ok).toBe(false);
+    const issue = result.issues.find((i) => i.code === 'schema_invalid');
+    expect(issue?.entity).toBe('model_profile');
+  });
+
+  it('model_profile con `cost.unit` fuera del enum → rojo con `schema_invalid`', () => {
+    const result = validateGallerySeed({
+      templates: [],
+      guardPacks: [],
+      modelProfiles: [validProfile({ cost: { unit: 'per_token', amountCents: 1 } })],
+    });
+    expect(result.ok).toBe(false);
+    expect(result.issues.map((i) => i.code)).toContain('schema_invalid');
+  });
+
+  it('`falEndpoint` DUPLICADO → rojo con `duplicate_fal_endpoint` (chocaría con el UNIQUE)', () => {
+    const result = validateGallerySeed({
+      templates: [],
+      guardPacks: [],
+      modelProfiles: [validProfile(), validProfile()],
+    });
+    expect(result.ok).toBe(false);
+    const issue = result.issues.find((i) => i.code === 'duplicate_fal_endpoint');
+    expect(issue?.where).toBe('fal-ai/kokoro');
   });
 
   it('acumula TODOS los problemas de una pasada, no solo el primero', () => {

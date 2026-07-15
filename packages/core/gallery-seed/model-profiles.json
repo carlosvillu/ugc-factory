@@ -1,0 +1,109 @@
+[
+  {
+    "falEndpoint": "veed/avatars/text-to-video",
+    "kind": "avatar",
+    "cost": { "unit": "minute", "amountCents": 35 },
+    "capabilities": { "audio": true, "dialogue": true, "aspects": ["9:16", "16:9", "1:1"] },
+    "notes": "Tier Test — avatar parlante (hook), voz incluida. Precio verificado 2026-07-15 vs §13.1 ($0,35/min)."
+  },
+  {
+    "falEndpoint": "fal-ai/kling-video/ai-avatar/v2/standard",
+    "kind": "avatar",
+    "cost": { "unit": "second", "amountCents": 5.62 },
+    "capabilities": { "audio": true, "dialogue": true, "refImages": 1 },
+    "notes": "Tier Standard — avatar parlante con Persona propia. Precio verificado 2026-07-15 vs §13.1 ($0,0562/s)."
+  },
+  {
+    "falEndpoint": "fal-ai/bytedance/omnihuman/v1.5",
+    "kind": "avatar",
+    "cost": { "unit": "second", "amountCents": 16 },
+    "capabilities": { "audio": true, "dialogue": true, "maxDuration": 30 },
+    "notes": "Tier Premium — avatar parlante, audio <=30s. DIVERGENCIA T3.4: §13.1 decia $0,14/s; fal publica $0,16/s (2026-07-15) — recalibrado al valor real."
+  },
+  {
+    "falEndpoint": "fal-ai/bytedance/seedream/v4.5/edit",
+    "kind": "image",
+    "cost": { "unit": "image", "amountCents": 4 },
+    "capabilities": { "refImages": 10 },
+    "notes": "Product shots / keyframes (Test+Standard). Hasta 10 imagenes de referencia. Precio verificado 2026-07-15 vs §13.1 ($0,04/img, 10 refs)."
+  },
+  {
+    "falEndpoint": "fal-ai/nano-banana-2/edit",
+    "kind": "image",
+    "cost": { "unit": "image", "amountCents": 8 },
+    "capabilities": { "refImages": 14 },
+    "notes": "Product shots (Standard). Hasta 14 imagenes de referencia. Precio verificado 2026-07-15 vs §13.1 ($0,08/img, 14 refs). 2K/4K se cobran 1,5x/2x (base tier verificado)."
+  },
+  {
+    "falEndpoint": "fal-ai/nano-banana-pro/edit",
+    "kind": "image",
+    "cost": { "unit": "image", "amountCents": 15 },
+    "capabilities": {},
+    "notes": "Product shots (Premium) + imagenes de Persona (Premium). Precio verificado 2026-07-15 vs §13.1 ($0,15/img)."
+  },
+  {
+    "falEndpoint": "fal-ai/kokoro",
+    "kind": "tts",
+    "cost": { "unit": "1k_chars", "amountCents": 2 },
+    "capabilities": { "audio": true },
+    "notes": "TTS Tier Test. Precio verificado 2026-07-15 vs §13.1 ($0,02/1k chars). Variante `fal-ai/kokoro/spanish` mismo precio."
+  },
+  {
+    "falEndpoint": "fal-ai/elevenlabs/tts/turbo-v2.5",
+    "kind": "tts",
+    "cost": { "unit": "1k_chars", "amountCents": 5 },
+    "capabilities": { "audio": true },
+    "notes": "TTS Tier Standard (ElevenLabs Turbo v2.5). Precio verificado 2026-07-15 vs §13.1 ($0,05/1k chars)."
+  },
+  {
+    "falEndpoint": "fal-ai/elevenlabs/tts/eleven-v3",
+    "kind": "tts",
+    "cost": { "unit": "1k_chars", "amountCents": 10 },
+    "capabilities": { "audio": true },
+    "notes": "TTS Tier Premium (ElevenLabs Eleven v3). Precio verificado 2026-07-15 vs §13.1 ($0,10/1k chars)."
+  },
+  {
+    "falEndpoint": "fal-ai/elevenlabs/speech-to-text",
+    "kind": "utility",
+    "cost": { "unit": "minute", "amountCents": 3 },
+    "capabilities": {},
+    "notes": "ASR word timestamps (captions karaoke) — ruta por defecto (§13.1 l.593). Precio verificado 2026-07-15 vs §13.1 ($0,03/min)."
+  },
+  {
+    "falEndpoint": "fal-ai/ace-step",
+    "kind": "music",
+    "cost": { "unit": "second", "amountCents": 0.02 },
+    "capabilities": { "audio": true },
+    "unverified": true,
+    "notes": "Musica (bed IA), Tier Standard. §13.1 l.596/l.600 marcaba `[verificar]` (~$0,005/s). fal publica $0,0002/s (2026-07-15) = 0,02 centimos/s — resuelto: mucho mas barato de lo estimado. `unverified` hasta integrar en F4."
+  },
+  {
+    "falEndpoint": "fal-ai/latentsync",
+    "kind": "lipsync",
+    "cost": { "unit": "video", "amountCents": 20 },
+    "capabilities": { "maxDuration": 40 },
+    "unverified": true,
+    "notes": "Lipsync Tier Test. §13.1 l.597/l.600 marcaba `[verificar]` ($0,20/video). fal: $0,20 para videos <=40s, luego $0,005/s (2026-07-15) — confirmado el precio base. `unverified` hasta integrar en F4."
+  },
+  {
+    "falEndpoint": "fal-ai/sync-lipsync/v2",
+    "kind": "lipsync",
+    "cost": { "unit": "minute", "amountCents": 300 },
+    "capabilities": {},
+    "notes": "Lipsync Tier Standard (sync-lipsync v2). Precio verificado 2026-07-15 vs §13.1 ($3/min)."
+  },
+  {
+    "falEndpoint": "fal-ai/sync-lipsync/v2/pro",
+    "kind": "lipsync",
+    "cost": { "unit": "minute", "amountCents": 500 },
+    "capabilities": {},
+    "notes": "Lipsync Tier Premium (sync-lipsync v2 pro). Precio verificado 2026-07-15 vs §13.1 ($5/min)."
+  },
+  {
+    "falEndpoint": "fal-ai/veo3.1",
+    "kind": "i2v",
+    "cost": { "unit": "second", "amountCents": 20 },
+    "capabilities": { "audio": true, "aspects": ["9:16", "16:9"] },
+    "notes": "B-roll Tier Premium (Veo 3.1). Precio verificado 2026-07-15: $0,20/s sin audio, $0,40/s con audio (720p/1080p) — se siembra el precio base sin audio; §13.1 decia $0,15/s fast / $0,40/s std. El precio con-audio y 4k se modelara con `params` en F4."
+  }
+]

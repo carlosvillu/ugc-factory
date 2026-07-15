@@ -19,8 +19,10 @@
 import { extractSlots, isCanonicalSlot } from './canonical-variables';
 import {
   GuardPackSeedSchema,
+  ModelProfileSeedSchema,
   PromptTemplateSeedSchema,
   type GuardPackSeed,
+  type ModelProfileSeed,
   type PromptTemplateSeed,
 } from './contracts';
 
@@ -34,12 +36,14 @@ export type GallerySeedIssueCode =
   /** El template referencia una `guardPackKey` que el seed de guard packs no define. */
   | 'unknown_guard_pack'
   /** Dos guard packs con la misma `key` (chocarían con el UNIQUE `guard_pack_key_key`). */
-  | 'duplicate_guard_pack';
+  | 'duplicate_guard_pack'
+  /** Dos model_profile con el mismo `falEndpoint` (chocarían con el UNIQUE `model_profile_fal_endpoint_key`). */
+  | 'duplicate_fal_endpoint';
 
 export interface GallerySeedIssue {
   code: GallerySeedIssueCode;
-  entity: 'prompt_template' | 'guard_pack';
-  /** El slug (template) o la key (guard pack), o el índice si aún no se pudo leer la clave natural. */
+  entity: 'prompt_template' | 'guard_pack' | 'model_profile';
+  /** El slug/key/falEndpoint (clave natural), o el índice si aún no se pudo leer la clave. */
   where: string;
   message: string;
 }
@@ -47,12 +51,16 @@ export interface GallerySeedIssue {
 export interface GallerySeed {
   templates: PromptTemplateSeed[];
   guardPacks: GuardPackSeed[];
+  modelProfiles: ModelProfileSeed[];
 }
 
-/** Entrada SIN TIPAR a propósito: el validador es la frontera del JSON. */
+/** Entrada SIN TIPAR a propósito: el validador es la frontera del JSON. `modelProfiles` es
+ *  opcional en el TIPO (no en la realidad: el seed real siempre lo trae) para que los fixtures de
+ *  test que solo ejercitan templates/guardPacks no tengan que arrastrar un array vacío. */
 export interface RawGallerySeedInput {
   templates: unknown[];
   guardPacks: unknown[];
+  modelProfiles?: unknown[];
 }
 
 export interface ValidateGallerySeedResult {
@@ -77,6 +85,7 @@ export function validateGallerySeed(raw: RawGallerySeedInput): ValidateGallerySe
   const issues: GallerySeedIssue[] = [];
   const templates: PromptTemplateSeed[] = [];
   const guardPacks: GuardPackSeed[] = [];
+  const modelProfiles: ModelProfileSeed[] = [];
 
   // ── Guard packs primero: los templates comprueban integridad referencial CONTRA ellos. ──
   raw.guardPacks.forEach((candidate, index) => {
@@ -174,8 +183,43 @@ export function validateGallerySeed(raw: RawGallerySeedInput): ValidateGallerySe
     seenSlugs.set(template.slug, index);
   });
 
+  // ── model_profile (§13.1) ──────────────────────────────────────────────────────
+  // Shape (Zod) + duplicados de `falEndpoint`. La clave natural es el endpoint fal: dos
+  // filas con el mismo endpoint chocarían con `model_profile_fal_endpoint_key` (una insertaría
+  // N-1). NO se valida aquí que el endpoint EXISTA en fal — eso es I/O de red y lo hace
+  // `pnpm fal:verify` (que además marca `verifiedAt`); el validador es puro/offline (gate).
+  (raw.modelProfiles ?? []).forEach((candidate, index) => {
+    const parsed = ModelProfileSeedSchema.safeParse(candidate);
+    if (!parsed.success) {
+      const endpoint = (candidate as { falEndpoint?: unknown } | null)?.falEndpoint;
+      issues.push({
+        code: 'schema_invalid',
+        entity: 'model_profile',
+        where: typeof endpoint === 'string' ? endpoint : `modelProfiles[${String(index)}]`,
+        message: firstZodMessage(parsed.error),
+      });
+      return;
+    }
+    modelProfiles.push(parsed.data);
+  });
+
+  const seenEndpoints = new Map<string, number>();
+  modelProfiles.forEach((profile, index) => {
+    const first = seenEndpoints.get(profile.falEndpoint);
+    if (first !== undefined) {
+      issues.push({
+        code: 'duplicate_fal_endpoint',
+        entity: 'model_profile',
+        where: profile.falEndpoint,
+        message: `model_profile duplicado "${profile.falEndpoint}" (también en modelProfiles[${String(first)}])`,
+      });
+      return;
+    }
+    seenEndpoints.set(profile.falEndpoint, index);
+  });
+
   const ok = issues.length === 0;
-  return ok ? { ok, issues, seed: { templates, guardPacks } } : { ok, issues };
+  return ok ? { ok, issues, seed: { templates, guardPacks, modelProfiles } } : { ok, issues };
 }
 
 /** Formatea los problemas para un fallo ruidoso (lo usa `pnpm seed:gallery` antes de tocar la BD). */

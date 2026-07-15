@@ -35,7 +35,8 @@ async function main(): Promise<void> {
 
   console.log(
     `seed:gallery: OK — prompt_template=${String(counts.templates)} ` +
-      `guard_pack=${String(counts.guardPacks)}`,
+      `guard_pack=${String(counts.guardPacks)} ` +
+      `model_profile=${String(counts.modelProfiles)}`,
   );
   process.exit(0);
 }

@@ -586,18 +586,19 @@ audit_log          id, actor, action, entity, entity_id, diff jsonb, at
 
 | Rol en pipeline | Tier Test | Tier Standard | Tier Premium |
 |---|---|---|---|
-| Avatar parlante (hook) | VEED Avatars `veed/avatars/text-to-video` ($0,35/min, voz incluida) | Kling AI Avatar v2 Std `fal-ai/kling-video/ai-avatar/v2/standard` ($0,0562/s) | OmniHuman v1.5 `fal-ai/bytedance/omnihuman/v1.5` ($0,14/s, audio ≤30 s) |
-| B-roll (i2v/r2v) | Grok Imagine `xai/grok-imagine-video/*` ($0,07/s 720p) / Wan 2.6 Flash (desde $0,05/s) | Kling v3 Std con audio ($0,126/s) / Wan 2.6 ($0,10/s 720p) | Veo 3.1 ($0,15/s fast con audio; $0,40/s std) / Seedance 2.0 Std ($0,3034/s, máx. 720p, 4–15 s) |
+| Avatar parlante (hook) | VEED Avatars `veed/avatars/text-to-video` ($0,35/min, voz incluida) | Kling AI Avatar v2 Std `fal-ai/kling-video/ai-avatar/v2/standard` ($0,0562/s) | OmniHuman v1.5 `fal-ai/bytedance/omnihuman/v1.5` ($0,16/s ✓T3.4, audio ≤30 s) |
+| B-roll (i2v/r2v) | Grok Imagine `xai/grok-imagine-video/*` ($0,07/s 720p) / Wan 2.6 Flash (desde $0,05/s) | Kling v3 Std con audio ($0,126/s) / Wan 2.6 ($0,10/s 720p) | Veo 3.1 ($0,20/s base sin audio ✓T3.4; tiers 4k/audio con `params` en F4) / Seedance 2.0 Std ($0,3034/s, máx. 720p, 4–15 s) |
 | Reference-to-video (fidelidad de producto) | — | Seedance 2.0 R2V / Wan 2.6 R2V | Veo 3.1 R2V / Kling O3 elements |
 | TTS | Kokoro `fal-ai/kokoro/{spanish,…}` ($0,02/1k chars) | ElevenLabs Turbo v2.5 ($0,05/1k) | ElevenLabs Eleven v3 ($0,10/1k) |
 | Word timestamps (para captions karaoke) | ASR `fal-ai/elevenlabs/speech-to-text` ($0,03/min) — **ruta por defecto**; si el TTS devuelve word timestamps nativos `[verificar]`, se ahorra este paso | ídem | ídem |
 | Product shots / keyframes | `fal-ai/bytedance/seedream/v4.5/edit` ($0,04/img, 10 refs) | Seedream 4.5 edit / `fal-ai/nano-banana-2/edit` ($0,08/img, 14 refs) | Nano Banana Pro ($0,15/img) |
 | Imágenes de Persona | Grok Imagine Image ($0,02) | FLUX.2 dev ($0,012/MP) | FLUX.2 pro / Nano Banana Pro |
-| Música (bed IA) | — | ace-step (~$0,005/s `[verificar]`) | ídem |
+| Música (bed IA) | — | ace-step ($0,0002/s ✓T3.4) | ídem |
 | Lipsync (solo si hay re-doblaje de clip existente) | LatentSync ($0,20/vídeo `[verificar]`) | sync-lipsync v2 ($3/min) | sync-lipsync v2 pro ($5/min) |
 
 - **Reglas**: no depender de Sora 2 (aviso de inestabilidad + sunset reportado 24-09-2026); LTX-2 descartado (solo 16:9); ruta alternativa de una pasada con Kling 3.0 voice control (soporta español, $0,154/s con voz) como receta experimental a A/B-testear contra TTS+avatar (calidad de lipsync ES es riesgo conocido del mercado).
-- **Deuda de verificación** (heredada de `research/01 §8.11`): enums exactos de `aspect_ratio` en Kling v3/Wan 2.6/HappyHorse, precios `[verificar]` (LatentSync, ace-step, mmaudio, Kling LipSync), y si los endpoints TTS de fal (ElevenLabs/Kokoro) devuelven **word timestamps nativos** (hasta confirmarlo, la ruta de timestamps es el ASR). Se cierra en la primera tarea de integración de cada modelo (el planning lo recogerá).
+- **Deuda de verificación** (heredada de `research/01 §8.11`): enums exactos de `aspect_ratio` en Kling v3/Wan 2.6/HappyHorse, y si los endpoints TTS de fal (ElevenLabs/Kokoro) devuelven **word timestamps nativos** (hasta confirmarlo, la ruta de timestamps es el ASR). Se cierra en la primera tarea de integración de cada modelo (el planning lo recogerá).
+  - **Precios `[verificar]` CERRADOS en T3.4 (2026-07-15, `pnpm fal:verify` contra `llms.txt` público de fal)**: **OmniHuman v1.5 = $0,16/s** (el catálogo decía $0,14); **ace-step = $0,0002/s** (decía ~$0,005 — mucho más barato); **LatentSync = $0,20/vídeo** (≤40 s, confirmado); **sync-lipsync v2 = $3/min, v2 pro = $5/min** (confirmados); **Veo 3.1 precio base = $0,20/s** sin audio (el catálogo decía $0,15/s fast; los tiers 4k/audio se modelan con `params` en F4). Los perfiles quedan sembrados con estos valores verificados en `model_profile` (`verified_at` marcado); las horquillas COGS-30s de las `recipe` no cambian (las derivas quedan dentro del rango del Apéndice B). `mmaudio`/`Kling LipSync` no se sembraron en T3.4 (no entran en las recetas v1); su verificación queda para su integración en F4.
 
 ### 13.2 Anthropic (análisis y guiones)
 

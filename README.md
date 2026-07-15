@@ -171,7 +171,7 @@ El desarrollo va por fases, tarea a tarea, con verificación observable en cada 
 
 <!-- STATUS-TABLE:BEGIN — generado por `pnpm readme:status`, no editar a mano -->
 
-**54 de 103 tareas cerradas (52 %).**
+**55 de 103 tareas cerradas (53 %).**
 
 | Fase                                                  | Qué entrega                                                                         | Estado         |
 | ----------------------------------------------------- | ----------------------------------------------------------------------------------- | -------------- |
@@ -182,7 +182,7 @@ El desarrollo va por fases, tarea a tarea, con verificación observable en cada 
 | **F1c** · Deuda del primer uso real                   | Deuda del primer uso real                                                           | ✅ Completa    |
 | **F2** · Estrategia y guiones                         | Matriz con coste estimado → guiones aprobados                                       | ✅ Completa    |
 | **F2b** · Deuda destapada por la verificación de T2.3 | Deuda destapada por la verificación de T2.3 (acordada con el usuario el 2026-07-14) | ✅ Completa    |
-| **F3** · Galería de prompts y compilador              | Templates facetados → prompts auditables                                            | 🔨 3/8         |
+| **F3** · Galería de prompts y compilador              | Templates facetados → prompts auditables                                            | 🔨 4/8         |
 | **F4** · Generación fal.ai                            | Los assets de una variante, generados de verdad en fal.ai                           | ⬜ No empezada |
 | **F5** · Composición, QA y export                     | El anuncio 9:16 completo, con subtítulos, C2PA y QA                                 | ⬜ No empezada |
 | **F6** · Publicación                                  | Publicar en TikTok/IG y crear el ad draft                                           | ⬜ No empezada |

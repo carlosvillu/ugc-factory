@@ -26,6 +26,12 @@ export {
   AssetSlotSeedSchema,
   PromptTemplateSeedSchema,
   GuardPackSeedSchema,
+  ModelKindSchema,
+  ModelStatusSchema,
+  CostUnitSchema,
+  ModelCostSchema,
+  ModelCapabilitiesSchema,
+  ModelProfileSeedSchema,
   type PromptKind,
   type PromptStatus,
   type GuardScope,
@@ -34,7 +40,24 @@ export {
   type AssetSlotSeed,
   type PromptTemplateSeed,
   type GuardPackSeed,
+  type ModelKind,
+  type ModelStatus,
+  type CostUnit,
+  type ModelCost,
+  type ModelCapabilities,
+  type ModelProfileSeed,
 } from './contracts';
+
+// EL COMPARADOR de `fal:verify` (T3.4): parseo puro del `llms.txt` público de fal + contraste
+// del precio del seed contra el publicado. Sin red (el script de @ugc/db hace el fetch y le pasa
+// los BYTES): así el gate testea la LÓGICA con fixtures reales capturados, sin golpear fal.
+export {
+  parseFalPrice,
+  compareModelProfile,
+  type ParsedFalPrice,
+  type ModelVerifyOutcome,
+  type ModelVerifyResult,
+} from './fal-catalog-verify';
 
 // El validador que corre DENTRO de `pnpm gate` (su test valida el seed REAL) y que
 // `pnpm seed:gallery` ejecuta antes de tocar la BD: un seed inválido no llega a Postgres.

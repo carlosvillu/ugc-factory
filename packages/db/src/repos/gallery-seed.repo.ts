@@ -6,14 +6,15 @@
 // §10.2 regla 1: "el JSON es el formato de intercambio y review; la BD es el runtime". Correr
 // `seed:gallery` N veces deja la MISMA galería: el segundo pase actualiza metadatos, no inserta
 // filas nuevas.
-import { count, sql } from 'drizzle-orm';
-import type { GallerySeed } from '@ugc/core/gallery';
+import { count, eq, sql } from 'drizzle-orm';
+import type { GallerySeed, ModelStatus } from '@ugc/core/gallery';
 import type { DbClient } from '../client';
-import { guardPack, promptTemplate } from '../schema/gallery';
+import { guardPack, modelProfile, promptTemplate } from '../schema/gallery';
 
 export interface SeedGalleryCounts {
   templates: number;
   guardPacks: number;
+  modelProfiles: number;
 }
 
 /**
@@ -119,17 +120,72 @@ export async function seedGallery(db: DbClient, seed: GallerySeed): Promise<Seed
           },
         });
     }
+
+    // ── model_profile (§13.1, T3.4) ──
+    // Clave natural = `falEndpoint`. Idéntico molde que arriba, con UNA diferencia LOAD-BEARING:
+    // el set-list NO toca `verifiedAt` NI `status`. Esos dos los posee `pnpm fal:verify` (marca
+    // cuándo se contrastó contra fal y si el modelo sigue vivo) — pisarlos en cada re-siembra
+    // borraría el resultado de la última verificación. Mismo criterio que `perf`/`headVersion`
+    // de los templates: el seed es la fuente de verdad de lo que el modelo ES; la BD, de cuándo
+    // se verificó y si sigue activo. `status` arranca en su default de columna (`active`) al
+    // INSERTAR, y solo `fal:verify` lo pasa a `deprecated`.
+    if (seed.modelProfiles.length > 0) {
+      await tx
+        .insert(modelProfile)
+        .values(
+          seed.modelProfiles.map((m) => ({
+            falEndpoint: m.falEndpoint,
+            kind: m.kind,
+            capabilities: m.capabilities,
+            cost: m.cost,
+            promptAdapter: m.promptAdapter,
+          })),
+        )
+        .onConflictDoUpdate({
+          target: modelProfile.falEndpoint,
+          set: {
+            kind: sql`excluded.kind`,
+            capabilities: sql`excluded.capabilities`,
+            cost: sql`excluded.cost`,
+            promptAdapter: sql`excluded.prompt_adapter`,
+            updatedAt: new Date(),
+            // NO: verifiedAt, status — los posee `fal:verify` (runtime), no el seed.
+          },
+        });
+    }
   });
 
   return countGallery(db);
+}
+
+/**
+ * Marca el resultado de una verificación de catálogo (`pnpm fal:verify`) sobre UN perfil: pone
+ * `verified_at = now()` y, si fal ya no expone el endpoint o divergió a `deprecated`, cambia el
+ * `status`. Idempotente por `falEndpoint`. NO toca los campos autorados por el seed.
+ */
+export async function markModelVerified(
+  db: DbClient,
+  falEndpoint: string,
+  opts: { status?: ModelStatus; verifiedAt?: Date } = {},
+): Promise<void> {
+  await db
+    .update(modelProfile)
+    .set({
+      verifiedAt: opts.verifiedAt ?? new Date(),
+      ...(opts.status ? { status: opts.status } : {}),
+      updatedAt: new Date(),
+    })
+    .where(eq(modelProfile.falEndpoint, falEndpoint));
 }
 
 /** Totales por tabla — lo que `seed:gallery` imprime y lo que la Verificación mira. */
 export async function countGallery(db: DbClient): Promise<SeedGalleryCounts> {
   const [templates] = await db.select({ n: count() }).from(promptTemplate);
   const [guardPacks] = await db.select({ n: count() }).from(guardPack);
+  const [modelProfiles] = await db.select({ n: count() }).from(modelProfile);
   return {
     templates: templates?.n ?? 0,
     guardPacks: guardPacks?.n ?? 0,
+    modelProfiles: modelProfiles?.n ?? 0,
   };
 }

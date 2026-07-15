@@ -1,0 +1,29 @@
+
+> ugc-factory@0.0.0 fal:verify /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads
+> pnpm --filter @ugc/db fal:verify
+
+
+> @ugc/db@0.0.0 fal:verify /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/db
+> tsx --env-file-if-exists=../../.env scripts/fal-verify.ts
+
+fal:verify: contrastando 15 perfiles contra fal.ai (metadatos públicos)…
+
+  [OK ] veed/avatars/text-to-video — precio confirmado: 35 c/minute ($0.35 per minutes)
+  [OK ] fal-ai/kling-video/ai-avatar/v2/standard — precio confirmado: 5.62 c/second ($0.0562 per seconds)
+  [DIV] fal-ai/bytedance/omnihuman/v1.5 — precio distinto: seed 77 c/second, fal 16.0000 c/second ($0.16 per seconds)
+  [OK ] fal-ai/bytedance/seedream/v4.5/edit — precio confirmado: 4 c/image ($0.04 per images)
+  [OK ] fal-ai/nano-banana-2/edit — precio confirmado: 8 c/image ($0.08** per image.)
+  [OK ] fal-ai/nano-banana-pro/edit — precio confirmado: 15 c/image ($0.15** per image.)
+  [OK ] fal-ai/kokoro — precio confirmado: 2 c/1k_chars ($0.02 per 1000 characters)
+  [OK ] fal-ai/elevenlabs/tts/turbo-v2.5 — precio confirmado: 5 c/1k_chars ($0.05 per 1000 characters)
+  [OK ] fal-ai/elevenlabs/tts/eleven-v3 — precio confirmado: 10 c/1k_chars ($0.1 per 1000 characters)
+  [OK ] fal-ai/elevenlabs/speech-to-text — precio confirmado: 3 c/minute ($0.03 per minutes)
+  [OK ] fal-ai/ace-step — precio confirmado: 0.02 c/second ($0.0002 per second of)
+  [OK ] fal-ai/latentsync — precio confirmado: 20 c/video ($0.2 for videos)
+  [OK ] fal-ai/sync-lipsync/v2 — precio confirmado: 300 c/minute ($3** per minute of)
+  [OK ] fal-ai/sync-lipsync/v2/pro — precio confirmado: 500 c/minute ($5 per minutes)
+  [OK ] fal-ai/veo3.1 — precio confirmado: 20 c/second (For every second of video you generate you will be charged **$0.20)
+
+fal:verify: 14 OK · 1 divergencias · 0 no verificables.
+Divergencias (revisar y recalibrar el seed / recipes — regla de trabajo 5):
+  - fal-ai/bytedance/omnihuman/v1.5: precio distinto: seed 77 c/second, fal 16.0000 c/second ($0.16 per seconds)

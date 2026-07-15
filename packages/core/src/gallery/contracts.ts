@@ -117,3 +117,100 @@ export const GuardPackSeedSchema = z.object({
   lines: z.array(z.string().min(1)).default([]),
 });
 export type GuardPackSeed = z.infer<typeof GuardPackSeedSchema>;
+
+// ── model_profile (§13.1, §12 l.546-548) — T3.4 ────────────────────────────────
+//
+// El CATÁLOGO de modelos fal.ai que el pipeline invoca (avatares, b-roll, TTS, ASR, shots,
+// música, lipsync). Espejo EXACTO de los enums nativos y del jsonb de `model_profile`
+// (`packages/db/src/schema/gallery.ts`, T3.1). Estos contratos son la frontera del JSON del
+// seed y —clave para T3.4— el shape que `pnpm fal:verify` compara contra lo publicado por fal.
+
+/** `model_kind` (§12 l.546): gobierna qué nodo del grafo puede usar el modelo. Enum nativo en BD. */
+export const ModelKindSchema = z.enum([
+  't2v',
+  'i2v',
+  'r2v',
+  'avatar',
+  'lipsync',
+  'tts',
+  'image',
+  'music',
+  'utility',
+]);
+export type ModelKind = z.infer<typeof ModelKindSchema>;
+
+/** `model_status` (§12 l.548): active|deprecated. Enum nativo en BD. `fal:verify` puede pasarlo a `deprecated`. */
+export const ModelStatusSchema = z.enum(['active', 'deprecated']);
+export type ModelStatus = z.infer<typeof ModelStatusSchema>;
+
+/**
+ * La UNIDAD de facturación de un modelo (§13.1 es MULTI-UNIDAD): un t2v/avatar cobra por
+ * SEGUNDO, un image por IMAGEN, un tts por 1000 CHARS, un lipsync por VÍDEO o por MINUTO, un
+ * FLUX por MEGAPÍXEL. El vocabulario es CONTRATO (el comparador de `fal:verify` reconcilia la
+ * unidad del seed contra la unidad leída de fal antes de comparar céntimos), por eso enum.
+ *
+ * Los strings ESPEJAN literalmente lo que fal escribe en su `llms.txt` normalizado a singular:
+ * `per seconds`→second, `per minutes`→minute, `per images`→image, `per 1000 characters`→1k_chars,
+ * `per megapixels`→megapixel, `per <vídeo>`→video (sync/latentsync cobran «per video»/«per request»).
+ */
+export const CostUnitSchema = z.enum([
+  'second',
+  'minute',
+  'image',
+  '1k_chars',
+  'megapixel',
+  'video',
+]);
+export type CostUnit = z.infer<typeof CostUnitSchema>;
+
+/**
+ * `cost` jsonb multi-unidad (§12 l.547). `amountCents` en CÉNTIMOS pero como FLOAT a propósito:
+ * §13.1 tiene precios sub-céntimo por unidad ($0,0002/s ace-step = 0,02 céntimos/s; $0,0562/s
+ * Kling = 5,62 céntimos/s). El dinero AGREGADO del sistema es entero (`cost_entry.amount_cents`),
+ * pero el precio UNITARIO de un modelo necesita la fracción — el estimador la multiplica por
+ * segundos/imágenes y redondea al agregar. Positivo salvo modelos de compute-seconds (no sembrados).
+ */
+export const ModelCostSchema = z.object({
+  unit: CostUnitSchema,
+  amountCents: z.number().nonnegative(),
+});
+export type ModelCost = z.infer<typeof ModelCostSchema>;
+
+/**
+ * `capabilities` jsonb (§12 l.547): qué puede hacer el modelo. TODO opcional — un tts no tiene
+ * `maxDuration` de vídeo, un image no tiene `audio`. El shape es laxo a propósito (los enums
+ * exactos de `aspects` son deuda `[verificar]` de §13.1 l.600, no se cierran aquí): se siembra
+ * lo que §13.1 da y `unverified` marca lo que aún no se ha contrastado en vivo.
+ */
+export const ModelCapabilitiesSchema = z.object({
+  maxDuration: z.number().positive().optional(),
+  refImages: z.number().int().nonnegative().optional(),
+  refVideos: z.number().int().nonnegative().optional(),
+  refAudios: z.number().int().nonnegative().optional(),
+  audio: z.boolean().optional(),
+  dialogue: z.boolean().optional(),
+  aspects: z.array(z.string()).optional(),
+});
+export type ModelCapabilities = z.infer<typeof ModelCapabilitiesSchema>;
+
+/**
+ * Un perfil de modelo del catálogo (§13.1, `model_profile`). Campos REQUERIDOS: `falEndpoint`
+ * (clave natural, UNIQUE en BD, target del ON CONFLICT), `kind`, `cost`. `verifiedAt`/`status`
+ * NO viven en el seed: los posee `fal:verify` en runtime (mismo criterio que `perf`/`headVersion`
+ * de los templates — el seed es la fuente de verdad de lo que el modelo ES; la BD, de cuándo se
+ * verificó y si sigue vivo).
+ *
+ * `unverified` marca los precios/capacidades `[verificar]` de §13.1 l.600 (ace-step, latentsync…):
+ * son honestos «no lo hemos contrastado aún», no precisión inventada. `fal:verify` los aclara.
+ */
+export const ModelProfileSeedSchema = z.object({
+  falEndpoint: z.string().min(1),
+  kind: ModelKindSchema,
+  cost: ModelCostSchema,
+  capabilities: ModelCapabilitiesSchema.default({}),
+  promptAdapter: z.string().optional(),
+  /** `[verificar]` §13.1 l.600: el precio/capacidad declarado es una estimación sin confirmar en vivo. */
+  unverified: z.boolean().default(false),
+  notes: z.string().optional(),
+});
+export type ModelProfileSeed = z.infer<typeof ModelProfileSeedSchema>;

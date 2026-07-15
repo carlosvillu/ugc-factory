@@ -1,0 +1,77 @@
+
+ RUN  v4.1.10 /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/core
+
+ ❯ |core:unit| src/gallery/adapters/scene-planner.test.ts (9 tests | 3 failed) 9ms
+     × escena de 25s con maxDuration 10 ⇒ 3 clips ≤10s que suman 25 (no 2 clips de 12,5s) 3ms
+     × los clips troceados encadenan su ventana temporal desde t de la escena 1ms
+     × trocea solo las escenas que exceden maxDuration y aplana los clips en orden 2ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |core:unit| src/gallery/adapters/scene-planner.test.ts > planScene — troceo §7.5 (assert (d)) > escena de 25s con maxDuration 10 ⇒ 3 clips ≤10s que suman 25 (no 2 clips de 12,5s)
+AssertionError: expected [ Array(2) ] to have a length of 3 but got 2
+
+- Expected
++ Received
+
+- 3
++ 2
+
+ ❯ src/gallery/adapters/scene-planner.test.ts:59:24
+     57|   it('escena de 25s con maxDuration 10 ⇒ 3 clips ≤10s que suman 25 (no…
+     58|     const plan = planScene(makeScene({ seconds: 25 }), 10);
+     59|     expect(plan.clips).toHaveLength(3);
+       |                        ^
+     60|     expect(plan.clips.every((c) => c.seconds <= 10)).toBe(true);
+     61|     expect(plan.clips.reduce((s, c) => s + c.seconds, 0)).toBeCloseTo(…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  |core:unit| src/gallery/adapters/scene-planner.test.ts > planScene — troceo §7.5 (assert (d)) > los clips troceados encadenan su ventana temporal desde t de la escena
+AssertionError: expected [ { t: 3, seconds: 12, …(3) }, …(1) ] to have a length of 3 but got 2
+
+- Expected
++ Received
+
+- 3
++ 2
+
+ ❯ src/gallery/adapters/scene-planner.test.ts:66:24
+     64|   it('los clips troceados encadenan su ventana temporal desde t de la …
+     65|     const plan = planScene(makeScene({ t: 3, seconds: 24 }), 10);
+     66|     expect(plan.clips).toHaveLength(3);
+       |                        ^
+     67|     expect(plan.clips[0]!.t).toBe(3);
+     68|     expect(plan.clips[1]!.t).toBeCloseTo(3 + 8, 6);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  |core:unit| src/gallery/adapters/scene-planner.test.ts > planGeneration — plan de guion completo > trocea solo las escenas que exceden maxDuration y aplana los clips en orden
+AssertionError: expected [ 1, 2, 1 ] to deeply equal [ 1, 3, 1 ]
+
+- Expected
++ Received
+
+  [
+    1,
+-   3,
++   2,
+    1,
+  ]
+
+ ❯ src/gallery/adapters/scene-planner.test.ts:95:54
+     93|     ];
+     94|     const plan = planGeneration(scenes, 10);
+     95|     expect(plan.scenes.map((sp) => sp.clips.length)).toEqual([1, 3, 1]…
+       |                                                      ^
+     96|     expect(plan.clips).toHaveLength(5);
+     97|     // Ningún clip excede maxDuration (§7.5 invariante primaria).
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed | 6 passed (9)
+   Start at  20:38:32
+   Duration  130ms (transform 21ms, setup 15ms, import 16ms, tests 9ms, environment 0ms)
+

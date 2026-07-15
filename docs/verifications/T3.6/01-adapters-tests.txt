@@ -1,0 +1,13 @@
+
+> @ugc/core@0.0.0 test /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/core
+> vitest run -- --run src/gallery/adapters
+
+
+ RUN  v4.1.10 /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/core
+
+
+ Test Files  59 passed (59)
+      Tests  977 passed (977)
+   Start at  20:37:28
+   Duration  4.65s (transform 5.31s, setup 672ms, import 28.28s, tests 1.74s, environment 3ms)
+

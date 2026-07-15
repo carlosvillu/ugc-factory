@@ -1,0 +1,8 @@
+{
+  "aspect_ratio": "9:16",
+  "duration_seconds": 5,
+  "prompt": "@image @video @audio A creator in a bright bathroom applies the serum to camera.\n\nFidelity: preserve the product label.",
+  "reference_audios": ["https://fal.storage/uploads/voice-01.wav"],
+  "reference_images": ["https://fal.storage/uploads/product-ref-01.png"],
+  "reference_videos": ["https://fal.storage/uploads/broll.mp4"]
+}

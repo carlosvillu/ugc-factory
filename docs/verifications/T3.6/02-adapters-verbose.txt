@@ -1,0 +1,34 @@
+
+ RUN  v4.1.10 /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/core
+
+ ✓ |core:unit| src/gallery/adapters/scene-planner.test.ts > planScene — troceo §7.5 (assert (d)) > escena de 8s con maxDuration 30 (OmniHuman real) ⇒ 1 clip sin trocear 1ms
+ ✓ |core:unit| src/gallery/adapters/scene-planner.test.ts > planScene — troceo §7.5 (assert (d)) > escena EXACTAMENTE igual a maxDuration ⇒ 1 clip (frontera: no trocea) 0ms
+ ✓ |core:unit| src/gallery/adapters/scene-planner.test.ts > planScene — troceo §7.5 (assert (d)) > escena = maxDuration + epsilon ⇒ 2 clips (frontera: acaba de exceder) 0ms
+ ✓ |core:unit| src/gallery/adapters/scene-planner.test.ts > planScene — troceo §7.5 (assert (d)) > escena de 12s con maxDuration 10 ⇒ 2 clips ≤10s que suman 12 0ms
+ ✓ |core:unit| src/gallery/adapters/scene-planner.test.ts > planScene — troceo §7.5 (assert (d)) > escena de 25s con maxDuration 10 ⇒ 3 clips ≤10s que suman 25 (no 2 clips de 12,5s) 0ms
+ ✓ |core:unit| src/gallery/adapters/scene-planner.test.ts > planScene — troceo §7.5 (assert (d)) > los clips troceados encadenan su ventana temporal desde t de la escena 0ms
+ ✓ |core:unit| src/gallery/adapters/scene-planner.test.ts > planScene — troceo §7.5 (assert (d)) > sin maxDuration (el modelo no declara tope) ⇒ 1 clip con la duración completa 0ms
+ ✓ |core:unit| src/gallery/adapters/scene-planner.test.ts > planScene — troceo §7.5 (assert (d)) > preserva el segment de la escena en cada clip 0ms
+ ✓ |core:unit| src/gallery/adapters/scene-planner.test.ts > planGeneration — plan de guion completo > trocea solo las escenas que exceden maxDuration y aplana los clips en orden 1ms
+ ✓ |core:unit| src/gallery/adapters/families.golden.test.ts > model adapters — golden payloads (claves ordenadas, carácter a carácter) > golden avatar-kling-ai-avatar 32ms
+ ✓ |core:unit| src/gallery/adapters/families.golden.test.ts > model adapters — golden payloads (claves ordenadas, carácter a carácter) > golden avatar-omnihuman 2ms
+ ✓ |core:unit| src/gallery/adapters/families.golden.test.ts > model adapters — golden payloads (claves ordenadas, carácter a carácter) > golden i2v-veo31 1ms
+ ✓ |core:unit| src/gallery/adapters/families.golden.test.ts > model adapters — golden payloads (claves ordenadas, carácter a carácter) > golden image-edit-seedream 1ms
+ ✓ |core:unit| src/gallery/adapters/families.golden.test.ts > model adapters — golden payloads (claves ordenadas, carácter a carácter) > golden seedance-t2v 1ms
+ ✓ |core:unit| src/gallery/adapters/families.golden.test.ts > assert (a) — Kling incluye la ref image cuando capabilities.refImages > 0 > refImages:1 (real) + imagen aportada ⇒ el payload lleva la imagen de referencia 0ms
+ ✓ |core:unit| src/gallery/adapters/families.golden.test.ts > assert (a) — Kling incluye la ref image cuando capabilities.refImages > 0 > refImages:1 pero SIN imagen aportada ⇒ el payload NO lleva image_url 0ms
+ ✓ |core:unit| src/gallery/adapters/families.golden.test.ts > assert (a) — Kling incluye la ref image cuando capabilities.refImages > 0 > avatar sin refImages (OmniHuman) + imágenes aportadas ⇒ payload SIN image_url 0ms
+ ✓ |core:unit| src/gallery/adapters/families.golden.test.ts > assert (b) — Seedance usa la sintaxis @image/@video/@audio > el prompt se prefija con un token @image/@video/@audio por cada ref aceptada 1ms
+ ✓ |core:unit| src/gallery/adapters/families.golden.test.ts > assert (b) — Seedance usa la sintaxis @image/@video/@audio > sin refs ⇒ el prompt NO lleva tokens @… y no hay reference_* 0ms
+ ✓ |core:unit| src/gallery/adapters/families.golden.test.ts > assert (c) — aspect/duración con los nombres y enums EXACTOS del model_profile > veo3.1 acepta "16:9" (está en su aspects) y lo emite tal cual + la duración pedida 0ms
+ ✓ |core:unit| src/gallery/adapters/families.golden.test.ts > assert (c) — aspect/duración con los nombres y enums EXACTOS del model_profile > veo3.1 rechaza "1:1" (no está en aspects) con aspect_unsupported que nombra los válidos 0ms
+ ✓ |core:unit| src/gallery/adapters/families.golden.test.ts > assert (c) — aspect/duración con los nombres y enums EXACTOS del model_profile > un profile SIN aspects declaradas (OmniHuman) acepta cualquier aspect (el modelo no restringe) 0ms
+ ✓ |core:unit| src/gallery/adapters/families.golden.test.ts > dispatch por promptAdapter (NO por prefijo de endpoint) > cada profile sembrado despacha al adapter de su familia y produce un payload 0ms
+ ✓ |core:unit| src/gallery/adapters/families.golden.test.ts > dispatch por promptAdapter (NO por prefijo de endpoint) > promptAdapter ausente ⇒ missing_prompt_adapter que nombra el endpoint 0ms
+ ✓ |core:unit| src/gallery/adapters/families.golden.test.ts > dispatch por promptAdapter (NO por prefijo de endpoint) > promptAdapter desconocido ⇒ unknown_prompt_adapter que nombra el endpoint 0ms
+
+ Test Files  2 passed (2)
+      Tests  25 passed (25)
+   Start at  20:37:40
+   Duration  901ms (transform 246ms, setup 34ms, import 787ms, tests 46ms, environment 0ms)
+

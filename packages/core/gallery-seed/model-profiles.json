@@ -4,6 +4,7 @@
     "kind": "avatar",
     "cost": { "unit": "minute", "amountCents": 35 },
     "capabilities": { "audio": true, "dialogue": true, "aspects": ["9:16", "16:9", "1:1"] },
+    "promptAdapter": "avatar",
     "notes": "Tier Test — avatar parlante (hook), voz incluida. Precio verificado 2026-07-15 vs §13.1 ($0,35/min)."
   },
   {
@@ -11,6 +12,7 @@
     "kind": "avatar",
     "cost": { "unit": "second", "amountCents": 5.62 },
     "capabilities": { "audio": true, "dialogue": true, "refImages": 1 },
+    "promptAdapter": "avatar",
     "notes": "Tier Standard — avatar parlante con Persona propia. Precio verificado 2026-07-15 vs §13.1 ($0,0562/s)."
   },
   {
@@ -18,6 +20,7 @@
     "kind": "avatar",
     "cost": { "unit": "second", "amountCents": 16 },
     "capabilities": { "audio": true, "dialogue": true, "maxDuration": 30 },
+    "promptAdapter": "avatar",
     "notes": "Tier Premium — avatar parlante, audio <=30s. DIVERGENCIA T3.4: §13.1 decia $0,14/s; fal publica $0,16/s (2026-07-15) — recalibrado al valor real."
   },
   {
@@ -25,6 +28,7 @@
     "kind": "image",
     "cost": { "unit": "image", "amountCents": 4 },
     "capabilities": { "refImages": 10 },
+    "promptAdapter": "image-edit",
     "notes": "Product shots / keyframes (Test+Standard). Hasta 10 imagenes de referencia. Precio verificado 2026-07-15 vs §13.1 ($0,04/img, 10 refs)."
   },
   {
@@ -32,6 +36,7 @@
     "kind": "image",
     "cost": { "unit": "image", "amountCents": 8 },
     "capabilities": { "refImages": 14 },
+    "promptAdapter": "image-edit",
     "notes": "Product shots (Standard). Hasta 14 imagenes de referencia. Precio verificado 2026-07-15 vs §13.1 ($0,08/img, 14 refs). 2K/4K se cobran 1,5x/2x (base tier verificado)."
   },
   {
@@ -39,6 +44,7 @@
     "kind": "image",
     "cost": { "unit": "image", "amountCents": 15 },
     "capabilities": {},
+    "promptAdapter": "image-edit",
     "notes": "Product shots (Premium) + imagenes de Persona (Premium). Precio verificado 2026-07-15 vs §13.1 ($0,15/img)."
   },
   {
@@ -104,6 +110,7 @@
     "kind": "i2v",
     "cost": { "unit": "second", "amountCents": 20 },
     "capabilities": { "audio": true, "aspects": ["9:16", "16:9"] },
+    "promptAdapter": "i2v",
     "notes": "B-roll Tier Premium (Veo 3.1). Precio verificado 2026-07-15: $0,20/s sin audio, $0,40/s con audio (720p/1080p) — se siembra el precio base sin audio; §13.1 decia $0,15/s fast / $0,40/s std. El precio con-audio y 4k se modelara con `params` en F4."
   }
 ]

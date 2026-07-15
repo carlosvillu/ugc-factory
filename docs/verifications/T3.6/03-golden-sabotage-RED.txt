@@ -1,0 +1,41 @@
+
+ RUN  v4.1.10 /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/core
+
+ ❯ |core:unit| src/gallery/adapters/families.golden.test.ts (16 tests | 1 failed) 47ms
+     × golden avatar-kling-ai-avatar 36ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |core:unit| src/gallery/adapters/families.golden.test.ts > model adapters — golden payloads (claves ordenadas, carácter a carácter) > golden avatar-kling-ai-avatar
+AssertionError: expected '{\n  "aspect_ratio": "9:16",\n  "dura…' to be '{\n  "aspect_ratio": "9:17",\n  "dura…' // Object.is equality
+
+- Expected
++ Received
+
+@@ -1,7 +1,7 @@
+  {
+-   "aspect_ratio": "9:17",
++   "aspect_ratio": "9:16",
+    "duration_seconds": 5,
+    "enable_audio": true,
+    "image_url": "https://fal.storage/uploads/persona-ref-01.png",
+    "prompt": "A creator in a bright bathroom applies the serum to camera.\n\nFidelity: preserve the product label."
+  }
+
+ ❯ expectGolden ../test-utils/src/golden.ts:31:18
+     29|     throw error;
+     30|   }
+     31|   expect(actual).toBe(expected); // toBe: comparación carácter a carác…
+       |                  ^
+     32| }
+     33|
+ ❯ src/gallery/adapters/families.golden.test.ts:100:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 15 passed (16)
+   Start at  20:38:13
+   Duration  905ms (transform 214ms, setup 16ms, import 759ms, tests 47ms, environment 0ms)
+

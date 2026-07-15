@@ -123,3 +123,27 @@ export {
 // `pnpm compile:prompt` compila y que el executor N6 usa en su test. NO son test-only (el CLI los
 // distribuye), por eso viven en el barrel y no en test-utils.
 export { DEMO_BEAUTY_BRIEF, DEMO_PERSONA, DEMO_SCRIPT } from './compile-fixtures';
+
+// ── LOS MODEL ADAPTERS (T3.6) ────────────────────────────────────────────────────
+// Librería PURA que N7 (F4/T4.11) llama: transforma el prompt canónico de N6 + assets al payload
+// del endpoint fal según `model_profile.promptAdapter`, y trocea escenas > maxDuration (§7.5).
+export {
+  adaptToPayload,
+  ADAPTER_FAMILIES,
+  avatarAdapter,
+  i2vAdapter,
+  seedanceAdapter,
+  imageEditAdapter,
+  planScene,
+  planGeneration,
+  type AdapterFamily,
+  type AdapterInput,
+  type AdapterAssets,
+  type AdapterIssue,
+  type AdapterPayload,
+  type AdapterResult,
+  type ModelAdapter,
+  type PlannedClip,
+  type ScenePlan,
+  type GenerationPlan,
+} from './adapters/index';

@@ -521,7 +521,7 @@ Decisiones del usuario (2026-07-07): la fase se ejecuta tras T0.1 y **antes** de
 - **Entrega**: motor en `packages/core`: selección determinista de template por facetas + scoring (§9.3), interpolación de variables canónicas (§10.4) desde brief/persona/hook/cta/campaign, inyección obligatoria de beats + fidelity guards + guard packs + anti-estilo, validación de resolución completa, `resolvedPrompt` persistido por escena; registro del executor N6 en el orquestador.
 - **Verificación**: golden files (3 combinaciones brief-fixture × template × persona comparadas carácter a carácter) en verde; un script CLI compila una variante real (con los templates de prueba de T3.2) e imprime el `resolvedPrompt` — `grep` confirma "no deformation" y el guard del vertical; un slot irresoluble produce error accionable (qué variable, de qué fuente). La inspección en canvas se verifica en T4.11.
 
-#### T3.6 · Model adapters
+#### T3.6 · Model adapters [x] 2026-07-15 — PASS, ver docs/verifications/T3.6/
 - **Depende de**: T3.5, T3.4
 - **Entrega**: adapters por familia (Seedance `@image/@video/@audio`; Kling referencias y voice control; Veo/Wan; imagen Seedream/NB2 edit) que transforman prompt canónico + assets al payload del endpoint respetando `capabilities`.
 - **Verificación**: golden files de payloads por adapter **más asserts semánticos** (los goldens solos son autorreferenciales): el payload de Kling incluye la imagen de referencia cuando `capabilities.refImages>0`, el de Seedance usa la sintaxis `@image/@video/@audio`, y aspect/duración usan los nombres y enums exactos del `model_profile`; un template que excede `maxDuration` produce el troceo de escenas esperado (§7.5) en el plan de generación, no un error en runtime.

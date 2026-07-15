@@ -36,6 +36,8 @@
     "packages/core": {
       // pino-pretty solo se referencia como string de transport en makeLogger
       // (observability.md §2): knip no puede verlo en el grafo de imports.
+      // El CLI `pnpm compile:prompt` (scripts/compile-prompt-demo.ts, T3.5) ya lo toma
+      // knip como entry vía el `scripts` del tsconfig — no necesita entry explícito.
       "ignoreDependencies": ["pino-pretty"]
     },
     "packages/test-utils": {

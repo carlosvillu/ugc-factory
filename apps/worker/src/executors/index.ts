@@ -12,6 +12,7 @@ import {
 } from './analysis';
 import { makeN4Executor } from './strategy';
 import { makeN5Executor } from './write-scripts';
+import { makeN6Executor } from './compile-prompt';
 
 export interface ExecutorRegistryDeps {
   /** Decisor de fallo de los executors de demo, resuelto por bootstrap. */
@@ -54,6 +55,11 @@ export function makeExecutorRegistry({
     // deliberado: `secretsKey` es un GETTER perezoso (un worker sin APP_MASTER_KEY arranca igual y
     // solo revienta el nodo que la use); leerlo aquí lo forzaría en el boot y rompería esa promesa.
     N5: makeN5Executor(analysis),
+    // N6 · COMPILADOR DE PROMPTS (T3.5): determinista y $0 (§9.3, como N4). ESQUELETO — el motor de
+    // compilación vive completo en `@ugc/core/gallery` (golden files); este executor es el registro
+    // mínimo. NO tiene deps (no lee la BD en T3.5: la tabla `generation` y el DAG de generación que
+    // le pasa las fuentes son F4/T4.11). Cuando F4 lo cablee, estrenará su grupo de deps.
+    N6: makeN6Executor(),
     'demo.sleep': demo,
     'demo.fail': demo,
     // `demo.hang` (T0.9): el executor no retorna nunca (espera al abort) — es el

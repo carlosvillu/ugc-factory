@@ -79,7 +79,13 @@ export {
 } from './analysis-dag';
 // DAG del LOTE (T2.6): el run de un solo nodo N5 (ScriptWriter + CP3) que guioniza un lote ya
 // creado. Lo arranca la aprobación de CP2 con `createRun` en su misma tx (server/batch-checkpoint.ts).
-export { batchRunDefinition, AnalysisN5ConfigSchema, type AnalysisN5Config } from './batch-dag';
+export {
+  batchRunDefinition,
+  AnalysisN5ConfigSchema,
+  type AnalysisN5Config,
+  AnalysisN6ConfigSchema,
+  type AnalysisN6Config,
+} from './batch-dag';
 export {
   shouldPause,
   CheckpointConfigSchema,

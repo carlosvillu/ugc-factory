@@ -3,5 +3,5 @@
   "compilerOptions": {
     "resolveJsonModule": true
   },
-  "include": ["src", "test", "prompts", "*.config.ts", "gallery-seed"]
+  "include": ["src", "test", "prompts", "scripts", "*.config.ts", "gallery-seed"]
 }

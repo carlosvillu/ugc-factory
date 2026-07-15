@@ -3,7 +3,7 @@
 // checkpoint de CP3 y que pause AUNQUE haya autopilot (es la puerta antes del gasto de generación),
 // y que el `batchId` viaje en la config (sin él el executor no sabe qué lote guionizar).
 import { describe, expect, it } from 'vitest';
-import { AnalysisN5ConfigSchema, batchRunDefinition } from './batch-dag';
+import { AnalysisN5ConfigSchema, AnalysisN6ConfigSchema, batchRunDefinition } from './batch-dag';
 import type { AnalysisN5Config } from './batch-dag';
 import { shouldPause } from './checkpoint';
 import { RunDefinitionSchema } from './run-definition';
@@ -65,5 +65,15 @@ describe('batchRunDefinition', () => {
   it('AnalysisN5ConfigSchema rechaza un batchId vacío (control negativo)', () => {
     expect(AnalysisN5ConfigSchema.safeParse({ batchId: '' }).success).toBe(false);
     expect(AnalysisN5ConfigSchema.safeParse({}).success).toBe(false);
+  });
+});
+
+describe('AnalysisN6ConfigSchema (T3.5, esqueleto del compilador)', () => {
+  it('acepta una variantId no vacía (el forward-pointer que F4 resolverá)', () => {
+    expect(AnalysisN6ConfigSchema.safeParse({ variantId: 'var_01' }).success).toBe(true);
+  });
+  it('rechaza variantId vacía o ausente (control negativo)', () => {
+    expect(AnalysisN6ConfigSchema.safeParse({ variantId: '' }).success).toBe(false);
+    expect(AnalysisN6ConfigSchema.safeParse({}).success).toBe(false);
   });
 });

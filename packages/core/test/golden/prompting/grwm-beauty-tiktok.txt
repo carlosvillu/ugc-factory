@@ -1,0 +1,32 @@
+UGC smartphone video style, vertical 9:16, no cinematic grading, no beauty filters, no color science. Cast a mujer de 29 años, latina, look casual de diario in the 25-34 range as an honest first-person creator (never labelled 'customer'), filming herself in baño con luz natural de ventana, encimera con dos o tres productos with 2-3 everyday anchors (bathroom mirror, morning light, a cluttered shelf). Beat 1 (0-3s): she looks into the lens and says, "Si tu piel tira al despertar, esto es para ti", framing the pain of la piel tira después de lavarla. Beat 2 (3-10s): she applies GlowSerum 24h to camera, showing the hidrata 24 horas sin sensación grasa with visible pores and natural skin texture. Beat 3 (10-18s): a second layer of proof on hidrata 24 horas sin sensación grasa, handheld with slight autofocus breathing and imperfect framing. Camera: fixed phone at arm's length, one reframe, no gimbal moves. Lighting: motivated by the window, soft and uneven. Deliberate imperfections: visible pores, autofocus breathing, imperfect framing, no retouch. Product moment: the label of GlowSerum 24h stays legible and true to shape, no morphing, no invented text. Fidelity guards: keep the product geometry and colour stable across cuts, no identity drift on the creator. Audio: implied room tone, no music bed. Final beat (18-22s): natural close to camera, "Pruébalo 30 días sin riesgo, enlace en la bio". Format: 9:16, 22s, tiktok, 9:16.
+
+Fidelity: preserve the product label, geometry and colour exactly, and hold a stable identity for the creator across every cut — no deformation, drift, or artifacts.
+
+Guard rails:
+- Keep the ad framed as an advertising concept: the on-screen creator speaks as a paid actor demonstrating the product, never as a verified buyer, and never invents a personal purchase story or a lived-through result.
+- Forbid first-person purchase language such as owning, buying or having personally tried the product in real life; the presenter narrates what the product does, not what they experienced.
+- If a founder or origin angle is requested, voice it in the third person about the maker; never let the synthetic presenter assert that they personally founded or created the product.
+- Do not state or imply guaranteed outcomes; describe what the product does, not what it will certainly do for the viewer.
+- Surface no fabricated review, star rating, follower count or sales figure as if it were genuine social proof.
+- Leave out any endorsement, award, ranking or expert seal that has not been supplied as an approved asset.
+- Keep every spoken and written claim inside the boundaries of the brief; add no benefit, statistic or comparison that the brief did not provide.
+- Show no other brand's trademark, packaging or logo, and imitate no competitor's look to suggest a comparison the brief did not authorise.
+- Preserve the product's true geometry, proportions and colour across every cut; permit no melting, bending, extra parts or artefact along its silhouette.
+- Keep the product's real label, wordmark and packaging text intact and legible; invent no copy, badge or logo that is not already on the physical product.
+- Hold the creator's face and body consistent from shot to shot; allow no drift of identity, no morphing of features and no swapping of the person mid-clip.
+- Render hands, fingers and limbs anatomically correct throughout, with no fusing, duplication or missing digits.
+- Suppress warping, ghosting, flicker and other generation defects; the frame should read as a clean phone capture, not a distorted render.
+- Make no medical, dermatological or 'clinically proven' promise, and stage no doctor, nurse or lab setting that implies clinical authority.
+- Keep skin real: show natural texture, pores and tone, and apply no smoothing, airbrushing or beauty-filter retouch to the creator's face.
+- Stage no exaggerated or overnight before-and-after that a real routine could not produce.
+- Compose for a full-bleed 9:16 vertical frame and keep the product, the face and any burned-in words clear of the right-edge action rail and the bottom caption strip.
+- Favour a raw, handheld, off-the-cuff feel over a polished commercial look; the clip should pass as something filmed on a phone in one take.
+- Leave the top and lower thirds free of critical subject matter so the app's own overlays never cover the payoff.
+
+Anti-style: no cinematic grading, no beauty filters, no studio polish — it must read as a raw smartphone capture.
+
+Beats:
+- [0-3s] hook to camera — "Si tu piel tira al despertar, esto es para ti" (fixed, arm's length)
+- [3-10s] apply product, show primary benefit (handheld reframe)
+- [10-18s] second proof point (handheld, autofocus breathing)
+- [18-22s] natural CTA close — "Pruébalo 30 días sin riesgo, enlace en la bio" (fixed, arm's length)

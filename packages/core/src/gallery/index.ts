@@ -77,3 +77,49 @@ export { RAW_GALLERY_SEED, type RawGallerySeed } from './raw-seed';
 // El lookup de guard packs §9.5 (T3.3): dado el seed + el contexto de la variante (category del
 // brief + plataforma destino), el subconjunto de guard packs que el compilador (T3.5) inyecta.
 export { resolveGuardPacks, type GuardLookupContext } from './guard-lookup';
+
+// ── EL COMPILADOR DE PROMPTS (N6, T3.5) ──────────────────────────────────────────
+// La resolución de variables canónicas §10.4 (slot→fuente): brief/persona/guion/campaña.
+export {
+  resolveSlot,
+  type CampaignContext,
+  type VariableSources,
+  type SlotSource,
+  type SlotResolution,
+} from './variable-sources';
+
+// La selección determinista de template por facetas + scoring §9.3 (perf vacío = neutro,
+// desempate por slug para reproducibilidad).
+export {
+  selectTemplate,
+  type SelectTemplateContext,
+  type SelectTemplateResult,
+} from './select-template';
+
+// El ensamblador del `resolvedPrompt` §10.4: interpolación + fidelity guard + guard packs +
+// anti-estilo + beats, con validación de resolución completa (issues accionables).
+export {
+  compilePrompt,
+  templateSlots,
+  COMPILER_FIDELITY_GUARD,
+  COMPILER_ANTI_STYLE,
+  type CompileInput,
+  type CompileResult,
+  type CompiledPrompt,
+  type CompileIssue,
+} from './compile-prompt';
+
+// El contrato FORWARD `N6-sources` (T3.5 → F4/T4.11): cómo un predecesor le pasa a N6 las fuentes
+// resueltas de una variante, y la función pura que las convierte en `CompileInput` (parseo +
+// selección de template). El executor N6 del worker lo usa; F4 cablea el productor.
+export {
+  N6SourcesSchema,
+  resolveCompileInput,
+  type N6Sources,
+  type ResolveCompileInputResult,
+} from './compile-executor-contract';
+
+// Fixtures de DEMO del compilador (brief beauty + persona + guion): datos deterministas que el CLI
+// `pnpm compile:prompt` compila y que el executor N6 usa en su test. NO son test-only (el CLI los
+// distribuye), por eso viven en el barrel y no en test-utils.
+export { DEMO_BEAUTY_BRIEF, DEMO_PERSONA, DEMO_SCRIPT } from './compile-fixtures';

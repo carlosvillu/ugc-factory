@@ -29,6 +29,21 @@ export const AnalysisN5ConfigSchema = z.object({
 export type AnalysisN5Config = z.infer<typeof AnalysisN5ConfigSchema>;
 
 /**
+ * Config del step N6 (compilador de prompts, T3.5). ESQUELETO: el corte de alcance de T3.5 es el
+ * MOTOR completo en core (funciones puras) + este executor de REGISTRO mínimo. El cableado pesado
+ * del DAG de generación (N6→N7a-e), la tabla `generation` donde vive `resolved_prompt` y la lectura
+ * de brief/persona/guion desde la BD son F4/T4.11 — NO se construyen aquí.
+ *
+ * Por eso la config apunta a la `variantId` (el forward-pointer estable, como `batchId` en N5): en
+ * F4 el executor sacará de ella el guion, la persona y las facetas para compilar. Hoy el executor
+ * VALIDA la config y delega en el motor puro de `@ugc/core/gallery` cuando F4 le pase las fuentes.
+ */
+export const AnalysisN6ConfigSchema = z.object({
+  variantId: z.string().min(1),
+});
+export type AnalysisN6Config = z.infer<typeof AnalysisN6ConfigSchema>;
+
+/**
  * Construye la definición del run de lote (un solo nodo N5) para un proyecto y un lote ya creado.
  *
  * `autopilot=false` + N5 `isCheckpoint` con `alwaysPause`: CP3 —el editor de guiones— es el

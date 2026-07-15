@@ -18,6 +18,7 @@
     "seed": "pnpm --filter @ugc/db db:seed",
     "seed:gallery": "pnpm --filter @ugc/db db:seed:gallery",
     "fal:verify": "pnpm --filter @ugc/db fal:verify",
+    "compile:prompt": "pnpm --filter @ugc/core compile:prompt",
     "knip": "knip",
     "readme:status": "node scripts/readme-status.mjs",
     "readme:status:check": "node scripts/readme-status.mjs --check",

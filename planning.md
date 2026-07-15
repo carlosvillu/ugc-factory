@@ -516,7 +516,7 @@ Decisiones del usuario (2026-07-07): la fase se ejecuta tras T0.1 y **antes** de
 - **Entrega**: seed de `model_profile` (catálogo §13.1: endpoints completos, capabilities, costes) y comando `pnpm fal:verify` que contrasta cada perfil contra la model page/`llms.txt` de fal (marca `verified_at`/desviaciones) y **recalibra los costes de las `recipe`** con los datos verificados (regla de trabajo 5).
 - **Verificación**: `pnpm fal:verify` corre contra fal.ai real y reporta OK o divergencia por perfil; introducir un precio falso en el seed hace que lo detecte; las recetas quedan recalculadas si hubo cambios.
 
-#### T3.5 · Compilador de prompts (N6)
+#### T3.5 · Compilador de prompts (N6) [x] 2026-07-15 — PASS (3 goldens char-a-char + CLI grep "no deformation" + slot irresoluble accionable; motor completo, executor N6 esqueleto), ver docs/verifications/T3.5/ (coste $0)
 - **Depende de**: T3.3, T2.4
 - **Entrega**: motor en `packages/core`: selección determinista de template por facetas + scoring (§9.3), interpolación de variables canónicas (§10.4) desde brief/persona/hook/cta/campaign, inyección obligatoria de beats + fidelity guards + guard packs + anti-estilo, validación de resolución completa, `resolvedPrompt` persistido por escena; registro del executor N6 en el orquestador.
 - **Verificación**: golden files (3 combinaciones brief-fixture × template × persona comparadas carácter a carácter) en verde; un script CLI compila una variante real (con los templates de prueba de T3.2) e imprime el `resolvedPrompt` — `grep` confirma "no deformation" y el guard del vertical; un slot irresoluble produce error accionable (qué variable, de qué fuente). La inspección en canvas se verifica en T4.11.

@@ -1,0 +1,9 @@
+
+ RUN  v4.1.10 /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/core
+
+
+ Test Files  1 passed (1)
+      Tests  3 passed (3)
+   Start at  19:43:16
+   Duration  1.09s (transform 225ms, setup 21ms, import 982ms, tests 4ms, environment 0ms)
+

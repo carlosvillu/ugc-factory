@@ -103,13 +103,13 @@ export interface StepPatch {
    */
   resetRetryCount?: boolean;
   /**
-   * `config` per-step (T0.9): el retry manual admite un patch de `config` en el
-   * body (p. ej. `fail_rate` de 1→0 para que la re-ejecución complete). REEMPLAZA
-   * la config completa (NO hace merge sobre la jsonb existente): los schemas de
-   * config reales no existen hasta F2+, y un merge sobre jsonb opaco sería
-   * prematuro. Se escribe en la MISMA tx que el `retry`, antes de re-encolar, de
-   * modo que el executor re-lee la config nueva. `undefined` = no tocar; cualquier
-   * valor (incluido `null`) reemplaza la config.
+   * `config` per-step (T0.9): el nuevo valor de `config` a escribir en la fila.
+   * A ESTE nivel (el store) REEMPLAZA la config completa — no mergea sobre la jsonb
+   * existente. El MERGE de un patch parcial de retry NO vive aquí sino en
+   * `retryStep` (retry.ts), que lee la config actual y superpone el patch ANTES de
+   * llamar a `update`; el store recibe ya el resultado final. Se escribe en la MISMA
+   * tx que el `retry`, antes de re-encolar, de modo que el executor re-lee la config
+   * nueva. `undefined` = no tocar; cualquier valor (incluido `null`) reemplaza.
    */
   config?: unknown;
   /**

@@ -169,6 +169,37 @@ describe('POST /api/steps/:id/retry', () => {
     expect(row.config).toEqual({ failRate: 0 });
   });
 
+  it('MERGE: un patch parcial NO borra claves obligatorias de la config (regresión del bug de prod)', async () => {
+    // Escenario exacto del handoff 2026-07-15: N3 con `{ targetLanguage: "es" }` falla;
+    // un patch parcial `{ failRate: 0 }` NO debe reemplazar la config entera (borrando
+    // `targetLanguage`) sino mergear sobre ella. Antes del fix esto dejaba
+    // `{ failRate: 0 }` sin `targetLanguage` → N3 moría en su safeParse al reencolarse.
+    const { stepId } = await seedFailedStep({ status: 'failed', config: { targetLanguage: 'es' } });
+    const res = await call(stepId, { config: { failRate: 0 } });
+    expect(res.status).toBe(200);
+    const row = await rowOf(stepId);
+    expect(row.status).toBe('queued');
+    // La clave obligatoria SOBREVIVE y la nueva se añade (merge superficial).
+    expect(row.config).toEqual({ targetLanguage: 'es', failRate: 0 });
+  });
+
+  it('MERGE: una clave homónima del patch pisa la actual (misma clave = override)', async () => {
+    const { stepId } = await seedFailedStep({
+      status: 'failed',
+      config: { targetLanguage: 'es', failRate: 1 },
+    });
+    const res = await call(stepId, { config: { failRate: 0 } });
+    expect(res.status).toBe(200);
+    expect((await rowOf(stepId)).config).toEqual({ targetLanguage: 'es', failRate: 0 });
+  });
+
+  it('MERGE: si la config actual es null (no-objeto), el patch la REEMPLAZA', async () => {
+    const { stepId } = await seedFailedStep({ status: 'failed', config: undefined });
+    const res = await call(stepId, { config: { failRate: 0 } });
+    expect(res.status).toBe(200);
+    expect((await rowOf(stepId)).config).toEqual({ failRate: 0 });
+  });
+
   it('body vacío conserva la config existente', async () => {
     const { stepId } = await seedFailedStep({ status: 'failed', config: { failRate: 1 } });
     const res = await call(stepId, {});

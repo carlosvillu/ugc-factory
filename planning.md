@@ -495,7 +495,7 @@ Decisiones del usuario (2026-07-07): la fase se ejecuta tras T0.1 y **antes** de
 
 ## F3 — Galería de prompts y compilador
 
-#### T3.1 · Migraciones y modelo de galería
+#### T3.1 · Migraciones y modelo de galería [x] 2026-07-15 — PASS, ver docs/verifications/T3.1/ (coste $0)
 - **Depende de**: T0.3
 - **Entrega**: tablas `prompt_template` (facetas GIN, `perf`, `usage_count`), `prompt_version`, `guard_pack` (con `key`, `vertical?`, `platform?`), `model_profile` (capabilities con refImages/refVideos/refAudios, `cost` multi-unidad) (§12).
 - **Verificación**: migración aplica (`psql \d`); con ≥1.000 filas sintéticas sembradas para el test (o `SET enable_seqscan=off`), una consulta por facetas combinadas muestra Bitmap Index Scan sobre el GIN en el EXPLAIN y devuelve exactamente las filas esperadas.

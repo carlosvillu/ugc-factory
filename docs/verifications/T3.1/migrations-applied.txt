@@ -1,0 +1,13 @@
+=== __drizzle_migrations (last 3) ===
+ id |                               hash                               |      to_timestamp      
+----+------------------------------------------------------------------+------------------------
+ 16 | 2e82de2046fb77a4d6d176578f028d5bf6e348564d7c518e217e72f27003c9f3 | 2026-07-15 13:48:54+00
+ 15 | eeb0c22c91d3900cbefe2f19cba0ca8724925bb0cb9227056ccdf456c08f7b1f | 2026-07-15 10:18:26+00
+ 14 | d4ec6f2240352a9218b7057efaae43ee28d75321951b90ba3c674c017fa62c73 | 2026-07-13 16:59:13+00
+(3 rows)
+
+=== tables present ===
+ public | guard_pack          | table | verify
+ public | model_profile       | table | verify
+ public | prompt_template     | table | verify
+ public | prompt_version      | table | verify

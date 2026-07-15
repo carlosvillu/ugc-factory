@@ -1,0 +1,11 @@
+===== CONTROL NEGATIVE: @> on free_tags (never had a GIN) =====
+                                                    QUERY PLAN                                                     
+-------------------------------------------------------------------------------------------------------------------
+ Seq Scan on public.prompt_template  (cost=0.00..271.50 rows=25 width=7) (actual time=0.840..0.840 rows=0 loops=1)
+   Output: id
+   Filter: (prompt_template.free_tags @> '{whatever}'::text[])
+   Rows Removed by Filter: 5000
+ Planning Time: 0.255 ms
+ Execution Time: 0.851 ms
+(6 rows)
+

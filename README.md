@@ -5,7 +5,7 @@
 **Herramienta personal, mono-usuario y self-hosted.** No es un SaaS: no tiene billing, ni multi-tenancy, ni onboarding. Es la máquina de anuncios de un único operador técnico, y ese recorte es deliberado — permite invertir toda la complejidad en lo que de verdad importa.
 
 > [!IMPORTANT]
-> **Estado: en construcción (51 de 103 tareas, ~50 %).** Hoy el sistema **analiza productos, planifica lotes de anuncios y escribe sus guiones (aprobables en CP3), pero todavía no fabrica ni un solo vídeo.** La generación de media (fal.ai) y la composición (FFmpeg) aún no están construidas. Detalle honesto en [Estado del proyecto](#estado-del-proyecto).
+> **Estado: en construcción (59 de 103 tareas, ~57 %).** Hoy el sistema **analiza productos, planifica lotes de anuncios, escribe sus guiones (aprobables en CP3) y compila prompts auditables desde su galería facetada de templates, pero todavía no fabrica ni un solo vídeo.** La generación de media (fal.ai) y la composición (FFmpeg) aún no están construidas. Detalle honesto en [Estado del proyecto](#estado-del-proyecto).
 
 ---
 
@@ -191,9 +191,9 @@ El desarrollo va por fases, tarea a tarea, con verificación observable en cada 
 
 <!-- STATUS-TABLE:END -->
 
-**Lo que funciona hoy**, de verdad y verificado: el monorepo con Postgres y Drizzle · auth mono-usuario · storage con descarga proxificada · colas pg-boss · **el orquestador transaccional del DAG** (checkpoints, retries, timeouts, cancelación, invalidación con linaje) · SSE en vivo · el canvas de React Flow · el ledger de gasto con credenciales cifradas · el design system completo · **el pipeline de análisis real N1→N2→N3** (Firecrawl/Jina + Haiku 4.5 + Sonnet 5) que produce un ProductBrief editable y aprobable · el listado de runs · la librería de personas · el compositor de la matriz de lote con su estimador de coste y su confirmación de gasto en CP2 · y **la escritura de guiones (N5, Sonnet 5) con sus guardrails FTC, editables y aprobables por variante en CP3** — el lote pasa a `scripted` cuando apruebas.
+**Lo que funciona hoy**, de verdad y verificado: el monorepo con Postgres y Drizzle · auth mono-usuario · storage con descarga proxificada · colas pg-boss · **el orquestador transaccional del DAG** (checkpoints, retries, timeouts, cancelación, invalidación con linaje) · SSE en vivo · el canvas de React Flow · el ledger de gasto con credenciales cifradas · el design system completo · **el pipeline de análisis real N1→N2→N3** (Firecrawl/Jina + Haiku 4.5 + Sonnet 5) que produce un ProductBrief editable y aprobable · el listado de runs · la librería de personas · el compositor de la matriz de lote con su estimador de coste y su confirmación de gasto en CP2 · y **la escritura de guiones (N5, Sonnet 5) con sus guardrails FTC, editables y aprobables por variante en CP3** — el lote pasa a `scripted` cuando apruebas · y **la galería facetada de templates de prompt (`/gallery`, ~50 templates es/en) con el compilador N6** que interpola variables tipadas, resuelve guard packs y aplica los adapters por familia de modelo para producir un prompt auditable por escena.
 
-**Lo que no existe todavía:** la galería y el compilador de prompts (N6) · **cualquier generación de vídeo o audio con fal.ai (N7)** · la composición con FFmpeg (N8) · el export, la publicación y las métricas.
+**Lo que no existe todavía:** **cualquier generación de vídeo o audio con fal.ai (N7)** · la composición con FFmpeg (N8) · el export, la publicación y las métricas.
 
 > [!NOTE]
 > **Producción está en marcha** en [ugc.carlosvillu.dev](https://ugc.carlosvillu.dev) (desplegada en un VPS con Caddy; T0.13). El desarrollo local sigue siendo `pnpm dev` + Docker Compose. El despliegue es manual por ahora (CI y branch protection son una tarea pendiente).

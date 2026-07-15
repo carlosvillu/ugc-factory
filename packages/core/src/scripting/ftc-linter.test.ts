@@ -8,9 +8,10 @@
 // y sugerencia»).
 import { describe, expect, it } from 'vitest';
 
+import { makeBrief } from '@ugc/test-utils';
 import { AdScriptSchema, type AdScript } from '../contracts/ad-script';
 import type { GuardrailRule } from '../contracts/guardrail-flag';
-import { lintScript } from './ftc-linter';
+import { lintScript, lintScriptForBrief } from './ftc-linter';
 
 /**
  * Construye un `AdScript` VÁLIDO cuyo texto hablado es `fullText`. NO es la factory `makeAdScript`
@@ -234,5 +235,36 @@ describe('lintScript — cobertura de hook y cta', () => {
       ),
     };
     expect(lintScript(withDirtyVisual, CTX)).toEqual([]);
+  });
+});
+
+// ── T2.6 · `lintScriptForBrief`: la extracción de bannedClaims/briefLanguage DESDE el brief ────────
+// Es la función que usan N5 (al escribir la v1) y CP3 (al re-lintear una edición): que las dos lean
+// el brief IGUAL es lo que garantiza que el bloqueo server-side de CP3 reproduzca el de N5.
+describe('lintScriptForBrief (T2.6): saca bannedClaims/briefLanguage del brief', () => {
+  it('caza el claim prohibido del brief (`brand.banned_or_risky_claims`, en `meta.language`)', () => {
+    // makeBrief trae banned=['cura el acné'], language='es'. Un guion `es` que lo dice se flaggea.
+    const brief = makeBrief();
+    const flags = lintScriptForBrief(makeScript({ body: 'Este sérum cura el acné.' }), brief);
+    expect(flags.map((f) => f.rule)).toContain('banned_claim');
+  });
+
+  it('control negativo: un guion limpio contra el mismo brief NO produce flags', () => {
+    const brief = makeBrief();
+    expect(lintScriptForBrief(makeScript({ body: 'Hidrata la piel a diario.' }), brief)).toEqual(
+      [],
+    );
+  });
+
+  it('el TRAP DE IDIOMA: un guion `en` NO dispara el claim `es` del brief (idiomas distintos)', () => {
+    // El claim vive en `es` (brief); el guion está en `en`. `lintScript` solo compara claims cuando
+    // los idiomas coinciden — un claim traducido no se caza (limitación honesta). Sin esto, un guion
+    // inglés perfectamente válido se bloquearía por un substring en español.
+    const brief = makeBrief();
+    const flags = lintScriptForBrief(
+      makeScript({ body: 'This cures acne fast.', language: 'en' }),
+      brief,
+    );
+    expect(flags.map((f) => f.rule)).not.toContain('banned_claim');
   });
 });

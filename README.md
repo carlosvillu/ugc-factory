@@ -5,7 +5,7 @@
 **Herramienta personal, mono-usuario y self-hosted.** No es un SaaS: no tiene billing, ni multi-tenancy, ni onboarding. Es la máquina de anuncios de un único operador técnico, y ese recorte es deliberado — permite invertir toda la complejidad en lo que de verdad importa.
 
 > [!IMPORTANT]
-> **Estado: en construcción (45 de 102 tareas, ~44 %).** Hoy el sistema **analiza productos y planifica lotes de anuncios, pero todavía no fabrica ni un solo vídeo.** La generación de media (fal.ai) y la composición (FFmpeg) aún no están construidas. Detalle honesto en [Estado del proyecto](#estado-del-proyecto).
+> **Estado: en construcción (51 de 103 tareas, ~50 %).** Hoy el sistema **analiza productos, planifica lotes de anuncios y escribe sus guiones (aprobables en CP3), pero todavía no fabrica ni un solo vídeo.** La generación de media (fal.ai) y la composición (FFmpeg) aún no están construidas. Detalle honesto en [Estado del proyecto](#estado-del-proyecto).
 
 ---
 
@@ -171,7 +171,7 @@ El desarrollo va por fases, tarea a tarea, con verificación observable en cada 
 
 <!-- STATUS-TABLE:BEGIN — generado por `pnpm readme:status`, no editar a mano -->
 
-**50 de 103 tareas cerradas (49 %).**
+**51 de 103 tareas cerradas (50 %).**
 
 | Fase                                                  | Qué entrega                                                                         | Estado         |
 | ----------------------------------------------------- | ----------------------------------------------------------------------------------- | -------------- |
@@ -180,7 +180,7 @@ El desarrollo va por fases, tarea a tarea, con verificación observable en cada 
 | **F1** · Análisis                                     | URL/texto → ProductBrief editable y aprobable en CP1                                | ✅ Completa    |
 | **F1b** · Deuda de cierre de F1                       | Deuda de cierre de F1                                                               | ✅ Completa    |
 | **F1c** · Deuda del primer uso real                   | Deuda del primer uso real                                                           | ✅ Completa    |
-| **F2** · Estrategia y guiones                         | Matriz con coste estimado → guiones aprobados                                       | 🔨 6/7         |
+| **F2** · Estrategia y guiones                         | Matriz con coste estimado → guiones aprobados                                       | ✅ Completa    |
 | **F2b** · Deuda destapada por la verificación de T2.3 | Deuda destapada por la verificación de T2.3 (acordada con el usuario el 2026-07-14) | ✅ Completa    |
 | **F3** · Galería de prompts y compilador              | Templates facetados → prompts auditables                                            | ⬜ No empezada |
 | **F4** · Generación fal.ai                            | Los assets de una variante, generados de verdad en fal.ai                           | ⬜ No empezada |
@@ -191,12 +191,12 @@ El desarrollo va por fases, tarea a tarea, con verificación observable en cada 
 
 <!-- STATUS-TABLE:END -->
 
-**Lo que funciona hoy**, de verdad y verificado: el monorepo con Postgres y Drizzle · auth mono-usuario · storage con descarga proxificada · colas pg-boss · **el orquestador transaccional del DAG** (checkpoints, retries, timeouts, cancelación, invalidación con linaje) · SSE en vivo · el canvas de React Flow · el ledger de gasto con credenciales cifradas · el design system completo · **el pipeline de análisis real N1→N2→N3** (Firecrawl/Jina + Haiku 4.5 + Sonnet 5) que produce un ProductBrief editable y aprobable · el listado de runs · la librería de personas · y el compositor de la matriz de lote con su estimador de coste.
+**Lo que funciona hoy**, de verdad y verificado: el monorepo con Postgres y Drizzle · auth mono-usuario · storage con descarga proxificada · colas pg-boss · **el orquestador transaccional del DAG** (checkpoints, retries, timeouts, cancelación, invalidación con linaje) · SSE en vivo · el canvas de React Flow · el ledger de gasto con credenciales cifradas · el design system completo · **el pipeline de análisis real N1→N2→N3** (Firecrawl/Jina + Haiku 4.5 + Sonnet 5) que produce un ProductBrief editable y aprobable · el listado de runs · la librería de personas · el compositor de la matriz de lote con su estimador de coste y su confirmación de gasto en CP2 · y **la escritura de guiones (N5, Sonnet 5) con sus guardrails FTC, editables y aprobables por variante en CP3** — el lote pasa a `scripted` cuando apruebas.
 
-**Lo que no existe todavía:** la UI de CP2 · los guiones (N5) · la galería y el compilador de prompts (N6) · **cualquier generación de vídeo o audio con fal.ai (N7)** · la composición con FFmpeg (N8) · el export, la publicación y las métricas.
+**Lo que no existe todavía:** la galería y el compilador de prompts (N6) · **cualquier generación de vídeo o audio con fal.ai (N7)** · la composición con FFmpeg (N8) · el export, la publicación y las métricas.
 
-> [!WARNING]
-> **Producción nunca ha arrancado.** Hoy el sistema solo corre en desarrollo (`pnpm dev` + Docker Compose). El build de producción (`next start`) falla al arrancar por un problema conocido con la resolución de las migraciones bajo Turbopack; la causa está diagnosticada y el fix validado, pero se aplicará en la tarea del despliegue (T0.13), que está bloqueada esperando VPS y dominio.
+> [!NOTE]
+> **Producción está en marcha** en [ugc.carlosvillu.dev](https://ugc.carlosvillu.dev) (desplegada en un VPS con Caddy; T0.13). El desarrollo local sigue siendo `pnpm dev` + Docker Compose. El despliegue es manual por ahora (CI y branch protection son una tarea pendiente).
 
 **Otras deudas conocidas** (documentadas, no escondidas): `pipeline_run.status` no lo mantiene nadie todavía —se deriva de los steps—; el KPI de "coste estimado" pinta $0,00 porque aún nadie escribe esa columna; y el rate-limit del login confía en `x-forwarded-for` sin trust boundary hasta que exista el proxy de Caddy.
 

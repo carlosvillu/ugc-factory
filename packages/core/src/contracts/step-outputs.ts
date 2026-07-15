@@ -113,3 +113,39 @@ export const N4OutputSchema = z.object({
   plan: BatchPlanSchema,
 });
 export type N4Output = z.infer<typeof N4OutputSchema>;
+
+/**
+ * N5 · GUIONIZACIÓN (T2.6, §7.2 N5): el ScriptWriter escribió un `ad_script` v1 por variante y los
+ * linteó (FTC, T2.5). Es el artefacto que abre CP3 (§7.1.b: el step pausa en `waiting_approval` con
+ * los guiones ya persistidos y linteados) y lo que el panel del editor lista.
+ *
+ * ARTEFACTO LIGERO A PROPÓSITO (patrón N3/N4): NO trae los guiones completos ni sus
+ * `guardrail_flags` inline. La FUENTE DE VERDAD son las filas `ad_script` del lote, que el panel de
+ * CP3 relee por REST (`GET /api/batches/:id/scripts`) para editar y aprobar. Aquí viajan solo el
+ * `batchId` (con qué lote guionizar), el `status` del writer y sus warnings —lo justo para el
+ * excerpt del SSE y para que el panel sepa a qué lote pedirle los guiones—. Meter cada guion inline
+ * obligaría a re-validar un objeto grande en cada lectura del artefacto y duplicaría la verdad que
+ * ya vive en la tabla.
+ *
+ * `scriptRefs` es la lista de referencias LIGERAS (una por guion persistido): `variantId` +
+ * `scriptId` + `filenameCode` + si tiene algún flag bloqueante. Es lo que el excerpt necesita para
+ * decir «6 guiones, 1 con aviso bloqueante» sin cargar el detalle. El detalle (`hook`/`scenes`/`cta`
+ * + `guardrail_flags` completos) se relee de `ad_script`.
+ */
+export const N5ScriptRefSchema = z.object({
+  variantId: UlidSchema,
+  scriptId: UlidSchema,
+  filenameCode: z.string(),
+  /** ¿Tiene algún flag `blocking:true`? Derivado del re-lint del writer; el guard REAL de la
+   *  aprobación vuelve a lintear server-side en CP3 (no se fía de este booleano). */
+  blocked: z.boolean(),
+});
+export type N5ScriptRef = z.infer<typeof N5ScriptRefSchema>;
+
+export const N5OutputSchema = z.object({
+  batchId: UlidSchema,
+  scriptRefs: z.array(N5ScriptRefSchema),
+  status: z.string(),
+  warnings: z.array(z.string()),
+});
+export type N5Output = z.infer<typeof N5OutputSchema>;

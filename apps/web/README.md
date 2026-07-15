@@ -13,7 +13,7 @@ pnpm --filter @ugc/web test       # vitest
 pnpm --filter @ugc/web test:e2e   # Playwright
 ```
 
-> El script `dev` no llama a `next dev` directamente: pasa por `scripts/dev.mjs`, un wrapper que inyecta la ruta absoluta de las migraciones. Bajo Turbopack, el `require.resolve` que las localiza devuelve un identificador numérico en vez de una ruta, y el arranque revienta. Es también el motivo de que **el build de producción (`next start`) no arranque todavía**: la causa está diagnosticada y el fix validado, pero se aplica en la tarea del despliegue.
+> El script `dev` no llama a `next dev` directamente: pasa por `scripts/dev.mjs`, un wrapper que inyecta la ruta absoluta de las migraciones. Bajo Turbopack, el `require.resolve` que las localiza devuelve un identificador numérico en vez de una ruta, y el arranque revienta. El build de producción resuelve lo mismo por su cuenta y **arranca** (producción está viva en [ugc.carlosvillu.dev](https://ugc.carlosvillu.dev), T0.13).
 
 Hay tres scripts de _smoke_ contra el mundo real, útiles para verificar a mano:
 

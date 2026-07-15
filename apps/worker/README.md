@@ -35,6 +35,7 @@ El consumer **no sabe** qué hace cada nodo. Solo sabe orquestar. Añadir un nod
 Un registro `node_key → StepExecutor` (`executors/index.ts`):
 
 - **`analysis.ts`** — `N1`, `N2`, `N3`: cáscaras finas sobre [`@ugc/services`](../../packages/services) (`runFirecrawlIngest`, `runVisualAnalyze`, `runSynthesizeBrief`). Toda la lógica está allí; aquí solo el enganche con el pipeline. `N2` sabe auto-descartarse cuando no hay imágenes que analizar: el step cierra como `skipped`, no como fallo.
+- **`write-scripts.ts`** — `N5`: escribe los guiones del lote (`runWriteScripts`, Sonnet 5), los pasa por el linter FTC (guardrails de §15) y persiste las filas `ad_script` v1. Es el primer step de un run de lote **nuevo** (arrancado al confirmar la matriz en CP2) y a la vez el checkpoint **CP3**: al terminar pausa en `waiting_approval` con los guiones listos para editar. Idempotente por `step_run.id` — un reintento no vuelve a pagar Sonnet.
 - **`demo.ts`** — una única implementación parametrizada (`sleepMs`, `failRate`, `hang`) registrada bajo varios `node_key`. Es el andamiaje que permite ejercitar el orquestador —retries, backoff, timeouts, checkpoints, cancelación— **sin gastar un céntimo en APIs reales**.
 
 Los executors de generación (fal.ai) y composición (FFmpeg) aún no existen: son las fases F4 y F5.

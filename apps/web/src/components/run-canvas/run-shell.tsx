@@ -14,6 +14,8 @@ import { BriefEditor } from '@/components/checkpoints/brief-editor';
 import { useBriefCheckpoint } from '@/components/checkpoints/use-brief-checkpoint';
 import { MatrixPanel } from '@/components/checkpoints/matrix-panel';
 import { useMatrixCheckpoint } from '@/components/checkpoints/use-matrix-checkpoint';
+import { ScriptsPanel } from '@/components/checkpoints/scripts-panel';
+import { useScriptsCheckpoint } from '@/components/checkpoints/use-scripts-checkpoint';
 import { RunCanvas } from './run-canvas';
 import { StepPanel } from './step-panel';
 import { formatCost } from './status';
@@ -53,7 +55,12 @@ export function RunShell({ runId }: { runId: string }) {
   // manda igualmente en el orden de comprobación: si por lo que fuera hubiera dos artefactos
   // reconocibles, gana el que bloquea al otro.
   const cp2 = useMatrixCheckpoint();
-  const checkpointOpen = cp1 !== null || cp2 !== null;
+  // CP3 (T2.6): el checkpoint de GUIONES (N5). Mismo trato que CP1/CP2 —el canvas sigue montado, el
+  // inspector genérico se retira—. Vive en el run de N5 (el que arranca la aprobación de CP2), un
+  // run DISTINTO del de análisis: aquí NUNCA coexiste con CP1/CP2 (son de otro run). El editor pide
+  // los guiones del lote por REST; el artefacto de N5 solo trae el `batchId`.
+  const cp3 = useScriptsCheckpoint();
+  const checkpointOpen = cp1 !== null || cp2 !== null || cp3 !== null;
 
   return (
     // `h-full` (no `h-dvh`): desde T1.13 el viewport lo fija el layout del grupo `(app)`,
@@ -75,6 +82,8 @@ export function RunShell({ runId }: { runId: string }) {
           />
         ) : cp2 !== null ? (
           <MatrixPanel stepId={cp2.stepId} brief={cp2.brief} config={cp2.config} />
+        ) : cp3 !== null ? (
+          <ScriptsPanel stepId={cp3.stepId} batchId={cp3.batchId} />
         ) : (
           <StepPanel />
         )}

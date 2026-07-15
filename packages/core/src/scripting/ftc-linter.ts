@@ -36,6 +36,7 @@
 //      inventa una detección que no tiene).
 import type { AdScript } from '../contracts/ad-script';
 import type { GuardrailFlag, GuardrailRule } from '../contracts/guardrail-flag';
+import type { ProductBrief } from '../contracts/product-brief';
 
 /** Opciones del linter. `bannedClaims` y `briefLanguage` salen del BRIEF; `script.language` (el
  *  idioma destino) lo lee el linter del propio guion — ver el trap de idioma en la cabecera. */
@@ -233,4 +234,19 @@ export function lintScript(script: AdScript, options: LintScriptOptions): Guardr
   }
 
   return flags;
+}
+
+/**
+ * Lintea un guion sacando `bannedClaims`/`briefLanguage` del BRIEF — el ÚNICO sitio donde se decide
+ * de dónde salen esos dos campos (`brand.banned_or_risky_claims` y `meta.language`). Lo usan N5 (al
+ * escribir la v1, en el executor del worker) y CP3 (al re-lintear una edición, server-side): tener
+ * la extracción en una función evita que los dos caminos lean rutas distintas del brief y diverjan
+ * —el bloqueo server-side debe ser IDÉNTICO al que produjo la v1, o un flag aparecería/desaparecería
+ * entre versiones sin que el texto cambie—.
+ */
+export function lintScriptForBrief(script: AdScript, brief: ProductBrief): GuardrailFlag[] {
+  return lintScript(script, {
+    bannedClaims: brief.brand.banned_or_risky_claims ?? [],
+    briefLanguage: brief.meta.language,
+  });
 }

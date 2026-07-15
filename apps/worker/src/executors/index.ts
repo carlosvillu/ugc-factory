@@ -11,6 +11,7 @@ import {
   makeN3Executor,
 } from './analysis';
 import { makeN4Executor } from './strategy';
+import { makeN5Executor } from './write-scripts';
 
 export interface ExecutorRegistryDeps {
   /** Decisor de fallo de los executors de demo, resuelto por bootstrap. */
@@ -46,6 +47,13 @@ export function makeExecutorRegistry({
     // grupo de deps de un solo campo. Cuando F2 traiga N5 (que sí paga Sonnet), ese grupo nacerá
     // con su primera dep de verdad.
     N4: makeN4Executor({ db: analysis.db }),
+    // N5 · GUIONIZACIÓN (T2.6): PAGA Sonnet 5, así que necesita BD + secretos + el override de base
+    // URL del cliente de Anthropic (que el stack E2E apunta a su fake). `WriteScriptsExecutorDeps` es
+    // un SUBCONJUNTO de `AnalysisExecutorDeps`, así que se le pasa el grupo del análisis TAL CUAL —
+    // el patrón que N4 abrió reusando `analysis.db`. Pasar el objeto entero (no desestructurar) es
+    // deliberado: `secretsKey` es un GETTER perezoso (un worker sin APP_MASTER_KEY arranca igual y
+    // solo revienta el nodo que la use); leerlo aquí lo forzaría en el boot y rompería esa promesa.
+    N5: makeN5Executor(analysis),
     'demo.sleep': demo,
     'demo.fail': demo,
     // `demo.hang` (T0.9): el executor no retorna nunca (espera al abort) — es el

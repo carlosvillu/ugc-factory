@@ -8,6 +8,7 @@
 import { z } from 'zod';
 import {
   BatchEstimateSchema,
+  BatchScriptsSchema,
   ErrorEnvelopeSchema,
   type BatchConfig,
   type CheckpointDecision,
@@ -119,6 +120,16 @@ const jsonInit = (body: unknown, method: string): RequestInit => ({
 // payload de dominio que consumir, solo confirmar el 2xx. Se valida igual (una
 // respuesta sin `ok` es un contrato roto).
 const OkSchema = z.object({ ok: z.literal(true) }).loose();
+
+/** La respuesta de `POST /api/steps/:id/approve` (T2.6): `ok` + un `nextRunId` OPCIONAL. Es un
+ *  schema aparte de `OkSchema` a propósito: `OkSchema` es `.loose()`, así que `nextRunId` llegaría
+ *  en el JSON pero NO en el TIPO inferido (`loose` no lo declara) — y el cliente que navega a CP3 lo
+ *  perdería en compilación. Aprobar CP2 arranca el run de N5 y devuelve su id aquí; el resto de
+ *  checkpoints (CP1, CP3, aprobar sin efecto) lo ven `undefined`. */
+const ApproveResponseSchema = z.object({
+  ok: z.literal(true),
+  nextRunId: z.string().optional(),
+});
 
 export const api = {
   get: <S extends z.ZodType>(path: string, schema: S) => apiFetch(path, schema),
@@ -253,6 +264,9 @@ export const batchActions = {
    *  del step (la misma procedencia que la confirmación), en vez de fiarse del que diga el cliente. */
   estimate: (stepId: string, config: BatchConfig) =>
     api.post('/api/batches/estimate', BatchEstimateSchema, { stepId, config }),
+  /** Los guiones VIGENTES de un lote (CP3, T2.6): lo que el editor de guiones lista y edita. El
+   *  servidor reconstruye cada `AdScript` válido (fila + matriz) — ver `server/batch-scripts.ts`. */
+  getScripts: (batchId: string) => api.get(`/api/batches/${batchId}/scripts`, BatchScriptsSchema),
 };
 
 export const runActions = {
@@ -285,7 +299,13 @@ export const runActions = {
    *  vacío y el servidor no persiste nada — que es el caso de la rama URL y de los checkpoints
    *  genéricos del canvas. */
   approve: (stepId: string, decision?: CheckpointDecision) =>
-    api.post(`/api/steps/${stepId}/approve`, OkSchema, decision === undefined ? {} : { decision }),
+    api.post(
+      `/api/steps/${stepId}/approve`,
+      // `ApproveResponseSchema` (no `OkSchema`): aprobar CP2 devuelve el `nextRunId` del run de N5,
+      // y `OkSchema.loose()` lo dejaría fuera del TIPO. Los demás checkpoints lo ven `undefined`.
+      ApproveResponseSchema,
+      decision === undefined ? {} : { decision },
+    ),
   edit: (stepId: string, outputRefs: unknown) =>
     api.post(`/api/steps/${stepId}/edit`, OkSchema, { outputRefs }),
   reject: (stepId: string) => api.post(`/api/steps/${stepId}/reject`, OkSchema),

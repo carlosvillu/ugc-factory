@@ -22,6 +22,11 @@ import { BatchConfigSchema, type BatchConfig, type ProductBrief } from '@ugc/cor
 
 import { MatrixPanel } from './matrix-panel';
 
+// CP2 navega a CP3 tras confirmar (T2.6): `matrix-panel` usa `useRouter().push`. En jsdom no hay
+// App Router montado, así que se mockea `next/navigation` (mismo patrón que los tests del intake).
+const push = vi.fn();
+vi.mock('next/navigation', () => ({ useRouter: () => ({ push }) }));
+
 const STEP_ID = '01J000000000000000000STEP0';
 
 /** El brief: 5 ángulos, 2 hooks cada uno, y un `avatar_hint` con el que Lucía casa. */
@@ -224,6 +229,26 @@ describe('CP2 · matriz y confirmación de gasto', () => {
       expect(approved).toHaveBeenCalledWith({
         decision: { kind: 'matrix', config: INITIAL_CONFIG },
       });
+    });
+  });
+
+  test('confirmar NAVEGA al run de N5 cuando la aprobación devuelve `nextRunId` (CP2→CP3)', async () => {
+    const user = userEvent.setup();
+    push.mockClear();
+    server.use(
+      // La aprobación de CP2 arranca el run de N5 y devuelve su id: la app debe navegar a él (ahí
+      // vive CP3). Sin esto, el editor de guiones nunca se vería.
+      http.post(`*/api/steps/${STEP_ID}/approve`, () =>
+        HttpResponse.json({ ok: true, nextRunId: '01J0000000000000000N5RUN0' }),
+      ),
+    );
+    renderPanel();
+    await totalCost();
+
+    await user.click(screen.getByRole('button', { name: /confirmar y crear 6 variantes/i }));
+
+    await waitFor(() => {
+      expect(push).toHaveBeenCalledWith('/runs/01J0000000000000000N5RUN0');
     });
   });
 

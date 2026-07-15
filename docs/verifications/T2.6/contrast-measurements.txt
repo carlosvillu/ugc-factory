@@ -1,0 +1,20 @@
+CONTRAST — WCAG ratios (getComputedStyle color vs composited background)
+
+--- CORRECTED (alpha-composited) ---
+DS Alert tone="danger" (the flag-badge primitive, raw bg rgba(239,68,68,0.1)):
+  DARK : text rgb(244,244,245) on composited rgb(37,20,22)  → 16.0:1  PASS (>4.5)
+  LIGHT: text rgb(24,24,27)   on composited rgb(239,221,223) → 13.58:1 PASS (>4.5)
+
+approve-blocked alert text (text-danger on surface):
+  DARK : 4.89:1 PASS   LIGHT: 6.32:1 PASS
+
+Buttons (aprobar todas / confirmar guiones): DARK 14.58 / 6.54 PASS ; LIGHT 15.3 / 6.1 PASS
+
+approved-count ("6 / 6 aprobadas", DS token text-text-3 = --text-3, a GLOBAL tertiary token used in 108 places):
+  DARK : text rgb(113,113,122) on rgb(20,20,22) → 3.81:1  (below 4.5 — dark only)
+  LIGHT: 4.83:1 PASS
+  → Pre-existing DS tertiary-text token, NOT introduced by T2.6. Routed observation to DS, not a T2.6 defect.
+
+NOTE: an earlier naive measurement reported flag-badge 3.42/2.8 FAIL; that was a
+MEASUREMENT ARTIFACT (treated the danger-soft rgba(...,0.1) fill as opaque red).
+Corrected alpha compositing shows the Alert danger primitive passes AA with wide margin.

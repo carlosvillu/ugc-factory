@@ -125,11 +125,15 @@ export {
   N2OutputSchema,
   N3OutputSchema,
   N4OutputSchema,
+  N5OutputSchema,
+  N5ScriptRefSchema,
   type SkippedOutput,
   type N1Output,
   type N2Output,
   type N3Output,
   type N4Output,
+  type N5Output,
+  type N5ScriptRef,
 } from './step-outputs';
 // La DECISIÓN de un checkpoint (T1.11): lo que el humano RESUELVE (CP1: subir fotos vs generar
 // packshot-IA; CP2: con qué config se compone el lote), que NO es el artefacto que edita. Canal
@@ -139,9 +143,13 @@ export {
   CheckpointDecisionSchema,
   BriefCheckpointDecisionSchema,
   MatrixCheckpointDecisionSchema,
+  ScriptsCheckpointDecisionSchema,
+  ScriptVerdictSchema,
   type CheckpointDecision,
   type BriefCheckpointDecision,
   type MatrixCheckpointDecision,
+  type ScriptsCheckpointDecision,
+  type ScriptVerdict,
 } from './checkpoint-decision';
 // La CONFIG de CP2 (T2.3): lo que el usuario elige en el panel de la matriz. La MISMA forma sirve
 // para estimar (`POST /api/batches/estimate`) y para confirmar (la `decision` del checkpoint) —
@@ -195,6 +203,15 @@ export {
   type GuardrailFlag,
   type GuardrailRule,
 } from './guardrail-flag';
+// La VISTA DE LECTURA de CP3 (T2.6): lo que `GET /api/batches/:id/scripts` devuelve para que el
+// editor de guiones pinte y EDITE los guiones vigentes de un lote. Reconstruye el `AdScript` válido
+// (con `filenameCode`/`sharedBodyKey`, que la fila `ad_script` no guarda) desde la fila + la matriz.
+export {
+  BatchScriptSchema,
+  BatchScriptsSchema,
+  type BatchScript,
+  type BatchScripts,
+} from './batch-scripts';
 // Listado `GET /api/runs` (T1.17): la vista pública de la lista de runs + LA DERIVACIÓN del
 // estado agregado a partir de los steps (`deriveRunStatus`). El agregado `pipeline_run.status`
 // NO lo mantiene nadie (deuda de T0.8): la verdad son los estados de STEP, igual que en el SSE.

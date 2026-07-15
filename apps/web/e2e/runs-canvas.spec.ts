@@ -353,11 +353,26 @@ test.describe('canvas: títulos, visor del artefacto y controles (T1.16)', () =>
       await editor.getByRole('button', { name: /aprobar y continuar/i }).click();
       await waitCanvasStatus(page, 'N3', 'succeeded');
 
+      // CP2 (T2.3) hay que confirmarlo para que su panel retire el inspector genérico y N4 quede
+      // `succeeded`: solo entonces —con NINGÚN checkpoint pausado— vuelve la vista cockpit que
+      // este spec necesita para inspeccionar N3. Pero confirmar CP2 arranca N5 en un run NUEVO y
+      // la app NAVEGA a él (T2.6: `router.push(nextRunId)`), sacándonos de esta página. El run
+      // original sigue existiendo con N3/N4 en `succeeded` y SIN checkpoint pausado, así que se
+      // vuelve a él por URL para inspeccionar N3. Se espera a que la navegación de T2.6 asiente
+      // (`waitForURL`) ANTES de volver, o el `router.push` diferido nos re-arrastraría al run de N5.
       await waitCanvasStatus(page, 'N4', 'waiting_approval', 60_000);
+      const analysisPath = new URL(page.url()).pathname;
       await page.getByRole('button', { name: /confirmar y crear/i }).click();
-      await waitCanvasStatus(page, 'N4', 'succeeded', 30_000);
+      await page.waitForURL((u) => u.pathname.startsWith('/runs/') && u.pathname !== analysisPath, {
+        timeout: 30_000,
+      });
+      await page.goto(`/runs/${runId}`);
 
-      // El inspector de N3: su caja de output enseña el EXCERPT (200 chars del servidor).
+      // El inspector de N3: su caja de output enseña el EXCERPT (200 chars del servidor). Tras el
+      // reload el canvas se re-hidrata por SSE; se aguarda a que N3 esté `succeeded` (su nodo ya
+      // en la página) antes de abrir su panel, o el click carrearía contra un canvas vacío.
+      await waitCanvasStatus(page, 'N4', 'succeeded', 30_000);
+      await waitCanvasStatus(page, 'N3', 'succeeded');
       const panel = await openCanvasPanel(page, 'N3');
       await expect(panel.getByText('ProductBrief')).toBeVisible(); // título humano (§7.2 / DS)
       const excerpt = panel.locator('[data-slot="open-output-dialog"]');

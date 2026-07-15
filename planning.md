@@ -13,7 +13,7 @@
 | F0 | Fundaciones | Un DAG de demo corre en el canvas en el VPS con checkpoints, SSE, credenciales y gasto registrado | ☐ |
 | FD | Design system | `/design-system` muestra tokens y ~26 componentes fieles a Claude Design (dark/light, 4 acentos), lint de adherencia activo y skill frontend actualizada — se ejecuta tras T0.1, antes de continuar F0 | ☐ |
 | F1 | Análisis | URL real (o texto libre) → ProductBrief editable aprobado en CP1 | ☐ |
-| F2 | Estrategia y guiones (incluye Personas v1 y recetas) | Brief → matriz con coste estimado → guiones aprobados en CP3 | ☐ |
+| F2 | Estrategia y guiones (incluye Personas v1 y recetas) | Brief → matriz con coste estimado → guiones aprobados en CP3 | ✅ |
 | F3 | Galería y compilador | Templates facetados + compilador que produce `resolvedPrompt` auditables | ☐ |
 | F4 | Generación fal | Todos los assets de una variante generados de verdad vía fal.ai | ☐ |
 | F5 | Composición y export | Anuncio completo 9:16 con captions karaoke, C2PA y QA descargable | ☐ |
@@ -455,9 +455,10 @@ Decisiones del usuario (2026-07-07): la fase se ejecuta tras T0.1 y **antes** de
 - **Coste estimado**: ~$0,15
 - **Verificación**: pedir ángulo "testimonial" produce un guion creator-style demo sin "I bought this"; un claim médico prohibido inyectado a mano dispara el bloqueo con sugerencia compliant; el ángulo founder-origin llega reformulado en tercera persona.
 
-#### T2.6 · CP3: editor de guiones
+#### T2.6 · CP3: editor de guiones (+ puente N5→CP3) [x] 2026-07-15 — PASS (E2E de fase F2, journey LIVE oatly.com; 6 variantes `scripted` + `edited_by_user` en la editada + bloqueo server-side probado con POST directo), ver docs/verifications/T2.6/ (coste real $0,64)
 - **Depende de**: T2.3, T2.4, T2.5
 - **Entrega**: panel de CP3: lista de variantes con su guion, edición por escena y de hook/CTA, re-lint al guardar, aprobación por variante o del lote.
+- **AMPLIACIÓN DE ALCANCE (2026-07-15, regla 6, decisión del usuario)**: la Verificación exige el journey URL→CP1→CP2→CP3→6 variantes `scripted`, pero el run terminaba en CP2 — no existía el puente que ejecuta N5 (ScriptWriter, T2.4), persiste los `ad_script`, ni crea el checkpoint CP3. T2.6 lo construye. Diseño (pase de `feature-dev:code-architect`, verificado contra el código; NO toca el orquestador genérico): **N5 corre como el primer step (isCheckpoint, alwaysPause) de un RUN DE LOTE NUEVO** (`batchRunDefinition`, hermano de `analysisRunDefinition`), arrancado con `createRun` DENTRO de la misma tx de la aprobación de CP2 (`createBatchForStep` pasa a recibir el `withTransaction` del scope). El **executor N5** (worker, molde de N1-N4) llama `runWriteScripts` (que ya existe, T2.4), corre `lintScript` (T2.5) sobre cada guion v1 y persiste `ad_script` v1 con `guardrail_flags`; idempotencia de dinero por `step_run.id` (como N3) ⇒ **migración menor: `ad_script.origin_step_id`** (hoy no existe; `product_brief` sí lo tiene). CP3 pausa en `waiting_approval`; el cliente navega al run nuevo (`nextRunId` en la respuesta de `/approve`). El efecto de dominio de CP3 (`approveScriptsForStep`) aplica los veredictos por-variante en UNA tx: edita (v2 `edited_by_user`) + re-lint SERVER-SIDE + set `ad_variant.scripted` SOLO si no queda flag `blocking` (el guard vive en el servidor, no en el botón). Aprobación por-variante = veredictos dentro de UN payload `decision` (`kind:'scripts'`), no multi-POST. Esto es N5 (guionización, aguas arriba de generación); N6/N7 (T3.5/T4.11) quedan FUERA.
 - **Coste estimado**: ~$0,50
 - **Playwright permanente**: `apps/web/e2e/script-editor.spec.ts` cubre edición, re-lint con bloqueo y aprobación individual/del lote; `apps/web/e2e/phases/f2-scripts.spec.ts` conserva el journey mockeado CP1 → CP2 → CP3 con seis variantes en `scripted`. Ambos llevan `@f2`; el segundo además `@phase`.
 - **Verificación (E2E de la fase)**: URL real → CP1 → CP2 (matriz 6 variantes) → CP3: editar el hook de una variante, aprobar todo → las 6 `ad_variant` quedan en estado **`scripted`** (valor literal en BD), con `ad_script` versionado (`edited_by_user` en la editada). Criterio O2: interacción total <5 min.

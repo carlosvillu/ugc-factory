@@ -15,9 +15,7 @@
 export { runFirecrawlIngest } from './firecrawl-ingest';
 export { runVisualAnalyze } from './visual-analyze';
 export { runSynthesizeBrief } from './synthesize-brief';
-// `runWriteScripts` (N5, T2.4) NO sale al barrel TODAVÍA, y es deliberado: la regla de arriba dice
-// que el barrel expone solo lo que se consume DESDE FUERA del paquete, y hoy nadie fuera lo
-// consume — su primer consumidor será el panel de CP3 (T2.6), que es quien tiene los
-// `ad_variant.id` delante para persistir las filas de `ad_script`. Su test lo importa por ruta
-// relativa (como hacen los otros helpers internos). Exportarlo "por si acaso" es superficie muerta
-// y el gate (knip, `includeEntryExports`) lo caza — que es exactamente lo que queremos.
+// `runWriteScripts` (N5): su consumidor de runtime llegó en T2.6 — el executor de N5 (apps/worker)
+// lo llama para escribir los guiones del lote antes de pausar en CP3. Sale al barrel ahora que hay
+// quien lo importe desde FUERA del paquete (antes solo su test, por ruta relativa).
+export { runWriteScripts } from './write-scripts';

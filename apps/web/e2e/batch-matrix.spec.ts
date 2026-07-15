@@ -196,10 +196,18 @@ test.describe('CP2 · matriz y confirmación de gasto (T2.3)', () => {
       await expect(
         page.getByRole('button', { name: new RegExp(`crear ${String(expectedCount)} variantes`) }),
       ).toBeEnabled();
-      await page.getByRole('button', { name: /confirmar y crear/i }).click();
 
-      // El step avanza (por SSE) y el panel se retira solo.
-      await waitCanvasStatus(page, 'N4', 'succeeded', 30_000);
+      // CP2→N5 (T2.6): confirmar CREA el lote Y arranca, en la MISMA tx, el run de N5 (el
+      // ScriptWriter) — un run DISTINTO de este. La app navega a él (ahí vive CP3). Es el nuevo
+      // efecto observable de confirmar (antes de T2.6 el step N4 se quedaba `succeeded` en ESTA
+      // página; ahora el usuario ya no está en ella). La navegación es un punto de sincronización
+      // FIABLE: el `nextRunId` sale de `createRun` DENTRO de la tx de dominio, así que la URL solo
+      // cambia DESPUÉS de que `ad_batch`/`ad_variant` estén commiteados — sin carrera con el SELECT.
+      const analysisPath = new URL(page.url()).pathname;
+      await page.getByRole('button', { name: /confirmar y crear/i }).click();
+      await page.waitForURL((u) => u.pathname.startsWith('/runs/') && u.pathname !== analysisPath, {
+        timeout: 30_000,
+      });
 
       // ── LA CLÁUSULA, CONTRA LA BD ──────────────────────────────────────────────────────
       // El lote y sus variantes existen, en `planned`, y son EXACTAMENTE las de la matriz. Se

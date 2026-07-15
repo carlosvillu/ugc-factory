@@ -3,7 +3,55 @@
 // rechaza es un 400 antes de tocarla. Sin este schema el canal sería un jsonb libre, y la basura
 // se descubriría en F4 — cuando N7a intente leer la decisión y no entienda lo que hay.
 import { describe, expect, it } from 'vitest';
+import type { AdScript } from './ad-script';
 import { CheckpointDecisionSchema } from './checkpoint-decision';
+
+/** Un `AdScript` VÁLIDO mínimo (el CONTRATO de core, no la fila de BD) para el `editedScript` de un
+ *  veredicto de CP3. Se valida al construirlo implícitamente al pasarlo por el schema de decisión. */
+function makeScript(overrides: Partial<AdScript> = {}): AdScript {
+  return {
+    filenameCode: 'demo-x-es-30s',
+    hook: 'Mira esto.',
+    cta: 'Enlace abajo.',
+    scenes: [
+      {
+        t: 0,
+        seconds: 2,
+        segment: 'hook',
+        narration: 'Mira esto.',
+        visual: 'v',
+        camera: 'c',
+        emotion: 'e',
+      },
+      {
+        t: 2,
+        seconds: 5,
+        segment: 'body',
+        narration: 'Cuerpo del guion.',
+        visual: 'v',
+        camera: 'c',
+        emotion: 'e',
+      },
+      {
+        t: 7,
+        seconds: 2,
+        segment: 'cta',
+        narration: 'Enlace abajo.',
+        visual: 'v',
+        camera: 'c',
+        emotion: 'e',
+      },
+    ],
+    subtitles: [{ start: 0, end: 2, text: 'Mira esto.' }],
+    fullText: 'Mira esto. Cuerpo del guion. Enlace abajo.',
+    wordCount: 7,
+    estSeconds: 9,
+    tone: 'directo',
+    language: 'es',
+    sharedBodyKey: 'body-key',
+    ...overrides,
+  };
+}
 
 describe('CheckpointDecisionSchema (T1.11)', () => {
   it('acepta las salidas SIN imagen elegida de CP1 (subir fotos / packshot-IA, §7.2 N3)', () => {
@@ -72,5 +120,55 @@ describe('CheckpointDecisionSchema (T1.11)', () => {
 
   it('rechaza una decisión SIN `kind` (nadie sabría qué checkpoint la tomó)', () => {
     expect(CheckpointDecisionSchema.safeParse({ images: 'ai_packshot' }).success).toBe(false);
+  });
+
+  // ── T2.6 · CP3 · GUIONES ────────────────────────────────────────────────────────────────
+  describe('CP3 (scripts)', () => {
+    it('acepta veredictos por variante SIN edición (aprobar/rechazar el guion tal cual)', () => {
+      const decision = {
+        kind: 'scripts',
+        verdicts: [
+          { variantId: 'var_01', approved: true },
+          { variantId: 'var_02', approved: false },
+        ],
+      };
+      const parsed = CheckpointDecisionSchema.safeParse(decision);
+      expect(parsed.success).toBe(true);
+      expect(parsed.data).toEqual(decision);
+    });
+
+    it('acepta un veredicto CON `editedScript` (el guion reescrito por el usuario)', () => {
+      const parsed = CheckpointDecisionSchema.safeParse({
+        kind: 'scripts',
+        verdicts: [{ variantId: 'var_01', approved: true, editedScript: makeScript() }],
+      });
+      expect(parsed.success).toBe(true);
+    });
+
+    it('RECHAZA `verdicts` vacío: una decisión de CP3 sin veredictos no significa nada', () => {
+      // Sin `.min(1)`, un `verdicts: []` aprobaría el step sin tocar ni una variante — el usuario
+      // creería haber decidido y ninguna variante llegaría a `scripted`.
+      expect(CheckpointDecisionSchema.safeParse({ kind: 'scripts', verdicts: [] }).success).toBe(
+        false,
+      );
+    });
+
+    it('RECHAZA un `editedScript` que NO es un AdScript válido (guion corrupto)', () => {
+      // El `editedScript` es INPUT del cliente: un guion sin escenas o con campos que faltan no
+      // puede persistirse como v2. La frontera lo para aquí, no en la BD.
+      expect(
+        CheckpointDecisionSchema.safeParse({
+          kind: 'scripts',
+          verdicts: [{ variantId: 'var_01', approved: true, editedScript: { hook: 'x' } }],
+        }).success,
+      ).toBe(false);
+    });
+
+    it('RECHAZA un veredicto sin `variantId` (no se sabe a qué variante aplica)', () => {
+      expect(
+        CheckpointDecisionSchema.safeParse({ kind: 'scripts', verdicts: [{ approved: true }] })
+          .success,
+      ).toBe(false);
+    });
   });
 });

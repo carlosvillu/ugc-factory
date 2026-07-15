@@ -178,14 +178,32 @@ export { seedPersonas } from './repos/persona-seed';
 // El LOTE (T2.3, CP2): la creación TRANSACCIONAL de `ad_batch` + sus `ad_variant` en `planned`. La
 // matriz se compone DENTRO de la función, con el id del lote ya asignado (es el
 // `batchDiscriminator` que hace globalmente único el `filename_code`, §12) — ver la cabecera del
-// repo. Las LECTURAS del lote (`getBatch`, `listBatchVariants`, `findBatchesByBrief`) NO salen al
-// barrel todavía: sus únicos consumidores viven DENTRO del paquete (los tests de integración, que
-// importan relativo) — knip veta el export sin consumidor de runtime, y saldrán con la pantalla del
-// lote de F2/F5, que es quien los va a llamar.
-export { createBatchWithVariants, type CreatedBatch } from './repos/batch.repo';
+// repo. `findBatchesByBrief` NO sale al barrel todavía (solo lo usan los tests de integración); sí
+// salen `getBatch` y `listBatchVariants`, que ESTRENAN consumidor de runtime en T2.6: el executor de
+// N5 saca del lote la matriz y el brief (`getBatch`) y resuelve `filenameCode→variantId` para
+// persistir cada guion (`listBatchVariants`).
+export {
+  createBatchWithVariants,
+  getBatch,
+  listBatchVariants,
+  type CreatedBatch,
+} from './repos/batch.repo';
+// GUIONES (T2.6, N5+CP3): la idempotencia de dinero de N5 (`findScriptsByOriginStep`), la
+// persistencia v1 del lote (`createScriptsForBatch`), la lectura del guion vigente de cada variante
+// para CP3 (`getLatestScriptsByBatch`) y la aplicación transaccional de los veredictos de CP3
+// (`applyScriptVerdicts`). Ver `repos/script.repo.ts`.
+export {
+  findScriptsByOriginStep,
+  createScriptsForBatch,
+  getLatestScriptsByBatch,
+  applyScriptVerdicts,
+  type ScriptToPersist,
+  type DecidedVerdict,
+} from './repos/script.repo';
 // Tipos de fila de las tablas del LOTE (T2.1): los consumen las factories makeAdBatch/
-// makeAdVariant/makeAdScript de @ugc/test-utils (los tests de constraints los insertan).
-export type { NewAdBatch, NewAdVariant, NewAdScript } from './schema/batch';
+// makeAdVariant/makeAdScript de @ugc/test-utils (los tests de constraints los insertan). `AdScriptRow`
+// (T2.6): la fila `ad_script` tal cual, que consumen el efecto de CP3 y el listado del panel.
+export type { NewAdBatch, NewAdVariant, NewAdScript, AdScriptRow } from './schema/batch';
 // Librería de PERSONAS (T2.0): el CRUD que consume `/api/personas` en web, la gestión de sus
 // imágenes de referencia y la lista que alimenta el endpoint de candidatas (la REGLA de
 // matching por `avatar_hint` es pura y vive en `@ugc/core/persona`; db solo lee).

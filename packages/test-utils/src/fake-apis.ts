@@ -24,7 +24,12 @@ import {
   JINA_MARKDOWN,
 } from './fixtures/firecrawl';
 import type { ProductBrief } from '@ugc/core/contracts';
-import { anthropicMessageResponse, anthropicBriefResponse } from './fixtures/anthropic';
+import {
+  anthropicMessageResponse,
+  anthropicBriefResponse,
+  anthropicScriptResponse,
+  scriptDraft,
+} from './fixtures/anthropic';
 import { makeBrief, makeVisualAnalysis } from './factories';
 import { makeTestPng } from './image-fixtures';
 
@@ -300,6 +305,65 @@ function briefForSynthesis(body: Record<string, unknown>, origin: string): Produ
   return FAKE_BRIEF;
 }
 
+/**
+ * ¿La request de `claude-sonnet-5` es del ScriptWriter (N5) y no del sintetizador (N3)? Los DOS usan
+ * el mismo modelo, así que NO se puede discriminar por `model`. Se discrimina por el SYSTEM prompt:
+ * el del guionista empieza por «Eres un guionista de anuncios UGC» (byte-estable, cacheado — §8 del
+ * prompt). El `system` viaja como array de bloques `{type:'text', text}` (cache_control por bloque).
+ */
+function isScriptWriting(body: Record<string, unknown>): boolean {
+  const system = body.system;
+  const blocks = Array.isArray(system) ? system : typeof system === 'string' ? [system] : [];
+  return blocks.some((b: unknown) => {
+    const text =
+      typeof b === 'string' ? b : typeof b === 'object' && b !== null && 'text' in b ? b.text : '';
+    return typeof text === 'string' && text.includes('guionista de anuncios UGC');
+  });
+}
+
+/** El TEXTO del user message (el ScriptWriter manda un único user con el brief recortado + las
+ *  semillas). Es de donde el fake saca cuántos hooks emitir y en qué idioma. */
+function scriptUserMessage(body: Record<string, unknown>): string {
+  const messages = Array.isArray(body.messages) ? body.messages : [];
+  for (const m of messages) {
+    if (
+      typeof m === 'object' &&
+      m !== null &&
+      'role' in m &&
+      (m as { role: unknown }).role === 'user'
+    ) {
+      const { content } = m as { content: unknown };
+      if (typeof content === 'string') return content;
+      // content puede ser array de bloques {type:'text', text}
+      if (Array.isArray(content)) {
+        return content
+          .map((c) =>
+            typeof c === 'object' && c !== null && 'text' in c
+              ? String((c as { text: unknown }).text)
+              : '',
+          )
+          .join('\n');
+      }
+    }
+  }
+  return '';
+}
+
+/** Construye la respuesta de guion para una request del ScriptWriter, leyendo del user message
+ *  cuántas semillas hay (`HOOK SEEDS (N; …)`) y el idioma destino (`TARGET LANGUAGE: xx`). Emitir el
+ *  número EXACTO de hooks es lo que satisface la biyección semilla↔hook que el writer exige. */
+function scriptResponseFor(body: Record<string, unknown>): Record<string, unknown> {
+  const message = scriptUserMessage(body);
+  const seedMatch = /HOOK SEEDS \((\d+);/.exec(message);
+  const seedCount = seedMatch ? Number(seedMatch[1]) : 1;
+  const langMatch = /TARGET LANGUAGE:\s*(\S+)/.exec(message);
+  const language = langMatch?.[1] ?? 'es';
+  // `nonce` estable-pero-distinto por request (idioma + nº de semillas) para que el body/cta no sean
+  // idénticos byte a byte entre grupos — no hace falta un contador global aquí.
+  const nonce = language.charCodeAt(0) + seedCount;
+  return anthropicScriptResponse(scriptDraft(seedCount, language, nonce));
+}
+
 export interface FakeExternalApis {
   /** Base URL del Firecrawl falso (para `firecrawlBaseUrl`). */
   firecrawlBaseUrl: string;
@@ -394,6 +458,14 @@ export async function startFakeExternalApis(): Promise<FakeExternalApis> {
       const model = typeof body.model === 'string' ? body.model : '';
       if (model === VISION_MODEL) {
         json(anthropicMessageResponse(FAKE_VISUAL_ANALYSIS));
+        return;
+      }
+      if (model === SYNTHESIS_MODEL && isScriptWriting(body)) {
+        // N5 · GUIONIZACIÓN (T2.4/T2.6). MISMO modelo que la síntesis, así que se discrimina por el
+        // system prompt del guionista (isScriptWriting) ANTES de la rama de síntesis. Devuelve un
+        // draft con tantos hooks como semillas pide el user message, en el idioma destino — lo justo
+        // para que el writer ensamble `AdScript` válidos y el status sea `scripted`.
+        json(scriptResponseFor(body));
         return;
       }
       if (model === SYNTHESIS_MODEL) {

@@ -198,10 +198,16 @@ async function resolvePersonaIds(db: Db, plan: BatchPlan): Promise<Map<string, s
   return new Map(rows.map((r) => [r.name, r.id]));
 }
 
-// NOTA: no hay un `getBatch(id)`. Lo escribí y knip lo cazó como export sin consumidor: la
-// creación ya DEVUELVE la fila (`CreatedBatch.batch`), y quien mira un lote por id todavía no
-// existe — llegará con la pantalla del lote (F2/F5). Un repo empieza con la query que necesitas HOY
-// (db.md §4); una que "seguro que hará falta" es código muerto que nadie mantiene.
+/**
+ * El lote por id (T2.6): el executor de N5 lo necesita para sacar la matriz (`BatchPlan`) y el
+ * `brief_id` del lote que la aprobación de CP2 creó. A diferencia de N4 —que arranca de una
+ * dependencia (N3) resuelta por el orquestador—, N5 corre en un run NUEVO sin dependencias: el único
+ * puntero que tiene al trabajo es el `batchId` de su config, y de él saca todo lo demás.
+ */
+export async function getBatch(db: Db, batchId: string): Promise<AdBatch | undefined> {
+  const [row] = await db.select().from(adBatch).where(eq(adBatch.id, batchId));
+  return row;
+}
 
 /** Las variantes de un lote, en orden estable por `filename_code` (lo que CP2 enseña tras crear
  *  el lote y lo que T2.4 recorre para escribir los guiones). */

@@ -14,11 +14,19 @@
 // persistir. Si hubiera dos caminos de aritmética, el usuario aprobaría un número y el sistema
 // crearía otro — y ese es el bug que ningún test de UI cazaría.
 //
-// ── ATOMICIDAD (misma lección que T1.10b) ───────────────────────────────────────────────────
+// ── ATOMICIDAD (misma lección que T1.10b, AMPLIADA en T2.6) ──────────────────────────────────
 // El lote se crea en la MISMA tx que la transición del step. Si `approveStep` commiteara y la
-// creación del lote fallara después, el run habría REANUDADO aguas abajo (hacia N5, el
-// ScriptWriter) sin lote que guionizar — y sin forma de reintentar (un segundo POST daría 409: el
-// step ya no está en `waiting_approval`). El usuario habría confirmado un gasto que no existe.
+// creación del lote fallara después, el run habría REANUDADO aguas abajo sin lote que guionizar —
+// y sin forma de reintentar (un segundo POST daría 409: el step ya no está en `waiting_approval`).
+// El usuario habría confirmado un gasto que no existe.
+//
+// T2.6 AÑADE UNA TERCERA MITAD A ESA MISMA TX: el ARRANQUE del run de guionización (N5). Aprobar CP2
+// no solo crea el lote: crea el run NUEVO (`batchRunDefinition`) cuyo primer step (N5) escribirá los
+// guiones y pausará en CP3. Los TRES —transición de CP2, `ad_batch`+`ad_variant`, y el
+// `pipeline_run` de N5 con su step encolado— commitean juntos o nada. Si `createRun` falla, el lote
+// tampoco persiste: es imposible quedar con un lote sin nadie que lo guionice, o con un run de N5
+// apuntando a un lote que el rollback borró. El `runId` nuevo se devuelve como `nextRunId` para que
+// el cliente NAVEGUE a él (CP3 vive en OTRO run que el SSE de CP2 no puede mostrar).
 import {
   N4OutputSchema,
   ProductBriefSchema,
@@ -27,6 +35,7 @@ import {
   type CheckpointDecision,
 } from '@ugc/core/contracts';
 import { planBatch } from '@ugc/core/strategy';
+import { batchRunDefinition, createRun, type WithTransaction } from '@ugc/core/orchestrator';
 import {
   createBatchWithVariants,
   findStep,
@@ -173,11 +182,19 @@ export async function estimateBatch(
  * INSERT reventaría contra el UNIQUE GLOBAL de §12 — un 500 justo al confirmar el gasto, que es el
  * peor momento posible.
  */
+/** El resultado de aprobar CP2: el lote creado + el id del run de N5 arrancado en la MISMA tx. El
+ *  `nextRunId` viaja hasta la respuesta de `/approve` para que el cliente navegue a CP3. */
+export interface BatchCheckpointResult {
+  batch: CreatedBatch;
+  nextRunId: string;
+}
+
 export async function createBatchForStep(
   db: Db,
+  withTransaction: WithTransaction,
   outputRefs: unknown,
   decision: CheckpointDecision | undefined,
-): Promise<CreatedBatch | undefined> {
+): Promise<BatchCheckpointResult | undefined> {
   if (decision?.kind !== 'matrix') return undefined;
 
   const artifact = N4OutputSchema.safeParse(outputRefs);
@@ -212,7 +229,7 @@ export async function createBatchForStep(
     }
   })();
 
-  return createBatchWithVariants(db, {
+  const batch = await createBatchWithVariants(db, {
     projectId: data.projectId,
     briefId: artifact.data.briefId,
     tier: config.tier,
@@ -223,4 +240,16 @@ export async function createBatchForStep(
     costEstimatedCents: estimate.total.maxCents,
     composePlan: (batchId) => planBatch({ ...args, batchDiscriminator: batchId }).plan,
   });
+
+  // ── EL ARRANQUE DEL RUN DE N5, EN ESTA MISMA TX (T2.6) ──────────────────────────────────────
+  // `createRun` inserta el `pipeline_run` nuevo + su step N5 (root, checkpoint, alwaysPause) y
+  // ENCOLA N5, todo dentro del `withTransaction` del scope de dominio (= savepoint sobre la tx de la
+  // aprobación de CP2). Si esto lanza, el `createBatchWithVariants` de arriba se deshace con el
+  // rollback de la tx externa — el invariante de atomicidad del comentario de cabecera.
+  const { runId } = await createRun(
+    { withTransaction },
+    batchRunDefinition(data.projectId, batch.batch.id),
+  );
+
+  return { batch, nextRunId: runId };
 }

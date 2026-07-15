@@ -73,6 +73,7 @@ export const POST = withAuth(
       const db = getDb();
       const boss = await getBoss();
 
+      let nextRunId: string | undefined;
       try {
         await withDomainTransaction(
           db,
@@ -83,12 +84,19 @@ export const POST = withAuth(
             // transición el `output_refs` es el mismo (aprobar sin editar no lo toca).
             const step = await findStep(tx, params.id);
             await approveStep({ withTransaction }, params.id);
-            // EL EFECTO DE DOMINIO del checkpoint, resuelto por la FORMA de su artefacto (T2.3):
-            // CP1 (brief) aprueba el `product_brief`; CP2 (matriz) CREA el `ad_batch` y sus
-            // `ad_variant` en `planned`. No-op para cualquier otro step. El registro vive en
-            // `server/domain-effects.ts` — el handler ya no encadena un `await xForStep()` por
-            // checkpoint (deuda que T1.11 anotó y esta tarea paga).
-            await applyDomainEffect(tx, step?.outputRefs, body.decision);
+            // EL EFECTO DE DOMINIO del checkpoint, resuelto por la FORMA de su artefacto:
+            // CP1 (brief) aprueba el `product_brief`; CP2 (matriz) CREA el `ad_batch` + sus
+            // `ad_variant` Y arranca el run de N5 (T2.6, devuelve su `nextRunId`); CP3 (guiones)
+            // aplica los veredictos por-variante. No-op para cualquier otro step. El registro vive
+            // en `server/domain-effects.ts`. El `withTransaction` se le PASA porque CP2 arranca el
+            // run de N5 con `createRun` en esta MISMA tx (atomicidad lote+run).
+            const effect = await applyDomainEffect(
+              tx,
+              withTransaction,
+              step?.outputRefs,
+              body.decision,
+            );
+            nextRunId = effect.nextRunId;
             // No-op si el body no trajo decisión. Dentro de la tx ⇒ si la transición hubiera
             // fallado (409: el step ya no está en `waiting_approval`), no queda fila de decisión.
             await persistCheckpointDecision(tx, params.id, body.decision);
@@ -99,10 +107,12 @@ export const POST = withAuth(
       }
 
       getRequestLogger().info(
-        { step_id: params.id, decision_kind: body.decision?.kind },
+        { step_id: params.id, decision_kind: body.decision?.kind, next_run_id: nextRunId },
         'checkpoint aprobado',
       );
-      return Response.json({ ok: true });
+      // `nextRunId` (T2.6): presente SOLO cuando la aprobación de CP2 arrancó el run de N5. Aditivo:
+      // los callers que no lo esperan (CP1, CP3, aprobar sin efecto) lo ven `undefined` y lo ignoran.
+      return Response.json({ ok: true, ...(nextRunId !== undefined && { nextRunId }) });
     },
     { params: ParamsSchema, body: BodySchema },
   ),

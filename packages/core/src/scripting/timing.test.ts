@@ -2,13 +2,14 @@
 // que los segundos salen de CONTAR PALABRAS y no de creerse al LLM.
 import { describe, expect, it } from 'vitest';
 
-import { secondsForText, WORDS_PER_SECOND, type AdSegment } from '../contracts';
+import { secondsForText, WORDS_PER_SECOND, type AdScript, type AdSegment } from '../contracts';
 import { DURATION_PRESETS } from '../strategy/presets';
 import {
   computeSceneTiming,
   estSecondsOf,
   fullTextOf,
   MIN_SCENE_SECONDS,
+  rebuildEditedScript,
   subtitlesFromScenes,
   totalWords,
   wordBudgetFor,
@@ -18,6 +19,29 @@ import {
 
 function draft(narration: string, segment: AdSegment): DraftScene & { segment: AdSegment } {
   return { narration, visual: 'plano medio', camera: 'estática', emotion: 'cercana', segment };
+}
+
+/** Un `AdScript` VÁLIDO armado con las MISMAS primitivas que `assembleScript` (timing + derivaciones)
+ *  — así el test de round-trip prueba PARIDAD real, no una reconstrucción hecha a medida. */
+function makeScript(narrations: { hook: string; body: string; cta: string }): AdScript {
+  const scenes = computeSceneTiming([
+    draft(narrations.hook, 'hook'),
+    draft(narrations.body, 'body'),
+    draft(narrations.cta, 'cta'),
+  ]);
+  return {
+    filenameCode: 'acme-hook01-es-12s',
+    sharedBodyKey: 'body-shared-1',
+    tone: 'cercano',
+    language: 'es',
+    hook: narrations.hook,
+    cta: narrations.cta,
+    scenes,
+    subtitles: subtitlesFromScenes(scenes),
+    fullText: fullTextOf(scenes),
+    wordCount: totalWords(scenes),
+    estSeconds: estSecondsOf(scenes),
+  };
 }
 
 describe('la regla word_count ÷ 2,5 (§7.2 N5)', () => {
@@ -88,5 +112,58 @@ describe('subtitulos y agregados', () => {
     );
     expect(wordsInSegment(scenes, 'hook')).toBe(5);
     expect(wordsInSegment(scenes, 'cta')).toBe(0);
+  });
+});
+
+describe('rebuildEditedScript (CP3, T2.6)', () => {
+  it('un guion SIN editar reconstruye byte a byte el mismo objeto (no inventa v2 espuria)', () => {
+    const script = makeScript({
+      hook: 'esto lo cambia todo',
+      body: 'lo probé una semana y funciona de verdad',
+      cta: 'link en la bio',
+    });
+    // Determinismo/paridad: `rebuildEditedScript` deriva TODO de las narraciones con las mismas
+    // primitivas que `makeScript` (= `assembleScript`), así que un guion intacto vuelve idéntico.
+    expect(rebuildEditedScript(script)).toEqual(script);
+  });
+
+  it('editar la narración de una escena recomputa hook/cta/fullText/timing (LA superficie editable)', () => {
+    const original = makeScript({
+      hook: 'hook viejo con cuatro palabras',
+      body: 'body original de seis palabras aqui',
+      cta: 'cta vieja aqui',
+    });
+    // El cliente cambia SOLO la narración de la escena hook (y deja fullText/hook/timing RANCIOS,
+    // como haría el navegador, que no calcula timing). El servidor debe re-derivar desde la escena.
+    const staleEdit: AdScript = {
+      ...original,
+      scenes: original.scenes.map((s) =>
+        s.segment === 'hook' ? { ...s, narration: 'hook nuevo con siete palabras nuevas hoy' } : s,
+      ),
+      // fullText/hook DELIBERADAMENTE viejos: es justo lo que el bug de staleness dejaría pasar.
+    };
+    const rebuilt = rebuildEditedScript(staleEdit);
+
+    // hook (top-level) se DERIVA de la escena hook, no del campo rancio.
+    expect(rebuilt.hook).toBe('hook nuevo con siete palabras nuevas hoy');
+    // fullText incluye la narración NUEVA, no la vieja (esto es lo que el re-lint escanea).
+    expect(rebuilt.fullText).toContain('hook nuevo con siete palabras nuevas hoy');
+    expect(rebuilt.fullText).not.toContain('hook viejo');
+    // El timing de la escena hook se recalculó (7 palabras ÷ 2,5 = 2,8 s), no quedó el viejo (4→1,6).
+    expect(rebuilt.scenes[0]?.seconds).toBe(2.8);
+    // cta intacta (no se tocó su escena) sigue derivándose de su escena cta.
+    expect(rebuilt.cta).toBe('cta vieja aqui');
+  });
+
+  it('hook y cta (top-level) son el join de las narraciones de sus escenas de segmento', () => {
+    const script = makeScript({ hook: 'uno dos', body: 'tres cuatro cinco', cta: 'seis siete' });
+    const rebuilt = rebuildEditedScript(script);
+    expect(rebuilt.hook).toBe('uno dos');
+    expect(rebuilt.cta).toBe('seis siete');
+    // La identidad (filenameCode/sharedBodyKey/tone/language) NO se deriva del texto: se conserva.
+    expect(rebuilt.filenameCode).toBe('acme-hook01-es-12s');
+    expect(rebuilt.sharedBodyKey).toBe('body-shared-1');
+    expect(rebuilt.tone).toBe('cercano');
+    expect(rebuilt.language).toBe('es');
   });
 });

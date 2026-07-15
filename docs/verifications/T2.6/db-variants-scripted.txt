@@ -1,0 +1,10 @@
+                         filename_code                          |  status  
+----------------------------------------------------------------+----------
+ oatly-cafe-perfecto-si-hook01-01kxjwyfjdkx-es-12s-01kxjxm1vfqq | scripted
+ oatly-cafe-perfecto-si-hook02-01kxjwyfjdkx-es-12s-01kxjxm1vfqq | scripted
+ oatly-el-cambio-que-no-hook01-01kxgv0hs4bt-es-12s-01kxjxm1vfqq | scripted
+ oatly-el-cambio-que-no-hook02-01kxgv0hs4bt-es-12s-01kxjxm1vfqq | scripted
+ oatly-una-eleccion-que-hook01-01kxjwyfjh21-es-12s-01kxjxm1vfqq | scripted
+ oatly-una-eleccion-que-hook02-01kxjwyfjh21-es-12s-01kxjxm1vfqq | scripted
+(6 rows)
+

@@ -1,0 +1,10 @@
+                              filename_code                               |  status  | v1_blocking_flag 
+--------------------------------------------------------------------------+----------+------------------
+ oatly-oat-drink-el-cafe-con-aven-hook01-01kxjwyfjdkx-es-12s-01kxjyad6a2q | planned  | true
+ oatly-oat-drink-el-cafe-con-aven-hook02-01kxjwyfjdkx-es-12s-01kxjyad6a2q | scripted | 
+ oatly-oat-drink-el-test-a-ciegas-hook01-01kxjwyfjdkx-es-12s-01kxjyad6a2q | scripted | 
+ oatly-oat-drink-el-test-a-ciegas-hook02-01kxjwyfjdkx-es-12s-01kxjyad6a2q | scripted | 
+ oatly-oat-drink-tu-cafe-diario-t-hook01-01kxjwyfjdkx-es-12s-01kxjyad6a2q | scripted | 
+ oatly-oat-drink-tu-cafe-diario-t-hook02-01kxjwyfjdkx-es-12s-01kxjyad6a2q | scripted | 
+(6 rows)
+

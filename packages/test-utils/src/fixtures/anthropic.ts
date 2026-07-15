@@ -148,6 +148,69 @@ export function anthropicBriefResponse(
   };
 }
 
+// ── Fixtures del ScriptWriter (T2.4/T2.6, N5) ───────────────────────────────────────────────
+// El ScriptWriter (`SCRIPT_WRITER_MODEL === 'claude-sonnet-5'`, el MISMO que la síntesis) emite un
+// JSON `{ tone, hooks[{seedIndex,...}], body[...], cta[...] }` por GRUPO de variantes. El fake lo
+// discrimina de la síntesis por el system prompt (empieza por «Eres un guionista…»), no por el modelo.
+//
+// PALABRAS CORTAS A PROPÓSITO: el objetivo `hook_test` tiene un presupuesto de palabras muy ajustado
+// (§8.4). Narraciones cortas dejan que `assembleScript` calcule un `estSeconds` DENTRO del techo, así
+// el status del writer es `scripted` (no `over_budget`) — que es lo que la Verificación de fase
+// necesita ver para que las 6 variantes lleguen a `scripted`.
+
+/**
+ * Draft de guion del ScriptWriter para un grupo de `seedCount` hooks en `language`. Un hook por
+ * semilla (seedIndex 0..seedCount-1, contiguos: la biyección que exige `hookBijectionProblem`), un
+ * body y un cta compartidos. `nonce` diferencia el texto entre llamadas (grupos/idiomas distintos).
+ */
+export function scriptDraft(seedCount: number, language: string, nonce: number): unknown {
+  const isEs = language === 'es';
+  const scene = (narration: string) => ({
+    narration,
+    visual: 'primer plano',
+    camera: 'handheld',
+    emotion: 'cercanía',
+  });
+  return {
+    tone: isEs ? 'cercano' : 'friendly',
+    hooks: Array.from({ length: seedCount }, (_, i) => ({
+      seedIndex: i,
+      ...scene(isEs ? `Mira esto ya ${String(i)}.` : `Look at this now ${String(i)}.`),
+    })),
+    body: [
+      scene(isEs ? `Cambió todo aquí ${String(nonce)}.` : `It changed things ${String(nonce)}.`),
+    ],
+    cta: [scene(isEs ? 'Enlace abajo.' : 'Link below.')],
+  };
+}
+
+/** Cuerpo de respuesta Messages API con un draft de guion. `model` = claude-sonnet-5 (T2.4). */
+export function anthropicScriptResponse(
+  draft: unknown,
+  usage: Partial<{
+    input_tokens: number;
+    output_tokens: number;
+    cache_creation_input_tokens: number;
+    cache_read_input_tokens: number;
+  }> = {},
+): Record<string, unknown> {
+  return {
+    id: 'msg_test_script_0001',
+    type: 'message',
+    role: 'assistant',
+    model: 'claude-sonnet-5',
+    content: [{ type: 'text', text: JSON.stringify(draft) }],
+    stop_reason: 'end_turn',
+    stop_sequence: null,
+    usage: {
+      input_tokens: usage.input_tokens ?? 5000,
+      output_tokens: usage.output_tokens ?? 500,
+      cache_creation_input_tokens: usage.cache_creation_input_tokens ?? 0,
+      cache_read_input_tokens: usage.cache_read_input_tokens ?? 0,
+    },
+  };
+}
+
 /** Refusal del sintetizador: `stop_reason='refusal'`, content vacío ⇒ parsed_output=null. El
  *  synthesizer lo maneja TIPADO (status='refused') y el coste SÍ se registra (se pagó el input). */
 export function anthropicBriefRefusalResponse(): Record<string, unknown> {

@@ -8,6 +8,7 @@ import {
   countSpokenWords,
   secondsForText,
   type AdScene,
+  type AdScript,
   type AdSubtitle,
   type AdSegment,
 } from '../contracts';
@@ -120,4 +121,61 @@ export function fullTextOf(scenes: readonly AdScene[]): string {
 /** Palabras habladas de las escenas de UN segmento (para el mensaje de feedback del reintento). */
 export function wordsInSegment(scenes: readonly AdScene[], segment: AdSegment): number {
   return totalWords(scenes.filter((scene) => scene.segment === segment));
+}
+
+/** El texto hablado de un segmento, en orden (unido por espacio) — LA MISMA derivación que
+ *  `assembleScript` usa para `hook`/`cta` (`draft.cta.map(s => s.narration).join(' ')`). */
+function spokenOfSegment(scenes: readonly AdScene[], segment: AdSegment): string {
+  return scenes
+    .filter((scene) => scene.segment === segment)
+    .map((scene) => scene.narration)
+    .join(' ');
+}
+
+/**
+ * RECONSTRUYE un `AdScript` CANÓNICO a partir de las NARRACIONES de sus escenas — la ÚNICA fuente
+ * de verdad de un guion editado en CP3 (T2.6). El editor deja tocar la `narration` de cada escena
+ * (agrupadas por segmento); TODO lo demás se DERIVA de ellas aquí, con las MISMAS primitivas que
+ * `assembleScript` usó al generar la v1:
+ *
+ *   · `t`/`seconds` de cada escena  ← `computeSceneTiming` (palabras ÷ 2,5, suelo 0,5 s).
+ *   · `hook`/`cta` (top-level)       ← join de las narraciones de las escenas de ese segmento.
+ *   · `fullText`/`wordCount`/`estSeconds`/`subtitles` ← de las escenas ya temporizadas.
+ *
+ * POR QUÉ ESTO ES CORRECCIÓN, NO ASEO. El linter (`lintScript`) escanea `fullText + hook + cta +
+ * narraciones`. Si el cliente devolviera un `AdScript` con las escenas editadas pero el `fullText`/
+ * `hook` VIEJOS (no calcula timing en el navegador), el re-lint del servidor vería el texto ANTIGUO:
+ * un claim borrado de una escena SEGUIRÍA disparando su flag por el `fullText` rancio, y el usuario
+ * NO podría resolver el bloqueo. Reconstruyendo aquí, el servidor lintea lo que el usuario REALMENTE
+ * escribió, y la fila v2 que se persiste es coherente consigo misma.
+ *
+ * DETERMINISTA: un guion SIN editar (mismas narraciones) reconstruye byte a byte el mismo objeto —
+ * así el `isRealEdit` de CP3 no inventa una v2 espuria al re-mandar un guion intacto.
+ *
+ * `filenameCode`/`sharedBodyKey`/`tone`/`language` NO se derivan del texto: son identidad del guion,
+ * se conservan tal cual del guion de entrada.
+ */
+export function rebuildEditedScript(edited: AdScript): AdScript {
+  const scenes = computeSceneTiming(
+    edited.scenes.map((scene) => ({
+      narration: scene.narration,
+      visual: scene.visual,
+      camera: scene.camera,
+      emotion: scene.emotion,
+      segment: scene.segment,
+    })),
+  );
+  return {
+    filenameCode: edited.filenameCode,
+    sharedBodyKey: edited.sharedBodyKey,
+    tone: edited.tone,
+    language: edited.language,
+    hook: spokenOfSegment(scenes, 'hook'),
+    cta: spokenOfSegment(scenes, 'cta'),
+    scenes,
+    subtitles: subtitlesFromScenes(scenes),
+    fullText: fullTextOf(scenes),
+    wordCount: totalWords(scenes),
+    estSeconds: estSecondsOf(scenes),
+  };
 }

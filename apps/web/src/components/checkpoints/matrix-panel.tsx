@@ -34,6 +34,7 @@
 //      hook-testing se DERIVA de él (`matrix.ts`: `sharedBodyAndCta = objective === 'hook_test'`).
 //      O sea: las tres cards del mockup SÍ son los tres objetivos reales. No hay toggle aparte.
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import type { BatchConfig, BatchEstimate, ProductBrief } from '@ugc/core/contracts';
 import type { Persona } from '@ugc/core/persona';
 import { ApiError, batchActions, personaActions, runActions } from '@/lib/api-client';
@@ -115,6 +116,7 @@ const MATRIX_COLUMNS: MetricsTableColumn[] = [
 ];
 
 export function MatrixPanel({ stepId, brief, config: initialConfig }: MatrixPanelProps) {
+  const router = useRouter();
   const [config, setConfig] = useState<BatchConfig>(initialConfig);
   // EL RESULTADO SE GUARDA JUNTO A LA CONFIG QUE LO PRODUJO, y no en tres `useState` sueltos
   // (`estimate` + `estimating` + `error`). Dos razones, y la segunda es la que importa:
@@ -237,14 +239,25 @@ export function MatrixPanel({ stepId, brief, config: initialConfig }: MatrixPane
    *
    * Sin optimistic update (canvas.md §5): el estado nuevo del step llega por SSE y el canvas se
    * repinta solo. Lo que sí se pinta al instante es el resultado del POST (el lote creado).
+   *
+   * NAVEGACIÓN A CP3 (T2.6): aprobar CP2 arranca, en la misma tx, el run de N5 (el ScriptWriter) —
+   * un run DISTINTO de este (el de análisis). El servidor devuelve su `nextRunId`, y sin navegar a
+   * él CP3 nunca se vería: el editor de guiones vive en `/runs/{nextRunId}`, no en este. Por eso, en
+   * cuanto la aprobación responde con el id, se empuja a esa página. `confirming` NO se baja en el
+   * camino feliz: este panel se está desmontando (cambio de ruta) y bajarlo pintaría un botón
+   * re-habilitado por un instante justo antes de irse.
    */
   async function onConfirm() {
     setConfirming(true);
     setConfirmError(null);
     try {
-      await runActions.approve(stepId, { kind: 'matrix', config });
-      // El step deja `waiting_approval` (por SSE) ⇒ este panel se desmonta solo y la vista cockpit
-      // vuelve. No hay estado «confirmado» que mantener aquí.
+      const { nextRunId } = await runActions.approve(stepId, { kind: 'matrix', config });
+      if (nextRunId !== undefined) {
+        router.push(`/runs/${nextRunId}`);
+        return;
+      }
+      // Sin `nextRunId` (no debería pasar en CP2: la aprobación SIEMPRE arranca N5) el step deja
+      // `waiting_approval` por SSE y el panel se desmonta solo — la vista cockpit vuelve.
     } catch (e) {
       setConfirmError(e instanceof ApiError ? e.message : 'No se pudo crear el lote');
       setConfirming(false);

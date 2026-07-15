@@ -1,0 +1,2 @@
+ALTER TABLE "ad_script" ADD COLUMN "origin_step_run_id" text;--> statement-breakpoint
+CREATE INDEX "ad_script_origin_step_idx" ON "ad_script" USING btree ("origin_step_run_id") WHERE "ad_script"."origin_step_run_id" is not null;

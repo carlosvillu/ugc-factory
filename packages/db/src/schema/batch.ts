@@ -188,10 +188,32 @@ export const adScript = pgTable(
     // §12: `guardrail_flags jsonb` — lo que el linter FTC de T2.5 marca sobre el guion.
     // Nullable: un guion aún no linteado no tiene flags (≠ lista vacía = linteado y limpio).
     guardrailFlags: jsonb('guardrail_flags'),
+    // T2.6 — IDEMPOTENCIA DE DINERO de N5 (patrón `product_brief.origin_step_run_id`, T1.10b): el
+    // `step_run.id` que ESCRIBIÓ este guion. Un reintento de N5 (que conserva el step_run.id) relee
+    // por aquí los guiones que ya persistió en vez de re-pagar Sonnet 5. Nullable: los guiones v2 de
+    // CP3 (ediciones del usuario) NO tienen origen de step, y los guiones sembrados en tests tampoco.
+    // NO tiene FK a `step_run` (mismo criterio que product_brief): step_run cascadea con el run, y el
+    // guion debe sobrevivir a la limpieza del run.
+    //
+    // A DIFERENCIA DE `product_brief`: aquí el índice NO es UNIQUE. Un step N5 escribe N guiones (uno
+    // por variante del lote), TODOS con el mismo `origin_step_run_id` — un UNIQUE reventaría (23505)
+    // en el 2.º INSERT. La barrera contra el retry-race es el UNIQUE `(variant_id, version)` de
+    // abajo (un segundo v1 de la misma variante choca ahí); este índice existe SOLO para el lookup
+    // `findScriptsByOriginStep`.
+    originStepRunId: text('origin_step_run_id'),
     ...timestamps,
   },
-  (t) => [uniqueIndex('ad_script_variant_version_key').on(t.variantId, t.version)],
+  (t) => [
+    uniqueIndex('ad_script_variant_version_key').on(t.variantId, t.version),
+    // Lookup de idempotencia de N5 (NO unique: N guiones comparten origen). Ver la nota de la columna.
+    index('ad_script_origin_step_idx')
+      .on(t.originStepRunId)
+      .where(sql`${t.originStepRunId} is not null`),
+  ],
 );
 
 export type AdScript = typeof adScript.$inferSelect;
 export type NewAdScript = typeof adScript.$inferInsert;
+// Alias sin choque con el CONTRATO `AdScript` de core (otro shape: filenameCode/sharedBodyKey en vez
+// de variantId/version). Los repos y el efecto de CP3, que manejan las DOS cosas, importan este.
+export type AdScriptRow = typeof adScript.$inferSelect;

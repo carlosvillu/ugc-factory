@@ -50,3 +50,7 @@ export {
 
 // El seed REAL, tal cual sale de `gallery-seed/*.json` (sin tipar: el validador es la frontera).
 export { RAW_GALLERY_SEED, type RawGallerySeed } from './raw-seed';
+
+// El lookup de guard packs §9.5 (T3.3): dado el seed + el contexto de la variante (category del
+// brief + plataforma destino), el subconjunto de guard packs que el compilador (T3.5) inyecta.
+export { resolveGuardPacks, type GuardLookupContext } from './guard-lookup';

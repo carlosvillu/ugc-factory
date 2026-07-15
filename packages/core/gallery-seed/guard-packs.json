@@ -1,1 +1,107 @@
-[]
+[
+  {
+    "key": "guard.general",
+    "scope": "general",
+    "lines": [
+      "Keep the ad framed as an advertising concept: the on-screen creator speaks as a paid actor demonstrating the product, never as a verified buyer, and never invents a personal purchase story or a lived-through result.",
+      "Forbid first-person purchase language such as owning, buying or having personally tried the product in real life; the presenter narrates what the product does, not what they experienced.",
+      "If a founder or origin angle is requested, voice it in the third person about the maker; never let the synthetic presenter assert that they personally founded or created the product.",
+      "Do not state or imply guaranteed outcomes; describe what the product does, not what it will certainly do for the viewer.",
+      "Surface no fabricated review, star rating, follower count or sales figure as if it were genuine social proof.",
+      "Leave out any endorsement, award, ranking or expert seal that has not been supplied as an approved asset.",
+      "Keep every spoken and written claim inside the boundaries of the brief; add no benefit, statistic or comparison that the brief did not provide.",
+      "Show no other brand's trademark, packaging or logo, and imitate no competitor's look to suggest a comparison the brief did not authorise."
+    ]
+  },
+  {
+    "key": "guard.fidelity",
+    "scope": "fidelity",
+    "lines": [
+      "Preserve the product's true geometry, proportions and colour across every cut; permit no melting, bending, extra parts or artefact along its silhouette.",
+      "Keep the product's real label, wordmark and packaging text intact and legible; invent no copy, badge or logo that is not already on the physical product.",
+      "Hold the creator's face and body consistent from shot to shot; allow no drift of identity, no morphing of features and no swapping of the person mid-clip.",
+      "Render hands, fingers and limbs anatomically correct throughout, with no fusing, duplication or missing digits.",
+      "Suppress warping, ghosting, flicker and other generation defects; the frame should read as a clean phone capture, not a distorted render."
+    ]
+  },
+  {
+    "key": "guard.platform.tiktok",
+    "scope": "platform",
+    "platform": "tiktok",
+    "lines": [
+      "Compose for a full-bleed 9:16 vertical frame and keep the product, the face and any burned-in words clear of the right-edge action rail and the bottom caption strip.",
+      "Favour a raw, handheld, off-the-cuff feel over a polished commercial look; the clip should pass as something filmed on a phone in one take.",
+      "Leave the top and lower thirds free of critical subject matter so the app's own overlays never cover the payoff."
+    ]
+  },
+  {
+    "key": "guard.platform.reels",
+    "scope": "platform",
+    "platform": "reels",
+    "lines": [
+      "Compose for a 9:16 vertical frame and keep the subject away from the lower band where the Reels caption, audio tag and profile row sit.",
+      "Keep motion smooth and the subject centred enough to survive the platform's slight crop of the top and bottom edges.",
+      "Aim for a bright, clean, native-to-feed look while still reading as creator-shot rather than studio-produced."
+    ]
+  },
+  {
+    "key": "guard.vertical.beauty",
+    "scope": "vertical",
+    "vertical": "beauty",
+    "lines": [
+      "Make no medical, dermatological or 'clinically proven' promise, and stage no doctor, nurse or lab setting that implies clinical authority.",
+      "Keep skin real: show natural texture, pores and tone, and apply no smoothing, airbrushing or beauty-filter retouch to the creator's face.",
+      "Stage no exaggerated or overnight before-and-after that a real routine could not produce."
+    ]
+  },
+  {
+    "key": "guard.vertical.finance",
+    "scope": "vertical",
+    "vertical": "finance",
+    "lines": [
+      "Promise no returns, income or profit, and imply no path to guaranteed wealth or risk-free earning.",
+      "Reproduce no real bank, card network or brokerage logo; render any on-screen account, balance or transaction as abstract placeholder blocks with no readable figures.",
+      "Present no fabricated account balance, payout screenshot or portfolio result as if it belonged to a real user."
+    ]
+  },
+  {
+    "key": "guard.vertical.health",
+    "scope": "vertical",
+    "vertical": "health",
+    "lines": [
+      "Make no claim to cure, treat, diagnose or prevent any condition, and offer no dosage, symptom-relief or medical-outcome promise.",
+      "Depict no clinical, hospital or pharmacy setting and no white-coat figure that would imply professional medical endorsement.",
+      "Show no unsafe, extreme or unsupervised use of the product, and imply no result that a healthy routine could not deliver."
+    ]
+  },
+  {
+    "key": "guard.vertical.apps",
+    "scope": "vertical",
+    "vertical": "apps",
+    "lines": [
+      "Render every on-screen interface as abstract cards, bars and blocks with no legible invented copy; show no real screenshot text that was not supplied as an asset.",
+      "Fabricate no metric, notification, chart or streak that overstates what the app actually does.",
+      "Display no competitor app icon, store badge or third-party brand mark inside the interface."
+    ]
+  },
+  {
+    "key": "guard.vertical.food",
+    "scope": "vertical",
+    "vertical": "food",
+    "lines": [
+      "Make no nutritional, weight-loss or health-benefit claim beyond what the brief supplies, and imply no dietary result the product cannot support.",
+      "Keep the food true to its real form and colour; stage no impossible portion, gloss or transformation that misrepresents the actual item.",
+      "Invent no rating, award or 'chef-approved' seal, and show no rival restaurant or grocery brand mark."
+    ]
+  },
+  {
+    "key": "guard.vertical.fashion",
+    "scope": "vertical",
+    "vertical": "fashion",
+    "lines": [
+      "Keep the garment true to its real cut, fabric, drape and colour; fabricate no pattern, logo or detail that the physical item does not have.",
+      "Reproduce no other label's monogram or trademark, and stage no lookalike that borrows a rival brand's identity.",
+      "Imply no body-transformation, slimming or 'instant fit' result that the clothing itself could not produce."
+    ]
+  }
+]

@@ -1,0 +1,24 @@
+Lazy loading nvm node npm ...
+# ficheros del corpus Cliprise (5):
+#   awesome-ai-ugc-video-prompts/CHANGELOG.md
+#   awesome-ai-ugc-video-prompts/README.md
+#   awesome-ai-video-ads-prompts/.github/ISSUE_TEMPLATE/resource_request.md
+#   awesome-ai-video-ads-prompts/CHANGELOG.md
+#   awesome-ai-video-ads-prompts/README.md
+# corpus: 15981 palabras
+# líneas sembradas: 37 (de 10 packs)
+
+## N=8: 0 coincidencia(s)
+
+## N=7: 0 coincidencia(s)
+
+## N=6: 0 coincidencia(s)
+
+## N=5: 0 coincidencia(s)
+
+## N=4: 2 coincidencia(s)
+  MATCH [guard.general] "what the product does"
+    en línea: "Forbid first-person purchase language such as owning, buying or having personally tried the product in real life; the presenter narrates what the product does, not what they experienced."
+  MATCH [guard.general] "what the product does"
+    en línea: "Do not state or imply guaranteed outcomes; describe what the product does, not what it will certainly do for the viewer."
+

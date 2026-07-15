@@ -505,7 +505,7 @@ Decisiones del usuario (2026-07-07): la fase se ejecuta tras T0.1 y **antes** de
 - **Entrega**: `packages/core/gallery-seed/*.json` + `pnpm seed:gallery` (upsert idempotente) + validador integrado en `pnpm gate` (campos requeridos, slugs únicos, slots resolubles contra §10.4, `guardPackIds` existentes, `enumValues` para enums; no hay CI remota); los fixtures incluyen **2–3 templates mínimos de prueba** (los usará la verificación de T3.5).
 - **Verificación**: romper un fixture a propósito (slot inexistente `{producto.nombre}`) hace fallar `pnpm gate` con mensaje claro; el seed corre dos veces sin duplicar filas.
 
-#### T3.3 · Guard packs (redacción propia)
+#### T3.3 · Guard packs (redacción propia) [x] 2026-07-15 — PASS, ver docs/verifications/T3.3/ (coste $0)
 - **Depende de**: T3.2
 - **Entrega**: packs `general`, `fidelity`, `platform.{tiktok,reels}` y verticales (beauty, finance, health, apps, food, fashion) con líneas de redacción propia (§10.1) + regla de lookup (§9.5).
 - **Verificación**: el lookup para brief vertical beauty + plataforma tiktok devuelve exactamente {general, fidelity, vertical.beauty, platform.tiktok}; ninguna línea del seed coincide textualmente con las librerías de Cliprise: clonar los repos públicos (`cliprise/awesome-ai-ugc-video-prompts`, `cliprise/awesome-ai-video-ads-prompts`) y contrastar por n-gramas/grep, con el output del contraste en la evidencia.

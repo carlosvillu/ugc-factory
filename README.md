@@ -171,7 +171,7 @@ El desarrollo va por fases, tarea a tarea, con verificación observable en cada 
 
 <!-- STATUS-TABLE:BEGIN — generado por `pnpm readme:status`, no editar a mano -->
 
-**49 de 103 tareas cerradas (48 %).**
+**50 de 103 tareas cerradas (49 %).**
 
 | Fase                                                  | Qué entrega                                                                         | Estado         |
 | ----------------------------------------------------- | ----------------------------------------------------------------------------------- | -------------- |
@@ -180,7 +180,7 @@ El desarrollo va por fases, tarea a tarea, con verificación observable en cada 
 | **F1** · Análisis                                     | URL/texto → ProductBrief editable y aprobable en CP1                                | ✅ Completa    |
 | **F1b** · Deuda de cierre de F1                       | Deuda de cierre de F1                                                               | ✅ Completa    |
 | **F1c** · Deuda del primer uso real                   | Deuda del primer uso real                                                           | ✅ Completa    |
-| **F2** · Estrategia y guiones                         | Matriz con coste estimado → guiones aprobados                                       | 🔨 5/7         |
+| **F2** · Estrategia y guiones                         | Matriz con coste estimado → guiones aprobados                                       | 🔨 6/7         |
 | **F2b** · Deuda destapada por la verificación de T2.3 | Deuda destapada por la verificación de T2.3 (acordada con el usuario el 2026-07-14) | ✅ Completa    |
 | **F3** · Galería de prompts y compilador              | Templates facetados → prompts auditables                                            | ⬜ No empezada |
 | **F4** · Generación fal.ai                            | Los assets de una variante, generados de verdad en fal.ai                           | ⬜ No empezada |

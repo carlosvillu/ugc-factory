@@ -13,7 +13,7 @@ import {
 } from '../contracts';
 import type { DurationPreset } from '../strategy/presets';
 
-/** Una escena tal y como la EMITE el modelo: texto, sin tiempo (§8 del system prompt). */
+/** Una escena tal y como la EMITE el modelo: texto, sin tiempo (§9 del system prompt). */
 export interface DraftScene {
   narration: string;
   visual: string;

@@ -1,0 +1,123 @@
+
+
+████████████████████ RUN 1/3 ████████████████████
+status=scripted  warnings=[]  coste=$0.0282  acumulado=$0.0282
+
+── serum-hidratante-founder-origin-s-hook01-norot-en-12s  (angle key: body:0|en|norot)  [11s]
+   HOOK: So here's why this thing even exists.
+   BODY: Guy got tired of tight, dry skin every night. So he built this instead.
+   CTA: Try it for 30 days.
+   lintScript flags: [] (limpio)
+
+── serum-hidratante-founder-origin-s-hook02-norot-en-12s  (angle key: body:0|en|norot)  [11s]
+   HOOK: Nobody just wakes up and makes a serum.
+   BODY: Guy got tired of tight, dry skin every night. So he built this instead.
+   CTA: Try it for 30 days.
+   lintScript flags: [] (limpio)
+
+── serum-hidratante-founder-origin-s-hook03-norot-en-12s  (angle key: body:0|en|norot)  [12s]
+   HOOK: I work in skincare. This is the one I grab.
+   BODY: Guy got tired of tight, dry skin every night. So he built this instead.
+   CTA: Try it for 30 days.
+   lintScript flags: [] (limpio)
+
+── serum-hidratante-testimonial-expe-hook01-norot-en-12s  (angle key: body:1|en|norot)  [12s]
+   HOOK: Okay, two weeks in, nobody warns you about this part.
+   BODY: Nobody admits their skin feels tight after washing, every single night.
+   CTA: Thirty days, no risk, just try it.
+   lintScript flags: [] (limpio)
+
+── serum-hidratante-testimonial-expe-hook02-norot-en-12s  (angle key: body:1|en|norot)  [12s]
+   HOOK: There's a result nobody really talks about with dry skin.
+   BODY: Nobody admits their skin feels tight after washing, every single night.
+   CTA: Thirty days, no risk, just try it.
+   lintScript flags: [] (limpio)
+
+── serum-hidratante-testimonial-expe-hook03-norot-en-12s  (angle key: body:1|en|norot)  [12s]
+   HOOK: Two weeks of this serum and honestly, look at that.
+   BODY: Nobody admits their skin feels tight after washing, every single night.
+   CTA: Thirty days, no risk, just try it.
+   lintScript flags: [] (limpio)
+
+
+████████████████████ RUN 2/3 ████████████████████
+status=scripted  warnings=[]  coste=$0.0297  acumulado=$0.0579
+
+── serum-hidratante-founder-origin-s-hook01-norot-en-12s  (angle key: body:0|en|norot)  [12s]
+   HOOK: Okay, nobody talks about why this actually got made.
+   BODY: The maker got sick of dry, tight skin no cream fixed. Built this instead.
+   CTA: Thirty days. No risk. Try it.
+   lintScript flags: [] (limpio)
+
+── serum-hidratante-founder-origin-s-hook02-norot-en-12s  (angle key: body:0|en|norot)  [13s]
+   HOOK: Wait, let me back up, this brand didn't start how you think.
+   BODY: The maker got sick of dry, tight skin no cream fixed. Built this instead.
+   CTA: Thirty days. No risk. Try it.
+   lintScript flags: [] (limpio)
+
+── serum-hidratante-founder-origin-s-hook03-norot-en-12s  (angle key: body:0|en|norot)  [13s]
+   HOOK: I'm in skincare all day, so hear me out on this one.
+   BODY: The maker got sick of dry, tight skin no cream fixed. Built this instead.
+   CTA: Thirty days. No risk. Try it.
+   lintScript flags: [] (limpio)
+
+── serum-hidratante-testimonial-expe-hook01-norot-en-12s  (angle key: body:1|en|norot)  [10s]
+   HOOK: Okay, nobody warns you what week two actually looks like.
+   BODY: It's the tightness after washing. That's the thing nobody admits.
+   CTA: Thirty days. See for yourself.
+   lintScript flags: [] (limpio)
+
+── serum-hidratante-testimonial-expe-hook02-norot-en-12s  (angle key: body:1|en|norot)  [10s]
+   HOOK: There's a result people just... don't talk about.
+   BODY: It's the tightness after washing. That's the thing nobody admits.
+   CTA: Thirty days. See for yourself.
+   lintScript flags: [] (limpio)
+
+── serum-hidratante-testimonial-expe-hook03-norot-en-12s  (angle key: body:1|en|norot)  [10s]
+   HOOK: Kind of embarrassing how much two weeks can change.
+   BODY: It's the tightness after washing. That's the thing nobody admits.
+   CTA: Thirty days. See for yourself.
+   lintScript flags: [] (limpio)
+
+
+████████████████████ RUN 3/3 ████████████████████
+status=scripted  warnings=[]  coste=$0.0299  acumulado=$0.0879
+
+── serum-hidratante-founder-origin-s-hook01-norot-en-12s  (angle key: body:0|en|norot)  [12s]
+   HOOK: So the guy who made this? He was just tired.
+   BODY: His skin cracked, dried out, nothing worked till this. Twenty-four hours, no tightness, ever.
+   CTA: Thirty days, zero risk. Try it.
+   lintScript flags: [] (limpio)
+
+── serum-hidratante-founder-origin-s-hook02-norot-en-12s  (angle key: body:0|en|norot)  [12s]
+   HOOK: No, seriously, listen to how this brand started.
+   BODY: His skin cracked, dried out, nothing worked till this. Twenty-four hours, no tightness, ever.
+   CTA: Thirty days, zero risk. Try it.
+   lintScript flags: [] (limpio)
+
+── serum-hidratante-founder-origin-s-hook03-norot-en-12s  (angle key: body:0|en|norot)  [12s]
+   HOOK: I work in skincare. This one's different, and here's why.
+   BODY: His skin cracked, dried out, nothing worked till this. Twenty-four hours, no tightness, ever.
+   CTA: Thirty days, zero risk. Try it.
+   lintScript flags: [] (limpio)
+
+── serum-hidratante-testimonial-expe-hook01-norot-en-12s  (angle key: body:1|en|norot)  [13s]
+   HOOK: Okay, day fourteen of this serum. Nobody prepared me for this.
+   BODY: Honestly? A lot of us are embarrassed we ignored tight skin this long.
+   CTA: Give it thirty days. See for yourself.
+   lintScript flags: [] (limpio)
+
+── serum-hidratante-testimonial-expe-hook02-norot-en-12s  (angle key: body:1|en|norot)  [13s]
+   HOOK: Nobody tells you what your skin looks like after two weeks.
+   BODY: Honestly? A lot of us are embarrassed we ignored tight skin this long.
+   CTA: Give it thirty days. See for yourself.
+   lintScript flags: [] (limpio)
+
+── serum-hidratante-testimonial-expe-hook03-norot-en-12s  (angle key: body:1|en|norot)  [13s]
+   HOOK: Two weeks in. Nobody warns you the difference is this obvious.
+   BODY: Honestly? A lot of us are embarrassed we ignored tight skin this long.
+   CTA: Give it thirty days. See for yourself.
+   lintScript flags: [] (limpio)
+
+
+═══════════ COSTE TOTAL DEL MUESTREO: $0.0879 (3 runs) ═══════════

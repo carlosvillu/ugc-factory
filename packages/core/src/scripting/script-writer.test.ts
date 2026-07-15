@@ -245,6 +245,21 @@ describe('ScriptWriter — el contrato de REQUEST', () => {
     // Y el idioma destino, que ES variable, viaja en el USER (nunca en el system).
     expect(SCRIPT_WRITER_SYSTEM_PROMPT).not.toContain('TARGET LANGUAGE: ');
   });
+
+  // T2.5 §15.1: los guardrails FTC (roles honestos) son TEXTO ESTÁTICO del system prompt. El prompt
+  // PIDE; el linter (`ftc-linter.ts`) OBLIGA. Este test protege la Entrega §15.1 en el prompt.
+  it('el system prompt PIDE roles honestos §15.1 (creator-style, no customer; founder en 3ª persona)', () => {
+    expect(SCRIPT_WRITER_SYSTEM_PROMPT).toContain('creator-style');
+    expect(SCRIPT_WRITER_SYSTEM_PROMPT).toContain('NUNCA es un cliente real');
+    // Testimonial → creator-style demo, sin experiencia personal de compra.
+    expect(SCRIPT_WRITER_SYSTEM_PROMPT).toContain('I bought this');
+    expect(SCRIPT_WRITER_SYSTEM_PROMPT).toContain('creator-style demo');
+    // Founder-origin en TERCERA persona estilo educador.
+    expect(SCRIPT_WRITER_SYSTEM_PROMPT).toContain('TERCERA persona');
+    expect(SCRIPT_WRITER_SYSTEM_PROMPT).toContain('the maker built this because');
+    // Y sigue siendo BRIEF-AGNÓSTICO: nada de claims ni idioma interpolados (invariante byte-stable).
+    expect(SCRIPT_WRITER_SYSTEM_PROMPT).not.toContain('TARGET LANGUAGE: ');
+  });
 });
 
 describe('buildScriptUserMessage — las dos deudas heredadas, en el prompt', () => {

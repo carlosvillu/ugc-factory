@@ -35,3 +35,7 @@ export {
   MIN_SCENE_SECONDS,
   type DraftScene,
 } from './timing';
+// EL LINTER FTC (§15.2, T2.5): función PURA STANDALONE que audita un `AdScript` ya generado y
+// devuelve los `GuardrailFlag[]` bloqueantes. NO lo llama el `write()` del ScriptWriter (compliance
+// es ortogonal a la generación): lo llama CP3 (T2.6) al guardar, y la verificación live de T2.5.
+export { lintScript, type LintScriptOptions } from './ftc-linter';

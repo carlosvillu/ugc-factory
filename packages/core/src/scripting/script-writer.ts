@@ -103,7 +103,7 @@ const STATUS_SEVERITY: Readonly<Record<ScriptWriterStatus, number>> = {
 };
 
 /**
- * LO QUE EL MODELO EMITE (§8 del system prompt): texto y nada de tiempo. Los `min(1)` son la RED
+ * LO QUE EL MODELO EMITE (§9 del system prompt): texto y nada de tiempo. Los `min(1)` son la RED
  * REAL — sin `output_config` (ver `attempt`) nada obliga al modelo a nada, y aunque lo hubiera, la
  * API de Anthropic **no aplica constraints de array** (§13.2): las cardinalidades se validan aquí.
  */
@@ -182,10 +182,10 @@ export function placeholderValuesFor(brief: ProductBrief): PlaceholderValues {
  */
 export const VARIATION_INSTRUCTIONS: readonly string[] = [
   'Arranca in-medias-res: mete al espectador en mitad de la escena, sin presentación. Registro directo y seco.',
-  'Registro de confesión: cuentas algo que te daba apuro admitir. Frases cortas, ritmo íntimo, cámara cerca.',
+  "Registro de confesión ÍNTIMO desde la voz del creador: presenta un problema o insight que a la gente le da apuro admitir («a lot of people are kind of embarrassed to admit…», «here's the thing nobody says about…»). El REGISTRO es íntimo y cercano; el HABLANTE NUNCA afirma ser el cliente que compró/usó/obtuvo el resultado (§8 gobierna). Frases cortas, ritmo íntimo, cámara cerca.",
   'Estructura mito/verdad: abre con la creencia común y desmóntala. Registro didáctico pero de colega, no de profesor.',
   'Estructura de demostración: enseña antes de explicar. La narración acompaña lo que se ve, no lo anuncia. Registro entusiasta y rápido.',
-  'Registro de queja compartida: empieza por la frustración, con humor. Estructura problema → alivio.',
+  "Registro de queja compartida desde la voz del creador: nombra la frustración que comparte tu audiencia («everyone's frustrated with…», «we all know how annoying it is when…»), con humor. El REGISTRO es de frustración compartida; el HABLANTE NUNCA afirma haberla sufrido como cliente que compró/usó el producto (§8 gobierna). Estructura problema → alivio.",
   'Estructura de lista hablada («tres cosas que…»), pero contada, no recitada. Registro enérgico, cortes rápidos.',
 ];
 
@@ -460,7 +460,7 @@ export function makeScriptWriter(deps: ScriptWriterDeps) {
     // (uniones >16 params, "compiled grammar too large"), y —aunque entrara— **IGNORA las
     // constraints de array** (§13.2: `minItems`/`maxItems` no se aplican), que es justo lo que
     // aquí importa (N hooks, 1–3 escenas por segmento). La red real es el `safeParse` de abajo.
-    // El schema viaja como TEXTO en el system (§8), cacheado, a coste marginal ~0.
+    // El schema viaja como TEXTO en el system (§9), cacheado, a coste marginal ~0.
     let response;
     try {
       response = await client.messages.create({

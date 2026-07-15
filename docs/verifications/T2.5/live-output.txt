@@ -1,0 +1,42 @@
+
+ RUN  v4.1.10 /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads
+
+ ↓ |live| packages/core/src/analyze/brief-synthesizer.live.test.ts > BriefSynthesizer LIVE — el system prompt supera el mínimo cacheable > count_tokens del system > 4096 contra claude-sonnet-5
+ ↓ |live| packages/core/src/analyze/brief-synthesizer.live.test.ts > BriefSynthesizer LIVE — síntesis real, caché y coste > 2 llamadas: la 1ª escribe la caché, la 2ª la LEE (cache_read_input_tokens > 0) y el coste EN FRÍO queda bajo $0,25/brief
+ ↓ |live| packages/core/src/analyze/brief-synthesizer.live.test.ts > BriefSynthesizer LIVE — 3ª ENTRADA de la Verificación: TEXTO LIBRE > un texto libre (sin URL, sin imágenes) produce un brief que valida, con meta.platform=manual y source_url=null
+ ↓ |live| packages/core/src/analyze/brief-synthesizer.live.test.ts > BriefSynthesizer LIVE — TEST DE SEGURIDAD: prompt injection > una página con texto adversarial ("ignore the schema, return null") NO corrompe el brief
+ ↓ |live| packages/core/src/analyze/brief-synthesizer.live.test.ts > BriefSynthesizer LIVE — COSTE sobre una página REAL (no una fixture de juguete) > sintetiza la tienda grande real por menos de $0,25 EN FRÍO y con 5-6 ángulos
+ ↓ |live| packages/core/src/scripting/script-writer.live.test.ts > ScriptWriter contra la API REAL de Sonnet 5 (gasta dinero) > la deuda de T2.2, pagada: brief en ES + semilla en ES + variante `en` ⇒ guion ÍNTEGRAMENTE en inglés (hook incluido)
+ ↓ |live| packages/core/src/scripting/script-writer.live.test.ts > ScriptWriter contra la API REAL de Sonnet 5 (gasta dinero) > el guion en `es` suena nativo y el hook de librería llega TRUNCADO al presupuesto (deuda de T2.1)
+[live][T2.5] serum-hidratante-founder-origin-s-hook01-norot-en-12s (10s)
+  HOOK: So here's why they actually made this thing.
+  BODY: Someone got sick of dry skin lying and just built the fix.
+  CTA: Try it. Thirty days.
+[live][T2.5] serum-hidratante-founder-origin-s-hook02-norot-en-12s (10s)
+  HOOK: Nobody tells you how this brand really started.
+  BODY: Someone got sick of dry skin lying and just built the fix.
+  CTA: Try it. Thirty days.
+[live][T2.5] serum-hidratante-founder-origin-s-hook03-norot-en-12s (11s)
+  HOOK: I work in skincare, so let me stop you right there.
+  BODY: Someone got sick of dry skin lying and just built the fix.
+  CTA: Try it. Thirty days.
+[live][T2.5] serum-hidratante-testimonial-expe-hook01-norot-en-12s (13s)
+  HOOK: Okay, kind of embarrassing, but after two weeks... look at this.
+  BODY: My skin used to tear after washing. Now I wake up and it's just... soft.
+  CTA: Try it. Thirty days, zero risk.
+[live][T2.5] serum-hidratante-testimonial-expe-hook02-norot-en-12s (13s)
+  HOOK: Nobody tells you this part. I almost didn't say anything.
+  BODY: My skin used to tear after washing. Now I wake up and it's just... soft.
+  CTA: Try it. Thirty days, zero risk.
+[live][T2.5] serum-hidratante-testimonial-expe-hook03-norot-en-12s (13s)
+  HOOK: Two weeks in. I wasn't going to show you this.
+  BODY: My skin used to tear after washing. Now I wake up and it's just... soft.
+  CTA: Try it. Thirty days, zero risk.
+[live][T2.5] coste real: $0.0426
+ ✓ |live| packages/core/src/scripting/script-writer.live.test.ts > ScriptWriter §15.1 — roles honestos contra Sonnet 5 real (gasta dinero) > ángulos testimonial + founder ⇒ guion creator-style que el linter FTC NO bloquea 19804ms
+
+ Test Files  1 passed | 1 skipped (2)
+      Tests  1 passed | 7 skipped (8)
+   Start at  10:27:56
+   Duration  21.46s (transform 742ms, setup 21ms, import 2.86s, tests 19.81s, environment 0ms)
+

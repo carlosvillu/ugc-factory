@@ -185,6 +185,16 @@ export {
   type AdScene,
   type AdSubtitle,
 } from './ad-script';
+// Los FLAGS de compliance FTC (T2.5, §15.2): lo que el linter (`@ugc/core/scripting` →
+// `ftc-linter.ts`) marca sobre un guion y lo que se serializa en `ad_script.guardrail_flags`
+// (jsonb, §12). Es un contrato SEPARADO de `AdScript` porque compliance es ortogonal a la
+// generación: un guion `scripted` puede llevar flags bloqueantes. Lo persiste/re-lintea CP3 (T2.6).
+export {
+  GuardrailFlagSchema,
+  GuardrailRuleSchema,
+  type GuardrailFlag,
+  type GuardrailRule,
+} from './guardrail-flag';
 // Listado `GET /api/runs` (T1.17): la vista pública de la lista de runs + LA DERIVACIÓN del
 // estado agregado a partir de los steps (`deriveRunStatus`). El agregado `pipeline_run.status`
 // NO lo mantiene nadie (deuda de T0.8): la verdad son los estados de STEP, igual que en el SSE.

@@ -25,6 +25,7 @@ import type { AnthropicUsage } from '../analyze/anthropic-client';
 import { composeMatrix } from '../strategy/matrix';
 import { DURATION_PRESETS } from '../strategy/presets';
 import { groupVariantsForScripting, makeScriptWriter } from './script-writer';
+import { lintScript } from './ftc-linter';
 import { MAX_HOOK_WORDS, countWords } from '../analyze/brief-validator';
 
 const apiKey = process.env.ANTHROPIC_API_KEY;
@@ -234,6 +235,125 @@ describeLive('ScriptWriter contra la API REAL de Sonnet 5 (gasta dinero)', () =>
               .map((s) => `  ${s.segment.toUpperCase()}: ${s.narration}`)
               .join('\n'),
         );
+      }
+    },
+  );
+});
+
+// ═══ T2.5 — GUARDRAILS FTC §15.1, contra el modelo REAL ═════════════════════════════════════════
+//
+// La cláusula «reformulado en tercera persona» / «sin I bought this» es COMPORTAMIENTO LIVE de
+// Sonnet 5: solo el modelo real reformula un ángulo testimonial/founder. Se ATA al linter (steer
+// del brief): pedimos ángulo testimonial + founder y assertamos que `lintScript` NO encuentra
+// violaciones sobre la salida REAL — eso convierte lo blando en objetivo dictaminable.
+//
+// Lo que el linter NO puede dictaminar (¿SUENA a tercera persona, aunque no diga «I'm the
+// founder»?) es juicio humano: se IMPRIME el guion para la evidencia y NO se auto-aprueba.
+
+/** Brief en INGLÉS con un ángulo testimonial y uno founder-origin, y un banned claim. En inglés
+ *  para que el linter (mismo idioma brief=guion) pueda dictaminar el banned_claim además de los
+ *  patrones de idioma destino. */
+const BRIEF_FTC_EN = makeBrief({
+  meta: {
+    source_url: 'https://shop.example.com/products/serum',
+    platform: 'shopify',
+    language: 'en',
+    extracted_at: '2026-07-15T12:00:00.000Z',
+    extraction_confidence: 'high',
+    warnings: [],
+  },
+  brand: {
+    tone_of_voice: 'warm and expert',
+    recommended_ad_tone: 'authentic',
+    visual_style: {
+      palette: ['#F5E9E2'],
+      typography: 'serif',
+      aesthetic: 'premium',
+      photography_style: 'lifestyle',
+    },
+    banned_or_risky_claims: ['cures acne', 'guaranteed results'],
+  },
+  angles: [
+    makeAngle({
+      name: 'Founder origin story',
+      framework: 'founder_story',
+      hook_examples: ['The story behind why this was made', 'How this brand actually started'],
+      key_message: 'The maker built this after years of frustration',
+    }),
+    makeAngle({
+      // Ángulo de estructura TESTIMONIAL (el `framework` del enum más cercano es `transformation`:
+      // problema → resultado). El nombre lo declara testimonial; el prompt debe reformularlo
+      // creator-style sin «I bought this».
+      name: 'Testimonial experience',
+      framework: 'transformation',
+      hook_examples: [
+        'What happens after two weeks of using this',
+        'The result nobody talks about',
+      ],
+      key_message: 'The 24h hydration shows the next morning',
+    }),
+  ],
+});
+
+const PLAN_FTC = composeMatrix({
+  brief: BRIEF_FTC_EN,
+  libraryHooks: HOOK_LINE_SEEDS,
+  angleCount: 2,
+  hooksPerAngle: 3,
+  languages: ['en'],
+  objective: 'hook_test',
+  tier: 'standard',
+});
+
+describeLive('ScriptWriter §15.1 — roles honestos contra Sonnet 5 real (gasta dinero)', () => {
+  it(
+    'ángulos testimonial + founder ⇒ guion creator-style que el linter FTC NO bloquea',
+    { timeout: 240_000 },
+    async () => {
+      // 2 grupos (founder, testimonial) en `en` = 2 llamadas ≈ $0,08. Margen 2×.
+      spendBudget(0.16);
+
+      const writer = makeScriptWriter({ apiKey: apiKey ?? '' });
+      const res = await writer.write({ plan: PLAN_FTC, brief: BRIEF_FTC_EN });
+
+      expect(res.warnings).toEqual(
+        expect.not.arrayContaining([expect.stringContaining('api_error')]),
+      );
+      expect(res.status).toBe('scripted');
+      expect(res.scripts.length).toBeGreaterThan(0);
+
+      const lintCtx = {
+        bannedClaims: BRIEF_FTC_EN.brand.banned_or_risky_claims ?? [],
+        briefLanguage: BRIEF_FTC_EN.meta.language,
+      };
+
+      for (const script of res.scripts) {
+        const flags = lintScript(script, lintCtx);
+        // LA CLÁUSULA OBJETIVA: el modelo real, pedido un ángulo testimonial/founder, produce un
+        // guion que el linter determinista NO bloquea (ni «I bought this», ni founder en 1ª
+        // persona, ni el banned claim). Si flaggea, se imprime el flag y el guion para diagnóstico.
+        expect({ code: script.filenameCode, flags }).toEqual({
+          code: script.filenameCode,
+          flags: [],
+        });
+      }
+
+      // EVIDENCIA PARA EL JUICIO HUMANO (lo que el linter NO dictamina: ¿suena a tercera persona /
+      // creator-style?). Se imprime; NO se auto-aprueba.
+      for (const script of res.scripts) {
+        console.warn(
+          `[live][T2.5] ${script.filenameCode} (${String(script.estSeconds)}s)\n` +
+            `  HOOK: ${script.hook}\n` +
+            script.scenes
+              .filter((s) => s.segment !== 'hook')
+              .map((s) => `  ${s.segment.toUpperCase()}: ${s.narration}`)
+              .join('\n'),
+        );
+      }
+
+      const usage = res.usage;
+      if (usage) {
+        console.warn(`[live][T2.5] coste real: $${costUsd(usage).toFixed(4)}`);
       }
     },
   );

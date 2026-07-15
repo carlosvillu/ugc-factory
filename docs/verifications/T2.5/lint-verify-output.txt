@@ -1,0 +1,46 @@
+
+ RUN  v4.1.10 /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/core
+
+[POS-ES] flags = [
+  {
+    "rule": "banned_claim",
+    "excerpt": "elimina el eccema por completo",
+    "blocking": true,
+    "explanation": "Contiene un claim de la lista de riesgo del brief (salud/finanzas/resultados garantizados): dispara rechazo de anuncios en TikTok/Meta y riesgo regulatorio FTC.",
+    "suggestion": "Elimina o atenúa la afirmación: describe qué hace el producto de forma verificable («ayuda a…», «está formulado para…») sin prometer un resultado garantizado ni un efecto médico/financiero."
+  }
+]
+[NEG-ES] flags = []
+[TRAP-CROSS] flags = []
+[POS-EN] flags = [{"rule":"banned_claim","excerpt":"eliminates eczema completely","blocking":true,"explanation":"Contiene un claim de la lista de riesgo del brief (salud/finanzas/resultados garantizados): dispara rechazo de anuncios en TikTok/Meta y riesgo regulatorio FTC.","suggestion":"Elimina o atenúa la afirmación: describe qué hace el producto de forma verificable («ayuda a…», «está formulado para…») sin prometer un resultado garantizado ni un efecto médico/financiero."}]
+[FP-POS] flags = [{"rule":"first_person_purchase","excerpt":"…his changed everything. I bought this last month and now…","blocking":true,"explanation":"El avatar es un creator-style demonstrator, nunca un cliente real: afirmar experiencia personal de compra («I bought this») es un testimonio fabricado que la FTC prohíbe.","suggestion":"Reescribe como creator-style demo: presenta el producto sin afirmar experiencia personal de compra. Di «This does X» / «Esto hace X» en vez de «I bought this and…» / «me lo compré y…»."}]
+[FOUNDER-POS] flags = [{"rule":"founder_first_person","excerpt":"The story behind this. I founded this company because nothing…","blocking":true,"explanation":"El avatar es sintético y NO es el fundador: afirmar en primera persona serlo es una identidad falsa. El origen founder se cuenta en tercera persona estilo educator.","suggestion":"Reformula en TERCERA persona estilo educator: el avatar es un creador, no el fundador. Di «the maker built this because…» / «quien lo creó lo hizo porque…» en vez de la afirmación en primera persona."}]
+[3RD-PERSON] flags = []
+[SOFT-GAP] flags = []
+ ✓ |core:unit| src/__t25_verify__.test.ts > T2.5 verifier — clause 2: banned claim injected by hand > POSITIVO: claim ES inyectado en guion ES ⇒ banned_claim blocking con explicación+sugerencia compliant 5ms
+ ✓ |core:unit| src/__t25_verify__.test.ts > T2.5 verifier — clause 2: banned claim injected by hand > CONTROL NEGATIVO: mismo idioma, SIN el claim ⇒ NO dispara banned_claim 1ms
+ ✓ |core:unit| src/__t25_verify__.test.ts > T2.5 verifier — clause 2: banned claim injected by hand > TRAP DE IDIOMA: claim ES (briefLanguage es) contra guion EN ⇒ banned_claim NO se detecta (limitación declarada) 1ms
+ ✓ |core:unit| src/__t25_verify__.test.ts > T2.5 verifier — clause 2: banned claim injected by hand > CONTROL POSITIVO cruzado: claim EN contra guion EN (briefLanguage en) ⇒ SÍ dispara (prueba que el linter no está muerto) 1ms
+ ✓ |core:unit| src/__t25_verify__.test.ts > T2.5 verifier — clauses 1 & 3 objective: first_person / founder patterns on hand-built scripts > un guion EN con "I bought this" ⇒ first_person_purchase (prueba que el patrón caza lo que la cláusula 1 prohíbe) 0ms
+ ✓ |core:unit| src/__t25_verify__.test.ts > T2.5 verifier — clauses 1 & 3 objective: first_person / founder patterns on hand-built scripts > un guion EN founder en 1ª persona "I founded this brand" ⇒ founder_first_person 0ms
+ ✓ |core:unit| src/__t25_verify__.test.ts > T2.5 verifier — clauses 1 & 3 objective: first_person / founder patterns on hand-built scripts > CONTROL: guion EN creator-style en 3ª persona ("The maker built this") ⇒ SIN flags (no falso positivo) 1ms
+ ✓ |core:unit| src/__t25_verify__.test.ts > T2.5 verifier — clauses 1 & 3 objective: first_person / founder patterns on hand-built scripts > el "my skin used to tighten... now it just doesnt" (patrón que el implementer levantó) ⇒ CONFIRMA que el linter NO lo caza 0ms
+
+ Test Files  1 passed (1)
+      Tests  8 passed (8)
+   Start at  10:27:19
+   Duration  228ms (transform 61ms, setup 24ms, import 91ms, tests 10ms, environment 0ms)
+
+
+ RUN  v4.1.10 /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/core
+
+[TRAP-VERBATIM-EN] flags = []
+[TRAP-VERBATIM-ES] flags = [{"rule":"banned_claim","excerpt":"cura la psoriasis","blocking":true,"explanation":"Contiene un claim de la lista de riesgo del brief (salud/finanzas/resultados garantizados): dispara rechazo de anuncios en TikTok/Meta y riesgo regulatorio FTC.","suggestion":"Elimina o atenúa la afirmación: describe qué hace el producto de forma verificable («ayuda a…», «está formulado para…») sin prometer un resultado garantizado ni un efecto médico/financiero."}]
+ ✓ |core:unit| src/__t25_trap__.test.ts > T2.5 trap airtight > claim ES VERBATIM en guion EN, briefLanguage es => guard SUPRIME el would-match (NO fire) 4ms
+ ✓ |core:unit| src/__t25_trap__.test.ts > T2.5 trap airtight > control: MISMO texto pero guion es + briefLanguage es => SI dispara 1ms
+
+ Test Files  1 passed (1)
+      Tests  2 passed (2)
+   Start at  10:34:05
+   Duration  206ms (transform 48ms, setup 24ms, import 75ms, tests 6ms, environment 0ms)
+

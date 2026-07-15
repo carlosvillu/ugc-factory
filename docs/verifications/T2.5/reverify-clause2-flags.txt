@@ -1,0 +1,32 @@
+
+=== POS-ES (es/es, claim ES) ===
+  script.language=es briefLanguage=es
+  flags (1): [
+  {
+    "rule": "banned_claim",
+    "excerpt": "revierte la calvicie en 30 días",
+    "blocking": true,
+    "explanation": "Contiene un claim de la lista de riesgo del brief (salud/finanzas/resultados garantizados): dispara rechazo de anuncios en TikTok/Meta y riesgo regulatorio FTC.",
+    "suggestion": "Elimina o atenúa la afirmación: describe qué hace el producto de forma verificable («ayuda a…», «está formulado para…») sin prometer un resultado garantizado ni un efecto médico/financiero."
+  }
+]
+
+=== NEG-ES (es/es, sin claim) ===
+  script.language=es briefLanguage=es
+  flags (0): []
+
+=== TRAP-CROSS (en script / es briefLang, claim ES verbatim) ===
+  script.language=en briefLanguage=es
+  flags (0): []
+
+=== POS-EN (en/en, claim EN) ===
+  script.language=en briefLanguage=en
+  flags (1): [
+  {
+    "rule": "banned_claim",
+    "excerpt": "reverses baldness in 30 days",
+    "blocking": true,
+    "explanation": "Contiene un claim de la lista de riesgo del brief (salud/finanzas/resultados garantizados): dispara rechazo de anuncios en TikTok/Meta y riesgo regulatorio FTC.",
+    "suggestion": "Elimina o atenúa la afirmación: describe qué hace el producto de forma verificable («ayuda a…», «está formulado para…») sin prometer un resultado garantizado ni un efecto médico/financiero."
+  }
+]

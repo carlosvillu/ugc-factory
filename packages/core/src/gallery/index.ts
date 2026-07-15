@@ -39,6 +39,7 @@ export {
   type VariableSpecSeed,
   type AssetSlotSeed,
   type PromptTemplateSeed,
+  type PromptTemplateSeedInput,
   type GuardPackSeed,
   type ModelKind,
   type ModelStatus,
@@ -147,3 +148,37 @@ export {
   type ScenePlan,
   type GenerationPlan,
 } from './adapters/index';
+
+// ── LA VISTA DE GALERÍA (T3.8) ───────────────────────────────────────────────────
+// Los contratos de respuesta de la API REST de `/gallery` (fila leída, no seed) + las funciones
+// PURAS que la UI usa: resaltado de slots, validación en vivo (reusa §10.4) y diff v2↔v1 (LCS
+// sin librería). Deterministas → su test corre en `pnpm gate`.
+export {
+  TemplateSummarySchema,
+  TemplateDetailSchema,
+  TemplateVersionSchema,
+  AppliedGuardPackSchema,
+  TemplateWithVersionsSchema,
+  FacetCountSchema,
+  TemplateListSchema,
+  TemplateEditSchema,
+  TemplateEditResultSchema,
+  TemplateStatusChangeSchema,
+  splitBodySlots,
+  invalidBodySlots,
+  diffLines,
+  templateFilterToQuery,
+  type TemplateSummary,
+  type TemplateDetail,
+  type TemplateVersion,
+  type AppliedGuardPack,
+  type TemplateWithVersions,
+  type FacetCount,
+  type TemplateList,
+  type TemplateEdit,
+  type TemplateEditResult,
+  type TemplateStatusChange,
+  type BodySegment,
+  type DiffLine,
+  type TemplateFilterQuery,
+} from './gallery-view';

@@ -20,6 +20,18 @@ import {
   type PersonaBody,
   type PersonaPatch,
 } from '@ugc/core/persona';
+import {
+  TemplateDetailSchema,
+  TemplateEditResultSchema,
+  TemplateListSchema,
+  TemplateSummarySchema,
+  TemplateWithVersionsSchema,
+  templateFilterToQuery,
+  type PromptTemplateSeedInput,
+  type PromptStatus,
+  type TemplateEdit,
+  type TemplateFilterQuery,
+} from '@ugc/core/gallery';
 
 export class ApiError extends Error {
   constructor(
@@ -312,4 +324,28 @@ export const runActions = {
   retry: (stepId: string, config?: unknown) =>
     api.post(`/api/steps/${stepId}/retry`, OkSchema, config === undefined ? undefined : { config }),
   skip: (stepId: string) => api.post(`/api/steps/${stepId}/skip`, OkSchema),
+};
+
+// ── Galería de templates (T3.8) ──────────────────────────────────────────────
+// El CRUD de `/gallery` + el versionado. Todo contra la API REST del Apéndice E, con los
+// contratos de `@ugc/core/gallery` (los mismos que re-valida el handler). La validación de slots
+// EN VIVO NO pasa por aquí: es una función pura de core (`invalidBodySlots`) que corre en el
+// navegador sin fetch — solo la PERSISTENCIA de v2 (`createVersion`) va por REST.
+export const templateActions = {
+  /** La lista facetada + los conteos del rail. El filtro se serializa a querystring con la MISMA
+   *  función pura que testea core (`templateFilterToQuery`): cliente y servidor hablan la misma URL. */
+  list: (filter: TemplateFilterQuery = {}) =>
+    api.get(`/api/templates${templateFilterToQuery(filter)}`, TemplateListSchema),
+  /** La ficha: template + versiones (más nueva primero) + guards que aplican (§9.5). */
+  get: (id: string) => api.get(`/api/templates/${id}`, TemplateWithVersionsSchema),
+  /** Crea un template (botón «+ Nuevo template»). Nace en `draft`. */
+  create: (body: PromptTemplateSeedInput) =>
+    api.post('/api/templates', TemplateSummarySchema, body),
+  /** Guarda una edición → crea `prompt_version` v2. Devuelve el par (previous, created) para que
+   *  el cliente renderice el diff con `diffLines` sin un segundo GET. */
+  createVersion: (id: string, edit: TemplateEdit) =>
+    api.patch(`/api/templates/${id}`, TemplateEditResultSchema, edit),
+  /** Cambia el estado (draft→review→published, §10.2). */
+  setStatus: (id: string, status: PromptStatus) =>
+    api.patch(`/api/templates/${id}/status`, TemplateDetailSchema, { status }),
 };

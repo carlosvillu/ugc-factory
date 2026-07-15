@@ -31,7 +31,11 @@ const CANVAS: Destination = {
 const RUNS: Destination = { label: 'Runs', href: '/runs', matches: ['/runs'] };
 const GASTO: Destination = { label: 'Gasto', href: '/spend' };
 const INICIO: Destination = { label: 'Inicio', href: '/' };
-const GALERIA: Destination = { label: 'Galería', href: null, pending: 'F5' };
+// Un destino DESHABILITADO para los tests genéricos de «un destino sin página nunca se resalta».
+// Antes era «Galería», pero desde T3.8 Galería es navegable (`/gallery`): «Biblioteca» sigue sin
+// página (llega en F2), así que asume el papel de fixture-deshabilitado.
+const BIBLIOTECA: Destination = { label: 'Biblioteca', href: null, pending: 'F2' };
+const GALERIA: Destination = { label: 'Galería', href: '/gallery', matches: ['/gallery'] };
 const RUN_ID = '/runs/01J000000000000000000000';
 
 describe('isHighlighted (resaltado visual del destino)', () => {
@@ -62,7 +66,12 @@ describe('isHighlighted (resaltado visual del destino)', () => {
   });
 
   it('un destino sin página (deshabilitado) nunca se resalta', () => {
-    expect(isHighlighted('/', GALERIA)).toBe(false);
+    expect(isHighlighted('/', BIBLIOTECA)).toBe(false);
+  });
+
+  it('«Galería» se resalta en su área (T3.8): /gallery activa el destino', () => {
+    expect(isHighlighted('/gallery', GALERIA)).toBe(true);
+    expect(isHighlighted('/spend', GALERIA)).toBe(false);
   });
 });
 
@@ -84,7 +93,7 @@ describe('isCurrentPage (aria-current="page")', () => {
   });
 
   it('un destino sin página nunca es la página actual', () => {
-    expect(isCurrentPage('/', GALERIA)).toBe(false);
+    expect(isCurrentPage('/', BIBLIOTECA)).toBe(false);
   });
 });
 
@@ -127,6 +136,7 @@ describe('DESTINATIONS (los 6 del mockup 2a + «Personas» + «Runs»)', () => {
       '/runs',
       RUN_ID,
       '/personas',
+      '/gallery',
       '/spend',
       '/settings',
       '/design-system',
@@ -162,7 +172,6 @@ describe('homeEntries (las tarjetas de la home)', () => {
   it('NO incluye destinos sin página: el invariante lo sostiene el tipo, no un comentario', () => {
     const labels = homeEntries().map((e) => e.label);
     expect(labels).not.toContain('Biblioteca');
-    expect(labels).not.toContain('Galería');
     expect(labels).not.toContain('Métricas');
   });
 

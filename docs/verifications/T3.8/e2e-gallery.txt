@@ -1,0 +1,2 @@
+  ✓  24 [chromium] › e2e/gallery.spec.ts:44:3 › /gallery — galería de templates (T3.8) › filtros combinados (2 facetas) devuelven exactamente los templates que casan ambas @f3 (8.8s)
+  ✓  25 [chromium] › e2e/gallery.spec.ts:99:3 › /gallery — galería de templates (T3.8) › ficha: slots resaltados, validación en vivo de slot inválido, y crear v2 con diff visible @f3 (13.8s)

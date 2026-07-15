@@ -1,0 +1,8 @@
+=== gate + e2e summary ===
+ Test Files  150 passed (150)
+      Tests  1672 passed (1672)
+--- e2e ---
+    test-results/auth.setup.ts-login-y-persistir-sesión-setup/test-failed-1.png
+  1 failed
+ ELIFECYCLE  Command failed with exit code 1.
+  64 passed (2.2m)

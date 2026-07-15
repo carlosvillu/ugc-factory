@@ -104,6 +104,10 @@ export const PromptTemplateSeedSchema = z.object({
   compliance: z.record(z.string(), z.unknown()).optional(),
 });
 export type PromptTemplateSeed = z.infer<typeof PromptTemplateSeedSchema>;
+/** El tipo de ENTRADA del seed (antes de aplicar defaults): solo los campos requeridos son
+ *  obligatorios. Lo usa el cliente al crear un template desde el formulario, que teclea el mínimo
+ *  (slug/title/kind/body/language) y deja que el schema rellene el resto. */
+export type PromptTemplateSeedInput = z.input<typeof PromptTemplateSeedSchema>;
 
 /**
  * Un guard pack (§12 l.540-542). `key` es la clave semántica UNIQUE (`guard.vertical.beauty`).

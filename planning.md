@@ -531,7 +531,7 @@ Decisiones del usuario (2026-07-07): la fase se ejecuta tras T0.1 y **antes** de
 - **Entrega**: ~50 templates propios (es/en) cubriendo formatos y ángulos de mayor uso, siguiendo la anatomía §10.3, en `draft` (pasan a `published` con thumbnail en T4.12). Ampliación a ~150 en T8.6.
 - **Verificación**: validador en verde; 5 templates elegidos al azar **por el verifier** cumplen los 14 puntos de la anatomía §10.3 (checklist manual); la búsqueda facetada devuelve candidatos para cada ángulo del brief de prueba.
 
-#### T3.8 · UI de galería
+#### T3.8 · UI de galería [x] 2026-07-16 — PASS (navegador: filtro 2 facetas, slot inválido en vivo, guardar crea prompt_version v2 con diff vs v1; mockup 5a), ver docs/verifications/T3.8/
 - **Depende de**: T3.7
 - **Entrega**: `/gallery` con navegación facetada, ficha de template (body con slots resaltados, beats, guards, versiones con diff), editor con validación de slots en vivo, estados draft/review/published. (El botón "probar template" llega en T4.12 con FalClient.)
 - **Mockup**: `docs/mockups/gallery.html` (variante 5a · rejilla facetada + filtros). El layout parte de ese mockup; el reviewer rechaza una página que se desvíe sin acuerdo (ver `.claude/skills/frontend`).

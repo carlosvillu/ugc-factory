@@ -1,0 +1,11 @@
+        template_id         | version |                     body                      
+----------------------------+---------+-----------------------------------------------
+ 01KXK54ZCSWS4RPY8DJ8B77JV9 |       1 | UGC smartphone video style, vertical 9:16, no
+ 01KXK54ZCSWS4RPY8DJ8B77JV9 |       2 | GRWM beauty edited body for T3.8 verification
+(2 rows)
+
+ head_version |                     body                      
+--------------+-----------------------------------------------
+            2 | GRWM beauty edited body for T3.8 verification
+(1 row)
+

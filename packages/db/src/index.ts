@@ -247,3 +247,16 @@ export { listRuns } from './repos/run-list.repo';
 // step). Misma función que usa el listado: dos sitios que responden «cuánto costó este run» tienen
 // que responder LO MISMO. Ver `run-list.repo.ts`.
 export { runLedgerCost } from './repos/run-list.repo';
+
+// Galería (T3.8): la LECTURA facetada de `/gallery` + el versionado inmutable de templates
+// (crear v2 sin mutar v1) + la transición de estado. Complementa a `seedGallery` (que siembra):
+// esto es lo que el runtime consume. Ver `gallery.repo.ts`.
+export {
+  listTemplates,
+  createTemplate,
+  getTemplateWithVersions,
+  createTemplateVersion,
+  setTemplateStatus,
+  listGuardPacks,
+} from './repos/gallery.repo';
+export type { PromptTemplate, PromptVersion } from './schema/gallery';

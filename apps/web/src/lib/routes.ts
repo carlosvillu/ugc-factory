@@ -109,7 +109,18 @@ export const DESTINATIONS: Destination[] = [
       'Los avatares que protagonizan los anuncios: demografía, personalidad, voz por idioma e imágenes de referencia del identity lock.',
   },
   { label: 'Biblioteca', href: null, pending: 'llega en la fase F2 (guiones y variantes)' },
-  { label: 'Galería', href: null, pending: 'llega en la fase F5 (composición y export)' },
+  {
+    // «Galería» (T3.8, F3): la galería de TEMPLATES DE PROMPT (§10) — navegación facetada, ficha
+    // con slots resaltados y guards, editor con validación en vivo y versiones con diff. El
+    // `pending` anterior («fase F5, composición y export») era una suposición errónea de una
+    // tarea previa: la galería de templates es F3, y su página existe desde T3.8. El botón
+    // «probar template» (que llama a fal) llega en T4.12; el resto de la galería está aquí.
+    label: 'Galería',
+    href: '/gallery',
+    matches: ['/gallery'],
+    description:
+      'Los templates de prompt curados: filtra por formato, ángulo, vertical y estado; abre una ficha para ver su cuerpo con slots, sus guards y sus versiones, y edítalo para crear una versión nueva.',
+  },
   { label: 'Métricas', href: null, pending: 'llega en la fase F6 (publicación y métricas)' },
   {
     label: 'Gasto',

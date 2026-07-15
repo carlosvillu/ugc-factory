@@ -16,6 +16,7 @@
     "db:generate": "pnpm --filter @ugc/db db:generate",
     "db:smoke": "pnpm --filter @ugc/db db:smoke",
     "seed": "pnpm --filter @ugc/db db:seed",
+    "seed:gallery": "pnpm --filter @ugc/db db:seed:gallery",
     "knip": "knip",
     "readme:status": "node scripts/readme-status.mjs",
     "readme:status:check": "node scripts/readme-status.mjs --check",

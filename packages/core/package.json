@@ -7,6 +7,7 @@
     ".": "./src/index.ts",
     "./analyze": "./src/analyze/index.ts",
     "./contracts": "./src/contracts/index.ts",
+    "./gallery": "./src/gallery/index.ts",
     "./ingest": "./src/ingest/index.ts",
     "./jobs": "./src/jobs/index.ts",
     "./library": "./src/library/index.ts",

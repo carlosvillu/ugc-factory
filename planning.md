@@ -500,7 +500,7 @@ Decisiones del usuario (2026-07-07): la fase se ejecuta tras T0.1 y **antes** de
 - **Entrega**: tablas `prompt_template` (facetas GIN, `perf`, `usage_count`), `prompt_version`, `guard_pack` (con `key`, `vertical?`, `platform?`), `model_profile` (capabilities con refImages/refVideos/refAudios, `cost` multi-unidad) (§12).
 - **Verificación**: migración aplica (`psql \d`); con ≥1.000 filas sintéticas sembradas para el test (o `SET enable_seqscan=off`), una consulta por facetas combinadas muestra Bitmap Index Scan sobre el GIN en el EXPLAIN y devuelve exactamente las filas esperadas.
 
-#### T3.2 · Seed pipeline con validador en el gate
+#### T3.2 · Seed pipeline con validador en el gate [x] 2026-07-15 — PASS, ver docs/verifications/T3.2/ (coste $0)
 - **Depende de**: T3.1
 - **Entrega**: `packages/core/gallery-seed/*.json` + `pnpm seed:gallery` (upsert idempotente) + validador integrado en `pnpm gate` (campos requeridos, slugs únicos, slots resolubles contra §10.4, `guardPackIds` existentes, `enumValues` para enums; no hay CI remota); los fixtures incluyen **2–3 templates mínimos de prueba** (los usará la verificación de T3.5).
 - **Verificación**: romper un fixture a propósito (slot inexistente `{producto.nombre}`) hace fallar `pnpm gate` con mensaje claro; el seed corre dos veces sin duplicar filas.

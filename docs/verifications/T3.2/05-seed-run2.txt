@@ -1,0 +1,9 @@
+
+> ugc-factory@0.0.0 seed:gallery /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads
+> pnpm --filter @ugc/db db:seed:gallery
+
+
+> @ugc/db@0.0.0 db:seed:gallery /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/db
+> tsx --env-file-if-exists=../../.env scripts/seed-gallery.ts
+
+seed:gallery: OK — prompt_template=3 guard_pack=0

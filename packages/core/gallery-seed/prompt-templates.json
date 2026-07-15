@@ -1,0 +1,190 @@
+[
+  {
+    "slug": "grwm-beauty-pain-point",
+    "title": "GRWM beauty — pain-point hook",
+    "description": "Get-ready-with-me de belleza, arranca con un dolor concreto y demuestra el producto en uso.",
+    "kind": "video",
+    "language": "es",
+    "status": "draft",
+    "body": "UGC smartphone video style, vertical 9:16, no cinematic grading, no beauty filters, no color science. Cast a {persona.descriptor} in the {persona.age_range} range as an honest first-person creator (never labelled 'customer'), filming herself in {persona.setting} with 2-3 everyday anchors (bathroom mirror, morning light, a cluttered shelf). Beat 1 (0-3s): she looks into the lens and says, \"{hook.line}\", framing the pain of {pain_point}. Beat 2 (3-10s): she applies {product.name} to camera, showing the {benefit.primary} with visible pores and natural skin texture. Beat 3 (10-18s): a second layer of proof on {benefit[0]}, handheld with slight autofocus breathing and imperfect framing. Camera: fixed phone at arm's length, one reframe, no gimbal moves. Lighting: motivated by the window, soft and uneven. Deliberate imperfections: visible pores, autofocus breathing, imperfect framing, no retouch. Product moment: the label of {product.name} stays legible and true to shape, no morphing, no invented text. Fidelity guards: keep the product geometry and colour stable across cuts, no identity drift on the creator. Audio: implied room tone, no music bed. Final beat (18-22s): natural close to camera, \"{cta.line}\". Format: 9:16, {duration}s, {platform}, {aspect}.",
+    "beats": [
+      {
+        "tStart": 0,
+        "tEnd": 3,
+        "action": "hook to camera",
+        "dialogue": "{hook.line}",
+        "camera": "fixed, arm's length"
+      },
+      {
+        "tStart": 3,
+        "tEnd": 10,
+        "action": "apply product, show primary benefit",
+        "dialogue": "",
+        "camera": "handheld reframe"
+      },
+      {
+        "tStart": 10,
+        "tEnd": 18,
+        "action": "second proof point",
+        "dialogue": "",
+        "camera": "handheld, autofocus breathing"
+      },
+      {
+        "tStart": 18,
+        "tEnd": 22,
+        "action": "natural CTA close",
+        "dialogue": "{cta.line}",
+        "camera": "fixed, arm's length"
+      }
+    ],
+    "variables": [
+      { "name": "product.name", "type": "string", "required": true, "source": "brief.product" },
+      { "name": "benefit.primary", "type": "string", "required": true, "source": "brief.benefits" },
+      { "name": "pain_point", "type": "string", "required": true, "source": "brief.pain_points" },
+      { "name": "persona.descriptor", "type": "string", "required": true, "source": "persona" },
+      { "name": "hook.line", "type": "string", "required": true, "source": "hook_line" },
+      { "name": "cta.line", "type": "string", "required": true, "source": "cta_line" }
+    ],
+    "assetSlots": [
+      { "slot": "@product", "required": true },
+      { "slot": "@character", "required": true }
+    ],
+    "guardPackKeys": [],
+    "defaultDurationS": 22,
+    "defaultAspect": "9:16",
+    "formats": ["grwm"],
+    "hookAngles": ["pain_point"],
+    "verticals": ["beauty"],
+    "platforms": ["tiktok"],
+    "aesthetics": ["natural"],
+    "freeTags": ["morning-routine"],
+    "featured": false,
+    "license": "AGPL-3.0",
+    "author": "UGC Factory",
+    "compliance": { "testimonialStyle": "creator", "requiresDisclosure": true }
+  },
+  {
+    "slug": "unboxing-saas-authority",
+    "title": "Unboxing SaaS — authority hook",
+    "description": "Demostración estilo educator de una herramienta SaaS, arranca con autoridad y cierra con CTA de prueba.",
+    "kind": "video",
+    "language": "es",
+    "status": "draft",
+    "body": "UGC smartphone video style, vertical 9:16, no cinematic grading, no beauty filters. Cast a {persona.descriptor} in the {persona.age_range} range as an honest educator/demonstrator (never 'customer'), at a real desk in {persona.setting} with 2-3 anchors (laptop, coffee mug, a notebook). Beat 1 (0-3s): straight to camera, \"{hook.line}\", establishing authority around {pain_point}. Beat 2 (3-12s): screen-share style demo of {product.name} delivering {benefit.primary}, cursor visible, real UI, no invented menus. Beat 3 (12-20s): a concrete second win on {benefit[1]}, handheld with imperfect framing. Camera: phone on a stack of books, one reframe, no dolly. Lighting: motivated by the desk lamp and window, uneven. Deliberate imperfections: autofocus breathing, imperfect framing, no retouch. Product moment: the {product.name} interface stays true, no morphed text, no fake logos. Fidelity guards: keep UI text legible and stable, no identity drift on the presenter. Audio: implied room tone, keyboard clicks, no music. Final beat (20-24s): natural close, \"{cta.line}\". Format: 9:16, {duration}s, {platform}, {aspect}, filmed for {setting}.",
+    "beats": [
+      {
+        "tStart": 0,
+        "tEnd": 3,
+        "action": "authority hook to camera",
+        "dialogue": "{hook.line}",
+        "camera": "fixed on books"
+      },
+      {
+        "tStart": 3,
+        "tEnd": 12,
+        "action": "screen-share demo, primary benefit",
+        "dialogue": "",
+        "camera": "fixed"
+      },
+      { "tStart": 12, "tEnd": 20, "action": "second win", "dialogue": "", "camera": "handheld" },
+      {
+        "tStart": 20,
+        "tEnd": 24,
+        "action": "natural CTA close",
+        "dialogue": "{cta.line}",
+        "camera": "fixed on books"
+      }
+    ],
+    "variables": [
+      { "name": "product.name", "type": "string", "required": true, "source": "brief.product" },
+      { "name": "benefit.primary", "type": "string", "required": true, "source": "brief.benefits" },
+      { "name": "pain_point", "type": "string", "required": true, "source": "brief.pain_points" },
+      { "name": "persona.descriptor", "type": "string", "required": true, "source": "persona" },
+      { "name": "hook.line", "type": "string", "required": true, "source": "hook_line" },
+      { "name": "cta.line", "type": "string", "required": true, "source": "cta_line" }
+    ],
+    "assetSlots": [
+      { "slot": "@product", "required": true },
+      { "slot": "@character", "required": true }
+    ],
+    "guardPackKeys": [],
+    "defaultDurationS": 24,
+    "defaultAspect": "9:16",
+    "formats": ["unboxing"],
+    "hookAngles": ["authority"],
+    "verticals": ["saas"],
+    "platforms": ["tiktok", "instagram"],
+    "aesthetics": ["desk"],
+    "freeTags": ["demo"],
+    "featured": false,
+    "license": "AGPL-3.0",
+    "author": "UGC Factory",
+    "compliance": { "testimonialStyle": "creator", "requiresDisclosure": true }
+  },
+  {
+    "slug": "before-after-fitness-transformation",
+    "title": "Before/after fitness — transformation hook",
+    "description": "Testimonio de transformación fitness estilo creator, arranca con el cambio y objeta lo obvio.",
+    "kind": "video",
+    "language": "en",
+    "status": "draft",
+    "body": "UGC smartphone video style, vertical 9:16, no cinematic grading, no beauty filters. Cast a {persona.descriptor} in the {persona.age_range} range as an honest creator-style demonstrator (never 'customer'), in {persona.setting} with 2-3 anchors (home gym mat, water bottle, a wall clock). Beat 1 (0-3s): to camera, \"{hook.line}\", teasing the transformation around {pain_point}. Beat 2 (3-11s): shows using {product.name} and states the {benefit.primary}, sweat and real skin visible. Beat 3 (11-19s): addresses the {objection} head-on with a plain {rebuttal}, handheld. Camera: phone propped on a shelf, one reframe. Lighting: motivated by overhead light, uneven. Deliberate imperfections: visible pores, autofocus breathing, imperfect framing. Product moment: {product.name} label true to shape, no morphing. Fidelity guards: stable geometry, no identity drift. Audio: implied room tone, no music. Final beat (19-23s): natural close, \"{cta.line}\". Format: 9:16, {duration}s, {platform}, {aspect}.",
+    "beats": [
+      {
+        "tStart": 0,
+        "tEnd": 3,
+        "action": "transformation hook",
+        "dialogue": "{hook.line}",
+        "camera": "fixed on shelf"
+      },
+      {
+        "tStart": 3,
+        "tEnd": 11,
+        "action": "use product, primary benefit",
+        "dialogue": "",
+        "camera": "handheld"
+      },
+      {
+        "tStart": 11,
+        "tEnd": 19,
+        "action": "objection and rebuttal",
+        "dialogue": "{rebuttal}",
+        "camera": "handheld"
+      },
+      {
+        "tStart": 19,
+        "tEnd": 23,
+        "action": "natural CTA close",
+        "dialogue": "{cta.line}",
+        "camera": "fixed on shelf"
+      }
+    ],
+    "variables": [
+      { "name": "product.name", "type": "string", "required": true, "source": "brief.product" },
+      { "name": "benefit.primary", "type": "string", "required": true, "source": "brief.benefits" },
+      { "name": "pain_point", "type": "string", "required": true, "source": "brief.pain_points" },
+      { "name": "objection", "type": "string", "required": true, "source": "brief.objections" },
+      { "name": "rebuttal", "type": "string", "required": true, "source": "brief.objections" },
+      { "name": "persona.descriptor", "type": "string", "required": true, "source": "persona" },
+      { "name": "hook.line", "type": "string", "required": true, "source": "hook_line" },
+      { "name": "cta.line", "type": "string", "required": true, "source": "cta_line" }
+    ],
+    "assetSlots": [
+      { "slot": "@product", "required": true },
+      { "slot": "@character", "required": true }
+    ],
+    "guardPackKeys": [],
+    "defaultDurationS": 23,
+    "defaultAspect": "9:16",
+    "formats": ["before-after"],
+    "hookAngles": ["transformation"],
+    "verticals": ["fitness"],
+    "platforms": ["instagram"],
+    "aesthetics": ["natural"],
+    "freeTags": ["testimonial"],
+    "featured": false,
+    "license": "AGPL-3.0",
+    "author": "UGC Factory",
+    "compliance": { "testimonialStyle": "creator", "requiresDisclosure": true }
+  }
+]

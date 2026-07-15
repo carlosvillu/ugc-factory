@@ -1,4 +1,7 @@
 {
   "extends": "../../tsconfig.base.json",
-  "include": ["src", "test", "prompts", "*.config.ts"]
+  "compilerOptions": {
+    "resolveJsonModule": true
+  },
+  "include": ["src", "test", "prompts", "*.config.ts", "gallery-seed"]
 }

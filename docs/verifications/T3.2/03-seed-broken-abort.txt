@@ -1,0 +1,14 @@
+
+> ugc-factory@0.0.0 seed:gallery /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads
+> pnpm --filter @ugc/db db:seed:gallery
+
+
+> @ugc/db@0.0.0 db:seed:gallery /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/db
+> tsx --env-file-if-exists=../../.env scripts/seed-gallery.ts
+
+seed:gallery: el seed NO es válido (1 problemas):
+  [unknown_slot] prompt_template grwm-beauty-pain-point — slot desconocido {producto.nombre} en el template "grwm-beauty-pain-point" (no está en las variables canónicas §10.4)
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/db:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @ugc/db@0.0.0 db:seed:gallery: `tsx --env-file-if-exists=../../.env scripts/seed-gallery.ts`
+Exit status 1
+ ELIFECYCLE  Command failed with exit code 1.

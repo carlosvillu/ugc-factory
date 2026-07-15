@@ -1,0 +1,235 @@
+
+> ugc-factory@0.0.0 gate /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads
+> pnpm lint && pnpm typecheck && pnpm format:check && pnpm knip && pnpm readme:status:check && pnpm test
+
+
+> ugc-factory@0.0.0 lint /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads
+> eslint .
+
+
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/web/e2e/runs-canvas.spec.ts
+   52:3  warning  Test has no assertions  playwright/expect-expect
+   69:3  warning  Test has no assertions  playwright/expect-expect
+   79:3  warning  Test has no assertions  playwright/expect-expect
+  126:3  warning  Test has no assertions  playwright/expect-expect
+  254:3  warning  Test has no assertions  playwright/expect-expect
+
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/web/src/components/checkpoints/brief-editor.tsx
+  325:23  warning  Compilation Skipped: Use of incompatible library
+
+This API returns functions which cannot be memoized without leading to stale UI. To prevent this, by default React Compiler will skip memoizing this component/hook. However, you may see issues if values from this API are passed to other components/hooks that are memoized.
+
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/web/src/components/checkpoints/brief-editor.tsx:325:23
+  323 |   }
+  324 |
+> 325 |   const productName = watch('product.name');
+      |                       ^^^^^ React Hook Form's `useForm()` API returns a `watch()` function which cannot be memoized safely.
+  326 |
+  327 |   return (
+  328 |     <form  react-hooks/incompatible-library
+
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/web/src/components/design-system/overlay-specimens.tsx
+  399:11  warning  Image elements must have an alt prop, either with meaningful text, or an empty string for decorative images  jsx-a11y/alt-text
+  413:11  warning  Image elements must have an alt prop, either with meaningful text, or an empty string for decorative images  jsx-a11y/alt-text
+  417:11  warning  Image elements must have an alt prop, either with meaningful text, or an empty string for decorative images  jsx-a11y/alt-text
+
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/web/src/components/intake/intake-form.tsx
+  70:39  warning  Compilation Skipped: Use of incompatible library
+
+This API returns functions which cannot be memoized without leading to stale UI. To prevent this, by default React Compiler will skip memoizing this component/hook. However, you may see issues if values from this API are passed to other components/hooks that are memoized.
+
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/web/src/components/intake/intake-form.tsx:70:39
+  68 |   const { errors, isSubmitting } = formState;
+  69 |
+> 70 |   const imageRefs: IntakeImageRef[] = watch('imageRefs') ?? [];
+     |                                       ^^^^^ React Hook Form's `useForm()` API returns a `watch()` function which cannot be memoized safely.
+  71 |   const [uploadError, setUploadError] = useState<string | null>(null);
+  72 |   const [uploading, setUploading] = useState(false);
+  73 |  react-hooks/incompatible-library
+
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/web/src/components/ui/image.test.tsx
+  129:12  warning  Image elements must have an alt prop, either with meaningful text, or an empty string for decorative images  jsx-a11y/alt-text
+
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/core/src/analyze/rescale.test.ts
+  5:8  warning  Using exported name 'sharp' as identifier for default export  import-x/no-named-as-default
+
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/core/src/analyze/rescale.ts
+  9:8  warning  Using exported name 'sharp' as identifier for default export  import-x/no-named-as-default
+
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/core/src/analyze/visual-analyzer.test.ts
+  6:8  warning  Using exported name 'sharp' as identifier for default export  import-x/no-named-as-default
+
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/core/src/contracts/product-brief.json-schema.test.ts
+  7:8  warning  Using exported name 'Ajv2020' as identifier for default export  import-x/no-named-as-default
+
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/core/src/persona/contracts.ts
+   42:6  warning  'VoiceRef' is defined but never used. Allowed unused vars must match /^_/u          unused-imports/no-unused-vars
+   59:6  warning  'VoiceMap' is defined but never used. Allowed unused vars must match /^_/u          unused-imports/no-unused-vars
+  167:6  warning  'PersonaCandidate' is defined but never used. Allowed unused vars must match /^_/u  unused-imports/no-unused-vars
+
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/core/src/persona/reference-image.ts
+  17:8  warning  Using exported name 'sharp' as identifier for default export  import-x/no-named-as-default
+
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/services/test/integration/visual-analyze.test.ts
+  13:8  warning  Using exported name 'sharp' as identifier for default export  import-x/no-named-as-default
+
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/test-utils/src/image-fixtures.ts
+  14:8  warning  Using exported name 'sharp' as identifier for default export  import-x/no-named-as-default
+
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/scripts/readme-status.mjs
+  115:23  warning  Caution: `prettier` also has a named export `resolveConfig`. Check if you meant to write `import {resolveConfig} from 'prettier'` instead  import-x/no-named-as-default-member
+  116:20  warning  Caution: `prettier` also has a named export `format`. Check if you meant to write `import {format} from 'prettier'` instead                import-x/no-named-as-default-member
+
+✖ 23 problems (0 errors, 23 warnings)
+
+
+> ugc-factory@0.0.0 typecheck /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads
+> tsc --noEmit && pnpm -r --parallel typecheck
+
+Scope: 6 of 7 workspace projects
+apps/web typecheck$ tsc --noEmit
+apps/worker typecheck$ tsc --noEmit
+packages/core typecheck$ tsc --noEmit
+packages/db typecheck$ tsc --noEmit
+packages/services typecheck$ tsc --noEmit
+packages/test-utils typecheck$ tsc --noEmit
+apps/web typecheck: Done
+apps/worker typecheck: Done
+packages/db typecheck: Done
+packages/test-utils typecheck: Done
+packages/services typecheck: Done
+packages/core typecheck: Done
+
+> ugc-factory@0.0.0 format:check /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads
+> prettier --check .
+
+Checking formatting...
+All matched files use Prettier code style!
+
+> ugc-factory@0.0.0 knip /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads
+> knip
+
+Configuration hints (1)
+src/golden.ts  packages/test-utils  knip.json  Remove from ignore
+
+> ugc-factory@0.0.0 readme:status:check /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads
+> node scripts/readme-status.mjs --check
+
+readme:status — la tabla del README coincide con planning.md ✓
+
+> ugc-factory@0.0.0 test /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads
+> vitest run --project '*:unit' --project '*:integration'
+
+
+ RUN  v4.1.10 /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads
+
+ ❯ |core:unit| src/gallery/seed-validator.test.ts (17 tests | 3 failed) 25ms
+     × pasa el validador entero (control positivo del gate) 17ms
+     × incluye 2-3 templates mínimos de prueba (los usará T3.5) 1ms
+     × todos los slots del body de cada template REAL son canónicos §10.4 1ms
+ ❯ |db:integration| test/integration/gallery-seed.test.ts (3 tests | 3 failed) 136ms
+     × siembra el seed REAL y correr dos veces NO duplica filas 7ms
+     × los templates llegan con su slug, body y facetas 1ms
+     × re-sembrar con el body corregido ACTUALIZA la fila pero NO pisa el estado de runtime 1ms
+(node:99579) DeprecationWarning: Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 6 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |db:integration| test/integration/gallery-seed.test.ts > `pnpm seed:gallery`: puebla la galería y es IDEMPOTENTE (T3.2) > siembra el seed REAL y correr dos veces NO duplica filas
+Error: el seed real de galería no valida
+ ❯ realSeed test/integration/gallery-seed.test.ts:22:31
+     20| function realSeed() {
+     21|   const validation = validateGallerySeed(RAW_GALLERY_SEED);
+     22|   if (!validation.seed) throw new Error('el seed real de galería no va…
+       |                               ^
+     23|   return validation.seed;
+     24| }
+ ❯ test/integration/gallery-seed.test.ts:38:18
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/6]⎯
+
+ FAIL  |db:integration| test/integration/gallery-seed.test.ts > `pnpm seed:gallery`: puebla la galería y es IDEMPOTENTE (T3.2) > los templates llegan con su slug, body y facetas
+Error: el seed real de galería no valida
+ ❯ realSeed test/integration/gallery-seed.test.ts:22:31
+     20| function realSeed() {
+     21|   const validation = validateGallerySeed(RAW_GALLERY_SEED);
+     22|   if (!validation.seed) throw new Error('el seed real de galería no va…
+       |                               ^
+     23|   return validation.seed;
+     24| }
+ ❯ test/integration/gallery-seed.test.ts:54:18
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/6]⎯
+
+ FAIL  |db:integration| test/integration/gallery-seed.test.ts > `pnpm seed:gallery`: puebla la galería y es IDEMPOTENTE (T3.2) > re-sembrar con el body corregido ACTUALIZA la fila pero NO pisa el estado de runtime
+Error: el seed real de galería no valida
+ ❯ realSeed test/integration/gallery-seed.test.ts:22:31
+     20| function realSeed() {
+     21|   const validation = validateGallerySeed(RAW_GALLERY_SEED);
+     22|   if (!validation.seed) throw new Error('el seed real de galería no va…
+       |                               ^
+     23|   return validation.seed;
+     24| }
+ ❯ test/integration/gallery-seed.test.ts:68:18
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/6]⎯
+
+ FAIL  |core:unit| src/gallery/seed-validator.test.ts > el seed REAL que siembra `pnpm seed:gallery` > pasa el validador entero (control positivo del gate)
+AssertionError: expected [ { code: 'unknown_slot', …(3) } ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   {
++     "code": "unknown_slot",
++     "entity": "prompt_template",
++     "message": "slot desconocido {producto.nombre} en el template \"grwm-beauty-pain-point\" (no está en las variables canónicas §10.4)",
++     "where": "grwm-beauty-pain-point",
++   },
++ ]
+
+ ❯ src/gallery/seed-validator.test.ts:23:27
+     21|     const result = validateGallerySeed(RAW_GALLERY_SEED);
+     22|     // Mensaje útil si algún día se rompe: el gate dice EXACTAMENTE qu…
+     23|     expect(result.issues).toEqual([]);
+       |                           ^
+     24|     expect(result.ok).toBe(true);
+     25|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/6]⎯
+
+ FAIL  |core:unit| src/gallery/seed-validator.test.ts > el seed REAL que siembra `pnpm seed:gallery` > incluye 2-3 templates mínimos de prueba (los usará T3.5)
+AssertionError: expected undefined to be defined
+ ❯ src/gallery/seed-validator.test.ts:29:25
+     27|   it('incluye 2-3 templates mínimos de prueba (los usará T3.5)', () =>…
+     28|     const result = validateGallerySeed(RAW_GALLERY_SEED);
+     29|     expect(result.seed).toBeDefined();
+       |                         ^
+     30|     const count = result.seed?.templates.length ?? 0;
+     31|     expect(count).toBeGreaterThanOrEqual(2);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/6]⎯
+
+ FAIL  |core:unit| src/gallery/seed-validator.test.ts > el seed REAL que siembra `pnpm seed:gallery` > todos los slots del body de cada template REAL son canónicos §10.4
+Error: el seed real no valida
+ ❯ src/gallery/seed-validator.test.ts:38:29
+     36|     // Barrido independiente (red de seguridad), además del que corre …
+     37|     const result = validateGallerySeed(RAW_GALLERY_SEED);
+     38|     if (!result.seed) throw new Error('el seed real no valida');
+       |                             ^
+     39|     for (const template of result.seed.templates) {
+     40|       const unknown = [...new Set(extractSlots(template.body))].filter…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/6]⎯
+
+
+ Test Files  2 failed | 135 passed (137)
+      Tests  6 failed | 1510 passed (1516)
+   Start at  17:06:02
+   Duration  89.87s (transform 56.15s, setup 6.06s, import 211.06s, tests 201.95s, environment 41.44s)
+
+ ELIFECYCLE  Test failed. See above for more details.
+ ELIFECYCLE  Command failed with exit code 1.

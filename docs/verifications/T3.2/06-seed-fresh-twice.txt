@@ -1,0 +1,2 @@
+seed:gallery: OK — prompt_template=3 guard_pack=0
+seed:gallery: OK — prompt_template=3 guard_pack=0

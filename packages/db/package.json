@@ -14,7 +14,8 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx --env-file-if-exists=../../.env scripts/migrate.ts",
     "db:smoke": "tsx --env-file-if-exists=../../.env scripts/smoke-project.ts",
-    "db:seed": "tsx --env-file-if-exists=../../.env scripts/seed.ts"
+    "db:seed": "tsx --env-file-if-exists=../../.env scripts/seed.ts",
+    "db:seed:gallery": "tsx --env-file-if-exists=../../.env scripts/seed-gallery.ts"
   },
   "devDependencies": {
     "@types/pg": "catalog:",

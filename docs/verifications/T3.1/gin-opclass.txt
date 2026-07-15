@@ -1,0 +1,9 @@
+           index_name            | access_method |  opclass  | opcdefault 
+---------------------------------+---------------+-----------+------------
+ prompt_template_aesthetics_gin  | gin           | array_ops | t
+ prompt_template_formats_gin     | gin           | array_ops | t
+ prompt_template_hook_angles_gin | gin           | array_ops | t
+ prompt_template_platforms_gin   | gin           | array_ops | t
+ prompt_template_verticals_gin   | gin           | array_ops | t
+(5 rows)
+

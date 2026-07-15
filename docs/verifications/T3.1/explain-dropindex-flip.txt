@@ -1,0 +1,13 @@
+===== DROP-INDEX FLIP EXPERIMENT: drop BOTH facet GINs, same query =====
+DROP INDEX
+DROP INDEX
+                                                      QUERY PLAN                                                       
+-----------------------------------------------------------------------------------------------------------------------
+ Seq Scan on public.prompt_template  (cost=0.00..284.00 rows=1 width=7) (actual time=0.039..1.503 rows=37 loops=1)
+   Output: id
+   Filter: ((prompt_template.formats @> '{grwm}'::text[]) AND (prompt_template.hook_angles @> '{pain-point}'::text[]))
+   Rows Removed by Filter: 4963
+ Planning Time: 0.280 ms
+ Execution Time: 1.516 ms
+(6 rows)
+

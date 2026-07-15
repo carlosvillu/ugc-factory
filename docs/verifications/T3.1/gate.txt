@@ -1,0 +1,35 @@
+packages/services typecheck: Done
+packages/db typecheck: Done
+packages/core typecheck: Done
+
+> ugc-factory@0.0.0 format:check /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads
+> prettier --check .
+
+Checking formatting...
+All matched files use Prettier code style!
+
+> ugc-factory@0.0.0 knip /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads
+> knip
+
+Configuration hints (1)
+src/golden.ts  packages/test-utils  knip.json  Remove from ignore
+
+> ugc-factory@0.0.0 readme:status:check /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads
+> node scripts/readme-status.mjs --check
+
+readme:status — la tabla del README coincide con planning.md ✓
+
+> ugc-factory@0.0.0 test /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads
+> vitest run --project '*:unit' --project '*:integration'
+
+
+ RUN  v4.1.10 /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads
+
+(node:460) DeprecationWarning: Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+
+ Test Files  135 passed (135)
+      Tests  1496 passed (1496)
+   Start at  16:14:09
+   Duration  65.48s (transform 34.16s, setup 4.52s, import 120.17s, tests 111.04s, environment 31.03s)
+

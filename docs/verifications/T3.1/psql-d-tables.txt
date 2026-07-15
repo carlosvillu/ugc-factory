@@ -1,0 +1,99 @@
+════════════════════════════════ \d prompt_template ════════════════════════════════
+                                Table "public.prompt_template"
+       Column       |           Type           | Collation | Nullable |        Default         
+--------------------+--------------------------+-----------+----------+------------------------
+ id                 | text                     |           | not null | 
+ slug               | text                     |           | not null | 
+ title              | text                     |           | not null | 
+ description        | text                     |           |          | 
+ kind               | prompt_kind              |           | not null | 
+ body               | text                     |           | not null | 
+ beats              | jsonb                    |           | not null | '[]'::jsonb
+ variables          | jsonb                    |           | not null | '[]'::jsonb
+ asset_slots        | jsonb                    |           | not null | '[]'::jsonb
+ guard_pack_keys    | text[]                   |           | not null | '{}'::text[]
+ default_duration_s | integer                  |           |          | 
+ default_aspect     | text                     |           |          | 
+ formats            | text[]                   |           | not null | '{}'::text[]
+ hook_angles        | text[]                   |           | not null | '{}'::text[]
+ verticals          | text[]                   |           | not null | '{}'::text[]
+ platforms          | text[]                   |           | not null | '{}'::text[]
+ aesthetics         | text[]                   |           | not null | '{}'::text[]
+ free_tags          | text[]                   |           | not null | '{}'::text[]
+ status             | prompt_status            |           | not null | 'draft'::prompt_status
+ featured           | boolean                  |           | not null | false
+ license            | text                     |           |          | 
+ author             | text                     |           |          | 
+ attribution        | text                     |           |          | 
+ language           | text                     |           | not null | 
+ translations       | jsonb                    |           | not null | '{}'::jsonb
+ compliance         | jsonb                    |           |          | 
+ perf               | jsonb                    |           |          | 
+ head_version       | integer                  |           | not null | 0
+ usage_count        | integer                  |           | not null | 0
+ created_at         | timestamp with time zone |           | not null | now()
+ updated_at         | timestamp with time zone |           | not null | now()
+Indexes:
+    "prompt_template_pkey" PRIMARY KEY, btree (id)
+    "prompt_template_aesthetics_gin" gin (aesthetics)
+    "prompt_template_formats_gin" gin (formats)
+    "prompt_template_hook_angles_gin" gin (hook_angles)
+    "prompt_template_platforms_gin" gin (platforms)
+    "prompt_template_slug_key" UNIQUE, btree (slug)
+    "prompt_template_verticals_gin" gin (verticals)
+Referenced by:
+    TABLE "prompt_version" CONSTRAINT "prompt_version_template_id_prompt_template_id_fk" FOREIGN KEY (template_id) REFERENCES prompt_template(id) ON DELETE CASCADE
+
+════════════════════════════════ \d prompt_version ════════════════════════════════
+                          Table "public.prompt_version"
+     Column      |           Type           | Collation | Nullable |   Default    
+-----------------+--------------------------+-----------+----------+--------------
+ id              | text                     |           | not null | 
+ template_id     | text                     |           | not null | 
+ version         | integer                  |           | not null | 
+ body            | text                     |           | not null | 
+ beats           | jsonb                    |           | not null | '[]'::jsonb
+ guard_pack_keys | text[]                   |           | not null | '{}'::text[]
+ changelog       | text                     |           |          | 
+ created_at      | timestamp with time zone |           | not null | now()
+ updated_at      | timestamp with time zone |           | not null | now()
+Indexes:
+    "prompt_version_pkey" PRIMARY KEY, btree (id)
+    "prompt_version_template_version_key" UNIQUE, btree (template_id, version)
+Foreign-key constraints:
+    "prompt_version_template_id_prompt_template_id_fk" FOREIGN KEY (template_id) REFERENCES prompt_template(id) ON DELETE CASCADE
+
+════════════════════════════════ \d guard_pack ════════════════════════════════
+                          Table "public.guard_pack"
+   Column   |           Type           | Collation | Nullable |   Default    
+------------+--------------------------+-----------+----------+--------------
+ id         | text                     |           | not null | 
+ key        | text                     |           | not null | 
+ scope      | guard_scope              |           | not null | 
+ vertical   | text                     |           |          | 
+ platform   | text                     |           |          | 
+ lines      | text[]                   |           | not null | '{}'::text[]
+ created_at | timestamp with time zone |           | not null | now()
+ updated_at | timestamp with time zone |           | not null | now()
+Indexes:
+    "guard_pack_pkey" PRIMARY KEY, btree (id)
+    "guard_pack_key_key" UNIQUE, btree (key)
+
+════════════════════════════════ \d model_profile ════════════════════════════════
+                               Table "public.model_profile"
+     Column     |           Type           | Collation | Nullable |        Default         
+----------------+--------------------------+-----------+----------+------------------------
+ id             | text                     |           | not null | 
+ fal_endpoint   | text                     |           | not null | 
+ kind           | model_kind               |           | not null | 
+ capabilities   | jsonb                    |           | not null | '{}'::jsonb
+ cost           | jsonb                    |           | not null | '{}'::jsonb
+ prompt_adapter | text                     |           |          | 
+ status         | model_status             |           | not null | 'active'::model_status
+ verified_at    | timestamp with time zone |           |          | 
+ created_at     | timestamp with time zone |           | not null | now()
+ updated_at     | timestamp with time zone |           | not null | now()
+Indexes:
+    "model_profile_pkey" PRIMARY KEY, btree (id)
+    "model_profile_fal_endpoint_key" UNIQUE, btree (fal_endpoint)
+

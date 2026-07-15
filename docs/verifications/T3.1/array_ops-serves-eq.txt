@@ -1,0 +1,10 @@
+CREATE INDEX
+ANALYZE
+                    QUERY PLAN                    
+--------------------------------------------------
+ Bitmap Heap Scan on prompt_template
+   Recheck Cond: (formats = '{grwm}'::text[])
+   ->  Bitmap Index Scan on tmp_formats_gin
+         Index Cond: (formats = '{grwm}'::text[])
+(4 rows)
+

@@ -1,0 +1,27 @@
+===== NATURAL PLAN (no enable_seqscan tweak) — combined facets @> =====
+ enable_seqscan 
+----------------
+ on
+(1 row)
+
+                                                                   QUERY PLAN                                                                    
+-------------------------------------------------------------------------------------------------------------------------------------------------
+ Bitmap Heap Scan on public.prompt_template  (cost=149.45..153.46 rows=1 width=7) (actual time=0.837..0.844 rows=37 loops=1)
+   Output: id
+   Recheck Cond: ((prompt_template.formats @> '{grwm}'::text[]) AND (prompt_template.hook_angles @> '{pain-point}'::text[]))
+   Heap Blocks: exact=2
+   Buffers: shared hit=37
+   ->  BitmapAnd  (cost=149.45..149.45 rows=1 width=0) (actual time=0.832..0.832 rows=0 loops=1)
+         Buffers: shared hit=35
+         ->  Bitmap Index Scan on prompt_template_formats_gin  (cost=0.00..63.97 rows=37 width=0) (actual time=0.430..0.430 rows=37 loops=1)
+               Index Cond: (prompt_template.formats @> '{grwm}'::text[])
+               Buffers: shared hit=15
+         ->  Bitmap Index Scan on prompt_template_hook_angles_gin  (cost=0.00..85.22 rows=37 width=0) (actual time=0.400..0.400 rows=37 loops=1)
+               Index Cond: (prompt_template.hook_angles @> '{pain-point}'::text[])
+               Buffers: shared hit=20
+ Planning:
+   Buffers: shared hit=191
+ Planning Time: 0.332 ms
+ Execution Time: 0.863 ms
+(17 rows)
+

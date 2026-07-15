@@ -1,0 +1,7 @@
+=== CENSO single-vertical: la compliance del body debe ser SU vertical ===
+single-vertical total: 38 | con compliance propia: 35 | molds sin compliance: 3 | MISMATCHES: 0
+
+=== FORMAT-SET: los 3 combos que el viejo FAIL marcó como defecto ===
+NO_CANDIDATES {"format":"before-after","hookAngle":"transformation","vertical":"fitness"}
+NO_CANDIDATES {"format":"mirror-selfie","hookAngle":"curiosity","vertical":"beauty"}
+NO_CANDIDATES {"format":"grwm","hookAngle":"social_proof","vertical":"fashion"}

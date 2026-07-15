@@ -526,7 +526,7 @@ Decisiones del usuario (2026-07-07): la fase se ejecuta tras T0.1 y **antes** de
 - **Entrega**: adapters por familia (Seedance `@image/@video/@audio`; Kling referencias y voice control; Veo/Wan; imagen Seedream/NB2 edit) que transforman prompt canónico + assets al payload del endpoint respetando `capabilities`.
 - **Verificación**: golden files de payloads por adapter **más asserts semánticos** (los goldens solos son autorreferenciales): el payload de Kling incluye la imagen de referencia cuando `capabilities.refImages>0`, el de Seedance usa la sintaxis `@image/@video/@audio`, y aspect/duración usan los nombres y enums exactos del `model_profile`; un template que excede `maxDuration` produce el troceo de escenas esperado (§7.5) en el plan de generación, no un error en runtime.
 
-#### T3.7 · Seed inicial de templates (lote 1: ~50)
+#### T3.7 · Seed inicial de templates (lote 1: ~50) [x] 2026-07-15 — PASS (56 templates es/en; 5 al azar cumplen los 14 puntos §10.3; búsqueda facetada relevante por ángulo tras neutralizar 18 backstops), ver docs/verifications/T3.7/
 - **Depende de**: T3.5
 - **Entrega**: ~50 templates propios (es/en) cubriendo formatos y ángulos de mayor uso, siguiendo la anatomía §10.3, en `draft` (pasan a `published` con thumbnail en T4.12). Ampliación a ~150 en T8.6.
 - **Verificación**: validador en verde; 5 templates elegidos al azar **por el verifier** cumplen los 14 puntos de la anatomía §10.3 (checklist manual); la búsqueda facetada devuelve candidatos para cada ángulo del brief de prueba.

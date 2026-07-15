@@ -1,0 +1,12 @@
+=== Comprobacion INDEPENDIENTE del verifier: cobertura RELEVANTE (format UNSET) ===
+OK   {"vertical":"beauty","platform":"tiktok","hookAngle":"curiosity"} -> lifestyle-broll-curiosity | backstop=true | declaraVertical=true | sinComplianceEnBody
+OK   {"vertical":"finance","platform":"instagram","hookAngle":"authority"} -> founder-explainer-authority | backstop=true | declaraVertical=true | sinComplianceEnBody
+OK   {"vertical":"pets","platform":"reels","hookAngle":"social_proof"} -> demo-social-proof | backstop=true | declaraVertical=true | sinComplianceEnBody
+OK   {"vertical":"fitness","platform":"tiktok","hookAngle":"transformation"} -> before-after-transformation | backstop=true | declaraVertical=true | sinComplianceEnBody
+OK   {"vertical":"food","platform":"instagram","hookAngle":"visual_proof"} -> demo-visual-proof | backstop=true | declaraVertical=true | sinComplianceEnBody
+OK   {"vertical":"saas","platform":"tiktok","hookAngle":"time_saving"} -> app-screen-demo-time-saving | backstop=true | declaraVertical=true | sinComplianceEnBody
+OK   {"vertical":"fashion","platform":"reels","hookAngle":"surprise"} -> expectation-vs-reality-surprise | backstop=true | declaraVertical=true | sinComplianceEnBody
+
+COBERTURA RELEVANTE: OK (0 ganadores con vertical/compliance ajena)
+
+unboxing-saas-authority: verticals=["saas"] | complianceLineEnBody=false

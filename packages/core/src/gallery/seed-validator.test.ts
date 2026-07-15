@@ -24,12 +24,16 @@ describe('el seed REAL que siembra `pnpm seed:gallery`', () => {
     expect(result.ok).toBe(true);
   });
 
-  it('incluye 2-3 templates mínimos de prueba (los usará T3.5)', () => {
+  it('siembra el lote 1 de templates (~50, T3.7) y valida entero', () => {
+    // T3.7 amplió el seed de los 3 templates molde (T3.2) al lote 1: ~50 templates propios (es/en)
+    // en `draft`, cubriendo la matriz formato × ángulo × vertical. No fijamos el número EXACTO —
+    // crecerá a ~150 en T8.6 (mismo criterio que el catálogo de model_profile de arriba, que no
+    // fija tope): sí fijamos el mínimo del lote 1 con holgura, para que borrar templates de golpe
+    // (una regresión de contenido) ponga el gate rojo.
     const result = validateGallerySeed(RAW_GALLERY_SEED);
     expect(result.seed).toBeDefined();
     const count = result.seed?.templates.length ?? 0;
-    expect(count).toBeGreaterThanOrEqual(2);
-    expect(count).toBeLessThanOrEqual(3);
+    expect(count).toBeGreaterThanOrEqual(45);
   });
 
   it('siembra el catálogo REAL de model_profile (§13.1) y valida entero', () => {

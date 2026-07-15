@@ -1,0 +1,24 @@
+
+ RUN  v4.1.10 /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads
+
+[live][T2.4] grupo en (3 guiones): in=1025 out=723 cache_w=3234 cache_r=0 ⇒ $0.0260
+ ✓ |live| packages/core/src/scripting/script-writer.live.test.ts > ScriptWriter contra la API REAL de Sonnet 5 (gasta dinero) > la deuda de T2.2, pagada: brief en ES + semilla en ES + variante `en` ⇒ guion ÍNTEGRAMENTE en inglés (hook incluido) 9344ms
+[live][T2.4][es] serum-hidratante-el-dolor-de-la-p-hook01-norot-es-12s (13s, tono: directo, confesión seca)
+  HOOK: Llevo años con la piel tirante y nadie me avisó de esto.
+  BODY: Probé de todo del súper, nada entraba. Esto sí, y se nota al despertar.
+  CTA: Pruébalo 30 días, sin riesgo.
+[live][T2.4][es] serum-hidratante-el-dolor-de-la-p-hook02-norot-es-12s (13s, tono: directo, confesión seca)
+  HOOK: Si se te tira la piel al salir de la ducha, para.
+  BODY: Probé de todo del súper, nada entraba. Esto sí, y se nota al despertar.
+  CTA: Pruébalo 30 días, sin riesgo.
+[live][T2.4][es] serum-hidratante-el-dolor-de-la-p-hook03-norot-es-12s (12s, tono: directo, confesión seca)
+  HOOK: Piel tirante, piel apagada, ya sabes de qué hablo.
+  BODY: Probé de todo del súper, nada entraba. Esto sí, y se nota al despertar.
+  CTA: Pruébalo 30 días, sin riesgo.
+ ✓ |live| packages/core/src/scripting/script-writer.live.test.ts > ScriptWriter contra la API REAL de Sonnet 5 (gasta dinero) > el guion en `es` suena nativo y el hook de librería llega TRUNCADO al presupuesto (deuda de T2.1) 11198ms
+
+ Test Files  1 passed (1)
+      Tests  2 passed (2)
+   Start at  03:44:38
+   Duration  21.39s (transform 180ms, setup 8ms, import 722ms, tests 20.54s, environment 0ms)
+

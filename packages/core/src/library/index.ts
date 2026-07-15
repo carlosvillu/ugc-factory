@@ -44,6 +44,9 @@ export {
   KNOWN_PLACEHOLDERS,
   countRenderedWords,
   findPlaceholders,
+  renderPlaceholders,
+  truncateToWordBudget,
+  type PlaceholderValues,
 } from './placeholders';
 // Los datos sembrados.
 export { SEED_LIBRARY, HOOK_LINE_SEEDS, CTA_LINE_SEEDS, RECIPE_SEEDS } from './seed-data';

@@ -54,6 +54,7 @@ import type { RawContent } from '../contracts/raw-content';
 import type { VisualAnalysis } from '../contracts/visual-analysis';
 import {
   makeAnthropicClient,
+  sumAnthropicUsage,
   toAnthropicUsage,
   type AnthropicDeps,
   type AnthropicUsage,
@@ -414,23 +415,11 @@ export function makeBriefSynthesizer(deps: BriefSynthesizerDeps) {
     // El coste del reintento SE SUMA al del primer intento: los dos se pagaron. Ocultarlo dejaría
     // al registro de costes mintiendo por defecto (T1.8 nació de un bound de dinero: el contador
     // tiene que contar TODO lo gastado, no lo que salió bien).
-    const usage = sumUsage(primero.usage, segundo.usage);
+    const usage = sumAnthropicUsage(primero.usage, segundo.usage);
     return { ...segundo, usage, warnings };
   }
 
   return { synthesize };
-}
-
-/** Suma el consumo de dos intentos. Los dos se pagaron: el coste registrado es el total. */
-function sumUsage(a: AnthropicUsage | null, b: AnthropicUsage | null): AnthropicUsage | null {
-  if (a === null) return b;
-  if (b === null) return a;
-  return {
-    inputTokens: a.inputTokens + b.inputTokens,
-    outputTokens: a.outputTokens + b.outputTokens,
-    cacheCreationInputTokens: a.cacheCreationInputTokens + b.cacheCreationInputTokens,
-    cacheReadInputTokens: a.cacheReadInputTokens + b.cacheReadInputTokens,
-  };
 }
 
 export type BriefSynthesizer = ReturnType<typeof makeBriefSynthesizer>;

@@ -66,3 +66,20 @@ export function toAnthropicUsage(usage: RawUsage): AnthropicUsage {
     cacheReadInputTokens: usage.cache_read_input_tokens ?? 0,
   };
 }
+
+/** Suma el consumo de dos llamadas. Las dos se pagaron: el total es lo que va al ledger. Vive aquí
+ *  (junto a `AnthropicUsage`) porque lo comparten todos los nodos que hacen ≥1 llamada con reintento
+ *  — N3 (`brief-synthesizer`) y N5 (`script-writer`). */
+export function sumAnthropicUsage(
+  a: AnthropicUsage | null,
+  b: AnthropicUsage | null,
+): AnthropicUsage | null {
+  if (a === null) return b;
+  if (b === null) return a;
+  return {
+    inputTokens: a.inputTokens + b.inputTokens,
+    outputTokens: a.outputTokens + b.outputTokens,
+    cacheCreationInputTokens: a.cacheCreationInputTokens + b.cacheCreationInputTokens,
+    cacheReadInputTokens: a.cacheReadInputTokens + b.cacheReadInputTokens,
+  };
+}

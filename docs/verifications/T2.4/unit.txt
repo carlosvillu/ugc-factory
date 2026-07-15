@@ -1,0 +1,40 @@
+ ✓ |core:unit| src/library/placeholders.test.ts > truncateToWordBudget > recorta a N PALABRAS (no a N caracteres) y deja el valor corto intacto 1ms
+ ✓ |core:unit| src/library/placeholders.test.ts > truncateToWordBudget > limpia la puntuación que queda colgando en el corte (este texto lo LEE una voz) 0ms
+ ✓ |core:unit| src/library/placeholders.test.ts > renderPlaceholders — la deuda de T2.1 > TRUNCA el valor al presupuesto de su placeholder 0ms
+ ✓ |core:unit| src/library/placeholders.test.ts > renderPlaceholders — la deuda de T2.1 > un placeholder sin valor en el brief se deja LITERAL (no se borra: mutilaría la frase) 0ms
+ ✓ |core:unit| src/library/placeholders.test.ts > renderPlaceholders — la deuda de T2.1 > sustituye varios placeholders distintos, cada uno con SU presupuesto 0ms
+ ✓ |core:unit| src/library/placeholders.test.ts > renderPlaceholders — la deuda de T2.1 > EL TECHO NO MIENTE: TODA la librería sembrada, renderizada con el peor brief, sigue ≤12 palabras habladas 1ms
+ ✓ |core:unit| src/library/placeholders.test.ts > renderPlaceholders — la deuda de T2.1 > CONTROL NEGATIVO: sustituir SIN truncar (el bug de T2.1) rompe el techo de 12 palabras 0ms
+ ✓ |core:unit| src/library/placeholders.test.ts > renderPlaceholders — la deuda de T2.1 > el renderizado real nunca supera el peor caso que T2.1 validó (countRenderedWords) 1ms
+ ✓ |core:unit| src/library/placeholders.test.ts > renderPlaceholders — la deuda de T2.1 > BLINDAJE (code-review): dos placeholders PEGADOS en un token cuentan LOS DOS presupuestos 0ms
+ ✓ |core:unit| src/scripting/timing.test.ts > la regla word_count ÷ 2,5 (§7.2 N5) > secondsForText cuenta palabras y divide por 2,5 — nada más 1ms
+ ✓ |core:unit| src/scripting/timing.test.ts > la regla word_count ÷ 2,5 (§7.2 N5) > wordBudgetFor apunta la MIRA por DEBAJO del techo (PROMPT_AIM_FACTOR) y redondea A LA BAJA 1ms
+ ✓ |core:unit| src/scripting/timing.test.ts > computeSceneTiming > calcula duración e instante de inicio acumulado (t no es duración: es cuándo empieza) 0ms
+ ✓ |core:unit| src/scripting/timing.test.ts > computeSceneTiming > aplica el suelo de 0,5 s: una escena de 1 palabra no puede durar 0,4 s (no existe ese clip) 0ms
+ ✓ |core:unit| src/scripting/timing.test.ts > computeSceneTiming > est_seconds redondea AL ALZA (un anuncio no se corta a media palabra) 0ms
+ ✓ |core:unit| src/scripting/timing.test.ts > subtitulos y agregados > los subtítulos derivan de las escenas: start/end SON los de la escena (no pueden desincronizarse) 0ms
+ ✓ |core:unit| src/scripting/timing.test.ts > subtitulos y agregados > totalWords / fullTextOf / wordsInSegment miden lo hablado, en orden 0ms
+ ✓ |core:unit| src/scripting/script-writer.test.ts > ScriptWriter — modo hook-testing: la identidad textual del body es POR CONSTRUCCIÓN > UNA llamada por ángulo+idioma (no por variante): 12 variantes → 4 llamadas 26ms
+ ✓ |core:unit| src/scripting/script-writer.test.ts > ScriptWriter — modo hook-testing: la identidad textual del body es POR CONSTRUCCIÓN > DIFF VACÍO: los bodies (y CTAs) de las variantes del mismo ángulo son textualmente idénticos 7ms
+ ✓ |core:unit| src/scripting/script-writer.test.ts > ScriptWriter — modo hook-testing: la identidad textual del body es POR CONSTRUCCIÓN > CONTROL NEGATIVO: en modo normal (conversion) NO se comparte nada — 12 llamadas, 12 bodies 15ms
+ ✓ |core:unit| src/scripting/script-writer.test.ts > ScriptWriter — el contrato de REQUEST > modelo, thinking disabled, SIN sampling params (Sonnet 5 los rechaza con 400) y system cacheado 4ms
+ ✓ |core:unit| src/scripting/script-writer.test.ts > ScriptWriter — el contrato de REQUEST > el system es BYTE-IDÉNTICO entre llamadas (si no, la caché no entra y se paga 12 veces) 4ms
+ ✓ |core:unit| src/scripting/script-writer.test.ts > buildScriptUserMessage — las dos deudas heredadas, en el prompt > DEUDA T2.2 — el idioma destino MANDA: una variante `en` con semilla en español pide inglés 0ms
+ ✓ |core:unit| src/scripting/script-writer.test.ts > buildScriptUserMessage — las dos deudas heredadas, en el prompt > DEUDA T2.1 — las semillas llegan RENDERIZADAS y TRUNCADAS: ningún {placeholder} sobrevive 0ms
+ ✓ |core:unit| src/scripting/script-writer.test.ts > buildScriptUserMessage — las dos deudas heredadas, en el prompt > lleva el presupuesto de palabras del preset y el objetivo (el CTA se escribe PARA él) 0ms
+ ✓ |core:unit| src/scripting/script-writer.test.ts > buildScriptUserMessage — las dos deudas heredadas, en el prompt > la DIVERSIDAD se instruye en el prompt (§9.4) y varía por grupo 0ms
+ ✓ |core:unit| src/scripting/script-writer.test.ts > ScriptWriter — el TIMING lo calculamos nosotros > scenes[] y subtitles[] salen de contar palabras; est_seconds ≤ duración objetivo 5ms
+ ✓ |core:unit| src/scripting/script-writer.test.ts > ScriptWriter — el TIMING lo calculamos nosotros > un guion que se pasa del presupuesto se REINTENTA con la desviación exacta, no se guarda 8ms
+ ✓ |core:unit| src/scripting/script-writer.test.ts > ScriptWriter — el TIMING lo calculamos nosotros > FAIL-CLOSED (code-review): si tras TODOS los reintentos el guion SIGUE pasándose del techo → estado over_budget, NUNCA scripted 7ms
+ ✓ |core:unit| src/scripting/script-writer.test.ts > ScriptWriter — el TIMING lo calculamos nosotros > CONTROL NEGATIVO del techo relajado: 13s PASA (§8.4 lo declara embarcable), 17s se RECHAZA 0ms
+ ✓ |core:unit| src/scripting/script-writer.test.ts > ScriptWriter — el TIMING lo calculamos nosotros > budgetViolation también rechaza el hook de >12 palabras (aunque el guion entero quepa) 0ms
+ ✓ |core:unit| src/scripting/script-writer.test.ts > ScriptWriter — el TIMING lo calculamos nosotros > §7.5 CONTROL NEGATIVO: un body de 2 escenas en hook_test se RECHAZA (1 escena PASA) 0ms
+ ✓ |core:unit| src/scripting/script-writer.test.ts > ScriptWriter — biyección hook↔semilla (code-review): el A/B no puede contaminarse en silencio > hookBijectionProblem: cobertura perfecta [0,1,2] para 3 variantes → null 0ms
+ ✓ |core:unit| src/scripting/script-writer.test.ts > ScriptWriter — biyección hook↔semilla (code-review): el A/B no puede contaminarse en silencio > CONTROL NEGATIVO: [0,0,2] (repite 0, salta 1) para 3 variantes → problema detectado 0ms
+ ✓ |core:unit| src/scripting/script-writer.test.ts > ScriptWriter — biyección hook↔semilla (code-review): el A/B no puede contaminarse en silencio > INTEGRACIÓN — un draft con seedIndex [0,0,2] dispara parse_error → reintento (no un A/B roto) 7ms
+ ✓ |core:unit| src/scripting/script-writer.test.ts > ScriptWriter — ramas tipadas (nunca lanza) > api_error: un 400 no se confunde con un output malformado y NO se reintenta 6ms
+ ✓ |core:unit| src/scripting/script-writer.test.ts > ScriptWriter — ramas tipadas (nunca lanza) > refusal: se devuelve el usage (se pagaron los tokens) y el estado tipado 7ms
+ ✓ |core:unit| src/scripting/script-writer.test.ts > ScriptWriter — ramas tipadas (nunca lanza) > parse_error: cardinalidad inválida (0 hooks) la caza el Zod, y se reintenta una vez 15ms
+ Test Files  3 passed (3)
+      Tests  37 passed (37)
+   Duration  925ms (transform 325ms, setup 47ms, import 945ms, tests 125ms, environment 0ms)

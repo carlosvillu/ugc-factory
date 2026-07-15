@@ -342,6 +342,8 @@ Plan determinista que conecta guion (N5) → generaciones (N7) → segmentos de 
 
 Cap duro de export: 60 s.
 
+**Objetivo vs. techo (aclarado en T2.4, 2026-07-15).** Cada preset (`strategy/presets.ts`) fija una duración OBJETIVO —el centro del rango, al que apunta el prompt del ScriptWriter (§7.5, `word_count ÷ 2,5`)— y un TECHO, que es el extremo superior del rango de esta tabla: **hook-test 15 s, conversión 34 s, storytelling 60 s**. Un guion se ACEPTA si su `est_seconds` cae dentro del rango (≤ techo), no si clava el objetivo. Motivo: el presupuesto de palabras de hook-test da 12,0 s exactos con margen cero (el `ceil()` de la suma y el suelo de 0,5 s por escena solo redondean hacia arriba), así que exigir «≤ objetivo» rechazaría guiones de 13 s que esta tabla declara perfectamente embarcables. El objetivo guía la escritura; el techo la acota.
+
 ---
 
 ## 9. Módulos del servidor

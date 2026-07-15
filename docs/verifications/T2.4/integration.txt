@@ -1,0 +1,5 @@
+ ✓ |services:integration| test/integration/write-scripts.test.ts > runWriteScripts — 12 guiones válidos + el cost_entry de TODAS las llamadas > emite 12 AdScript que validan contra Zod y registra el usage SUMADO de los 4 grupos 34ms
+ ✓ |services:integration| test/integration/write-scripts.test.ts > runWriteScripts — 12 guiones válidos + el cost_entry de TODAS las llamadas > sin key de Anthropic no hay paso de IA: lanza con el caller en el mensaje 36ms
+ Test Files  1 passed (1)
+      Tests  2 passed (2)
+   Duration  6.07s (transform 355ms, setup 7ms, import 992ms, tests 167ms, environment 0ms)

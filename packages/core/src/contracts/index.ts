@@ -170,6 +170,21 @@ export {
   type AdSegment,
   type HookSource,
 } from './batch-plan';
+// El GUION de una variante (T2.4, N5): la otra mitad de la frontera §7.4 (`BatchPlan →
+// AdScript[]`) y la fila de `ad_script` (§12). Lo produce `@ugc/core/scripting`, lo edita CP3
+// (T2.6) y lo consume el compilador de prompts (N6, T3.5). El TIMING (`t`, `seconds`,
+// `estSeconds`) lo calculamos NOSOTROS de la narración — nunca se le pide al LLM.
+export {
+  AdScriptSchema,
+  AdSceneSchema,
+  AdSubtitleSchema,
+  WORDS_PER_SECOND,
+  countSpokenWords,
+  secondsForText,
+  type AdScript,
+  type AdScene,
+  type AdSubtitle,
+} from './ad-script';
 // Listado `GET /api/runs` (T1.17): la vista pública de la lista de runs + LA DERIVACIÓN del
 // estado agregado a partir de los steps (`deriveRunStatus`). El agregado `pipeline_run.status`
 // NO lo mantiene nadie (deuda de T0.8): la verdad son los estados de STEP, igual que en el SSE.

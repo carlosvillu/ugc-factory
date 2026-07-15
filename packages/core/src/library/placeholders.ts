@@ -61,8 +61,71 @@ export function countRenderedWords(text: string): number {
   const tokens = text.trim().split(/\s+/).filter(Boolean);
   let total = 0;
   for (const token of tokens) {
-    const placeholder = KNOWN_PLACEHOLDERS.find((p) => token.includes(p));
-    total += placeholder ? (PLACEHOLDER_WORD_BUDGET[placeholder] ?? 1) : 1;
+    // Un token puede llevar VARIOS placeholders pegados (`{product}{category}`) — poco habitual en
+    // la librería curada (sus hooks llevan espacios), pero `renderPlaceholders` (regex global)
+    // sustituiría LOS DOS, así que aquí hay que SUMAR el presupuesto de cada placeholder que el
+    // token incluya, no solo el del primero. Contar uno mentiría por debajo y el techo se colaría.
+    const matched = KNOWN_PLACEHOLDERS.filter((p) => token.includes(p));
+    total +=
+      matched.length > 0
+        ? matched.reduce((sum, p) => sum + (PLACEHOLDER_WORD_BUDGET[p] ?? 1), 0)
+        : 1;
   }
   return total;
+}
+
+/** Los valores del brief con los que se resuelve cada placeholder. Cualquiera puede faltar
+ *  (un brief sin `pain_points` no tiene `{pain}`): un placeholder sin valor NO se sustituye —
+ *  ver `renderPlaceholders`. Claves SIN llaves (`pain`, no `{pain}`): las llaves son sintaxis
+ *  de la plantilla, no parte del nombre del dato. */
+export type PlaceholderValues = Partial<
+  Record<'product' | 'benefit' | 'pain' | 'category', string>
+>;
+
+/**
+ * Recorta un valor a `budget` PALABRAS (no caracteres: el presupuesto está en palabras porque lo
+ * que acota es el TIEMPO HABLADO — §7.2 N5, ~2,5 palabras/segundo). Se recorta por el FINAL: la
+ * cabeza de un dolor o un beneficio lleva el sustantivo que lo identifica («la piel tira después
+ * de lavarla con cualquier jabón agresivo del súper» → «la piel tira después de lavarla con»);
+ * la cola es matiz.
+ *
+ * La puntuación colgante del corte (una coma o un punto que quedaba a mitad de frase) se limpia:
+ * un hook que dice «Si te pasa la piel tira después de lavarla con, mira esto» suena a error, y
+ * este texto lo LEE una voz.
+ */
+export function truncateToWordBudget(value: string, budget: number): string {
+  const words = value.trim().split(/\s+/).filter(Boolean);
+  if (words.length <= budget) return value.trim();
+  return words
+    .slice(0, budget)
+    .join(' ')
+    .replace(/[.,;:!?¡¿…]+$/u, '');
+}
+
+/**
+ * EL RENDERIZADOR — la mitad que faltaba del contrato de `PLACEHOLDER_WORD_BUDGET` (T2.4).
+ *
+ * `countRenderedWords` VALIDA contra el presupuesto (T2.1: ninguna plantilla de la librería se
+ * pasa del techo NI EN SU PEOR CASO). Esta función SUSTITUYE, y **por eso tiene que TRUNCAR**: el
+ * presupuesto solo es verdad si el valor que entra cabe en él. `ProductBriefSchema` declara
+ * `product.name` / `benefits[].benefit` / `pain_points[].pain` como `z.string()` PELADO —nada
+ * acota su longitud—, así que un `pain` de 12 palabras convierte un hook de 10 palabras literales
+ * en uno de 18 HABLADAS: 7 s de audio en los 0–3 s del hook. El techo volvería a mentir, y esta
+ * vez ya en el anuncio EMITIDO.
+ *
+ * Puro y determinista. Un placeholder SIN valor se deja tal cual (`{pain}` literal): borrarlo
+ * dejaría una frase mutilada («Si te pasa , mira esto») y el hueco visible es una señal honesta
+ * de que el brief no traía ese dato — el ScriptWriter lo ve y no lo encaja.
+ */
+export function renderPlaceholders(template: string, values: PlaceholderValues): string {
+  return template.replace(/\{([a-z_]+)\}/g, (match, name: string) => {
+    const value = values[name as keyof PlaceholderValues];
+    if (value === undefined || value.trim() === '') return match;
+    const budget = PLACEHOLDER_WORD_BUDGET[match];
+    // Un placeholder DESCONOCIDO (no está en el presupuesto) no se sustituye: no hay techo que
+    // aplicarle, y sustituirlo sin techo es exactamente el bug que esta función existe para no
+    // cometer. El validador de seeds ya prohíbe que la librería los use.
+    if (budget === undefined) return match;
+    return truncateToWordBudget(value, budget);
+  });
 }

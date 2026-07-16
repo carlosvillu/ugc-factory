@@ -130,7 +130,17 @@ export async function createBoss(deps: CreateBossDeps): Promise<PgBoss> {
     // detiene, junto al pool — así el shutdown limpia el timer (como el keepAlive
     // de main.ts) y el sweep NO corre en modo degradado (createBoss solo se
     // invoca con la BD alcanzable, mismo gate que pg-boss).
-    const sweeper = startSweeper({ db, transitionDeps, logger: deps.logger });
+    // El sweeper barre steps colgados (T0.9) Y reconcilia generaciones colgadas contra fal (T4.3): le
+    // pasamos el boss (para encolar `output.download`) y la FAL_KEY (para pollear el `status_url`
+    // guardado). Sin FAL_KEY la pieza de generaciones se omite y solo se barren steps (el worker
+    // arranca igual). NB: reconcile NUNCA re-submitea — solo pollea el request ya durable en la fila.
+    const sweeper = startSweeper({
+      db,
+      transitionDeps,
+      logger: deps.logger,
+      boss,
+      ...(process.env.FAL_KEY !== undefined ? { falKey: process.env.FAL_KEY } : {}),
+    });
     boss.once('stopped', () => {
       sweeper.stop();
     });

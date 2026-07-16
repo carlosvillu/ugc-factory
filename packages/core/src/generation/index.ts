@@ -13,7 +13,32 @@ export {
   type FalClientDeps,
   type FalSubmitResult,
   type FalPollResult,
+  type FalStatusCheck,
 } from './fal-client';
+export {
+  reconcileGeneration,
+  DEFAULT_RECONCILE_DEADLINES_MS,
+  RECONCILABLE_STATUSES,
+  CLAIM_STATUSES_POLL,
+  CLAIM_STATUSES_IN_PROGRESS,
+  type ReconcilableGeneration,
+  type GenerationKind,
+  type ReconcileOutcome,
+  type ReconcileResult,
+  type ReconcileDeps,
+  type ReconcileDeadlines,
+  type ReconcileUpdate,
+  type ReconcileEnqueueDownload,
+  type ReconcileCheckStatus,
+} from './reconcile';
+export {
+  sweepStuckGenerations,
+  type SweepableGenerationRow,
+  type SweepGenerationsDeps,
+  type SweepGenerationsResult,
+  type ListReconcilableGenerations,
+  type ResolveGenerationKind,
+} from './sweep-generations';
 export { computeContentHash, type ContentHashInput, type GenerationInputs } from './content-hash';
 export { extractImageOutput, type FalImage, type FalImageOutput } from './fal-image-output';
 // Webhook de fal (T4.2, §9.6): verificación de firma ED25519 (función pura, deps inyectadas) +

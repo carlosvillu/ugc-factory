@@ -7,7 +7,8 @@
 // El estado canónico de la generación vive AQUÍ, no en el queue de fal (backend §2). El
 // servicio persiste-primero; estas funciones son las escrituras deterministas que lo
 // hacen reconciliable (T4.3 releerá `status_url` de estas filas sin re-submit).
-import { eq } from 'drizzle-orm';
+import { and, eq, inArray } from 'drizzle-orm';
+import { RECONCILABLE_STATUSES } from '@ugc/core/generation';
 import type { Db } from '../client';
 import { generation, type Generation, type NewGeneration } from '../schema/generation';
 
@@ -97,4 +98,48 @@ export async function listGenerationsByStatus(
   status: Generation['status'],
 ): Promise<Generation[]> {
   return db.select().from(generation).where(eq(generation.status, status));
+}
+
+/**
+ * CLAIM condicional de una generación para reconciliar (T4.3, §9.0, backend §3): aplica el `patch`
+ * SOLO si la fila SIGUE en uno de los `fromStatuses` (los reconciliables observados al listar). Es la
+ * revalidación-bajo-condición que evita el DOBLE-COBRO por carrera: entre que el sweeper LISTA una
+ * fila `submitted` y que su `checkStatus` resuelve, OTRO actor (el webhook + su `output.download`)
+ * puede haberla llevado a `completed` (y escrito su `cost_entry`). Un `updateGeneration` incondicional
+ * REGRESARÍA ese `completed` a `in_progress`, re-encolaría una 2ª descarga y el FOR UPDATE de finalize
+ * —que solo frena si la fila YA está `completed`— dejaría pasar un 2º `cost_entry`. El `WHERE status
+ * IN (...)` hace que el UPDATE NO toque una fila que ya salió de los estados reconciliables: devuelve
+ * `false` (0 filas afectadas) y reconcile NO encola/expira. Espeja la revalidación que `transition()`
+ * hace con FOR UPDATE para los steps (un UPDATE condicional es la versión atómica sin lock explícito:
+ * Postgres re-evalúa el WHERE bajo el lock de fila del propio UPDATE).
+ *
+ * Devuelve `true` si la fila se actualizó (el claim tomó efecto), `false` si otro actor ya la sacó de
+ * los `fromStatuses` (no-op seguro).
+ */
+export async function claimGenerationForReconcile(
+  db: Db,
+  id: string,
+  patch: GenerationPatch,
+  fromStatuses: readonly Generation['status'][],
+): Promise<boolean> {
+  const rows = await db
+    .update(generation)
+    .set(patch)
+    .where(and(eq(generation.id, id), inArray(generation.status, fromStatuses)))
+    .returning({ id: generation.id });
+  return rows.length > 0;
+}
+
+/** Lista las generaciones RECONCILIABLES (§9.6, T4.3): las que el sweeper re-chequea cada tick —
+ *  `submitting` (crash-mid-submit, se expira por edad), `submitted`/`in_queue` (se pollea el
+ *  `status_url` guardado) y `in_progress` (descarga encolada: se re-encola por deadline si la descarga
+ *  se perdió — NO es terminal, ver la sub-lógica de `reconcileGeneration`). El conjunto lo define core
+ *  (`RECONCILABLE_STATUSES`) y se reusa aquí para no derivar. Ordenadas por id (orden determinista,
+ *  como `findExpiredRunningStepIds`). NO incluye los terminales `completed`/`failed`/`cancelled`. */
+export async function listReconcilableGenerations(db: Db): Promise<Generation[]> {
+  return db
+    .select()
+    .from(generation)
+    .where(inArray(generation.status, [...RECONCILABLE_STATUSES]))
+    .orderBy(generation.id);
 }

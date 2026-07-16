@@ -1,0 +1,3 @@
+{"level":30,"time":1784217994538,"pid":30683,"hostname":"MBP-de-Carlos","name":"worker","intervalMs":5000,"generationReconcile":true,"msg":"sweeper arrancado"}
+{"level":30,"time":1784217994538,"pid":30683,"hostname":"MBP-de-Carlos","name":"worker","queue":"demo.noop","msg":"pg-boss arrancado: colas y consumers listos"}
+{"level":30,"time":1784217994539,"pid":30683,"hostname":"MBP-de-Carlos","name":"worker","health":{"ok":true,"db":true},"msg":"worker ready"}

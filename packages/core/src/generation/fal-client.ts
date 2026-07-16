@@ -81,6 +81,20 @@ export interface FalPollResult {
   statusPayload: unknown;
 }
 
+/**
+ * El resultado de UN SOLO chequeo de estado (`checkStatus`): la primitiva puntual que `poll` repite
+ * en su loop y que la reconciliación de T4.3 usa UNA vez por tick (un sweeper no puede bloquear un
+ * tick esperando a fal). Distingue los tres estados observables — `completed` (con output leído de
+ * response_url), `processing` (sigue en cola/progreso) y `failed` (fal terminó en error) — sin
+ * colapsarlos: un `processing` NO es un error, y un `failed` de fal se distingue de un 429/timeout
+ * (que es `FalProviderError`, lanzado por `authedFetch`). Un contrato roto (JSON sin `status`) es
+ * `FalResponseError` (lanzado, no un estado). Es la base de reuso que la primitiva `reconcile` exige.
+ */
+export type FalStatusCheck =
+  | { state: 'completed'; output: unknown; statusPayload: unknown }
+  | { state: 'processing'; statusPayload: unknown }
+  | { state: 'failed'; falStatus: string; statusPayload: unknown };
+
 export interface FalClientDeps {
   /** La API key de fal EN CLARO (el caller la lee de env/secretos). */
   credentials: string;
@@ -276,28 +290,55 @@ export function makeFalClient(deps: FalClientDeps) {
   }
 
   /**
+   * UN SOLO chequeo de estado sobre la `status_url` DEVUELTA (nunca reconstruida): un GET, y si
+   * COMPLETED un segundo GET a `response_url` para el output. Es el cuerpo del loop de `poll`
+   * extraído como primitiva puntual (T4.3): la reconciliación del sweeper lo llama UNA vez por tick
+   * (no puede bloquear un tick esperando a fal). Cada GET pasa por el rate limiter y `authedFetch`
+   * (429/timeout tipados = `FalProviderError`). Un `FAILED`/`ERROR`/`CANCELLED` es el estado
+   * `failed` (NO se lanza: el caller decide expirar la fila); un JSON sin `status` conocido es
+   * `FalResponseError` (contrato roto, reintentar no cambia nada).
+   */
+  async function checkStatus(handle: {
+    statusUrl: string;
+    responseUrl: string;
+  }): Promise<FalStatusCheck> {
+    const res = await limiter.run(() => authedFetch(handle.statusUrl));
+    const payload: unknown = await res.json();
+    const status = readStatus(payload);
+    if (status === 'COMPLETED') {
+      const outRes = await limiter.run(() => authedFetch(handle.responseUrl));
+      const output: unknown = await outRes.json();
+      return { state: 'completed', output, statusPayload: payload };
+    }
+    if (status === 'FAILED' || status === 'ERROR' || status === 'CANCELLED') {
+      return { state: 'failed', falStatus: status, statusPayload: payload };
+    }
+    if (status === 'IN_QUEUE' || status === 'IN_PROGRESS') {
+      return { state: 'processing', statusPayload: payload };
+    }
+    throw new FalResponseError(
+      `status de fal desconocido en ${handle.statusUrl}: ${JSON.stringify(payload)}`,
+    );
+  }
+
+  /**
    * POLL hasta COMPLETED sobre la `status_url` DEVUELTA (nunca reconstruida), luego lee la
-   * `response_url` para el output. Cada GET pasa por el rate limiter y por `authedFetch`
-   * (429/timeout tipados). Un `FAILED`/estado desconocido es `FalProviderError` (algo salió
-   * mal en fal, reintentable); un JSON sin `status` es `FalResponseError`.
+   * `response_url` para el output. Es un loop sobre `checkStatus` (la MISMA primitiva de reuso que
+   * la reconciliación): completed→devuelve, failed→`FalProviderError` (reintentable), processing→
+   * espera `pollIntervalMs` y reintenta. Un JSON sin `status` es `FalResponseError` (lo lanza
+   * `checkStatus`). Preserva el comportamiento de T4.1 (un `FAILED` de fal sigue siendo un throw
+   * para el caller de `poll`); la diferencia es que ahora la lógica de un GET vive en `checkStatus`.
    */
   async function poll(handle: { statusUrl: string; responseUrl: string }): Promise<FalPollResult> {
     for (let attempt = 0; attempt < maxPollAttempts; attempt += 1) {
-      const res = await limiter.run(() => authedFetch(handle.statusUrl));
-      const payload: unknown = await res.json();
-      const status = readStatus(payload);
-      if (status === 'COMPLETED') {
-        const outRes = await limiter.run(() => authedFetch(handle.responseUrl));
-        const output: unknown = await outRes.json();
-        return { status: 'COMPLETED', output, statusPayload: payload };
+      const check = await checkStatus(handle);
+      if (check.state === 'completed') {
+        return { status: 'COMPLETED', output: check.output, statusPayload: check.statusPayload };
       }
-      if (status === 'FAILED' || status === 'ERROR' || status === 'CANCELLED') {
-        throw new FalProviderError(`fal terminó en estado ${status}`, { status: undefined });
-      }
-      if (status !== 'IN_QUEUE' && status !== 'IN_PROGRESS') {
-        throw new FalResponseError(
-          `status de fal desconocido en ${handle.statusUrl}: ${JSON.stringify(payload)}`,
-        );
+      if (check.state === 'failed') {
+        throw new FalProviderError(`fal terminó en estado ${check.falStatus}`, {
+          status: undefined,
+        });
       }
       await sleep(pollIntervalMs);
     }
@@ -324,7 +365,7 @@ export function makeFalClient(deps: FalClientDeps) {
     return res;
   }
 
-  return { uploadInput, submit, poll, download };
+  return { uploadInput, submit, checkStatus, poll, download };
 }
 
 export type FalClient = ReturnType<typeof makeFalClient>;

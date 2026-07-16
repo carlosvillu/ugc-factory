@@ -66,6 +66,75 @@ describe('FalClient.submit — persiste las URLs DEVUELTAS por fal', () => {
   });
 });
 
+describe('FalClient.checkStatus — UN chequeo puntual (base de reuso de la reconciliación T4.3)', () => {
+  it('COMPLETED: UN GET al status_url + UN GET al response_url; devuelve el output y el statusPayload', async () => {
+    const hits: string[] = [];
+    server.use(
+      http.get(STATUS_URL, ({ request }) => {
+        hits.push(request.url);
+        return HttpResponse.json({ status: 'COMPLETED', request_id: CANARY });
+      }),
+      http.get(RESPONSE_URL, ({ request }) => {
+        hits.push(request.url);
+        return HttpResponse.json({ images: [{ url: 'https://fal.media/x.png' }] });
+      }),
+    );
+    const check = await client().checkStatus({ statusUrl: STATUS_URL, responseUrl: RESPONSE_URL });
+    expect(check.state).toBe('completed');
+    if (check.state !== 'completed') throw new Error('narrowing');
+    expect(check.output).toEqual({ images: [{ url: 'https://fal.media/x.png' }] });
+    expect(check.statusPayload).toEqual({ status: 'COMPLETED', request_id: CANARY });
+    // La URL canaria exacta: no reconstruida. Y NO hay loop — un solo status GET + un output GET.
+    expect(hits).toEqual([STATUS_URL, RESPONSE_URL]);
+  });
+
+  it('IN_QUEUE/IN_PROGRESS → `processing` SIN un 2º GET de output (no bloquea, no descarga)', async () => {
+    for (const s of ['IN_QUEUE', 'IN_PROGRESS'] as const) {
+      const hits: string[] = [];
+      server.use(
+        http.get(STATUS_URL, ({ request }) => {
+          hits.push(request.url);
+          return HttpResponse.json({ status: s });
+        }),
+      );
+      const check = await client().checkStatus({
+        statusUrl: STATUS_URL,
+        responseUrl: RESPONSE_URL,
+      });
+      expect(check.state).toBe('processing');
+      // Un solo GET al status: `processing` NO toca response_url (si lo tocara, msw reventaría).
+      expect(hits).toEqual([STATUS_URL]);
+    }
+  });
+
+  it('FAILED/ERROR/CANCELLED → estado `failed` con el falStatus (NO lanza: el caller decide expirar)', async () => {
+    for (const s of ['FAILED', 'ERROR', 'CANCELLED'] as const) {
+      server.use(http.get(STATUS_URL, () => HttpResponse.json({ status: s })));
+      const check = await client().checkStatus({
+        statusUrl: STATUS_URL,
+        responseUrl: RESPONSE_URL,
+      });
+      expect(check.state).toBe('failed');
+      if (check.state !== 'failed') throw new Error('narrowing');
+      expect(check.falStatus).toBe(s);
+    }
+  });
+
+  it('un status desconocido es FalResponseError (contrato roto, NO un estado)', async () => {
+    server.use(http.get(STATUS_URL, () => HttpResponse.json({ status: 'WAT' })));
+    await expect(
+      client().checkStatus({ statusUrl: STATUS_URL, responseUrl: RESPONSE_URL }),
+    ).rejects.toBeInstanceOf(FalResponseError);
+  });
+
+  it('un 429/timeout del status GET es FalProviderError (NO validación) — rama transitoria', async () => {
+    server.use(http.get(STATUS_URL, () => new HttpResponse(null, { status: 503 })));
+    await expect(
+      client({ maxRetries: 0 }).checkStatus({ statusUrl: STATUS_URL, responseUrl: RESPONSE_URL }),
+    ).rejects.toBeInstanceOf(FalProviderError);
+  });
+});
+
 describe('FalClient.poll — usa la status_url DEVUELTA, nunca una reconstruida (§4.3)', () => {
   it('pollea EXACTAMENTE la status_url canaria y descarga el output de response_url', async () => {
     const polled: string[] = [];

@@ -1,0 +1,7 @@
+submit-no-webhook: sometiendo 1 imagen FLUX.2 dev (square_hd) con webhook MUERTO https://webhooks-disabled.invalid.example/api/webhooks/fal (RED REAL, SIN polling)…
+---VERIFIER-MARKERS---
+GENERATION_ID=01KXNTMDVVG0ZFZ9C1ZDAGCRJT
+FAL_REQUEST_ID=019f6baa-3994-7910-b8a3-f755987c7af8
+STATUS=submitted
+STATUS_URL=https://queue.fal.run/fal-ai/flux-2/requests/019f6baa-3994-7910-b8a3-f755987c7af8/status
+CONTENT_HASH=8c857eb52983cfd37d456f5a5c440dab5a14664ca3cb89ed0a1fad9a1c403101

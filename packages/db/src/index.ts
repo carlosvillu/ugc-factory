@@ -112,7 +112,10 @@ export {
   getGenerationForUpdate,
   getGenerationByFalRequestId,
   listGenerationsByStatus,
+  listReconcilableGenerations,
+  claimGenerationForReconcile,
 } from './repos/generation.repo';
+export type { GenerationPatch } from './repos/generation.repo';
 export type { Generation, NewGeneration } from './schema/generation';
 // Ledger de gasto (T0.12): `recordCost` (efecto de escritura, lo llama el executor
 // de demo config-injectable y, en fases reales, cada nodo que gasta), el resumen

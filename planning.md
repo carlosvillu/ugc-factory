@@ -566,7 +566,7 @@ Decisiones del usuario (2026-07-07): la fase se ejecuta tras T0.1 y **antes** de
 - **Coste estimado**: ~$0,15
 - **Verificación**: en el VPS (o local con cloudflared), una generación real completa vía webhook sin polling ("webhook verified" en logs); un POST forjado devuelve 401 sin tocar la BD; reenviar el mismo webhook no duplica nada.
 
-#### T4.3 · Polling fallback + reconciliación idempotente
+#### T4.3 · Polling fallback + reconciliación idempotente [x] 2026-07-16 — PASS, ver docs/verifications/T4.3/ (coste real ≈3¢)
 - **Depende de**: T4.1
 - **Entrega**: poller lazy en read-path + integración con el sweeper (reconciliar generations colgadas contra fal, expirar por tipo); executor idempotente (§6.3.9).
 - **Coste estimado**: ~$0,20

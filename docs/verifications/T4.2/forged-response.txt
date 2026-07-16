@@ -1,0 +1,2 @@
+{"code":"invalid_signature","message":"firma o timestamp de webhook inválidos"}
+HTTP_STATUS 401

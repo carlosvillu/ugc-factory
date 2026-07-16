@@ -1,0 +1,5 @@
+[2026-07-16T13:25:50.927Z] capture-proxy escuchando en http://127.0.0.1:8799 → upstream :3000
+[2026-07-16T13:25:52.895Z] passthrough: GET /api/health (0 bytes)
+[2026-07-16T13:26:09.491Z] passthrough: GET /api/health (0 bytes)
+[2026-07-16T13:26:20.237Z] WEBHOOK #1 entrante: POST /api/webhooks/fal · 563 bytes · reqId=019f6b1b-49c3-7163-9866-2d7bdfec2232 ts=1784208380 sigLen=128
+[2026-07-16T13:26:21.216Z] WEBHOOK respuesta upstream: 200 · {"ok":true,"outcome":"enqueued_download"}

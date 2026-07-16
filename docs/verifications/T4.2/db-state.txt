@@ -1,0 +1,22 @@
+# T4.2 re-verification DB state — generation 01KXNHPHVTRFQDGA1J8V6QEP9F (fal_request_id 019f6b1b-49c3-7163-9866-2d7bdfec2232)
+
+BEFORE smoke (global):        generation=4  asset=14  cost_entry=28
+AFTER completion (global):    generation=5  asset=15  cost_entry=29
+
+This generation, after webhook completion:
+  status=completed  cost_actual=1c  completed_at=2026-07-16 13:26:22.794+00
+  assets_for_gen=1  (kind=keyframe, bytes=1045963, key=generations/01KXNHPHVTRFQDGA1J8V6QEP9F/01KXNHPP3VZ3FM0AP700ZV66X9.png)
+  cost_entries_for_gen=1  (provider=fal, amount_cents=1, qty=1, unit=images)
+
+CLAUSE 3 — resend same webhook (valid sig, within window):
+  AFTER replay (global):      generation=5  asset=15  cost_entry=29   (identical → NO duplication)
+  AFTER replay (per-gen):     assets_for_gen=1  cost_entries_for_gen=1  (identical)
+  handler outcome: already_completed (200 no-op)
+
+CLAUSE 2 — forged POST (bogus signature, fresh timestamp):
+  BEFORE forged (global):     generation=5  asset=15  cost_entry=29
+  AFTER forged  (global):     generation=5  asset=15  cost_entry=29   (identical → DB untouched)
+  response: HTTP 401 {"code":"invalid_signature",...}
+
+/spend UI (browser): fal.ai row = 3 images / $0.02 total; día 2026-07-16 = $0.02.
+  Corroborated by psql: sum(amount_cents) fal today = 2c = $0.02. This generation contributed 1c.

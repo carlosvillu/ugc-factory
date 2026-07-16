@@ -62,6 +62,34 @@ export async function getGeneration(db: Db, id: string): Promise<Generation | un
   return row;
 }
 
+/**
+ * `SELECT … FOR UPDATE` sobre la fila `generation` (T4.2, §9.0): la bloquea hasta el commit y
+ * devuelve su estado BAJO el lock. Es la primitiva que SERIALIZA dos liquidaciones concurrentes de
+ * la MISMA generación (webhook-handler de web vs consumer del worker, o dos jobs `output.download`
+ * solapados por redelivery): el finalize la llama al abrir su transacción, re-chequea `completed`
+ * bajo el lock, y el perdedor de la carrera sale sin re-insertar asset/cost. Sin este lock, dos
+ * finalizes leen `!= completed` a la vez y ambos escriben un `cost_entry` → DOBLE-COBRO. `undefined`
+ * si la fila no existe. DEBE llamarse dentro de una `db.transaction` (el lock vive hasta el commit).
+ */
+export async function getGenerationForUpdate(tx: Db, id: string): Promise<Generation | undefined> {
+  const [row] = await tx.select().from(generation).where(eq(generation.id, id)).for('update');
+  return row;
+}
+
+/**
+ * Lee una generación por su `fal_request_id` (T4.2, §9.6): la CLAVE de idempotencia del webhook.
+ * El handler del webhook de fal releela por este id para decidir si ya está `completed` (no-op) o
+ * si debe avanzar. La columna es UNIQUE (índice `generation_fal_request_id_key`), así que a lo sumo
+ * hay una fila; `undefined` si fal manda un `request_id` que no conocemos (webhook espurio/tardío).
+ */
+export async function getGenerationByFalRequestId(
+  db: Db,
+  falRequestId: string,
+): Promise<Generation | undefined> {
+  const [row] = await db.select().from(generation).where(eq(generation.falRequestId, falRequestId));
+  return row;
+}
+
 /** Todas las generaciones en un estado dado (T4.1: comprobar las `submitting` huérfanas tras un
  *  submit fallido; base de la reconciliación que T4.3 hará sobre `submitted`/`in_queue`). */
 export async function listGenerationsByStatus(

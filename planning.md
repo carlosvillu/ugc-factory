@@ -560,7 +560,7 @@ Decisiones del usuario (2026-07-07): la fase se ejecuta tras T0.1 y **antes** de
 - **Coste estimado**: ~$0,15
 - **Verificación**: generar una imagen barata real (FLUX.2 dev, <$0,05) end-to-end por polling → `generation` completa, coste real en `/spend`, PNG en storage propio; subir el mismo input dos veces reutiliza `fal_url` (un solo upload: `asset.fal_uploaded_at` no cambia en la 2ª pasada, además de los logs).
 
-#### T4.2 · Webhook de fal con firma ED25519
+#### T4.2 · Webhook de fal con firma ED25519 [x] 2026-07-16 — PASS, ver docs/verifications/T4.2/ (coste real ≈1,3¢)
 - **Depende de**: T4.1, T0.13
 - **Entrega**: `POST /api/webhooks/fal`: verificación ED25519 contra JWKS (caché ≤24 h) + timestamp ±5 min + idempotencia por `request_id`; el handler persiste el evento y delega en el orquestador; la **descarga del output se encola como job del worker** (§9.6).
 - **Coste estimado**: ~$0,15

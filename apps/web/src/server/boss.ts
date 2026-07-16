@@ -8,7 +8,7 @@
 // route handler no arranca pg-boss; el primer `getBoss()` lo arranca desde
 // `DATABASE_URL`, y los tests inyectan su propio boss con `setBossForTests()`.
 import { ensureQueue } from '@ugc/db';
-import { stepExecuteJob } from '@ugc/core/jobs';
+import { outputDownloadJob, stepExecuteJob } from '@ugc/core/jobs';
 import { PgBoss } from 'pg-boss';
 
 let override: PgBoss | undefined;
@@ -36,6 +36,9 @@ export async function getBoss(): Promise<PgBoss> {
     });
     await boss.start();
     await ensureQueue(boss, stepExecuteJob);
+    // Cola `output.download` (T4.2): el webhook de fal encola aquí desde el route handler. Sin la
+    // cola creada `boss.send` LANZA en pg-boss v12 — se crea en el MISMO camino que step.execute.
+    await ensureQueue(boss, outputDownloadJob);
     return boss;
   })();
   return started;

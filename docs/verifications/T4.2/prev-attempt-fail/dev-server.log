@@ -1,0 +1,46 @@
+
+> ugc-factory@0.0.0 dev /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads
+> pnpm --parallel --filter @ugc/web --filter @ugc/worker dev
+
+Scope: 2 of 7 workspace projects
+apps/web dev$ node scripts/dev.mjs
+apps/worker dev$ tsx watch --env-file-if-exists=../../.env src/main.ts
+apps/web dev: ▲ Next.js 16.2.10 (Turbopack)
+apps/web dev: - Local:         http://localhost:3000
+apps/web dev: - Network:       http://192.168.1.132:3000
+apps/web dev: ✓ Ready in 485ms
+apps/worker dev: {"level":30,"time":1784205925899,"pid":8190,"hostname":"MBP-de-Carlos","name":"worker","intervalMs":5000,"msg":"sweeper de timeouts arrancado"}
+apps/worker dev: {"level":30,"time":1784205925900,"pid":8190,"hostname":"MBP-de-Carlos","name":"worker","queue":"demo.noop","msg":"pg-boss arrancado: colas y consumers listos"}
+apps/worker dev: {"level":30,"time":1784205925900,"pid":8190,"hostname":"MBP-de-Carlos","name":"worker","health":{"ok":true,"db":true},"msg":"worker ready"}
+apps/web dev: {"level":30,"time":1784205927042,"pid":8191,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","msg":"running startup migrations"}
+apps/web dev: {"level":30,"time":1784205927106,"pid":8191,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","msg":"startup migrations applied"}
+apps/web dev: {"level":30,"time":1784205927167,"pid":8191,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","seeded":false,"msg":"auth.password_hash ya existía"}
+apps/web dev: {"level":30,"time":1784205927205,"pid":8191,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","provider":"fal","seeded":false,"msg":"secret.fal ya existía en BD (env ignorada; la BD es la fuente)"}
+apps/web dev: {"level":30,"time":1784205927233,"pid":8191,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","provider":"anthropic","seeded":false,"msg":"secret.anthropic ya existía en BD (env ignorada; la BD es la fuente)"}
+apps/web dev: {"level":30,"time":1784205927233,"pid":8191,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","provider":"firecrawl","seeded":false,"msg":"secret.firecrawl ya existía en BD (env ignorada; la BD es la fuente)"}
+apps/web dev: {"level":30,"time":1784205927274,"pid":8191,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","msg":"sembrando datos de referencia (T3.9)"}
+apps/web dev: {"level":30,"time":1784205927333,"pid":8191,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","hookLines":80,"ctaLines":30,"recipes":3,"msg":"librería sembrada o ya presente (insert-only)"}
+apps/web dev: {"level":30,"time":1784205927421,"pid":8191,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","templates":56,"guardPacks":10,"modelProfiles":16,"msg":"galería sembrada o ya presente (insert-only)"}
+apps/web dev: {"level":30,"time":1784205927475,"pid":8191,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","personas":5,"imagesCreated":0,"imagesFailed":0,"msg":"personas sembradas o ya presentes"}
+apps/web dev: {"level":30,"time":1784205927475,"pid":8191,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","msg":"datos de referencia sembrados (T3.9)"}
+apps/web dev: {"level":30,"time":1784205935955,"pid":8191,"hostname":"MBP-de-Carlos","name":"web","request_id":"0e308cb2-15fe-4e9f-a186-7e18b69b2d13","route":"/api/health","health":{"ok":true,"db":true},"msg":"health check"}
+apps/web dev:  GET /api/health 200 in 1059ms (next.js: 1019ms, application-code: 40ms)
+apps/web dev: {"level":30,"time":1784205936030,"pid":8191,"hostname":"MBP-de-Carlos","name":"web","request_id":"d2a8d4a2-d371-415c-b017-ffe8d773e651","route":"/api/health","health":{"ok":true,"db":true},"msg":"health check"}
+apps/web dev:  GET /api/health 200 in 15ms (next.js: 2ms, application-code: 13ms)
+apps/web dev: {"level":30,"time":1784205969355,"pid":8191,"hostname":"MBP-de-Carlos","name":"web","request_id":"e2efd112-56d6-4c9f-aa76-6740164e1d30","route":"/api/health","health":{"ok":true,"db":true},"msg":"health check"}
+apps/web dev:  GET /api/health 200 in 62ms (next.js: 27ms, application-code: 35ms)
+apps/web dev: {"level":30,"time":1784205989204,"pid":8191,"hostname":"MBP-de-Carlos","name":"web","request_id":"11a66954-9ced-46f8-8147-80a8b45a62c7","route":"/api/health","health":{"ok":true,"db":true},"msg":"health check"}
+apps/web dev:  GET /api/health 200 in 28ms (next.js: 10ms, application-code: 18ms)
+apps/web dev:  POST /api/webhooks/fal 400 in 1525ms (next.js: 1079ms, application-code: 446ms)
+apps/web dev:  POST /api/webhooks/fal 400 in 7ms (next.js: 4ms, application-code: 3ms)
+apps/web dev:  POST /api/webhooks/fal 400 in 20ms (next.js: 7ms, application-code: 12ms)
+apps/web dev:  POST /api/webhooks/fal 400 in 11ms (next.js: 4ms, application-code: 7ms)
+apps/web dev:  POST /api/webhooks/fal 400 in 12ms (next.js: 4ms, application-code: 7ms)
+apps/web dev:  POST /api/webhooks/fal 400 in 20ms (next.js: 6ms, application-code: 14ms)
+apps/web dev:  POST /api/webhooks/fal 400 in 10ms (next.js: 4ms, application-code: 7ms)
+apps/web dev: {"level":40,"time":1784206908579,"pid":8191,"hostname":"MBP-de-Carlos","name":"web","event":"fal_webhook_rejected","reason":"no_verifying_key","msg":"webhook de fal rechazado: firma/cabeceras/timestamp inválidos"}
+apps/web dev:  POST /api/webhooks/fal 401 in 13ms (next.js: 6ms, application-code: 7ms)
+apps/web dev: [?25h
+apps/web dev: Done
+apps/worker dev: {"level":30,"time":1784207188180,"pid":8190,"hostname":"MBP-de-Carlos","name":"worker","signal":"SIGTERM","msg":"worker shutting down"}
+ ELIFECYCLE  Command failed.

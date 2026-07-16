@@ -1,0 +1,18 @@
+Lazy loading nvm node npm ...
+[2026-07-16T12:46:04.108Z] capture-proxy escuchando en http://127.0.0.1:8799 → upstream :3000
+[2026-07-16T12:46:09.287Z] passthrough: GET /api/health (0 bytes)
+[2026-07-16T12:46:29.169Z] passthrough: GET /api/health (0 bytes)
+[2026-07-16T12:46:54.635Z] WEBHOOK #1 entrante: POST /api/webhooks/fal · 564 bytes · reqId=019f6af7-3088-7f03-b97d-84fec4a3ce12 ts=1784206014 sigLen=128
+[2026-07-16T12:46:56.197Z] WEBHOOK respuesta upstream: 400 · {"code":"validation_error","message":"payload de webhook de fal inválido"}
+[2026-07-16T12:46:57.122Z] WEBHOOK #2 entrante: POST /api/webhooks/fal · 564 bytes · reqId=019f6af7-3088-7f03-b97d-84fec4a3ce12 ts=1784206016 sigLen=128
+[2026-07-16T12:46:57.140Z] WEBHOOK respuesta upstream: 400 · {"code":"validation_error","message":"payload de webhook de fal inválido"}
+[2026-07-16T12:47:35.921Z] WEBHOOK #3 entrante: POST /api/webhooks/fal · 564 bytes · reqId=019f6af7-3088-7f03-b97d-84fec4a3ce12 ts=1784206055 sigLen=128
+[2026-07-16T12:47:35.950Z] WEBHOOK respuesta upstream: 400 · {"code":"validation_error","message":"payload de webhook de fal inválido"}
+[2026-07-16T12:48:50.891Z] WEBHOOK #4 entrante: POST /api/webhooks/fal · 564 bytes · reqId=019f6af7-3088-7f03-b97d-84fec4a3ce12 ts=1784206130 sigLen=128
+[2026-07-16T12:48:50.908Z] WEBHOOK respuesta upstream: 400 · {"code":"validation_error","message":"payload de webhook de fal inválido"}
+[2026-07-16T12:49:45.837Z] WEBHOOK #5 entrante: POST /api/webhooks/fal · 564 bytes · reqId=019f6af7-3088-7f03-b97d-84fec4a3ce12 ts=1784206185 sigLen=128
+[2026-07-16T12:49:45.853Z] WEBHOOK respuesta upstream: 400 · {"code":"validation_error","message":"payload de webhook de fal inválido"}
+[2026-07-16T12:52:55.458Z] WEBHOOK #6 entrante: POST /api/webhooks/fal · 564 bytes · reqId=019f6af7-3088-7f03-b97d-84fec4a3ce12 ts=1784206375 sigLen=128
+[2026-07-16T12:52:55.483Z] WEBHOOK respuesta upstream: 400 · {"code":"validation_error","message":"payload de webhook de fal inválido"}
+[2026-07-16T12:58:35.849Z] WEBHOOK #7 entrante: POST /api/webhooks/fal · 564 bytes · reqId=019f6af7-3088-7f03-b97d-84fec4a3ce12 ts=1784206715 sigLen=128
+[2026-07-16T12:58:35.864Z] WEBHOOK respuesta upstream: 400 · {"code":"validation_error","message":"payload de webhook de fal inválido"}

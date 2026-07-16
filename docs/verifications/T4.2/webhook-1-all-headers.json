@@ -1,0 +1,22 @@
+{
+  "host": "bag-winter-adapted-reduced.trycloudflare.com",
+  "content-length": "563",
+  "accept": "*/*",
+  "accept-encoding": "gzip",
+  "cdn-loop": "cloudflare; loops=1; subreqs=1",
+  "cf-connecting-ip": "34.135.41.243",
+  "cf-ew-via": "15",
+  "cf-ipcountry": "US",
+  "cf-ray": "a1c15688ab79cef7-MAD",
+  "cf-visitor": "{\"scheme\":\"https\"}",
+  "cf-warp-tag-id": "8163ce0b-115a-4724-8926-e32ec4c9bc22",
+  "cf-worker": "trycloudflare.com",
+  "connection": "keep-alive",
+  "content-type": "application/json",
+  "x-fal-webhook-request-id": "019f6b1b-49c3-7163-9866-2d7bdfec2232",
+  "x-fal-webhook-signature": "7a7dec9e8780d91892145d3f1db8d050add94878c1c0c4bfa1596aa831993f9c045fa501400f7ff539c39d474d0d6b2eb9e0c653b44859298b580905fec58e01",
+  "x-fal-webhook-timestamp": "1784208380",
+  "x-fal-webhook-user-id": "github|179462",
+  "x-forwarded-for": "34.135.41.243",
+  "x-forwarded-proto": "https"
+}

@@ -1,0 +1,9 @@
+=== stuck generation row ===
+             id             |  status   |            fal_request_id            | cost_actual | completed_at 
+----------------------------+-----------+--------------------------------------+-------------+--------------
+ 01KXNFEBGCCZX83JZDTD85PZVH | submitted | 019f6af7-3088-7f03-b97d-84fec4a3ce12 |             | 
+(1 row)
+
+=== asset/cost for this generation (expect 0/0) ===
+assets=0
+costs=0

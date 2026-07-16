@@ -19,6 +19,18 @@ export { server, useHttpMocks } from './msw/index';
 // create-test-database.ts vía imports relativos — no van al barrel.
 export { createTestDatabase, type TestDatabase } from './create-test-database';
 export { makeProject, makePipelineRun, makeStepRun, makeAsset } from './factories';
+// Factory de `generation` (T4.2, §9.6): fila que un webhook de fal encuentra (submitted con
+// fal_request_id). La insertan los tests handler-level del webhook (@ugc/web).
+export { makeGeneration } from './factories';
+// Helpers del webhook de fal (T4.2, testing/api.md §2.6): par ED25519 de test + firma con el MISMO
+// builder de core (self-consistency; la conformance la aporta el fixture real del verifier).
+export {
+  makeFalKeypair,
+  signFalWebhook,
+  nowFalTimestamp,
+  type FalTestKeypair,
+  type FalTestJwk,
+} from './fal-webhook';
 // Factories de FILAS del análisis (T1.2): rows de url_analysis/product_brief/brand_kit
 // que insertan los tests de integración de @ugc/db.
 export { makeUrlAnalysis, makeProductBrief, makeBrandKit } from './factories';

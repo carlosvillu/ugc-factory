@@ -10,6 +10,7 @@ import type {
   NewAdVariant,
   NewAsset,
   NewBrandKit,
+  NewGeneration,
   NewPipelineRun,
   NewProductBrief,
   NewProject,
@@ -73,6 +74,30 @@ export function makeAsset(overrides: Partial<NewAsset> = {}): NewAsset {
     mime: 'application/octet-stream',
     bytes: 0,
     checksum: '',
+    ...overrides,
+  };
+}
+
+/**
+ * Fila válida de `generation` con overrides (T4.2, §9.6). Por defecto describe una generación ya
+ * `submitted` con `fal_request_id`/`status_url`/`response_url` estampados — el estado en el que un
+ * webhook de fal la encuentra (el submit por webhook ya ocurrió). `model_profile_id` es NOT NULL:
+ * el test lo pasa (id de un `model_profile` sembrado) o acepta el placeholder por defecto.
+ * `fal_request_id` es UNIQUE: para dos generaciones en el mismo test, pásalo distinto.
+ */
+export function makeGeneration(overrides: Partial<NewGeneration> = {}): NewGeneration {
+  const id = overrides.id ?? newUlid();
+  return {
+    id,
+    modelProfileId: overrides.modelProfileId ?? newUlid(),
+    resolvedPrompt: 'a red apple on a white table',
+    inputs: {},
+    contentHash: 'a'.repeat(64),
+    status: 'submitted',
+    falRequestId: `req-${id}`,
+    statusUrl: `https://queue.fal.run/x/requests/${id}/status`,
+    responseUrl: `https://queue.fal.run/x/requests/${id}`,
+    startedAt: new Date(),
     ...overrides,
   };
 }

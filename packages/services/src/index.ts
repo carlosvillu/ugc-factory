@@ -23,3 +23,14 @@ export { runWriteScripts } from './write-scripts';
 // `cost_entry`. Lo consumen el smoke del verifier (`smoke-generate.ts`) y, en T4.11, el executor
 // del nodo de generación. `uploadInputCached` es la base §9.6 de la caché de upload a fal storage.
 export { runGenerate, uploadInputCached } from './generate';
+// Submit VÍA WEBHOOK sin polling (T4.2, §9.6): deja la fila `generation` en `submitted` keyed por
+// el request_id REAL de fal; la completion la conduce el webhook. Lo consume el smoke del verifier.
+export { submitGenerationForWebhook } from './submit-generation';
+// Tail compartido de la generación (T4.2, §9.6): descarga output → asset → cost → completed. Lo
+// usan `runGenerate` (poll) y el consumer `output.download` (webhook). `OutputDownloader` es el
+// puerto mínimo de descarga que el consumer inyecta (el FalClient lo cumple).
+export { finalizeGeneration, type OutputDownloader } from './finalize-generation';
+// Webhook de fal (T4.2, §9.6): el handler que persiste el evento verificado y encola la descarga
+// (lo llama el route handler de web), y la caché ≤24 h del JWKS que alimenta a `verifyFalWebhook`.
+export { handleFalWebhookEvent } from './handle-fal-webhook';
+export { makeFalJwksCache } from './fal-jwks';

@@ -1,4 +1,4 @@
-import { noopJob, stepExecuteJob } from '@ugc/core/jobs';
+import { noopJob, outputDownloadJob, stepExecuteJob } from '@ugc/core/jobs';
 import type { Logger } from '@ugc/core';
 import type { TransitionDeps } from '@ugc/core/orchestrator';
 import { getSecretsKeyFromEnv } from '@ugc/core/secrets';
@@ -12,6 +12,7 @@ import {
 import { PgBoss } from 'pg-boss';
 import { type FailDecider, registerNoopConsumer } from './consumers/demo-noop';
 import { registerStepConsumer } from './consumers/step-execute';
+import { registerOutputDownloadConsumer } from './consumers/output-download';
 import { type DemoFailDecider, randomDemoFail } from './executors/demo';
 import { makeExecutorRegistry } from './executors';
 import { startSweeper } from './sweeper';
@@ -59,6 +60,9 @@ export async function createBoss(deps: CreateBossDeps): Promise<PgBoss> {
     // `boss.send('step.execute')` LANZA en pg-boss v12. Su policy `short` es la
     // que activa el índice único de `singleton_key`.
     await ensureQueue(boss, stepExecuteJob);
+    // Cola `output.download` (T4.2, §9.6): el webhook de fal encola aquí la descarga del output.
+    // Sin la cola creada `boss.send('output.download')` LANZA en pg-boss v12 (igual que step.execute).
+    await ensureQueue(boss, outputDownloadJob);
     await registerNoopConsumer({
       boss,
       logger: deps.logger,
@@ -111,6 +115,14 @@ export async function createBoss(deps: CreateBossDeps): Promise<PgBoss> {
       db,
       transitionDeps,
       executors,
+      logger: deps.logger,
+    });
+    // Consumer `output.download` (T4.2): descarga el output de fal tras el webhook y liquida la
+    // generación (finalizeGeneration). Comparte el pool de Drizzle del worker y el storage local.
+    await registerOutputDownloadConsumer({
+      boss,
+      db,
+      storage: makeLocalStorageAdapterFromEnv(),
       logger: deps.logger,
     });
     // Sweeper de timeouts (T0.9, jobs.md §8): setInterval que expira los steps

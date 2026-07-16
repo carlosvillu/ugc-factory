@@ -10,3 +10,8 @@ export {
 } from './registry';
 export { noopJob, NoopJobSchema, type NoopJob } from './demo-noop';
 export { stepExecuteJob, StepExecuteJobSchema, type StepExecuteJob } from './step-execute';
+export {
+  outputDownloadJob,
+  OutputDownloadJobSchema,
+  type OutputDownloadJob,
+} from './output-download';

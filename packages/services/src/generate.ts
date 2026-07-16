@@ -12,29 +12,24 @@
 // ORDEN DE PERSISTENCIA (§9.6, base de idempotencia de T4.3): la fila `generation` se crea en
 // `submitting` ANTES del submit; tras el submit se estampa `request_id`/`status_url`/`response_url`
 // (`submitted`). Un crash entre medias deja una fila reconciliable, no un job fantasma en fal.
-import { newUlid } from '@ugc/core/contracts';
 import {
   computeContentHash,
-  extractImageOutput,
   makeFalClient,
   FalResponseError,
   type FalClientDeps,
   type GenerationInputs,
 } from '@ugc/core/generation';
-import { ModelCostSchema } from '@ugc/core/gallery';
 import type { Logger, StorageAdapter } from '@ugc/core';
 import {
-  createAsset,
   createGeneration,
   getModelProfile,
-  recordCost,
   setAssetFalUpload,
   updateGeneration,
   type DbClient,
   type Generation,
 } from '@ugc/db';
 
-import { falImageCostOf } from './fal-pricing';
+import { finalizeGeneration } from './finalize-generation';
 
 /** Logger no-op: el default cuando el caller no inyecta uno (tests que no afirman sobre logs). En
  *  producción (worker/web) se inyecta el pino estructurado con correlación. */
@@ -155,7 +150,6 @@ export async function runGenerate(
   if (profile === undefined) {
     throw new FalResponseError(`runGenerate: model_profile ${input.modelProfileId} no existe`);
   }
-  const costParsed = ModelCostSchema.safeParse(profile.cost);
 
   // 2) content_hash de dedupe (§9.6). Base para la deuda de dedup completa (F4/F5).
   const contentHash = computeContentHash({
@@ -197,113 +191,40 @@ export async function runGenerate(
     falStatusPayload: submitted.raw,
   });
 
-  // Pasos 5-7 comparten el MISMO manejo de fallo: cualquier error (poll, validación de output,
-  // descarga) deja la fila `failed` con el estado real —nunca un `completed` mentiroso— y re-lanza
-  // el mismo error para que el caller (executor T4.11) decida el reintento por su tipo
-  // (FalProviderError reintentable vs FalResponseError de contrato). Un solo catch en vez de
-  // estampar `failed` a mano en cada punto de salida.
-  let asset: Awaited<ReturnType<typeof createAsset>>;
-  let output: NonNullable<ReturnType<typeof extractImageOutput>>;
-  let falOutputUrl: string;
-  let statusPayload: unknown;
+  // 5-9) POLL hasta COMPLETED, luego liquidar con el TAIL COMPARTIDO `finalizeGeneration` (T4.2):
+  //   validar output → descargar el PNG a nuestro storage → cost_entry → completed, todo en una tx.
+  //   El MISMO tail lo usa el consumer `output.download` del webhook — una sola verdad, no dos
+  //   copias. `finalizeGeneration` LANZA en fallo (no se auto-marca `failed`): AQUÍ el catch mapea
+  //   cualquier error (poll, validación, descarga) a `failed` con el estado real —nunca un
+  //   `completed` mentiroso— y re-lanza para que el caller (executor T4.11) decida el reintento por
+  //   el tipo (FalProviderError reintentable vs FalResponseError de contrato).
   try {
-    // 5) POLL hasta COMPLETED sobre la status_url guardada, luego lee el output de response_url.
     const polled = await fal.poll({
       statusUrl: submitted.statusUrl,
       responseUrl: submitted.responseUrl,
     });
-    statusPayload = polled.statusPayload;
-
-    // 6) Validar el output (rama de VALIDACIÓN: se pagó, pero el contrato debe cumplirse).
-    const parsed = extractImageOutput(polled.output);
-    if (parsed === null) {
+    const finalized = await finalizeGeneration(
+      { db, storage, downloader: fal, logger: deps.logger ?? NOOP_LOGGER },
+      { generation, output: polled.output, statusPayload: polled.statusPayload },
+    );
+    // El camino de polling (T4.1) es el ÚNICO liquidador de esta generación recién creada: NO puede
+    // encontrarla ya `completed` bajo el lock (no hay webhook ni otro job compitiendo por una fila
+    // que este mismo call acaba de crear). Un `assetId` null aquí (= la carrera se perdió) sería un
+    // invariante roto (¿otra ruta liquidó una generación de polling?) → surface honesto, no un null silencioso.
+    if (finalized.assetId === null) {
       throw new FalResponseError(
-        `runGenerate: el output de ${profile.falEndpoint} no trae images[]: ${JSON.stringify(polled.output)}`,
+        `runGenerate: la generación ${generation.id} fue finalizada por otra ruta durante el polling (invariante roto)`,
       );
     }
-    output = parsed;
-    const firstImage = output.images[0];
-    if (firstImage === undefined) {
-      // Imposible por el `.min(1)` del schema, pero el tipo lo permite: guard honesto en vez de `!`.
-      throw new FalResponseError(
-        `runGenerate: el output de ${profile.falEndpoint} no trae imágenes`,
-      );
-    }
-    falOutputUrl = firstImage.url;
-
-    // 7) DESCARGAR el PNG del output a NUESTRO storage (la Verificación exige "PNG en storage
-    //    propio"). Es un asset NUEVO con generation_id — NO pasa por la caché de fal_url (esa es de
-    //    INPUTS, §9.6). La descarga usa `fal.download`: MISMO timeout duro que submit/poll (un CDN
-    //    que cuelga la conexión aborta a los `timeoutMs` en vez de bloquear DESPUÉS de haber pagado).
-    const outRes = await fal.download(firstImage.url);
-    if (outRes.body === null) {
-      throw new FalResponseError(
-        `runGenerate: el output ${firstImage.url} no trae cuerpo descargable`,
-      );
-    }
-    const mime = firstImage.content_type ?? 'image/png';
-    const ext = mime.includes('jpeg') ? 'jpg' : 'png';
-    const storageKey = `generations/${generation.id}/${newUlid()}.${ext}`;
-    const put = await storage.put(storageKey, outRes.body, { mime });
-    asset = await createAsset(db, {
-      kind: 'keyframe',
-      storageKey,
-      mime,
-      bytes: put.bytes,
-      checksum: put.checksum,
-      width: firstImage.width,
-      height: firstImage.height,
-      generationId: generation.id,
-    });
+    return {
+      generation: finalized.generation,
+      assetId: finalized.assetId,
+      falOutputUrl: finalized.falOutputUrl,
+      costCents: finalized.costCents,
+      warnings: [...warnings, ...finalized.warnings],
+    };
   } catch (err) {
     await updateGeneration(db, generation.id, { status: 'failed', completedAt: new Date() });
     throw err;
   }
-
-  // 8) COSTE (record-first): céntimos = megapíxeles × precio/MP del perfil. NUNCA lanza por precio
-  //    desconocido (la llamada de pago ya ocurrió) — degrada a 0 con warning, la fila se escribe.
-  const cost = costParsed.success
-    ? falImageCostOf({
-        output,
-        unit: costParsed.data.unit,
-        centsPerUnit: costParsed.data.amountCents,
-      })
-    : {
-        cents: 0,
-        megapixels: 0,
-        imageCount: output.images.length,
-        warning: 'fal-pricing: model_profile.cost inválido',
-      };
-  if (cost.warning !== null) warnings.push(cost.warning);
-  // `quantity` es INTEGER (nº de unidades facturadas): las IMÁGENES generadas, `unit='images'`.
-  // Los megapíxeles son el INPUT del precio (fraccionario), no la unidad del ledger — vivirían
-  // mal en una columna int. El importe (`amount_cents`) ya incorpora el precio por MP.
-  await recordCost(db, {
-    provider: 'fal',
-    amountCents: cost.cents,
-    quantity: cost.imageCount,
-    unit: 'images',
-    stepRunId: input.stepRunId,
-    generationId: generation.id,
-  });
-
-  // 9) Liquidar la generación como `completed` con el coste, el payload de status y la DURACIÓN
-  //    (§12 l.527: `duration_s`). Se mide desde `started_at` (estampado en el create) hasta ahora.
-  const completedAt = new Date();
-  const startedAt = generation.startedAt ?? completedAt;
-  generation = await updateGeneration(db, generation.id, {
-    status: 'completed',
-    costActual: cost.cents,
-    falStatusPayload: statusPayload,
-    durationS: (completedAt.getTime() - startedAt.getTime()) / 1000,
-    completedAt,
-  });
-
-  return {
-    generation,
-    assetId: asset.id,
-    falOutputUrl,
-    costCents: cost.cents,
-    warnings,
-  };
 }

@@ -238,11 +238,20 @@ export function makeFalClient(deps: FalClientDeps) {
   async function submit(
     endpoint: string,
     input: Record<string, unknown>,
+    opts: { webhookUrl?: string } = {},
   ): Promise<FalSubmitResult> {
     return limiter.run(async () => {
       let queued;
       try {
-        queued = await sdk().queue.submit(endpoint, { input });
+        // `webhookUrl` (T4.2): cuando se pasa, fal NOTIFICA la completion a esa URL con una firma
+        // ED25519 (verificada por `verifyFalWebhook`) EN VEZ de que nosotros pollemos. El submit
+        // por webhook y el submit por polling (T4.1) son el MISMO submit — solo cambia si el caller
+        // pollea la `status_url` devuelta o espera el webhook. `webhookUrl` es opcional: sin él, el
+        // comportamiento de T4.1 (polling) es idéntico.
+        queued = await sdk().queue.submit(endpoint, {
+          input,
+          ...(opts.webhookUrl !== undefined ? { webhookUrl: opts.webhookUrl } : {}),
+        });
       } catch (err) {
         throw toProviderError(err);
       }

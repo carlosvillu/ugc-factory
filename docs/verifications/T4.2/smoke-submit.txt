@@ -1,0 +1,13 @@
+
+> @ugc/web@0.0.0 smoke:generate:webhook /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/web
+> tsx --env-file-if-exists=../../.env scripts/smoke-generate-webhook.ts
+
+smoke:generate:webhook: sometiendo 1 imagen barata a fal-ai/flux-2 con webhook → https://bag-winter-adapted-reduced.trycloudflare.com/api/webhooks/fal (RED REAL, SIN polling)…
+smoke:generate:webhook: generation 01KXNHPHVTRFQDGA1J8V6QEP9F → submitted (esperado: submitted)
+smoke:generate:webhook: fal_request_id = 019f6b1b-49c3-7163-9866-2d7bdfec2232
+smoke:generate:webhook: status_url     = https://queue.fal.run/fal-ai/flux-2/requests/019f6b1b-49c3-7163-9866-2d7bdfec2232/status
+
+smoke:generate:webhook: submit OK. AHORA fal debe llamar al webhook en segundos.
+  · WEB logs → "webhook de fal verificado: descarga de output encolada"
+  · WORKER logs → "output.download: ... (webhook verified)" + generación completed
+  · La generación 01KXNHPHVTRFQDGA1J8V6QEP9F debe pasar submitted → in_progress → completed SIN polling.

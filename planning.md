@@ -572,11 +572,19 @@ Decisiones del usuario (2026-07-07): la fase se ejecuta tras T0.1 y **antes** de
 - **Coste estimado**: ~$0,20
 - **Verificación**: con webhooks deshabilitados (dev local), una generación real completa vía polling; matar el worker durante una generación y reiniciar retoma el seguimiento **sin re-submit** (el billing de fal muestra 1 solo job).
 
-#### T4.4 · N7a: product shots con referencias reales
+#### T4.4 · N7a: product shots — ruta packshot-IA [x] 2026-07-16 — PASS, ver docs/verifications/T4.4/ (coste real ≈2¢; juicio humano OK)
+> **Split de alcance 2026-07-16 (regla 6):** la tarea original declaraba DOS rutas (referencias reales + packshot-IA). La ruta con referencias necesita fotos de un producto propio (que el usuario no tiene aún) y su Verificación exige juicio humano sobre el producto reconocible — no verificable en vivo esta sesión. Construir su código de dinero (puente foto→asset, re-validación pre-gasto) sin verificarlo contra fal real es el anti-patrón prohibido (suite verde, funcionalidad rota). Por decisión del usuario, T4.4 se reduce a la ruta packshot-IA; la ruta con referencias es **T4.4b** (abajo), gated en fotos del usuario.
 - **Depende de**: T4.1, T3.6
-- **Entrega**: executor N7a: `fal-ai/bytedance/seedream/v4.5/edit` con fotos hero del brief como referencia (fallback `fal-ai/nano-banana-2/edit`), 2–3 shots 9:16; ruta packshot-IA si no hay fotos (decisión de CP1, marcada `synthetic_product=true`).
-- **Coste estimado**: ~$0,50 (shots por las dos rutas: referencias y packshot-IA)
-- **Verificación**: con fotos reales de un producto propio, los shots muestran **el producto real reconocible** (label/forma a juicio humano) en escenario UGC 9:16; el flujo sin fotos produce packshots razonables con el flag persistido.
+- **Entrega**: executor N7a (`makeN7aExecutor` + config Zod + registro en `executors/index.ts`, firma `StepExecutor` completa para que T4.11 solo lo instancie en el DAG), **ruta packshot-IA**: `fal-ai/flux-2` (text-to-image, único t2v-de-imagen sembrado; declara `9:16` en `capabilities.aspects`, coste por megapíxel) con prompt de packshot construido desde la descripción del brief, 2–3 shots 9:16 (`inputs:{image_size:<9:16>, num_images:2-3}` vía `runGenerate` de T4.1 — flux-2 NO usa el sistema de adapters, no tiene `promptAdapter`). Marca `synthetic_product=true` (campo de primera clase, NO en `content_hash.inputs` — es procedencia de output, no dimensión de dedupe). Selección de ruta inyectable/config-driven (el smoke conduce `ai_packshot` sin `step_run_id`).
+- **Coste estimado**: ~$0,25 (solo packshot-IA)
+- **Verificación**: el flujo sin fotos produce packshots 9:16 **razonables a juicio humano** con el flag `synthetic_product=true` persistido. Smoke STEPLESS (sin `step_run_id`), molde `smoke-generate.ts` de T4.1. El bucle genera los 2–3 shots en vivo y los presenta al usuario para su juicio.
+
+#### T4.4b · N7a: product shots con referencias reales ⚠ (fotos del usuario)
+- **Depende de**: T4.4
+- **⚠ Prerequisito**: fotos hero reales de un producto propio (las aporta el usuario) — sin ellas la Verificación (juicio humano sobre "producto reconocible") no es ejecutable.
+- **Entrega**: la ruta con referencias del executor N7a: `fal-ai/bytedance/seedream/v4.5/edit` (fallback `fal-ai/nano-banana-2/edit`) con las fotos hero del brief como referencia vía `imageEditAdapter` (T3.6) + `uploadInputCached` (T4.1); 2–3 shots 9:16. Cablea el **puente URL→asset** (descargar las URLs de `brief.assets` a filas `asset` de nuestro storage, subibles a fal — deuda diferida de planning.md:299/357) + **re-validación del hero promovido antes de gastar en fal** (planning.md:352: una URL 200 hoy puede dar 403 mañana). Propaga 9:16 al payload de seedream (los adapters edit descartan el aspect hoy — verificar el parámetro real de seedream v4.5 edit).
+- **Coste estimado**: ~$0,30
+- **Verificación**: con fotos reales de un producto propio, los shots muestran **el producto real reconocible** (label/forma a juicio humano) en escenario UGC 9:16.
 
 #### T4.5 · N7b: TTS + word timestamps
 - **Depende de**: T4.1, T2.0, T2.4 *(usa guiones reales con `scenes[]` de T2.4)*

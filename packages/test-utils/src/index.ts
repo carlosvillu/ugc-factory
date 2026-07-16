@@ -8,7 +8,7 @@
 export { expectGolden } from './golden';
 // Doble de EventSource para los tests del cliente SSE de apps/web (frontend.md §4).
 export { FakeEventSource } from './fake-event-source';
-export { server, useHttpMocks } from './msw/index';
+export { server, useHttpMocks, http, HttpResponse } from './msw/index';
 // Harness de integración con Postgres real (db-integration.md, llega en T0.3).
 // El barrel expone SOLO lo que consumen las suites de otros paquetes:
 // createTestDatabase + TestDatabase + makeProject (tests de integración de

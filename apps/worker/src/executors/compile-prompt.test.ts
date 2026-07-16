@@ -86,6 +86,7 @@ describe('makeN6Executor (esqueleto T3.5)', () => {
       demoShouldFail: () => false,
       demoRecordCost: () => Promise.resolve(),
       analysis: {} as never,
+      generation: {} as never,
     });
     expect(typeof registry.N6).toBe('function');
   });

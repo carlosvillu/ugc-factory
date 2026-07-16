@@ -75,6 +75,11 @@ export interface GenerateInput {
   stepRunId?: string;
   /** La variante del lote, si aplica (T4.11). OPCIONAL. */
   variantId?: string;
+  /** PROCEDENCIA del output (T4.4, N7a): marca la generación como PACKSHOT SINTÉTICO — el output
+   *  es un shot del producto GENERADO por IA (ruta `ai_packshot`), no una foto real. Se persiste
+   *  como columna de primera clase en `generation` (NO entra en `content_hash`: es procedencia, no
+   *  dimensión de dedupe). Default `false` (la mayoría de generaciones no son packshots sintéticos). */
+  syntheticProduct?: boolean;
 }
 
 export interface GenerateResult {
@@ -167,6 +172,9 @@ export async function runGenerate(
     resolvedPrompt: input.resolvedPrompt,
     inputs,
     contentHash,
+    // Procedencia (T4.4): se estampa en el MISMO INSERT que crea la fila (no un UPDATE suelto),
+    // así la fila nace con su flag y una lectura concurrente nunca la ve a medio marcar.
+    syntheticProduct: input.syntheticProduct ?? false,
     status: 'submitting',
     startedAt: new Date(),
   });

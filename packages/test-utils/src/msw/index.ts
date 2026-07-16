@@ -3,12 +3,18 @@
 // hasta entonces el server nace vacío y CUALQUIER petición HTTP en la suite
 // normal falla: la hermeticidad es el contrato (una petición no mockeada es un
 // bug que podría gastar dinero).
-import type { RequestHandler } from 'msw';
+import { http, HttpResponse, type RequestHandler } from 'msw';
 import { setupServer } from 'msw/node';
 import { afterAll, afterEach, beforeAll, beforeEach } from 'vitest';
 
 // Export secundario: overrides puntuales con server.use(...) dentro de un test.
 export const server = setupServer();
+
+// Re-export de los constructores de handlers de msw: así un paquete que solo consume el `server`
+// compartido (p. ej. @ugc/worker en el test de N7a) registra handlers `http.get/post(...)` SIN
+// necesitar msw como dependencia directa — la única fuente de la frontera HTTP mockeada es
+// test-utils, coherente con `server`.
+export { http, HttpResponse };
 
 export function useHttpMocks(...overrides: RequestHandler[]): void {
   beforeAll(() => {

@@ -25,6 +25,7 @@ import {
   type ModelProfile,
 } from '@ugc/db';
 import { RAW_GALLERY_SEED, validateGallerySeed } from '@ugc/core/gallery';
+import { computeContentHash } from '@ugc/core/generation';
 import { createTestDatabase, makeTestLogger, server, type TestDatabase } from '@ugc/test-utils';
 import type { StorageAdapter } from '@ugc/core';
 
@@ -133,6 +134,9 @@ describe('runGenerate — cadena end-to-end (Verificación T4.1)', () => {
     expect(gen?.durationS).toBeGreaterThanOrEqual(0);
     expect(gen?.startedAt).not.toBeNull();
     expect(gen?.completedAt).not.toBeNull();
+    // synthetic_product (T4.4): default `false` cuando el caller NO lo marca (esta generación no es
+    // un packshot IA). N7a la pondrá `true`; aquí probamos el DEFAULT.
+    expect(gen?.syntheticProduct).toBe(false);
 
     // PNG en NUESTRO storage: asset con generation_id, bytes recuperables.
     const asset = await getAsset(tdb.db, res.assetId);
@@ -148,6 +152,50 @@ describe('runGenerate — cadena end-to-end (Verificación T4.1)', () => {
     expect(fal?.amountCents).toBe(1);
     expect(fal?.unit).toBe('images');
     expect(fal?.quantity).toBe(1);
+  });
+
+  it('T4.4: `syntheticProduct:true` se persiste en la fila `generation` (procedencia, no dedupe)', async () => {
+    // request_id DISTINTO del CANARY del camino feliz: la tabla es compartida entre tests (sin
+    // truncate) y `fal_request_id` es UNIQUE, así que esta generación necesita el suyo propio.
+    const REQ = 'T44-req-synthetic';
+    const statusUrl = `https://queue.fal.run/${ENDPOINT}/requests/${REQ}/status`;
+    const responseUrl = `https://queue.fal.run/${ENDPOINT}/requests/${REQ}`;
+    server.use(
+      http.post(SUBMIT_URL, () =>
+        HttpResponse.json({
+          request_id: REQ,
+          status_url: statusUrl,
+          response_url: responseUrl,
+          cancel_url: `${responseUrl}/cancel`,
+          status: 'IN_QUEUE',
+          queue_position: 0,
+        }),
+      ),
+      http.get(statusUrl, () => HttpResponse.json({ status: 'COMPLETED', request_id: REQ })),
+      http.get(responseUrl, () => HttpResponse.json(RESPONSE_BODY)),
+      http.get(OUTPUT_URL, () =>
+        HttpResponse.arrayBuffer(PNG_BYTES.buffer, { headers: { 'content-type': 'image/png' } }),
+      ),
+    );
+    const res = await runGenerate(deps(), {
+      modelProfileId: fluxProfile.id,
+      resolvedPrompt: 'AI packshot of a serum bottle, studio, 9:16',
+      inputs: { image_size: 'portrait_16_9', num_images: 1, seed: 0 },
+      syntheticProduct: true,
+    });
+    const gen = await getGeneration(tdb.db, res.generation.id);
+    expect(gen?.syntheticProduct).toBe(true);
+    // El flag NO contamina el content_hash: es procedencia, NO dimensión de dedupe. El hash solo
+    // depende de (resolvedPrompt, modelProfileId, inputs) — `syntheticProduct` no entra. Se ancla
+    // sobre la primitiva PURA `computeContentHash` (sin red): el hash de la generación persistida es
+    // idéntico al que se computa SIN pasar por el flag. Si alguien colara `syntheticProduct` en el
+    // hash, este assert caería (control negativo).
+    const hashWithoutFlag = computeContentHash({
+      resolvedPrompt: 'AI packshot of a serum bottle, studio, 9:16',
+      modelProfileId: fluxProfile.id,
+      inputs: { image_size: 'portrait_16_9', num_images: 1, seed: 0 },
+    });
+    expect(gen?.contentHash).toBe(hashWithoutFlag);
   });
 
   it('§9.6: la fila existe en `submitting` ANTES del submit (500-on-submit)', async () => {

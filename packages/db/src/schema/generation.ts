@@ -6,6 +6,7 @@
 // `normalized_cache_key`, §9.7) siguen sin anticiparse: llegan en F5 con su
 // consumidor.
 import {
+  boolean,
   integer,
   jsonb,
   pgEnum,
@@ -138,6 +139,17 @@ export const generation = pgTable(
     // El coste REAL en céntimos (se cruza con el `cost_entry` que el servicio escribe).
     costActual: integer('cost_actual'),
     durationS: real('duration_s'),
+    // PROCEDENCIA del output (T4.4, N7a): `true` cuando el output es un PACKSHOT SINTÉTICO —
+    // un shot del producto GENERADO por IA (ruta `ai_packshot` de N7a, sin fotos reales del
+    // producto), no una foto real ni un frame de una foto hero. Downstream (N7d b-roll R2V,
+    // fidelity guards de F4/F5) necesita distinguir "esta imagen de producto es inventada" de
+    // "esta es el producto real" para decidir la fidelidad exigible. Es PROCEDENCIA, NO
+    // dimensión de dedupe: por eso vive como columna de primera clase y NUNCA entra en
+    // `content_hash.inputs` (meterlo ahí partiría el dedupe entre dos generaciones idénticas
+    // que solo difieren en este flag). Se lee vía `asset.generation_id → generation`. Default
+    // `false`: la inmensa mayoría de generaciones (Persona, avatar, b-roll de foto real) no
+    // son packshots sintéticos.
+    syntheticProduct: boolean('synthetic_product').notNull().default(false),
     startedAt: timestamp('started_at', { withTimezone: true }),
     completedAt: timestamp('completed_at', { withTimezone: true }),
     ...timestamps,

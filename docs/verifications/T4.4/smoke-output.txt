@@ -1,0 +1,14 @@
+
+> @ugc/web@0.0.0 smoke:packshot /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/web
+> tsx --env-file-if-exists=../../.env scripts/smoke-packshot.ts
+
+smoke:packshot: prompt de packshot →
+  Product packshot of "Allbirds Men's Cruiser - Shadow Blue (Natural White Sole)". a Calzado. La zapatilla clásica de Allbirds que equilibra estilo urbano y comodidad ligera para el día a día.. Minimal and modern, our signature classic court shoe delivers the right balance of style and urban comfort. Lightweight, breathable, and made to move, this is your new go-to for life on the go.. Clean studio product photography, single product centered and isolated, neutral seamless background, soft diffused lighting, sharp focus, high detail, realistic materials, e-commerce hero shot suitable for UGC ads. Vertical 9:16 composition, full product visible, generous negative space. brand color palette: #E0DACF, #9C0F0F, #E5E7EB, #ECE9E2; aesthetic: minimalista deportivo con acentos neutrales y toques de elegancia. No text, no watermark, no logo overlay, no people, no hands.
+
+smoke:packshot: generando 2 packshots 9:16 (portrait_16_9) con fal-ai/flux-2 (RED REAL)…
+{"level":30,"time":1784225184091,"pid":96608,"hostname":"MBP-de-Carlos","name":"worker","event":"fal_generation_finalized","generationId":"01KXP1QA1QCCM4JWJEXYJZQXXA","assetId":"01KXP1QEANE9PZF4AGQZ570BWR","costCents":1,"msg":"generación finalizada: output descargado, coste registrado, completed"}
+smoke:packshot: shot 1/2 → generation 01KXP1QA1QCCM4JWJEXYJZQXXA (completed), synthetic_product=true, asset 01KXP1QEANE9PZF4AGQZ570BWR 576×1024 (9:16 ⇒ height>width: OK ✓), 1¢ — GET /api/assets/01KXP1QEANE9PZF4AGQZ570BWR/download
+{"level":30,"time":1784225188012,"pid":96608,"hostname":"MBP-de-Carlos","name":"worker","event":"fal_generation_finalized","generationId":"01KXP1QEAYDTGM5EAP3KDQ79FQ","assetId":"01KXP1QJ58JPA6ACBQ8GSQH32C","costCents":1,"msg":"generación finalizada: output descargado, coste registrado, completed"}
+smoke:packshot: shot 2/2 → generation 01KXP1QEAYDTGM5EAP3KDQ79FQ (completed), synthetic_product=true, asset 01KXP1QJ58JPA6ACBQ8GSQH32C 576×1024 (9:16 ⇒ height>width: OK ✓), 1¢ — GET /api/assets/01KXP1QJ58JPA6ACBQ8GSQH32C/download
+
+smoke:packshot: OK ✓ — 2 packshots generados, coste total 2¢ (→ /spend). Descarga los assets y JÚZGALOS: ¿son packshots 9:16 razonables del producto?

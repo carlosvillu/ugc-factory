@@ -41,6 +41,8 @@ export {
 } from './sweep-generations';
 export { computeContentHash, type ContentHashInput, type GenerationInputs } from './content-hash';
 export { extractImageOutput, type FalImage, type FalImageOutput } from './fal-image-output';
+// Constructor del prompt de packshot (T4.4, N7a · ruta `ai_packshot`): lógica pura brief → prompt.
+export { buildPackshotPrompt, PACKSHOT_MIN_SHOTS, PACKSHOT_MAX_SHOTS } from './packshot-prompt';
 // Webhook de fal (T4.2, §9.6): verificación de firma ED25519 (función pura, deps inyectadas) +
 // el builder del mensaje firmado (compartido con los tests) + el contrato del payload.
 export {

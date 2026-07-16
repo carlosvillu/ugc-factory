@@ -1,0 +1,6 @@
+             id             | provider | amount_cents |       generation_id        | step_run_id 
+----------------------------+----------+--------------+----------------------------+-------------
+ 01KXP1QEAQS1WPHGYRWCMRB07J | fal      |            1 | 01KXP1QA1QCCM4JWJEXYJZQXXA | 
+ 01KXP1QJ59NVWH6NNK5M55T861 | fal      |            1 | 01KXP1QEAYDTGM5EAP3KDQ79FQ | 
+(2 rows)
+

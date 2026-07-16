@@ -13,6 +13,7 @@ import {
 import { makeN4Executor } from './strategy';
 import { makeN5Executor } from './write-scripts';
 import { makeN6Executor } from './compile-prompt';
+import { type GenerationExecutorDeps, makeN7aExecutor } from './generation';
 
 export interface ExecutorRegistryDeps {
   /** Decisor de fallo de los executors de demo, resuelto por bootstrap. */
@@ -22,6 +23,10 @@ export interface ExecutorRegistryDeps {
   /** Deps de los nodos REALES del análisis (T1.10a): BD, storage, secretos y los
    *  overrides de base URL de los clientes externos (el stack E2E los apunta a su fake). */
   analysis: AnalysisExecutorDeps;
+  /** Deps de los executors de GENERACIÓN (T4.4, N7a): BD + storage + `FAL_KEY`. La `falKey` se lee
+   *  PEREZOSAMENTE (getter) igual que `secretsKey`: un worker sin `FAL_KEY` arranca y sirve todo lo
+   *  demás, y solo revienta —con mensaje claro— el step de generación que de verdad la necesita. */
+  generation: GenerationExecutorDeps;
 }
 
 /**
@@ -35,6 +40,7 @@ export function makeExecutorRegistry({
   demoShouldFail,
   demoRecordCost,
   analysis,
+  generation,
 }: ExecutorRegistryDeps): Record<string, StepExecutor> {
   const demo = makeDemoExecutor({ shouldFail: demoShouldFail, recordCost: demoRecordCost });
   return {
@@ -60,6 +66,10 @@ export function makeExecutorRegistry({
     // mínimo. NO tiene deps (no lee la BD en T3.5: la tabla `generation` y el DAG de generación que
     // le pasa las fuentes son F4/T4.11). Cuando F4 lo cablee, estrenará su grupo de deps.
     N6: makeN6Executor(),
+    // N7a · PRODUCT SHOTS, ruta packshot-IA (T4.4, §7.2). PAGA fal (text-to-image flux-2): estrena el
+    // grupo de deps `generation` (BD + storage + FAL_KEY perezosa). T4.11 lo cablea como nodo del DAG
+    // (step_run_id/variant_id); en T4.4 corre STEPLESS (el smoke conduce `ai_packshot` sin step).
+    N7a: makeN7aExecutor(generation),
     'demo.sleep': demo,
     'demo.fail': demo,
     // `demo.hang` (T0.9): el executor no retorna nunca (espera al abort) — es el

@@ -109,6 +109,21 @@ export async function createBoss(deps: CreateBossDeps): Promise<PgBoss> {
         jinaBaseUrl: process.env.JINA_BASE_URL,
         anthropicBaseUrl: process.env.ANTHROPIC_BASE_URL,
       },
+      // Nodos de GENERACIÓN (T4.4, N7a): comparten el pool de Drizzle y el storage local del worker.
+      // `falKey` es PEREZOSA (getter): un worker sin FAL_KEY arranca igual y sirve análisis/demo;
+      // solo revienta —con mensaje claro— si un step de generación de verdad la necesita (mismo
+      // criterio que `secretsKey`). El stack E2E no ejerce N7a (no gasta fal real).
+      generation: {
+        db,
+        storage: makeLocalStorageAdapterFromEnv(),
+        get falKey() {
+          const key = process.env.FAL_KEY;
+          if (key === undefined || key === '') {
+            throw new Error('N7a: falta FAL_KEY (la generación de packshots la necesita)');
+          }
+          return key;
+        },
+      },
     });
     await registerStepConsumer({
       boss,

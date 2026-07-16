@@ -1,0 +1,1 @@
+ALTER TABLE "generation" ADD COLUMN "synthetic_product" boolean DEFAULT false NOT NULL;

@@ -1,0 +1,6 @@
+             id             |  status   | step_run_id | synthetic_product |      model_profile_id      | has_req | has_resp |                           content_hash                           
+----------------------------+-----------+-------------+-------------------+----------------------------+---------+----------+------------------------------------------------------------------
+ 01KXP1QA1QCCM4JWJEXYJZQXXA | completed |             | t                 | 01KXN3Z0KV42NPXW91DFR0GHW7 | t       | t        | f8ac0efe1f9e298b8df148c8130168e0b758e80b7cafea329287f609baba8342
+ 01KXP1QEAYDTGM5EAP3KDQ79FQ | completed |             | t                 | 01KXN3Z0KV42NPXW91DFR0GHW7 | t       | t        | 2ea0b06061bee1ffd5badab4c99e580046102b75ae2739049f85db4cc945d488
+(2 rows)
+

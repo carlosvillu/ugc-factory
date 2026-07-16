@@ -1,0 +1,20 @@
+ M apps/web/package.json
+ M docs/dev-loop/journal.md
+ M packages/core/gallery-seed/model-profiles.json
+ M packages/core/package.json
+ M packages/db/drizzle/meta/_journal.json
+ M packages/db/src/index.ts
+ M packages/db/src/repos/asset.repo.ts
+ M packages/db/src/repos/gallery.repo.ts
+ M packages/db/src/schema/generation.ts
+ M packages/services/src/index.ts
+ M pnpm-lock.yaml
+?? apps/web/scripts/smoke-generate.ts
+?? docs/verifications/T4.1/
+?? packages/core/src/generation/
+?? packages/db/drizzle/0016_free_bloodstorm.sql
+?? packages/db/drizzle/meta/0016_snapshot.json
+?? packages/db/src/repos/generation.repo.ts
+?? packages/services/src/fal-pricing.ts
+?? packages/services/src/generate.ts
+?? packages/services/test/integration/generate.test.ts

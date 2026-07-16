@@ -15,13 +15,36 @@ import { and, arrayContains, desc, eq, sql } from 'drizzle-orm';
 import type { Db } from '../client';
 import {
   guardPack,
+  modelProfile,
   promptTemplate,
   promptVersion,
   type GuardPack,
+  type ModelProfile,
   type NewPromptTemplate,
   type PromptTemplate,
   type PromptVersion,
 } from '../schema/gallery';
+
+/** Lee un `model_profile` por id (T4.1): el servicio de generación necesita su `falEndpoint`
+ *  y su `cost` (multi-unidad §13.1) para invocar fal y calcular el `cost_entry`. `undefined`
+ *  si no existe (el servicio lo mapea a un error accionable — no hay generación sin modelo). */
+export async function getModelProfile(db: Db, id: string): Promise<ModelProfile | undefined> {
+  const [row] = await db.select().from(modelProfile).where(eq(modelProfile.id, id));
+  return row;
+}
+
+/** Lee un `model_profile` por su clave natural `fal_endpoint` (T4.1): el smoke/live lo usa para
+ *  resolver el id del perfil sembrado (p. ej. `fal-ai/flux-2`) sin conocerlo de antemano. */
+export async function getModelProfileByEndpoint(
+  db: Db,
+  falEndpoint: string,
+): Promise<ModelProfile | undefined> {
+  const [row] = await db
+    .select()
+    .from(modelProfile)
+    .where(eq(modelProfile.falEndpoint, falEndpoint));
+  return row;
+}
 
 /** El estado del template (`prompt_status` enum §10.2), tomado del inferido de la fila para no
  *  duplicar la lista de valores. El endpoint valida el string contra `PromptStatusSchema` de core

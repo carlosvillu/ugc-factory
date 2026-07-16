@@ -1,0 +1,17 @@
+
+> @ugc/web@0.0.0 smoke:generate /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/web
+> tsx --env-file-if-exists=../../.env scripts/smoke-generate.ts
+
+smoke:generate: generando 1 imagen barata con fal-ai/flux-2 (RED REAL)…
+smoke:generate: generation 01KXN84A1ZW0VBNQWGTP48X71X → completed
+smoke:generate: fal_request_id = 019f6a82-2a9f-7282-9943-111eb00bca32
+smoke:generate: status_url     = https://queue.fal.run/fal-ai/flux-2/requests/019f6a82-2a9f-7282-9943-111eb00bca32/status
+smoke:generate: content_hash   = 825b578c5c3805eb7b96a7f28c5409b49f2deb57dbb22c91fc36e492120dc65b
+smoke:generate: cost           = 0 céntimos (→ /spend)
+smoke:generate: output (fal)   = https://v3b.fal.media/files/b/0aa27887/J7K9LepyyXGN1psxeAKkW_CYG7q2yM.png
+smoke:generate: asset 01KXN84D5C52HJDP5X70JX4S4Y — descárgalo con GET /api/assets/01KXN84D5C52HJDP5X70JX4S4Y/download
+{"level":30,"time":1784198347431,"pid":30895,"hostname":"MBP-de-Carlos","name":"worker","event":"fal_input_upload","assetId":"01KXN84D5MHB4F6A9AHGM0KXAN","falUrl":"https://v3b.fal.media/files/b/0aa2787a/rZ1U3meqH2er5BNjv6hZD_1784198345915.png","bytes":290648,"msg":"fal storage upload: input subido por primera vez"}
+{"level":30,"time":1784198347433,"pid":30895,"hostname":"MBP-de-Carlos","name":"worker","event":"fal_input_cache_hit","assetId":"01KXN84D5MHB4F6A9AHGM0KXAN","falUrl":"https://v3b.fal.media/files/b/0aa2787a/rZ1U3meqH2er5BNjv6hZD_1784198345915.png","msg":"fal storage cache-hit: input reutilizado sin re-subir"}
+smoke:generate: upload#1 cacheHit=false · upload#2 cacheHit=true (esperado: false, true)
+smoke:generate: fal_uploaded_at NO cambió entre pasadas: OK ✓
+smoke:generate: OK ✓ — inspecciona la generación, /spend y el asset descargado

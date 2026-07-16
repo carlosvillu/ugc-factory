@@ -12,7 +12,8 @@
     "test:e2e": "playwright test",
     "smoke:assets": "tsx --env-file-if-exists=../../.env scripts/smoke-assets.ts",
     "smoke:ingest": "tsx --env-file-if-exists=../../.env scripts/smoke-ingest.ts",
-    "smoke:firecrawl": "tsx --env-file-if-exists=../../.env scripts/smoke-firecrawl.ts"
+    "smoke:firecrawl": "tsx --env-file-if-exists=../../.env scripts/smoke-firecrawl.ts",
+    "smoke:generate": "tsx --env-file-if-exists=../../.env scripts/smoke-generate.ts"
   },
   "dependencies": {
     "@base-ui-components/react": "1.0.0-rc.0",

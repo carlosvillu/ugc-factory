@@ -1,0 +1,8 @@
+rerun-1mp: generando 1 imagen ~1MP (square_hd) con FLUX.2 (RED REAL)…
+rerun-1mp: generation 01KXN8TB807PQZX1W92P4DBAPT → completed
+rerun-1mp: fal_request_id = 019f6a8d-2ee4-70f2-a452-2a7945793f6a
+rerun-1mp: status_url     = https://queue.fal.run/fal-ai/flux-2/requests/019f6a8d-2ee4-70f2-a452-2a7945793f6a/status
+rerun-1mp: asset dims     = 1024x1024
+rerun-1mp: asset bytes    = 1428703
+rerun-1mp: cost           = 1 céntimos (→ /spend)
+rerun-1mp: assetId        = 01KXN8TG0EZAY922WXN85KWNPB

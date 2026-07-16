@@ -554,7 +554,7 @@ Decisiones del usuario (2026-07-07): la fase se ejecuta tras T0.1 y **antes** de
 
 ## F4 — Generación fal.ai
 
-#### T4.1 · FalClient + upload de inputs con caché
+#### T4.1 · FalClient + upload de inputs con caché [x] 2026-07-16 — PASS, ver docs/verifications/T4.1/ (coste real ≈3,8¢)
 - **Depende de**: T0.7b, T0.5, T3.4, T0.12, T0.14 *(usa la tabla `asset` y el storage de T0.5)*
 - **Entrega**: cliente sobre `@fal-ai/client`: submit a `queue.fal.run` (persistencia `submitting`→`submitted` con `request_id`/`status_url`/`response_url`; §9.6), subida de inputs vía fal storage con caché `(asset_id, checksum)` → `asset.fal_url`, rate limiter (~8 concurrentes) y manejo de 429/`Retry-After`; tabla `generation` completa.
 - **Coste estimado**: ~$0,15

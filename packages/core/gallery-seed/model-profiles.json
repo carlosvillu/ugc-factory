@@ -106,6 +106,14 @@
     "notes": "Lipsync Tier Premium (sync-lipsync v2 pro). Precio verificado 2026-07-15 vs §13.1 ($5/min)."
   },
   {
+    "falEndpoint": "fal-ai/flux-2",
+    "kind": "image",
+    "cost": { "unit": "megapixel", "amountCents": 1.2 },
+    "capabilities": { "aspects": ["9:16", "16:9", "1:1", "4:3", "3:4"] },
+    "unverified": true,
+    "notes": "FLUX.2 [dev] TEXT-TO-IMAGE (§13.1 l.595, imagenes de Persona Standard, ~$0,012/MP). Endpoint verificado 2026-07-16 vs fal.ai/models/fal-ai/flux-2 ($0,012/MP = 1,2 centimos/MP). NO necesita imagen de referencia (a diferencia de los `image-edit` seedream/nano-banana). `promptAdapter` OMITIDO: el adapter t2i se cablea en T4.11 (pipeline dispatch); T4.1 lo integra directo. `unverified` hasta verificar shape en vivo (T4.1)."
+  },
+  {
     "falEndpoint": "fal-ai/veo3.1",
     "kind": "i2v",
     "cost": { "unit": "second", "amountCents": 20 },

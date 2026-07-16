@@ -100,8 +100,18 @@ export { makeLocalStorageAdapterFromEnv } from './adapters/local-storage';
 // Repo del agregado `asset` (T0.5): create/get tipados. Los consume el endpoint de
 // download (web) y el smoke/seed de assets. `NewAsset` lo consume la factory
 // makeAsset de test-utils; `Asset` no se importa por nombre (se infiere).
-export { createAsset, getAsset } from './repos/asset.repo';
+export { createAsset, getAsset, setAssetFalUpload } from './repos/asset.repo';
 export type { NewAsset } from './schema/generation';
+// Agregado `generation` (T4.1, §9.6): el ciclo submitting→submitted→…→completed que el
+// servicio de generación orquesta. Lo consumen `@ugc/services` (runGenerate) y el smoke
+// del verifier. `Generation`/`NewGeneration`/`GenerationPatch` son los shapes públicos.
+export {
+  createGeneration,
+  updateGeneration,
+  getGeneration,
+  listGenerationsByStatus,
+} from './repos/generation.repo';
+export type { Generation } from './schema/generation';
 // Ledger de gasto (T0.12): `recordCost` (efecto de escritura, lo llama el executor
 // de demo config-injectable y, en fases reales, cada nodo que gasta), el resumen
 // del panel /spend (`getSpendSummary`: totales por día/proveedor + presupuesto +
@@ -263,5 +273,7 @@ export {
   createTemplateVersion,
   setTemplateStatus,
   listGuardPacks,
+  getModelProfile,
+  getModelProfileByEndpoint,
 } from './repos/gallery.repo';
-export type { PromptTemplate, PromptVersion } from './schema/gallery';
+export type { ModelProfile, PromptTemplate, PromptVersion } from './schema/gallery';

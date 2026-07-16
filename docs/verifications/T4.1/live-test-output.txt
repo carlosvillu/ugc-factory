@@ -1,0 +1,13 @@
+
+> ugc-factory@0.0.0 test:live /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads
+> RUN_LIVE=1 vitest run --project live fal-client.live
+
+
+ RUN  v4.1.10 /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads
+
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+   Start at  12:52:07
+   Duration  2.44s (transform 36ms, setup 12ms, import 89ms, tests 2.21s, environment 0ms)
+

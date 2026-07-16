@@ -19,3 +19,7 @@ export { runSynthesizeBrief } from './synthesize-brief';
 // lo llama para escribir los guiones del lote antes de pausar en CP3. Sale al barrel ahora que hay
 // quien lo importe desde FUERA del paquete (antes solo su test, por ruta relativa).
 export { runWriteScripts } from './write-scripts';
+// Generación de imagen contra fal (T4.1, §9.6): submit + polling inline + descarga del output +
+// `cost_entry`. Lo consumen el smoke del verifier (`smoke-generate.ts`) y, en T4.11, el executor
+// del nodo de generación. `uploadInputCached` es la base §9.6 de la caché de upload a fal storage.
+export { runGenerate, uploadInputCached } from './generate';

@@ -24,3 +24,25 @@ export async function getAsset(db: Db, id: string): Promise<Asset | undefined> {
   const [row] = await db.select().from(asset).where(eq(asset.id, id));
   return row;
 }
+
+/**
+ * Estampa la caché de upload a fal storage (T4.1, §9.6): la `fal_url` que fal devolvió y
+ * el `fal_uploaded_at` = ahora. Se llama SOLO tras un upload REAL. La 2ª vez que se sube
+ * el mismo input NO se llama aquí (cache-hit), así que `fal_uploaded_at` no cambia — que
+ * es la señal observable de la Verificación ("un solo upload"). Devuelve la fila
+ * actualizada.
+ */
+export async function setAssetFalUpload(
+  db: Db,
+  id: string,
+  falUrl: string,
+  uploadedAt: Date,
+): Promise<Asset> {
+  const [row] = await db
+    .update(asset)
+    .set({ falUrl, falUploadedAt: uploadedAt })
+    .where(eq(asset.id, id))
+    .returning();
+  if (!row) throw new Error(`setAssetFalUpload: no existe el asset ${id}`);
+  return row;
+}

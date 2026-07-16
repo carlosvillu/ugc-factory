@@ -1,0 +1,52 @@
+
+ RUN  v4.1.10 /private/tmp/claude-501/-Users-carlosvillu-Developer---GARBAGE---UGC-Ads/b2bb4e77-03b6-4ef6-8e3e-bfd5df72fbdb/scratchpad/t39-biteshot/packages/db
+
+ ❯ |db:integration| test/integration/persona.test.ts (16 tests | 1 failed) 189ms
+     × `onConflict:"nothing"` NO revierte los metadatos que el usuario editó por /personas 11ms
+ ❯ |db:integration| test/integration/gallery-seed.test.ts (7 tests | 1 failed) 351ms
+     × re-sembrar con `onConflict:"nothing"` NO pisa un template editado por el usuario 49ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |db:integration| test/integration/gallery-seed.test.ts > seed de arranque insert-only: la edición del usuario sobrevive al redeploy (T3.9) > re-sembrar con `onConflict:"nothing"` NO pisa un template editado por el usuario
+AssertionError: expected 'UGC smartphone video style, vertical …' to be 'UGC smartphone video style, vertical …' // Object.is equality
+
+- Expected
++ Received
+
+  UGC smartphone video style, vertical 9:16, no cinematic grading, no beauty filters, no color science. Cast a {persona.descriptor} in the {persona.age_range} range as an honest first-person creator (never labelled 'customer'), filming herself in {persona.setting} with 2-3 everyday anchors (bathroom mirror, morning light, a cluttered shelf). Beat 1 (0-3s): she looks into the lens and says, "{hook.line}", framing the pain of {pain_point}. Beat 2 (3-10s): she applies {product.name} to camera, showing the {benefit.primary} with visible pores and natural skin texture. Beat 3 (10-18s): a second layer of proof on {benefit[0]}, handheld with slight autofocus breathing and imperfect framing. Camera: fixed phone at arm's length, one reframe, no gimbal moves. Lighting: motivated by the window, soft and uneven. Deliberate imperfections: visible pores, autofocus breathing, imperfect framing, no retouch. Product moment: the label of {product.name} stays legible and true to shape, no morphing, no invented text. Fidelity guards: keep the product geometry and colour stable across cuts, no identity drift on the creator. Audio: implied room tone, no music bed. Final beat (18-22s): natural close to camera, "{cta.line}". Format: 9:16, {duration}s, {platform}, {aspect}.
+-
+- // EDICIÓN DEL USUARIO — no debe revertirse en el redeploy
+
+ ❯ test/integration/gallery-seed.test.ts:204:25
+    202|       .where(eq(promptTemplate.slug, target.slug));
+    203|     expect(after?.id).toBe(row.id); // misma fila
+    204|     expect(after?.body).toBe(editedBody); // LA EDICIÓN SOBREVIVE (lo …
+       |                         ^
+    205|     expect(after?.headVersion).toBe(2); // el estado de runtime intacto
+    206|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  |db:integration| test/integration/persona.test.ts > seed de arranque insert-only sobre personas: la edición del usuario sobrevive (T3.9) > `onConflict:"nothing"` NO revierte los metadatos que el usuario editó por /personas
+AssertionError: expected 'descriptor SEMBRADO' to be 'descriptor EDITADO POR EL USUARIO — n…' // Object.is equality
+
+Expected: "descriptor EDITADO POR EL USUARIO — no debe revertirse"
+Received: "descriptor SEMBRADO"
+
+ ❯ test/integration/persona.test.ts:347:31
+    345|
+    346|     const after = await getPersona(tdb.db, first.persona.id);
+    347|     expect(after?.descriptor).toBe(editedDescriptor); // LA EDICIÓN SO…
+       |                               ^
+    348|     expect(after?.gender).toBe('male');
+    349|     expect(after?.voiceMap).toEqual({ es: { provider: 'elevenlabs', vo…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  2 failed (2)
+      Tests  2 failed | 21 passed (23)
+   Start at  09:25:39
+   Duration  6.77s (transform 581ms, setup 19ms, import 2.09s, tests 541ms, environment 0ms)
+

@@ -1,0 +1,24 @@
+
+> @ugc/web@0.0.0 dev /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/web
+> node scripts/dev.mjs
+
+▲ Next.js 16.2.10 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.1.132:3000
+✓ Ready in 325ms
+{"level":30,"time":1784186185242,"pid":20247,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","msg":"running startup migrations"}
+{"level":30,"time":1784186185484,"pid":20247,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","msg":"startup migrations applied"}
+{"level":30,"time":1784186185572,"pid":20247,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","seeded":true,"msg":"auth.password_hash sembrado (first boot)"}
+{"level":30,"time":1784186185633,"pid":20247,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","provider":"fal","seeded":true,"msg":"secret.fal sembrado cifrado desde env (first boot)"}
+{"level":30,"time":1784186185677,"pid":20247,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","provider":"firecrawl","seeded":true,"msg":"secret.firecrawl sembrado cifrado desde env (first boot)"}
+{"level":30,"time":1784186185677,"pid":20247,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","provider":"anthropic","seeded":true,"msg":"secret.anthropic sembrado cifrado desde env (first boot)"}
+{"level":30,"time":1784186185828,"pid":20247,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","msg":"sembrando datos de referencia (T3.9)"}
+{"level":30,"time":1784186185917,"pid":20247,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","hookLines":80,"ctaLines":30,"recipes":3,"msg":"librería sembrada o ya presente (insert-only)"}
+{"level":30,"time":1784186186022,"pid":20247,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","templates":56,"guardPacks":10,"modelProfiles":15,"msg":"galería sembrada o ya presente (insert-only)"}
+seed: persona «Lucía (placeholder)» ← imagen sintética 1638×2048 px (personas/01KXMWHA9HXZH1ENGE59AW7XG3/01KXMWHAAAJ73K1GNW88Y6949M.png)
+seed: persona «Lucía (placeholder)» ← imagen sintética 1638×2048 px (personas/01KXMWHA9HXZH1ENGE59AW7XG3/01KXMWHAB20YK71MD10T1N77ZB.png)
+seed: persona «Marcus (placeholder)» ← imagen sintética 1638×2048 px (personas/01KXMWHAB7RC36Y8MH6XVSP8MN/01KXMWHABQ9MSJFWSVD9RKKHN2.png)
+seed: persona «Marcus (placeholder)» ← imagen sintética 1638×2048 px (personas/01KXMWHAB7RC36Y8MH6XVSP8MN/01KXMWHACB43GVGVRH1B6BFBXP.png)
+{"level":30,"time":1784186186135,"pid":20247,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","personas":2,"imagesCreated":4,"imagesFailed":0,"msg":"personas sembradas o ya presentes"}
+{"level":30,"time":1784186186136,"pid":20247,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","msg":"datos de referencia sembrados (T3.9)"}
+

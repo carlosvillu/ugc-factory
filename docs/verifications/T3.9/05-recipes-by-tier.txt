@@ -1,0 +1,7 @@
+    id    | est_cost_30s_min_cents | est_cost_30s_max_cents 
+----------+------------------------+------------------------
+ test     |                     30 |                    170
+ standard |                    180 |                    500
+ premium  |                    900 |                   1300
+(3 rows)
+

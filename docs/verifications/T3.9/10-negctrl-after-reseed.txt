@@ -1,0 +1,18 @@
+=== AFTER RE-SEED (boot #3) — survival + no-dup check ===
+ templates_total | this_slug_rows | personas_total | this_persona_rows 
+-----------------+----------------+----------------+-------------------
+              56 |              1 |              2 |                 1
+(1 row)
+
+--- edited TEMPLATE body (must still start with the marker) ---
+ head_version |                          body_head                           
+--------------+--------------------------------------------------------------
+            2 | EDICION DEL USUARIO T3.9 marker 1784186580 — no debe reverti
+(1 row)
+
+--- edited PERSONA descriptor (must still be the edited value) ---
+                       descriptor_head                        
+--------------------------------------------------------------
+ descriptor EDITADO POR EL USUARIO T3.9 1784186608 — no debe 
+(1 row)
+

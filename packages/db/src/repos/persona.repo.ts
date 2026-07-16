@@ -12,6 +12,7 @@
 //     METADATOS de la persona; la BD, de su HISTORIA (`perf` NUNCA se pisa).
 import { asc, count, eq, inArray, sql } from 'drizzle-orm';
 import type { Db } from '../client';
+import type { SeedConflictPolicy } from './library.repo';
 import { asset } from '../schema/generation';
 import { persona, type NewPersona, type Persona } from '../schema/gallery';
 
@@ -165,37 +166,66 @@ export async function removeReferenceImage(
  * Devuelve la fila y si fue una inserción NUEVA (el caller decide si generar imágenes: solo se
  * generan para una persona recién creada — re-sembrar no debe duplicar assets ni pisar las
  * imágenes reales que el usuario haya subido por el CRUD).
+ *
+ * `onConflict` (T3.9): mismo hilo de política que `seedLibrary`/`seedGallery`.
+ *   - `'update'` (default): `pnpm seed` — re-siembra deliberada tras un cambio de código en los
+ *     metadatos placeholder.
+ *   - `'nothing'`: el ARRANQUE de web. CRÍTICO: `gender`/`descriptor`/`voiceMap`… los edita el
+ *     usuario por el PATCH `/api/personas/[id]` (`updatePersona`). Un `DO UPDATE` en el boot los
+ *     REVERTIRÍA en cada redeploy → pérdida de datos, la misma clase que T3.9 elimina en templates.
+ *     Con `'nothing'`, la fila viva no se toca; una persona placeholder NUEVA del código sí entra.
  */
 export async function upsertPersonaByName(
   db: Db,
   values: NewPersona,
+  opts: { onConflict?: SeedConflictPolicy } = {},
 ): Promise<{ persona: Persona; created: boolean }> {
+  const onConflict = opts.onConflict ?? 'update';
   const before = await db
     .select({ id: persona.id })
     .from(persona)
     .where(eq(persona.name, values.name));
 
-  const [row] = await db
-    .insert(persona)
-    .values(values)
-    .onConflictDoUpdate({
-      target: persona.name,
-      set: {
-        // `excluded` = la fila que se intentaba insertar (patrón de library.repo.ts).
-        ageRange: sql`excluded.age_range`,
-        gender: sql`excluded.gender`,
-        ethnicity: sql`excluded.ethnicity`,
-        style: sql`excluded.style`,
-        descriptor: sql`excluded.descriptor`,
-        setting: sql`excluded.setting`,
-        personality: sql`excluded.personality`,
-        wardrobeNotes: sql`excluded.wardrobe_notes`,
-        voiceMap: sql`excluded.voice_map`,
-        updatedAt: new Date(),
-      },
-    })
-    .returning();
-  if (!row) throw new Error('upsertPersonaByName: UPSERT no devolvió fila');
+  const insertPersona = db.insert(persona).values(values);
+  const [row] = await (
+    onConflict === 'nothing'
+      ? insertPersona.onConflictDoNothing({ target: persona.name })
+      : insertPersona.onConflictDoUpdate({
+          target: persona.name,
+          set: {
+            // `excluded` = la fila que se intentaba insertar (patrón de library.repo.ts).
+            ageRange: sql`excluded.age_range`,
+            gender: sql`excluded.gender`,
+            ethnicity: sql`excluded.ethnicity`,
+            style: sql`excluded.style`,
+            descriptor: sql`excluded.descriptor`,
+            setting: sql`excluded.setting`,
+            personality: sql`excluded.personality`,
+            wardrobeNotes: sql`excluded.wardrobe_notes`,
+            voiceMap: sql`excluded.voice_map`,
+            updatedAt: new Date(),
+          },
+        })
+  ).returning();
+
+  // `DO NOTHING` NO devuelve fila cuando la persona ya existía (el INSERT no toca nada). Se relee
+  // SIEMPRE por la clave natural — NO condicionado a `before` — para que el contrato
+  // (`{ persona, created }`) sea el mismo en ambas ramas. La condición sobre `before` sería una
+  // RACE de primer arranque: el seed NO tiene advisory lock (a diferencia de `runMigrations`), así
+  // que en un boot CONCURRENTE contra BD vacía dos instancias de web arrancan a la vez; la perdedora
+  // ve `before` vacío pero su INSERT choca con la fila del ganador → `DO NOTHING` no devuelve fila.
+  // Releer solo si `before` no estaba vacío la habría tirado al throw y TUMBADO el arranque — justo
+  // el modo de fallo que T3.9 elimina. `created: false` es además correcto: esta instancia no la creó.
+  if (!row) {
+    if (onConflict === 'nothing') {
+      const [existing] = await db.select().from(persona).where(eq(persona.name, values.name));
+      if (existing) return { persona: existing, created: false };
+      // Sin fila tras un `DO NOTHING` es un estado imposible (o insertamos, o chocamos con una
+      // existente): si aquí no aparece, algo grave pasa y el throw ruidoso es lo correcto.
+      throw new Error('upsertPersonaByName: DO NOTHING sin fila y la persona no se releyó');
+    }
+    throw new Error('upsertPersonaByName: UPSERT no devolvió fila');
+  }
 
   return { persona: row, created: before.length === 0 };
 }

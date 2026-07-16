@@ -36,6 +36,20 @@ export interface SeedLibraryCounts {
 }
 
 /**
+ * Política ante colisión con una fila ya presente (clave natural). Es UNA opción que se hila
+ * por las tres tablas — no un parche por tabla (T3.9):
+ *   - `'update'` (default): el seed es la fuente de verdad de los METADATOS; una corrección de
+ *     `angle`/`verticals`/costes en el CÓDIGO se propaga a la BD. Lo usan `pnpm seed` (re-siembra
+ *     deliberada tras un cambio de código) y su test de idempotencia con corrección.
+ *   - `'nothing'`: first-insert-only. La fila existente NO se toca; una fila NUEVA sí se inserta.
+ *     Lo usa el ARRANQUE de web (T3.9): igual contrato que los `…IfAbsent` de `app_setting`. Aquí
+ *     el trade-off consciente es que una recalibración de recetas (T3.4) hecha en el código NO se
+ *     propaga en el boot — solo con `pnpm seed` a mano. Aceptable: hook/cta/recipe no son
+ *     editables por el usuario, y el incidente que motiva la tarea eran tablas VACÍAS, no obsoletas.
+ */
+export type SeedConflictPolicy = 'update' | 'nothing';
+
+/**
  * Siembra hooks + CTAs + recetas y devuelve el TOTAL de filas que hay en cada tabla tras la
  * operación (no las insertadas: en la segunda corrida se insertan 0 y el total sigue siendo
  * el mismo — que es justo lo que prueba la idempotencia).
@@ -45,78 +59,80 @@ export interface SeedLibraryCounts {
 export async function seedLibrary(
   db: Db,
   seeds: { hooks: HookLineSeed[]; ctas: CtaLineSeed[]; recipes: RecipeSeed[] },
+  opts: { onConflict?: SeedConflictPolicy } = {},
 ): Promise<SeedLibraryCounts> {
+  const onConflict = opts.onConflict ?? 'update';
   await db.transaction(async (tx) => {
     if (seeds.hooks.length > 0) {
-      await tx
-        .insert(hookLine)
-        .values(
-          seeds.hooks.map((h) => ({
-            angle: h.angle,
-            text: h.text,
-            verticals: h.verticals,
-            language: h.language,
-          })),
-        )
-        // La línea existe (mismo idioma + mismo texto) → se ACTUALIZAN sus metadatos. Una
-        // corrección de `angle`/`verticals` en seed-data.ts llega a la BD; `perf` y la PK
-        // sobreviven intactos.
-        .onConflictDoUpdate({
-          target: [hookLine.language, hookLine.text],
-          set: {
-            // `excluded` = la fila que se intentaba insertar. Con un INSERT de N valores es la
-            // ÚNICA forma de que cada fila reciba SU propio valor (un literal las pisaría todas
-            // con el del último elemento del array).
-            angle: sql`excluded.angle`,
-            verticals: sql`excluded.verticals`,
-            updatedAt: new Date(),
-          },
-        });
+      const insertHooks = tx.insert(hookLine).values(
+        seeds.hooks.map((h) => ({
+          angle: h.angle,
+          text: h.text,
+          verticals: h.verticals,
+          language: h.language,
+        })),
+      );
+      await (onConflict === 'nothing'
+        ? insertHooks.onConflictDoNothing({ target: [hookLine.language, hookLine.text] })
+        : // La línea existe (mismo idioma + mismo texto) → se ACTUALIZAN sus metadatos. Una
+          // corrección de `angle`/`verticals` en seed-data.ts llega a la BD; `perf` y la PK
+          // sobreviven intactos.
+          insertHooks.onConflictDoUpdate({
+            target: [hookLine.language, hookLine.text],
+            set: {
+              // `excluded` = la fila que se intentaba insertar. Con un INSERT de N valores es la
+              // ÚNICA forma de que cada fila reciba SU propio valor (un literal las pisaría todas
+              // con el del último elemento del array).
+              angle: sql`excluded.angle`,
+              verticals: sql`excluded.verticals`,
+              updatedAt: new Date(),
+            },
+          }));
     }
 
     if (seeds.ctas.length > 0) {
-      await tx
-        .insert(ctaLine)
-        .values(
-          seeds.ctas.map((c) => ({
-            objective: c.objective,
-            text: c.text,
-            language: c.language,
-          })),
-        )
-        .onConflictDoUpdate({
-          target: [ctaLine.language, ctaLine.text],
-          set: {
-            objective: sql`excluded.objective`,
-            updatedAt: new Date(),
-          },
-        });
+      const insertCtas = tx.insert(ctaLine).values(
+        seeds.ctas.map((c) => ({
+          objective: c.objective,
+          text: c.text,
+          language: c.language,
+        })),
+      );
+      await (onConflict === 'nothing'
+        ? insertCtas.onConflictDoNothing({ target: [ctaLine.language, ctaLine.text] })
+        : insertCtas.onConflictDoUpdate({
+            target: [ctaLine.language, ctaLine.text],
+            set: {
+              objective: sql`excluded.objective`,
+              updatedAt: new Date(),
+            },
+          }));
     }
 
     if (seeds.recipes.length > 0) {
-      await tx
-        .insert(recipe)
-        .values(
-          seeds.recipes.map((r) => ({
-            id: r.tier,
-            steps: r.steps,
-            estCost30sMinCents: r.estCost30sMinCents,
-            estCost30sMaxCents: r.estCost30sMaxCents,
-            notes: r.notes,
-          })),
-        )
-        // Recalibrable (T3.4): la receta del tier se REESCRIBE, no se duplica. Mismo
-        // `excluded.*` que arriba y por el mismo motivo — es un INSERT de N filas.
-        .onConflictDoUpdate({
-          target: recipe.id,
-          set: {
-            steps: sql`excluded.steps`,
-            estCost30sMinCents: sql`excluded.est_cost_30s_min_cents`,
-            estCost30sMaxCents: sql`excluded.est_cost_30s_max_cents`,
-            notes: sql`excluded.notes`,
-            updatedAt: new Date(),
-          },
-        });
+      const insertRecipes = tx.insert(recipe).values(
+        seeds.recipes.map((r) => ({
+          id: r.tier,
+          steps: r.steps,
+          estCost30sMinCents: r.estCost30sMinCents,
+          estCost30sMaxCents: r.estCost30sMaxCents,
+          notes: r.notes,
+        })),
+      );
+      await (onConflict === 'nothing'
+        ? insertRecipes.onConflictDoNothing({ target: recipe.id })
+        : // Recalibrable (T3.4): la receta del tier se REESCRIBE, no se duplica. Mismo
+          // `excluded.*` que arriba y por el mismo motivo — es un INSERT de N filas.
+          insertRecipes.onConflictDoUpdate({
+            target: recipe.id,
+            set: {
+              steps: sql`excluded.steps`,
+              estCost30sMinCents: sql`excluded.est_cost_30s_min_cents`,
+              estCost30sMaxCents: sql`excluded.est_cost_30s_max_cents`,
+              notes: sql`excluded.notes`,
+              updatedAt: new Date(),
+            },
+          }));
     }
   });
 

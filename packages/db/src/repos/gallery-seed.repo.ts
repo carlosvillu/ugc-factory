@@ -9,6 +9,7 @@
 import { count, eq, sql } from 'drizzle-orm';
 import type { GallerySeed, ModelStatus } from '@ugc/core/gallery';
 import type { DbClient } from '../client';
+import type { SeedConflictPolicy } from './library.repo';
 import { guardPack, modelProfile, promptTemplate } from '../schema/gallery';
 
 export interface SeedGalleryCounts {
@@ -24,101 +25,115 @@ export interface SeedGalleryCounts {
  *
  * Todo en UNA transacción: o queda la galería entera, o nada a medias.
  */
-export async function seedGallery(db: DbClient, seed: GallerySeed): Promise<SeedGalleryCounts> {
+export async function seedGallery(
+  db: DbClient,
+  seed: GallerySeed,
+  opts: { onConflict?: SeedConflictPolicy } = {},
+): Promise<SeedGalleryCounts> {
+  // Política ante colisión (T3.9), hilada por las tres tablas como en `seedLibrary`:
+  //   - `'update'` (default): re-siembra deliberada tras un cambio de código (`pnpm seed:gallery`).
+  //   - `'nothing'`: first-insert-only, lo que usa el ARRANQUE de web. CRÍTICO para el template:
+  //     un `DO UPDATE` en el boot REVERTIRÍA en cada redeploy la edición que el usuario haya hecho
+  //     en `/gallery` (`createTemplateVersion` escribe body/beats/guardPackKeys/headVersion sobre
+  //     la fila viva) → pérdida de datos. Con `'nothing'`, first boot inserta, boots posteriores
+  //     no-op sobre las filas presentes, y un template NUEVO en el código sí se recoge.
+  const onConflict = opts.onConflict ?? 'update';
   await db.transaction(async (tx) => {
     // ── guard packs primero (los templates los referencian por key) ──
     if (seed.guardPacks.length > 0) {
-      await tx
-        .insert(guardPack)
-        .values(
-          seed.guardPacks.map((p) => ({
-            key: p.key,
-            scope: p.scope,
-            vertical: p.vertical,
-            platform: p.platform,
-            lines: p.lines,
-          })),
-        )
-        // Existe (misma key) → se REESCRIBEN sus datos. `excluded.*` para que cada fila del
-        // INSERT de N valores reciba SU propio valor (un literal las pisaría todas).
-        .onConflictDoUpdate({
-          target: guardPack.key,
-          set: {
-            scope: sql`excluded.scope`,
-            vertical: sql`excluded.vertical`,
-            platform: sql`excluded.platform`,
-            lines: sql`excluded.lines`,
-            updatedAt: new Date(),
-          },
-        });
+      const insertGuardPacks = tx.insert(guardPack).values(
+        seed.guardPacks.map((p) => ({
+          key: p.key,
+          scope: p.scope,
+          vertical: p.vertical,
+          platform: p.platform,
+          lines: p.lines,
+        })),
+      );
+      await (onConflict === 'nothing'
+        ? insertGuardPacks.onConflictDoNothing({ target: guardPack.key })
+        : // Existe (misma key) → se REESCRIBEN sus datos. `excluded.*` para que cada fila del
+          // INSERT de N valores reciba SU propio valor (un literal las pisaría todas).
+          insertGuardPacks.onConflictDoUpdate({
+            target: guardPack.key,
+            set: {
+              scope: sql`excluded.scope`,
+              vertical: sql`excluded.vertical`,
+              platform: sql`excluded.platform`,
+              lines: sql`excluded.lines`,
+              updatedAt: new Date(),
+            },
+          }));
     }
 
     if (seed.templates.length > 0) {
-      await tx
-        .insert(promptTemplate)
-        .values(
-          seed.templates.map((t) => ({
-            slug: t.slug,
-            title: t.title,
-            description: t.description,
-            kind: t.kind,
-            body: t.body,
-            beats: t.beats,
-            variables: t.variables,
-            assetSlots: t.assetSlots,
-            guardPackKeys: t.guardPackKeys,
-            defaultDurationS: t.defaultDurationS,
-            defaultAspect: t.defaultAspect,
-            formats: t.formats,
-            hookAngles: t.hookAngles,
-            verticals: t.verticals,
-            platforms: t.platforms,
-            aesthetics: t.aesthetics,
-            freeTags: t.freeTags,
-            status: t.status,
-            featured: t.featured,
-            license: t.license,
-            author: t.author,
-            attribution: t.attribution,
-            language: t.language,
-            translations: t.translations,
-            compliance: t.compliance,
-          })),
-        )
-        // El template existe (mismo slug) → se ACTUALIZAN sus campos AUTORADOS. El seed es la
-        // fuente de verdad de lo que el template ES; la BD, de su HISTORIA. Por eso el set-list
-        // NUNCA toca `perf`, `usageCount` ni `headVersion` (estado de runtime/flywheel de F7):
-        // pisarlos corromperría la historia en cada re-siembra — el bug que este molde evita.
-        .onConflictDoUpdate({
-          target: promptTemplate.slug,
-          set: {
-            title: sql`excluded.title`,
-            description: sql`excluded.description`,
-            kind: sql`excluded.kind`,
-            body: sql`excluded.body`,
-            beats: sql`excluded.beats`,
-            variables: sql`excluded.variables`,
-            assetSlots: sql`excluded.asset_slots`,
-            guardPackKeys: sql`excluded.guard_pack_keys`,
-            defaultDurationS: sql`excluded.default_duration_s`,
-            defaultAspect: sql`excluded.default_aspect`,
-            formats: sql`excluded.formats`,
-            hookAngles: sql`excluded.hook_angles`,
-            verticals: sql`excluded.verticals`,
-            platforms: sql`excluded.platforms`,
-            aesthetics: sql`excluded.aesthetics`,
-            freeTags: sql`excluded.free_tags`,
-            status: sql`excluded.status`,
-            featured: sql`excluded.featured`,
-            license: sql`excluded.license`,
-            author: sql`excluded.author`,
-            attribution: sql`excluded.attribution`,
-            language: sql`excluded.language`,
-            translations: sql`excluded.translations`,
-            compliance: sql`excluded.compliance`,
-            updatedAt: new Date(),
-          },
-        });
+      const insertTemplates = tx.insert(promptTemplate).values(
+        seed.templates.map((t) => ({
+          slug: t.slug,
+          title: t.title,
+          description: t.description,
+          kind: t.kind,
+          body: t.body,
+          beats: t.beats,
+          variables: t.variables,
+          assetSlots: t.assetSlots,
+          guardPackKeys: t.guardPackKeys,
+          defaultDurationS: t.defaultDurationS,
+          defaultAspect: t.defaultAspect,
+          formats: t.formats,
+          hookAngles: t.hookAngles,
+          verticals: t.verticals,
+          platforms: t.platforms,
+          aesthetics: t.aesthetics,
+          freeTags: t.freeTags,
+          status: t.status,
+          featured: t.featured,
+          license: t.license,
+          author: t.author,
+          attribution: t.attribution,
+          language: t.language,
+          translations: t.translations,
+          compliance: t.compliance,
+        })),
+      );
+      await (onConflict === 'nothing'
+        ? // Boot: la fila viva NO se toca — la edición del usuario (`createTemplateVersion`)
+          // sobrevive al redeploy. Un slug NUEVO del código sí se inserta.
+          insertTemplates.onConflictDoNothing({ target: promptTemplate.slug })
+        : // El template existe (mismo slug) → se ACTUALIZAN sus campos AUTORADOS. El seed es la
+          // fuente de verdad de lo que el template ES; la BD, de su HISTORIA. Por eso el set-list
+          // NUNCA toca `perf`, `usageCount` ni `headVersion` (estado de runtime/flywheel de F7):
+          // pisarlos corromperría la historia en cada re-siembra — el bug que este molde evita.
+          insertTemplates.onConflictDoUpdate({
+            target: promptTemplate.slug,
+            set: {
+              title: sql`excluded.title`,
+              description: sql`excluded.description`,
+              kind: sql`excluded.kind`,
+              body: sql`excluded.body`,
+              beats: sql`excluded.beats`,
+              variables: sql`excluded.variables`,
+              assetSlots: sql`excluded.asset_slots`,
+              guardPackKeys: sql`excluded.guard_pack_keys`,
+              defaultDurationS: sql`excluded.default_duration_s`,
+              defaultAspect: sql`excluded.default_aspect`,
+              formats: sql`excluded.formats`,
+              hookAngles: sql`excluded.hook_angles`,
+              verticals: sql`excluded.verticals`,
+              platforms: sql`excluded.platforms`,
+              aesthetics: sql`excluded.aesthetics`,
+              freeTags: sql`excluded.free_tags`,
+              status: sql`excluded.status`,
+              featured: sql`excluded.featured`,
+              license: sql`excluded.license`,
+              author: sql`excluded.author`,
+              attribution: sql`excluded.attribution`,
+              language: sql`excluded.language`,
+              translations: sql`excluded.translations`,
+              compliance: sql`excluded.compliance`,
+              updatedAt: new Date(),
+            },
+          }));
     }
 
     // ── model_profile (§13.1, T3.4) ──
@@ -130,28 +145,28 @@ export async function seedGallery(db: DbClient, seed: GallerySeed): Promise<Seed
     // se verificó y si sigue activo. `status` arranca en su default de columna (`active`) al
     // INSERTAR, y solo `fal:verify` lo pasa a `deprecated`.
     if (seed.modelProfiles.length > 0) {
-      await tx
-        .insert(modelProfile)
-        .values(
-          seed.modelProfiles.map((m) => ({
-            falEndpoint: m.falEndpoint,
-            kind: m.kind,
-            capabilities: m.capabilities,
-            cost: m.cost,
-            promptAdapter: m.promptAdapter,
-          })),
-        )
-        .onConflictDoUpdate({
-          target: modelProfile.falEndpoint,
-          set: {
-            kind: sql`excluded.kind`,
-            capabilities: sql`excluded.capabilities`,
-            cost: sql`excluded.cost`,
-            promptAdapter: sql`excluded.prompt_adapter`,
-            updatedAt: new Date(),
-            // NO: verifiedAt, status — los posee `fal:verify` (runtime), no el seed.
-          },
-        });
+      const insertModelProfiles = tx.insert(modelProfile).values(
+        seed.modelProfiles.map((m) => ({
+          falEndpoint: m.falEndpoint,
+          kind: m.kind,
+          capabilities: m.capabilities,
+          cost: m.cost,
+          promptAdapter: m.promptAdapter,
+        })),
+      );
+      await (onConflict === 'nothing'
+        ? insertModelProfiles.onConflictDoNothing({ target: modelProfile.falEndpoint })
+        : insertModelProfiles.onConflictDoUpdate({
+            target: modelProfile.falEndpoint,
+            set: {
+              kind: sql`excluded.kind`,
+              capabilities: sql`excluded.capabilities`,
+              cost: sql`excluded.cost`,
+              promptAdapter: sql`excluded.prompt_adapter`,
+              updatedAt: new Date(),
+              // NO: verifiedAt, status — los posee `fal:verify` (runtime), no el seed.
+            },
+          }));
     }
   });
 

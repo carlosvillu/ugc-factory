@@ -1,0 +1,11 @@
+        t        | count 
+-----------------+-------
+ cta_line        |     0
+ guard_pack      |     0
+ hook_line       |     0
+ model_profile   |     0
+ persona         |     0
+ prompt_template |     0
+ recipe          |     0
+(7 rows)
+

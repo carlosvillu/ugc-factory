@@ -9,7 +9,7 @@
 //      camelCase↔snake_case), append de imágenes de referencia, borrado en cascada de los
 //      assets, y la idempotencia del upsert por nombre (perf e imágenes NO se pisan).
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { eq } from 'drizzle-orm';
+import { count, eq } from 'drizzle-orm';
 import {
   createTestDatabase,
   makeAdBatch,
@@ -20,7 +20,15 @@ import {
   makeUrlAnalysis,
   type TestDatabase,
 } from '@ugc/test-utils';
-import { adBatch, adVariant, asset, productBrief, project, urlAnalysis } from '@ugc/db/schema';
+import {
+  adBatch,
+  adVariant,
+  asset,
+  persona,
+  productBrief,
+  project,
+  urlAnalysis,
+} from '@ugc/db/schema';
 import {
   addReferenceImage,
   countPersonas,
@@ -302,4 +310,71 @@ describe('persona: seed idempotente por nombre (mismo contrato que la librería 
     expect(second.persona.perf).toEqual({ uses: 12, ctr: 0.031 });
     expect(second.persona.referenceImageIds).toEqual([img!.id]);
   });
+});
+
+// EL CONTRATO INSERT-ONLY DEL ARRANQUE, sobre PERSONAS (T3.9). El invariante de la tarea es «una
+// edición del USUARIO sobrevive a un redeploy» — y los metadatos de persona SON editables por el
+// usuario (PATCH `/api/personas/[id]` → `updatePersona` escribe gender/descriptor/voiceMap…). El
+// boot llama a `upsertPersonaByName`/`seedPersonas` con `onConflict:'nothing'`: la fila viva NO se
+// toca (la edición sobrevive) y una persona placeholder NUEVA del código sí entra. Control negativo
+// permanente: con `'update'` (el default de `pnpm seed`) la edición se revertiría — debe morder.
+describe('seed de arranque insert-only sobre personas: la edición del usuario sobrevive (T3.9)', () => {
+  it('`onConflict:"nothing"` NO revierte los metadatos que el usuario editó por /personas', async () => {
+    const seed = makePersonaRow({ name: 'Persona Boot T3.9', descriptor: 'descriptor SEMBRADO' });
+
+    // First boot: la persona se inserta con el descriptor del seed.
+    const first = await upsertPersonaByName(tdb.db, seed, { onConflict: 'nothing' });
+    expect(first.created).toBe(true);
+    expect(first.persona.descriptor).toBe('descriptor SEMBRADO');
+
+    // El usuario edita los metadatos por el CRUD (`updatePersona`, lo que hace el PATCH). El valor
+    // editado DIFIERE del sembrado (si no, el control sería vacuo).
+    const editedDescriptor = 'descriptor EDITADO POR EL USUARIO — no debe revertirse';
+    expect(editedDescriptor).not.toBe(seed.descriptor);
+    await updatePersona(tdb.db, first.persona.id, {
+      descriptor: editedDescriptor,
+      gender: 'male',
+      voiceMap: { es: { provider: 'elevenlabs', voiceId: 'v_es_editado' } },
+    });
+
+    // SEGUNDO boot (redeploy): re-siembra insert-only. Con el `DO UPDATE` por defecto esto
+    // revertiría el descriptor al sembrado — el bug que la tarea previene.
+    const second = await upsertPersonaByName(tdb.db, seed, { onConflict: 'nothing' });
+    expect(second.created).toBe(false); // ya existía → no-op (la rama de re-lectura del DO NOTHING)
+    expect(second.persona.id).toBe(first.persona.id); // misma fila, no duplicada
+
+    const after = await getPersona(tdb.db, first.persona.id);
+    expect(after?.descriptor).toBe(editedDescriptor); // LA EDICIÓN SOBREVIVE
+    expect(after?.gender).toBe('male');
+    expect(after?.voiceMap).toEqual({ es: { provider: 'elevenlabs', voiceId: 'v_es_editado' } });
+
+    // No se ha duplicado la persona.
+    const rows = await tdb.db
+      .select({ n: count() })
+      .from(persona)
+      .where(eq(persona.name, seed.name));
+    expect(rows[0]?.n).toBe(1);
+  });
+
+  it('el default `"update"` SÍ revierte (prueba de que el control negativo muerde de verdad)', async () => {
+    const seed = makePersonaRow({ name: 'Persona Update T3.9', descriptor: 'descriptor SEMBRADO' });
+    const first = await upsertPersonaByName(tdb.db, seed, { onConflict: 'nothing' });
+    await updatePersona(tdb.db, first.persona.id, { descriptor: 'descriptor EDITADO' });
+
+    // Con el default (`'update'`, el de `pnpm seed`) la re-siembra PISA el descriptor editado: es
+    // justo por eso que el boot NO puede usar este modo (documenta el trade-off, no un bug).
+    const second = await upsertPersonaByName(tdb.db, seed);
+    expect(second.persona.descriptor).toBe('descriptor SEMBRADO'); // revertido
+  });
+
+  // NOTA sobre la RACE de primer arranque concurrente (code-review de T3.9): el seed no tiene
+  // advisory lock, así que dos boots contra BD vacía pueden interleavearse (el perdedor lee `before`
+  // vacío pero su INSERT choca → `DO NOTHING` sin fila). El fix es que la rama `'nothing'` RE-LEE
+  // SIEMPRE (incondicional a `before`) — la TOCTOU queda cerrada POR CONSTRUCCIÓN, no por timing.
+  // NO hay test dedicado: la interleave exacta no es reproducible de forma determinista desde fuera
+  // de la función (un `Promise.all` sobre el pool se serializa y pasa con o SIN el bug → falso
+  // guard, y flaky si el timing cambia). La re-lectura incondicional la cubren de forma
+  // determinista los tests de idempotencia (segundo boot con filas presentes → `DO NOTHING` → `!row`
+  // → re-lee → `created:false`): `persona-seed.test.ts` («corre dos veces sin duplicar») y el test de
+  // supervivencia de arriba. Ese es el guard honesto.
 });

@@ -1,0 +1,7 @@
+[n4] tier por defecto del lote = "test" (el que abortaba en prod)
+[n4] listPlanningInputs("test"): hooks=80 personas=2 recipe.tier=test
+[n4] planBatch OK: variantes=12 coste estimado del lote = 96–546 cents
+[n4] ✅ PUNTO 2: N4 ESTIMA el coste en vez de abortar (tier "test" sembrado)
+[n4] tras DELETE de la receta "test" (en tx): filas restantes = 0 ⇒ getRecipe devolvería undefined ⇒ N4 lanzaría PermanentStepError
+[n4] tras rollback, recipe("test").tier = test (debe seguir presente)
+[n4] ✅ rama de aborto confirmada: N4 solo aborta cuando la receta es undefined

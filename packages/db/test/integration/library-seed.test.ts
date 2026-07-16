@@ -178,3 +178,53 @@ describe('`pnpm seed`: puebla librerías y recetas (T2.1)', () => {
     await seedLibrary(tdb.db, validation.library);
   });
 });
+
+// EL CONTRATO INSERT-ONLY DEL ARRANQUE (T3.9), sobre la librería. El boot llama a `seedLibrary`
+// con `onConflict: 'nothing'`: first boot inserta, boots posteriores son no-op sobre las filas
+// presentes (mismo contrato que los `…IfAbsent` de `app_setting`) y una fila NUEVA del código sí
+// entra. Es la contrapartida del test de galería — aquí hooks/CTAs/recetas no son editables por el
+// usuario, pero el invariante del arranque (no-op sobre lo presente + recoge lo nuevo) es el mismo.
+describe('seed de arranque insert-only sobre la librería (T3.9)', () => {
+  it('`onConflict:"nothing"` NO propaga un cambio de metadatos a una fila ya presente, y sí inserta una nueva', async () => {
+    const line = {
+      angle: 'curiosity' as const,
+      text: 'Línea T3.9 para el contrato insert-only.',
+      verticals: [] as never[],
+      language: 'es' as const,
+    };
+
+    // First boot: la línea se inserta.
+    await seedLibrary(
+      tdb.db,
+      { hooks: [line], ctas: [], recipes: realRecipes() },
+      { onConflict: 'nothing' },
+    );
+    const [before] = await tdb.db.select().from(hookLine).where(eq(hookLine.text, line.text));
+    expect(before?.angle).toBe('curiosity');
+
+    // Segundo boot con el ángulo "corregido" en el código: con `'nothing'` NO se propaga (el boot
+    // no revierte estado; una recalibración deliberada es trabajo de `pnpm seed`, que usa DO UPDATE).
+    await seedLibrary(
+      tdb.db,
+      { hooks: [{ ...line, angle: 'pain_point' }], ctas: [], recipes: realRecipes() },
+      { onConflict: 'nothing' },
+    );
+    const [after] = await tdb.db.select().from(hookLine).where(eq(hookLine.text, line.text));
+    expect(after?.id).toBe(before?.id); // misma fila, no duplicada
+    expect(after?.angle).toBe('curiosity'); // NO-OP sobre lo presente (insert-only)
+
+    // Una línea NUEVA del código (otro texto) sí entra en el mismo re-seed insert-only.
+    const newLine = { ...line, text: 'Otra línea T3.9 completamente nueva.' };
+    await seedLibrary(
+      tdb.db,
+      { hooks: [line, newLine], ctas: [], recipes: realRecipes() },
+      { onConflict: 'nothing' },
+    );
+    const inserted = await tdb.db.select().from(hookLine).where(eq(hookLine.text, newLine.text));
+    expect(inserted).toHaveLength(1); // la nueva SÍ se recoge
+
+    // Limpieza de las dos líneas de prueba.
+    await tdb.db.delete(hookLine).where(eq(hookLine.text, line.text));
+    await tdb.db.delete(hookLine).where(eq(hookLine.text, newLine.text));
+  });
+});

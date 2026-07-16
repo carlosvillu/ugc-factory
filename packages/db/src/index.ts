@@ -175,6 +175,11 @@ export { listPlanningInputs } from './repos/planning.repo';
 // puede abrirse. Un E2E que se saltara el seed probaría un sistema que no es el que se despliega.
 export { seedLibrary } from './repos/library.repo';
 export { seedPersonas } from './repos/persona-seed';
+// La SIEMBRA DE GALERÍA desde fuera del paquete (T3.9): el ARRANQUE de web la invoca con
+// `onConflict: 'nothing'` (first-insert-only) para no revertir en cada redeploy las ediciones de
+// templates que el usuario haga en `/gallery`. Antes solo la usaban el script `pnpm seed:gallery`
+// y su test (import relativo); el boot obliga a exponerla. Ver `gallery-seed.repo.ts`.
+export { seedGallery } from './repos/gallery-seed.repo';
 // El LOTE (T2.3, CP2): la creación TRANSACCIONAL de `ad_batch` + sus `ad_variant` en `planned`. La
 // matriz se compone DENTRO de la función, con el id del lote ya asignado (es el
 // `batchDiscriminator` que hace globalmente único el `filename_code`, §12) — ver la cabecera del

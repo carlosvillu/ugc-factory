@@ -1,0 +1,12 @@
+=== AFTER edit (before restart) ===
+ templates_total | this_slug_rows | head_version | versions_for_template |                          body_head                           
+-----------------+----------------+--------------+-----------------------+--------------------------------------------------------------
+              56 |              1 |            2 |                     2 | EDICION DEL USUARIO T3.9 marker 1784186580 — no debe reverti
+(1 row)
+
+=== BEFORE persona edit ===
+             id             |        name         |                 descriptor_head                 
+----------------------------+---------------------+-------------------------------------------------
+ 01KXMWHA9HXZH1ENGE59AW7XG3 | Lucía (placeholder) | mujer de 29 años, latina, look casual de diario
+(1 row)
+

@@ -1,0 +1,6 @@
+=== BEFORE edit ===
+ templates_total | this_slug_rows | head_version | versions_for_template 
+-----------------+----------------+--------------+-----------------------
+              56 |              1 |            0 |                     0
+(1 row)
+

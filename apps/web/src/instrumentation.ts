@@ -38,15 +38,25 @@ export async function register(): Promise<void> {
   // Los cuatro módulos son independientes entre sí: se cargan en paralelo para no
   // serializar la resolución en el arranque.
   const [
-    { runMigrations, seedPasswordHashIfAbsent, seedMonthlyBudgetIfAbsent, seedSecretIfAbsent },
+    {
+      runMigrations,
+      seedPasswordHashIfAbsent,
+      seedMonthlyBudgetIfAbsent,
+      seedSecretIfAbsent,
+      seedLibrary,
+      seedGallery,
+      seedPersonas,
+    },
     { getRootLogger },
     { getDb },
+    { getStorage },
     { hashPassword, getSecretsKey },
     { encryptSecret },
   ] = await Promise.all([
     import('@ugc/db'),
     import('@/server/logger'),
     import('@/server/db'),
+    import('@/server/storage'),
     import('@/server/session'),
     import('@ugc/core/secrets'),
   ]);
@@ -130,4 +140,109 @@ export async function register(): Promise<void> {
       );
     }),
   );
+
+  // Siembra de DATOS DE REFERENCIA en el arranque (T3.9). Origen: incidente de producción
+  // 2026-07-16 — el deploy aplicaba el SCHEMA (migraciones arriba) pero NO los datos, y N4
+  // (strategy) abortaba con `no hay receta sembrada del tier "test"`. Ahora el boot los siembra
+  // igual que ya migra: idempotente y en TODA vía de arranque (redeploy.sh, `compose up`, manual).
+  //
+  // Los datos van BUNDLEADOS (`import … from '*.json'` en core), por eso el boot puede sembrar sin
+  // los ficheros sueltos que la imagen standalone no trae.
+  //
+  // CONTRATO INSERT-ONLY (`onConflict: 'nothing'`): first boot inserta, boots posteriores son
+  // no-op sobre las filas presentes. Un `DO UPDATE` aquí REVERTIRÍA en cada redeploy las ediciones
+  // de templates que el usuario haga en `/gallery` (`createTemplateVersion`) → pérdida de datos.
+  // Mismo contrato que los `…IfAbsent` de `app_setting`. `pnpm seed`/`pnpm seed:gallery` conservan
+  // `DO UPDATE` para la re-siembra deliberada tras un cambio de código (default de las funciones).
+  //
+  // Fail-fast (como las migraciones): un seed que revienta tumba el arranque CLARO — mejor que
+  // servir una prod sana-por-fuera-rota-por-dentro. Un seed idempotente que encuentra las filas ya
+  // presentes NO es un error: es el caso normal del 99% de los arranques.
+  const [
+    { SEED_LIBRARY, validateSeeds, formatSeedIssues },
+    { RAW_GALLERY_SEED, validateGallerySeed, formatGallerySeedIssues },
+    { PERSONA_SEEDS },
+  ] = await Promise.all([
+    import('@ugc/core/library'),
+    import('@ugc/core/gallery'),
+    import('@ugc/core/persona/server'),
+  ]);
+
+  log.info({}, 'sembrando datos de referencia (T3.9)');
+
+  // ── Librería: hooks + CTAs + recetas. El validador corre ANTES de tocar la BD (mismo criterio
+  // que `pnpm seed`): un seed inválido aborta el arranque con el detalle de qué línea está mal. ──
+  const libraryValidation = validateSeeds(SEED_LIBRARY);
+  if (!libraryValidation.ok || !libraryValidation.library) {
+    throw new Error(
+      `seed de arranque: la librería NO es válida (${String(
+        libraryValidation.issues.length,
+      )} problemas):\n${formatSeedIssues(libraryValidation.issues)}`,
+    );
+  }
+  const libraryCounts = await seedLibrary(getDb(), libraryValidation.library, {
+    onConflict: 'nothing',
+  });
+  log.info(
+    {
+      hookLines: libraryCounts.hookLines,
+      ctaLines: libraryCounts.ctaLines,
+      recipes: libraryCounts.recipes,
+    },
+    'librería sembrada o ya presente (insert-only)',
+  );
+
+  // ── Galería: prompt_template + guard_pack + model_profile. `onConflict: 'nothing'` protege las
+  // ediciones de templates del usuario en cada redeploy. ──
+  const galleryValidation = validateGallerySeed(RAW_GALLERY_SEED);
+  if (!galleryValidation.ok || !galleryValidation.seed) {
+    throw new Error(
+      `seed de arranque: la galería NO es válida (${String(
+        galleryValidation.issues.length,
+      )} problemas):\n${formatGallerySeedIssues(galleryValidation.issues)}`,
+    );
+  }
+  const galleryCounts = await seedGallery(getDb(), galleryValidation.seed, {
+    onConflict: 'nothing',
+  });
+  log.info(
+    {
+      templates: galleryCounts.templates,
+      guardPacks: galleryCounts.guardPacks,
+      modelProfiles: galleryCounts.modelProfiles,
+    },
+    'galería sembrada o ya presente (insert-only)',
+  );
+
+  // ── Personas placeholder + sus imágenes de referencia sintéticas. DOS decisiones de T3.9: ──
+  // 1) `onConflict: 'nothing'` — insert-only sobre la FILA de persona: los metadatos
+  //    (gender/descriptor/voiceMap…) los edita el usuario por el PATCH `/api/personas/[id]`; un
+  //    `DO UPDATE` en el boot los revertiría en cada redeploy → misma pérdida de datos que la tarea
+  //    elimina en templates. Las imágenes ya eran insert-only (solo las personas nuevas las reciben).
+  // 2) `onImageError` NO-FATAL — el paso de IMAGEN (sharp/`makeSyntheticReferenceImage`) se degrada
+  //    en vez de tumbar el arranque. Con fail-fast, un sharp roto en una BD VACÍA (deploy nuevo,
+  //    recovery) impediría servir `/login` — un modo de fallo NUEVO peor que el pipeline roto. Los
+  //    seeds de DATOS (arriba) SÍ siguen fail-fast: N4 los necesita. Una imagen placeholder no.
+  //    Necesita el StorageAdapter (los PNGs van al almacén, como un upload real) — se reusa el
+  //    accessor `getStorage()` de web, mismo criterio que `getDb()`.
+  const personaResult = await seedPersonas(getDb(), getStorage(), PERSONA_SEEDS, {
+    onConflict: 'nothing',
+    onImageError: (err, ctx) => {
+      log.error(
+        { err, personaName: ctx.personaName, personaId: ctx.personaId },
+        'no se pudo generar la imagen de referencia de la persona en el arranque: ' +
+          'se degrada (la fila existe, sin imagen placeholder) para no impedir servir /login',
+      );
+    },
+  });
+  log.info(
+    {
+      personas: personaResult.personas,
+      imagesCreated: personaResult.imagesCreated,
+      imagesFailed: personaResult.imagesFailed,
+    },
+    'personas sembradas o ya presentes',
+  );
+
+  log.info({}, 'datos de referencia sembrados (T3.9)');
 }

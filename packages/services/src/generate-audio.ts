@@ -62,6 +62,7 @@ import {
 } from '@ugc/db';
 
 import { falTtsCostOf, falAsrCostOf } from './fal-pricing';
+import { NOOP_LOGGER } from './noop-logger';
 
 /** El nombre del campo DE TEXTO en el submit del TTS: NO es el mismo entre proveedores (verificado en
  *  vivo 2026-07-16 contra los openapi de fal): kokoro lo llama `prompt`, elevenlabs lo llama `text`.
@@ -71,19 +72,6 @@ import { falTtsCostOf, falAsrCostOf } from './fal-pricing';
 function ttsTextField(falEndpoint: string): 'prompt' | 'text' {
   return falEndpoint.startsWith('fal-ai/elevenlabs/') ? 'text' : 'prompt';
 }
-
-/** Logger no-op (mismo patrón que `generate.ts`). */
-const noop = (): void => {
-  /* noop */
-};
-const NOOP_LOGGER: Logger = {
-  trace: noop,
-  debug: noop,
-  info: noop,
-  warn: noop,
-  error: noop,
-  child: () => NOOP_LOGGER,
-};
 
 export interface GenerateAudioDeps {
   db: DbClient;

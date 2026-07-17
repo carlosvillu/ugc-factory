@@ -4,7 +4,7 @@
 // 0¢ con warning observable). Las cost fns reciben el `cost` CRUDO del profile y validan internamente.
 import { describe, expect, it } from 'vitest';
 
-import { falTtsCostOf, falAsrCostOf } from './fal-pricing';
+import { falTtsCostOf, falAsrCostOf, falVideoCostOf } from './fal-pricing';
 
 describe('falTtsCostOf — TTS por 1000 caracteres (T4.5)', () => {
   it('1000 chars a 2¢/1k (kokoro) = 2¢', () => {
@@ -68,6 +68,37 @@ describe('falAsrCostOf — ASR por minuto (T4.5)', () => {
   it('CONTROL NEGATIVO: cost jsonb inválido/ausente → 0¢ con warning, NO lanza', () => {
     expect(falAsrCostOf({ cost: undefined, durationSeconds: 60 }).cents).toBe(0);
     expect(falAsrCostOf({ cost: undefined, durationSeconds: 60 }).warning).toMatch(
+      /inválido o ausente/,
+    );
+  });
+});
+
+describe('falVideoCostOf — avatar image+audio por segundo (T4.7)', () => {
+  it('FLOAT sub-céntimo: 4 s a 5,62¢/s (Kling Std) = 22,48¢ → 22¢ (round)', () => {
+    // Kling siembra `amountCents: 5.62` (float a propósito, ver ModelCostSchema). El precio unitario
+    // fraccional se multiplica por segundos y se redondea al ENTERO del ledger. Reintroducir un parse
+    // que exija enteros degradaría Kling a 0¢ silenciosamente — este assert lo protege.
+    const c = falVideoCostOf({ cost: { unit: 'second', amountCents: 5.62 }, durationSeconds: 4 });
+    expect(c.cents).toBe(22);
+    expect(c.durationSeconds).toBe(4);
+    expect(c.warning).toBeNull();
+  });
+
+  it('OmniHuman Premium: 4 s a 16¢/s = 64¢', () => {
+    const c = falVideoCostOf({ cost: { unit: 'second', amountCents: 16 }, durationSeconds: 4 });
+    expect(c.cents).toBe(64);
+    expect(c.warning).toBeNull();
+  });
+
+  it('CONTROL NEGATIVO: unidad inesperada (minute) → 0¢ con warning, NO lanza', () => {
+    const c = falVideoCostOf({ cost: { unit: 'minute', amountCents: 16 }, durationSeconds: 4 });
+    expect(c.cents).toBe(0);
+    expect(c.warning).toMatch(/unidad inesperada/);
+  });
+
+  it('CONTROL NEGATIVO: cost jsonb inválido/ausente → 0¢ con warning, NO lanza', () => {
+    expect(falVideoCostOf({ cost: null, durationSeconds: 4 }).cents).toBe(0);
+    expect(falVideoCostOf({ cost: null, durationSeconds: 4 }).warning).toMatch(
       /inválido o ausente/,
     );
   });

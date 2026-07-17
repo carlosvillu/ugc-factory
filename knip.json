@@ -15,7 +15,12 @@
       //    quedarían "unused").
       //  - auth.setup.ts: el setup project de Playwright (testMatch por regex); el
       //    plugin de knip solo toma *.spec.ts como entries, no el setup.
-      "entry": ["scripts/e2e-stack.ts", "e2e/auth.setup.ts"]
+      "entry": ["scripts/e2e-stack.ts", "e2e/auth.setup.ts"],
+      // ffprobe: el smoke de N7c (T4.7, `scripts/smoke-avatar.ts`) mide la duración del clip de avatar
+      // con `ffprobe` (spawnSync) para la Verificación "duración = audio ±0,3 s". Es un binario del
+      // sistema (parte de ffmpeg, en la imagen Docker del worker), NO un paquete npm — el smoke degrada
+      // con mensaje si no está en local. knip no puede resolverlo como dependency: se ignora explícito.
+      "ignoreBinaries": ["ffprobe"]
       // pg ya NO se ignora: desde T0.10 el route handler del stream SSE
       // (runs/[id]/events) importa `Client` de 'pg' DIRECTO (conexión dedicada en
       // LISTEN), así que knip lo ve como dependency usada. Antes solo se declaraba

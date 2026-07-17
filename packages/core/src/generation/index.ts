@@ -44,6 +44,10 @@ export { extractImageOutput, type FalImage, type FalImageOutput } from './fal-im
 // TTS + word timestamps (T4.5, N7b, §13.1): el output de audio del TTS y el output de word
 // timestamps del ASR encadenado (shape construido desde el output ASR REAL capturado en vivo).
 export { extractAudioOutput, type FalAudioOutput } from './fal-audio-output';
+// Avatar image+audio (T4.7, N7c, §7.2): el output de vídeo de los modelos de avatar (Kling AI Avatar
+// Std / OmniHuman Premium). `{video:{url}, duration}` — la `duration` es HERMANA de `video` a nivel
+// raíz (no anidada como en el audio). Lo consume `runGenerateAvatar` (@ugc/services).
+export { extractVideoOutput, type FalVideoOutput } from './fal-video-output';
 export {
   WordTimestampsSchema,
   extractWordTimestamps,

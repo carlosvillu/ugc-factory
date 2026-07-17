@@ -33,6 +33,11 @@ export { runGenerateAudio } from './generate-audio';
 // (`voice_preview=true`) para que N reproducciones no añadan coste. Lo consume el route handler
 // `POST /api/personas/[id]/voice-preview`.
 export { runTtsOnly, type VoicePreviewResult } from './generate-audio';
+// Generación de CLIP DE AVATAR contra fal (T4.7, §7.2 N7c): anima una imagen de la Persona con el audio
+// del hook (image+audio: Kling Std / OmniHuman Premium). Servicio NUEVO con finalizer PROPIO
+// (`kind:'avatar_clip'`) — NO `finalizeGeneration` (solo-imagen). Lo consume el smoke del verifier y, en
+// T4.11, el executor N7c.
+export { runGenerateAvatar } from './generate-avatar';
 // Submit VÍA WEBHOOK sin polling (T4.2, §9.6): deja la fila `generation` en `submitted` keyed por
 // el request_id REAL de fal; la completion la conduce el webhook. Lo consume el smoke del verifier.
 export { submitGenerationForWebhook } from './submit-generation';

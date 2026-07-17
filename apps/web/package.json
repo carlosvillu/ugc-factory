@@ -16,7 +16,8 @@
     "smoke:generate": "tsx --env-file-if-exists=../../.env scripts/smoke-generate.ts",
     "smoke:generate:webhook": "tsx --env-file-if-exists=../../.env scripts/smoke-generate-webhook.ts",
     "smoke:packshot": "tsx --env-file-if-exists=../../.env scripts/smoke-packshot.ts",
-    "smoke:voiceover": "tsx --env-file-if-exists=../../.env scripts/smoke-voiceover.ts"
+    "smoke:voiceover": "tsx --env-file-if-exists=../../.env scripts/smoke-voiceover.ts",
+    "smoke:avatar": "tsx --env-file-if-exists=../../.env scripts/smoke-avatar.ts"
   },
   "dependencies": {
     "@base-ui-components/react": "1.0.0-rc.0",

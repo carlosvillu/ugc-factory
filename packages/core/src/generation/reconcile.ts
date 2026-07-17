@@ -71,14 +71,15 @@ export interface ReconcilableGeneration {
   kind: GenerationKind;
 }
 
-// T4.11: audio/non-image generations are NOT handled here; make this kind-aware before wiring N7b to the worker
+// T4.11: audio/video/non-image generations are NOT handled here; make this kind-aware before wiring N7b/N7c to the worker
 // La reconciliación encola `output.download`, cuyo consumer llama `finalizeGeneration` (SOLO-IMAGEN).
-// N7b (T4.5) produce generaciones de AUDIO (`kind='tts_audio'`); si el sweeper las reconcilia y encola
-// aquí, el consumer reventaría con su output `{audio:{url}}`. `GenerationKind` NO incluye `'audio'` aún
-// y `resolveKind` defaultea a `'image'` — la mina es LATENTE porque T4.5 NO cablea N7b al DAG (corre
-// stepless vía `runGenerateAudio` directo, sin sweeper). T4.11 debe: (1) añadir `'audio'` a este tipo,
-// (2) rutar el enqueue a un `audio.download` (o hacer `output.download` kind-aware) ANTES de que un
-// caller vivo produzca generaciones de audio reconciliables.
+// N7b (T4.5) produce generaciones de AUDIO (`kind='tts_audio'`) y N7c (T4.7) de VÍDEO/AVATAR
+// (`kind='avatar_clip'`); si el sweeper las reconcilia y encola aquí, el consumer reventaría con su
+// output `{audio:{url}}`/`{video:{url}}`. `GenerationKind` NO incluye `'audio'`/`'video'` aún (bueno,
+// `'video'` existe en el tipo pero `resolveKind` defaultea a `'image'`) — la mina es LATENTE porque
+// T4.5/T4.7 NO cablean N7b/N7c al DAG (corren stepless vía `runGenerateAudio`/`runGenerateAvatar`
+// directo, sin sweeper). T4.11 debe: (1) resolver el kind real (audio/vídeo) de la fila, (2) rutar el
+// enqueue a un download kind-aware ANTES de que un caller vivo produzca generaciones no-imagen reconciliables.
 /** El "tipo" de generación que fija el deadline de cuelgue. Hoy solo `image`; la costura por-tipo
  *  existe para que vídeo (T4.7/T4.8) traiga su propio deadline (minutos) sin tocar esta lógica. */
 export type GenerationKind = 'image' | 'video';

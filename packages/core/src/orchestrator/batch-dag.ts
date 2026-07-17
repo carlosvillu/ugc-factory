@@ -118,6 +118,45 @@ export const N7bConfigSchema = z.object({
 export type N7bConfig = z.infer<typeof N7bConfigSchema>;
 
 /**
+ * Config del step N7c · CLIP DE AVATAR, tiers image+audio (T4.7, §7.2). N7c anima una IMAGEN de la
+ * Persona con el AUDIO del hook (voiceover TTS de N7b) para producir un clip del avatar hablando, con
+ * lipsync. Dos tiers image+audio: Kling AI Avatar v2 Std (`fal-ai/kling-video/ai-avatar/v2/standard`)
+ * y OmniHuman v1.5 (`fal-ai/bytedance/omnihuman/v1.5`). Ambos toman `{image_url, audio_url, prompt}`;
+ * la duración del clip = la del audio automáticamente (ninguno expone `duration_seconds` de entrada).
+ *
+ * (El tier Test — VEED — es T4.7b: su ASR-del-clip exige extraer el audio del vídeo con ffmpeg, ausente
+ * hoy en el worker.)
+ *
+ * FORWARD-POINTERS ESTABLES (patrón N7a/N7b): la Persona y el hook viajan como IDs de `asset` REALES —
+ * `imageAssetId` (fila `asset` kind `reference_image` de la Persona) y `audioAssetId` (fila `asset` kind
+ * `tts_audio` del hook, producida por N7b). El executor lee esas filas, sube sus bytes a fal storage
+ * (caché §9.6 de `uploadInputCached`) y obtiene las URLs `image_url`/`audio_url`. NO recibe URLs por
+ * config (fijaría a mano lo que el pipeline deriva; trampa T1.13). La costura STEPLESS: el smoke elige
+ * el tier + los assets por config, sin run/DAG. T4.11 rellenará estos punteros desde la resolución
+ * recipe×tier + el voiceover real de la variante.
+ *
+ * `resolution` SOLO la consume OmniHuman (`720p|1080p`, default `1080p`); Kling la ignora. `prompt` es
+ * opcional (ambos modelos lo aceptan; default en el executor).
+ */
+export const N7cConfigSchema = z.object({
+  /** El endpoint del modelo de avatar del tier (Kling Std / OmniHuman Premium). Clave natural del
+   *  catálogo (el executor resuelve el perfil por endpoint, patrón N7a/N7b). */
+  avatarEndpoint: z.string().min(1),
+  /** El `asset` de la IMAGEN de la Persona (kind `reference_image`): sube a fal → `image_url`. */
+  imageAssetId: z.string().min(1),
+  /** El `asset` del AUDIO del hook (kind `tts_audio`, de N7b): sube a fal → `audio_url`. La duración
+   *  del clip = la de este audio automáticamente. */
+  audioAssetId: z.string().min(1),
+  /** Prompt opcional del avatar (guía de la actuación). Ambos modelos lo aceptan. */
+  prompt: z.string().min(1).optional(),
+  /** Resolución de OmniHuman (`720p|1080p`, default 1080p). Kling la ignora. El límite de audio de
+   *  OmniHuman depende de ella (≤30 s @1080p, ≤60 s @720p) — pero el executor valida contra
+   *  `capabilities.maxDuration` del perfil, no contra este enum. */
+  resolution: z.enum(['720p', '1080p']).optional(),
+});
+export type N7cConfig = z.infer<typeof N7cConfigSchema>;
+
+/**
  * Construye la definición del run de lote (un solo nodo N5) para un proyecto y un lote ya creado.
  *
  * `autopilot=false` + N5 `isCheckpoint` con `alwaysPause`: CP3 —el editor de guiones— es el

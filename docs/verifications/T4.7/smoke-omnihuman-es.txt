@@ -1,0 +1,13 @@
+
+> @ugc/web@0.0.0 smoke:avatar /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/web
+> tsx --env-file-if-exists=../../.env scripts/smoke-avatar.ts
+
+smoke:avatar: fal-ai/bytedance/omnihuman/v1.5 (16¢/s) — imagen 01KXR8SQQ2MWKTMD4AYJ46YX8M + audio 01KXPQ34EXYZ5NG4WZ6GSNSF0C (2.98s) @720p — RED REAL…
+
+{"level":30,"time":1784300387673,"pid":40014,"hostname":"MBP-de-Carlos","name":"worker","event":"fal_input_cache_hit","assetId":"01KXR8SQQ2MWKTMD4AYJ46YX8M","falUrl":"https://v3b.fal.media/files/b/0aa2a025/tiJGjQEMFT7fZNp3bhXWE_1784299770213.png","msg":"fal storage cache-hit: input reutilizado sin re-subir"}
+{"level":30,"time":1784300387673,"pid":40014,"hostname":"MBP-de-Carlos","name":"worker","event":"fal_input_cache_hit","assetId":"01KXPQ34EXYZ5NG4WZ6GSNSF0C","falUrl":"https://v3b.fal.media/files/b/0aa2a019/iEIglddf6FoVkrhOKZo0z_1784299770191.mpeg","msg":"fal storage cache-hit: input reutilizado sin re-subir"}
+{"level":30,"time":1784300504818,"pid":40014,"hostname":"MBP-de-Carlos","name":"worker","event":"fal_avatar_generation_finalized","generationId":"01KXR9EFAT8KRGHRW500MEWMZK","assetId":"01KXR9J1QB1J7YCW0A6N0J1NN8","costCents":54,"durationSeconds":3.36975,"alreadyFinalized":false,"msg":"clip de avatar generado: vídeo descargado, coste por segundo registrado, completed"}
+smoke:avatar: generation 01KXR9EFAT8KRGHRW500MEWMZK (completed), asset 01KXR9J1QB1J7YCW0A6N0J1NN8 (avatar_clip, 3.37s), coste 54¢ (→ /spend) — GET /api/assets/01KXR9J1QB1J7YCW0A6N0J1NN8/download
+smoke:avatar:   duración clip=3.40s vs audio=2.98s → Δ=0.42s FUERA DE TOLERANCIA ✗ (>±0,3s)
+
+smoke:avatar: OK ✓ — clip generado, coste 54¢. Descarga el clip y JÚZGALO: ¿la Persona habla el hook con LIPSYNC aceptable? ¿en el idioma esperado?

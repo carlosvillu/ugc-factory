@@ -174,3 +174,55 @@ export function falAsrCostOf(args: { cost: unknown; durationSeconds: number }): 
     warning: null,
   };
 }
+
+// ── T4.7 (N7c · avatar image+audio): coste por SEGUNDO de vídeo ────────────────────────────────────
+// Los avatares Kling AI Avatar Std (5,62¢/s) y OmniHuman v1.5 (16¢/s) facturan por SEGUNDO de clip
+// (`unit='second'`). El `amountCents` del perfil es FLOAT a propósito (5,62 no cabe en un entero — ver
+// `ModelCostSchema`): el precio unitario sub-céntimo se multiplica por los segundos del clip y se
+// redondea al final (el ledger `amount_cents` es INTEGER). Mismo INVARIANTE DE DINERO que las cost fns
+// de arriba: NUNCA lanza (la llamada de pago YA ocurrió), degrada a 0¢ con warning OBSERVABLE si la
+// unidad no es la esperada o el `cost` jsonb no valida.
+//
+// DIFERENCIA con `falImageCostOf`: un clip de avatar NO es sub-céntimo (un OmniHuman de 4 s son 64¢),
+// así que la duración DEBE venir del output de fal (o, en su defecto, del audio de entrada — `duración
+// = audio automáticamente`). El caller resuelve esa duración ANTES de llamar aquí; esta fn solo pone el
+// precio. Registrar 0¢ sobre un clip de 64¢ sería un ledger deshonesto — por eso el caller nunca pasa 0.
+
+export interface FalVideoCost {
+  /** `amount_cents` ENTERO del `cost_entry` (redondeado). */
+  cents: number;
+  /** La VERDAD granular → `quantity` (unit='seconds'): SEGUNDOS de vídeo facturados (redondeados por el
+   *  caller a INTEGER para el ledger). */
+  durationSeconds: number;
+  warning: string | null;
+}
+
+/**
+ * Coste de una llamada de avatar image+audio de fal (por SEGUNDO). El insumo facturado es la DURACIÓN
+ * del clip (del output de fal, o del audio de entrada si el modelo no la emite). Recibe el `cost` jsonb
+ * CRUDO del `model_profile` y valida `ModelCostSchema` INTERNAMENTE (misma política que `falAsrCostOf`).
+ */
+export function falVideoCostOf(args: { cost: unknown; durationSeconds: number }): FalVideoCost {
+  const parsed = ModelCostSchema.safeParse(args.cost);
+  if (!parsed.success) {
+    return {
+      cents: 0,
+      durationSeconds: args.durationSeconds,
+      warning: 'fal-pricing: model_profile de avatar .cost inválido o ausente: amount_cents=0.',
+    };
+  }
+  if (parsed.data.unit !== 'second') {
+    return {
+      cents: 0,
+      durationSeconds: args.durationSeconds,
+      warning:
+        `fal-pricing: unidad inesperada '${parsed.data.unit}' para un avatar (se esperaba 'second'): ` +
+        'el cost_entry se registra con amount_cents=0. Revisa el model_profile.',
+    };
+  }
+  return {
+    cents: Math.round(args.durationSeconds * parsed.data.amountCents),
+    durationSeconds: args.durationSeconds,
+    warning: null,
+  };
+}

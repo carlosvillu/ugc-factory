@@ -89,6 +89,8 @@ export {
   type N7aConfig,
   N7bConfigSchema,
   type N7bConfig,
+  N7cConfigSchema,
+  type N7cConfig,
   PackshotRouteSchema,
   type PackshotRoute,
 } from './batch-dag';

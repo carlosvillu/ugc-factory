@@ -15,6 +15,7 @@ import { makeN5Executor } from './write-scripts';
 import { makeN6Executor } from './compile-prompt';
 import { type GenerationExecutorDeps, makeN7aExecutor } from './generation';
 import { makeN7bExecutor } from './generate-voice';
+import { makeN7cExecutor } from './generate-avatar';
 
 export interface ExecutorRegistryDeps {
   /** Decisor de fallo de los executors de demo, resuelto por bootstrap. */
@@ -77,6 +78,12 @@ export function makeExecutorRegistry({
     // `output.download` kind-aware ANTES de cablearlo (una generación de audio recogida por la vía de
     // imagen del sweeper explotaría — marcadores en output-download.ts + reconcile.ts).
     N7b: makeN7bExecutor(generation),
+    // N7c · CLIP DE AVATAR, tiers image+audio (T4.7, §7.2 N7c). PAGA fal (Kling Std / OmniHuman Premium):
+    // reusa el mismo grupo de deps `generation` (BD + storage + FAL_KEY perezosa). T4.11 lo cablea como
+    // nodo del DAG; en T4.7 corre STEPLESS (el smoke conduce el clip sin step). ⚠ T4.11 debe hacer el
+    // sweeper/`output.download` kind-aware ANTES de cablearlo (una generación de VÍDEO recogida por la
+    // vía de imagen del sweeper explotaría — marcadores en output-download.ts + reconcile.ts).
+    N7c: makeN7cExecutor(generation),
     'demo.sleep': demo,
     'demo.fail': demo,
     // `demo.hang` (T0.9): el executor no retorna nunca (espera al abort) — es el

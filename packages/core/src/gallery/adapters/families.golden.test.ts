@@ -189,12 +189,16 @@ describe('assert (a) — Kling incluye la ref image cuando capabilities.refImage
     expect(res.payload).not.toHaveProperty('image_url');
   });
 
-  // CONTROL NEGATIVO 2: un avatar SIN refImages (OmniHuman: refImages ausente) ⇒ aunque se aporten
-  // imágenes, NO se inyecta ninguna (el modelo no las acepta). Es el control que el brief exige.
-  it('avatar sin refImages (OmniHuman) + imágenes aportadas ⇒ payload SIN image_url', () => {
+  // CONTROL NEGATIVO 2: un avatar SIN refImages (VEED: text-to-video, refImages ausente) ⇒ aunque se
+  // aporten imágenes, NO se inyecta ninguna (el modelo no las acepta). Es el control que el brief exige.
+  // OJO: hasta T4.7 este control usaba OmniHuman, pero T4.7 corrigió el seed de OmniHuman (fal exige
+  // `image_url` para OmniHuman → `refImages:1`), así que ya NO es un avatar «sin refImages». VEED
+  // (`veed/avatars/text-to-video`) es text-to-video puro y no toma imagen de entrada — el vehículo
+  // honesto para el mismo control (la PROPIEDAD sigue siendo «sin refImages ⇒ sin image_url»).
+  it('avatar sin refImages (VEED text-to-video) + imágenes aportadas ⇒ payload SIN image_url', () => {
     const res = avatarAdapter({
       resolvedPrompt: CANONICAL_PROMPT,
-      profile: byEndpoint('fal-ai/bytedance/omnihuman/v1.5'),
+      profile: byEndpoint('veed/avatars/text-to-video'),
       aspect: '9:16',
       durationSeconds: 8,
       assets: { refImages: [PERSONA_IMG, PRODUCT_IMG] },

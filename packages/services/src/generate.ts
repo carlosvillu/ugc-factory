@@ -30,20 +30,7 @@ import {
 } from '@ugc/db';
 
 import { finalizeGeneration } from './finalize-generation';
-
-/** Logger no-op: el default cuando el caller no inyecta uno (tests que no afirman sobre logs). En
- *  producción (worker/web) se inyecta el pino estructurado con correlación. */
-const noop = (): void => {
-  /* noop */
-};
-const NOOP_LOGGER: Logger = {
-  trace: noop,
-  debug: noop,
-  info: noop,
-  warn: noop,
-  error: noop,
-  child: () => NOOP_LOGGER,
-};
+import { NOOP_LOGGER } from './noop-logger';
 
 export interface GenerateDeps {
   db: DbClient;

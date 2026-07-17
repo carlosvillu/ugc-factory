@@ -99,7 +99,8 @@ export { makeLocalStorageAdapter } from './adapters/local-storage';
 export { makeLocalStorageAdapterFromEnv } from './adapters/local-storage';
 // Repo del agregado `asset` (T0.5): create/get tipados. Los consume el endpoint de
 // download (web) y el smoke/seed de assets. `NewAsset` lo consume la factory
-// makeAsset de test-utils; `Asset` no se importa por nombre (se infiere).
+// makeAsset de test-utils; `Asset` lo importan los tests de N7c (T4.7) para tipar la
+// factory de assets de input (imagen de Persona + audio del hook).
 export {
   createAsset,
   getAsset,
@@ -107,7 +108,7 @@ export {
   setAssetFalUpload,
   setAssetWordTimestamps,
 } from './repos/asset.repo';
-export type { NewAsset } from './schema/generation';
+export type { Asset, NewAsset } from './schema/generation';
 // Agregado `generation` (T4.1, §9.6): el ciclo submitting→submitted→…→completed que el
 // servicio de generación orquesta. Lo consumen `@ugc/services` (runGenerate) y el smoke
 // del verifier. `Generation`/`NewGeneration`/`GenerationPatch` son los shapes públicos.

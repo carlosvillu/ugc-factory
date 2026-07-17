@@ -11,7 +11,7 @@
     "falEndpoint": "fal-ai/kling-video/ai-avatar/v2/standard",
     "kind": "avatar",
     "cost": { "unit": "second", "amountCents": 5.62 },
-    "capabilities": { "audio": true, "dialogue": true, "refImages": 1 },
+    "capabilities": { "audio": true, "dialogue": true, "refImages": 1, "refAudios": 1 },
     "promptAdapter": "avatar",
     "notes": "Tier Standard — avatar parlante con Persona propia. Precio verificado 2026-07-15 vs §13.1 ($0,0562/s)."
   },
@@ -19,7 +19,13 @@
     "falEndpoint": "fal-ai/bytedance/omnihuman/v1.5",
     "kind": "avatar",
     "cost": { "unit": "second", "amountCents": 16 },
-    "capabilities": { "audio": true, "dialogue": true, "maxDuration": 30 },
+    "capabilities": {
+      "audio": true,
+      "dialogue": true,
+      "maxDuration": 30,
+      "refImages": 1,
+      "refAudios": 1
+    },
     "promptAdapter": "avatar",
     "notes": "Tier Premium — avatar parlante, audio <=30s. DIVERGENCIA T3.4: §13.1 decia $0,14/s; fal publica $0,16/s (2026-07-15) — recalibrado al valor real."
   },

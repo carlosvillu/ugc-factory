@@ -1,5 +1,6 @@
 {
   "aspect_ratio": "9:16",
+  "audio_url": "https://fal.storage/uploads/voice-01.wav",
   "duration_seconds": 5,
   "enable_audio": true,
   "image_url": "https://fal.storage/uploads/persona-ref-01.png",

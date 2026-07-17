@@ -1,0 +1,7 @@
+gen-portrait: generando retrato con fal-ai/flux-2 (RED REAL)…
+  professional headshot portrait photo of a friendly young woman, face centered and front-facing, looking at camera, soft studio lighting, plain neutral light-grey background, photorealistic, high detail, sharp focus, natural skin texture, upper body visible
+
+{"level":30,"time":1784299708139,"pid":35208,"hostname":"MBP-de-Carlos","name":"worker","event":"fal_generation_finalized","generationId":"01KXR8SK5SRPX7GN695QSJB5BY","assetId":"01KXR8SQQ2MWKTMD4AYJ46YX8M","costCents":1,"msg":"generación finalizada: output descargado, coste registrado, completed"}
+gen-portrait: OK ✓ generation 01KXR8SK5SRPX7GN695QSJB5BY (completed), asset 01KXR8SQQ2MWKTMD4AYJ46YX8M (576×1024), coste 1¢
+PORTRAIT_ASSET_ID=01KXR8SQQ2MWKTMD4AYJ46YX8M
+PORTRAIT_STORAGE_KEY=generations/01KXR8SK5SRPX7GN695QSJB5BY/01KXR8SQ0TE93AXTX06ZYVZHY5.png

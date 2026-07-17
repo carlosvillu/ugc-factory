@@ -8,7 +8,7 @@
 // reconciliación con la prosa "2 clips" de §7.5.
 import { describe, expect, it } from 'vitest';
 import type { AdScene } from '../../contracts/ad-script';
-import { planScene, planGeneration } from './scene-planner';
+import { planScene, planGeneration, quantizeDurationToEnum } from './scene-planner';
 
 function makeScene(overrides: Partial<AdScene> = {}): AdScene {
   return {
@@ -81,6 +81,46 @@ describe('planScene — troceo §7.5 (assert (d))', () => {
   it('preserva el segment de la escena en cada clip', () => {
     const plan = planScene(makeScene({ segment: 'hook', seconds: 25 }), 10);
     expect(plan.clips.every((c) => c.segment === 'hook')).toBe(true);
+  });
+});
+
+describe('quantizeDurationToEnum — cuantización al enum del modelo (T4.8, N7d)', () => {
+  const VEO_I2V = [4, 6, 8] as const;
+
+  it('redondea HACIA ARRIBA al valor mínimo del enum ≥ seconds', () => {
+    expect(quantizeDurationToEnum(5, VEO_I2V)).toBe(6);
+    expect(quantizeDurationToEnum(7, VEO_I2V)).toBe(8);
+    expect(quantizeDurationToEnum(4.1, VEO_I2V)).toBe(6);
+  });
+
+  it('un valor EXACTO del enum se devuelve tal cual (no salta al siguiente)', () => {
+    expect(quantizeDurationToEnum(4, VEO_I2V)).toBe(4);
+    expect(quantizeDurationToEnum(6, VEO_I2V)).toBe(6);
+    expect(quantizeDurationToEnum(8, VEO_I2V)).toBe(8);
+  });
+
+  it('por debajo del mínimo del enum ⇒ el mínimo (nunca baja de 4s)', () => {
+    expect(quantizeDurationToEnum(2, VEO_I2V)).toBe(4);
+    expect(quantizeDurationToEnum(0.5, VEO_I2V)).toBe(4);
+  });
+
+  it('por encima del máximo del enum ⇒ clamp al máximo (defensa; el troceo ya topa a max)', () => {
+    expect(quantizeDurationToEnum(9, VEO_I2V)).toBe(8);
+    expect(quantizeDurationToEnum(100, VEO_I2V)).toBe(8);
+  });
+
+  it('enum de un solo valor (Veo R2V, fijo 8s) ⇒ SIEMPRE ese valor', () => {
+    expect(quantizeDurationToEnum(3, [8])).toBe(8);
+    expect(quantizeDurationToEnum(8, [8])).toBe(8);
+    expect(quantizeDurationToEnum(12, [8])).toBe(8);
+  });
+
+  it('enum desordenado se ordena antes de cuantizar (no depende del orden del catálogo)', () => {
+    expect(quantizeDurationToEnum(5, [8, 4, 6])).toBe(6);
+  });
+
+  it('enum vacío es un bug de datos → lanza (no un default silencioso)', () => {
+    expect(() => quantizeDurationToEnum(5, [])).toThrow(/vacío/);
   });
 });
 

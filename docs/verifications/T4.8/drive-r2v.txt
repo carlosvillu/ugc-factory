@@ -1,0 +1,30 @@
+drive-n7d: EXECUTOR N7d sobre script 01KXRN431RVWJ9NG3EP5ZM0XM1 · endpoint fal-ai/veo3.1/reference-to-video · 1 imagen(es) @720p 9:16 — RED REAL…
+
+{"level":30,"time":1784312808151,"pid":262,"hostname":"MBP-de-Carlos","name":"worker","event":"fal_input_cache_hit","assetId":"01KXRN4G0JENSZZD30Q19XT5CN","falUrl":"https://v3b.fal.media/files/b/0aa2a522/qHIMcLVa6ZfCDoYCxLlvH_1784312666283.png","msg":"fal storage cache-hit: input reutilizado sin re-subir"}
+{"level":30,"time":1784312878159,"pid":262,"hostname":"MBP-de-Carlos","name":"worker","event":"fal_broll_generation_finalized","generationId":"01KXRN9GPR7WGMS6XJX8G16KHZ","assetId":"01KXRNBN28C4Z3G3ACEF92CMBG","route":"r2v","costCents":160,"durationSeconds":8,"alreadyFinalized":false,"msg":"clip de b-roll generado: vídeo descargado, coste por segundo registrado, completed"}
+{"level":30,"time":1784312878167,"pid":262,"hostname":"MBP-de-Carlos","name":"worker","event":"fal_input_cache_hit","assetId":"01KXRN4G0JENSZZD30Q19XT5CN","falUrl":"https://v3b.fal.media/files/b/0aa2a522/qHIMcLVa6ZfCDoYCxLlvH_1784312666283.png","msg":"fal storage cache-hit: input reutilizado sin re-subir"}
+{"level":30,"time":1784312938339,"pid":262,"hostname":"MBP-de-Carlos","name":"worker","event":"fal_broll_generation_finalized","generationId":"01KXRNBN2QDDCG79K4MS86QSSB","assetId":"01KXRNDFTT61EB73F9S3SK88WP","route":"r2v","costCents":160,"durationSeconds":8,"alreadyFinalized":false,"msg":"clip de b-roll generado: vídeo descargado, coste por segundo registrado, completed"}
+drive-n7d: OK ✓ output del executor:
+{
+  "scriptId": "01KXRN431RVWJ9NG3EP5ZM0XM1",
+  "brollEndpoint": "fal-ai/veo3.1/reference-to-video",
+  "route": "r2v",
+  "clips": [
+    {
+      "bodySceneIndex": 0,
+      "clipIndex": 0,
+      "generationId": "01KXRN9GPR7WGMS6XJX8G16KHZ",
+      "assetId": "01KXRNBN28C4Z3G3ACEF92CMBG",
+      "durationSeconds": 8,
+      "costCents": 160
+    },
+    {
+      "bodySceneIndex": 1,
+      "clipIndex": 0,
+      "generationId": "01KXRNBN2QDDCG79K4MS86QSSB",
+      "assetId": "01KXRNDFTT61EB73F9S3SK88WP",
+      "durationSeconds": 8,
+      "costCents": 160
+    }
+  ]
+}

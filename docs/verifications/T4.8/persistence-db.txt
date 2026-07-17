@@ -1,0 +1,61 @@
+-[ RECORD 1 ]+----------------------------------------------------------------------
+asset_id     | 01KXRN6T8MHK55CFYN35G819S4
+kind         | broll_clip
+duration_s   | 6
+mime         | video/mp4
+bytes        | 830576
+checksum     | a89f3c80af3568389867e9f96ca11c4ca76ccbe470575c81f96196cb1d1eb8a1
+storage_key  | generations/01KXRN5879AFB3ZCD60DB744PJ/01KXRN6SEVC0SXXP9G2VQQSVTJ.mp4
+gen_status   | completed
+fal_endpoint | fal-ai/veo3.1/image-to-video
+route        | i2v
+provider     | fal
+unit         | seconds
+quantity     | 6
+amount_cents | 120
+-[ RECORD 2 ]+----------------------------------------------------------------------
+asset_id     | 01KXRN925BV93KFM7A4540TQPB
+kind         | broll_clip
+duration_s   | 8
+mime         | video/mp4
+bytes        | 1550789
+checksum     | c9fec95338cb122762a40a60dc24c9388bf196d24bec18e39578eab393ee0824
+storage_key  | generations/01KXRN6T956FEPHK2RCH9SGNFR/01KXRN91FNEA6VCFAS0871AQG5.mp4
+gen_status   | completed
+fal_endpoint | fal-ai/veo3.1/image-to-video
+route        | i2v
+provider     | fal
+unit         | seconds
+quantity     | 8
+amount_cents | 160
+-[ RECORD 3 ]+----------------------------------------------------------------------
+asset_id     | 01KXRNBN28C4Z3G3ACEF92CMBG
+kind         | broll_clip
+duration_s   | 8
+mime         | video/mp4
+bytes        | 951678
+checksum     | 62952869533c6bc2a938d34230776a6f509a51274bbb5bd208dba2fe0faea06c
+storage_key  | generations/01KXRN9GPR7WGMS6XJX8G16KHZ/01KXRNBM6K53X6TF4MMXH283SB.mp4
+gen_status   | completed
+fal_endpoint | fal-ai/veo3.1/reference-to-video
+route        | r2v
+provider     | fal
+unit         | seconds
+quantity     | 8
+amount_cents | 160
+-[ RECORD 4 ]+----------------------------------------------------------------------
+asset_id     | 01KXRNDFTT61EB73F9S3SK88WP
+kind         | broll_clip
+duration_s   | 8
+mime         | video/mp4
+bytes        | 1211869
+checksum     | d39d7a057bcd94d0dd91fb6d1010309775da4709a3c6622c099d46273def127d
+storage_key  | generations/01KXRNBN2QDDCG79K4MS86QSSB/01KXRNDF0QV4YD26BKA38ATG06.mp4
+gen_status   | completed
+fal_endpoint | fal-ai/veo3.1/reference-to-video
+route        | r2v
+provider     | fal
+unit         | seconds
+quantity     | 8
+amount_cents | 160
+

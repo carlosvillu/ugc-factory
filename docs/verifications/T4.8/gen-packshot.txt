@@ -1,0 +1,7 @@
+gen-packshot: generando packshot con fal-ai/flux-2 (RED REAL)…
+  professional product packshot photo of a sleek amber glass skincare serum bottle with a black dropper cap and a minimalist white label reading "GLOW", centered on a clean bright studio background, soft diffused lighting, photorealistic, high detail, sharp focus, commercial e-commerce style
+
+{"level":30,"time":1784312643615,"pid":98147,"hostname":"MBP-de-Carlos","name":"worker","event":"fal_generation_finalized","generationId":"01KXRN4BJ95TDFWCXPJ3KZYQ53","assetId":"01KXRN4G0JENSZZD30Q19XT5CN","costCents":1,"msg":"generación finalizada: output descargado, coste registrado, completed"}
+gen-packshot: OK ✓ generation 01KXRN4BJ95TDFWCXPJ3KZYQ53 (completed), asset 01KXRN4G0JENSZZD30Q19XT5CN (576×1024), coste 1¢
+PACKSHOT_ASSET_ID=01KXRN4G0JENSZZD30Q19XT5CN
+PACKSHOT_STORAGE_KEY=generations/01KXRN4BJ95TDFWCXPJ3KZYQ53/01KXRN4FG0J3FN16YD9BZSAWC8.png

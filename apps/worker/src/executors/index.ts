@@ -16,6 +16,7 @@ import { makeN6Executor } from './compile-prompt';
 import { type GenerationExecutorDeps, makeN7aExecutor } from './generation';
 import { makeN7bExecutor } from './generate-voice';
 import { makeN7cExecutor } from './generate-avatar';
+import { makeN7dExecutor } from './generate-broll';
 
 export interface ExecutorRegistryDeps {
   /** Decisor de fallo de los executors de demo, resuelto por bootstrap. */
@@ -84,6 +85,13 @@ export function makeExecutorRegistry({
     // sweeper/`output.download` kind-aware ANTES de cablearlo (una generación de VÍDEO recogida por la
     // vía de imagen del sweeper explotaría — marcadores en output-download.ts + reconcile.ts).
     N7c: makeN7cExecutor(generation),
+    // N7d · B-ROLL POR ESCENA (T4.8, §7.2 N7d + §7.5). PAGA fal (Veo 3.1 i2v/R2V por segundo): reusa el
+    // mismo grupo de deps `generation` (BD + storage + FAL_KEY perezosa). Genera 1 clip por escena de
+    // BODY (troceando escenas > maxDuration), b-roll SILENCIOSO (la voz es de N7b). T4.11 lo cablea como
+    // nodo del DAG; en T4.8 corre STEPLESS (el smoke conduce los clips sin step). ⚠ T4.11 debe hacer el
+    // sweeper/`output.download` kind-aware ANTES de cablearlo (una generación de VÍDEO recogida por la
+    // vía de imagen del sweeper explotaría — marcadores en output-download.ts + reconcile.ts).
+    N7d: makeN7dExecutor(generation),
     'demo.sleep': demo,
     'demo.fail': demo,
     // `demo.hang` (T0.9): el executor no retorna nunca (espera al abort) — es el

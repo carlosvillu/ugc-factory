@@ -38,6 +38,12 @@ export { runTtsOnly, type VoicePreviewResult } from './generate-audio';
 // (`kind:'avatar_clip'`) — NO `finalizeGeneration` (solo-imagen). Lo consume el smoke del verifier y, en
 // T4.11, el executor N7c.
 export { runGenerateAvatar } from './generate-avatar';
+// Generación de CLIP DE B-ROLL contra fal (T4.8, §7.2 N7d): 1 clip por escena del body — i2v desde
+// keyframe (`fal-ai/veo3.1/image-to-video`) o R2V del producto (`fal-ai/veo3.1/reference-to-video`).
+// Servicio hermano de `runGenerateAvatar` (vídeo, finalizer `kind:'broll_clip'`), pero SIN audio y con
+// duración como INPUT (el enum cuantizado del clip). Lo consume el smoke del verifier y, en T4.11, el
+// executor N7d.
+export { runGenerateBroll } from './generate-broll';
 // Submit VÍA WEBHOOK sin polling (T4.2, §9.6): deja la fila `generation` en `submitted` keyed por
 // el request_id REAL de fal; la completion la conduce el webhook. Lo consume el smoke del verifier.
 export { submitGenerationForWebhook } from './submit-generation';

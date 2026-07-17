@@ -635,7 +635,7 @@ export const RECIPE_SEEDS: RecipeSeed[] = [
     tier: 'premium',
     steps: [
       { component: 'avatar', model: 'fal-ai/bytedance/omnihuman/v1.5' },
-      { component: 'broll', model: 'fal-ai/veo3.1' },
+      { component: 'broll', model: 'fal-ai/veo3.1/image-to-video' },
       { component: 'voice', model: 'fal-ai/elevenlabs/tts/eleven-v3' },
       { component: 'shots', model: 'fal-ai/nano-banana-pro/edit' },
     ],

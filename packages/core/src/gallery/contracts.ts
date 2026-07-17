@@ -143,6 +143,14 @@ export const ModelKindSchema = z.enum([
 ]);
 export type ModelKind = z.infer<typeof ModelKindSchema>;
 
+/** Los `kind` de vídeo que N7d (b-roll) sabe generar: `t2v` (text-to-video), `i2v` (image-to-video
+ *  desde keyframe) y `r2v` (reference-to-video del producto). El servicio, el executor y el smoke de
+ *  b-roll comparten esta frontera (cada uno con su propio error tipado). */
+const BROLL_MODEL_KINDS = ['t2v', 'i2v', 'r2v'] as const;
+export function isBrollModelKind(kind: ModelKind): kind is (typeof BROLL_MODEL_KINDS)[number] {
+  return (BROLL_MODEL_KINDS as readonly string[]).includes(kind);
+}
+
 /** `model_status` (§12 l.548): active|deprecated. Enum nativo en BD. `fal:verify` puede pasarlo a `deprecated`. */
 export const ModelStatusSchema = z.enum(['active', 'deprecated']);
 export type ModelStatus = z.infer<typeof ModelStatusSchema>;
@@ -194,6 +202,17 @@ export const ModelCapabilitiesSchema = z.object({
   audio: z.boolean().optional(),
   dialogue: z.boolean().optional(),
   aspects: z.array(z.string()).optional(),
+  // ── ENUMS DE DURACIÓN/RESOLUCIÓN DEL MODELO (T4.8, N7d — cierre de deuda §13.1 l.600) ────────────
+  // Varios modelos de vídeo de fal NO aceptan duración/resolución libres: exponen un ENUM discreto en
+  // su input schema (Veo 3.1 i2v `duration:"4s"|"6s"|"8s"`, R2V fijo `"8s"`; `resolution:"720p"|
+  // "1080p"|"4k"`). `durations` guarda esos segundos permitidos (el executor cuantiza el clip contra
+  // ellos con `quantizeDurationToEnum`); `resolutions` los presets de resolución. Como `aspects`, son
+  // los enums EXACTOS del `model_profile` — el dialecto del modelo vive en el catálogo, no en código.
+  /** Duraciones (en SEGUNDOS) que el modelo acepta como enum discreto de entrada. Vacío/ausente = el
+   *  modelo toma una duración libre (o no la parametriza). */
+  durations: z.array(z.number().positive()).optional(),
+  /** Presets de resolución del modelo (`"720p"`, `"1080p"`, `"4k"`), enum exacto de su input schema. */
+  resolutions: z.array(z.string()).optional(),
 });
 export type ModelCapabilities = z.infer<typeof ModelCapabilitiesSchema>;
 

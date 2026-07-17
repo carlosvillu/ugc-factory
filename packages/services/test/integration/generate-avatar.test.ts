@@ -318,6 +318,59 @@ describe('runGenerateAvatar — clip de avatar image+audio (Verificación T4.7)'
     expect(assets).toHaveLength(0);
   });
 
+  it('el catch de degradación NO enmascara la causa raíz: si el UPDATE de failed falla, sale el error de FAL', async () => {
+    // Lección T1.8 (simetrizado con `runGenerateBroll` de T4.8): el catch marca `failed` en una tx; si
+    // ESA tx lanza (BD caída), su error NO debe enterrar el `err` original de fal. Se fuerza AMBOS: (1) fal
+    // devuelve un output sin vídeo → FalResponseError "no trae vídeo"; (2) la tx de degradación del catch
+    // rechaza (db.transaction envuelto). El error que SALE de runGenerateAvatar debe ser el de fal, no el
+    // de la tx ("degrade boom avatar"). SIN el try/catch anidado del fix, saldría el error de la tx (rojo).
+    const req = 'AVA-maskcause';
+    const status = `https://queue.fal.run/${KLING_ENDPOINT}/requests/${req}/status`;
+    const response = `https://queue.fal.run/${KLING_ENDPOINT}/requests/${req}`;
+    server.use(
+      ...uploadHandlers(),
+      http.post(`https://queue.fal.run/${KLING_ENDPOINT}`, () =>
+        HttpResponse.json({
+          request_id: req,
+          status_url: status,
+          response_url: response,
+          status: 'IN_QUEUE',
+        }),
+      ),
+      http.get(status, () => HttpResponse.json({ status: 'COMPLETED', request_id: req })),
+      // Output SIN vídeo → FalResponseError "no trae vídeo" (la causa raíz que debe sobrevivir).
+      http.get(response, () => HttpResponse.json({ audio: { url: 'https://x/y.wav' } })),
+    );
+    const image = await makeInputAsset('reference_image', IMG_BYTES, 'image/png');
+    const audio = await makeInputAsset('tts_audio', WAV_BYTES, 'audio/wav', 4);
+
+    // db envuelto: delega todo al real EXCEPTO `transaction`, que rechaza (simula BD caída en el catch).
+    // La tx de liquidación del happy path NUNCA se alcanza aquí (extractVideoOutput lanza antes), así que
+    // el ÚNICO uso de `transaction` es la degradación del catch → este proxy solo afecta a esa ruta.
+    const brokenTxDb = new Proxy(tdb.db, {
+      get(target, prop, receiver) {
+        if (prop === 'transaction') {
+          return () => Promise.reject(new Error('degrade boom avatar (BD caída simulada)'));
+        }
+        return Reflect.get(target, prop, receiver) as unknown;
+      },
+    });
+
+    const err = await runGenerateAvatar(
+      { ...deps(), db: brokenTxDb },
+      {
+        avatarModelProfileId: klingProfile.id,
+        imageAssetId: image.id,
+        audioAssetId: audio.id,
+      },
+    ).catch((e: unknown) => e);
+
+    expect(err).toBeInstanceOf(Error);
+    // La CAUSA RAÍZ (fal, "no trae vídeo") sobrevive; el error de la tx de degradación NO la enmascara.
+    expect((err as Error).message).toContain('no trae vídeo');
+    expect((err as Error).message).not.toContain('degrade boom avatar');
+  });
+
   it('BUG: si otra ruta ya llevó la fila a `completed`, la liquidación NO la voltea a `failed` (no-op gracioso)', async () => {
     // Mundo concurrente de T4.11 (webhook+poll+sweeper): mientras esta llamada descarga el vídeo, OTRA
     // ruta finaliza la MISMA generación. La liquidación de ESTA llamada re-chequea `completed` bajo el

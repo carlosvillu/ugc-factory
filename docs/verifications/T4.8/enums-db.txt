@@ -1,0 +1,7 @@
+           fal_endpoint           | kind |         aspects          | durations |       resolutions       | maxdur |                 cost                  
+----------------------------------+------+--------------------------+-----------+-------------------------+--------+---------------------------------------
+ fal-ai/veo3.1                    | t2v  | ["9:16", "16:9"]         | [4, 6, 8] | ["720p", "1080p", "4k"] |        | {"unit": "second", "amountCents": 20}
+ fal-ai/veo3.1/image-to-video     | i2v  | ["auto", "9:16", "16:9"] | [4, 6, 8] | ["720p", "1080p", "4k"] | 8      | {"unit": "second", "amountCents": 20}
+ fal-ai/veo3.1/reference-to-video | r2v  | ["9:16", "16:9"]         | [8]       | ["720p", "1080p", "4k"] | 8      | {"unit": "second", "amountCents": 20}
+(3 rows)
+

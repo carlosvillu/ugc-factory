@@ -88,3 +88,40 @@ export function planGeneration(
     clips: scenePlans.flatMap((sp) => sp.clips),
   };
 }
+
+// ── CUANTIZACIÓN DE DURACIÓN AL ENUM DEL MODELO (T4.8, N7d) ────────────────────────────────────────
+// Un `PlannedClip.seconds` es un FLOAT (reparto uniforme del troceo: p. ej. una escena de 15 s en 2
+// clips → 7,5 s cada uno). Pero varios modelos de vídeo de fal NO aceptan una duración libre: exponen
+// un ENUM discreto (Veo 3.1 i2v: `"4s"|"6s"|"8s"`; Veo 3.1 R2V: fijo `"8s"`). Esta función pura mapea
+// los segundos del clip al valor del enum que el executor mandará a fal.
+//
+// DIRECCIÓN = REDONDEO HACIA ARRIBA (nearest enum ≥ seconds). Un clip MÁS CORTO que su ventana
+// narrativa la deja hambrienta (N8 no tendría metraje que cortar); uno MÁS LARGO se recorta a la
+// narración (el planner ya declara que los clips existen para que N8 los recorte — cabecera de
+// `planScene`). Como `planScene` YA topa cada clip a `maxDuration`, sembrar `maxDuration = max(enum)`
+// hace que el redondeo-arriba SIEMPRE caiga dentro del enum y nunca exceda el tope del modelo.
+//
+// ⚠ ASUNCIÓN DOWNSTREAM: N8 (recorte a narración) no existe aún (F5). Hasta entonces el clip puede
+// durar más que su escena; se documenta a propósito (redondeo-arriba es el default defendible).
+//
+// El VALOR DE RETORNO (segundos ENTEROS del enum elegido) es la ÚNICA verdad de duración del clip: el
+// output de Veo i2v/R2V NO trae `duration` (a diferencia del avatar), así que este valor gobierna el
+// payload (`duration:"Ns"`), el coste POR SEGUNDO y `asset.duration_s`. Facturar/persistir cualquier
+// otro número (p. ej. el `clip.seconds` crudo) desincronizaría el ledger de lo que fal generó.
+
+/**
+ * Cuantiza `seconds` al valor MÍNIMO del enum de duración `allowed` que sea ≥ `seconds` (redondeo
+ * hacia arriba). Si `seconds` excede el máximo del enum, devuelve el máximo (clamp — el executor ya
+ * garantiza `seconds ≤ maxDuration = max(enum)` vía el troceo, pero el clamp lo hace total). `allowed`
+ * DEBE ser no vacío; el caller lo obtiene del catálogo del modelo (dialecto del endpoint).
+ */
+export function quantizeDurationToEnum(seconds: number, allowed: readonly number[]): number {
+  if (allowed.length === 0) {
+    throw new Error('quantizeDurationToEnum: el enum de duraciones permitidas está vacío');
+  }
+  // `find` sobre el enum ORDENADO ascendente da el menor valor ≥ `seconds` (redondeo-arriba). Si
+  // `seconds` los excede a todos, se cae al máximo del enum (`Math.max`, fallback de clamp).
+  const sorted = [...allowed].sort((a, b) => a - b);
+  const fit = sorted.find((d) => d >= seconds);
+  return fit ?? Math.max(...allowed);
+}

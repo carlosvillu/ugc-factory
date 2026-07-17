@@ -121,10 +121,47 @@
   },
   {
     "falEndpoint": "fal-ai/veo3.1",
+    "kind": "t2v",
+    "cost": { "unit": "second", "amountCents": 20 },
+    "capabilities": {
+      "audio": true,
+      "aspects": ["9:16", "16:9"],
+      "durations": [4, 6, 8],
+      "resolutions": ["720p", "1080p", "4k"]
+    },
+    "promptAdapter": "i2v",
+    "notes": "Veo 3.1 base = TEXT-TO-VIDEO (verificado 2026-07-17 vs fal.ai/models/fal-ai/veo3.1: input SIN `image_url` ni referencias — solo prompt). Reetiquetado `t2v` (T4.8): estaba `i2v` por error, pero el b-roll i2v/R2V va por los endpoints hermanos `image-to-video`/`reference-to-video` de abajo. `promptAdapter:i2v` es DEUDA T4.11 (el adapter emite `duration_seconds`/`enable_audio` que Veo NO acepta; los executors de N7d hacen BYPASS). Enums exactos `aspect_ratio`/`duration`/`resolution` cerrados (deuda §13.1 l.600). Precio $0,20/s sin audio (720p/1080p); con-audio/4k con `params` en F4."
+  },
+  {
+    "falEndpoint": "fal-ai/veo3.1/image-to-video",
     "kind": "i2v",
     "cost": { "unit": "second", "amountCents": 20 },
-    "capabilities": { "audio": true, "aspects": ["9:16", "16:9"] },
+    "capabilities": {
+      "audio": true,
+      "refImages": 1,
+      "maxDuration": 8,
+      "aspects": ["auto", "9:16", "16:9"],
+      "durations": [4, 6, 8],
+      "resolutions": ["720p", "1080p", "4k"]
+    },
     "promptAdapter": "i2v",
-    "notes": "B-roll Tier Premium (Veo 3.1). Precio verificado 2026-07-15: $0,20/s sin audio, $0,40/s con audio (720p/1080p) — se siembra el precio base sin audio; §13.1 decia $0,15/s fast / $0,40/s std. El precio con-audio y 4k se modelara con `params` en F4."
+    "unverified": true,
+    "notes": "B-roll N7d ruta i2v DESDE KEYFRAME (Veo 3.1 image-to-video, §7.5). Schema verificado 2026-07-17 vs fal openapi `endpoint_id=fal-ai/veo3.1/image-to-video`: input `{prompt(req), image_url(req, start frame = keyframe de N7a), aspect_ratio(auto|16:9|9:16, def auto), duration(4s|6s|8s, def 8s), resolution(720p|1080p|4k, def 720p), generate_audio(def true → N7d lo pone FALSE: b-roll SILENCIOSO, la voz es de N7b; y $0,20/s sin audio vs $0,40/s con), negative_prompt, seed, auto_fix, safety_tolerance}`. Output `{video:{url,...}}` SIN `duration` (la duración del clip = el enum enviado). BYPASS del adapter i2v (emite `duration_seconds`/`enable_audio` que Veo rechaza). `maxDuration:8` = max(durations) para que el troceo §7.5 caiga siempre en el enum. `unverified` hasta el smoke live del verifier (T4.8)."
+  },
+  {
+    "falEndpoint": "fal-ai/veo3.1/reference-to-video",
+    "kind": "r2v",
+    "cost": { "unit": "second", "amountCents": 20 },
+    "capabilities": {
+      "audio": true,
+      "refImages": 3,
+      "maxDuration": 8,
+      "aspects": ["9:16", "16:9"],
+      "durations": [8],
+      "resolutions": ["720p", "1080p", "4k"]
+    },
+    "promptAdapter": "i2v",
+    "unverified": true,
+    "notes": "B-roll N7d ruta R2V — PRODUCTO FIEL en escena (Veo 3.1 reference-to-video, §7.5 «cuando el producto deba regenerarse en escena»). Schema verificado 2026-07-17 vs fal openapi `endpoint_id=fal-ai/veo3.1/reference-to-video`: input `{prompt(req), image_urls(req, ARRAY de referencias del producto → fidelidad de sujeto), aspect_ratio(16:9|9:16, def 16:9), duration FIJO 8s, resolution(720p|1080p|4k, def 720p), generate_audio(def true → N7d FALSE), auto_fix, safety_tolerance}`. Output `{video:{url,...}}` SIN `duration` → clip = 8s. BYPASS del adapter (dialecto `image_urls`, no `image_url`; `duration` fijo). `refImages:3` = hasta 3 packshots del producto. `unverified` hasta el smoke live del verifier (T4.8)."
   }
 ]

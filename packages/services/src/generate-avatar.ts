@@ -339,12 +339,31 @@ export async function runGenerateAvatar(
   } catch (err) {
     // Degradar a `failed` SOLO si la fila NO es ya terminal (`completed`): una ruta concurrente (T4.11)
     // pudo haberla completado legítimamente. Mismo criterio de gracia que la rama `alreadyFinalized`.
-    await db.transaction(async (tx) => {
-      const locked = await getGenerationForUpdate(tx, generation.id);
-      if (locked !== undefined && locked.status !== 'completed') {
-        await updateGeneration(tx, generation.id, { status: 'failed', completedAt: new Date() });
-      }
-    });
+    //
+    // EL CATCH NO PUEDE ENTERRAR LA CAUSA RAÍZ (lección T1.8). Si la tx de degradación LANZA (conexión
+    // caída/timeout justo en el fallo), ese error secundario NO debe propagarse en lugar de `err`: el
+    // operador vería "connection terminated" en vez del fallo REAL de fal. Se envuelve en su propio
+    // try/catch: el fallo del UPDATE se LOGUEA (observabilidad del daño colateral) y SIEMPRE se re-lanza
+    // `err` (la causa raíz), nunca el error de la degradación. (Simetrizado con `runGenerateBroll` en
+    // T4.8: el review de T4.8 encontró que esta copia carecía de la protección.)
+    try {
+      await db.transaction(async (tx) => {
+        const locked = await getGenerationForUpdate(tx, generation.id);
+        if (locked !== undefined && locked.status !== 'completed') {
+          await updateGeneration(tx, generation.id, { status: 'failed', completedAt: new Date() });
+        }
+      });
+    } catch (degradeErr) {
+      log.error(
+        {
+          event: 'fal_avatar_degrade_failed',
+          generationId: generation.id,
+          degradeError: degradeErr instanceof Error ? degradeErr.message : String(degradeErr),
+          originalError: err instanceof Error ? err.message : String(err),
+        },
+        'no se pudo marcar la generación de avatar como failed tras un fallo de fal: la fila puede quedar en un estado no terminal (reconciliable por el sweeper)',
+      );
+    }
     throw err;
   }
 }

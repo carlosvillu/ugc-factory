@@ -9,6 +9,7 @@ export { adaptToPayload, ADAPTER_FAMILIES, type AdapterFamily } from './select-a
 export {
   planScene,
   planGeneration,
+  quantizeDurationToEnum,
   type PlannedClip,
   type ScenePlan,
   type GenerationPlan,

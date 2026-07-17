@@ -1,0 +1,28 @@
+===== i2v-clip1-6s =====
+codec_name=h264
+codec_type=video
+width=720
+height=1280
+duration=6.000000
+  #audio streams: 0
+===== i2v-clip2-8s =====
+codec_name=h264
+codec_type=video
+width=720
+height=1280
+duration=8.000000
+  #audio streams: 0
+===== r2v-clip1-8s =====
+codec_name=h264
+codec_type=video
+width=720
+height=1280
+duration=8.000000
+  #audio streams: 0
+===== r2v-clip2-8s =====
+codec_name=h264
+codec_type=video
+width=720
+height=1280
+duration=8.000000
+  #audio streams: 0

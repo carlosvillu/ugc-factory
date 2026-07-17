@@ -157,6 +157,45 @@ export const N7cConfigSchema = z.object({
 export type N7cConfig = z.infer<typeof N7cConfigSchema>;
 
 /**
+ * Config del step N7d · B-ROLL POR ESCENA (T4.8, §7.2 N7d + §7.5). N7d genera UN clip de vídeo por
+ * ESCENA DEL BODY del guion (§7.5 «el b-roll es el body»): i2v desde un keyframe
+ * (`fal-ai/veo3.1/image-to-video`) o R2V del producto (`fal-ai/veo3.1/reference-to-video`) cuando el
+ * producto debe regenerarse en escena. Las escenas > `maxDuration` del modelo se TROCEAN en clips
+ * (§7.5, `planGeneration` de core); la duración de cada clip se CUANTIZA al enum del modelo
+ * (`quantizeDurationToEnum`).
+ *
+ * `scriptId` es el forward-pointer estable (patrón N7b): el executor lee de la fila `ad_script` REAL sus
+ * `scenes[]` (path de PRODUCCIÓN — NO recibe las escenas por config, que fijaría a mano lo que el
+ * pipeline deriva; trampa T1.13) y FILTRA a `segment: 'body'` (el b-roll es el body).
+ *
+ * `brollEndpoint` decide la RUTA por el `kind` del perfil (i2v → keyframe único; r2v → referencias del
+ * producto). `imageAssetIds` son los assets de imagen de entrada (keyframe de N7a para i2v, packshots
+ * del producto para r2v) — el executor los sube a fal y los pasa como `image_url`/`image_urls[]`. La
+ * costura STEPLESS: el smoke elige endpoint + imágenes por config, sin run/DAG. T4.11 rellenará estos
+ * punteros desde la resolución recipe×tier + los keyframes/packshots reales de la variante, y la
+ * decisión i2v-vs-R2V desde si el producto aparece en la escena.
+ *
+ * `aspect`/`resolution` van explícitos (default 9:16 / 720p) — enums exactos de `capabilities` del
+ * modelo (cierre de deuda §13.1 l.600). El executor los valida contra el catálogo antes de gastar.
+ */
+export const N7dConfigSchema = z.object({
+  /** El guion cuyas escenas de body se materializan en b-roll (fila `ad_script` real). */
+  scriptId: z.string().min(1),
+  /** El endpoint del modelo de b-roll (Veo i2v / Veo R2V). Clave natural del catálogo; el executor
+   *  resuelve el perfil por endpoint y su `kind` decide la ruta (i2v/r2v). */
+  brollEndpoint: z.string().min(1),
+  /** Los `asset` de imagen de entrada: el keyframe (i2v, se usa el primero) o las referencias del
+   *  producto (r2v, hasta `capabilities.refImages`). Al menos uno. */
+  imageAssetIds: z.array(z.string().min(1)).min(1),
+  /** Aspecto vertical del clip (default 9:16). Debe estar en `capabilities.aspects` del modelo. */
+  aspect: z.string().min(1).default('9:16'),
+  /** Preset de resolución (`720p|1080p|4k`, default 720p — §7.5 pide 720p+). Debe estar en
+   *  `capabilities.resolutions` del modelo. */
+  resolution: z.string().min(1).default('720p'),
+});
+export type N7dConfig = z.infer<typeof N7dConfigSchema>;
+
+/**
  * Construye la definición del run de lote (un solo nodo N5) para un proyecto y un lote ya creado.
  *
  * `autopilot=false` + N5 `isCheckpoint` con `alwaysPause`: CP3 —el editor de guiones— es el

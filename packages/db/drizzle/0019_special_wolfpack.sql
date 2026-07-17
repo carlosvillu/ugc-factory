@@ -1,0 +1,2 @@
+ALTER TABLE "generation" ADD COLUMN "voice_preview" boolean DEFAULT false NOT NULL;--> statement-breakpoint
+CREATE UNIQUE INDEX "generation_voice_preview_content_hash_key" ON "generation" USING btree ("content_hash") WHERE "generation"."voice_preview" = true;

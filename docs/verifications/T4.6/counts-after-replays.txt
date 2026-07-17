@@ -1,0 +1,5 @@
+==AFTER 5 replays==
+vp_gen=1
+fal_entries=22
+fal_cents=8
+fal_chars=400

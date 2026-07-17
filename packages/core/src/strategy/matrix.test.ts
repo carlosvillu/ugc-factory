@@ -328,6 +328,49 @@ describe('la persona: clave ESTABLE y señal de por qué no hay ninguna', () => 
     expect(despues.variants[0]?.personaName).toBe('Lucía Renombrada');
   });
 
+  it('un lote NUEVO PERSISTE el `personaId` estable en cada variante (T4.6, la clave del preview de voz)', () => {
+    // CP3 (T4.6) resuelve el `voice_map` por `personaId`, no por nombre. `composeMatrix` DEBE poblarlo
+    // en el plan de un lote nuevo (antes de T4.6 solo persistía el nombre). Si alguien deja de poblarlo,
+    // este test se pone rojo — el preview de CP3 se quedaría sin clave estable.
+    const plan = composeMatrix({
+      ...BASE,
+      personas: [LUCIA_ID],
+      angleCount: 1,
+      hooksPerAngle: 2,
+      languages: ['es'],
+      objective: 'conversion' as const, // sin body/cta compartidos: cada variante lleva su persona
+    });
+    expect(plan.variants.length).toBeGreaterThan(0);
+    expect(plan.variants.every((v) => v.personaId === LUCIA_ID.id)).toBe(true);
+  });
+
+  it('una matriz LEGACY (sin `personaId`) parsea OK y colapsa a `null` — tolerancia a lotes pre-T4.6', () => {
+    // `readBatchScripts` (CP3) corre `BatchPlanSchema.parse` sobre la `ad_batch.matrix` PERSISTIDA. Una
+    // matriz guardada ANTES de T4.6 no trae `personaId`; sin el `.default(null)` del contrato, el parse
+    // LANZARÍA y tumbaría la pantalla ENTERA de CP3. Este test ANCLA la tolerancia: una variante legacy
+    // sin el campo debe parsear y quedar `personaId: null` (semánticamente: sin persona → sin preview).
+    // Si alguien vuelve a hacer `personaId` requerido, este test MUERDE.
+    const nuevo = composeMatrix({
+      ...BASE,
+      personas: [LUCIA_ID],
+      angleCount: 1,
+      hooksPerAngle: 2,
+      languages: ['es'],
+      objective: 'conversion' as const,
+    });
+    // Simula la forma LEGACY: se elimina `personaId` de cada variante del plan persistido.
+    const legacy = {
+      ...nuevo,
+      variants: nuevo.variants.map((v) => {
+        const { personaId: _omit, ...rest } = v;
+        return rest;
+      }),
+    };
+    const parsed = BatchPlanSchema.parse(legacy);
+    expect(parsed.variants.length).toBe(nuevo.variants.length);
+    expect(parsed.variants.every((v) => v.personaId === null)).toBe(true);
+  });
+
   it('personaSelection distingue «no había personas» de «ninguna casó» (CP2 puede decir la verdad)', () => {
     const base = {
       ...BASE,

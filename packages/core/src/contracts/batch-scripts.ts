@@ -29,6 +29,10 @@ export const BatchScriptSchema = z.object({
   angleName: z.string().min(1),
   /** La persona asignada, o `null` si el lote rota / no casó ninguna (§11). */
   personaName: z.string().nullable(),
+  /** El ID ESTABLE de la persona asignada, o `null` (§11). CP3 (T4.6) lo usa como clave para resolver
+   *  el `voice_map` de la Persona y previsualizar su voz — `personaName` no es clave estable
+   *  (renombrable, no único). Sale de `PlannedVariant.personaId` (la matriz del lote). */
+  personaId: z.string().nullable(),
   /** El guion vigente COMPLETO y válido (con `filenameCode`/`sharedBodyKey` reconstruidos). */
   script: AdScriptSchema,
   /** Los flags de compliance de la versión vigente (§15.2): lo que CP3 resalta y lo que BLOQUEA la

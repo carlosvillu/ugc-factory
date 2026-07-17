@@ -45,6 +45,7 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { MetricsTable, type MetricsTableColumn } from '@/components/ui/metrics-table';
 import { Select } from '@/components/ui/select';
+import { VoicePreviewButton } from '@/components/checkpoints/voice-preview-button';
 
 export interface MatrixPanelProps {
   /** El step de CP2 (N4 en `waiting_approval`): a él va la aprobación con la decisión, y de él
@@ -442,24 +443,46 @@ export function MatrixPanel({ stepId, brief, config: initialConfig }: MatrixPane
                 </span>
               </button>
               {candidates.map((p) => (
-                <button
-                  key={p.id}
-                  type="button"
-                  role="radio"
-                  aria-checked={config.personaMode === 'fixed' && config.personaId === p.id}
-                  data-slot={`persona-${p.id}`}
-                  onClick={() => {
-                    selectPersona(p.id);
-                  }}
-                  className={cardButtonClass(
-                    config.personaMode === 'fixed' && config.personaId === p.id,
-                  )}
-                >
-                  <span className="text-mono font-semibold">{p.name}</span>
-                  <span className="mt-1 block text-micro text-text-3">
-                    {p.ageRange} · {p.gender} · {p.ethnicity} · {p.style}
-                  </span>
-                </button>
+                <div key={p.id} className="flex flex-col gap-1.5">
+                  <button
+                    type="button"
+                    role="radio"
+                    aria-checked={config.personaMode === 'fixed' && config.personaId === p.id}
+                    data-slot={`persona-${p.id}`}
+                    onClick={() => {
+                      selectPersona(p.id);
+                    }}
+                    className={cardButtonClass(
+                      config.personaMode === 'fixed' && config.personaId === p.id,
+                    )}
+                  >
+                    <span className="text-mono font-semibold">{p.name}</span>
+                    <span className="mt-1 block text-micro text-text-3">
+                      {p.ageRange} · {p.gender} · {p.ethnicity} · {p.style}
+                    </span>
+                  </button>
+                  {/* PREVIEW DE VOZ (T4.6, §8.3): un ▶ por idioma del lote para escuchar la voz de esta
+                      persona ANTES de gastar render. Solo los idiomas para los que la persona tiene
+                      voz asignada (voice_map) — el resto no reproduciría nada. */}
+                  <div
+                    className="flex flex-wrap items-center gap-1.5"
+                    data-slot={`persona-voice-previews-${p.id}`}
+                  >
+                    {config.languages.map((lang) => {
+                      if (p.voiceMap[lang] === undefined) return null;
+                      const langLabel = LANGUAGES.find((l) => l.code === lang)?.label ?? lang;
+                      return (
+                        <VoicePreviewButton
+                          key={lang}
+                          personaId={p.id}
+                          language={lang}
+                          languageLabel={langLabel}
+                          personaName={p.name}
+                        />
+                      );
+                    })}
+                  </div>
+                </div>
               ))}
             </div>
           </Section>

@@ -594,7 +594,7 @@ Decisiones del usuario (2026-07-07): la fase se ejecuta tras T0.1 y **antes** de
 - **Coste estimado**: ~$0,30 (TTS + ASR de 2 guiones)
 - **Verificación**: para un guion es y otro en, los audios suenan correctos en idioma y voz esperados; los word timestamps cubren el 100 % de las palabras y, medidos contra el onset visible en un editor de waveform (Audacity/`ffmpeg astats`) en 3 palabras concretas, difieren <±100 ms; resultado del `[verificar]` anotado en `model_profile` y en PRD §13.1.
 
-#### T4.6 · Preview de voz en CP2/CP3
+#### T4.6 · Preview de voz en CP2/CP3 [x] 2026-07-17 — PASS, ver docs/verifications/T4.6/ (coste real ≈$0,00 fal — 2 muestras sub-céntimo)
 - **Depende de**: T4.5, T2.3, T2.6 *(el botón ▶ vive en los paneles de CP2/CP3)*
 - **Entrega**: muestras de voz por Persona/idioma (generadas una vez, cacheadas) escuchables en CP2/CP3 **antes** de gastar render (§8.3 — por eso esta tarea va antes que el resto de N7).
 - **Coste estimado**: ~$0,20 (muestras que quedan cacheadas)
@@ -627,6 +627,7 @@ Decisiones del usuario (2026-07-07): la fase se ejecuta tras T0.1 y **antes** de
 
 #### T4.11 · Sub-DAG de N7 en el canvas + E2E de fase
 - **Depende de**: T4.4, T4.6, T4.7, T4.8, T4.9, T4.10, T0.11
+- **Deuda T4.6 (seam de intercepción fal en E2E)**: el preview de voz intercepta fal en E2E con `makeFalPreviewFetch` (reescritura por-origen del `fetch`, vive en `apps/web/src/server/voice-preview.ts`), NO con un `baseUrl` de primera clase en `FalClientDeps` como sus clientes hermanos (`anthropic-client`, `firecrawl`). Se dejó ahí a PROPÓSITO: la Verificación de T4.6 solo ejercita el path web, y el seam en core rinde en el path del **worker**, que no existe hasta que N7b/N7a corran en el full-stack E2E de ESTA tarea. **T4.11 debe mover la intercepción a `FalClientDeps` (reescritura POR-ORIGEN, no `baseUrl`-prepend — fal emite `status_url`/`response_url` ABSOLUTOS y auto-referenciales que el cliente SIGUE; un prepend naïve reescribiría el submit pero no el poll/download → fuga a fal real; verificar el modelo de URL de fal antes de codificar) y borrar `makeFalPreviewFetch`/`FAL_ORIGINS`** — así el worker queda cubierto por el mismo seam.
 - **Entrega**: nodo compuesto N7 por variante (expandible a N7a–N7e) con thumbnails/players por asset; N6 visible con su `resolvedPrompt`; coste estimado vs real por sub-step; retry granular.
 - **Coste estimado**: ~$6 (variante completa + retries)
 - **Playwright permanente**: `apps/web/e2e/phases/f4-generation.spec.ts` (`@f4 @phase`) usa fal fake y conserva expansión N7a–N7e, previews, `resolvedPrompt`, coste por sub-step, fallo determinista y retry granular sin reiniciar los hermanos sanos.

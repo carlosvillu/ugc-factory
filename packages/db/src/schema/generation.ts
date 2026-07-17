@@ -5,6 +5,7 @@
 // columnas de composición (`word_timestamps`, `parent_asset_ids`,
 // `normalized_cache_key`, §9.7) siguen sin anticiparse: llegan en F5 con su
 // consumidor.
+import { sql } from 'drizzle-orm';
 import {
   boolean,
   integer,
@@ -162,6 +163,17 @@ export const generation = pgTable(
     // `false`: la inmensa mayoría de generaciones (Persona, avatar, b-roll de foto real) no
     // son packshots sintéticos.
     syntheticProduct: boolean('synthetic_product').notNull().default(false),
+    // DISCRIMINADOR DE PRIMERA CLASE (T4.6, §8.3): `true` cuando esta generación es una MUESTRA DE
+    // PREVIEW DE VOZ (el botón ▶ de CP2/CP3), no un voiceover de producción. Precedente
+    // `synthetic_product` de T4.4: `generation` NO tiene columna `kind` propia, así que las
+    // procedencias que necesitan gatear un ÍNDICE o una query se modelan como booleanos de primera
+    // clase FUERA de `content_hash`. Aquí gatea la CACHÉ SCOPED de previews: el índice único parcial de
+    // abajo impone unicidad de `content_hash` SOLO entre previews (lookup-then-insert atómico, patrón
+    // `url_analysis`), sin tocar la unicidad GLOBAL de `content_hash` que T4.10 decide deliberadamente
+    // (N7a/N7b/retries de producción NO esperan unicidad de hash). Así "5 reproducciones, 0 coste"
+    // queda garantizado a nivel BD incluso con clicks concurrentes. Default `false`: la inmensa mayoría
+    // de generaciones (imagen, voiceover de producción) no son previews.
+    voicePreview: boolean('voice_preview').notNull().default(false),
     startedAt: timestamp('started_at', { withTimezone: true }),
     completedAt: timestamp('completed_at', { withTimezone: true }),
     ...timestamps,
@@ -174,6 +186,17 @@ export const generation = pgTable(
     // filas `submitting` conviven sin colisionar y la unicidad solo muerde una vez que fal
     // devuelve el id.
     uniqueIndex('generation_fal_request_id_key').on(t.falRequestId),
+    // CACHÉ SCOPED DE PREVIEWS DE VOZ (T4.6): unicidad de `content_hash` SOLO entre las filas
+    // `voice_preview=true`. Índice PARCIAL (el `WHERE`) — deliberadamente NO global: la unicidad
+    // global de `content_hash` la decide T4.10, y N7a/N7b/retries de producción NO la esperan. El
+    // `content_hash` de un preview lo determinan voz+modelo+idioma+texto de muestra fijo, así que dos
+    // clicks del MISMO ▶ colisionan aquí y el `ON CONFLICT DO NOTHING` del repo hace que el segundo no
+    // cree fila ni cost_entry (garantía "N plays, 0 coste" a nivel BD). `content_hash` es nullable,
+    // pero un preview SIEMPRE lo pobla; Postgres permite múltiples NULLs en un índice único, así que
+    // las generaciones no-preview (excluidas por el `WHERE`) y cualquier preview sin hash conviven.
+    uniqueIndex('generation_voice_preview_content_hash_key')
+      .on(t.contentHash)
+      .where(sql`${t.voicePreview} = true`),
   ],
 );
 

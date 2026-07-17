@@ -7,7 +7,7 @@
 // El estado canónico de la generación vive AQUÍ, no en el queue de fal (backend §2). El
 // servicio persiste-primero; estas funciones son las escrituras deterministas que lo
 // hacen reconciliable (T4.3 releerá `status_url` de estas filas sin re-submit).
-import { and, eq, inArray } from 'drizzle-orm';
+import { and, eq, inArray, sql } from 'drizzle-orm';
 import { RECONCILABLE_STATUSES } from '@ugc/core/generation';
 import type { Db } from '../client';
 import { generation, type Generation, type NewGeneration } from '../schema/generation';
@@ -21,6 +21,62 @@ import { generation, type Generation, type NewGeneration } from '../schema/gener
 export async function createGeneration(db: Db, values: NewGeneration): Promise<Generation> {
   const [row] = await db.insert(generation).values(values).returning();
   if (!row) throw new Error('createGeneration: INSERT no devolvió fila');
+  return row;
+}
+
+// ── Caché SCOPED de previews de voz (T4.6, §8.3) ────────────────────────────────
+// Patrón lookup-then-insert de `url_analysis.repo` sobre el índice único PARCIAL
+// `generation_voice_preview_content_hash_key` (unicidad de `content_hash` SOLO entre
+// `voice_preview=true`). NO toca la unicidad global de `content_hash` (eso es T4.10).
+
+/**
+ * Lookup de la caché de un preview de voz PREVIO por su `content_hash` (T4.6). La caché es
+ * lookup-then-insert a nivel de aplicación (NO un constraint que rompa la inserción): el servicio
+ * llama a esto ANTES de generar y, si hay fila `completed`, reutiliza su asset SIN una segunda
+ * llamada a fal ni un segundo `cost_entry` — así "N reproducciones, 0 coste". Gateado por
+ * `voice_preview=true` (el índice parcial garantiza ≤1 fila por hash entre previews). `undefined` si
+ * no hay caché (es una muestra nueva a generar).
+ */
+export async function getVoicePreviewGenerationByContentHash(
+  db: Db,
+  contentHash: string,
+): Promise<Generation | undefined> {
+  const [row] = await db
+    .select()
+    .from(generation)
+    .where(and(eq(generation.contentHash, contentHash), eq(generation.voicePreview, true)))
+    // El índice único parcial garantiza ≤1 fila; `limit(1)` por higiene (determinista).
+    .limit(1);
+  return row;
+}
+
+/**
+ * Inserta la INTENCIÓN de un preview de voz en `submitting` SI NO EXISTE ya una fila preview con el
+ * mismo `content_hash` — `ON CONFLICT DO NOTHING` contra el índice único parcial
+ * `generation_voice_preview_content_hash_key`. Es la escritura ATÓMICA de la caché (§8.3): dos clicks
+ * concurrentes del MISMO ▶ NO crean dos generaciones (ni dos `cost_entry`) — la segunda choca y el
+ * INSERT no devuelve fila. `voice_preview` se fuerza a `true` aquí (es la clave del scope). Retorno:
+ *  - la fila creada, si ESTE insert ganó la carrera (created → el caller sigue con submit→poll→…);
+ *  - `undefined`, si otra transacción ya la insertó (el caller re-SELECTa y reutiliza su asset).
+ */
+export async function insertVoicePreviewGenerationIfAbsent(
+  db: Db,
+  values: NewGeneration,
+): Promise<Generation | undefined> {
+  const [row] = await db
+    .insert(generation)
+    .values({ ...values, voicePreview: true })
+    // Target del índice único PARCIAL: la columna + el MISMO predicado literal que el índice. El
+    // predicado DEBE ser un literal (no un parámetro `$1`): el arbiter de Postgres compara el
+    // predicado del ON CONFLICT con el del índice y un parámetro no casa (42P10) — por eso `sql` con
+    // el literal exacto de `generation_voice_preview_content_hash_key` (mismo criterio que
+    // `insertManualUrlAnalysisIfAbsent`).
+    .onConflictDoNothing({
+      target: generation.contentHash,
+      where: sql`${generation.voicePreview} = true`,
+    })
+    .returning();
+  // `undefined` cuando hubo conflicto (otra tx insertó primero): NO es un error.
   return row;
 }
 

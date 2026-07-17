@@ -34,6 +34,10 @@ export {
   VOICE_PROVIDER_LABEL,
   REFERENCE_IMAGES_MIN,
   MIN_REFERENCE_LONG_EDGE_PX,
+  // Preview de voz (T4.6, §8.3): body (idioma) y respuesta (assetId+cached) del botón ▶ de CP2/CP3.
+  VoicePreviewRequestSchema,
+  VoicePreviewResponseSchema,
+  type VoicePreviewResponse,
   type Persona,
   type PersonaBody,
   type PersonaPatch,

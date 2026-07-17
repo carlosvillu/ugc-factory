@@ -1,0 +1,6 @@
+             id             |           fal_endpoint           |  status   | cost_actual 
+----------------------------+----------------------------------+-----------+-------------
+ 01KXQNE9NK12D9XHFJ81XTYMP1 | fal-ai/elevenlabs/tts/turbo-v2.5 | completed |           0
+ 01KXQNZKMJ1QS9CFBM17HYEDJY | fal-ai/kokoro                    | completed |           0
+(2 rows)
+

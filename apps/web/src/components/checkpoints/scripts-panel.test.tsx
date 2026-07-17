@@ -71,6 +71,7 @@ const CLEAN: BatchScript = {
   filenameCode: 'acme-hook01-es-12s',
   angleName: 'Ángulo limpio',
   personaName: 'Lucía',
+  personaId: '01J0000000000000000LUCIA0',
   script: makeScript('acme-hook01-es-12s', {
     hook: 'esto lo cambia todo hoy',
     body: 'lo probé una semana entera y funciona',
@@ -84,6 +85,7 @@ const BLOCKED: BatchScript = {
   filenameCode: 'acme-hook02-es-12s',
   angleName: 'Ángulo bloqueante',
   personaName: null,
+  personaId: null,
   script: makeScript('acme-hook02-es-12s', {
     hook: 'esta crema cura el acné seguro',
     body: 'lo probé una semana entera y funciona',

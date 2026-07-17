@@ -67,6 +67,22 @@ export const PlannedVariantSchema = z.object({
   hook: PlannedHookSchema,
   /** `null` = persona sin fijar: «el usuario puede fijar o dejar que rote para el A/B» (§11). */
   personaName: z.string().min(1).nullable(),
+  /**
+   * El ID ESTABLE (`persona.id`) de la persona asignada, o `null` si ninguna casó/rotó (§11). El
+   * compositor YA usaba el id para las claves de dedup/filename (`personaKey`, estable ante
+   * renombrados) — hasta T4.6 no se PERSISTÍA en el plan, solo el nombre. Se añade porque CP3 (T4.6)
+   * necesita una clave estable para resolver el `voice_map` de la Persona y previsualizar su voz: el
+   * `personaName` no es clave (renombrar rompería el lookup, y dos personas podrían compartir nombre).
+   * `null` cuando `personaName` es `null` (van juntos: misma persona o ninguna).
+   *
+   * `.default(null)`: TOLERANTE a matrices LEGACY. `readBatchScripts` (CP3) corre `BatchPlanSchema.parse`
+   * sobre la `ad_batch.matrix` PERSISTIDA; una matriz guardada ANTES de T4.6 no trae este campo, y sin el
+   * default el `parse` LANZARÍA y tumbaría la pantalla ENTERA de CP3 (no solo el ▶). Una variante vieja sin
+   * el campo colapsa a `null` — semánticamente correcto (sin persona → sin preview, ya soportado por
+   * `meta.personaId !== null`). NO debilita el contrato de ESCRITURA: `composeMatrix` lo puebla SIEMPRE
+   * en lotes nuevos.
+   */
+  personaId: z.string().min(1).nullable().default(null),
   language: z.string().min(1),
   /** Duración objetivo en segundos (el preset del lote, §8.4) → `ad_variant.duration_target`. */
   durationTargetSeconds: z.number().int().positive(),

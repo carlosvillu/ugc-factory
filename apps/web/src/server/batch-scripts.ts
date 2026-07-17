@@ -80,6 +80,7 @@ export async function readBatchScripts(db: Db, batchId: string): Promise<BatchSc
       filenameCode: row.filenameCode,
       angleName: planned.angleName,
       personaName: planned.personaName,
+      personaId: planned.personaId,
       script: reconstructScript(row.script, row.filenameCode, sharedBodyKey),
       guardrailFlags: parseFlags(row.script.guardrailFlags),
     });

@@ -171,6 +171,23 @@ export const PersonaCandidateListSchema = z.object({
 });
 
 /**
+ * Respuesta de `POST /api/personas/:id/voice-preview` (T4.6, §8.3): el asset de la muestra de voz a
+ * reproducir + si vino de caché. El `<audio src>` del ▶ apunta a `/api/assets/${assetId}/download`.
+ * `cached` es observable de la garantía "N reproducciones, 0 coste" (aunque la comprobación fuerte es
+ * el conteo de `cost_entry` en `/spend`, este flag da señal directa al cliente/tests).
+ */
+export const VoicePreviewResponseSchema = z.object({
+  assetId: z.string().min(1),
+  cached: z.boolean(),
+});
+export type VoicePreviewResponse = z.infer<typeof VoicePreviewResponseSchema>;
+
+/** Body de `POST /api/personas/:id/voice-preview`: el idioma de la variante cuya voz previsualizar. */
+export const VoicePreviewRequestSchema = z.object({
+  language: LocaleKeySchema,
+});
+
+/**
  * MÍNIMO de imágenes de referencia por persona (§11: «retratos consistentes, mismo sujeto en
  * 2–3 encuadres»). No lo impone la BD (una persona nace sin imágenes y se le suben después):
  * lo impone la UI y lo comprueba la Verificación («crear una persona con 2 imágenes ≥2K»).

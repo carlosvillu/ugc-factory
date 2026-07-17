@@ -120,6 +120,8 @@ export {
   listGenerationsByStatus,
   listReconcilableGenerations,
   claimGenerationForReconcile,
+  getVoicePreviewGenerationByContentHash,
+  insertVoicePreviewGenerationIfAbsent,
 } from './repos/generation.repo';
 export type { GenerationPatch } from './repos/generation.repo';
 export type { Generation, NewGeneration } from './schema/generation';

@@ -311,6 +311,9 @@ export function composeMatrix(input: ComposeMatrixInput): BatchPlan {
         );
         const persona = pickPersona(candidates, rotationIndex);
         const personaName = persona?.name ?? null;
+        // El ID ESTABLE de la persona (T4.6): CP3 lo usa para resolver el voice_map y previsualizar la
+        // voz. `undefined` (persona estructural sin id) → `null`, coherente con `personaName`.
+        const personaId = persona?.id ?? null;
         // La clave de dedup/filename usa el `id` (estable ante renombrados), NO el nombre.
         const personaSlug = persona ? slugify(personaKey(persona), 12) : 'norot';
         const hookCode = `hook${String(hookIndex + 1).padStart(2, '0')}`;
@@ -333,6 +336,7 @@ export function composeMatrix(input: ComposeMatrixInput): BatchPlan {
           framework: angle.framework,
           hook,
           personaName,
+          personaId,
           language,
           durationTargetSeconds: preset.targetSeconds,
           // §8.3: el filename codifica la combinación. Lleva el hook y el idioma, que es lo

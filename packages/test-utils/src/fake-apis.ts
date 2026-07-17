@@ -15,6 +15,8 @@
 // su `usage`). Si el productor real cambia, se cambia el fixture — y el fake le sigue.
 import { createServer, type Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import {
   FIRECRAWL_LANDING_RICH,
   FIRECRAWL_LANDING_DISCOVERY_LINKS,
@@ -371,6 +373,8 @@ export interface FakeExternalApis {
   jinaBaseUrl: string;
   /** Base URL del Anthropic falso (para `anthropicBaseUrl`). */
   anthropicBaseUrl: string;
+  /** Base URL del fal falso (para `FAL_BASE_URL`, T4.6): web reescribe `queue.fal.run` aquí. */
+  falBaseUrl: string;
   /** Para el shutdown del stack. */
   close: () => Promise<void>;
 }
@@ -418,6 +422,12 @@ export async function startFakeExternalApis(): Promise<FakeExternalApis> {
   // antes de servirla, así que un fixture con bytes inventados fallaría el decode y toda candidata
   // saldría inservible — el test pasaría por la razón equivocada. Se genera una vez, perezosamente.
   let png: Uint8Array | undefined;
+
+  // El .wav de la muestra de voz (T4.6), leído perezosamente la primera vez que se sirve. Y un
+  // contador de submits al queue de fal para dar request_ids únicos (dos previews distintos no deben
+  // colisionar en la misma pasada).
+  let wav: Buffer | undefined;
+  let falSubmitCounter = 0;
 
   async function handle(
     req: import('node:http').IncomingMessage,
@@ -541,6 +551,63 @@ export async function startFakeExternalApis(): Promise<FakeExternalApis> {
       return;
     }
 
+    // ── fal.ai: queue del TTS (T4.6) ────────────────────────────────────────────
+    // El preview de voz llama a fal por el `fetch` que web reescribe (queue.fal.run → este fake, vía
+    // FAL_BASE_URL). Se finge SOLO lo que el TTS-only necesita: submit → status COMPLETED → response
+    // con `{audio:{url}}` → descarga del .wav fixture. NADA de ASR (un preview no lo encadena). El
+    // request_id se deriva del endpoint + un contador para que dos submits no colisionen; status y
+    // response cuelgan de ESTE origen, así que el FalClient los sigue directamente (sin más reescritura).
+    // POST del submit del queue: `/{owner}/{alias}` (p. ej. `/fal-ai/kokoro` o
+    // `/fal-ai/elevenlabs/tts/turbo-v2.5`). Se reconoce por el prefijo `fal-ai/` y que NO sea una
+    // sub-ruta de `requests/`.
+    const isFalSubmit =
+      req.method === 'POST' &&
+      url.pathname.startsWith('/fal-ai/') &&
+      !url.pathname.includes('/requests/');
+    if (isFalSubmit) {
+      const endpoint = url.pathname.slice(1); // sin el '/' inicial
+      falSubmitCounter += 1;
+      const requestId = `fake-${String(falSubmitCounter)}`;
+      const responseUrl = `${origin}/${endpoint}/requests/${requestId}`;
+      json({
+        request_id: requestId,
+        status_url: `${responseUrl}/status`,
+        response_url: responseUrl,
+        cancel_url: `${responseUrl}/cancel`,
+        status: 'IN_QUEUE',
+      });
+      return;
+    }
+    // GET del status del queue: `/{endpoint}/requests/{id}/status` → COMPLETED de una (fake determinista).
+    if (
+      req.method === 'GET' &&
+      url.pathname.startsWith('/fal-ai/') &&
+      url.pathname.endsWith('/status')
+    ) {
+      json({ status: 'COMPLETED' });
+      return;
+    }
+    // GET del resultado del queue: `/{endpoint}/requests/{id}` → el output de AUDIO `{audio:{url}}`
+    // apuntando al .wav servido por este mismo fake.
+    if (
+      req.method === 'GET' &&
+      url.pathname.startsWith('/fal-ai/') &&
+      url.pathname.includes('/requests/') &&
+      !url.pathname.endsWith('/status')
+    ) {
+      json({ audio: { url: `${origin}/fal-media/voice-sample.wav`, content_type: 'audio/wav' } });
+      return;
+    }
+    // Descarga del .wav del output (URL pública que el "response" emitió).
+    if (req.method === 'GET' && url.pathname === '/fal-media/voice-sample.wav') {
+      wav ??= readFileSync(
+        fileURLToPath(new URL('../fixtures/media/voice-sample.wav', import.meta.url)),
+      );
+      res.writeHead(200, { 'content-type': 'audio/wav', 'content-length': String(wav.byteLength) });
+      res.end(wav);
+      return;
+    }
+
     // ── Jina (fallback del scraping): markdown plano ────────────────────────────
     if (req.method === 'GET') {
       res.writeHead(200, { 'content-type': 'text/plain; charset=utf-8' });
@@ -565,6 +632,7 @@ export async function startFakeExternalApis(): Promise<FakeExternalApis> {
     firecrawlBaseUrl: base,
     jinaBaseUrl: base,
     anthropicBaseUrl: base,
+    falBaseUrl: base,
     close: () =>
       new Promise<void>((resolve) => {
         server.close(() => {

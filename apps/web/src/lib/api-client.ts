@@ -17,6 +17,7 @@ import {
 import {
   PersonaCandidateListSchema,
   PersonaSchema,
+  VoicePreviewResponseSchema,
   type PersonaBody,
   type PersonaPatch,
 } from '@ugc/core/persona';
@@ -263,6 +264,12 @@ export const personaActions = {
     apiFetch(`/api/personas/${id}/reference-images/${assetId}`, PersonaSchema, {
       method: 'DELETE',
     }),
+  /** Genera (o reutiliza de caché) una MUESTRA DE VOZ de la persona en un idioma (T4.6, §8.3): el ▶
+   *  de CP2/CP3. Devuelve `{assetId, cached}`; el `<audio src>` apunta a
+   *  `/api/assets/${assetId}/download`. Reproducir la muestra N veces NO añade coste (caché scoped en
+   *  el servidor: un hit no toca fal ni el ledger). */
+  voicePreview: (id: string, language: string) =>
+    api.post(`/api/personas/${id}/voice-preview`, VoicePreviewResponseSchema, { language }),
 };
 
 // ── CP2 · matriz y coste del lote (T2.3) ─────────────────────────────────────

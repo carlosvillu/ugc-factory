@@ -27,6 +27,12 @@ export { runGenerate, uploadInputCached } from './generate';
 // con word timestamps. Servicio NUEVO (no `runGenerate`, cuyo tail es solo-imagen). Lo consume el
 // smoke del verifier y, en T4.11, el executor N7b.
 export { runGenerateAudio } from './generate-audio';
+// Preview de voz TTS-only cacheado (T4.6, §8.3): la muestra por Persona/idioma que el botón ▶ de
+// CP2/CP3 reproduce ANTES de gastar render. Comparte el scaffold submit→poll→download con
+// `runGenerateAudio` pero SIN ASR (un preview no necesita timestamps) y con caché scoped
+// (`voice_preview=true`) para que N reproducciones no añadan coste. Lo consume el route handler
+// `POST /api/personas/[id]/voice-preview`.
+export { runTtsOnly, type VoicePreviewResult } from './generate-audio';
 // Submit VÍA WEBHOOK sin polling (T4.2, §9.6): deja la fila `generation` en `submitted` keyed por
 // el request_id REAL de fal; la completion la conduce el webhook. Lo consume el smoke del verifier.
 export { submitGenerationForWebhook } from './submit-generation';

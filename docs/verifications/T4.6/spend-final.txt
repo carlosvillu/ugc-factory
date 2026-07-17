@@ -1,0 +1,8 @@
+Gasto total
+$2.09
+Anthropic	411 461	tokens	$2.01
+fal.ai	483	chars	$0.08
+Firecrawl	17	credits	$0.00
+2026-07-14	$1.06
+2026-07-15	$0.78
+2026-07-16	$0.08

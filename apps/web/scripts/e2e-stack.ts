@@ -81,6 +81,9 @@ const { db: seedDb, pool: seedPool } = createDbPool(connectionString);
 const secretsKey = deriveSecretsKey(masterKey);
 await seedSecretIfAbsent(seedDb, 'firecrawl', encryptSecret('fake-firecrawl-key', secretsKey));
 await seedSecretIfAbsent(seedDb, 'anthropic', encryptSecret('fake-anthropic-key', secretsKey));
+// La API key de fal (T4.6): el preview de voz de CP2/CP3 la descifra para llamar al TTS. FALSA — el
+// submit viaja al fake de fal (FAL_BASE_URL de abajo), nunca a fal real.
+await seedSecretIfAbsent(seedDb, 'fal', encryptSecret('fake-fal-key', secretsKey));
 
 // LA LIBRERÍA Y LAS PERSONAS (T2.1/T2.0), sembradas con LOS SEEDS REALES — no con fixtures de
 // juguete. Esto no es decoración del stack: **CP2 (T2.3) no existe sin ellas.**
@@ -120,6 +123,11 @@ const env: NodeJS.ProcessEnv = {
   FIRECRAWL_BASE_URL: fakeApis.firecrawlBaseUrl,
   JINA_BASE_URL: fakeApis.jinaBaseUrl,
   ANTHROPIC_BASE_URL: fakeApis.anthropicBaseUrl,
+  // fal (T4.6): el route del preview de voz reescribe `queue.fal.run` a este fake vía el `fetch`
+  // inyectado — así el submit del SDK y el polling/descarga caen en el servidor local y la suite
+  // JAMÁS gasta dinero. Fijado INCONDICIONALMENTE (mismo criterio que el resto): un shell con la URL
+  // real de fal no debe filtrar una llamada de pago.
+  FAL_BASE_URL: fakeApis.falBaseUrl,
   // StorageAdapter local (T0.5): web sirve /api/assets/:id/download desde aquí.
   // Fijado incondicionalmente (no `?? process.env.ASSETS_DIR`): un shell limpio
   // (`env -u ASSETS_DIR`) debe pasar igual — el fix no puede depender del entorno

@@ -28,6 +28,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
+import { VoicePreviewButton } from '@/components/checkpoints/voice-preview-button';
 
 export interface ScriptsPanelProps {
   /** El step de CP3 (N5 en `waiting_approval`): a él van los veredictos. */
@@ -292,6 +293,17 @@ function VariantCard({
           <Badge tone="neutral" mono>
             {script.language}
           </Badge>
+          {/* PREVIEW DE VOZ (T4.6, §8.3): ▶ para escuchar la voz de la persona de esta variante en su
+              idioma, ANTES de gastar render. Solo si la variante tiene persona fijada (`personaId`):
+              una variante «sin persona» (rotación no resuelta) no tiene voz que previsualizar. */}
+          {meta.personaId !== null && meta.personaName !== null ? (
+            <VoicePreviewButton
+              personaId={meta.personaId}
+              language={script.language}
+              languageLabel={script.language}
+              personaName={meta.personaName}
+            />
+          ) : null}
         </div>
       </div>
 

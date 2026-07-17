@@ -1759,3 +1759,16 @@ Esta tarea se salvó **tres veces** por ir al servicio REAL en vez de fiarse de 
 - **Rareza de entorno**: un `pnpm dev` UGC previo en :3001 (tree/DB desconocidos) daba 500 en el download sin auth; el verifier lo descartó y levantó su propio server en :3005 sobre el DATABASE_URL/ASSETS_DIR reales (401 correcto sin auth). Artefacto del server viejo, ajeno al veredicto.
 - **Deuda anotada**: en planning T4.11 (finalizer de vídeo compartido + t2v/i2v incoherente + requireContext). Sigue viva la deuda kind-aware del sweeper/output-download (una generación de VÍDEO recogida por la vía de imagen del sweeper explotaría — T4.11 antes de cablear N7c/N7d al DAG).
 - **Siguiente**: T4.9 (N7e bed musical IA, ~$0,30, dep T4.1[x]) elegible; T4.10 (dedup, dep T4.5/T4.7/T4.8 — ahora las 3 cerradas) también elegible.
+
+## 2026-07-17 · arnés: guardrails de realidad, dinero y premisas (auditoría del journal)
+- **Contexto**: auditoría de las 1752 entradas del journal (F0→F4) buscando patrones sistemáticos. Cinco: (1) "el arnés más cómodo que la realidad" (≥11 instancias, detectado en REVIEW no prevenido en BRIEF); (2) bugs de dinero/estado del implementer que caza siempre `code-review`, nunca sus tests (8 tareas seguidas); (3) el bucle relaya diagnósticos/números sin medirlos (≥6 incidentes, 2 con decisión de usuario sobre premisa falsa); (4) higiene de entorno en prosa acumulada; (5) Verificaciones del planning mal calibradas (bounds imposibles, puntos fijos).
+- **Aplicado en este cambio** (worktree `harness/realism-brief-and-money-guardrails`, PR pendiente de push del usuario):
+  - **BRIEF-R1** (dev-loop §2): plan de contacto con la realidad — fixture capturada en vivo nombrada en el brief cuando la tarea toca un contrato con un productor externo/interno. Mueve el principio 9 del REVIEW (detección) al BRIEF (prevención).
+  - **BRIEF-R2** (dev-loop §2): la aritmética de todo bound numérico la hace el bucle ANTES del brief (¿alcanzable con la entrada real?). Evita los 4 ciclos de T1.8.
+  - **Regla PREMISA** (dev-loop §6, consolidada; espejo en `verifier.md`): ningún diagnóstico/número/imposibilidad cruza una frontera sin medición propia; el verifier verifica la premisa de un FAIL-por-imposibilidad con el probe más barato (T4.7 = 1¢).
+  - **Checklist dinero/estado** (`implementer.md` reglas 5–6): contratos desde payload real; responder por escrito a concurrencia/fallo-parcial/reintento/legacy cuando se toca `cost_entry` o transiciones de estado.
+  - **P7 aplicado en parte**: anécdotas largas de §6 movidas a `references/lecciones.md`; el SKILL.md se queda con la regla citable + puntero (net density baja).
+- **Deuda de arnés (NO en este PR, requiere test con el usuario mirando)**:
+  - **P4 · preflight determinista del gate** (`pkill` de next huérfanos, purga `.next/dev`, check puerto/Docker, re-stage `git cat-file -s>0`, re-gate post-commit): es el ítem de mayor durabilidad (lo automatizado nunca reincidió; la prosa reincidió siempre), pero hace `rm -rf`/`pkill -9` y hay que probarlo. Próximo PR.
+  - **P5 · Stop hook `stop_hook_active`**: NO hay Stop hook versionado en el repo (el bloqueo de T4.7 venía del harness/skill, no de un fichero editable aquí). Sigue como deuda declarada arriba.
+- **Deuda anotada**: — (esto es cambio de arnés, no cierre de tarea).

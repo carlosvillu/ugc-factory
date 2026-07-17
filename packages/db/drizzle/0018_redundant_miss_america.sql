@@ -1,0 +1,1 @@
+ALTER TABLE "asset" ADD COLUMN "word_timestamps" jsonb;

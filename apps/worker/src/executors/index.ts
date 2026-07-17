@@ -14,6 +14,7 @@ import { makeN4Executor } from './strategy';
 import { makeN5Executor } from './write-scripts';
 import { makeN6Executor } from './compile-prompt';
 import { type GenerationExecutorDeps, makeN7aExecutor } from './generation';
+import { makeN7bExecutor } from './generate-voice';
 
 export interface ExecutorRegistryDeps {
   /** Decisor de fallo de los executors de demo, resuelto por bootstrap. */
@@ -70,6 +71,12 @@ export function makeExecutorRegistry({
     // grupo de deps `generation` (BD + storage + FAL_KEY perezosa). T4.11 lo cablea como nodo del DAG
     // (step_run_id/variant_id); en T4.4 corre STEPLESS (el smoke conduce `ai_packshot` sin step).
     N7a: makeN7aExecutor(generation),
+    // N7b · TTS + WORD TIMESTAMPS (T4.5, §7.2 N7b + §13.1). PAGA fal (cadena TTS→ASR): reusa el mismo
+    // grupo de deps `generation` (BD + storage + FAL_KEY perezosa). T4.11 lo cablea como nodo del DAG;
+    // en T4.5 corre STEPLESS (el smoke conduce la cadena sin step). ⚠ T4.11 debe hacer el sweeper/
+    // `output.download` kind-aware ANTES de cablearlo (una generación de audio recogida por la vía de
+    // imagen del sweeper explotaría — marcadores en output-download.ts + reconcile.ts).
+    N7b: makeN7bExecutor(generation),
     'demo.sleep': demo,
     'demo.fail': demo,
     // `demo.hang` (T0.9): el executor no retorna nunca (espera al abort) — es el

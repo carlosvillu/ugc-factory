@@ -100,7 +100,13 @@ export { makeLocalStorageAdapterFromEnv } from './adapters/local-storage';
 // Repo del agregado `asset` (T0.5): create/get tipados. Los consume el endpoint de
 // download (web) y el smoke/seed de assets. `NewAsset` lo consume la factory
 // makeAsset de test-utils; `Asset` no se importa por nombre (se infiere).
-export { createAsset, getAsset, setAssetFalUpload } from './repos/asset.repo';
+export {
+  createAsset,
+  getAsset,
+  getAssetByGenerationKind,
+  setAssetFalUpload,
+  setAssetWordTimestamps,
+} from './repos/asset.repo';
 export type { NewAsset } from './schema/generation';
 // Agregado `generation` (T4.1, §9.6): el ciclo submitting→submitted→…→completed que el
 // servicio de generación orquesta. Lo consumen `@ugc/services` (runGenerate) y el smoke
@@ -214,6 +220,7 @@ export {
 // (`applyScriptVerdicts`). Ver `repos/script.repo.ts`.
 export {
   findScriptsByOriginStep,
+  getScriptById,
   createScriptsForBatch,
   getLatestScriptsByBatch,
   applyScriptVerdicts,

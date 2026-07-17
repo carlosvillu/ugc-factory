@@ -23,6 +23,10 @@ export { runWriteScripts } from './write-scripts';
 // `cost_entry`. Lo consumen el smoke del verifier (`smoke-generate.ts`) y, en T4.11, el executor
 // del nodo de generación. `uploadInputCached` es la base §9.6 de la caché de upload a fal storage.
 export { runGenerate, uploadInputCached } from './generate';
+// Generación de AUDIO contra fal (T4.5, §7.2 N7b + §13.1): la CADENA TTS→ASR que produce un voiceover
+// con word timestamps. Servicio NUEVO (no `runGenerate`, cuyo tail es solo-imagen). Lo consume el
+// smoke del verifier y, en T4.11, el executor N7b.
+export { runGenerateAudio } from './generate-audio';
 // Submit VÍA WEBHOOK sin polling (T4.2, §9.6): deja la fila `generation` en `submitted` keyed por
 // el request_id REAL de fal; la completion la conduce el webhook. Lo consume el smoke del verifier.
 export { submitGenerationForWebhook } from './submit-generation';

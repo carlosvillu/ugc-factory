@@ -41,6 +41,18 @@ export {
 } from './sweep-generations';
 export { computeContentHash, type ContentHashInput, type GenerationInputs } from './content-hash';
 export { extractImageOutput, type FalImage, type FalImageOutput } from './fal-image-output';
+// TTS + word timestamps (T4.5, N7b, §13.1): el output de audio del TTS y el output de word
+// timestamps del ASR encadenado (shape construido desde el output ASR REAL capturado en vivo).
+export { extractAudioOutput, type FalAudioOutput } from './fal-audio-output';
+export {
+  WordTimestampsSchema,
+  extractWordTimestamps,
+  computeWordCoverage,
+  deriveDurationSeconds,
+  type WordTimestamps,
+  type AsrWord,
+  type WordCoverage,
+} from './word-timestamps';
 // Constructor del prompt de packshot (T4.4, N7a · ruta `ai_packshot`): lógica pura brief → prompt.
 export { buildPackshotPrompt, PACKSHOT_MIN_SHOTS, PACKSHOT_MAX_SHOTS } from './packshot-prompt';
 // Webhook de fal (T4.2, §9.6): verificación de firma ED25519 (función pura, deps inyectadas) +

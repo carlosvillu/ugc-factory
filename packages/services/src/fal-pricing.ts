@@ -7,6 +7,7 @@
 // (width×height/1e6) de cada imagen × `model_profile.cost.amountCents` (céntimos/MP). El precio
 // unitario vive en el seed `model_profile` (§13.1, multi-unidad); NO se hardcodea aquí — se pasa.
 import type { FalImageOutput } from '@ugc/core/generation';
+import { ModelCostSchema } from '@ugc/core/gallery';
 
 export interface FalImageCost {
   /** `amount_cents` ENTERO del `cost_entry` (invariante del ledger: nunca float). Redondeado. */
@@ -76,5 +77,100 @@ export function falImageCostOf(args: {
     warning: missingDims
       ? 'fal-pricing: alguna imagen no traía dimensiones; el coste omite esas imágenes.'
       : null,
+  };
+}
+
+// ── T4.5 (N7b · TTS + ASR): dos unidades de coste DISTINTAS por escena ────────────────────────────
+// La cadena N7b hace DOS llamadas fal facturadas por separado (anti-doble-cobro: un `cost_entry` por
+// cada una): el TTS por `1k_chars` (kokoro 2¢, turbo 5¢, eleven-v3 10¢/1000 chars) y el ASR por
+// `minute` (`speech-to-text` 3¢/min). Mismo INVARIANTE DE DINERO que `falImageCostOf`: NUNCA lanzan
+// (la llamada de pago YA ocurrió; perder el importe con warning es malo, perder la fila es peor), y
+// degradan a 0¢ con warning OBSERVABLE si la unidad del perfil no es la esperada.
+//
+// REDONDEO SUB-CÉNTIMO (`amount_cents` es INTEGER): un clip corto factura fracciones de céntimo
+// (55 chars a 2¢/1k = 0,11¢; 3,2 s de audio a 3¢/min = 0,16¢) → `Math.round` los lleva a 0¢. Es
+// CORRECTO para el ledger AGREGADO (el importe real de fal de un clip así ES ~0¢, y el SUM de muchas
+// filas recupera el total con error de sub-céntimo por fila); `quantity`/`unit` guardan la VERDAD
+// granular (chars, minutos) para poder recomputar sin el redondeo. Mismo criterio que el megapíxel
+// de imagen: los MP son el input del precio, no la unidad del ledger.
+
+export interface FalTtsCost {
+  /** `amount_cents` ENTERO del `cost_entry` (redondeado; puede ser 0 en clips muy cortos). */
+  cents: number;
+  /** La VERDAD granular → `quantity` (unit='chars'): nº de caracteres facturados. */
+  chars: number;
+  warning: string | null;
+}
+
+/**
+ * Coste de una llamada TTS de fal (por 1000 CARACTERES). El insumo facturado es la LONGITUD del texto
+ * que se sintetiza. Recibe el `cost` jsonb CRUDO del `model_profile` y valida `ModelCostSchema`
+ * INTERNAMENTE — su casa natural: la degradación "cost inválido → 0¢ + warning" es la MISMA política
+ * de invariante de dinero que "unidad inesperada → 0¢ + warning" que ya vive aquí. NUNCA lanza (la
+ * llamada de pago YA ocurrió: perder el importe con warning es malo, perder la FILA es peor).
+ */
+export function falTtsCostOf(args: { cost: unknown; chars: number }): FalTtsCost {
+  const parsed = ModelCostSchema.safeParse(args.cost);
+  if (!parsed.success) {
+    return {
+      cents: 0,
+      chars: args.chars,
+      warning: 'fal-pricing: model_profile TTS.cost inválido o ausente: amount_cents=0.',
+    };
+  }
+  if (parsed.data.unit !== '1k_chars') {
+    return {
+      cents: 0,
+      chars: args.chars,
+      warning:
+        `fal-pricing: unidad inesperada '${parsed.data.unit}' para un TTS (se esperaba '1k_chars'): ` +
+        'el cost_entry se registra con amount_cents=0. Revisa el model_profile.',
+    };
+  }
+  return {
+    cents: Math.round((args.chars / 1000) * parsed.data.amountCents),
+    chars: args.chars,
+    warning: null,
+  };
+}
+
+export interface FalAsrCost {
+  /** `amount_cents` ENTERO del `cost_entry` (redondeado; puede ser 0 en audios de pocos segundos). */
+  cents: number;
+  /** La VERDAD granular → `quantity` (unit='seconds'): SEGUNDOS de audio transcritos. Es EXACTAMENTE
+   *  lo que el caller registra en el ledger (`quantity` es INTEGER: `Math.round(durationSeconds)`), no
+   *  los minutos internos del cálculo — así el rastro granular del interface coincide con la fila. */
+  durationSeconds: number;
+  warning: string | null;
+}
+
+/**
+ * Coste de una llamada ASR de fal (por MINUTO). El insumo facturado es la DURACIÓN del audio (derivada
+ * del último `end` de los word timestamps — el TTS de kokoro no emite duración). Recibe el `cost` jsonb
+ * CRUDO del `model_profile` y valida `ModelCostSchema` INTERNAMENTE (misma política que `falTtsCostOf`).
+ * El precio es por minuto, pero el `durationSeconds` que devuelve es lo que va al ledger en `unit='seconds'`.
+ */
+export function falAsrCostOf(args: { cost: unknown; durationSeconds: number }): FalAsrCost {
+  const parsed = ModelCostSchema.safeParse(args.cost);
+  if (!parsed.success) {
+    return {
+      cents: 0,
+      durationSeconds: args.durationSeconds,
+      warning: 'fal-pricing: model_profile ASR.cost inválido o ausente: amount_cents=0.',
+    };
+  }
+  if (parsed.data.unit !== 'minute') {
+    return {
+      cents: 0,
+      durationSeconds: args.durationSeconds,
+      warning:
+        `fal-pricing: unidad inesperada '${parsed.data.unit}' para un ASR (se esperaba 'minute'): ` +
+        'el cost_entry se registra con amount_cents=0. Revisa el model_profile.',
+    };
+  }
+  return {
+    cents: Math.round((args.durationSeconds / 60) * parsed.data.amountCents),
+    durationSeconds: args.durationSeconds,
+    warning: null,
   };
 }

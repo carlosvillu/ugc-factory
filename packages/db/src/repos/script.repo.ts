@@ -40,6 +40,19 @@ export async function findScriptsByOriginStep(db: Db, stepRunId: string): Promis
   return db.select().from(adScript).where(eq(adScript.originStepRunId, stepRunId));
 }
 
+/**
+ * Un guion `ad_script` POR ID (T4.5, N7b — también lo consumirá T4.11). El executor de voz lee la
+ * fila REAL persistida para tomar `scenes[].narration` de la ruta de PRODUCCIÓN (no recibe el texto
+ * de narración por config: eso fijaría a mano lo que el pipeline deriva). `undefined` si no existe:
+ * el executor lo mapea a `PermanentStepError` (un scriptId que no resuelve es un fallo de cableado,
+ * reintentarlo no lo arregla). Devuelve la fila cruda; `scenes`/`subtitles` son jsonb OPACO que el
+ * caller VALIDA con `AdScriptSchema`/`AdSceneSchema` (nunca castea).
+ */
+export async function getScriptById(db: Db, id: string): Promise<AdScriptRow | undefined> {
+  const [row] = await db.select().from(adScript).where(eq(adScript.id, id));
+  return row;
+}
+
 /** Un guion a persistir en v1: el CONTRATO `AdScript` (lo que produce N5) + su variante resuelta +
  *  los flags que el linter marcó. `filenameCode`/`sharedBodyKey` del contrato NO se persisten (viven
  *  en `ad_variant`/`ad_batch.matrix`); el resto mapea 1:1 a la fila. */

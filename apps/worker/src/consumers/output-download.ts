@@ -81,6 +81,13 @@ export async function registerOutputDownloadConsumer({
         return;
       }
 
+      // T4.11: audio/non-image generations are NOT handled here; make this kind-aware before wiring N7b to the worker
+      // `finalizeGeneration` es SOLO-IMAGEN (`extractImageOutput` + `createAsset kind:'keyframe'`). Una
+      // generación de AUDIO (N7b, T4.5) recogida por el sweeper de T4.3 → encolada aquí → reventaría con
+      // su output `{audio:{url}}`. T4.5 NO cablea N7b al worker (corre stepless vía `runGenerateAudio`
+      // directo), así que la mina es LATENTE hasta T4.11 — que debe rutar por `generation.kind` (o el
+      // `model_profile.kind`) a `finalizeGeneration` (imagen) vs `finalizeAudioGeneration` (audio) ANTES
+      // de que un caller vivo (el DAG) produzca generaciones de audio reconciliables.
       // Finalizar con el tail compartido. Un fallo de descarga PROPAGA (pg-boss reintenta con backoff).
       const finalized = await finalizeGeneration(
         { db, storage, downloader, logger: log },

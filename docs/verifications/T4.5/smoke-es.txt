@@ -1,0 +1,21 @@
+
+> @ugc/web@0.0.0 smoke:voiceover /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/web
+> tsx --env-file-if-exists=../../.env scripts/smoke-voiceover.ts
+
+smoke:voiceover: guion TVER45ES1784247420 — idioma fila=es, 3 escenas
+smoke:voiceover: TTS fal-ai/elevenlabs/tts/turbo-v2.5 (voz Rachel) → ASR fal-ai/elevenlabs/speech-to-text (spa) — RED REAL…
+
+{"level":30,"time":1784247574384,"pid":26151,"hostname":"MBP-de-Carlos","name":"worker","event":"fal_audio_generation_finalized","generationId":"01KXPQ2JH6V213N9S0E5WC6N2Z","assetId":"01KXPQ2QVCSJBSAZ1TJNED5M18","ttsCostCents":0,"asrCostCents":0,"durationSeconds":4.44,"wordCount":11,"alreadyFinalized":false,"msg":"voiceover generado: TTS descargado, ASR sellado, cobertura 100%, completed"}
+smoke:voiceover: escena 1/3 — generation 01KXPQ2JH6V213N9S0E5WC6N2Z (completed), asset 01KXPQ2QVCSJBSAZ1TJNED5M18 (tts_audio, 4.44s), cobertura 11/11 OK ✓, TTS 0¢ + ASR 0¢ — GET /api/assets/01KXPQ2QVCSJBSAZ1TJNED5M18/download
+smoke:voiceover:   onset 3 palabras → "Sinceramente,"@0.119s  "este"@1.059s  "pequeño"@1.36s
+smoke:voiceover:   narración = "Sinceramente, este pequeño frasco cambió por completo mi rutina de mañana."
+{"level":30,"time":1784247581323,"pid":26151,"hostname":"MBP-de-Carlos","name":"worker","event":"fal_audio_generation_finalized","generationId":"01KXPQ2QVJDKE2KJST76C4TTYY","assetId":"01KXPQ2YM619DMEVVXTCY2GH97","ttsCostCents":0,"asrCostCents":0,"durationSeconds":3.539,"wordCount":13,"alreadyFinalized":false,"msg":"voiceover generado: TTS descargado, ASR sellado, cobertura 100%, completed"}
+smoke:voiceover: escena 2/3 — generation 01KXPQ2QVJDKE2KJST76C4TTYY (completed), asset 01KXPQ2YM619DMEVVXTCY2GH97 (tts_audio, 3.54s), cobertura 13/13 OK ✓, TTS 0¢ + ASR 0¢ — GET /api/assets/01KXPQ2YM619DMEVVXTCY2GH97/download
+smoke:voiceover:   onset 3 palabras → "Con"@0.099s  "solo"@0.34s  "dos"@0.62s
+smoke:voiceover:   narración = "Con solo dos gotas mi piel se siente suave durante todo el día."
+{"level":30,"time":1784247587300,"pid":26151,"hostname":"MBP-de-Carlos","name":"worker","event":"fal_audio_generation_finalized","generationId":"01KXPQ2YME4ECVTXN5XC58JNFY","assetId":"01KXPQ34EXYZ5NG4WZ6GSNSF0C","ttsCostCents":0,"asrCostCents":0,"durationSeconds":2.98,"wordCount":11,"alreadyFinalized":false,"msg":"voiceover generado: TTS descargado, ASR sellado, cobertura 100%, completed"}
+smoke:voiceover: escena 3/3 — generation 01KXPQ2YME4ECVTXN5XC58JNFY (completed), asset 01KXPQ34EXYZ5NG4WZ6GSNSF0C (tts_audio, 2.98s), cobertura 11/11 OK ✓, TTS 0¢ + ASR 0¢ — GET /api/assets/01KXPQ34EXYZ5NG4WZ6GSNSF0C/download
+smoke:voiceover:   onset 3 palabras → "Consigue"@0.14s  "el"@0.519s  "tuyo"@0.659s
+smoke:voiceover:   narración = "Consigue el tuyo hoy antes de que se agote esta remesa."
+
+smoke:voiceover: OK ✓ — 3 voiceovers, coste total 0¢ (→ /spend). Descarga los audios y JÚZGALOS: ¿suenan correctos en idioma (es) y voz esperada? Mide en Audacity/ffmpeg astats el onset de 3 palabras vs los timestamps de arriba (<±100ms).

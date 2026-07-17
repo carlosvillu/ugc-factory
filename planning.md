@@ -586,9 +586,11 @@ Decisiones del usuario (2026-07-07): la fase se ejecuta tras T0.1 y **antes** de
 - **Coste estimado**: ~$0,30
 - **Verificación**: con fotos reales de un producto propio, los shots muestran **el producto real reconocible** (label/forma a juicio humano) en escenario UGC 9:16.
 
-#### T4.5 · N7b: TTS + word timestamps
+#### T4.5 · N7b: TTS + word timestamps [x] 2026-07-17 — PASS (verifier objetivo + juicio auditivo humano OK), ver docs/verifications/T4.5/
 - **Depende de**: T4.1, T2.0, T2.4 *(usa guiones reales con `scenes[]` de T2.4)*
-- **Entrega**: executor TTS por escena según receta y `voice_map` de la Persona; **cierre de deuda `[verificar]`**: si los endpoints TTS devuelven word timestamps nativos; si no, ASR `fal-ai/elevenlabs/speech-to-text` encadenado; `word_timestamps` persistidos.
+- **Deuda T4.11 (registrada aquí como sub-ítem del cableado)**: el sweeper de T4.3 encola `output.download` → `finalizeGeneration` (SOLO-imagen) sobre cualquier generación reconciliable; una generación de AUDIO (N7b) recogida por esa vía reventaría. T4.5 corre stepless (sin worker/sweeper) → latente. **T4.11 DEBE hacer `output.download`/`reconcile` kind-aware** (rutar por `generation.kind`/`model_profile.kind` a `finalizeGeneration` imagen vs finalizer de audio) ANTES de cablear N7b al DAG. Marcadores en `apps/worker/src/consumers/output-download.ts` y `packages/core/src/generation/reconcile.ts`.
+- **Deuda de seed (§13.1)**: el TTS Test se sembró como `fal-ai/kokoro` BASE (voces `af_/am_`, inglés); el español va por ElevenLabs Turbo (Standard, 2,5× coste). Sembrar el endpoint de idioma de Kokoro —si existe— es follow-up de T4.11/T3.4.
+- **Entrega**: executor TTS por escena según receta y `voice_map` de la Persona; **deuda `[verificar]` (parcial)**: **Kokoro CONFIRMADO sin timestamps nativos** → ASR obligatorio; **ElevenLabs `[verificar]` sigue abierto** (Turbo expone un param `timestamps` no ejercitado — podría ahorrar el ASR en Standard/Premium; follow-up T4.6/T4.11). ASR `fal-ai/elevenlabs/speech-to-text` encadenado como ruta por defecto; `word_timestamps` persistidos en `asset.word_timestamps` (jsonb). Anotado en PRD §13.1. Eleven v3 deferred.
 - **Coste estimado**: ~$0,30 (TTS + ASR de 2 guiones)
 - **Verificación**: para un guion es y otro en, los audios suenan correctos en idioma y voz esperados; los word timestamps cubren el 100 % de las palabras y, medidos contra el onset visible en un editor de waveform (Audacity/`ffmpeg astats`) en 3 palabras concretas, difieren <±100 ms; resultado del `[verificar]` anotado en `model_profile` y en PRD §13.1.
 

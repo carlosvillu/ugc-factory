@@ -70,6 +70,18 @@ export const asset = pgTable('asset', {
   // (generation.qa referencia assets, asset.generation_id referencia generación): la
   // integridad la garantiza el repo, no un constraint circular.
   generationId: text('generation_id'),
+  // ── T4.5 (§9.7, §12; N7b · TTS + word timestamps) ────────────────────────────
+  // WORD-LEVEL TIMESTAMPS del voiceover (`kind='tts_audio'`). §13.1 fija la RUTA POR
+  // DEFECTO: los timestamps NO vienen del TTS (kokoro/elevenlabs no los emiten
+  // nativos — confirmado 2026-07-16 en el openapi de `fal-ai/kokoro`: el output es
+  // solo `{audio:{url}}`), sino de un ASR encadenado (`fal-ai/elevenlabs/speech-to-text`)
+  // sobre el audio TTS ya generado. El ASR devuelve JSON (no un fichero): por eso NO es
+  // un asset propio — sus timestamps se SELLAN sobre ESTE mismo asset de audio (UPDATE de
+  // esta columna). Los consume el generador ASS/subtítulos de F5. jsonb OPACO en la BD; su
+  // shape lo valida `WordTimestampsSchema` de core (construido desde el output ASR REAL
+  // capturado en vivo, disciplina anti-arnés). Nullable: un asset que no es voiceover, o un
+  // voiceover cuyo ASR aún no corrió, no tiene timestamps (≠ `[]` = ASR corrió sin palabras).
+  wordTimestamps: jsonb('word_timestamps'),
   ...timestamps,
 });
 

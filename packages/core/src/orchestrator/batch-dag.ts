@@ -86,6 +86,38 @@ export const N7aConfigSchema = z.object({
 export type N7aConfig = z.infer<typeof N7aConfigSchema>;
 
 /**
+ * Config del step N7b · TTS + WORD TIMESTAMPS (T4.5, §7.2 N7b + §13.1). N7b sintetiza un voiceover por
+ * ESCENA del guion (`scene.narration`) con el TTS del tier (kokoro/turbo/eleven-v3) y encadena el ASR
+ * (`fal-ai/elevenlabs/speech-to-text`) para los word timestamps (ruta por defecto §13.1: el TTS no los
+ * emite nativos).
+ *
+ * `scriptId` es el forward-pointer estable (patrón de N5/N6/N7a): el executor lee de la fila `ad_script`
+ * REAL sus `scenes[].narration` (path de PRODUCCIÓN — NO recibe la narración por config, que fijaría a
+ * mano lo que el pipeline deriva; trampa T1.13). `language` mapea a `language_code` del ASR.
+ *
+ * EL TRIPLE DE VOZ ES CONSISTENTE POR CONSTRUCCIÓN (T4.5 = ejecución + resolución MÍNIMA). En T4.5 el
+ * config suministra un triple ya resuelto (`ttsEndpoint` + `voice` + `provider`) del MISMO tier — la
+ * costura stepless: el smoke conduce la cadena sin leer el recipe/voice_map de la BD. `resolveVoiceStep`
+ * (core) valida que el triple es coherente (p. ej. tier kokoro con un voiceId de elevenlabs →
+ * `PermanentStepError`, nunca coerción silenciosa). T4.11 rellenará el triple desde el recipe del tier +
+ * el `voice_map` de la Persona por idioma.
+ */
+export const N7bConfigSchema = z.object({
+  scriptId: z.string().min(1),
+  /** El idioma del guion (`ad_script.language`), p. ej. `es`/`en`. Mapea a `language_code` del ASR. */
+  language: z.string().min(1),
+  /** El endpoint del TTS del tier (`fal-ai/kokoro`, `fal-ai/elevenlabs/tts/turbo-v2.5`, …). */
+  ttsEndpoint: z.string().min(1),
+  /** El proveedor de la voz (`kokoro`/`elevenlabs`/`minimax`), del `voice_map` de la Persona. */
+  provider: z.enum(['elevenlabs', 'minimax', 'kokoro']),
+  /** El `voiceId` DENTRO del proveedor (kokoro: `af_heart`; elevenlabs: un id de voz). */
+  voice: z.string().min(1),
+  /** Velocidad del habla (kokoro `speed`, default 1). Opcional. */
+  speed: z.number().positive().optional(),
+});
+export type N7bConfig = z.infer<typeof N7bConfigSchema>;
+
+/**
  * Construye la definición del run de lote (un solo nodo N5) para un proyecto y un lote ya creado.
  *
  * `autopilot=false` + N5 `isCheckpoint` con `alwaysPause`: CP3 —el editor de guiones— es el

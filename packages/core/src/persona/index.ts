@@ -45,3 +45,11 @@ export {
 // sin sharp, sin BD — el endpoint de candidatas es un passthrough sobre esto y T2.2 la
 // reutilizará sin re-implementarla.
 export { matchPersonas } from './candidates';
+// Resolución de voz para N7b (T4.5, §13.1): valida la coherencia proveedor↔endpoint↔voiceId del triple
+// del TTS. PURA: sin red ni BD. La ejecución (TTS→ASR) vive en @ugc/services.
+export {
+  resolveVoiceStep,
+  type VoiceProvider,
+  type ResolvedVoiceInputs,
+  type ResolveVoiceStepInput,
+} from './voice-resolution';

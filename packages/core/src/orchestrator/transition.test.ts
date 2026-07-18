@@ -7,6 +7,7 @@ import { describe, expect, it } from 'vitest';
 import {
   IllegalTransitionError,
   StepNotFoundError,
+  failStep,
   transition,
   type TransitionDeps,
 } from './transition';
@@ -17,6 +18,7 @@ interface EnqueuedJob {
   name: string;
   payload: unknown;
   singletonKey?: string;
+  startAfter?: Date;
 }
 
 /**
@@ -94,6 +96,7 @@ function makeWorld(rows: StepRow[]) {
               name: req.job.name,
               payload: req.payload,
               singletonKey: req.singletonKey,
+              ...(req.startAfter !== undefined ? { startAfter: req.startAfter } : {}),
             });
             return Promise.resolve();
           },
@@ -201,6 +204,51 @@ describe('transition(): transición LEGAL', () => {
     const s = w.steps.get('s1');
     expect(s?.status).toBe('queued');
     expect(s?.finishedAt).toBeNull();
+  });
+
+  it('enqueue inicial (pending→queued): NUNCA fija startAfter (backoff solo del retry)', async () => {
+    const w = makeWorld([step({ id: 's1', status: 'pending' })]);
+    await transition(w.deps, 's1', 'enqueue');
+    expect(w.enqueued).toHaveLength(1);
+    expect(w.enqueued[0]?.startAfter).toBeUndefined();
+  });
+});
+
+describe('failStep(): backoff del re-encolado del retry (T4.11, MONEY POINT deuda T4.10b)', () => {
+  it('con retryBackoffMs, el RE-ENCOLADO del retry fija startAfter ≈ now + backoff', async () => {
+    // El backoff es load-bearing para la carrera-perdedora de dedup: sin él, un `LoserRaceError` de un N7
+    // agotaría max_retries en milisegundos mientras el ganador Veo sigue generando. Aquí se fija que el
+    // re-encolado del retry lleva `startAfter` (el belt que espacia los reintentos).
+    const w = makeWorld([step({ id: 's1', status: 'running', retryCount: 0, maxRetries: 3 })]);
+    const before = Date.now();
+    const outcome = await failStep(w.deps, 's1', { retryBackoffMs: 30_000 });
+    expect(outcome).toBe('retried');
+    expect(w.steps.get('s1')?.status).toBe('queued');
+    expect(w.enqueued).toHaveLength(1);
+    const startAfter = w.enqueued[0]?.startAfter;
+    expect(startAfter).toBeInstanceOf(Date);
+    // startAfter ≈ now + 30s (con margen amplio por el tiempo de ejecución del test).
+    expect(startAfter!.getTime()).toBeGreaterThanOrEqual(before + 29_000);
+    expect(startAfter!.getTime()).toBeLessThanOrEqual(Date.now() + 31_000);
+  });
+
+  it('SIN retryBackoffMs, el retry se re-encola sin startAfter (comportamiento de siempre)', async () => {
+    // Los nodos NO-N7 (análisis/demo) no pasan backoff: su retry es inmediato como antes. Este test es el
+    // CONTROL NEGATIVO del cambio: si el backoff se aplicara SIEMPRE, este assert de "sin startAfter"
+    // fallaría y rompería la latencia de los tests de retry existentes.
+    const w = makeWorld([step({ id: 's1', status: 'running', retryCount: 0, maxRetries: 3 })]);
+    const outcome = await failStep(w.deps, 's1');
+    expect(outcome).toBe('retried');
+    expect(w.enqueued).toHaveLength(1);
+    expect(w.enqueued[0]?.startAfter).toBeUndefined();
+  });
+
+  it('retries agotados (retryCount >= maxRetries): NO re-encola (queda failed terminal), sin backoff', async () => {
+    const w = makeWorld([step({ id: 's1', status: 'running', retryCount: 3, maxRetries: 3 })]);
+    const outcome = await failStep(w.deps, 's1', { retryBackoffMs: 30_000 });
+    expect(outcome).toBe('exhausted');
+    expect(w.steps.get('s1')?.status).toBe('failed');
+    expect(w.enqueued).toHaveLength(0);
   });
 });
 

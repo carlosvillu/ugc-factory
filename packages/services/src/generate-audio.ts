@@ -43,8 +43,6 @@ import {
   type FalClientDeps,
   type GenerationInputs,
 } from '@ugc/core/generation';
-import { newUlid } from '@ugc/core/contracts';
-import type { Logger, StorageAdapter } from '@ugc/core';
 import {
   createAsset,
   getAssetByGenerationKind,
@@ -55,10 +53,13 @@ import {
   recordCost,
   setAssetWordTimestamps,
   updateGeneration,
+  type Asset,
   type DbClient,
   type Generation,
   type ModelProfile,
 } from '@ugc/db';
+import { newUlid } from '@ugc/core/contracts';
+import type { Logger, StorageAdapter } from '@ugc/core';
 
 import { falTtsCostOf, falAsrCostOf } from './fal-pricing';
 import { resolveProductionDedup } from './generation-dedup';
@@ -71,6 +72,17 @@ import { NOOP_LOGGER } from './noop-logger';
  *  la clave natural del catálogo. */
 function ttsTextField(falEndpoint: string): 'prompt' | 'text' {
   return falEndpoint.startsWith('fal-ai/elevenlabs/') ? 'text' : 'prompt';
+}
+
+/** Conteo REAL de palabras (`type:'word'`) del `word_timestamps` ya sellado en un asset de audio
+ *  reutilizado (fix T4.11, deuda T4.10c). Se valida el jsonb con el MISMO schema que sella el ASR
+ *  (`extractWordTimestamps`) y se cuenta con `computeWordCoverage` — la MISMA definición de "palabra"
+ *  que usó la liquidación original, sin re-implementar el filtro. Devuelve 0 si el asset no tiene
+ *  timestamps o no validan (no debería en un voiceover `completed`, pero un 0 aquí no miente la duración
+ *  —esa ya se validó no-null arriba— y evita reventar el hit por un jsonb legado). */
+function countReusedWords(asset: Asset): number {
+  const wt = extractWordTimestamps(asset.wordTimestamps);
+  return wt === null ? 0 : computeWordCoverage(wt).wordCount;
 }
 
 export interface GenerateAudioDeps {
@@ -536,15 +548,29 @@ export async function runGenerateAudio(
     logger: log,
   });
   if ('reused' in dedup) {
+    // HIT DE DEDUP DE AUDIO (fix T4.11, deuda T4.10c). El deliverable del voiceover reutilizado son SUS
+    // `word_timestamps` + SU duración, que YA viven SELLADOS en el asset (esta ejecución no corrió el
+    // ASR). El consumidor de subtítulos/lipsync los lee del ASSET, no de este Result — pero el Result
+    // DEBE reportar la duración y el conteo REALES del asset, no un `0`/`?? 0` que enmascare el estado.
+    const asset = dedup.reused.asset;
+    // Un asset de audio `completed` SIN `durationS` es un INVARIANTE ROTO (un voiceover completado se
+    // liquida SIEMPRE con `durationS = deriveDurationSeconds(...)`, paso 14). No se enmascara como 0:
+    // eso mentiría al subtitulador (una duración 0 recorta la timeline). Se lanza — determinista, un
+    // retry produciría el mismo fallo, así que el executor lo mapea a `PermanentStepError` (no re-paga).
+    if (asset.durationS === null) {
+      throw new FalResponseError(
+        `runGenerateAudio: la generación reutilizada ${dedup.reused.generation.id} está completed pero su asset ${asset.id} no tiene duration_s (invariante roto)`,
+      );
+    }
     return {
       generation: dedup.reused.generation,
       assetId: dedup.reused.assetId,
       ttsCostCents: 0,
       asrCostCents: 0,
-      // `word_timestamps` ya viven en el asset reutilizado; `wordCount` es un rastro de ESTA ejecución
-      // (que no corrió el ASR), así que es 0 en un hit — el consumidor lee los timestamps del asset.
-      durationSeconds: dedup.reused.asset.durationS ?? 0,
-      wordCount: 0,
+      // Duración y conteo de palabras REALES del asset reutilizado (no 0): el hit sigue entregando un
+      // deliverable completo al consumidor de subtítulos/lipsync.
+      durationSeconds: asset.durationS,
+      wordCount: countReusedWords(asset),
       reused: true,
       warnings,
     };

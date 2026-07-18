@@ -19,7 +19,7 @@ import {
   type NewGeneration,
 } from '@ugc/db';
 import type { Logger } from '@ugc/core';
-import { FalResponseError } from '@ugc/core/generation';
+import { LoserRaceError } from '@ugc/core/generation';
 
 /** Un acierto de dedup: la generación de producción `completed` previa con el mismo `content_hash` y su
  *  asset reutilizable. Reutilizarlo NO llama a fal ni escribe `cost_entry` (0 coste). */
@@ -106,7 +106,12 @@ export async function resolveProductionDedup(
     logDedupHit(logger, raceHit);
     return { reused: raceHit };
   }
-  throw new FalResponseError(
+  // CARRERA PERDEDORA (MONEY POINT T4.11): perdimos el INSERT del índice único parcial y el ganador aún
+  // no está `completed`. Se lanza `LoserRaceError` —una SEÑAL DE TIPO dedicada, no un `FalResponseError`
+  // con string— para que el executor N7 la trate como REINTENTABLE (deja subir el throw → `failStep` →
+  // retry) SIN confundirla con una violación de contrato (que es `PermanentStepError`, no re-paga). En el
+  // reintento el ganador ya estará `completed` y esta rama deduplicará a su asset (0 submits, 0 coste).
+  throw new LoserRaceError(
     `${args.serviceLabel}: ${args.assetLabel} idéntico se está produciendo en otra petición concurrente; reintenta`,
   );
 }

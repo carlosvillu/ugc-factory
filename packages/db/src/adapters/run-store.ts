@@ -30,6 +30,10 @@ export function makeRunStore(db: Db): RunStore {
           // §7.1.b (T0.8): banderas de checkpoint tomadas de la definición del DAG.
           isCheckpoint: s.isCheckpoint,
           checkpointConfig: s.checkpointConfig,
+          // Override del tope de reintentos (T4.11): solo se pasa si core lo trae; omitido ⇒
+          // Drizzle no fija la columna y aplica su default (3). Los N7 lo suben para la dedup
+          // concurrente (ver NewStepRow.maxRetries / RunNodeSchema.maxRetries).
+          ...(s.maxRetries !== undefined ? { maxRetries: s.maxRetries } : {}),
         })),
       );
     },

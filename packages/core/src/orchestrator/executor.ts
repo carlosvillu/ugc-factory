@@ -41,6 +41,50 @@ export class PermanentStepError extends Error {
   }
 }
 
+/**
+ * BACKOFF del re-encolado de un retry de CARRERA PERDEDORA de dedup (T4.11, MONEY POINT deuda T4.10b). El
+ * consumer se lo pasa a `failStep` SOLO cuando el fallo del executor es un `LoserRaceError` (no en un
+ * fallo transitorio normal, que reintenta inmediato como siempre); el `retry` (failed→queued) reencola el
+ * job con `startAfter = now + este valor`.
+ *
+ * POR QUÉ EXISTE — la carrera-perdedora de dedup de generación (§9.6). Dos generaciones idénticas
+ * concurrentes (dos variantes del mismo ángulo que comparten body/CTA, o dos clips iguales) compiten por
+ * el índice único parcial de `content_hash`; la PERDEDORA lanza `LoserRaceError` (retryable) y debe
+ * REINTENTAR hasta que la GANADORA esté `completed` para deduplicar a su asset (0 re-pago a fal). Sin
+ * backoff el retry se reencola INSTANTÁNEAMENTE: la perdedora agotaría su presupuesto de `max_retries` en
+ * milisegundos mientras la ganadora —si es un vídeo Veo— sigue generando MINUTOS, y iría a `failed` en
+ * vez de deduplicar ⇒ rompería en silencio la Verificación «nº de generations = hooks+body+CTA+shots».
+ *
+ * VALOR (30 s). El presupuesto de espera del loser es `max_retries × RETRY_BACKOFF_MS`. Ese presupuesto
+ * DEBE EXCEDER —CON MARGEN, no igualar— la latencia peor-caso del ganador: un vídeo Veo colgado hasta su
+ * deadline de reconciliación (`videoMs = 30 min` en `reconcile.ts`, tras el cual el sweeper expiraría al
+ * ganador). El EMPATE es un modo de fallo: si el presupuesto del loser vale EXACTO 30 min y el ganador
+ * completa a los 30:01, el loser ya se agotó a 30:00 y el step va a `failed` ESPURIO → rompe la
+ * Verificación «una variante completa N6→N7 con todos los assets». Por eso `N7_MAX_RETRIES = 80` da 80×30
+ * s = 40 min = 10 min de holgura REAL sobre el deadline de 30 min. El margen es barato (los reintentos
+ * extra SOLO ocurren en una carrera real, y cada uno es un loser esperando en backoff, no un busy-loop);
+ * un `failed` espurio en una variante de PAGO no lo es. 30 s de backoff también es benigno para la cola.
+ * Se aplica SOLO a la carrera-perdedora: un fallo NO-N7 (análisis/demo) o un transitorio de red NO se
+ * penaliza con la espera (retry inmediato). NO lo bajes sin recomputar `N7_MAX_RETRIES`: bajar el backoff
+ * SIN subir el count acorta el presupuesto total y reintroduce el fallo silencioso de la dedup concurrente.
+ */
+export const RETRY_BACKOFF_MS = 30_000;
+
+/**
+ * Tope de reintentos de un nodo N7 de generación (T4.11, deuda T4.10b). `RunNodeSchema.maxRetries` de
+ * los nodos N7 se fija a este valor (lo cablea el DAG de generación en Pass 2b). Con `RETRY_BACKOFF_MS`
+ * (30 s), `N7_MAX_RETRIES × 30 s = 40 min` de presupuesto de espera para la carrera-perdedora de dedup.
+ *
+ * POR QUÉ 80 Y NO 60: el presupuesto DEBE EXCEDER CON MARGEN el deadline de vídeo (`videoMs`, 30 min en
+ * `reconcile.ts`), NUNCA igualarlo. 60×30 s = 30 min sería un EMPATE exacto con el deadline → si el loser
+ * se agota a 30:00 y el ganador Veo completa a 30:01, el loser va a `failed` ESPURIO en vez de deduplicar
+ * y rompe «una variante completa N6→N7 con todos los assets». 80×30 s = 40 min da 10 min de holgura REAL.
+ * El margen es barato (los reintentos extra solo ocurren en una carrera real, cada uno un loser en
+ * backoff, no un busy-loop). Los nodos NO-N7 conservan el default de BD (3): sus fallos son transitorios
+ * normales, no carreras de dedup.
+ */
+export const N7_MAX_RETRIES = 80;
+
 /** Lo que recibe un executor: la config per-step (de `step_run.config`) y una
  *  señal de aborto (shutdown/expiración del job — la propaga el consumer).
  *

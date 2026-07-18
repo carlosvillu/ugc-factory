@@ -20,7 +20,7 @@ import { getAsset, getModelProfileByEndpoint } from '@ugc/db';
 import { runGenerateAvatar } from '@ugc/services';
 
 import type { GenerationExecutorDeps } from './generation';
-import { requireOutputContext } from './_shared';
+import { requireOutputContext, runGenerationStep } from './_shared';
 
 /** El ref ligero del clip de avatar generado (la verdad vive en `generation`/`asset`). */
 interface N7cOutput {
@@ -92,22 +92,24 @@ export function makeN7cExecutor(deps: GenerationExecutorDeps): StepExecutor {
       );
     }
 
-    const res = await runGenerateAvatar(
-      {
-        db: deps.db,
-        storage: deps.storage,
-        falKey: deps.falKey,
-        ...(deps.logger !== undefined ? { logger: deps.logger } : {}),
-        ...(deps.fetch !== undefined ? { fetch: deps.fetch } : {}),
-      },
-      {
-        avatarModelProfileId: profile.id,
-        imageAssetId: cfg.imageAssetId,
-        audioAssetId: cfg.audioAssetId,
-        ...(cfg.prompt !== undefined ? { prompt: cfg.prompt } : {}),
-        ...(cfg.resolution !== undefined ? { resolution: cfg.resolution } : {}),
-        ...(stepId !== undefined ? { stepRunId: stepId } : {}),
-      },
+    const res = await runGenerationStep(() =>
+      runGenerateAvatar(
+        {
+          db: deps.db,
+          storage: deps.storage,
+          falKey: deps.falKey,
+          ...(deps.logger !== undefined ? { logger: deps.logger } : {}),
+          ...(deps.fetch !== undefined ? { fetch: deps.fetch } : {}),
+        },
+        {
+          avatarModelProfileId: profile.id,
+          imageAssetId: cfg.imageAssetId,
+          audioAssetId: cfg.audioAssetId,
+          ...(cfg.prompt !== undefined ? { prompt: cfg.prompt } : {}),
+          ...(cfg.resolution !== undefined ? { resolution: cfg.resolution } : {}),
+          ...(stepId !== undefined ? { stepRunId: stepId } : {}),
+        },
+      ),
     );
 
     collectOutput({

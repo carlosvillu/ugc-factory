@@ -86,11 +86,47 @@ export class FalProviderError extends Error {
  * Fallo de VALIDACIÓN: fal respondió (y se pagó), pero el payload no tiene la forma esperada
  * (falta `status`/`status_url`/`response_url`, output sin `images`…). NO es reintentable por
  * red: reintentar no cambia un contrato roto. Rama SEPARADA a propósito de `FalProviderError`.
+ *
+ * ⚠ MONEY POINT (T4.11, deuda T4.10a): NO uses `FalResponseError` para una VIOLACIÓN DE CONTRATO de
+ * un output YA generado (output sin `video`/`audio`, invariante `assetId===null` roto). El consumer
+ * de steps (`step-execute.ts`) trata un throw normal como REINTENTABLE (`failStep` → retry → re-submit
+ * a fal), así que envolver un output determinísticamente malformado en `FalResponseError` haría que el
+ * step lo RE-PAGUE 3 veces para fallar igual (el money-burn T1.10a). Una violación de contrato de una
+ * generación completada es DETERMINISTA → los executors N7 la mapean a `PermanentStepError` (sin retry,
+ * sin re-pago). `FalResponseError` queda para el uso original: fallos de validación en el camino de
+ * dedup/reintento (la carrera perdedora usa su propia subclase `LoserRaceError`, ver abajo).
  */
 export class FalResponseError extends Error {
   constructor(message: string) {
     super(message);
     this.name = 'FalResponseError';
+  }
+}
+
+/**
+ * Fallo de CARRERA PERDEDORA de la dedup de producción (§9.6, MONEY POINT T4.11/deuda T4.10a): dos
+ * generaciones idénticas concurrentes compiten por el índice único parcial `content_hash`; la que
+ * PIERDE el INSERT y todavía no ve la fila del ganador `completed` lanza ESTA señal para que el caller
+ * reintente y deduplique cuando el ganador termine. Es una SEÑAL DE TIPO, no un string compartido:
+ *
+ *   · Es REINTENTABLE a propósito (subclase de `FalResponseError` para que cualquier caller que ya
+ *     trate `FalResponseError` como "reintenta" siga funcionando; y `step-execute.ts` la deja subir
+ *     como throw normal → `failStep` → retry). El reintento NO re-paga: en la siguiente vuelta el
+ *     ganador ya está `completed` y el loser DEDUPLICA a su asset (0 submits, 0 cost_entry).
+ *   · La distinción de TIPO frente a una violación de contrato es lo que impide el money-burn: una
+ *     violación de contrato es `PermanentStepError` (no reintenta, no re-paga); una carrera perdedora
+ *     es `LoserRaceError` (reintenta, deduplica). Antes AMBAS eran el mismo `FalResponseError` con
+ *     string distinto — indistinguibles por tipo, así que un executor no podía cribar una de otra.
+ *
+ * ⚠ Los executors N7 NO deben envolver `LoserRaceError` en `PermanentStepError` (la volverían terminal
+ * y el loser iría a `failed` en vez de deduplicar, rompiendo «nº de generations = hooks+body+CTA+shots»).
+ * El presupuesto de retry del loser (`max_retries` del step) debe SOBREVIVIR a la latencia peor-caso del
+ * ganador (Veo, minutos) — ver la config de retry de N7 en la definición del run.
+ */
+export class LoserRaceError extends FalResponseError {
+  constructor(message: string) {
+    super(message);
+    this.name = 'LoserRaceError';
   }
 }
 

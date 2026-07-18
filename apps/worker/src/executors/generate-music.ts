@@ -21,7 +21,7 @@ import { getModelProfileByEndpoint } from '@ugc/db';
 import { runGenerateMusic } from '@ugc/services';
 
 import type { GenerationExecutorDeps } from './generation';
-import { requireOutputContext } from './_shared';
+import { requireOutputContext, runGenerationStep } from './_shared';
 
 /** El ref ligero del bed musical generado (la verdad vive en `generation`/`asset`). */
 interface N7eOutput {
@@ -62,21 +62,23 @@ export function makeN7eExecutor(deps: GenerationExecutorDeps): StepExecutor {
       );
     }
 
-    const res = await runGenerateMusic(
-      {
-        db: deps.db,
-        storage: deps.storage,
-        falKey: deps.falKey,
-        ...(deps.logger !== undefined ? { logger: deps.logger } : {}),
-        ...(deps.fetch !== undefined ? { fetch: deps.fetch } : {}),
-      },
-      {
-        musicModelProfileId: profile.id,
-        mood: cfg.mood,
-        durationSeconds: cfg.durationSeconds,
-        ...(cfg.lyrics !== undefined ? { lyrics: cfg.lyrics } : {}),
-        ...(stepId !== undefined ? { stepRunId: stepId } : {}),
-      },
+    const res = await runGenerationStep(() =>
+      runGenerateMusic(
+        {
+          db: deps.db,
+          storage: deps.storage,
+          falKey: deps.falKey,
+          ...(deps.logger !== undefined ? { logger: deps.logger } : {}),
+          ...(deps.fetch !== undefined ? { fetch: deps.fetch } : {}),
+        },
+        {
+          musicModelProfileId: profile.id,
+          mood: cfg.mood,
+          durationSeconds: cfg.durationSeconds,
+          ...(cfg.lyrics !== undefined ? { lyrics: cfg.lyrics } : {}),
+          ...(stepId !== undefined ? { stepRunId: stepId } : {}),
+        },
+      ),
     );
 
     collectOutput({

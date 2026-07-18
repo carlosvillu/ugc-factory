@@ -51,6 +51,11 @@ export {
   // sin gastar reintentos — crítico en nodos de PAGO (un retry determinista = dinero
   // quemado para fallar igual).
   PermanentStepError,
+  // Backoff del retry + tope de reintentos de los N7 (T4.11, MONEY POINT deuda T4.10b): el
+  // presupuesto de espera de la carrera-perdedora de dedup para que sobreviva la latencia peor-caso
+  // del ganador (Veo, minutos) y deduplique en vez de fallar.
+  RETRY_BACKOFF_MS,
+  N7_MAX_RETRIES,
   type DemoConfig,
   type StepExecutor,
   type ExecutorContext,

@@ -16,6 +16,7 @@ import { StepExecuteJobSchema, stepExecuteJob } from '@ugc/core/jobs';
 import {
   IllegalTransitionError,
   PermanentStepError,
+  RETRY_BACKOFF_MS,
   type ExecutorDep,
   type StepEvent,
   type StepExecutor,
@@ -24,6 +25,7 @@ import {
   shouldPause,
   transition,
 } from '@ugc/core/orchestrator';
+import { LoserRaceError } from '@ugc/core/generation';
 import type { Logger } from '@ugc/core';
 import { findRunAutopilot, findStep, findStepsByIds } from '@ugc/db';
 import type { DbClient } from '@ugc/db';
@@ -224,7 +226,18 @@ export async function registerStepConsumer({
           // para el visor de logs del panel del canvas. Solo el `message` (un jsonb
           // pequeño); el stack no viaja por SSE.
           const errorInfo = { message: err instanceof Error ? err.message : String(err) };
-          const outcome = await failStep(transitionDeps, stepId, { error: errorInfo });
+          // `retryBackoffMs` (T4.11, MONEY POINT): el re-encolado del retry espera este backoff SOLO
+          // cuando el fallo es una CARRERA PERDEDORA de dedup (`LoserRaceError`). Ahí es load-bearing:
+          // sin él el loser agotaría `max_retries` en milisegundos mientras el ganador Veo sigue
+          // generando (minutos) e iría a `failed` en vez de deduplicar. Para CUALQUIER OTRO fallo
+          // (transitorio de red, demo/análisis) el retry es INMEDIATO como siempre — no se penaliza un
+          // fallo normal con 30 s de espera (y no se altera la latencia de los tests de retry). La señal
+          // de tipo dedicada es justo lo que permite espaciar SOLO el caso que lo necesita.
+          const retryBackoffMs = err instanceof LoserRaceError ? RETRY_BACKOFF_MS : 0;
+          const outcome = await failStep(transitionDeps, stepId, {
+            error: errorInfo,
+            ...(retryBackoffMs > 0 ? { retryBackoffMs } : {}),
+          });
           log.info(
             { outcome },
             `step.execute: ${outcome === 'retried' ? 'reencolado para reintento' : 'reintentos agotados, failed terminal'}`,

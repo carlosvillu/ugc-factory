@@ -520,4 +520,86 @@ describe('runGenerateAudio — cadena TTS→ASR end-to-end (Verificación T4.5)'
     const failed = await listGenerationsByStatus(tdb.db, 'failed');
     expect(failed.some((g) => g.resolvedPrompt === 'sin audio')).toBe(true);
   });
+
+  it('HIT DE DEDUP (fix T4.11 T4.10c): un voiceover deduplicado entrega duración + wordCount REALES del asset (no 0)', async () => {
+    // Un lote de variantes del mismo ángulo comparte narración/voz/modelo → mismo content_hash → la 2ª
+    // generación DEDUPLICA la 1ª (0 fal, 0 coste). El deliverable del voiceover son SUS word_timestamps +
+    // SU duración, que YA viven sellados en el asset reutilizado. El Result del hit DEBE reportarlos REALES
+    // (leídos del asset), no un `durationSeconds:0`/`wordCount:0` que enmascare el estado — el consumidor
+    // de subtítulos/lipsync depende de ellos.
+    happyChain('dedup-hit');
+    // Narración ÚNICA a este test (el harness no trunca entre tests): un hash fresco, sin colisión.
+    const narration =
+      'This exact narration is deduplicated across two identical concurrent variants.';
+    const first = await runGenerateAudio(deps(), {
+      ttsModelProfileId: ttsProfile.id,
+      asrModelProfileId: asrProfile.id,
+      narration,
+      ttsInputs: { voice: 'af_heart' },
+      asrLanguageCode: 'eng',
+    });
+    expect(first.reused).toBe(false);
+    // La 1ª generación sella 11 palabras y duración 3.179 (del fixture ASR real).
+    expect(first.wordCount).toBe(11);
+    expect(first.durationSeconds).toBeCloseTo(3.179, 3);
+
+    // 2ª generación IDÉNTICA → HIT de dedup. Si `happyChain` se invocara de nuevo y el hit NO tomara la
+    // ruta de reúso, submitearía (y el mock lo serviría) — pero el hit NO debe llamar a fal. Para
+    // demostrar que NO submitea, NO re-registramos handlers: `resetHandlers` en afterEach los quitó, así
+    // que un submit real reventaría con onUnhandledRequest:'error'. El hit no toca la red.
+    server.resetHandlers();
+    const hit = await runGenerateAudio(deps(), {
+      ttsModelProfileId: ttsProfile.id,
+      asrModelProfileId: asrProfile.id,
+      narration,
+      ttsInputs: { voice: 'af_heart' },
+      asrLanguageCode: 'eng',
+    });
+
+    // Es un HIT: mismo asset, 0 coste, sin fal.
+    expect(hit.reused).toBe(true);
+    expect(hit.assetId).toBe(first.assetId);
+    expect(hit.ttsCostCents).toBe(0);
+    expect(hit.asrCostCents).toBe(0);
+    // EL FIX: duración y wordCount REALES del asset reutilizado — NO 0 (que mentiría al subtitulador).
+    expect(hit.durationSeconds).toBeCloseTo(3.179, 3);
+    expect(hit.wordCount).toBe(11);
+
+    // Y la verdad vive en el ASSET (el consumidor los lee de ahí, no del Result): mismo asset, mismos
+    // timestamps sellados.
+    const asset = await getAsset(tdb.db, hit.assetId);
+    const wt = WordTimestampsSchema.parse(asset?.wordTimestamps);
+    expect(computeWordCoverage(wt).wordCount).toBe(11);
+    expect(asset?.durationS).toBeCloseTo(3.179, 3);
+  });
+
+  it('CONTROL NEGATIVO (fix T4.11 T4.10c): un asset de audio completed SIN duration_s es invariante roto → el hit LANZA, no reporta 0', async () => {
+    // Reintroduce el enmascaramiento que el fix elimina: si un asset `completed` reutilizado tuviera
+    // `duration_s` NULL, el código viejo devolvía `durationSeconds: asset.durationS ?? 0` — un 0 silencioso
+    // que recortaría la timeline del subtitulador. El fix lo trata como invariante roto y LANZA. Este test
+    // FALLARÍA (el hit devolvería 0 en vez de lanzar) si alguien restaurara el `?? 0`.
+    happyChain('dedup-null-dur');
+    const narration =
+      'A voiceover whose reused asset has a corrupted null duration for this control.';
+    const seed = await runGenerateAudio(deps(), {
+      ttsModelProfileId: ttsProfile.id,
+      asrModelProfileId: asrProfile.id,
+      narration,
+      ttsInputs: { voice: 'af_heart' },
+      asrLanguageCode: 'eng',
+    });
+    // Corromper el asset del voiceover completado a `duration_s = NULL` (un invariante roto simulado).
+    await tdb.pool.query('UPDATE asset SET duration_s = NULL WHERE id = $1', [seed.assetId]);
+
+    server.resetHandlers();
+    await expect(
+      runGenerateAudio(deps(), {
+        ttsModelProfileId: ttsProfile.id,
+        asrModelProfileId: asrProfile.id,
+        narration,
+        ttsInputs: { voice: 'af_heart' },
+        asrLanguageCode: 'eng',
+      }),
+    ).rejects.toThrow(/no tiene duration_s \(invariante roto\)/i);
+  });
 });

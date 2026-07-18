@@ -6,6 +6,7 @@ export {
   makeFalClient,
   FalProviderError,
   FalResponseError,
+  LoserRaceError,
   DEFAULT_FAL_CONCURRENCY,
   DEFAULT_FAL_TIMEOUT_MS,
   DEFAULT_FAL_MAX_RETRIES,

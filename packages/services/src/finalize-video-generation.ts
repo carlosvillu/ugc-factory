@@ -31,9 +31,14 @@ import {
   type Generation,
 } from '@ugc/db';
 
-/** El `kind` de asset de vídeo que el finalizer crea. Es la ÚNICA divergencia de datos entre N7c y N7d.
+/** El `kind` de asset que este finalizer crea. `avatar_clip`/`broll_clip` (N7c/N7d, vídeo) son la razón
+ *  original; `music_bed` (N7e) se admite SOLO para la vía de reconciliación kind-aware de `output.download`
+ *  (finalize-download.ts) — porque a nivel de HELPER las tres son la MISMA operación: UNA llamada fal →
+ *  coste `unit:'seconds'` → UN asset → `completed` bajo lock. El servicio LIVE `runGenerateMusic` conserva
+ *  su finalizer INLINE (no se funde con "vídeo" para no ensuciar sus call-sites — decisión de altitud
+ *  T4.11); esta unión ampliada es solo para que el consumer de descarga no DUPLIQUE el tail bajo lock.
  *  Interno (no se re-exporta desde el barrel): solo lo consumen las firmas de este módulo. */
-type VideoAssetKind = 'avatar_clip' | 'broll_clip';
+type SingleCallPerSecondAssetKind = 'avatar_clip' | 'broll_clip' | 'music_bed';
 
 export interface FinalizeVideoDeps {
   db: DbClient;
@@ -44,7 +49,7 @@ export interface FinalizeVideoArgs {
   /** La fila `generation` viva (en `submitted`, tras el poll a completed). */
   generation: Generation;
   /** El `kind` del asset de vídeo a crear (`avatar_clip`/`broll_clip`). */
-  assetKind: VideoAssetKind;
+  assetKind: SingleCallPerSecondAssetKind;
   /** La duración del clip en segundos, YA derivada por el servicio (avatar: output/audio; broll: enum). */
   durationSeconds: number;
   /** El coste del clip en céntimos (por segundo), YA computado por el servicio (`falVideoCostOf`). */

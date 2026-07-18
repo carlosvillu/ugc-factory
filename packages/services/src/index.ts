@@ -60,7 +60,15 @@ export { submitGenerationForWebhook } from './submit-generation';
 // Tail compartido de la generación (T4.2, §9.6): descarga output → asset → cost → completed. Lo
 // usan `runGenerate` (poll) y el consumer `output.download` (webhook). `OutputDownloader` es el
 // puerto mínimo de descarga que el consumer inyecta (el FalClient lo cumple).
-export { finalizeGeneration, type OutputDownloader } from './finalize-generation';
+// `OutputDownloader` es el puerto mínimo de descarga que el consumer `output.download` inyecta (el
+// FalClient lo cumple). `finalizeGeneration` (imagen) NO se re-exporta: lo consume internamente el
+// dispatch kind-aware (`finalizeGenerationByKind`) por ruta relativa; el consumer solo ve el dispatch.
+export { type OutputDownloader } from './finalize-generation';
+// Dispatch KIND-AWARE del consumer `output.download` (T4.11, MONEY POINT): ruta una generación colgada
+// reconciliada al finalizer correcto por su `model_profile.kind` (imagen/vídeo/música), NUNCA al de
+// imagen a ciegas (un audio/vídeo reventaría o crearía un asset corrupto). Un `tts` no es liquidable por
+// esta vía (necesita ASR) → `PermanentStepError`.
+export { finalizeGenerationByKind } from './finalize-download';
 // Webhook de fal (T4.2, §9.6): el handler que persiste el evento verificado y encola la descarga
 // (lo llama el route handler de web), y la caché ≤24 h del JWKS que alimenta a `verifyFalWebhook`.
 export { handleFalWebhookEvent } from './handle-fal-webhook';

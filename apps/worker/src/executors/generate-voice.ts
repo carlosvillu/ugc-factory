@@ -22,7 +22,7 @@ import { getModelProfileByEndpoint, getScriptById } from '@ugc/db';
 import { runGenerateAudio } from '@ugc/services';
 
 import type { GenerationExecutorDeps } from './generation';
-import { requireOutputContext } from './_shared';
+import { requireOutputContext, runGenerationStep } from './_shared';
 
 /** El endpoint del ASR: la ruta por defecto de word timestamps (§13.1). El mismo para los 3 tiers. */
 const ASR_ENDPOINT = 'fal-ai/elevenlabs/speech-to-text';
@@ -123,22 +123,24 @@ export function makeN7bExecutor(deps: GenerationExecutorDeps): StepExecutor {
     for (let i = 0; i < script.scenes.length; i++) {
       const scene = script.scenes[i];
       if (scene === undefined) continue;
-      const res = await runGenerateAudio(
-        {
-          db: deps.db,
-          storage: deps.storage,
-          falKey: deps.falKey,
-          ...(deps.logger !== undefined ? { logger: deps.logger } : {}),
-          ...(deps.fetch !== undefined ? { fetch: deps.fetch } : {}),
-        },
-        {
-          ttsModelProfileId: ttsProfile.id,
-          asrModelProfileId: asrProfile.id,
-          narration: scene.narration,
-          ttsInputs: voiceInputs,
-          ...(asrLanguageCode !== undefined ? { asrLanguageCode } : {}),
-          ...(stepId !== undefined ? { stepRunId: stepId } : {}),
-        },
+      const res = await runGenerationStep(() =>
+        runGenerateAudio(
+          {
+            db: deps.db,
+            storage: deps.storage,
+            falKey: deps.falKey,
+            ...(deps.logger !== undefined ? { logger: deps.logger } : {}),
+            ...(deps.fetch !== undefined ? { fetch: deps.fetch } : {}),
+          },
+          {
+            ttsModelProfileId: ttsProfile.id,
+            asrModelProfileId: asrProfile.id,
+            narration: scene.narration,
+            ttsInputs: voiceInputs,
+            ...(asrLanguageCode !== undefined ? { asrLanguageCode } : {}),
+            ...(stepId !== undefined ? { stepRunId: stepId } : {}),
+          },
+        ),
       );
       clips.push({
         sceneIndex: i,

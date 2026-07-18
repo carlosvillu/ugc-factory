@@ -325,6 +325,11 @@ export interface NewStepRow {
   // §7.1.b (T0.8): banderas de checkpoint tomadas de la definición del DAG.
   isCheckpoint: boolean;
   checkpointConfig: unknown;
+  // Override per-nodo del tope de reintentos (T4.11, MONEY POINT deuda T4.10b). `undefined` ⇒ no
+  // se escribe la columna y aplica el default de BD (`step_run.max_retries` = 3). Los nodos N7 lo
+  // suben para que el presupuesto de retry de la carrera-perdedora de dedup sobreviva la latencia
+  // peor-caso del ganador (Veo, minutos); ver `RunNodeSchema.maxRetries`.
+  maxRetries?: number;
 }
 
 /**

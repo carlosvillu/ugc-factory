@@ -51,6 +51,7 @@ import {
 } from '@ugc/db';
 
 import { falMusicCostOf } from './fal-pricing';
+import { degradeGenerationOnError } from './finalize-video-generation';
 import { resolveProductionDedup } from './generation-dedup';
 import { NOOP_LOGGER } from './noop-logger';
 
@@ -321,31 +322,18 @@ export async function runGenerateMusic(
     };
   } catch (err) {
     // Degradar a `failed` SOLO si la fila NO es ya terminal (`completed`): una ruta concurrente (T4.11)
-    // pudo haberla completado. Mismo criterio de gracia que la rama `alreadyFinalized`.
-    //
-    // EL CATCH NO PUEDE ENTERRAR LA CAUSA RAÍZ (lección T1.8). Si la tx de degradación LANZA (conexión
-    // caída/timeout justo en el fallo), ese error secundario NO debe propagarse en lugar de `err`: el
-    // operador vería "connection terminated" en vez del fallo REAL de fal ("output sin audio"). Se
-    // envuelve en su propio try/catch: el fallo del UPDATE se LOGUEA (observabilidad del daño colateral)
-    // y SIEMPRE se re-lanza `err` (la causa raíz), nunca el error de la degradación.
-    try {
-      await db.transaction(async (tx) => {
-        const locked = await getGenerationForUpdate(tx, generation.id);
-        if (locked !== undefined && locked.status !== 'completed') {
-          await updateGeneration(tx, generation.id, { status: 'failed', completedAt: new Date() });
-        }
-      });
-    } catch (degradeErr) {
-      log.error(
-        {
-          event: 'fal_music_degrade_failed',
-          generationId: generation.id,
-          degradeError: degradeErr instanceof Error ? degradeErr.message : String(degradeErr),
-          originalError: err instanceof Error ? err.message : String(err),
-        },
-        'no se pudo marcar la generación de música como failed tras un fallo de fal: la fila puede quedar en un estado no terminal (reconciliable por el sweeper)',
-      );
-    }
+    // pudo haberla completado. Mismo criterio de gracia que la rama `alreadyFinalized`, y misma disciplina
+    // anti-T1.8 (el error de fal —causa raíz— SIEMPRE sobrevive; el fallo de la degradación se LOGUEA
+    // pero NUNCA se propaga en su lugar). Se REUSA el helper compartido `degradeGenerationOnError`
+    // (extraído en T4.11): este catch de degradación era byte-idéntico al de avatar/broll — el 3er clon.
+    // El finalizer inline de música NO se funde con `finalizeVideoGeneration` a propósito (decisión de
+    // altitud, ver informe): meterle `music_bed` cambiaría un finalizer de VÍDEO en un finalizer genérico
+    // y ensuciaría los call-sites de vídeo; el catch de degradación, en cambio, es kind-agnóstico y se
+    // comparte sin coste. Tras degradar, se re-lanza SIEMPRE `err` (la causa raíz de fal).
+    await degradeGenerationOnError(
+      { db, logger: log },
+      { generationId: generation.id, originalError: err, event: 'fal_music_degrade_failed' },
+    );
     throw err;
   }
 }

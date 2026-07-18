@@ -37,6 +37,18 @@ export const RunNodeSchema = z.strictObject({
   // checkpoint marcado así pausa aunque el run esté en autopilot). Opaco por lo
   // demás; se persiste tal cual en `step_run.checkpoint_config`.
   checkpointConfig: z.looseObject({ alwaysPause: z.boolean().optional() }).nullish(),
+  // Override per-nodo del tope de reintentos automáticos (T4.11, MONEY POINT deuda T4.10b).
+  // OMITIDO ⇒ el default de la columna `step_run.max_retries` (3). Existe porque los nodos N7
+  // de generación de PAGO tienen un requisito de retry ESPECIAL que el default no cubre: cuando
+  // dos generaciones idénticas concurrentes compiten por el índice único de dedup (§9.6), la
+  // PERDEDORA lanza `LoserRaceError` (retryable) y debe REINTENTAR hasta que la GANADORA complete
+  // para deduplicar a su asset (0 re-pago). Si la ganadora es un vídeo Veo (minutos) y el
+  // presupuesto de retry del loser se agota antes, el loser va a `failed` en vez de deduplicar y
+  // rompe en silencio la Verificación «nº de generations = hooks+body+CTA+shots». El presupuesto
+  // efectivo es `maxRetries × backoff acumulado` (el backoff lo aplica el consumer al reencolar,
+  // ver `RETRY_BACKOFF_MS` en step-execute); N7 lo fija HOLGADO para cubrir la latencia peor-caso
+  // de Veo. NO lo bajes sin entender que rompe la dedup concurrente (Pass 2b lo cablea a N7).
+  maxRetries: z.number().int().nonnegative().optional(),
 });
 export type RunNode = z.infer<typeof RunNodeSchema>;
 /**

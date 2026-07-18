@@ -71,17 +71,17 @@ export interface ReconcilableGeneration {
   kind: GenerationKind;
 }
 
-// T4.11: audio/video/non-image generations are NOT handled here; make this kind-aware before wiring N7b/N7c to the worker
-// La reconciliación encola `output.download`, cuyo consumer llama `finalizeGeneration` (SOLO-IMAGEN).
-// N7b (T4.5) produce generaciones de AUDIO (`kind='tts_audio'`) y N7c (T4.7) de VÍDEO/AVATAR
-// (`kind='avatar_clip'`); si el sweeper las reconcilia y encola aquí, el consumer reventaría con su
-// output `{audio:{url}}`/`{video:{url}}`. `GenerationKind` NO incluye `'audio'`/`'video'` aún (bueno,
-// `'video'` existe en el tipo pero `resolveKind` defaultea a `'image'`) — la mina es LATENTE porque
-// T4.5/T4.7 NO cablean N7b/N7c al DAG (corren stepless vía `runGenerateAudio`/`runGenerateAvatar`
-// directo, sin sweeper). T4.11 debe: (1) resolver el kind real (audio/vídeo) de la fila, (2) rutar el
-// enqueue a un download kind-aware ANTES de que un caller vivo produzca generaciones no-imagen reconciliables.
-/** El "tipo" de generación que fija el deadline de cuelgue. Hoy solo `image`; la costura por-tipo
- *  existe para que vídeo (T4.7/T4.8) traiga su propio deadline (minutos) sin tocar esta lógica. */
+// `GenerationKind` (image|video) fija SOLO el DEADLINE de cuelgue por tipo (imagen segundos, vídeo
+// minutos): el sweeper lo resuelve desde `model_profile.kind` (`resolveKind`, ver sweeper.ts). El
+// enrutado del OUTPUT al finalizer correcto (imagen vs vídeo vs música) NO vive aquí —reconcile solo
+// persiste el output en forma webhook y encola `output.download`—: vive en el CONSUMER de esa cola, que
+// T4.11 hizo kind-aware (`finalizeGenerationByKind`, finalize-download.ts). Así una generación de
+// audio/vídeo reconciliada ya NO cae en el finalizer de imagen. (Este tipo se mantiene binario a
+// propósito: un bed de música y un voiceover usan el deadline de imagen —segundos-minuto—, solo el
+// vídeo Veo necesita el deadline largo.)
+/** El "tipo" de generación que fija el deadline de cuelgue. `image` (segundos-minuto) vs `video`
+ *  (minutos); el sweeper lo deriva de `model_profile.kind`. El enrutado del finalizer por kind es otra
+ *  cosa y vive en el consumer `output.download` (finalize-download.ts, T4.11). */
 export type GenerationKind = 'image' | 'video';
 
 /** El resultado observable de una reconciliación (logs + tests distinguen cada rama). */

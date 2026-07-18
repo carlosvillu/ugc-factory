@@ -26,7 +26,7 @@ import type { Logger, StorageAdapter } from '@ugc/core';
 import { getBrief, getModelProfileByEndpoint, type DbClient } from '@ugc/db';
 import { runGenerate } from '@ugc/services';
 
-import { requireOutputContext } from './_shared';
+import { requireOutputContext, runGenerationStep } from './_shared';
 
 /** El endpoint del ÚNICO modelo text-to-image sembrado (§13.1): `fal-ai/flux-2`. NO usa el sistema
  *  de adapters (no tiene `promptAdapter`): N7a le pasa `image_size`/`num_images` directo por
@@ -138,23 +138,25 @@ export function makeN7aExecutor(deps: GenerationExecutorDeps): StepExecutor {
         num_images: 1,
         seed: i,
       };
-      const res = await runGenerate(
-        {
-          db: deps.db,
-          storage: deps.storage,
-          falKey: deps.falKey,
-          ...(deps.logger !== undefined ? { logger: deps.logger } : {}),
-          ...(deps.fetch !== undefined ? { fetch: deps.fetch } : {}),
-        },
-        {
-          modelProfileId: profile.id,
-          resolvedPrompt,
-          inputs,
-          // Procedencia: ESTE es el marcado de `synthetic_product`. Se persiste en el INSERT de la
-          // fila `generation` (columna de primera clase), no en un UPDATE suelto.
-          syntheticProduct: true,
-          ...(stepId !== undefined ? { stepRunId: stepId } : {}),
-        },
+      const res = await runGenerationStep(() =>
+        runGenerate(
+          {
+            db: deps.db,
+            storage: deps.storage,
+            falKey: deps.falKey,
+            ...(deps.logger !== undefined ? { logger: deps.logger } : {}),
+            ...(deps.fetch !== undefined ? { fetch: deps.fetch } : {}),
+          },
+          {
+            modelProfileId: profile.id,
+            resolvedPrompt,
+            inputs,
+            // Procedencia: ESTE es el marcado de `synthetic_product`. Se persiste en el INSERT de la
+            // fila `generation` (columna de primera clase), no en un UPDATE suelto.
+            syntheticProduct: true,
+            ...(stepId !== undefined ? { stepRunId: stepId } : {}),
+          },
+        ),
       );
       shots.push({
         generationId: res.generation.id,

@@ -80,6 +80,10 @@ export async function createRun(
       // schema Zod los normalizaría (isCheckpoint→false, checkpointConfig→null).
       isCheckpoint: node.isCheckpoint ?? false,
       checkpointConfig: node.checkpointConfig ?? null,
+      // Override del tope de reintentos (T4.11): solo se propaga si el nodo lo trae; omitido ⇒
+      // NewStepRow.maxRetries=undefined ⇒ la columna usa su default de BD (3). Los N7 lo suben
+      // para que la carrera-perdedora de dedup sobreviva la latencia peor-caso del ganador.
+      ...(node.maxRetries !== undefined ? { maxRetries: node.maxRetries } : {}),
     } satisfies NewStepRow,
   }));
   const stepRows: NewStepRow[] = planned.map((p) => p.row);

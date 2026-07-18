@@ -29,7 +29,7 @@ import { getModelProfileByEndpoint, getScriptById } from '@ugc/db';
 import { runGenerateBroll } from '@ugc/services';
 
 import type { GenerationExecutorDeps } from './generation';
-import { requireOutputContext } from './_shared';
+import { requireOutputContext, runGenerationStep } from './_shared';
 
 /** El ref ligero de un clip de b-roll generado (la verdad vive en `generation`/`asset`). */
 interface N7dClipRef {
@@ -165,27 +165,29 @@ export function makeN7dExecutor(deps: GenerationExecutorDeps): StepExecutor {
       if (scenePlan === undefined) continue;
       for (const planned of scenePlan.clips) {
         const durationSeconds = quantizeDurationToEnum(planned.seconds, durations);
-        const res = await runGenerateBroll(
-          {
-            db: deps.db,
-            storage: deps.storage,
-            falKey: deps.falKey,
-            ...(deps.logger !== undefined ? { logger: deps.logger } : {}),
-            ...(deps.fetch !== undefined ? { fetch: deps.fetch } : {}),
-          },
-          {
-            brollModelProfileId: profile.id,
-            imageAssetIds: cfg.imageAssetIds,
-            durationSeconds,
-            aspectRatio: cfg.aspect,
-            resolution: cfg.resolution,
-            ...(stepId !== undefined ? { stepRunId: stepId } : {}),
-            // SALT DE DEDUP (T4.10): dos clips de la MISMA escena troceada (§7.5) tienen keyframe+prompt+
-            // duración idénticos → mismo content_hash → el dedup los colapsaría en uno solo (el vídeo
-            // repetiría el clip). El salt `escena:clip` los distingue en el hash SIN filtrarse al payload de
-            // fal. Variantes distintas que comparten la misma estructura de body reusan igual (mismo salt).
-            dedupSalt: `${String(bodySceneIndex)}:${String(planned.clipIndex)}`,
-          },
+        const res = await runGenerationStep(() =>
+          runGenerateBroll(
+            {
+              db: deps.db,
+              storage: deps.storage,
+              falKey: deps.falKey,
+              ...(deps.logger !== undefined ? { logger: deps.logger } : {}),
+              ...(deps.fetch !== undefined ? { fetch: deps.fetch } : {}),
+            },
+            {
+              brollModelProfileId: profile.id,
+              imageAssetIds: cfg.imageAssetIds,
+              durationSeconds,
+              aspectRatio: cfg.aspect,
+              resolution: cfg.resolution,
+              ...(stepId !== undefined ? { stepRunId: stepId } : {}),
+              // SALT DE DEDUP (T4.10): dos clips de la MISMA escena troceada (§7.5) tienen keyframe+prompt+
+              // duración idénticos → mismo content_hash → el dedup los colapsaría en uno solo (el vídeo
+              // repetiría el clip). El salt `escena:clip` los distingue en el hash SIN filtrarse al payload de
+              // fal. Variantes distintas que comparten la misma estructura de body reusan igual (mismo salt).
+              dedupSalt: `${String(bodySceneIndex)}:${String(planned.clipIndex)}`,
+            },
+          ),
         );
         clips.push({
           bodySceneIndex,

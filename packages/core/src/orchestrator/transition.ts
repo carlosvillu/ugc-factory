@@ -146,11 +146,20 @@ function settlesCost(event: StepEvent): boolean {
 export async function enqueueStep(
   jobs: TxStores['jobs'],
   step: Pick<StepRow, 'id' | 'runId' | 'nodeKey'>,
+  // BACKOFF opcional del re-encolado (T4.11, MONEY POINT deuda T4.10b): cuando > 0, el job no es
+  // elegible hasta `now + delayMs` (pg-boss `startAfter`). Se usa SOLO en el re-encolado de un
+  // RETRY (failed→queued), NUNCA en el encolado inicial (pending→queued) ni en la resolución
+  // aguas abajo — ahí `delayMs` es 0 (comportamiento de siempre). Por qué importa: sin backoff, un
+  // retry se reencola de inmediato y la carrera-perdedora de dedup de un N7 agotaría su presupuesto
+  // en milisegundos mientras el ganador (Veo, minutos) sigue generando ⇒ el loser iría a `failed`
+  // en vez de deduplicar. El backoff estira `maxRetries × delay` para cubrir esa latencia.
+  delayMs = 0,
 ): Promise<void> {
   await jobs.enqueue({
     job: stepExecuteJob,
     payload: { runId: step.runId, stepId: step.id, nodeKey: step.nodeKey },
     singletonKey: `${step.runId}:${step.nodeKey}`,
+    ...(delayMs > 0 ? { startAfter: new Date(Date.now() + delayMs) } : {}),
   });
 }
 
@@ -226,7 +235,10 @@ export async function applyTransition(
   //     QUÉ se saltó el nodo en vez de mostrar un hueco. Si alguien "simplifica" la
   //     condición a solo `succeed`, BORRA ese motivo.
   // Ignorado en el resto de eventos.
-  opts: { error?: unknown; outputRefs?: unknown } = {},
+  // `retryBackoffMs` (T4.11): backoff del re-encolado cuando ESTE evento es un `retry`. Solo el
+  // `retry` (failed→queued) lo aplica; el `enqueue` inicial y la resolución aguas abajo se
+  // reencolan sin delay. Default 0 (comportamiento de siempre para demo/análisis).
+  opts: { error?: unknown; outputRefs?: unknown; retryBackoffMs?: number } = {},
 ): Promise<StepStatus> {
   // 1) Lock de fila + estado BAJO el lock.
   const step = await steps.findForUpdate(stepId);
@@ -293,7 +305,10 @@ export async function applyTransition(
   //    `queued` (evento `enqueue`: pending→queued) tiene, por definición de
   //    §7.1, un job en la cola: se crea aquí.
   if (to === 'queued') {
-    await enqueueStep(jobs, step);
+    // El backoff solo aplica al RE-ENCOLADO de un `retry` (failed→queued): un `enqueue` inicial
+    // (pending→queued) se encola sin delay. Así el retry de un N7 espaciado sobrevive a la latencia
+    // del ganador de la dedup sin martillear la cola, y el resto de encolados no cambian.
+    await enqueueStep(jobs, step, event === 'retry' ? (opts.retryBackoffMs ?? 0) : 0);
   }
 
   // 5) Resolver deps aguas abajo cuando este step se RESUELVE y habilita a sus
@@ -387,7 +402,9 @@ export async function failStep(
   deps: TransitionDeps,
   stepId: string,
   // T0.11: el error del executor a persistir en el `fail` (para el visor del panel).
-  opts: { error?: unknown } = {},
+  // T4.11: `retryBackoffMs` — backoff del re-encolado del retry (para la carrera-perdedora de dedup
+  // de los N7, que debe espaciar sus reintentos hasta que el ganador complete). Default 0.
+  opts: { error?: unknown; retryBackoffMs?: number } = {},
 ): Promise<FailOutcome> {
   return deps.withTransaction(async (stores) => {
     await applyTransition(stores, stepId, 'fail', { error: opts.error });
@@ -396,7 +413,10 @@ export async function failStep(
     const failed = await stores.steps.findForUpdate(stepId);
     if (!failed) throw new StepNotFoundError(stepId);
     if (failed.retryCount >= failed.maxRetries) return 'exhausted';
-    await applyTransition(stores, stepId, 'retry'); // failed→queued + increment + enqueue
+    // failed→queued + increment + enqueue (con backoff si el caller lo pidió).
+    await applyTransition(stores, stepId, 'retry', {
+      ...(opts.retryBackoffMs !== undefined ? { retryBackoffMs: opts.retryBackoffMs } : {}),
+    });
     return 'retried';
   });
 }

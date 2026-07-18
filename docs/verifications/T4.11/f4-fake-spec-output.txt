@@ -1,0 +1,25 @@
+      13 |   await page.getByRole('button', { name: /entrar/i }).click();
+      14 |
+        at /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/web/e2e/auth.setup.ts:11:14
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/auth.setup.ts-login-y-persistir-sesión-setup/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/auth.setup.ts-login-y-persistir-sesión-setup/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/auth.setup.ts-login-y-persistir-sesión-setup/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/auth.setup.ts-login-y-persistir-sesión-setup/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace test-results/auth.setup.ts-login-y-persistir-sesión-setup/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  1 failed
+    [setup] › e2e/auth.setup.ts:10:1 › login y persistir sesión ────────────────────────────────────
+  1 did not run

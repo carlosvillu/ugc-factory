@@ -1,0 +1,12 @@
+=== generations (kind via model_profile) ===
+             id             |  kind  |  status   | synthetic_product | cost_actual 
+----------------------------+--------+-----------+-------------------+-------------
+ 01KXVKN34S1P12KBNT6SQW05F8 | music  | completed | f                 |           0
+ 01KXVKN359GZN8ZFFN7D4R91MD | image  | completed | t                 |           1
+ 01KXVKN35CCD32S5YY4DKAZ0Y8 | tts    | completed | f                 |           0
+ 01KXVKN7FRJVBVF2JQSKMEJTM5 | image  | failed    | t                 |           1
+ 01KXVKN8CGHPBG0A5WE66RVRVC | tts    | completed | f                 |           0
+ 01KXVKND8R0656CX8N5X42GZHX | tts    | completed | f                 |           0
+ 01KXVKNKEKEJS6RCE4W0E0QJAM | avatar | submitted | f                 |            
+(7 rows)
+

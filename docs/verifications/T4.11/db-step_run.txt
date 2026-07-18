@@ -1,0 +1,15 @@
+ node_key |    status     |   vid    | rc | est | act |                                       err                                        
+----------+---------------+----------+----+-----+-----+----------------------------------------------------------------------------------
+ N1       | succeeded     |          |  0 |     |   0 | 
+ N2       | succeeded     |          |  0 |     |   0 | 
+ N3       | succeeded     |          |  0 |     |   8 | 
+ N4       | succeeded     |          |  0 |     |   0 | 
+ N5       | succeeded     |          |  0 |     |   2 | 
+ N6       | succeeded     | 01KXVKF3 |  0 |     |   0 | 
+ N7a      | failed        | 01KXVKF3 |  0 |     |   2 | {"message": "runGenerate: la generación 01KXVKN7FRJVBVF2JQSKMEJTM5 fue finalizad
+ N7b      | succeeded     | 01KXVKF3 |  0 |     |   0 | 
+ N7c      | succeeded     | 01KXVKF3 |  0 |     |  26 | 
+ N7d      | awaiting_deps | 01KXVKF3 |  0 |     |     | 
+ N7e      | succeeded     | 01KXVKF3 |  0 |     |   0 | 
+(11 rows)
+

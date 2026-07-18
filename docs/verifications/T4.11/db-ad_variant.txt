@@ -1,0 +1,5 @@
+     id     |  status  | audio_source 
+------------+----------+--------------
+ 01KXVKF3FW | scripted | ai_bed
+(1 row)
+

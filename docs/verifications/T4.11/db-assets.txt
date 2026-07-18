@@ -1,0 +1,17 @@
+      id      |      kind       |    mime    |  bytes  | has_falurl | width | height |   dur    
+--------------+-----------------+------------+---------+------------+-------+--------+----------
+ 01KXVJJ4ZNPE | reference_image | image/png  |   84624 | t          |       |        |         
+ 01KXVJJ6ARSY | reference_image | image/png  |   84470 | f          |       |        |         
+ 01KXVJJ6BA2P | reference_image | image/png  |   84797 | f          |       |        |         
+ 01KXVJJ6BVA7 | reference_image | image/png  |   84797 | f          |       |        |         
+ 01KXVJJ6CC9F | reference_image | image/png  |   84739 | f          |       |        |         
+ 01KXVJYCM1D2 | screenshot      | image/png  |      70 | f          |       |        |         
+ 01KXVKN7FGSV | keyframe        | image/png  |  386813 | f          |   576 |   1024 |         
+ 01KXVKN8C82V | tts_audio       | audio/mpeg |   26376 | t          |       |        |    0.879
+ 01KXVKN9SN36 | music_bed       | audio/wav  | 2313538 | f          |       |        |       12
+ 01KXVKNAR4W0 | keyframe        | image/png  |  331857 | f          |   576 |   1024 |         
+ 01KXVKND8EV9 | tts_audio       | audio/mpeg |   41422 | f          |       |        |    2.479
+ 01KXVKNJ5VCY | tts_audio       | audio/mpeg |   19689 | f          |       |        |    1.039
+ 01KXVKRWMAQD | avatar_clip     | video/mp4  |  743092 | f          |       |        | 1.645687
+(13 rows)
+

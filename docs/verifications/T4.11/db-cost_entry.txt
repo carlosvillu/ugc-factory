@@ -1,0 +1,10 @@
+ provider  | n  | total_cents 
+-----------+----+-------------
+ fal       | 10 |          28
+ anthropic |  3 |          10
+ firecrawl |  1 |           0
+(3 rows)
+
+ERROR:  column "created_at" does not exist
+LINE 1: ...LECT left(generation_id,14) gen, amount_cents cc, created_at...
+                                                             ^

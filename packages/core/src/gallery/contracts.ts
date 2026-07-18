@@ -151,6 +151,35 @@ export function isBrollModelKind(kind: ModelKind): kind is (typeof BROLL_MODEL_K
   return (BROLL_MODEL_KINDS as readonly string[]).includes(kind);
 }
 
+/** Los `kind` de vídeo que N7c (clip de avatar, T4.7) sabe generar: `avatar` (imagen+audio → clip
+ *  hablando) y `lipsync`. Sibling de `isBrollModelKind`. */
+const AVATAR_MODEL_KINDS = ['avatar', 'lipsync'] as const;
+export function isAvatarModelKind(kind: ModelKind): kind is (typeof AVATAR_MODEL_KINDS)[number] {
+  return (AVATAR_MODEL_KINDS as readonly string[]).includes(kind);
+}
+
+/**
+ * ¿Este `model_kind` produce un ASSET DE VÍDEO? (avatar/lipsync de N7c ∪ t2v/i2v/r2v de N7d). Es el
+ * ÚNICO punto de verdad de la taxonomía «esto es vídeo»: lo consumen el sweeper (deadline de cuelgue
+ * en minutos, no en segundos), el finalizer de descarga (elige `finalizeVideoDownload`) y quien
+ * necesite distinguir vídeo de imagen/audio. ANTES vivía TRIPLICADO —`VIDEO_MODEL_KINDS` en el
+ * sweeper, `AVATAR_KINDS`+`BROLL_KINDS` en finalize-download— cosido por un comentario «mantener
+ * sincronizados»; T4.11 lo unifica aquí, siguiendo el molde de `isBrollModelKind`.
+ */
+export function isVideoModelKind(kind: ModelKind): boolean {
+  return isAvatarModelKind(kind) || isBrollModelKind(kind);
+}
+
+/** El `kind` DE ASSET de vídeo que corresponde a un `model_kind`: avatar/lipsync → `avatar_clip`;
+ *  t2v/i2v/r2v → `broll_clip`. `null` si el kind NO produce vídeo (image/tts/music/utility). Un único
+ *  punto de derivación para el finalizer de descarga (que antes lo hacía con `AVATAR_KINDS`/`BROLL_KINDS`
+ *  locales). */
+export function videoAssetKindForModelKind(kind: ModelKind): 'avatar_clip' | 'broll_clip' | null {
+  if (isAvatarModelKind(kind)) return 'avatar_clip';
+  if (isBrollModelKind(kind)) return 'broll_clip';
+  return null;
+}
+
 /** El `kind` que N7e (bed musical IA, T4.9) sabe generar: `music` (ace-step, text-to-music por tags).
  *  El servicio y el smoke de música comparten esta frontera (cada uno con su propio error tipado),
  *  igual que `isBrollModelKind` para N7d. */

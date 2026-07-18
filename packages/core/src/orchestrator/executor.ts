@@ -128,6 +128,10 @@ export interface ExecutorContext {
   signal?: AbortSignal;
   runId?: string;
   stepId?: string;
+  /** §12: la variante de este step, cuando el nodo es POR VARIANTE (N6/N7 de generación, T4.11). El
+   *  consumer la pasa desde `step_run.variant_id`. `null`/ausente en los nodos únicos del run. Es cómo
+   *  N7e sabe a qué `ad_variant` escribir `audio_source='ai_bed'` SIN duplicarla en su `config`. */
+  variantId?: string | null;
   collectOutput?: (outputRefs: unknown) => void;
   markInapplicable?: () => void;
   deps?: ExecutorDep[];

@@ -39,6 +39,12 @@ export interface StepConsumerDeps {
   /** Mapa node_key → executor (executors/index.ts). */
   executors: Record<string, StepExecutor>;
   logger: Logger;
+  /** Backoff del re-encolado de un retry de CARRERA PERDEDORA de dedup (`LoserRaceError`). Default
+   *  `RETRY_BACKOFF_MS` (30 s, producción). INYECTABLE SOLO para los tests del presupuesto de retry
+   *  (T4.11): un test que ejercita el ciclo failStep→retry→backoff→re-run necesita un backoff PEQUEÑO
+   *  para no esperar minutos reales — pero recorre EXACTAMENTE el mismo camino (el `startAfter` de
+   *  pg-boss), no uno simulado. NO afecta a los fallos NO-`LoserRaceError` (esos reintentan inmediato). */
+  retryBackoffMs?: number;
 }
 
 export async function registerStepConsumer({
@@ -47,6 +53,7 @@ export async function registerStepConsumer({
   transitionDeps,
   executors,
   logger,
+  retryBackoffMs: loserRetryBackoffMs = RETRY_BACKOFF_MS,
 }: StepConsumerDeps): Promise<void> {
   // batchSize 1 + localConcurrency > 1: cada worker procesa UN job (un throw solo
   // falla ese job), pero varios drenan en paralelo — necesario para que 20 runs
@@ -171,6 +178,9 @@ export async function registerStepConsumer({
           signal: job.signal,
           runId,
           stepId,
+          // §12: la variante del step (N6/N7 por-variante, T4.11) → el executor la usa para su efecto
+          // de dominio por-variante (N7e escribe `ad_variant.audio_source='ai_bed'`).
+          variantId: step?.variantId ?? null,
           deps,
           collectOutput: (refs) => {
             outcome.output = refs;
@@ -233,7 +243,7 @@ export async function registerStepConsumer({
           // (transitorio de red, demo/análisis) el retry es INMEDIATO como siempre — no se penaliza un
           // fallo normal con 30 s de espera (y no se altera la latencia de los tests de retry). La señal
           // de tipo dedicada es justo lo que permite espaciar SOLO el caso que lo necesita.
-          const retryBackoffMs = err instanceof LoserRaceError ? RETRY_BACKOFF_MS : 0;
+          const retryBackoffMs = err instanceof LoserRaceError ? loserRetryBackoffMs : 0;
           const outcome = await failStep(transitionDeps, stepId, {
             error: errorInfo,
             ...(retryBackoffMs > 0 ? { retryBackoffMs } : {}),

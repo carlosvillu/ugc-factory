@@ -29,6 +29,12 @@ export interface StepRow {
   id: string;
   runId: string;
   nodeKey: string;
+  // §12 (l.495): la variante a la que pertenece este step, cuando el nodo es POR VARIANTE (N6/N7 del
+  // DAG de generación, T4.11). `null` para los nodos únicos del run (N1..N5, demo). Es identidad
+  // SEPARADA de `node_key` (que se queda limpio `N7c`, reconocible por §12 y por el registro de
+  // executors): dos variantes que comparten body/CTA producen dos steps con el MISMO `node_key` en el
+  // MISMO run, distinguidos por este `variant_id` (y por él el `singletonKey` de encolado no colisiona).
+  variantId: string | null;
   status: StepStatus;
   dependsOn: string[];
   // Contador de reintentos y su tope (§7.1). El consumer los lee BAJO el lock
@@ -200,6 +206,10 @@ export interface NewSupersedingStepRow {
   id: string;
   runId: string;
   nodeKey: string;
+  // §12: la fila que supersede CONSERVA el `variant_id` de la superseded (T4.11): re-ejecutar un N7
+  // invalidado de una variante debe seguir siendo esa variante (para el singletonKey y el nodo compuesto
+  // del canvas). `undefined` ⇒ columna NULL (nodos únicos del run).
+  variantId?: string;
   status: StepStatus; // 'pending' | 'awaiting_deps'
   dependsOn: string[];
   supersedesId: string;
@@ -319,6 +329,9 @@ export interface NewStepRow {
   id: string;
   runId: string;
   nodeKey: string;
+  // §12: la variante del step si el nodo es por-variante (N6/N7, T4.11), o `undefined` (nodo único
+  // del run → columna NULL). Ver `StepRow.variantId`.
+  variantId?: string;
   status: StepStatus; // 'pending' (root) | 'awaiting_deps' (dependiente)
   dependsOn: string[]; // ULIDs de los steps de los que depende (ya resueltos)
   config: unknown; // parámetros del executor (step_run.config), o null

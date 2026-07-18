@@ -103,6 +103,14 @@ export {
   PackshotRouteSchema,
   type PackshotRoute,
 } from './batch-dag';
+// DAG de GENERACIÓN (T4.11): el run N6→N7a-e EXPANDIDO POR VARIANTE que materializa los assets de un
+// lote guionizado. Lo arranca la aprobación de CP3 con `createRun` en su misma tx
+// (server/script-checkpoint.ts).
+export {
+  generationRunDefinition,
+  GENERATION_NODE_KEYS,
+  type VariantGenerationPlan,
+} from './generation-dag';
 export {
   shouldPause,
   CheckpointConfigSchema,

@@ -28,6 +28,7 @@ import {
 import type { DbClient, Generation, GenerationPatch } from '@ugc/db';
 import { sweepExpiredSteps } from '@ugc/core/orchestrator';
 import type { JobQueue, TransitionDeps } from '@ugc/core/orchestrator';
+import { isVideoModelKind } from '@ugc/core/gallery';
 import {
   makeFalClient,
   sweepStuckGenerations,
@@ -109,7 +110,7 @@ export function makeGenerationSweep(deps: {
             // Sin perfil (dato inconsistente) → imagen (el deadline más corto, conservador).
             kindByProfile.set(
               profileId,
-              profile !== undefined && VIDEO_MODEL_KINDS.has(profile.kind) ? 'video' : 'image',
+              profile !== undefined && isVideoModelKind(profile.kind) ? 'video' : 'image',
             );
           }),
         );
@@ -135,11 +136,6 @@ export function makeGenerationSweep(deps: {
     });
   };
 }
-
-/** Los `model_kind` que producen un ASSET DE VÍDEO (deadline de cuelgue en minutos). El resto
- *  (`image`/`tts`/`music`/`utility`) usan el deadline de imagen. Cuando entre vídeo (T4.7/T4.8), sus
- *  perfiles ya resolverán `'video'` por este mapa sin tocar nada más. */
-const VIDEO_MODEL_KINDS: ReadonlySet<string> = new Set(['t2v', 'i2v', 'r2v', 'avatar', 'lipsync']);
 
 /**
  * Arranca el barrido periódico. Cada tick hace DOS cosas (T0.9 + T4.3):

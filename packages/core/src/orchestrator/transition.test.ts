@@ -151,6 +151,7 @@ function step(overrides: Partial<StepRow> & Pick<StepRow, 'id'>): StepRow {
   return {
     runId: 'run1',
     nodeKey: 'N0',
+    variantId: null,
     status: 'pending',
     dependsOn: [],
     retryCount: 0,

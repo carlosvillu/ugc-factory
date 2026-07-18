@@ -142,10 +142,16 @@ function settlesCost(event: StepEvent): boolean {
  * '${runId}:${nodeKey}'` + policy `short` es DEFENSA EN PROFUNDIDAD sobre ese
  * mecanismo: un belt que hoy protege un path inalcanzable (ver informe FIX 6). Se
  * mantiene por corrección del contrato, no porque el dedup sea load-bearing.
+ *
+ * T4.11 — `variantId` EN EL singletonKey: los nodos POR VARIANTE (N6/N7 de generación) comparten
+ * `node_key` entre variantes (N variantes reusan `N7c`), así que `${runId}:${nodeKey}` colisionaría y
+ * el 2.º step quedaría varado. El `variantId` (cuando existe) lo desambigua. Formato backward-compatible:
+ * los nodos SIN variante (`variantId` null → N1..N5, demo) conservan `${runId}:${nodeKey}` EXACTO — sus
+ * runs/tests no se mueven.
  */
 export async function enqueueStep(
   jobs: TxStores['jobs'],
-  step: Pick<StepRow, 'id' | 'runId' | 'nodeKey'>,
+  step: Pick<StepRow, 'id' | 'runId' | 'nodeKey' | 'variantId'>,
   // BACKOFF opcional del re-encolado (T4.11, MONEY POINT deuda T4.10b): cuando > 0, el job no es
   // elegible hasta `now + delayMs` (pg-boss `startAfter`). Se usa SOLO en el re-encolado de un
   // RETRY (failed→queued), NUNCA en el encolado inicial (pending→queued) ni en la resolución
@@ -158,7 +164,15 @@ export async function enqueueStep(
   await jobs.enqueue({
     job: stepExecuteJob,
     payload: { runId: step.runId, stepId: step.id, nodeKey: step.nodeKey },
-    singletonKey: `${step.runId}:${step.nodeKey}`,
+    // El `variantId` (cuando existe) desambigua las variantes que comparten `node_key`; los nodos sin
+    // variante conservan `${runId}:${nodeKey}` EXACTO (backward-compatible, ver docblock). El `!== ''` es
+    // un cinturón: `RunNodeSchema.variantId` es `z.string().min(1)` (el schema ya prohíbe ''), pero la
+    // columna es nullable SIN CHECK, así que un '' que colara por un insert directo NO debe producir el
+    // sufijo `:` colgante que rompería la desambiguación.
+    singletonKey:
+      step.variantId != null && step.variantId !== ''
+        ? `${step.runId}:${step.nodeKey}:${step.variantId}`
+        : `${step.runId}:${step.nodeKey}`,
     ...(delayMs > 0 ? { startAfter: new Date(Date.now() + delayMs) } : {}),
   });
 }

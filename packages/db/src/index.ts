@@ -217,6 +217,7 @@ export {
   createBatchWithVariants,
   getBatch,
   listBatchVariants,
+  setVariantAudioSource,
   type CreatedBatch,
 } from './repos/batch.repo';
 // GUIONES (T2.6, N5+CP3): la idempotencia de dinero de N5 (`findScriptsByOriginStep`), la

@@ -48,7 +48,10 @@ import {
 } from '@ugc/db';
 
 import { falVideoCostOf } from './fal-pricing';
-import { degradeGenerationOnError, finalizeVideoGeneration } from './finalize-video-generation';
+import {
+  degradeGenerationOnError,
+  finalizeSingleCallPerSecondGeneration,
+} from './finalize-single-call-per-second';
 import { uploadInputCached } from './generate';
 import { resolveProductionDedup } from './generation-dedup';
 import { NOOP_LOGGER } from './noop-logger';
@@ -306,7 +309,7 @@ export async function runGenerateBroll(
     // 11) LIQUIDACIÓN en UNA tx BAJO EL LOCK DE FILA vía el finalizer de vídeo COMPARTIDO (T4.11): la
     //     misma barrera anti-doble-cobro que `runGenerateAvatar` (kind parametrizado). `durationSeconds`
     //     es el enum enviado (INPUT, no output de Veo) — se deriva en ESTE servicio; el helper persiste.
-    const settled = await finalizeVideoGeneration(
+    const settled = await finalizeSingleCallPerSecondGeneration(
       { db, logger: log },
       {
         generation,

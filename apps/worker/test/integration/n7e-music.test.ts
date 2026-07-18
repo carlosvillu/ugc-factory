@@ -14,11 +14,17 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from
 import { PermanentStepError } from '@ugc/core/orchestrator';
 import { RAW_GALLERY_SEED, validateGallerySeed } from '@ugc/core/gallery';
 import { createDbPool, makeLocalStorageAdapter, seedGallery } from '@ugc/db';
+import { adBatch, adVariant, productBrief, project, urlAnalysis } from '@ugc/db/schema';
 import {
   createTestDatabase,
   http,
   HttpResponse,
+  makeAdBatch,
+  makeAdVariant,
+  makeProductBrief,
+  makeProject,
   makeTestLogger,
+  makeUrlAnalysis,
   server,
   type TestDatabase,
 } from '@ugc/test-utils';
@@ -89,8 +95,33 @@ afterAll(async () => {
 });
 
 beforeEach(async () => {
-  await tdb.pool.query('TRUNCATE generation, asset, cost_entry CASCADE');
+  await tdb.pool.query(
+    'TRUNCATE generation, asset, cost_entry, ad_variant, ad_batch, product_brief, url_analysis, project CASCADE',
+  );
 });
+
+/** Siembra project→url_analysis→brief→batch→variant y devuelve el `variantId`. Lo usan los tests del
+ *  efecto de dominio `audio_source='ai_bed'` (T4.11): el executor lo marca cuando corre POR VARIANTE. */
+async function seedVariant(): Promise<string> {
+  const [p] = await tdb.db.insert(project).values(makeProject()).returning();
+  const [ua] = await tdb.db
+    .insert(urlAnalysis)
+    .values(makeUrlAnalysis({ projectId: p!.id }))
+    .returning();
+  const [brief] = await tdb.db
+    .insert(productBrief)
+    .values(makeProductBrief({ urlAnalysisId: ua!.id }))
+    .returning();
+  const [batch] = await tdb.db
+    .insert(adBatch)
+    .values(makeAdBatch({ projectId: p!.id, briefId: brief!.id }))
+    .returning();
+  const [variant] = await tdb.db
+    .insert(adVariant)
+    .values(makeAdVariant({ batchId: batch!.id }))
+    .returning();
+  return variant!.id;
+}
 
 function makeExecutor(db: ReturnType<typeof createDbPool>['db']) {
   return makeN7eExecutor({
@@ -142,6 +173,66 @@ describe('N7e executor (T4.9): bed musical IA', () => {
       expect(out.musicEndpoint).toBe(MUSIC_ENDPOINT);
       expect(out.mood).toBe('upbeat, energetic, commercial');
       expect(out.durationSeconds).toBe(30);
+    } finally {
+      await pool.end();
+    }
+  });
+
+  it('POR VARIANTE (T4.11): tras el bed, la ad_variant tiene audio_source=ai_bed', async () => {
+    const { db, pool } = createDbPool(tdb.connectionString);
+    try {
+      const variantId = await seedVariant();
+      happyMusic();
+      await makeExecutor(db)({
+        config: { musicEndpoint: MUSIC_ENDPOINT, mood: 'upbeat', durationSeconds: 30 },
+        variantId,
+        collectOutput: noopCollect,
+        deps: [],
+      });
+      const { rows } = await tdb.pool.query<{ audio_source: string | null }>(
+        'SELECT audio_source FROM ad_variant WHERE id = $1',
+        [variantId],
+      );
+      expect(rows[0]?.audio_source).toBe('ai_bed');
+    } finally {
+      await pool.end();
+    }
+  });
+
+  it('CONTROL stepless (sin variantId): NO se marca ninguna variante (la lleva el asset)', async () => {
+    const { db, pool } = createDbPool(tdb.connectionString);
+    try {
+      const variantId = await seedVariant();
+      happyMusic();
+      // Sin `variantId` en el contexto (el smoke conduce el servicio sin step/variante).
+      await makeExecutor(db)({
+        config: { musicEndpoint: MUSIC_ENDPOINT, mood: 'upbeat', durationSeconds: 30 },
+        collectOutput: noopCollect,
+        deps: [],
+      });
+      const { rows } = await tdb.pool.query<{ audio_source: string | null }>(
+        'SELECT audio_source FROM ad_variant WHERE id = $1',
+        [variantId],
+      );
+      // La variante sembrada queda intacta (audio_source NULL): el executor no la tocó.
+      expect(rows[0]?.audio_source).toBeNull();
+    } finally {
+      await pool.end();
+    }
+  });
+
+  it('variantId que NO apunta a ninguna fila → PermanentStepError (cableado roto)', async () => {
+    const { db, pool } = createDbPool(tdb.connectionString);
+    try {
+      happyMusic();
+      await expect(
+        makeExecutor(db)({
+          config: { musicEndpoint: MUSIC_ENDPOINT, mood: 'upbeat', durationSeconds: 30 },
+          variantId: 'variant-that-does-not-exist',
+          collectOutput: noopCollect,
+          deps: [],
+        }),
+      ).rejects.toBeInstanceOf(PermanentStepError);
     } finally {
       await pool.end();
     }

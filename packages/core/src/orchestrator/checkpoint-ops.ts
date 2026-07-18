@@ -209,6 +209,8 @@ async function invalidateDownstream(stores: TxStores, closure: StepRow[]): Promi
       id: newId.get(old.id) ?? old.id,
       runId: old.runId,
       nodeKey: old.nodeKey,
+      // Conserva la identidad de variante (T4.11): un N7 invalidado se re-ejecuta para la MISMA variante.
+      ...(old.variantId !== null ? { variantId: old.variantId } : {}),
       // Estado provisional; se recalcula tras conocer los estados de las deps.
       status: 'awaiting_deps',
       dependsOn: remappedDeps,
@@ -242,7 +244,12 @@ async function invalidateDownstream(stores: TxStores, closure: StepRow[]): Promi
     const allResolved = row.dependsOn.every((id) => resolved[id] === true);
     if (!allResolved) continue; // sigue en awaiting_deps
     await steps.update(row.id, { status: 'queued' });
-    await enqueueStep(jobs, { id: row.id, runId: row.runId, nodeKey: row.nodeKey });
+    await enqueueStep(jobs, {
+      id: row.id,
+      runId: row.runId,
+      nodeKey: row.nodeKey,
+      variantId: row.variantId ?? null,
+    });
   }
 
   // El NOTIFY del run lo emite el applyTransition del approve_edited/supersede; no

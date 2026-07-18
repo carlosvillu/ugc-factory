@@ -8,16 +8,14 @@
 // FRONTERAS DE T4.9 (no over-build):
 //   - El mood + la duración vienen del config (costura stepless). T4.11 rellenará el mood desde el
 //     recipe/brief y la duración desde la variante.
-//   - `audio_source=ai_bed` en la VARIANTE (Verificación) es cableado al DAG → T4.11: N7e stepless NO
-//     tiene variante que marcar; la procedencia "bed IA" ya la lleva el asset `music_bed`. (Ver informe
-//     de T4.9: la marca de la variante se difiere a T4.11, donde N7 se cabla a la variante real.)
-//   - CABLEARLO al DAG (step_run_id/variant_id/canvas) es T4.11, NO T4.9. Y T4.11 debe hacer el
-//     sweeper/`output.download` kind-aware ANTES de cablearlo (una generación de AUDIO recogida por la
-//     vía de imagen del sweeper explotaría — deuda compartida con N7b/N7d).
+//   - `audio_source=ai_bed` en la VARIANTE (Verificación de T4.11, movida desde T4.9): AL CABLEAR N7e al
+//     DAG (T4.11 pass 2b-i) el executor recibe `ctx.variantId` (columna `step_run.variant_id`), así que
+//     AHORA sí marca la variante. Se hace TRAS el bed (no antes): la procedencia solo es cierta cuando el
+//     bed existe. Stepless (sin `variantId`) el executor omite la marca — la lleva el asset `music_bed`.
 import { N7eConfigSchema, PermanentStepError } from '@ugc/core/orchestrator';
 import type { StepExecutor } from '@ugc/core/orchestrator';
 import { isMusicModelKind } from '@ugc/core/gallery';
-import { getModelProfileByEndpoint } from '@ugc/db';
+import { getModelProfileByEndpoint, setVariantAudioSource } from '@ugc/db';
 import { runGenerateMusic } from '@ugc/services';
 
 import type { GenerationExecutorDeps } from './generation';
@@ -80,6 +78,21 @@ export function makeN7eExecutor(deps: GenerationExecutorDeps): StepExecutor {
         },
       ),
     );
+
+    // EFECTO DE DOMINIO POR VARIANTE (Verificación T4.11): la variante cuyo bed acabamos de generar
+    // tiene `audio_source='ai_bed'`. Solo cuando el nodo corre POR VARIANTE en el DAG (`ctx.variantId`
+    // presente, de `step_run.variant_id`); stepless (smoke sin variante) se omite. TRAS el bed: la
+    // procedencia solo es cierta con el asset ya creado. Idempotente (un retry reescribe el mismo valor).
+    if (ctx.variantId != null && ctx.variantId !== '') {
+      const marked = await setVariantAudioSource(deps.db, ctx.variantId, 'ai_bed');
+      if (!marked) {
+        // La variante del step no existe: cableado roto (un `variant_id` que no apunta a ninguna fila).
+        // Permanente (reintentar no la crea); el bed ya se generó, pero la variante no se pudo marcar.
+        throw new PermanentStepError(
+          `N7e: la variante ${ctx.variantId} del step no existe; no se pudo marcar audio_source='ai_bed'`,
+        );
+      }
+    }
 
     collectOutput({
       musicEndpoint: cfg.musicEndpoint,

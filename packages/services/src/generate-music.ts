@@ -14,14 +14,12 @@
 // segundo, payload por BYPASS. Se cambia video-family por audio-family (`extractAudioOutput`,
 // `{audio:{url}}`, .mp3/.wav) y se queda idéntico. Decisión de altitud anotada en el informe de T4.9.
 //
-// DEUDA DE FINALIZER (conocida, NO se agrava aquí): el finalizer de VÍDEO bajo lock está TRIPLICADO
-// entre `runGenerateAvatar`/`runGenerateBroll` y su extracción a un helper por `assetKind` es deuda
-// T4.11 (l.640). Música es el PRIMER audio-family de UNA sola llamada: el finalizer de audio de N7b NO
-// es reutilizable (está fusionado con el ASR), así que no hay NADA que extraer todavía — este es un
-// nuevo molde de finalizer audio-single-call. Cuando nazca un SEGUNDO audio-single-call se podrá
-// extraer un helper de liquidación de audio parametrizado por `assetKind` (como el de vídeo de T4.11);
-// hasta entonces, se DUPLICA conscientemente el scaffold bajo lock (con su catch anti-entierro-de-causa-
-// raíz, lección T1.8) igual que broll/avatar, sin copy-drift a ciegas.
+// FINALIZER COMPARTIDO (T4.11 fold): la liquidación bajo lock se DELEGA en
+// `finalizeSingleCallPerSecondGeneration` (finalize-single-call-per-second.ts) con `assetKind:'music_bed'`.
+// Música es el TERCER deliverable de UNA sola llamada fal facturada POR SEGUNDO (avatar/broll/música): su
+// tail settle-under-lock era byte-idéntico al de vídeo salvo `assetKind`, así que se funde en el mismo
+// helper (antes se duplicaba inline por una decisión de altitud de T4.9 que T4.11 revierte). El catch de
+// degradación (`degradeGenerationOnError`) también es compartido — anti-entierro-de-causa-raíz (T1.8).
 //
 // ⚠ T4.9 NO CABLEA ESTO AL WORKER/SWEEPER (eso es T4.11, como N7a/N7b/N7c/N7d). El sweeper de T4.3
 // reconcilia CUALQUIER generación y encola `output.download`→`finalizeGeneration` (solo-imagen); una
@@ -39,19 +37,13 @@ import {
 import { newUlid } from '@ugc/core/contracts';
 import { isMusicModelKind } from '@ugc/core/gallery';
 import type { Logger, StorageAdapter } from '@ugc/core';
-import {
-  createAsset,
-  getAssetByGenerationKind,
-  getGenerationForUpdate,
-  getModelProfile,
-  recordCost,
-  updateGeneration,
-  type DbClient,
-  type Generation,
-} from '@ugc/db';
+import { getModelProfile, updateGeneration, type DbClient, type Generation } from '@ugc/db';
 
 import { falMusicCostOf } from './fal-pricing';
-import { degradeGenerationOnError } from './finalize-video-generation';
+import {
+  degradeGenerationOnError,
+  finalizeSingleCallPerSecondGeneration,
+} from './finalize-single-call-per-second';
 import { resolveProductionDedup } from './generation-dedup';
 import { NOOP_LOGGER } from './noop-logger';
 
@@ -243,78 +235,29 @@ export async function runGenerateMusic(
     const cost = falMusicCostOf({ cost: profile.cost, durationSeconds });
     if (cost.warning !== null) warnings.push(cost.warning);
 
-    // 10) LIQUIDACIÓN en UNA tx BAJO EL LOCK DE FILA (misma barrera anti-doble-cobro que
-    //     `finalizeGeneration`/`runGenerateBroll`): re-chequear `completed` bajo el lock antes de crear
-    //     asset/coste/completed. Se mantiene la forma (y su GRACIA) para que T4.11 la cablee al worker
-    //     (webhook+poll+sweeper) sin reintroducir doble-cobro ni corromper una fila terminal.
-    const completedAt = new Date();
-    const settled = await db.transaction(async (tx) => {
-      const locked = await getGenerationForUpdate(tx, generation.id);
-      if (locked?.status === 'completed') {
-        // NO-OP GRACIOSO (como `finalizeGeneration`/`runGenerateBroll`): otra ruta ya finalizó bajo el
-        // lock. NO se re-crea asset ni se re-cobra y —crítico— NO se lanza (un throw caería en el catch y
-        // VOLTEARÍA a `failed` una fila legítimamente `completed`). El audio descargado queda huérfano en
-        // storage (deuda menor conocida, igual que en `finalizeGeneration`).
-        const existing = await getAssetByGenerationKind(tx, generation.id, 'music_bed');
-        return { asset: existing ?? null, updated: locked, alreadyFinalized: true } as const;
-      }
-      const asset = await createAsset(tx, {
-        kind: 'music_bed',
+    // 10) LIQUIDACIÓN bajo el lock de fila vía el finalizer COMPARTIDO single-call-per-second (T4.11
+    //     fold): música es el TERCER asset por-segundo de una sola llamada (avatar/broll/música), y su
+    //     tail settle-under-lock era byte-idéntico al de vídeo salvo `assetKind`. Se rutea aquí con
+    //     `assetKind:'music_bed'` — misma barrera anti-doble-cobro, misma GRACIA `alreadyFinalized`, mismo
+    //     invariante `assetId !== null`, mismo mundo concurrente (webhook+poll+sweeper). El coste ya se
+    //     computó por segundo con `falMusicCostOf` (arriba); el finalizer solo lo persiste.
+    const settled = await finalizeSingleCallPerSecondGeneration(
+      { db, logger: log },
+      {
+        generation,
+        assetKind: 'music_bed',
+        durationSeconds,
+        costCents: cost.cents,
+        put,
         storageKey,
         mime,
-        bytes: put.bytes,
-        checksum: put.checksum,
-        durationS: durationSeconds,
-        generationId: generation.id,
-      });
-      await recordCost(tx, {
-        provider: 'fal',
-        amountCents: cost.cents,
-        // `quantity` es INTEGER en el ledger → segundos ENTEROS; `amount_cents` YA se computó desde la
-        // duración por segundo (`falMusicCostOf`). La duración pedida ES entera (el caller la cuantiza),
-        // así que el round es idempotente.
-        quantity: Math.round(durationSeconds),
-        unit: 'seconds',
-        ...(generation.stepRunId !== null ? { stepRunId: generation.stepRunId } : {}),
-        generationId: generation.id,
-      });
-      const updated = await updateGeneration(tx, generation.id, {
-        status: 'completed',
-        costActual: cost.cents,
-        falStatusPayload: polled.statusPayload,
-        durationS: durationSeconds,
-        completedAt,
-      });
-      return { asset, updated, alreadyFinalized: false } as const;
-    });
-
-    const assetId = settled.asset?.id ?? null;
-    if (assetId === null) {
-      // La rama `alreadyFinalized` no encontró el asset de audio de la ruta ganadora: invariante roto
-      // (una generación `completed` de música DEBE tener su `music_bed`). Surface honesto — pero NO se
-      // marca `failed` (la fila está legítimamente `completed`): se re-lanza y el catch de abajo NO la
-      // degradará (su UPDATE es condicional a `!= completed`).
-      throw new FalResponseError(
-        `runGenerateMusic: la generación ${generation.id} está completed pero sin asset music_bed (invariante roto)`,
-      );
-    }
-
-    log.info(
-      {
-        event: 'fal_music_generation_finalized',
-        generationId: generation.id,
-        assetId,
-        mood,
-        costCents: cost.cents,
-        durationSeconds,
-        alreadyFinalized: settled.alreadyFinalized,
+        statusPayload: polled.statusPayload,
       },
-      'bed musical generado: audio descargado, coste por segundo registrado, completed',
     );
 
     return {
-      generation: settled.updated,
-      assetId,
+      generation: settled.generation,
+      assetId: settled.assetId,
       costCents: cost.cents,
       durationSeconds,
       reused: false,
@@ -324,12 +267,8 @@ export async function runGenerateMusic(
     // Degradar a `failed` SOLO si la fila NO es ya terminal (`completed`): una ruta concurrente (T4.11)
     // pudo haberla completado. Mismo criterio de gracia que la rama `alreadyFinalized`, y misma disciplina
     // anti-T1.8 (el error de fal —causa raíz— SIEMPRE sobrevive; el fallo de la degradación se LOGUEA
-    // pero NUNCA se propaga en su lugar). Se REUSA el helper compartido `degradeGenerationOnError`
-    // (extraído en T4.11): este catch de degradación era byte-idéntico al de avatar/broll — el 3er clon.
-    // El finalizer inline de música NO se funde con `finalizeVideoGeneration` a propósito (decisión de
-    // altitud, ver informe): meterle `music_bed` cambiaría un finalizer de VÍDEO en un finalizer genérico
-    // y ensuciaría los call-sites de vídeo; el catch de degradación, en cambio, es kind-agnóstico y se
-    // comparte sin coste. Tras degradar, se re-lanza SIEMPRE `err` (la causa raíz de fal).
+    // pero NUNCA se propaga en su lugar). Se REUSA el helper compartido `degradeGenerationOnError`, igual
+    // que avatar/broll. Tras degradar, se re-lanza SIEMPRE `err` (la causa raíz de fal).
     await degradeGenerationOnError(
       { db, logger: log },
       { generationId: generation.id, originalError: err, event: 'fal_music_degrade_failed' },

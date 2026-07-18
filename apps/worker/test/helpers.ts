@@ -79,8 +79,17 @@ export interface WorkerHarness {
 export async function startWorkerWith(
   tdb: TestDatabase,
   executors: Record<string, StepExecutor>,
+  // Backoff del retry de carrera-perdedora de dedup (T4.11): opcional, para que el test del presupuesto
+  // de retry use un backoff PEQUEÑO y no espere los 30 s reales de producción. Omitido ⇒ el default.
+  opts?: { retryBackoffMs?: number },
 ): Promise<WorkerHarness> {
-  const boss = new PgBoss(tdb.connectionString);
+  // `max` acotado (default de pg-boss = 10): todas las BD de test son clones sobre UN mismo servidor
+  // Postgres (`createTestDatabase`), así que cada boss vivo cuenta contra el `max_connections` (100)
+  // COMPARTIDO. Con vitest corriendo los ficheros de integración en PARALELO, N bosses × 10 conexiones
+  // saturaban el servidor («sorry, too many clients already») y tumbaban a los ficheros vecinos. Un pool
+  // pequeño (cubre el supervisor + los pollers de `localConcurrency`) reduce el pico sin cambiar ninguna
+  // aserción — el mismo consumer real, menos conexiones ociosas.
+  const boss = new PgBoss({ connectionString: tdb.connectionString, max: 4 });
   boss.on('error', () => {
     /* irrelevante para estos asserts: el ruido del boss no es lo que se prueba */
   });
@@ -94,6 +103,7 @@ export async function startWorkerWith(
     transitionDeps: deps,
     executors,
     logger: makeLogger({ name: 'worker', level: 'silent' }),
+    ...(opts?.retryBackoffMs !== undefined ? { retryBackoffMs: opts.retryBackoffMs } : {}),
   });
   return {
     deps,

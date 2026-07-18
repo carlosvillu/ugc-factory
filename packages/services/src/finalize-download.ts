@@ -9,7 +9,7 @@
 // finalizer correcto, SIN fundir semánticas (cada kind tiene su unidad de coste):
 //   · image/utility               → `finalizeGeneration` (imagen, `keyframe`, coste por `images`).
 //   · avatar/lipsync/t2v/i2v/r2v  → finalizer de VÍDEO (`avatar_clip`/`broll_clip`, coste por segundo)
-//                                    vía el helper compartido `finalizeVideoGeneration`.
+//                                    vía el helper compartido `finalizeSingleCallPerSecondGeneration`.
 //   · music                       → finalizer de MÚSICA (`music_bed`, coste por segundo).
 //   · tts                         → NO se puede liquidar por esta vía: un voiceover necesita la CADENA
 //                                    TTS→ASR (2ª llamada fal) para sellar `word_timestamps` — el
@@ -25,23 +25,21 @@
 // mandó a fal (facturar/persistir otro número desincronizaría el ledger).
 import { newUlid } from '@ugc/core/contracts';
 import { extractAudioOutput, extractVideoOutput } from '@ugc/core/generation';
+import { videoAssetKindForModelKind } from '@ugc/core/gallery';
 import { PermanentStepError } from '@ugc/core/orchestrator';
 import type { Logger, StorageAdapter } from '@ugc/core';
 import { getModelProfile, type DbClient, type Generation, type ModelProfile } from '@ugc/db';
 
 import { falMusicCostOf, falVideoCostOf } from './fal-pricing';
-import { finalizeVideoGeneration, type FinalizeVideoResult } from './finalize-video-generation';
+import {
+  finalizeSingleCallPerSecondGeneration,
+  type FinalizeSingleCallPerSecondResult,
+} from './finalize-single-call-per-second';
 import {
   finalizeGeneration,
   type FinalizeResult,
   type OutputDownloader,
 } from './finalize-generation';
-
-/** Los `model_kind` que producen un ASSET DE VÍDEO. El asset kind concreto (`avatar_clip` vs
- *  `broll_clip`) se deriva del kind: `avatar`/`lipsync` → `avatar_clip`; `t2v`/`i2v`/`r2v` → `broll_clip`.
- *  Es el MISMO conjunto que el sweeper usa para el deadline de vídeo (mantener sincronizados). */
-const AVATAR_KINDS: ReadonlySet<string> = new Set(['avatar', 'lipsync']);
-const BROLL_KINDS: ReadonlySet<string> = new Set(['t2v', 'i2v', 'r2v']);
 
 export interface FinalizeDownloadDeps {
   db: DbClient;
@@ -93,10 +91,11 @@ export async function finalizeGenerationByKind(
     return { assetId: res.assetId, costCents: res.costCents };
   }
 
-  const isAvatar = AVATAR_KINDS.has(kind);
-  if (isAvatar || BROLL_KINDS.has(kind)) {
-    const assetKind = isAvatar ? 'avatar_clip' : 'broll_clip';
-    const res = await finalizeVideoDownload(deps, { ...args, profile, assetKind });
+  // avatar/lipsync → `avatar_clip`; t2v/i2v/r2v → `broll_clip`. La derivación vive en el clasificador
+  // compartido `videoAssetKindForModelKind` (@ugc/core/gallery): un solo punto de verdad con el sweeper.
+  const videoAssetKind = videoAssetKindForModelKind(kind);
+  if (videoAssetKind !== null) {
+    const res = await finalizeVideoDownload(deps, { ...args, profile, assetKind: videoAssetKind });
     return { assetId: res.assetId, costCents: res.generation.costActual ?? 0 };
   }
 
@@ -182,7 +181,7 @@ async function finalizeVideoDownload(
     output: unknown;
     statusPayload: unknown;
   },
-): Promise<FinalizeVideoResult> {
+): Promise<FinalizeSingleCallPerSecondResult> {
   const { generation, profile, assetKind } = args;
   // CONTRACT-VIOLATIONS = `PermanentStepError` DIRECTO (no `FalResponseError`). Esta vía corre en el
   // CONSUMER del sweeper (`output.download`), NO en un executor N7: aquí NO hay `runGenerationStep` que
@@ -213,7 +212,7 @@ async function finalizeVideoDownload(
   });
   const cost = falVideoCostOf({ cost: profile.cost, durationSeconds });
 
-  return finalizeVideoGeneration(
+  return finalizeSingleCallPerSecondGeneration(
     { db: deps.db, logger: deps.logger },
     {
       generation,
@@ -236,7 +235,7 @@ async function finalizeMusicDownload(
     output: unknown;
     statusPayload: unknown;
   },
-): Promise<FinalizeVideoResult> {
+): Promise<FinalizeSingleCallPerSecondResult> {
   const { generation, profile } = args;
   // CONTRACT-VIOLATIONS = `PermanentStepError` DIRECTO (misma razón que `finalizeVideoDownload`): esta
   // vía corre en el consumer del sweeper, fuera de `runGenerationStep`, así que NADIE mapearía un
@@ -273,7 +272,7 @@ async function finalizeMusicDownload(
 
   // Se reusa el finalizer per-second-single-call compartido con `assetKind:'music_bed'` (mismo tail
   // bajo lock: 1 llamada → coste `seconds` → 1 asset → completed). NO se duplica el tail para música.
-  return finalizeVideoGeneration(
+  return finalizeSingleCallPerSecondGeneration(
     { db: deps.db, logger: deps.logger },
     {
       generation,

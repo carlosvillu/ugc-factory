@@ -72,6 +72,9 @@ export async function createRun(
       id: idOf(node.key),
       runId,
       nodeKey: node.nodeKey,
+      // §12: la variante del nodo (N6/N7 por-variante, T4.11) → `step_run.variant_id`. Solo se propaga
+      // si el nodo la trae; omitido ⇒ columna NULL (nodos únicos del run).
+      ...(node.variantId !== undefined ? { variantId: node.variantId } : {}),
       status: initialStatus(node),
       dependsOn: (node.dependsOn ?? []).map(idOf),
       config: node.config ?? null,
@@ -105,7 +108,12 @@ export async function createRun(
     for (const step of stepRows) {
       if (step.status !== 'pending') continue;
       await steps.update(step.id, { status: 'queued' });
-      await enqueueStep(jobs, { id: step.id, runId, nodeKey: step.nodeKey });
+      await enqueueStep(jobs, {
+        id: step.id,
+        runId,
+        nodeKey: step.nodeKey,
+        variantId: step.variantId ?? null,
+      });
     }
 
     // NOTIFY inicial: el snapshot SSE (T0.10) ve el run ya con sus roots en cola.

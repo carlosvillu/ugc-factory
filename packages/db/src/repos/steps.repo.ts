@@ -24,6 +24,7 @@ function toStepRow(row: {
   id: string;
   runId: string;
   nodeKey: string;
+  variantId: string | null;
   status: StepRow['status'];
   dependsOn: string[];
   retryCount: number;
@@ -37,6 +38,7 @@ function toStepRow(row: {
     id: row.id,
     runId: row.runId,
     nodeKey: row.nodeKey,
+    variantId: row.variantId,
     status: row.status,
     dependsOn: row.dependsOn,
     retryCount: row.retryCount,
@@ -55,6 +57,7 @@ const stepRowColumns = {
   id: stepRun.id,
   runId: stepRun.runId,
   nodeKey: stepRun.nodeKey,
+  variantId: stepRun.variantId,
   status: stepRun.status,
   dependsOn: stepRun.dependsOn,
   retryCount: stepRun.retryCount,
@@ -342,6 +345,8 @@ export async function insertSuperseding(db: Db, row: NewSupersedingStepRow): Pro
     id: row.id,
     runId: row.runId,
     nodeKey: row.nodeKey,
+    // Conserva la variante de la fila superseded (T4.11); omitido ⇒ columna NULL.
+    ...(row.variantId !== undefined ? { variantId: row.variantId } : {}),
     status: row.status,
     dependsOn: row.dependsOn,
     supersedesId: row.supersedesId,

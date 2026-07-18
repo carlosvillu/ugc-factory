@@ -1,0 +1,124 @@
+// Topología del DAG de generación (T4.11 pass 2b-i): expansión por variante, node_keys limpios,
+// variantId, `maxRetries` holgado en los N7, y las aristas de flujo de datos N7c←N7b, N7d←N7a. Todo
+// determinista → corre en `pnpm gate`.
+import { describe, expect, it } from 'vitest';
+import { generationRunDefinition, GENERATION_NODE_KEYS } from './generation-dag';
+import { validateDag } from './run-definition';
+import { N7_MAX_RETRIES } from './executor';
+import type { VariantGenerationPlan } from './generation-dag';
+import type { RunNodeInput } from './run-definition';
+
+/** Un plan de variante con los cinco N7 presentes (config opaca de relleno: el builder no la mira). */
+function fullVariant(variantId: string): VariantGenerationPlan {
+  return {
+    variantId,
+    n6Config: { variantId },
+    n7aConfig: { route: 'ai_packshot', briefId: 'b1' },
+    n7bConfig: { scriptId: 's1' },
+    n7cConfig: { avatarEndpoint: 'fal-ai/x' },
+    n7dConfig: { scriptId: 's1' },
+    n7eConfig: { musicEndpoint: 'fal-ai/ace-step' },
+  };
+}
+
+const K = GENERATION_NODE_KEYS;
+const byKey = (nodes: RunNodeInput[], key: string): RunNodeInput | undefined =>
+  nodes.find((n) => n.key === key);
+
+describe('generationRunDefinition', () => {
+  it('produce un DAG estructuralmente válido (pasa validateDag)', () => {
+    const def = generationRunDefinition('p', [fullVariant('v1'), fullVariant('v2')]);
+    expect(validateDag(def)).toBeNull();
+  });
+
+  it('arranca en autopilot (N6/N7 no son checkpoints; el gasto ya se autorizó en CP2)', () => {
+    const def = generationRunDefinition('p', [fullVariant('v1')]);
+    expect(def.autopilot).toBe(true);
+    expect(def.nodes.every((n) => n.isCheckpoint !== true)).toBe(true);
+  });
+
+  it('EXPANDE por variante: N variantes → N sub-DAGs de 6 nodos (N6 + 5 N7)', () => {
+    const def = generationRunDefinition('p', [
+      fullVariant('v1'),
+      fullVariant('v2'),
+      fullVariant('v3'),
+    ]);
+    expect(def.nodes).toHaveLength(3 * 6);
+    // Cada variante tiene sus 6 nodos con SU variantId.
+    for (const v of ['v1', 'v2', 'v3']) {
+      const nodesOfV = def.nodes.filter((n) => n.variantId === v);
+      expect(nodesOfV).toHaveLength(6);
+    }
+  });
+
+  it('node_key LIMPIO (§12) reutilizado entre variantes; la identidad está en variantId', () => {
+    const def = generationRunDefinition('p', [fullVariant('v1'), fullVariant('v2')]);
+    // Dos nodos N7c (uno por variante) con el MISMO node_key limpio, distinto variantId.
+    const n7cNodes = def.nodes.filter((n) => n.nodeKey === K.n7c);
+    expect(n7cNodes).toHaveLength(2);
+    expect(n7cNodes.map((n) => n.variantId).sort()).toEqual(['v1', 'v2']);
+    // El registro de executors resuelve por este node_key EXACTO → debe ser el limpio, sin sufijo.
+    expect(n7cNodes.every((n) => n.nodeKey === 'N7c')).toBe(true);
+  });
+
+  it('N7c depende de N6 Y N7b (consume el audio del hook)', () => {
+    const def = generationRunDefinition('p', [fullVariant('v1')]);
+    const n7c = byKey(def.nodes, `${K.n7c}__v1`);
+    expect(n7c?.dependsOn).toEqual([`${K.n6}__v1`, `${K.n7b}__v1`]);
+  });
+
+  it('N7d depende de N6 Y N7a (consume los keyframes)', () => {
+    const def = generationRunDefinition('p', [fullVariant('v1')]);
+    const n7d = byKey(def.nodes, `${K.n7d}__v1`);
+    expect(n7d?.dependsOn).toEqual([`${K.n6}__v1`, `${K.n7a}__v1`]);
+  });
+
+  it('N7a/N7b/N7e dependen SOLO de N6 (independientes entre sí)', () => {
+    const def = generationRunDefinition('p', [fullVariant('v1')]);
+    expect(byKey(def.nodes, `${K.n7a}__v1`)?.dependsOn).toEqual([`${K.n6}__v1`]);
+    expect(byKey(def.nodes, `${K.n7b}__v1`)?.dependsOn).toEqual([`${K.n6}__v1`]);
+    expect(byKey(def.nodes, `${K.n7e}__v1`)?.dependsOn).toEqual([`${K.n6}__v1`]);
+  });
+
+  it('N6 es la raíz del sub-DAG (sin deps)', () => {
+    const def = generationRunDefinition('p', [fullVariant('v1')]);
+    expect(byKey(def.nodes, `${K.n6}__v1`)?.dependsOn).toEqual([]);
+  });
+
+  it('MONEY: todo N7 fija maxRetries=N7_MAX_RETRIES; N6 NO (default de BD)', () => {
+    const def = generationRunDefinition('p', [fullVariant('v1')]);
+    for (const nodeKey of [K.n7a, K.n7b, K.n7c, K.n7d, K.n7e]) {
+      const n = def.nodes.find((x) => x.nodeKey === nodeKey);
+      expect(n?.maxRetries).toBe(N7_MAX_RETRIES);
+    }
+    // N6 es $0: sus fallos son transitorios normales, conserva el default (no fija maxRetries).
+    expect(def.nodes.find((n) => n.nodeKey === K.n6)?.maxRetries).toBeUndefined();
+  });
+
+  it('omite los N7 no pedidos (receta/ruta) y mantiene la topología de los que están', () => {
+    // Solo N6 + N7b + N7e (una variante sin imágenes ni b-roll): N7c NO depende de N7a/N7b ausentes.
+    const def = generationRunDefinition('p', [
+      {
+        variantId: 'v1',
+        n6Config: { variantId: 'v1' },
+        n7bConfig: { scriptId: 's1' },
+        n7eConfig: { musicEndpoint: 'x' },
+      },
+    ]);
+    expect(def.nodes.map((n) => n.nodeKey).sort()).toEqual(['N6', 'N7b', 'N7e']);
+    expect(validateDag(def)).toBeNull();
+  });
+
+  it('N7c sin N7b presente depende SOLO de N6 (surface honesto: su executor fallará al no hallar audio)', () => {
+    // Plan incoherente (avatar sin voz): el builder no inventa una arista a un N7b inexistente.
+    const def = generationRunDefinition('p', [
+      { variantId: 'v1', n6Config: { variantId: 'v1' }, n7cConfig: { avatarEndpoint: 'x' } },
+    ]);
+    expect(byKey(def.nodes, `${K.n7c}__v1`)?.dependsOn).toEqual([`${K.n6}__v1`]);
+    expect(validateDag(def)).toBeNull();
+  });
+
+  it('sin variantes ⇒ lanza (el run no tendría root)', () => {
+    expect(() => generationRunDefinition('p', [])).toThrow(/no hay variantes/);
+  });
+});

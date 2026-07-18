@@ -22,6 +22,8 @@ export function makeRunStore(db: Db): RunStore {
           id: s.id,
           runId: s.runId,
           nodeKey: s.nodeKey,
+          // §12: la variante del step (N6/N7 por-variante, T4.11); omitido ⇒ columna NULL.
+          ...(s.variantId !== undefined ? { variantId: s.variantId } : {}),
           status: s.status,
           dependsOn: s.dependsOn,
           // `config` es jsonb nullable; core pasa `null` cuando el nodo no lleva

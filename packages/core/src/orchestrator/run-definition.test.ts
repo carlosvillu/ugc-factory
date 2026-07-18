@@ -58,6 +58,32 @@ describe('validateDag', () => {
     ).toMatch(/node_key duplicado/);
   });
 
+  it('mismo node_key con variantId DISTINTO ⇒ válido (expansión N7 por variante, T4.11)', () => {
+    // El DAG de generación reusa `N7c` para N variantes: no colisionan porque su singletonKey incluye
+    // el `variantId` (`${runId}:${nodeKey}:${variantId}`). La frontera lo permite.
+    expect(
+      validateDag(
+        base([
+          { key: 'N6__v1', nodeKey: 'N6', variantId: 'v1', dependsOn: [] },
+          { key: 'N6__v2', nodeKey: 'N6', variantId: 'v2', dependsOn: [] },
+          { key: 'N7c__v1', nodeKey: 'N7c', variantId: 'v1', dependsOn: ['N6__v1'] },
+          { key: 'N7c__v2', nodeKey: 'N7c', variantId: 'v2', dependsOn: ['N6__v2'] },
+        ]),
+      ),
+    ).toBeNull();
+  });
+
+  it('mismo node_key con el MISMO variantId ⇒ error (colisión de singletonKey)', () => {
+    expect(
+      validateDag(
+        base([
+          { key: 'A', nodeKey: 'N7c', variantId: 'v1', dependsOn: [] },
+          { key: 'B', nodeKey: 'N7c', variantId: 'v1', dependsOn: ['A'] },
+        ]),
+      ),
+    ).toMatch(/\(node_key, variant_id\) duplicado/);
+  });
+
   it('dependencia colgante ⇒ error', () => {
     expect(validateDag(base([{ key: 'A', nodeKey: 'demo.sleep', dependsOn: ['NOPE'] }]))).toMatch(
       /inexistente/,

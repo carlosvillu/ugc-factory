@@ -219,6 +219,28 @@ export async function listBatchVariants(db: Db, batchId: string): Promise<AdVari
     .orderBy(adVariant.filenameCode);
 }
 
+/** Los valores del enum `audio_source` (§7.2 N7e, migración 0021): de dónde viene el audio de fondo de
+ *  la variante. `ai_bed` = bed generado por N7e; `own_license`/`native_trending` los pondría F5/F6. */
+export type AudioSource = (typeof adVariant.audioSource.enumValues)[number];
+
+/**
+ * Marca el `audio_source` de una variante (T4.11): el efecto de dominio de N7e escribe `'ai_bed'` cuando
+ * genera el bed de música (Verificación de T4.11, movida desde T4.9). Idempotente: reescribir el mismo
+ * valor es inocuo (un retry del step no corrompe nada). Devuelve `true` si la fila existía.
+ */
+export async function setVariantAudioSource(
+  db: Db,
+  variantId: string,
+  audioSource: AudioSource,
+): Promise<boolean> {
+  const updated = await db
+    .update(adVariant)
+    .set({ audioSource })
+    .where(eq(adVariant.id, variantId))
+    .returning({ id: adVariant.id });
+  return updated.length > 0;
+}
+
 /**
  * Los lotes de un brief (T2.3: la Verificación pregunta «¿qué lote creó este checkpoint?», y la
  * pantalla del lote de F2/F5 los listará). Orden estable por id (ULID ⇒ cronológico).

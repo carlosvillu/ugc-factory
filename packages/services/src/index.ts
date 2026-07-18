@@ -44,6 +44,12 @@ export { runGenerateAvatar } from './generate-avatar';
 // duración como INPUT (el enum cuantizado del clip). Lo consume el smoke del verifier y, en T4.11, el
 // executor N7d.
 export { runGenerateBroll } from './generate-broll';
+// Generación de BED MUSICAL IA contra fal (T4.9, §7.2 N7e): 1 bed por MOOD (`tags`) y DURACIÓN con
+// ace-step (`fal-ai/ace-step`, text-to-music). Servicio HERMANO estructural de `runGenerateBroll`
+// (UNA llamada, duración = INPUT no output, UNA unidad de coste por segundo, payload por BYPASS), pero
+// audio-family (`extractAudioOutput`, finalizer `kind:'music_bed'`) — NO reusa el finalizer de N7b
+// (fusionado con el ASR). Lo consume el smoke del verifier y, en T4.11, el executor N7e.
+export { runGenerateMusic } from './generate-music';
 // Submit VÍA WEBHOOK sin polling (T4.2, §9.6): deja la fila `generation` en `submitted` keyed por
 // el request_id REAL de fal; la completion la conduce el webhook. Lo consume el smoke del verifier.
 export { submitGenerationForWebhook } from './submit-generation';

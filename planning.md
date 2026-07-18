@@ -621,11 +621,12 @@ Decisiones del usuario (2026-07-07): la fase se ejecuta tras T0.1 y **antes** de
 - **Coste estimado**: ~$4 (presupuesto §7.5 de una variante Standard)
 - **Verificación**: para una variante de conversión (21–34 s) se generan exactamente los clips del presupuesto §7.5 (1 avatar + 2 b-roll), 9:16 720p+, producto fiel en las escenas R2V; enums anotados en `model_profile`.
 
-#### T4.9 · N7e: bed musical IA
+#### T4.9 · N7e: bed musical IA [x] 2026-07-18 — PASS, ver docs/verifications/T4.9/ (coste real $0,01; juicio de mood OK del usuario)
 - **Depende de**: T4.1
 - **Entrega**: executor música (ace-step) por mood/duración; **cierre de deuda**: precio real de ace-step.
 - **Coste estimado**: ~$0,30
-- **Verificación**: bed de 30 s con el mood pedido (a juicio humano), coste registrado, `audio_source=ai_bed` en la variante.
+> **Reinterpretación de alcance 2026-07-17 (regla 6, decisión del bucle):** la cláusula «`audio_source=ai_bed` en la VARIANTE» se MUEVE (no se borra) a la Verificación de **T4.11**, donde N7e se cablea al DAG y hay una `ad_variant` que marcar. Motivo verificado: T4.9 corre STEPLESS como todos los N7 (ni el servicio ni el executor tocan `ad_variant` — el cableado N7→variante es T4.11); además `audio_source` NO existe aún en ningún schema y es un enum de publicación (`ai_bed`/`own_license`/`native_trending`) que consumen F5/F6 — introducir medio enum ahora sería scope-creep e insuficiente. La procedencia «bed IA» SÍ se verifica en T4.9 a nivel de ASSET (`music_bed`). PRD intacto.
+- **Verificación**: bed de 30 s con el mood pedido (a juicio humano), coste registrado, asset `kind='music_bed'` persistido con su procedencia bed-IA (`cost_entry` provider='fal' unit='seconds'). La cláusula `audio_source=ai_bed` en la variante se verifica en T4.11 (ver reinterpretación arriba).
 
 #### T4.10 · Deduplicación de generación
 - **Depende de**: T4.5, T4.7, T4.8
@@ -641,7 +642,7 @@ Decisiones del usuario (2026-07-07): la fase se ejecuta tras T0.1 y **antes** de
 - **Entrega**: nodo compuesto N7 por variante (expandible a N7a–N7e) con thumbnails/players por asset; N6 visible con su `resolvedPrompt`; coste estimado vs real por sub-step; retry granular.
 - **Coste estimado**: ~$6 (variante completa + retries)
 - **Playwright permanente**: `apps/web/e2e/phases/f4-generation.spec.ts` (`@f4 @phase`) usa fal fake y conserva expansión N7a–N7e, previews, `resolvedPrompt`, coste por sub-step, fallo determinista y retry granular sin reiniciar los hermanos sanos.
-- **Verificación (E2E de la fase)**: desde el canvas, una variante real completa N6→N7 con todos los assets reproducibles en el panel y el `resolvedPrompt` inspeccionable en N6; coste real del lote difiere <15 % del estimado de CP2; retry de un sub-step fallado funciona.
+- **Verificación (E2E de la fase)**: desde el canvas, una variante real completa N6→N7 con todos los assets reproducibles en el panel y el `resolvedPrompt` inspeccionable en N6; coste real del lote difiere <15 % del estimado de CP2; retry de un sub-step fallado funciona. **`audio_source=ai_bed` en la variante** cuando N7e generó su bed (cláusula MOVIDA desde T4.9, regla 6 2026-07-17: T4.9 es stepless y no toca `ad_variant`; aquí N7e se cablea al DAG y la variante existe — requiere la columna/enum `audio_source` en `ad_variant`, a crear en esta tarea o su predecesora de cableado).
 
 #### T4.12 · Generación de Personas, thumbnails y "probar template"
 - **Depende de**: T4.1, T3.8, T2.0 *(T3.7 implícito vía T3.8; los thumbnails y el botón "probar template" viven en la UI de galería)*

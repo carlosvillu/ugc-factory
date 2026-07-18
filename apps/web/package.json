@@ -18,7 +18,8 @@
     "smoke:packshot": "tsx --env-file-if-exists=../../.env scripts/smoke-packshot.ts",
     "smoke:voiceover": "tsx --env-file-if-exists=../../.env scripts/smoke-voiceover.ts",
     "smoke:avatar": "tsx --env-file-if-exists=../../.env scripts/smoke-avatar.ts",
-    "smoke:broll": "tsx --env-file-if-exists=../../.env scripts/smoke-broll.ts"
+    "smoke:broll": "tsx --env-file-if-exists=../../.env scripts/smoke-broll.ts",
+    "smoke:music": "tsx --env-file-if-exists=../../.env scripts/smoke-music.ts"
   },
   "dependencies": {
     "@base-ui-components/react": "1.0.0-rc.0",

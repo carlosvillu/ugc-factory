@@ -4,7 +4,7 @@
 // 0¢ con warning observable). Las cost fns reciben el `cost` CRUDO del profile y validan internamente.
 import { describe, expect, it } from 'vitest';
 
-import { falTtsCostOf, falAsrCostOf, falVideoCostOf } from './fal-pricing';
+import { falTtsCostOf, falAsrCostOf, falVideoCostOf, falMusicCostOf } from './fal-pricing';
 
 describe('falTtsCostOf — TTS por 1000 caracteres (T4.5)', () => {
   it('1000 chars a 2¢/1k (kokoro) = 2¢', () => {
@@ -99,6 +99,37 @@ describe('falVideoCostOf — avatar image+audio por segundo (T4.7)', () => {
   it('CONTROL NEGATIVO: cost jsonb inválido/ausente → 0¢ con warning, NO lanza', () => {
     expect(falVideoCostOf({ cost: null, durationSeconds: 4 }).cents).toBe(0);
     expect(falVideoCostOf({ cost: null, durationSeconds: 4 }).warning).toMatch(
+      /inválido o ausente/,
+    );
+  });
+});
+
+describe('falMusicCostOf — bed musical (ace-step) por segundo (T4.9)', () => {
+  it('bed de 30 s a 0,02¢/s (ace-step) = 0,6¢ → 1¢ (round del ledger)', () => {
+    // ace-step siembra `amountCents: 0.02` (float sub-céntimo, $0,0002/s verificado vs fal). Un bed de
+    // 30 s son 0,02×30 = 0,6¢ → `Math.round` lo lleva a 1¢. Este assert protege el precio REAL (deuda
+    // §13.1 cerrada en T4.9) y el redondeo del ledger sobre un float sub-céntimo.
+    const c = falMusicCostOf({ cost: { unit: 'second', amountCents: 0.02 }, durationSeconds: 30 });
+    expect(c.cents).toBe(1);
+    expect(c.durationSeconds).toBe(30);
+    expect(c.warning).toBeNull();
+  });
+
+  it('bed largo (240 s, el máximo de ace-step) a 0,02¢/s = 4,8¢ → 5¢', () => {
+    const c = falMusicCostOf({ cost: { unit: 'second', amountCents: 0.02 }, durationSeconds: 240 });
+    expect(c.cents).toBe(5);
+    expect(c.warning).toBeNull();
+  });
+
+  it('CONTROL NEGATIVO: unidad inesperada (minute) → 0¢ con warning, NO lanza', () => {
+    const c = falMusicCostOf({ cost: { unit: 'minute', amountCents: 0.02 }, durationSeconds: 30 });
+    expect(c.cents).toBe(0);
+    expect(c.warning).toMatch(/unidad inesperada/);
+  });
+
+  it('CONTROL NEGATIVO: cost jsonb inválido/ausente → 0¢ con warning, NO lanza', () => {
+    expect(falMusicCostOf({ cost: null, durationSeconds: 30 }).cents).toBe(0);
+    expect(falMusicCostOf({ cost: null, durationSeconds: 30 }).warning).toMatch(
       /inválido o ausente/,
     );
   });

@@ -226,3 +226,54 @@ export function falVideoCostOf(args: { cost: unknown; durationSeconds: number })
     warning: null,
   };
 }
+
+// ── T4.9 (N7e · bed musical IA): coste por SEGUNDO de música ────────────────────────────────────────
+// ace-step (`fal-ai/ace-step`) factura por SEGUNDO de audio generado (`unit='second'`): $0,0002/s =
+// 0,02 céntimos/s (verificado 2026-07-17 vs fal openapi/model page — precio REAL confirmado, deuda
+// `[verificar]` de §13.1 l.596/l.600 cerrada). El `amountCents` del perfil es FLOAT sub-céntimo (0,02
+// no cabe en un entero — ver `ModelCostSchema`): un bed de 30 s son 0,02×30 = 0,6¢ → `Math.round` lo
+// lleva a 1¢ (redondeo del ledger; `quantity`/`unit` guardan la VERDAD granular en segundos). Es
+// estructuralmente `falVideoCostOf` (por segundo, duración = INPUT no output), pero con su PROPIA
+// función para que el warning observable diga «música» y no «avatar» — el operador que ve un warning
+// en `/spend` sabe QUÉ modelo lo emitió. Mismo INVARIANTE DE DINERO: NUNCA lanza (la llamada de pago
+// YA ocurrió), degrada a 0¢ con warning OBSERVABLE si la unidad no es 'second' o el `cost` no valida.
+
+export interface FalMusicCost {
+  /** `amount_cents` ENTERO del `cost_entry` (redondeado; un bed corto puede redondear a pocos céntimos). */
+  cents: number;
+  /** La VERDAD granular → `quantity` (unit='seconds'): SEGUNDOS de música facturados (= el input, la
+   *  duración pedida; ace-step no re-cuantiza — el clip dura lo que se pide). */
+  durationSeconds: number;
+  warning: string | null;
+}
+
+/**
+ * Coste de una generación de música de fal (por SEGUNDO). El insumo facturado es la DURACIÓN pedida
+ * del bed (el input `duration`, no el output: ace-step genera exactamente los segundos solicitados).
+ * Recibe el `cost` jsonb CRUDO del `model_profile` y valida `ModelCostSchema` INTERNAMENTE (misma
+ * política que `falVideoCostOf`).
+ */
+export function falMusicCostOf(args: { cost: unknown; durationSeconds: number }): FalMusicCost {
+  const parsed = ModelCostSchema.safeParse(args.cost);
+  if (!parsed.success) {
+    return {
+      cents: 0,
+      durationSeconds: args.durationSeconds,
+      warning: 'fal-pricing: model_profile de música .cost inválido o ausente: amount_cents=0.',
+    };
+  }
+  if (parsed.data.unit !== 'second') {
+    return {
+      cents: 0,
+      durationSeconds: args.durationSeconds,
+      warning:
+        `fal-pricing: unidad inesperada '${parsed.data.unit}' para música (se esperaba 'second'): ` +
+        'el cost_entry se registra con amount_cents=0. Revisa el model_profile.',
+    };
+  }
+  return {
+    cents: Math.round(args.durationSeconds * parsed.data.amountCents),
+    durationSeconds: args.durationSeconds,
+    warning: null,
+  };
+}

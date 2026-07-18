@@ -1,0 +1,36 @@
+=== GENERATION 01KXT4G8PR11S0DXZ8ME19BHYH ===
+-[ RECORD 1 ]---+--------------------------------------------------------------------------------------------------------------------
+id              | 01KXT4G8PR11S0DXZ8ME19BHYH
+status          | completed
+resolved_prompt | dark cinematic trailer, epic orchestral, tense, dramatic percussion
+cost_actual     | 1
+duration_s      | 30
+inputs          | {"tags": "dark cinematic trailer, epic orchestral, tense, dramatic percussion", "lyrics": "[inst]", "duration": 30}
+step_run_id     | 
+started_at      | 2026-07-18 08:11:52.407+00
+completed_at    | 2026-07-18 08:12:00.434+00
+
+
+=== ASSET 01KXT4GGHQRK7CB9MEQMMK7HKJ ===
+-[ RECORD 1 ]-+----------------------------------------------------------------------
+id            | 01KXT4GGHQRK7CB9MEQMMK7HKJ
+kind          | music_bed
+mime          | audio/wav
+bytes         | 5755294
+duration_s    | 30
+checksum      | 43299f516f6c2d12cb7c682246d69e3dca57a33aad0feda72bd8809f37544a72
+storage_key   | generations/01KXT4G8PR11S0DXZ8ME19BHYH/01KXT4GFTHRPW41ATBZBMJCBGS.wav
+generation_id | 01KXT4G8PR11S0DXZ8ME19BHYH
+
+
+=== COST_ENTRY ===
+-[ RECORD 1 ]-+------------------------------
+id            | 01KXT4GGHS4R6MR5ZT2S94MZM8
+provider      | fal
+amount_cents  | 1
+quantity      | 30
+unit          | seconds
+generation_id | 01KXT4G8PR11S0DXZ8ME19BHYH
+step_run_id   | 
+occurred_at   | 2026-07-18 08:12:00.435741+00
+

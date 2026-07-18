@@ -151,6 +151,13 @@ export function isBrollModelKind(kind: ModelKind): kind is (typeof BROLL_MODEL_K
   return (BROLL_MODEL_KINDS as readonly string[]).includes(kind);
 }
 
+/** El `kind` que N7e (bed musical IA, T4.9) sabe generar: `music` (ace-step, text-to-music por tags).
+ *  El servicio y el smoke de música comparten esta frontera (cada uno con su propio error tipado),
+ *  igual que `isBrollModelKind` para N7d. */
+export function isMusicModelKind(kind: ModelKind): kind is 'music' {
+  return kind === 'music';
+}
+
 /** `model_status` (§12 l.548): active|deprecated. Enum nativo en BD. `fal:verify` puede pasarlo a `deprecated`. */
 export const ModelStatusSchema = z.enum(['active', 'deprecated']);
 export type ModelStatus = z.infer<typeof ModelStatusSchema>;

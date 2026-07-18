@@ -196,6 +196,35 @@ export const N7dConfigSchema = z.object({
 export type N7dConfig = z.infer<typeof N7dConfigSchema>;
 
 /**
+ * Config del step N7e · BED MUSICAL IA (T4.9, §7.2 N7e). N7e genera UN bed de música por MOOD y
+ * DURACIÓN con ace-step (`fal-ai/ace-step`, text-to-music) para poner DEBAJO del voiceover (§14). A
+ * diferencia de N7b (voz), el bed no tiene texto ni ASR y su duración es un INPUT (se pide 30s), no
+ * derivada.
+ *
+ * `musicEndpoint` es la clave natural del catálogo (el executor resuelve el perfil por endpoint y
+ * valida `kind:'music'`, patrón N7a-N7d). `mood` viaja como `tags` de ace-step (comma-separated genre,
+ * lo que la Verificación juzga a oído). `durationSeconds` gobierna el payload, el coste por segundo y
+ * `asset.duration_s` (ace-step acepta 5–240s). La costura STEPLESS: el smoke elige endpoint + mood +
+ * duración por config, sin run/DAG. T4.11 rellenará el mood desde el recipe/brief y la duración desde
+ * la variante.
+ */
+export const N7eConfigSchema = z.object({
+  /** El endpoint del modelo de música (ace-step). Clave natural del catálogo; el executor resuelve el
+   *  perfil por endpoint y valida que su `kind` sea 'music'. */
+  musicEndpoint: z.string().min(1),
+  /** El MOOD del bed como tags separadas por coma (ace-step `tags`, requerido): estilo/género del bed
+   *  (`"upbeat, energetic, lofi"`). Es lo que la Verificación juzga ("el mood pedido"). */
+  mood: z.string().min(1),
+  /** La DURACIÓN del bed EN SEGUNDOS (ace-step `duration`, rango 5–240, default 30 — el bed cubre la
+   *  variante). Gobierna el payload, el coste por segundo y `asset.duration_s`. */
+  durationSeconds: z.number().int().min(5).max(240).default(30),
+  /** Letra opcional (ace-step `lyrics`). OMITIDA → instrumental (`"[inst]"`, la voz la pone N7b). N7e de
+   *  producción no la pasa; existe para un jingle cantado a demanda. */
+  lyrics: z.string().min(1).optional(),
+});
+export type N7eConfig = z.infer<typeof N7eConfigSchema>;
+
+/**
  * Construye la definición del run de lote (un solo nodo N5) para un proyecto y un lote ya creado.
  *
  * `autopilot=false` + N5 `isCheckpoint` con `alwaysPause`: CP3 —el editor de guiones— es el

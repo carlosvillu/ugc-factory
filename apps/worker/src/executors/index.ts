@@ -17,6 +17,7 @@ import { type GenerationExecutorDeps, makeN7aExecutor } from './generation';
 import { makeN7bExecutor } from './generate-voice';
 import { makeN7cExecutor } from './generate-avatar';
 import { makeN7dExecutor } from './generate-broll';
+import { makeN7eExecutor } from './generate-music';
 
 export interface ExecutorRegistryDeps {
   /** Decisor de fallo de los executors de demo, resuelto por bootstrap. */
@@ -92,6 +93,14 @@ export function makeExecutorRegistry({
     // sweeper/`output.download` kind-aware ANTES de cablearlo (una generación de VÍDEO recogida por la
     // vía de imagen del sweeper explotaría — marcadores en output-download.ts + reconcile.ts).
     N7d: makeN7dExecutor(generation),
+    // N7e · BED MUSICAL IA (T4.9, §7.2 N7e). PAGA fal (ace-step por segundo, $0,0002/s): reusa el mismo
+    // grupo de deps `generation` (BD + storage + FAL_KEY perezosa). Genera UN bed instrumental por MOOD
+    // (`tags`) y DURACIÓN para poner debajo del voiceover (§14); no itera escenas (uno cubre la variante).
+    // T4.11 lo cablea como nodo del DAG (y marca `audio_source=ai_bed` en la variante); en T4.9 corre
+    // STEPLESS (el smoke conduce el bed sin step). ⚠ T4.11 debe hacer el sweeper/`output.download`
+    // kind-aware ANTES de cablearlo (una generación de AUDIO recogida por la vía de imagen del sweeper
+    // explotaría — deuda compartida con N7b/N7d).
+    N7e: makeN7eExecutor(generation),
     'demo.sleep': demo,
     'demo.fail': demo,
     // `demo.hang` (T0.9): el executor no retorna nunca (espera al abort) — es el

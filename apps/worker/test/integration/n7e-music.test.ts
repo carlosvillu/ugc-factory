@@ -1,0 +1,232 @@
+// Integración del executor N7e · BED MUSICAL IA (T4.9, §7.2 N7e). Ejerce lo que el smoke (que conduce
+// el SERVICIO directo) NO cubre: la cáscara del executor — parseo de config, guard de catálogo
+// (`kind:'music'` ANTES de gastar), y el output ref del bed. El camino feliz invoca ace-step con fal
+// mockeado (msw — CERO red real, CERO gasto). Postgres 16 REAL vía Testcontainers.
+//
+// CLÁUSULA DETERMINISTA DE LA VERIFICACIÓN (regla de trabajo 8): «bed de 30 s con el mood pedido, coste
+// registrado». El coste (0,02¢/s × 30 s → 1¢) y la persistencia (`music_bed` con `duration_s`, UN
+// cost_entry por segundo) son deterministas → gate test permanente. El MOOD a oído es juicio humano
+// (smoke del verifier). Molde: `n7d-broll.test.ts`.
+import { mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { PermanentStepError } from '@ugc/core/orchestrator';
+import { RAW_GALLERY_SEED, validateGallerySeed } from '@ugc/core/gallery';
+import { createDbPool, makeLocalStorageAdapter, seedGallery } from '@ugc/db';
+import {
+  createTestDatabase,
+  http,
+  HttpResponse,
+  makeTestLogger,
+  server,
+  type TestDatabase,
+} from '@ugc/test-utils';
+import type { StorageAdapter } from '@ugc/core';
+
+import { makeN7eExecutor } from '../../src/executors/generate-music';
+
+const MUSIC_ENDPOINT = 'fal-ai/ace-step';
+const noopCollect = (_refs: unknown): void => undefined;
+
+const AUDIO_URL = 'https://v3.fal.media/files/music/bed.mp3';
+const MP3_BYTES = new Uint8Array([0x49, 0x44, 0x33, 0x04]);
+
+/** Camino feliz de ace-step con request_id dinámico por submit. Output AUDIO (`{audio:{url}, seed, tags,
+ *  lyrics}`). */
+function happyMusic(): void {
+  let counter = 0;
+  server.use(
+    http.post(`https://queue.fal.run/${MUSIC_ENDPOINT}`, () => {
+      counter += 1;
+      const id = `ace-req-${String(counter)}`;
+      return HttpResponse.json({
+        request_id: id,
+        status_url: `https://queue.fal.run/${MUSIC_ENDPOINT}/requests/${id}/status`,
+        response_url: `https://queue.fal.run/${MUSIC_ENDPOINT}/requests/${id}`,
+        status: 'IN_QUEUE',
+      });
+    }),
+    http.get(`https://queue.fal.run/${MUSIC_ENDPOINT}/requests/:id/status`, ({ params }) =>
+      HttpResponse.json({ status: 'COMPLETED', request_id: params.id }),
+    ),
+    http.get(`https://queue.fal.run/${MUSIC_ENDPOINT}/requests/:id`, () =>
+      HttpResponse.json({
+        audio: { url: AUDIO_URL, content_type: 'audio/mpeg' },
+        seed: 42,
+        tags: 'upbeat',
+        lyrics: '[inst]',
+      }),
+    ),
+    http.get(AUDIO_URL, () =>
+      HttpResponse.arrayBuffer(MP3_BYTES.buffer, { headers: { 'content-type': 'audio/mpeg' } }),
+    ),
+  );
+}
+
+let tdb: TestDatabase;
+let storage: StorageAdapter;
+let assetsDir: string;
+
+beforeAll(async () => {
+  server.listen({ onUnhandledRequest: 'error' });
+  tdb = await createTestDatabase({ label: 'worker:n7e' });
+  assetsDir = mkdtempSync(path.join(tmpdir(), 'ugc-n7e-'));
+  storage = makeLocalStorageAdapter({ root: assetsDir });
+  const seed = validateGallerySeed(RAW_GALLERY_SEED);
+  if (!seed.ok || !seed.seed) throw new Error('el seed de galería no valida');
+  await seedGallery(tdb.db, seed.seed);
+});
+
+afterEach(() => {
+  server.resetHandlers();
+});
+
+afterAll(async () => {
+  server.close();
+  await tdb.close();
+  rmSync(assetsDir, { recursive: true, force: true });
+});
+
+beforeEach(async () => {
+  await tdb.pool.query('TRUNCATE generation, asset, cost_entry CASCADE');
+});
+
+function makeExecutor(db: ReturnType<typeof createDbPool>['db']) {
+  return makeN7eExecutor({
+    db,
+    storage,
+    falKey: 'fal-test-key-not-a-secret',
+    logger: makeTestLogger(),
+  });
+}
+
+describe('N7e executor (T4.9): bed musical IA', () => {
+  it('ESPINA: bed de 30 s con el mood pedido → music_bed + cost por segundo, output ref', async () => {
+    const { db, pool } = createDbPool(tdb.connectionString);
+    try {
+      happyMusic();
+      const outputs: unknown[] = [];
+      await makeExecutor(db)({
+        config: {
+          musicEndpoint: MUSIC_ENDPOINT,
+          mood: 'upbeat, energetic, commercial',
+          durationSeconds: 30,
+        },
+        collectOutput: (refs: unknown) => outputs.push(refs),
+        deps: [],
+      });
+
+      // UN asset music_bed de 30 s.
+      const { rows: assets } = await tdb.pool.query<{ kind: string; duration_s: number }>(
+        "SELECT kind, duration_s FROM asset WHERE kind = 'music_bed'",
+      );
+      expect(assets).toHaveLength(1);
+      expect(assets[0]?.duration_s).toBe(30);
+
+      // 1 generation completed, 1 cost_entry por SEGUNDO.
+      const { rows: gens } = await tdb.pool.query<{ status: string; resolved_prompt: string }>(
+        'SELECT status, resolved_prompt FROM generation',
+      );
+      expect(gens).toHaveLength(1);
+      expect(gens[0]?.status).toBe('completed');
+      expect(gens[0]?.resolved_prompt).toBe('upbeat, energetic, commercial');
+      const { rows: costs } = await tdb.pool.query<{ unit: string; amount_cents: number }>(
+        'SELECT unit, amount_cents FROM cost_entry',
+      );
+      expect(costs).toHaveLength(1);
+      expect(costs[0]?.unit).toBe('seconds');
+      expect(costs[0]?.amount_cents).toBe(1); // 0,02¢/s × 30s = 0,6¢ → 1¢
+
+      const out = outputs[0] as { musicEndpoint: string; mood: string; durationSeconds: number };
+      expect(out.musicEndpoint).toBe(MUSIC_ENDPOINT);
+      expect(out.mood).toBe('upbeat, energetic, commercial');
+      expect(out.durationSeconds).toBe(30);
+    } finally {
+      await pool.end();
+    }
+  });
+
+  it('duration por defecto (30 s) si el config no la trae', async () => {
+    const { db, pool } = createDbPool(tdb.connectionString);
+    try {
+      happyMusic();
+      await makeExecutor(db)({
+        config: { musicEndpoint: MUSIC_ENDPOINT, mood: 'lofi, chill' },
+        collectOutput: noopCollect,
+        deps: [],
+      });
+      const { rows } = await tdb.pool.query<{ duration_s: number }>(
+        "SELECT duration_s FROM asset WHERE kind = 'music_bed'",
+      );
+      expect(rows[0]?.duration_s).toBe(30);
+    } finally {
+      await pool.end();
+    }
+  });
+
+  it('GUARD DE CATÁLOGO: endpoint que no es kind music (un TTS) → PermanentStepError, NO gasta', async () => {
+    // NO se registran handlers de fal: si intentara llamar, msw reventaría con onUnhandledRequest:'error'.
+    const { db, pool } = createDbPool(tdb.connectionString);
+    try {
+      await expect(
+        makeExecutor(db)({
+          config: { musicEndpoint: 'fal-ai/kokoro', mood: 'upbeat', durationSeconds: 30 }, // kind 'tts'
+          collectOutput: noopCollect,
+          deps: [],
+        }),
+      ).rejects.toBeInstanceOf(PermanentStepError);
+      const { rows } = await tdb.pool.query('SELECT id FROM generation');
+      expect(rows).toHaveLength(0);
+    } finally {
+      await pool.end();
+    }
+  });
+
+  it('endpoint inexistente (galería sin ese perfil) → PermanentStepError, NO gasta', async () => {
+    const { db, pool } = createDbPool(tdb.connectionString);
+    try {
+      await expect(
+        makeExecutor(db)({
+          config: { musicEndpoint: 'fal-ai/does-not-exist', mood: 'upbeat', durationSeconds: 30 },
+          collectOutput: noopCollect,
+          deps: [],
+        }),
+      ).rejects.toBeInstanceOf(PermanentStepError);
+      const { rows } = await tdb.pool.query('SELECT id FROM generation');
+      expect(rows).toHaveLength(0);
+    } finally {
+      await pool.end();
+    }
+  });
+
+  it('config inválida (sin mood) → PermanentStepError', async () => {
+    const { db, pool } = createDbPool(tdb.connectionString);
+    try {
+      await expect(
+        makeExecutor(db)({
+          config: { musicEndpoint: MUSIC_ENDPOINT, durationSeconds: 30 },
+          collectOutput: noopCollect,
+          deps: [],
+        }),
+      ).rejects.toBeInstanceOf(PermanentStepError);
+    } finally {
+      await pool.end();
+    }
+  });
+
+  it('config inválida (duration fuera de rango 5–240) → PermanentStepError', async () => {
+    const { db, pool } = createDbPool(tdb.connectionString);
+    try {
+      await expect(
+        makeExecutor(db)({
+          config: { musicEndpoint: MUSIC_ENDPOINT, mood: 'upbeat', durationSeconds: 999 },
+          collectOutput: noopCollect,
+          deps: [],
+        }),
+      ).rejects.toBeInstanceOf(PermanentStepError);
+    } finally {
+      await pool.end();
+    }
+  });
+});

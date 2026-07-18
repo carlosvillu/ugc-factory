@@ -1,0 +1,8 @@
+019f718b-dd29-7191-8401-84f4147defc0 -> IN_QUEUE pos 0
+019f7197-2d66-7571-a79d-4f30681ceeba -> IN_QUEUE pos 0
+             id             | status |            fal_request_id            | cost_actual |                       tags                        | dur | lyrics |         started_at         |        completed_at        
+----------------------------+--------+--------------------------------------+-------------+---------------------------------------------------+-----+--------+----------------------------+----------------------------
+ 01KXRRQPT30Y4ADSR1BH62Q3K0 | failed | 019f718b-dd29-7191-8401-84f4147defc0 |             | dreamy lofi hip hop, chill, mellow, relaxed beats | 30  | [inst] | 2026-07-17 19:26:58.883+00 | 2026-07-17 19:38:26.506+00
+ 01KXRSEAX2M6K84CHSN1PSTTGB | failed | 019f7197-2d66-7571-a79d-4f30681ceeba |             | dreamy lofi hip hop, chill, mellow, relaxed beats | 30  | [inst] | 2026-07-17 19:39:20.354+00 | 2026-07-17 19:50:45.837+00
+(2 rows)
+

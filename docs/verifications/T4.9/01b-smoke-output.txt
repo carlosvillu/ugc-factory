@@ -1,0 +1,16 @@
+
+> @ugc/web@0.0.0 smoke:music /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/web
+> tsx --env-file-if-exists=../../.env scripts/smoke-music.ts
+
+smoke:music: fal-ai/ace-step (kind music) — mood "dreamy lofi hip hop, chill, mellow, relaxed beats", duración 30s — RED REAL…
+
+smoke:music: falló FalProviderError: polling agotó 600 intentos sin COMPLETED en https://queue.fal.run/fal-ai/ace-step/requests/019f7197-2d66-7571-a79d-4f30681ceeba/status
+    at Object.poll (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/core/src/generation/fal-client.ts:345:11)
+    at async runGenerateMusic (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/services/src/generate-music.ts:186:20)
+    at async main (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/web/scripts/smoke-music.ts:93:15) {
+  status: undefined,
+  retryAfterMs: undefined
+}
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/web:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @ugc/web@0.0.0 smoke:music: `tsx --env-file-if-exists=../../.env scripts/smoke-music.ts`
+Exit status 1

@@ -86,8 +86,7 @@
     "kind": "music",
     "cost": { "unit": "second", "amountCents": 0.02 },
     "capabilities": { "audio": true },
-    "unverified": true,
-    "notes": "Musica (bed IA), Tier Standard. §13.1 l.596/l.600 marcaba `[verificar]` (~$0,005/s). fal publica $0,0002/s (2026-07-15) = 0,02 centimos/s — resuelto: mucho mas barato de lo estimado. `unverified` hasta integrar en F4."
+    "notes": "Musica (bed IA), Tier Standard. §13.1 l.596/l.600 marcaba `[verificar]` (~$0,005/s). fal publica $0,0002/s = 0,02 centimos/s — CONFIRMADO en la integracion N7e (T4.9, 2026-07-17 vs fal openapi + model page): precio real vigente, mucho mas barato de lo estimado. Input schema `{tags(req, mood comma-separated), duration(5-240s, def 60), lyrics(def '', '[inst]'=instrumental)}`; output `{audio:{url}, seed, tags, lyrics}`. Deuda `[verificar]` CERRADA — `unverified` retirado."
   },
   {
     "falEndpoint": "fal-ai/latentsync",

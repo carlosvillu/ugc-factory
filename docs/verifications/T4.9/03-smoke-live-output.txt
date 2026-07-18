@@ -1,0 +1,11 @@
+
+> @ugc/web@0.0.0 smoke:music /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/web
+> tsx --env-file-if-exists=../../.env scripts/smoke-music.ts
+
+smoke:music: fal-ai/ace-step (kind music) — mood "dark cinematic trailer, epic orchestral, tense, dramatic percussion", duración 30s — RED REAL…
+
+{"level":30,"time":1784362320446,"pid":93101,"hostname":"MBP-de-Carlos","name":"worker","event":"fal_music_generation_finalized","generationId":"01KXT4G8PR11S0DXZ8ME19BHYH","assetId":"01KXT4GGHQRK7CB9MEQMMK7HKJ","mood":"dark cinematic trailer, epic orchestral, tense, dramatic percussion","costCents":1,"durationSeconds":30,"alreadyFinalized":false,"msg":"bed musical generado: audio descargado, coste por segundo registrado, completed"}
+smoke:music: generation 01KXT4G8PR11S0DXZ8ME19BHYH (completed), asset 01KXT4GGHQRK7CB9MEQMMK7HKJ (music_bed, 30.00s), coste 1¢ (→ /spend) — GET /api/assets/01KXT4GGHQRK7CB9MEQMMK7HKJ/download
+smoke:music:   duración bed=29.91s vs enviado=30s → Δ=0.09s OK ✓
+
+smoke:music: OK ✓ — bed generado, coste 1¢. Descárgalo y JÚZGALO: ¿suena con el mood pedido ("dark cinematic trailer, epic orchestral, tense, dramatic percussion") y es un bed instrumental de ~30s apto para poner bajo el voiceover?

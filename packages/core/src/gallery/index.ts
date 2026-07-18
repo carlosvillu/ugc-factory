@@ -33,6 +33,7 @@ export {
   ModelCapabilitiesSchema,
   ModelProfileSeedSchema,
   isBrollModelKind,
+  isMusicModelKind,
   type PromptKind,
   type PromptStatus,
   type GuardScope,

@@ -4,20 +4,18 @@
 // dinero se gasta en N7. Molde de N4 (strategy.ts): cáscara fina que conecta el orquestador con el
 // MOTOR PURO de `@ugc/core/gallery` (`compilePrompt`) y devuelve el resultado por `output_refs`.
 //
-// ┌─ CORTE DE ALCANCE DE T3.5 (respetado a rajatabla) ──────────────────────────────────────────┐
-// │ El motor de compilación (selección de template, interpolación §10.4, guard packs §9.5,       │
-// │ fidelity guard + anti-estilo, validación de resolución) vive COMPLETO en core y se testea con │
-// │ golden files. ESTE executor es el REGISTRO MÍNIMO: valida su config, llama al motor y emite el │
-// │ resolvedPrompt. NO construye el DAG de generación (N6→N7a-e), NO persiste en la tabla          │
-// │ `generation` (que NO EXISTE hasta T4.1) y NO lee brief/persona/guion de la BD — ese cableado   │
-// │ es F4/T4.11. Aquí el compilador COMPUTA; T4.11 lo materializa en el run de generación.         │
-// └────────────────────────────────────────────────────────────────────────────────────────────┘
+// EL MOTOR VIVE EN CORE. La compilación (selección de template, interpolación §10.4, guard packs §9.5,
+// fidelity guard + anti-estilo, validación de resolución) vive COMPLETA en `@ugc/core/gallery`
+// (`compilePrompt`) y se testea con golden files. Este executor es la cáscara fina: valida su config,
+// RESUELVE las fuentes y llama al motor. No persiste en `generation` (esa fila la crea N7 al submitear,
+// §9.6): el `resolvedPrompt` viaja por `output_refs` y N7 lo consume de sus deps.
 //
-// DE DÓNDE SACA SUS FUENTES. En F4 N6 leerá de la variante (`variantId` en su config) el guion, la
-// persona y las facetas. Hoy, sin el DAG de generación que las produce, si un predecesor emitió el
-// contrato `N6-sources` (por sus `output_refs`), N6 COMPILA de verdad vía el motor de core; si no,
-// marca el nodo INAPLICABLE (no inventa fuentes: eso sería fingir el trabajo de T4.11). El parseo +
-// selección de template viven en `resolveCompileInput` (core, junto a zod y el motor).
+// DE DÓNDE SACA SUS FUENTES (dos orígenes, precedencia dep-first — ver el docstring de `makeN6Executor`):
+// en el DAG de generación (post-CP3) N6 es la RAÍZ (sin dep productora) y ENSAMBLA el `N6Sources` de la
+// BD por `variantId` (`assembleN6Sources`, @ugc/services); en la costura stepless (smoke/unit de T3.5)
+// un predecesor emite el contrato `N6-sources` por sus `output_refs` y N6 compila de él sin BD. Sin
+// ninguno de los dos, marca el nodo INAPLICABLE. El parseo + selección de template viven en
+// `resolveCompileInput` (core, junto a zod y el motor).
 import {
   AnalysisN6ConfigSchema,
   PermanentStepError,
@@ -30,21 +28,31 @@ import {
   RAW_GALLERY_SEED,
   type CompileInput,
 } from '@ugc/core/gallery';
+import { assembleN6Sources } from '@ugc/services';
+import type { DbClient } from '@ugc/db';
+
+/** Deps de N6 (T4.11): la BD para ENSAMBLAR el `N6Sources` de la variante (brief+persona+guion+facetas)
+ *  cuando N6 corre en el DAG de generación (donde es la RAÍZ, sin dep productora). `db` es opcional para
+ *  la costura STEPLESS: el smoke/unit de T3.5 pasa el `N6-sources` por `deps` sin BD; el path de
+ *  producción (post-CP3) lo lee de la BD por `variantId`. */
+export interface N6ExecutorDeps {
+  db?: DbClient;
+}
 
 /**
- * N6: compila el prompt de una variante (determinista, $0). Esqueleto de T3.5 — el motor es real
- * (core), el cableado de fuentes desde la BD y el DAG de generación son F4/T4.11.
+ * N6: compila el prompt de una variante (determinista, $0). El motor de compilación vive completo en
+ * `@ugc/core/gallery` (golden files); este executor RESUELVE LAS FUENTES y llama al motor.
  *
- * Sin deps de infraestructura: N6 no lee la BD en T3.5 (no hay tabla `generation` ni productor aguas
- * arriba todavía). Cuando F4 traiga el DAG de generación, este executor estrenará su grupo de deps
- * ({ db }) —como N4 reusó `analysis.db`— para leer la variante que hoy solo referencia.
+ * DOS ORÍGENES DE FUENTES (precedencia dep-first, para no romper la costura stepless de T3.5):
+ *   1. STEPLESS: un dep con un `N6-sources` (`output_refs`) → compila de él (smoke/unit sin BD).
+ *   2. PRODUCCIÓN (T4.11): sin ese dep pero CON `deps.db` → ENSAMBLA el `N6Sources` de la BD por
+ *      `variantId` (`assembleN6Sources`, @ugc/services). N6 es la raíz del sub-DAG (no tiene productor
+ *      aguas arriba), así que en un run real SIEMPRE cae aquí.
+ *   3. Ninguno (sin dep y sin `db`) → INAPLICABLE (el mismo surface de T3.5 antes de F4).
  */
-export function makeN6Executor(): StepExecutor {
-  // NO es `async`: N6 en T3.5 es puramente síncrono (valida config + llama al motor puro; no hay I/O
-  // que esperar hasta que F4 le dé la BD). Devuelve `Promise.resolve()` para cumplir el contrato
-  // `StepExecutor`. Cuando F4 estrene sus deps de BD, este cuerpo pasará a `async` con awaits reales.
-  return (ctx) => {
-    const { collectOutput, markInapplicable, deps } = ctx;
+export function makeN6Executor(deps: N6ExecutorDeps = {}): StepExecutor {
+  return async (ctx) => {
+    const { collectOutput, markInapplicable } = ctx;
     if (collectOutput === undefined) {
       throw new PermanentStepError(
         'N6: el ExecutorContext no trae collectOutput (bug de cableado)',
@@ -55,6 +63,7 @@ export function makeN6Executor(): StepExecutor {
     if (!parsed.success) {
       throw new PermanentStepError(`N6: config inválida: ${parsed.error.message}`);
     }
+    const { variantId } = parsed.data;
 
     // El seed de galería (templates + guard packs) es la fuente de verdad del motor — los mismos JSON
     // que `pnpm seed:gallery` inserta. Un seed inválido es un fallo de configuración PERMANENTE (no
@@ -63,24 +72,34 @@ export function makeN6Executor(): StepExecutor {
     if (!validation.ok || validation.seed === undefined) {
       throw new PermanentStepError('N6: el seed de galería no valida (catálogo de templates roto)');
     }
+    const { templates, guardPacks } = validation.seed;
 
-    const compileInput = extractCompileInput(
-      deps ?? [],
-      validation.seed.templates,
-      validation.seed.guardPacks,
-    );
+    // (1) STEPLESS: fuentes por dep `N6-sources` (precede a la BD para no romper el smoke/unit).
+    let compileInput = extractCompileInput(ctx.deps ?? [], templates, guardPacks);
+
+    // (2) PRODUCCIÓN: sin dep pero con BD → ensambla el N6Sources de la variante (assembleN6Sources).
+    if (compileInput === undefined && deps.db !== undefined) {
+      const sources = await assembleN6Sources({ db: deps.db }, { variantId });
+      const resolved = resolveCompileInput(sources, templates, guardPacks);
+      if (!resolved.ok) {
+        throw new PermanentStepError(
+          `N6: no se pudo resolver el CompileInput de la variante ${variantId}: ${resolved.message}`,
+        );
+      }
+      compileInput = resolved.input;
+    }
+
     if (compileInput === undefined) {
-      // Nodo no aplicable: el productor de las fuentes (F4/T4.11) todavía no está cableado. El
-      // consumer lo cierra con `skip_inapplicable` (mismo mecanismo que N2 sin imágenes), no como
-      // fallo. Deja constancia del motivo en el artefacto.
+      // Ni dep `N6-sources` ni BD: el nodo no aplica (mismo surface de T3.5). El consumer lo cierra con
+      // `skip_inapplicable` (como N2 sin imágenes), no como fallo. Deja constancia del motivo.
       collectOutput({
         node: 'N6',
         skipped: 'awaiting_generation_dag',
-        variantId: parsed.data.variantId,
+        variantId,
         note: 'El compilador N6 está registrado; el DAG de generación que le pasa las fuentes es T4.11.',
       });
       markInapplicable?.();
-      return Promise.resolve();
+      return;
     }
 
     // COMPILACIÓN REAL vía el motor puro de core. NO lanza: resultado tipado (ok / issues).
@@ -95,13 +114,12 @@ export function makeN6Executor(): StepExecutor {
 
     collectOutput({
       node: 'N6',
-      variantId: parsed.data.variantId,
+      variantId,
       templateSlug: result.result.templateSlug,
       guardPackKeysUsed: result.result.guardPackKeysUsed,
       resolvedPrompt: result.result.resolvedPrompt,
       resolvedBeats: result.result.resolvedBeats,
     });
-    return Promise.resolve();
   };
 }
 

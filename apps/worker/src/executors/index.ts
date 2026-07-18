@@ -65,11 +65,12 @@ export function makeExecutorRegistry({
     // deliberado: `secretsKey` es un GETTER perezoso (un worker sin APP_MASTER_KEY arranca igual y
     // solo revienta el nodo que la use); leerlo aquí lo forzaría en el boot y rompería esa promesa.
     N5: makeN5Executor(analysis),
-    // N6 · COMPILADOR DE PROMPTS (T3.5): determinista y $0 (§9.3, como N4). ESQUELETO — el motor de
-    // compilación vive completo en `@ugc/core/gallery` (golden files); este executor es el registro
-    // mínimo. NO tiene deps (no lee la BD en T3.5: la tabla `generation` y el DAG de generación que
-    // le pasa las fuentes son F4/T4.11). Cuando F4 lo cablee, estrenará su grupo de deps.
-    N6: makeN6Executor(),
+    // N6 · COMPILADOR DE PROMPTS (T3.5 esqueleto → T4.11 flujo LIVE): determinista y $0 (§9.3, como N4).
+    // El motor de compilación vive completo en `@ugc/core/gallery` (golden files); este executor RESUELVE
+    // LAS FUENTES. T4.11 le da la BD (`analysis.db`, patrón de N4/N5) para ENSAMBLAR el `N6Sources` de la
+    // variante (brief+persona+guion+facetas) cuando corre como RAÍZ del sub-DAG de generación — la costura
+    // stepless de T3.5 (fuentes por dep) se conserva y precede a la BD.
+    N6: makeN6Executor({ db: analysis.db }),
     // N7a · PRODUCT SHOTS, ruta packshot-IA (T4.4, §7.2). PAGA fal (text-to-image flux-2): estrena el
     // grupo de deps `generation` (BD + storage + FAL_KEY perezosa). T4.11 lo cablea como nodo del DAG
     // (step_run_id/variant_id); en T4.4 corre STEPLESS (el smoke conduce `ai_packshot` sin step).

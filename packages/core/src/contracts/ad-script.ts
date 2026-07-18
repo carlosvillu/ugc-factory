@@ -113,6 +113,48 @@ export const AdScriptSchema = z.object({
 });
 export type AdScript = z.infer<typeof AdScriptSchema>;
 
+/** Los campos que la fila `ad_script` SÍ guarda (los que el mapper toma tal cual). `scenes`/`subtitles`
+ *  llegan como jsonb opaco (`unknown`): `AdScriptSchema` los valida. */
+export interface AdScriptRowFields {
+  hook: string;
+  cta: string;
+  scenes: unknown;
+  subtitles: unknown;
+  fullText: string;
+  wordCount: number;
+  estSeconds: number;
+  tone: string;
+  language: string;
+}
+
+/**
+ * Reconstruye el `AdScript` VÁLIDO del contrato a partir de los campos de la fila `ad_script` + los DOS
+ * que la fila NO guarda: `filenameCode` (vive en `ad_variant`, lo trae el join) y `sharedBodyKey` (vive
+ * en `ad_batch.matrix` → `PlannedVariant.segmentKeys.body`). Función PURA (sin BD): sus dos callers —la
+ * lectura de CP3 (`readBatchScripts`, apps/web) y el ensamblador de N6Sources (@ugc/services, T4.11)—
+ * comparten ESTE mapper para que no diverjan DOS reconstrucciones del mismo `AdScript` (dos verdades del
+ * mismo dato en jsonb se corrompen en silencio — la disciplina de la skill testing).
+ */
+export function reconstructAdScriptFromRow(
+  row: AdScriptRowFields,
+  filenameCode: string,
+  sharedBodyKey: string,
+): AdScript {
+  return AdScriptSchema.parse({
+    filenameCode,
+    sharedBodyKey,
+    hook: row.hook,
+    cta: row.cta,
+    scenes: row.scenes,
+    subtitles: row.subtitles,
+    fullText: row.fullText,
+    wordCount: row.wordCount,
+    estSeconds: row.estSeconds,
+    tone: row.tone,
+    language: row.language,
+  });
+}
+
 /** Cuenta palabras habladas. Misma tokenización que `countWords` de `analyze/brief-validator`
  *  (tokens separados por espacio): el timing y el techo de hook miden lo mismo con la misma vara. */
 export function countSpokenWords(text: string): number {

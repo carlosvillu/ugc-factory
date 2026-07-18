@@ -60,6 +60,25 @@ export {
 } from './word-timestamps';
 // Constructor del prompt de packshot (T4.4, N7a · ruta `ai_packshot`): lógica pura brief → prompt.
 export { buildPackshotPrompt, PACKSHOT_MIN_SHOTS, PACKSHOT_MAX_SHOTS } from './packshot-prompt';
+// Resolución CROSS-NODE del sub-DAG de generación (T4.11 pass 2b-ii, §7.2 N7): deriva el audio del hook
+// (N7c←N7b) y los keyframes (N7d←N7a) del output de la dep de la MISMA variante — NO de config arbitraria.
+export {
+  findDepBySchema,
+  findN7bDep,
+  deriveHookAudioAssetId,
+  deriveKeyframeAssetIds,
+  type ResolvedDep,
+} from './cross-node-deps';
+// Resolución PURA recipe×voice_map → endpoints/triple de voz (T4.11 pass 2b-ii): la mitad de core del
+// builder `buildVariantGenerationPlan` (la mitad de servicio lee la BD y resuelve endpoint→profile_id).
+export {
+  resolveComponentEndpoints,
+  resolveVoiceTriple,
+  type ResolvedComponentEndpoints,
+  type ResolvedVoiceTriple,
+  type VoiceMap,
+  type VoiceMapEntry,
+} from './resolve-variant-recipe';
 // Webhook de fal (T4.2, §9.6): verificación de firma ED25519 (función pura, deps inyectadas) +
 // el builder del mensaje firmado (compartido con los tests) + el contrato del payload.
 export {

@@ -18,16 +18,20 @@ import { stepExecuteJob } from '@ugc/core/jobs';
 import { planBatch } from '@ugc/core/strategy';
 import { SEED_LIBRARY, validateSeeds } from '@ugc/core/library';
 import {
+  createAsset,
   createBatchWithVariants,
   createScriptsForBatch,
   ensureQueue,
   listBatchVariants,
   listPlanningInputs,
+  seedGallery,
   seedLibrary,
   withDomainTransaction,
   type Db,
 } from '@ugc/db';
 import { persona, productBrief, project, urlAnalysis } from '@ugc/db/schema';
+import { RAW_GALLERY_SEED, validateGallerySeed } from '@ugc/core/gallery';
+import { PermanentStepError } from '@ugc/core/orchestrator';
 import {
   createTestDatabase,
   makeBrief,
@@ -45,7 +49,12 @@ let boss: PgBoss;
 
 const BRIEF = makeBrief();
 
-const LUCIA = {
+// Persona enriquecida para el path de GENERACIÓN de CP3 (T4.11): con imagen de referencia (el
+// `imageAssetId` de N7c) y un `voiceMap` con proveedor PREMIUM (elevenlabs, §13.1) — así
+// `buildVariantGenerationPlan` resuelve el avatar (referenceImageIds[0]) y el triple de voz
+// (elevenlabs ↔ eleven-v3) sin lanzar en las ramas que no son el foco del test. Inocuo para los
+// tests de tier-test (que no construyen ningún plan: sus variantes no llegan a `scripted`).
+const LUCIA_BASE = {
   name: 'Lucía',
   ageRange: '25-34',
   gender: 'female' as const,
@@ -54,6 +63,7 @@ const LUCIA = {
   descriptor: 'creadora de 30 años, estilo natural',
   setting: 'baño luminoso',
   personality: 'cercana',
+  voiceMap: { es: { provider: 'elevenlabs' as const, voiceId: 'rachel_v3' } },
 };
 
 beforeAll(async () => {
@@ -67,7 +77,20 @@ beforeAll(async () => {
   const validation = validateSeeds(SEED_LIBRARY);
   if (!validation.library) throw new Error('la librería real no valida');
   await seedLibrary(tdb.db, validation.library);
-  await tdb.db.insert(persona).values(LUCIA);
+  // La galería (model_profiles): `buildVariantGenerationPlan` resuelve los endpoints premium contra
+  // `model_profile` (money-gate) — sin el seed, todo endpoint sería "no resoluble" y lanzaría.
+  const gseed = validateGallerySeed(RAW_GALLERY_SEED);
+  if (!gseed.ok || !gseed.seed) throw new Error('el seed de galería no valida');
+  await seedGallery(tdb.db, gseed.seed);
+  // La imagen de referencia de la Persona (kind reference_image): su assetId es el `imageAssetId` de N7c.
+  const refImage = await createAsset(tdb.db, {
+    kind: 'reference_image',
+    storageKey: `refs/lucia-${newUlid()}.png`,
+    mime: 'image/png',
+    bytes: 1024,
+    checksum: 'deadbeef',
+  });
+  await tdb.db.insert(persona).values({ ...LUCIA_BASE, referenceImageIds: [refImage.id] });
 });
 
 afterAll(async () => {
@@ -255,14 +278,15 @@ async function seedScriptedBatch(
   db: Db,
   n: number,
   flagsPerVariant: GuardrailFlag[][],
+  tier: 'test' | 'premium' = 'test',
 ): Promise<{ output: N5Output; variantIds: string[]; batchId: string }> {
   const { briefId, projectId } = await seedBrief();
-  const { libraryHooks, personas, recipe } = await listPlanningInputs(db, 'test');
+  const { libraryHooks, personas, recipe } = await listPlanningInputs(db, tier);
   const config = {
     angleIndices: Array.from({ length: n }, (_, i) => i),
     hooksPerAngle: 1,
     objective: 'hook_test' as const,
-    tier: 'test' as const,
+    tier,
     languages: ['es'],
     personaMode: 'rotate' as const,
   };
@@ -271,7 +295,7 @@ async function seedScriptedBatch(
   const created = await createBatchWithVariants(db, {
     projectId,
     briefId,
-    tier: 'test',
+    tier,
     objective: 'hook_test',
     languages: ['es'],
     costEstimatedCents: preview.estimate.total.maxCents,
@@ -327,11 +351,36 @@ async function scriptVersions(
   return rows;
 }
 
-describe('CP3 · approveScriptsForStep (T2.6): veredictos, v2 solo si edita, bloqueo server-side', () => {
-  it('edita UNA variante y aprueba TODAS: exactamente una v2 edited_by_user, todas scripted', async () => {
-    const { output, variantIds } = await seedScriptedBatch(tdb.db, 2, [[], []]);
+/** Invoca `approveScriptsForStep` EXACTAMENTE como el efecto de dominio en producción: dentro de un
+ *  `withDomainTransaction` (el `db` que recibe ES la tx, y comparte `withTransaction`). Así el arranque
+ *  del run de generación (T4.11) —`applyScriptVerdicts` por `db` + `createRun` por `withTransaction`— va
+ *  en UNA sola tx, que es lo que hace atómica la aprobación. Devuelve el resultado (con `nextRunId`). */
+async function approveInTx(
+  output: N5Output,
+  decision: Parameters<typeof approveScriptsForStep>[3],
+): Promise<{ nextRunId?: string }> {
+  return withDomainTransaction(tdb.db, boss, makeTestLogger(), ({ db, withTransaction }) =>
+    approveScriptsForStep(db, withTransaction, output, decision),
+  );
+}
 
-    await approveScriptsForStep(tdb.db, output, {
+/** El nº de `pipeline_run` de generación existentes (para asertar "no arrancó ningún run"). El run de
+ *  N5 de CP2 no lo crea este harness — cualquier `pipeline_run` aquí es el de generación de CP3. */
+async function pipelineRunCount(): Promise<number> {
+  const { rows } = await tdb.pool.query<{ count: string }>('SELECT count(*) FROM pipeline_run');
+  return Number(rows[0]?.count);
+}
+
+describe('CP3 · approveScriptsForStep (T2.6): veredictos, v2 solo si edita, bloqueo server-side', () => {
+  // T4.11: los tests cuyas variantes LLEGAN a `scripted` arrancan el run de generación N6→N7 en la
+  // misma tx, y `buildVariantGenerationPlan` exige un recipe con endpoints REALES → van en `premium`
+  // (el broll de tier-test es aún ETIQUETA, money-gate). Se invocan vía `approveInTx` (como el efecto
+  // de dominio de producción). Los tests de BLOQUEO/no-op mantienen tier-test: sus variantes no pasan a
+  // `scripted`, no se construye ningún plan, y ADEMÁS se asserta que NO arrancó ningún run.
+  it('edita UNA variante y aprueba TODAS: exactamente una v2 edited_by_user, todas scripted', async () => {
+    const { output, variantIds } = await seedScriptedBatch(tdb.db, 2, [[], []], 'premium');
+
+    const result = await approveInTx(output, {
       kind: 'scripts',
       verdicts: [
         {
@@ -351,20 +400,25 @@ describe('CP3 · approveScriptsForStep (T2.6): veredictos, v2 solo si edita, blo
       { version: 2, edited_by_user: true },
     ]);
     expect(await scriptVersions(variantIds[1]!)).toEqual([{ version: 1, edited_by_user: false }]);
+    // T4.11: aprobar arrancó el run de generación N6→N7 (patrón `nextRunId` de CP2).
+    expect(result.nextRunId).toBeTruthy();
+    expect(await pipelineRunCount()).toBe(1);
   });
 
   it('mandar `editedScript` IDÉNTICO al vigente NO crea v2 (aprobar no es editar)', async () => {
     // El cliente puede redonda-viajar los 6 guiones; solo los REALMENTE tocados crean v2. El
     // servidor compara contra la fila vigente, no se fía de la mera presencia del campo.
-    const { output, variantIds } = await seedScriptedBatch(tdb.db, 1, [[]]);
+    const { output, variantIds } = await seedScriptedBatch(tdb.db, 1, [[]], 'premium');
 
-    await approveScriptsForStep(tdb.db, output, {
+    const result = await approveInTx(output, {
       kind: 'scripts',
       verdicts: [{ variantId: variantIds[0]!, approved: true, editedScript: makeScriptContract() }],
     });
 
     expect(await variantStatus(variantIds[0]!)).toBe('scripted');
     expect(await scriptVersions(variantIds[0]!)).toEqual([{ version: 1, edited_by_user: false }]);
+    // Llegó a scripted → arrancó su run.
+    expect(result.nextRunId).toBeTruthy();
   });
 
   it('BLOQUEO SERVER-SIDE: `approved:true` sobre un guion con flag bloqueante NO lo pasa a scripted', async () => {
@@ -372,13 +426,16 @@ describe('CP3 · approveScriptsForStep (T2.6): veredictos, v2 solo si edita, blo
     // flag bloqueante. El servidor NO se fía: relee los flags guardados y RECHAZA la transición.
     const { output, variantIds } = await seedScriptedBatch(tdb.db, 1, [[BLOCKING_FLAG]]);
 
-    await approveScriptsForStep(tdb.db, output, {
+    const result = await approveInTx(output, {
       kind: 'scripts',
       verdicts: [{ variantId: variantIds[0]!, approved: true }],
     });
 
     // La variante NO llega a `scripted`: el flag bloqueante manda sobre el `approved` del cliente.
     expect(await variantStatus(variantIds[0]!)).not.toBe('scripted');
+    // T4.11: ninguna variante `scripted` ⇒ NO se arranca ningún run de generación (nada que generar).
+    expect(result.nextRunId).toBeUndefined();
+    expect(await pipelineRunCount()).toBe(0);
   });
 
   it('BLOQUEO SERVER-SIDE por RE-LINT: un `editedScript` que INTRODUCE un claim prohibido no se aprueba', async () => {
@@ -421,7 +478,7 @@ describe('CP3 · approveScriptsForStep (T2.6): veredictos, v2 solo si edita, blo
       ],
     });
 
-    await approveScriptsForStep(tdb.db, output, {
+    const result = await approveInTx(output, {
       kind: 'scripts',
       verdicts: [{ variantId: variantIds[0]!, approved: true, editedScript: dirty }],
     });
@@ -434,14 +491,18 @@ describe('CP3 · approveScriptsForStep (T2.6): veredictos, v2 solo si edita, blo
       [variantIds[0]],
     );
     expect(rows[0]?.guardrail_flags.some((f) => f.blocking)).toBe(true);
+    // T4.11: bloqueada ⇒ no arranca run.
+    expect(result.nextRunId).toBeUndefined();
+    expect(await pipelineRunCount()).toBe(0);
   });
 
   it('control POSITIVO: editar un guion RESOLVIENDO el flag lo deja pasar a scripted', async () => {
     // El contraste que demuestra que el bloqueo no es «nunca aprueba»: una variante con flag
-    // bloqueante en la v1, editada a un texto LIMPIO, SÍ llega a scripted.
-    const { output, variantIds } = await seedScriptedBatch(tdb.db, 1, [[BLOCKING_FLAG]]);
+    // bloqueante en la v1, editada a un texto LIMPIO, SÍ llega a scripted. Premium (llega a scripted
+    // → arranca run).
+    const { output, variantIds } = await seedScriptedBatch(tdb.db, 1, [[BLOCKING_FLAG]], 'premium');
 
-    await approveScriptsForStep(tdb.db, output, {
+    const result = await approveInTx(output, {
       kind: 'scripts',
       verdicts: [
         {
@@ -453,12 +514,37 @@ describe('CP3 · approveScriptsForStep (T2.6): veredictos, v2 solo si edita, blo
     });
 
     expect(await variantStatus(variantIds[0]!)).toBe('scripted');
+    expect(result.nextRunId).toBeTruthy();
   });
 
   it('no-op si la decisión no es `scripts` (un artefacto N5 sin decisión de guiones)', async () => {
     const { output, variantIds } = await seedScriptedBatch(tdb.db, 1, [[]]);
-    await approveScriptsForStep(tdb.db, output, undefined);
+    const result = await approveInTx(output, undefined);
     // Sin decisión, nada transiciona.
     expect(await variantStatus(variantIds[0]!)).toBe('planned');
+    // Y no arranca ningún run.
+    expect(result.nextRunId).toBeUndefined();
+    expect(await pipelineRunCount()).toBe(0);
+  });
+
+  // ── T4.11 · MONEY-SAFETY: la aprobación es ATÓMICA con el arranque del run ──────────────────────────
+  it('ATOMICIDAD money-gate: si `buildVariantGenerationPlan` LANZA, el rollback deshace los veredictos', async () => {
+    // Una variante aprobable (sin flag) en tier-TEST: `applyScriptVerdicts` la transicionaría a
+    // `scripted` PERO acto seguido `buildVariantGenerationPlan` LANZA (el broll de tier-test es aún una
+    // etiqueta — money-gate). Como ambas mitades comparten la tx de `withDomainTransaction`, el throw
+    // hace rollback de TODO: la variante NO queda `scripted`, y NO hay ni un `pipeline_run` colgado. El
+    // invariante de dinero: nunca una variante marcada lista sin su run (o con un run condenado).
+    const { output, variantIds } = await seedScriptedBatch(tdb.db, 1, [[]]);
+
+    await expect(
+      approveInTx(output, {
+        kind: 'scripts',
+        verdicts: [{ variantId: variantIds[0]!, approved: true }],
+      }),
+    ).rejects.toThrow(PermanentStepError);
+
+    // El rollback deshizo el veredicto: la variante sigue en `planned`, sin `scripted`, y sin run.
+    expect(await variantStatus(variantIds[0]!)).toBe('planned');
+    expect(await pipelineRunCount()).toBe(0);
   });
 });

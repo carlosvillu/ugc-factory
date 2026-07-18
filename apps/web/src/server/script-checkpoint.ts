@@ -36,6 +36,12 @@ import {
 } from '@ugc/core/contracts';
 import { lintScriptForBrief, rebuildEditedScript } from '@ugc/core/scripting';
 import {
+  createRun,
+  generationRunDefinition,
+  type VariantGenerationPlan,
+  type WithTransaction,
+} from '@ugc/core/orchestrator';
+import {
   applyScriptVerdicts,
   getBatch,
   getBrief,
@@ -43,6 +49,7 @@ import {
   type DecidedVerdict,
   type Db,
 } from '@ugc/db';
+import { buildVariantGenerationPlan } from '@ugc/services';
 import { AppError } from '@ugc/core/contracts';
 
 /** El artefacto de un step de guiones (N5), o `undefined` si el step no es uno. Se discrimina por
@@ -71,29 +78,45 @@ function isRealEdit(rebuilt: AdScript, currentScenes: readonly { narration: stri
   return narrationFingerprint(rebuilt.scenes) !== narrationFingerprint(currentScenes);
 }
 
+/** El resultado de aprobar CP3 (T4.11): el id del RUN DE GENERACIÓN N6→N7 arrancado en la MISMA tx para
+ *  las variantes `scripted`, o `undefined` si CP3 no aprobó ninguna (nada que generar). Viaja hasta la
+ *  respuesta de `/approve` para que el cliente navegue al canvas de generación (patrón del `nextRunId`
+ *  de CP2). */
+export interface ScriptsCheckpointResult {
+  nextRunId?: string;
+}
+
 /**
- * Efecto de APROBAR el checkpoint de guiones (CP3): aplica los veredictos por-variante.
+ * Efecto de APROBAR el checkpoint de guiones (CP3): aplica los veredictos por-variante Y —en la MISMA
+ * tx— arranca el RUN DE GENERACIÓN N6→N7 de las variantes que quedaron `scripted` (T4.11).
  *
  * No-op si el step no es N5 o si la decisión no es `scripts` (mismo criterio que CP1/CP2: un efecto
- * que no reconoce su artefacto/decisión no hace nada).
+ * que no reconoce su artefacto/decisión no hace nada) → `{}`.
+ *
+ * ATOMICIDAD (patrón de CP2, `finalizeMatrixCheckpoint`): los veredictos + el `createRun` del run de
+ * generación commitean JUNTOS o nada. Si `buildVariantGenerationPlan` lanza (money-safety: un endpoint
+ * de recipe que aún es etiqueta) o `createRun` falla, el rollback de la tx externa DESHACE también los
+ * veredictos — no queda una variante `scripted` sin su run, ni un run condenado a medio gastar.
  */
 export async function approveScriptsForStep(
   db: Db,
+  withTransaction: WithTransaction,
   outputRefs: unknown,
   decision: CheckpointDecision | undefined,
-): Promise<void> {
+): Promise<ScriptsCheckpointResult> {
   const output = parseScriptsOutput(outputRefs);
-  if (output === undefined) return;
-  if (decision?.kind !== 'scripts') return;
+  if (output === undefined) return {};
+  if (decision?.kind !== 'scripts') return {};
 
-  await applyDecidedVerdicts(db, output.batchId, decision);
+  return applyDecidedVerdicts(db, withTransaction, output.batchId, decision);
 }
 
 async function applyDecidedVerdicts(
   db: Db,
+  withTransaction: WithTransaction,
   batchId: string,
   decision: ScriptsCheckpointDecision,
-): Promise<void> {
+): Promise<ScriptsCheckpointResult> {
   // El brief del lote: la fuente de bannedClaims/briefLanguage para el re-lint (la MISMA que usó N5).
   const batch = await getBatch(db, batchId);
   if (batch === undefined) {
@@ -155,4 +178,33 @@ async function applyDecidedVerdicts(
   });
 
   await applyScriptVerdicts(db, { batchId, verdicts: decided });
+
+  // ── EL ARRANQUE DEL RUN DE GENERACIÓN N6→N7, EN ESTA MISMA TX (T4.11) ────────────────────────────
+  // Las variantes que quedaron `scripted` (aprobadas + sin flag bloqueante) son EXACTAMENTE las que
+  // `applyScriptVerdicts` transicionó — se derivan del `decided` (no se re-consulta la BD): `approve:true`.
+  const scriptedVariantIds = decided.filter((d) => d.approve).map((d) => d.variantId);
+  if (scriptedVariantIds.length === 0) {
+    // CP3 no aprobó ninguna variante (todo rechazado o bloqueado): no hay nada que generar. Como CP2
+    // sin decisión `matrix`, no se arranca ningún run.
+    return {};
+  }
+
+  // Un `VariantGenerationPlan` por variante `scripted` (lee recipe×tier + voice_map + guion de la BD —
+  // la MISMA tx). Money-safety: `buildVariantGenerationPlan` LANZA (PermanentStepError) si un endpoint
+  // de recipe aún es etiqueta → el rollback deshace los veredictos (atomicidad). Secuencial: fail-fast
+  // (una variante irresoluble aborta el lote entero antes de crear un run a medias).
+  const plans: VariantGenerationPlan[] = [];
+  for (const variantId of scriptedVariantIds) {
+    plans.push(await buildVariantGenerationPlan({ db }, { variantId }));
+  }
+
+  // `createRun` inserta el `pipeline_run` de generación + su sub-DAG N6→N7a-e POR VARIANTE y encola los
+  // roots (N6), todo dentro del `withTransaction` del scope de dominio (savepoint sobre la tx de la
+  // aprobación de CP3). Si lanza, `applyScriptVerdicts` de arriba se deshace con el rollback externo.
+  const { runId } = await createRun(
+    { withTransaction },
+    generationRunDefinition(batch.projectId, plans),
+  );
+
+  return { nextRunId: runId };
 }

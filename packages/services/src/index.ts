@@ -73,3 +73,12 @@ export { finalizeGenerationByKind } from './finalize-download';
 // (lo llama el route handler de web), y la caché ≤24 h del JWKS que alimenta a `verifyFalWebhook`.
 export { handleFalWebhookEvent } from './handle-fal-webhook';
 export { makeFalJwksCache } from './fal-jwks';
+// ENSAMBLADOR de N6Sources desde la BD (T4.11 pass 2b-ii, §7.2 N6): brief+persona+guion+facetas de una
+// variante → el `N6Sources` que el motor puro `compilePrompt` consume. Lo llama el executor N6 (raíz del
+// sub-DAG de generación, sin dep productora) para leer las fuentes de la BD por `variantId`.
+export { assembleN6Sources } from './assemble-n6-sources';
+// BUILDER del plan de generación de UNA variante (T4.11 pass 2b-ii, §7.2 N6→N7): variante `scripted` →
+// `VariantGenerationPlan` (endpoints por componente resueltos del recipe×tier, triple de voz del
+// voice_map). Lo llama `approveScriptsForStep` (CP3) para arrancar el run de generación. Money-safe: una
+// etiqueta-no-endpoint lanza `PermanentStepError` ANTES de crear el run.
+export { buildVariantGenerationPlan } from './build-variant-generation-plan';

@@ -24,6 +24,7 @@ import {
   planGeneration,
   quantizeDurationToEnum,
 } from '@ugc/core/gallery';
+import { deriveKeyframeAssetIds } from '@ugc/core/generation';
 import { AdScriptSchema } from '@ugc/core/contracts';
 import { getModelProfileByEndpoint, getScriptById } from '@ugc/db';
 import { runGenerateBroll } from '@ugc/services';
@@ -63,6 +64,19 @@ export function makeN7dExecutor(deps: GenerationExecutorDeps): StepExecutor {
       throw new PermanentStepError(`N7d: config inválida: ${parsed.error.message}`);
     }
     const cfg = parsed.data;
+
+    // CROSS-NODE (T4.11 §9.6, money-path): los KEYFRAMES i2v vienen de los product shots de N7a de la
+    // MISMA variante. En un RUN se DERIVAN del output de la dep N7a (`ctx.deps`, resueltas por el
+    // consumer desde `step.dependsOn` → aisladas por variante por construcción); `cfg.imageAssetIds` es
+    // la costura STEPLESS del smoke. Precedencia DEP-WINS: si hay dep N7a, MANDA — un keyframe rancio de
+    // OTRA variante animaría el producto equivocado y quemaría vídeo real.
+    const depKeyframes = deriveKeyframeAssetIds(ctx.deps ?? []);
+    const imageAssetIds = depKeyframes ?? cfg.imageAssetIds;
+    if (imageAssetIds === undefined || imageAssetIds.length === 0) {
+      throw new PermanentStepError(
+        'N7d: no hay keyframes — ni dep N7a (run) ni cfg.imageAssetIds (stepless). Cableado roto.',
+      );
+    }
 
     // Leer la fila REAL de `ad_script` + el model_profile del b-roll (por endpoint). Independientes →
     // en UNO (`Promise.all`, patrón N7b). El script se VALIDA (nunca castear el jsonb opaco de la BD).
@@ -176,7 +190,7 @@ export function makeN7dExecutor(deps: GenerationExecutorDeps): StepExecutor {
             },
             {
               brollModelProfileId: profile.id,
-              imageAssetIds: cfg.imageAssetIds,
+              imageAssetIds,
               durationSeconds,
               aspectRatio: cfg.aspect,
               resolution: cfg.resolution,

@@ -127,6 +127,11 @@ export {
   N4OutputSchema,
   N5OutputSchema,
   N5ScriptRefSchema,
+  N6OutputSchema,
+  N7aOutputSchema,
+  N7aShotRefSchema,
+  N7bOutputSchema,
+  N7bClipRefSchema,
   type SkippedOutput,
   type N1Output,
   type N2Output,
@@ -134,6 +139,9 @@ export {
   type N4Output,
   type N5Output,
   type N5ScriptRef,
+  type N6Output,
+  type N7aOutput,
+  type N7bOutput,
 } from './step-outputs';
 // La DECISIÓN de un checkpoint (T1.11): lo que el humano RESUELVE (CP1: subir fotos vs generar
 // packshot-IA; CP2: con qué config se compone el lote), que NO es el artefacto que edita. Canal
@@ -189,9 +197,11 @@ export {
   WORDS_PER_SECOND,
   countSpokenWords,
   secondsForText,
+  reconstructAdScriptFromRow,
   type AdScript,
   type AdScene,
   type AdSubtitle,
+  type AdScriptRowFields,
 } from './ad-script';
 // Los FLAGS de compliance FTC (T2.5, §15.2): lo que el linter (`@ugc/core/scripting` →
 // `ftc-linter.ts`) marca sobre un guion y lo que se serializa en `ad_script.guardrail_flags`

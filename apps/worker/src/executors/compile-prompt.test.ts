@@ -1,7 +1,7 @@
-// Unit del executor N6 (T3.5, esqueleto). Cubre lo que la Entrega promete ("registro del executor
-// N6 en el orquestador") y su comportamiento observable: sin fuentes cableadas se marca inaplicable;
-// con un `N6-sources` compila DE VERDAD vía el motor de core y emite el resolvedPrompt con el
-// fidelity guard. Puro: sin BD, sin cola (N6 es $0 y determinista en T3.5).
+// Unit del executor N6 (costura STEPLESS: fuentes por dep `N6-sources`, sin BD). Cubre su comportamiento
+// observable en ese path: sin fuentes cableadas se marca inaplicable; con un `N6-sources` compila DE
+// VERDAD vía el motor de core y emite el resolvedPrompt con el fidelity guard. El path de PRODUCCIÓN
+// (ensamblado desde la BD por `variantId`, T4.11) se cubre en integración. N6 es $0 y determinista.
 import { describe, expect, it, vi } from 'vitest';
 import type { ExecutorContext } from '@ugc/core/orchestrator';
 import { PermanentStepError } from '@ugc/core/orchestrator';
@@ -35,7 +35,7 @@ function makeCtx(overrides: Partial<ExecutorContext> = {}): {
   return { ctx, outputs, markInapplicable };
 }
 
-describe('makeN6Executor (esqueleto T3.5)', () => {
+describe('makeN6Executor (costura stepless: fuentes por dep, sin BD)', () => {
   it('sin fuentes cableadas (sin dep N6-sources) → marca inaplicable y no compila', async () => {
     const { ctx, outputs, markInapplicable } = makeCtx();
     await makeN6Executor()(ctx);
@@ -64,19 +64,19 @@ describe('makeN6Executor (esqueleto T3.5)', () => {
     expect(out.guardPackKeysUsed).toContain('guard.vertical.beauty');
   });
 
-  it('config inválida (sin variantId) → PermanentStepError', () => {
+  it('config inválida (sin variantId) → PermanentStepError', async () => {
     const { ctx } = makeCtx({ config: {} });
-    // El executor valida de forma síncrona antes de devolver la promesa: el throw es síncrono.
-    expect(() => makeN6Executor()(ctx)).toThrow(PermanentStepError);
+    // T4.11: N6 es `async` (lee la BD en el path de producción) — el throw viaja por promesa rechazada.
+    await expect(makeN6Executor()(ctx)).rejects.toThrow(PermanentStepError);
   });
 
-  it('un N6-sources con slot irresoluble (sin guion) → PermanentStepError accionable', () => {
+  it('un N6-sources con slot irresoluble (sin guion) → PermanentStepError accionable', async () => {
     const noScript: N6Sources = { ...n6Sources, script: undefined };
     const { ctx } = makeCtx({
       deps: [{ stepId: 's1', nodeKey: 'N6-sources', status: 'succeeded', outputRefs: noScript }],
     });
     // Sin guion, {hook.line}/{cta.line} no resuelven → el executor revienta ruidoso antes de un render.
-    expect(() => makeN6Executor()(ctx)).toThrow(/slots sin resolver/);
+    await expect(makeN6Executor()(ctx)).rejects.toThrow(/slots sin resolver/);
   });
 
   it('está REGISTRADO en el orquestador bajo la clave N6 (Entrega: "registro del executor N6")', () => {

@@ -149,3 +149,63 @@ export const N5OutputSchema = z.object({
   warnings: z.array(z.string()),
 });
 export type N5Output = z.infer<typeof N5OutputSchema>;
+
+// ── ARTEFACTOS DEL SUB-DAG DE GENERACIÓN N6→N7 (T4.11) ────────────────────────────────────────────
+//
+// POR QUÉ VIVEN AQUÍ Y NO EN EL EXECUTOR (la razón de cabecera, agudizada por T4.11): estos NO son
+// refs ligeros solo para el SSE. Son la FRONTERA CROSS-NODE por la que un executor N7 lee el asset
+// que produjo OTRO nodo N7 de la MISMA variante — N7c (avatar) consume el `assetId` del audio del hook
+// de N7b; N7d (b-roll) consume los `assetId` de los keyframes de N7a. El consumer resuelve las deps por
+// ULID (`step.dependsOn`, aislado por variante por construcción) y las entrega en `ctx.deps`; el executor
+// consumidor DISCRIMINA su dep POR SCHEMA (`safeParse`, patrón `parseScriptsOutput`/`resolveCompileInput`),
+// NUNCA por `node_key` (T0.8: `node_key` no es único tras un supersede). Si estos schemas vivieran como
+// interfaces locales en el worker, N7c/N7d no tendrían con qué validar su dep — y una config con un
+// `audioAssetId`/keyframe de OTRA variante pasaría inadvertida quemando dinero de vídeo en el asset
+// equivocado. Ese es el punto de máximo riesgo de dinero de F4 (§9.6).
+
+/** N6 · COMPILADOR DE PROMPTS ($0): el `resolvedPrompt` de la variante + su procedencia de catálogo.
+ *  Los N7 lo consumen de sus deps y lo persisten al submitear (la fila `generation` la crea N7, no N6). */
+export const N6OutputSchema = z.object({
+  node: z.literal('N6'),
+  variantId: z.string(),
+  templateSlug: z.string(),
+  guardPackKeysUsed: z.array(z.string()),
+  resolvedPrompt: z.string(),
+  resolvedBeats: z.array(z.unknown()),
+});
+export type N6Output = z.infer<typeof N6OutputSchema>;
+
+/** El ref de UN shot de N7a (product shot / keyframe). El `assetId` es lo que N7d consume como keyframe. */
+export const N7aShotRefSchema = z.object({
+  generationId: z.string(),
+  assetId: z.string(),
+  costCents: z.number(),
+});
+/** N7a · PRODUCT SHOTS / KEYFRAMES (ruta `ai_packshot`). Sus `shots[].assetId` son los KEYFRAMES que
+ *  N7d (b-roll i2v) consume de su dep. */
+export const N7aOutputSchema = z.object({
+  route: z.literal('ai_packshot'),
+  syntheticProduct: z.literal(true),
+  shots: z.array(N7aShotRefSchema),
+});
+export type N7aOutput = z.infer<typeof N7aOutputSchema>;
+
+/** El ref de UN voiceover de N7b (uno por escena). `sceneIndex` + `assetId`: N7c consume el asset de la
+ *  escena del HOOK (segment `hook`), no ciegamente `clips[0]`. */
+export const N7bClipRefSchema = z.object({
+  sceneIndex: z.number(),
+  generationId: z.string(),
+  assetId: z.string(),
+  durationSeconds: z.number(),
+  wordCount: z.number(),
+  ttsCostCents: z.number(),
+  asrCostCents: z.number(),
+});
+/** N7b · VOICEOVER (TTS→ASR). Su `clips[].assetId` (el de la escena del hook) es el AUDIO que N7c
+ *  (avatar) consume de su dep para animar el lipsync. */
+export const N7bOutputSchema = z.object({
+  scriptId: z.string(),
+  language: z.string(),
+  clips: z.array(N7bClipRefSchema),
+});
+export type N7bOutput = z.infer<typeof N7bOutputSchema>;

@@ -77,10 +77,15 @@ export type CtaLineSeed = z.infer<typeof CtaLineSeedSchema>;
  * Un paso de la receta: el componente del vídeo (§12 `recipe.steps`, Apéndice B lo tabula
  * como Avatar / B-roll / Voz / Shots) y el modelo que lo cubre en ese tier.
  *
- * `model`: hoy la ETIQUETA del Apéndice B (p. ej. "Kling AI Avatar v2 Std"). La tabla
- * `model_profile` (F3) todavía no existe; T3.4 —que "recalibra las `recipe` sembradas en
- * T2.1"— es quien lo recableará a un `model_profile_id` real. `params` queda para esa
- * recalibración (duración de clip, resolución…): opcional hoy.
+ * `model`: el `falEndpoint` real del `model_profile` cuando existe (p. ej.
+ * "fal-ai/bytedance/omnihuman/v1.5") — T3.4 recableó las `recipe` sembradas para que `model`
+ * apunte al endpoint resoluble por `getModelProfileByEndpoint`, y el resolver de T4.11
+ * (buildVariantGenerationPlan) lo mapea a un `model_profile_id`. EXCEPCIÓN: los `broll` de los
+ * tiers test/standard siguen siendo una ETIQUETA (Wan 2.6 / Kling v3, sin endpoint fal vivo,
+ * §13.1 l.600) — deuda `[verificar]` que se cierra en su integración F4; el resolver LANZA
+ * `PermanentStepError` ruidoso si topa una etiqueta no-endpoint (money-safety: nunca inventa un
+ * endpoint que gastaría en el modelo equivocado). `params` (duración de clip, resolución…):
+ * opcional, lo consume el executor.
  */
 export const RecipeStepSeedSchema = z.object({
   component: z.enum(['avatar', 'broll', 'voice', 'shots']),

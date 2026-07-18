@@ -21,7 +21,7 @@
 import { N7aConfigSchema, PermanentStepError } from '@ugc/core/orchestrator';
 import type { StepExecutor } from '@ugc/core/orchestrator';
 import { buildPackshotPrompt, type GenerationInputs } from '@ugc/core/generation';
-import { ProductBriefSchema } from '@ugc/core/contracts';
+import { ProductBriefSchema, type N7aOutput } from '@ugc/core/contracts';
 import type { Logger, StorageAdapter } from '@ugc/core';
 import { getBrief, getModelProfileByEndpoint, type DbClient } from '@ugc/db';
 import { runGenerate } from '@ugc/services';
@@ -59,16 +59,10 @@ export interface GenerationExecutorDeps {
  *  `generation`/`asset`; el artefacto solo lleva refs para el excerpt SSE y para que N7d/CP4 sepan
  *  qué shots hay). `syntheticProduct` viaja aquí ADEMÁS de en la columna para que un lector del
  *  artefacto no tenga que hacer el join si solo quiere el flag. */
-interface N7aShotRef {
-  generationId: string;
-  assetId: string;
-  costCents: number;
-}
-interface N7aOutput {
-  route: 'ai_packshot';
-  syntheticProduct: true;
-  shots: N7aShotRef[];
-}
+// El shape del artefacto vive en core (`N7aOutputSchema`, contracts/step-outputs.ts): es la FRONTERA
+// CROSS-NODE por la que N7d consume los keyframes (`shots[].assetId`). El executor solo lo produce
+// tipado contra ella (`satisfies N7aOutput`).
+type N7aShotRef = N7aOutput['shots'][number];
 
 /**
  * N7a · PRODUCT SHOTS, ruta `ai_packshot` (T4.4, §7.2). Genera 2–3 packshots 9:16 del producto con

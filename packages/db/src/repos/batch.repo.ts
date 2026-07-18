@@ -209,6 +209,14 @@ export async function getBatch(db: Db, batchId: string): Promise<AdBatch | undef
   return row;
 }
 
+/** Una variante por id; `undefined` si no existe (T4.11). La necesita `buildVariantGenerationPlan`
+ *  (@ugc/services) para ensamblar el plan de generación de UNA variante `scripted` sin recorrer todo
+ *  su lote — tiene el `variantId` directo (de las variantes `scripted` que CP3 aprobó). */
+export async function getVariant(db: Db, id: string): Promise<AdVariant | undefined> {
+  const [row] = await db.select().from(adVariant).where(eq(adVariant.id, id));
+  return row;
+}
+
 /** Las variantes de un lote, en orden estable por `filename_code` (lo que CP2 enseña tras crear
  *  el lote y lo que T2.4 recorre para escribir los guiones). */
 export async function listBatchVariants(db: Db, batchId: string): Promise<AdVariant[]> {

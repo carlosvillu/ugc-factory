@@ -17,7 +17,7 @@ import { N7bConfigSchema, PermanentStepError } from '@ugc/core/orchestrator';
 import type { StepExecutor } from '@ugc/core/orchestrator';
 import type { GenerationInputs } from '@ugc/core/generation';
 import { resolveVoiceStep } from '@ugc/core/persona';
-import { AdScriptSchema } from '@ugc/core/contracts';
+import { AdScriptSchema, type N7bOutput } from '@ugc/core/contracts';
 import { getModelProfileByEndpoint, getScriptById } from '@ugc/db';
 import { runGenerateAudio } from '@ugc/services';
 
@@ -37,21 +37,10 @@ const ASR_LANGUAGE_CODE: Readonly<Record<string, string>> = {
   en: 'eng',
 };
 
-/** El ref ligero de un voiceover generado (la verdad vive en `generation`/`asset`). */
-interface N7bClipRef {
-  sceneIndex: number;
-  generationId: string;
-  assetId: string;
-  durationSeconds: number;
-  wordCount: number;
-  ttsCostCents: number;
-  asrCostCents: number;
-}
-interface N7bOutput {
-  scriptId: string;
-  language: string;
-  clips: N7bClipRef[];
-}
+// El shape del artefacto vive en core (`N7bOutputSchema`, contracts/step-outputs.ts): es la FRONTERA
+// CROSS-NODE por la que N7c consume el audio del hook (`clips[].assetId`). El executor solo lo produce
+// tipado contra ella (`satisfies N7bOutput`).
+type N7bClipRef = N7bOutput['clips'][number];
 
 /**
  * N7b · TTS + WORD TIMESTAMPS (T4.5, §7.2). Sintetiza un voiceover por ESCENA del guion con el TTS del

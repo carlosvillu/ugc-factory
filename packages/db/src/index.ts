@@ -216,10 +216,15 @@ export { seedGallery } from './repos/gallery-seed.repo';
 export {
   createBatchWithVariants,
   getBatch,
+  getVariant,
   listBatchVariants,
   setVariantAudioSource,
   type CreatedBatch,
 } from './repos/batch.repo';
+// La RECETA de un tier (T4.11): `buildVariantGenerationPlan` (@ugc/services) la lee para resolver
+// `recipe.steps` (componente→endpoint fal) por tier de la variante. Vuelve a salir al barrel tras T2.3
+// (era interna) porque ESTRENA consumidor de runtime fuera del paquete. Devuelve `RecipeSeed` parseado.
+export { getRecipe } from './repos/library.repo';
 // GUIONES (T2.6, N5+CP3): la idempotencia de dinero de N5 (`findScriptsByOriginStep`), la
 // persistencia v1 del lote (`createScriptsForBatch`), la lectura del guion vigente de cada variante
 // para CP3 (`getLatestScriptsByBatch`) y la aplicación transaccional de los veredictos de CP3

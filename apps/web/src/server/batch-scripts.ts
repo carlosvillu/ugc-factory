@@ -13,14 +13,14 @@
 // en `ad_variant.filename_code` (batch.repo.ts). Así el `filenameCode` es la clave de cruce fiable
 // entre la fila (que tiene `variantId`) y la matriz (que tiene `sharedBodyKey`/`angleName`/persona).
 import {
-  AdScriptSchema,
   BatchPlanSchema,
   GuardrailFlagSchema,
+  reconstructAdScriptFromRow,
   type BatchScript,
   type BatchScripts,
   type GuardrailFlag,
 } from '@ugc/core/contracts';
-import { getBatch, getLatestScriptsByBatch, type AdScriptRow, type Db } from '@ugc/db';
+import { getBatch, getLatestScriptsByBatch, type Db } from '@ugc/db';
 import { AppError } from '@ugc/core/contracts';
 
 /** Los flags guardados en la fila (`guardrail_flags`, jsonb nullable), validados. Un valor corrupto
@@ -29,24 +29,6 @@ import { AppError } from '@ugc/core/contracts';
 function parseFlags(raw: unknown): GuardrailFlag[] {
   const parsed = GuardrailFlagSchema.array().safeParse(raw ?? []);
   return parsed.success ? parsed.data : [];
-}
-
-/** Reconstruye el `AdScript` VÁLIDO de una fila: le añade el `filenameCode` (del join) y el
- *  `sharedBodyKey` (de la matriz) que la fila no guarda, y lo valida contra el contrato. */
-function reconstructScript(row: AdScriptRow, filenameCode: string, sharedBodyKey: string) {
-  return AdScriptSchema.parse({
-    filenameCode,
-    sharedBodyKey,
-    hook: row.hook,
-    cta: row.cta,
-    scenes: row.scenes,
-    subtitles: row.subtitles,
-    fullText: row.fullText,
-    wordCount: row.wordCount,
-    estSeconds: row.estSeconds,
-    tone: row.tone,
-    language: row.language,
-  });
 }
 
 /**
@@ -81,7 +63,7 @@ export async function readBatchScripts(db: Db, batchId: string): Promise<BatchSc
       angleName: planned.angleName,
       personaName: planned.personaName,
       personaId: planned.personaId,
-      script: reconstructScript(row.script, row.filenameCode, sharedBodyKey),
+      script: reconstructAdScriptFromRow(row.script, row.filenameCode, sharedBodyKey),
       guardrailFlags: parseFlags(row.script.guardrailFlags),
     });
   }

@@ -82,12 +82,13 @@ const EFFECTS: DomainEffect[] = [
     },
   },
   {
-    // CP3 · GUIONES (T2.6): aplicar los veredictos por-variante — v2 de los guiones editados,
-    // re-lint server-side, y `ad_variant.scripted` SOLO para las que pasan el guard de bloqueo. Sin
-    // decisión `scripts` no hace nada. NO arranca ningún run (N6/N7 son F3/F4).
+    // CP3 · GUIONES (T2.6 + T4.11): aplicar los veredictos por-variante — v2 de los guiones editados,
+    // re-lint server-side, y `ad_variant.scripted` SOLO para las que pasan el guard de bloqueo — Y
+    // arrancar el RUN DE GENERACIÓN N6→N7 de las variantes `scripted` en la MISMA tx (devuelve su
+    // `nextRunId`, patrón de CP2). Sin decisión `scripts` no hace nada.
     matches: (outputRefs) => N5OutputSchema.safeParse(outputRefs).success,
-    apply: (db, _withTransaction, outputRefs, decision) =>
-      approveScriptsForStep(db, outputRefs, decision),
+    apply: (db, withTransaction, outputRefs, decision) =>
+      approveScriptsForStep(db, withTransaction, outputRefs, decision),
   },
 ];
 

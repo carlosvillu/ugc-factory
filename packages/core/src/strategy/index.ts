@@ -6,6 +6,10 @@
 // (T2.0); su salida es el `BatchPlan` (contrato transversal, `contracts/batch-plan.ts`) y el
 // desglose de coste que CP2 (T2.3) enseña antes de gastar un céntimo.
 export { composeMatrix, type ComposeMatrixInput, type PlannablePersona } from './matrix';
+// El puente framework(brief)→hookAngle(librería/galería): la MISMA tabla que usa el compositor de
+// matriz (N4) para casar hooks. La reusa el ensamblador N6 (T4.11) para poblar `facets.hookAngle`
+// desde `ad_variant.framework` — una sola fuente de verdad para el mapeo, no dos.
+export { BRIEF_FRAMEWORK_TO_HOOK_ANGLE } from './hook-angle-bridge';
 // La resolución CONFIG → MATRIZ + COSTE (T2.3): la usan el executor de N4 (que propone la matriz
 // inicial), el endpoint de estimación de CP2 y el efecto de dominio que crea el lote. Una sola
 // aritmética para los tres ⇒ lo que se estima es lo que se crea.

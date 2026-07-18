@@ -145,8 +145,14 @@ export const N7cConfigSchema = z.object({
   /** El `asset` de la IMAGEN de la Persona (kind `reference_image`): sube a fal → `image_url`. */
   imageAssetId: z.string().min(1),
   /** El `asset` del AUDIO del hook (kind `tts_audio`, de N7b): sube a fal → `audio_url`. La duración
-   *  del clip = la de este audio automáticamente. */
-  audioAssetId: z.string().min(1),
+   *  del clip = la de este audio automáticamente.
+   *
+   *  OPCIONAL desde T4.11 (pass 2b-ii): en un RUN, el audio del hook NO existe al construir el plan
+   *  (N7b aún no ha corrido) — el executor lo DERIVA del output de su dep N7b de la MISMA variante
+   *  (`ctx.deps`, precedencia dep-wins). Este campo es la costura STEPLESS (el smoke lo fija sin DAG).
+   *  Si hay dep N7b, la dep MANDA y este valor se ignora (un puntero rancio a OTRA variante quemaría
+   *  vídeo real — §9.6). */
+  audioAssetId: z.string().min(1).optional(),
   /** Prompt opcional del avatar (guía de la actuación). Ambos modelos lo aceptan. */
   prompt: z.string().min(1).optional(),
   /** Resolución de OmniHuman (`720p|1080p`, default 1080p). Kling la ignora. El límite de audio de
@@ -185,8 +191,13 @@ export const N7dConfigSchema = z.object({
    *  resuelve el perfil por endpoint y su `kind` decide la ruta (i2v/r2v). */
   brollEndpoint: z.string().min(1),
   /** Los `asset` de imagen de entrada: el keyframe (i2v, se usa el primero) o las referencias del
-   *  producto (r2v, hasta `capabilities.refImages`). Al menos uno. */
-  imageAssetIds: z.array(z.string().min(1)).min(1),
+   *  producto (r2v, hasta `capabilities.refImages`). Al menos uno.
+   *
+   *  OPCIONAL desde T4.11 (pass 2b-ii): en un RUN, los keyframes NO existen al construir el plan (N7a
+   *  aún no ha corrido) — el executor los DERIVA del output de su dep N7a de la MISMA variante
+   *  (`ctx.deps`, precedencia dep-wins). Este campo es la costura STEPLESS (el smoke lo fija sin DAG).
+   *  Si hay dep N7a, la dep MANDA (un keyframe rancio de OTRA variante quemaría vídeo real — §9.6). */
+  imageAssetIds: z.array(z.string().min(1)).min(1).optional(),
   /** Aspecto vertical del clip (default 9:16). Debe estar en `capabilities.aspects` del modelo. */
   aspect: z.string().min(1).default('9:16'),
   /** Preset de resolución (`720p|1080p|4k`, default 720p — §7.5 pide 720p+). Debe estar en

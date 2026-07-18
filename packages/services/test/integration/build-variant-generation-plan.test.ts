@@ -1,0 +1,255 @@
+// Integración de `buildVariantGenerationPlan` (T4.11 pass 2b-ii) contra Postgres real. Prueba que el
+// builder LEE la BD de una variante y produce los configs de generación con los endpoints resueltos del
+// recipe×tier + el triple de voz del voice_map — y que un endpoint que aún es ETIQUETA (broll de tier
+// test/standard) LANZA `PermanentStepError` ANTES de crear ningún run (money-safety, decisión #2). NO
+// toca fal ($0): solo lecturas de BD.
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import {
+  createAsset,
+  createPersona,
+  createProject,
+  createScriptsForBatch,
+  getVariant,
+  seedGallery,
+  seedLibrary,
+} from '@ugc/db';
+import { adBatch, adVariant, productBrief, urlAnalysis } from '@ugc/db/schema';
+import { PermanentStepError } from '@ugc/core/orchestrator';
+import { RAW_GALLERY_SEED, validateGallerySeed } from '@ugc/core/gallery';
+import { SEED_LIBRARY, validateSeeds } from '@ugc/core/library';
+import {
+  createTestDatabase,
+  makeProductBrief,
+  makeUrlAnalysis,
+  makeProject,
+  makeBrief,
+} from '@ugc/test-utils';
+import type { TestDatabase } from '@ugc/test-utils';
+import { newUlid } from '@ugc/core/contracts';
+
+import { buildVariantGenerationPlan } from '../../src/build-variant-generation-plan';
+
+let tdb: TestDatabase;
+
+const BRIEF = makeBrief();
+
+beforeAll(async () => {
+  tdb = await createTestDatabase({ label: 'services:build-variant-generation-plan' });
+  const gseed = validateGallerySeed(RAW_GALLERY_SEED);
+  if (!gseed.ok || !gseed.seed) throw new Error('el seed de galería no valida');
+  await seedGallery(tdb.db, gseed.seed);
+  const lseed = validateSeeds(SEED_LIBRARY);
+  if (!lseed.library) throw new Error('la librería no valida');
+  await seedLibrary(tdb.db, lseed.library);
+});
+
+afterAll(async () => {
+  await tdb.close();
+});
+
+beforeEach(async () => {
+  await tdb.pool.query(
+    'TRUNCATE ad_script, ad_variant, ad_batch, product_brief, url_analysis, persona, asset, project CASCADE',
+  );
+});
+
+/** Siembra proyecto + brief + persona (con voz es + imagen de referencia) + lote + variante + guion.
+ *  `tier` gobierna el recipe (premium = todos resolubles; test = broll etiqueta). Devuelve el variantId. */
+async function seedVariant(
+  tier: 'test' | 'premium',
+): Promise<{ variantId: string; personaId: string; briefId: string }> {
+  const project = await createProject(tdb.db, makeProject());
+  const [ua] = await tdb.db
+    .insert(urlAnalysis)
+    .values(makeUrlAnalysis({ projectId: project.id }))
+    .returning();
+  const [brief] = await tdb.db
+    .insert(productBrief)
+    .values(makeProductBrief({ urlAnalysisId: ua!.id, data: BRIEF }))
+    .returning();
+
+  // La imagen de referencia de la Persona (kind reference_image) — su assetId es el `imageAssetId` de N7c.
+  const refImage = await createAsset(tdb.db, {
+    kind: 'reference_image',
+    storageKey: `refs/${newUlid()}.png`,
+    mime: 'image/png',
+    bytes: 1024,
+    checksum: 'deadbeef',
+  });
+  // El voice_map DEBE coincidir con el proveedor del TTS del tier (§13.1: kokoro=test, elevenlabs=premium):
+  // un triple incoherente lanzaría en la RAMA DE VOZ y taparía lo que este test quiere probar del broll.
+  const voiceMap =
+    tier === 'test'
+      ? { es: { provider: 'kokoro' as const, voiceId: 'af_heart' } }
+      : { es: { provider: 'elevenlabs' as const, voiceId: 'rachel_v3' } };
+  const persona = await createPersona(tdb.db, {
+    name: `Lucía ${newUlid().slice(-6)}`,
+    ageRange: '25-34',
+    gender: 'female',
+    ethnicity: 'latina',
+    style: 'natural',
+    descriptor: 'creadora de 30 años',
+    setting: 'baño luminoso',
+    personality: 'cercana',
+    voiceMap,
+    referenceImageIds: [refImage.id],
+  });
+
+  const batchId = newUlid();
+  await tdb.db.insert(adBatch).values({
+    id: batchId,
+    projectId: project.id,
+    briefId: brief!.id,
+    matrix: { variants: [] },
+    tier,
+    objective: 'conversion',
+    platforms: ['tiktok'],
+    languages: ['es'],
+  });
+  const variantId = newUlid();
+  await tdb.db.insert(adVariant).values({
+    id: variantId,
+    batchId,
+    angleName: 'pain_point',
+    framework: 'PAS',
+    personaId: persona.id,
+    language: 'es',
+    durationTarget: 30,
+    platformTargets: ['tiktok'],
+    filenameCode: `demo-${variantId.slice(-6).toLowerCase()}-es-30s`,
+    status: 'scripted',
+  });
+  await createScriptsForBatch(tdb.db, {
+    stepRunId: newUlid(),
+    scripts: [
+      {
+        variantId,
+        content: {
+          filenameCode: `demo-${variantId.slice(-6).toLowerCase()}-es-30s`,
+          sharedBodyKey: 'body_x',
+          hook: 'Si te pasa esto, mira.',
+          cta: 'Enlace en la bio.',
+          scenes: [
+            {
+              t: 0,
+              seconds: 3,
+              segment: 'hook',
+              narration: 'Si te pasa esto, mira.',
+              visual: 'v',
+              camera: 'c',
+              emotion: 'e',
+            },
+            {
+              t: 3,
+              seconds: 6,
+              segment: 'body',
+              narration: 'Mira cómo funciona de verdad.',
+              visual: 'v',
+              camera: 'c',
+              emotion: 'e',
+            },
+            {
+              t: 9,
+              seconds: 2,
+              segment: 'cta',
+              narration: 'Enlace en la bio.',
+              visual: 'v',
+              camera: 'c',
+              emotion: 'e',
+            },
+          ],
+          subtitles: [{ start: 0, end: 3, text: 'Si te pasa esto, mira.' }],
+          fullText: 'Si te pasa esto, mira. Mira cómo funciona de verdad. Enlace en la bio.',
+          wordCount: 13,
+          estSeconds: 11,
+          tone: 'cercano',
+          language: 'es',
+        },
+        guardrailFlags: [],
+      },
+    ],
+  });
+
+  return { variantId, personaId: persona.id, briefId: brief!.id };
+}
+
+describe('buildVariantGenerationPlan (T4.11 pass 2b-ii)', () => {
+  it('PREMIUM: resuelve endpoints del recipe + triple de voz + imagen de persona; NO fija punteros cross-node', async () => {
+    const { variantId, briefId } = await seedVariant('premium');
+
+    const plan = await buildVariantGenerationPlan({ db: tdb.db }, { variantId });
+
+    expect(plan.variantId).toBe(variantId);
+    expect(plan.n6Config).toEqual({ variantId });
+
+    // N7a · shots: ruta ai_packshot + briefId del lote (NO sale del recipe — asimetría flux-2).
+    expect(plan.n7aConfig).toEqual({ route: 'ai_packshot', briefId });
+
+    // N7b · voz: endpoint TTS premium + provider+voiceId del voice_map + idioma + scriptId REAL.
+    const n7b = plan.n7bConfig as {
+      ttsEndpoint: string;
+      provider: string;
+      voice: string;
+      language: string;
+      scriptId: string;
+    };
+    expect(n7b.ttsEndpoint).toBe('fal-ai/elevenlabs/tts/eleven-v3');
+    expect(n7b.provider).toBe('elevenlabs');
+    expect(n7b.voice).toBe('rachel_v3');
+    expect(n7b.language).toBe('es');
+    expect(n7b.scriptId).toBeTruthy();
+
+    // N7c · avatar: endpoint premium + imagen primaria de la persona. audioAssetId NO se fija (dep-derivado).
+    const n7c = plan.n7cConfig as {
+      avatarEndpoint: string;
+      imageAssetId: string;
+      audioAssetId?: string;
+    };
+    expect(n7c.avatarEndpoint).toBe('fal-ai/bytedance/omnihuman/v1.5');
+    expect(n7c.imageAssetId).toBeTruthy();
+    expect(n7c.audioAssetId).toBeUndefined(); // el audio del hook lo deriva el executor de su dep N7b
+
+    // N7d · b-roll: endpoint premium (i2v) + scriptId. imageAssetIds NO se fija (keyframes dep-derivados).
+    const n7d = plan.n7dConfig as {
+      brollEndpoint: string;
+      scriptId: string;
+      imageAssetIds?: string[];
+    };
+    expect(n7d.brollEndpoint).toBe('fal-ai/veo3.1/image-to-video');
+    expect(n7d.imageAssetIds).toBeUndefined();
+
+    // N7e · música: endpoint constante ace-step + duración de la variante.
+    const n7e = plan.n7eConfig as { musicEndpoint: string; durationSeconds: number };
+    expect(n7e.musicEndpoint).toBe('fal-ai/ace-step');
+    expect(n7e.durationSeconds).toBe(30);
+  });
+
+  it('MONEY-GATE: tier con broll ETIQUETA (test) → PermanentStepError ANTES de devolver el plan', async () => {
+    const { variantId } = await seedVariant('test');
+
+    // El broll de tier test es 'Grok Imagine / Wan 2.6 Flash [endpoint pendiente F4]' — no resoluble por
+    // getModelProfileByEndpoint → el builder LANZA (no inventa un endpoint que gastaría en el modelo malo).
+    await expect(buildVariantGenerationPlan({ db: tdb.db }, { variantId })).rejects.toThrow(
+      PermanentStepError,
+    );
+  });
+
+  it('CONTROL POSITIVO del money-gate: premium (broll resoluble) NO lanza — el gate no es tautológico', async () => {
+    const { variantId } = await seedVariant('premium');
+    // Si premium tampoco resolviera, el test de arriba pasaría por la razón equivocada. Aquí se confirma
+    // que el gate SOLO muerde en el tier con etiqueta, no siempre.
+    await expect(buildVariantGenerationPlan({ db: tdb.db }, { variantId })).resolves.toBeDefined();
+  });
+
+  it('variante inexistente → PermanentStepError', async () => {
+    await expect(
+      buildVariantGenerationPlan({ db: tdb.db }, { variantId: newUlid() }),
+    ).rejects.toThrow(PermanentStepError);
+  });
+
+  it('sanity: la variante sembrada existe y es scripted', async () => {
+    const { variantId } = await seedVariant('premium');
+    const v = await getVariant(tdb.db, variantId);
+    expect(v?.status).toBe('scripted');
+  });
+});

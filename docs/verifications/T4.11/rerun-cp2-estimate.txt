@@ -1,0 +1,12 @@
+=== CP2 planned-matrix (1 variant, premium) ===
+MATRIZ PLANIFICADA · 1 VARIANTES
+filename_code legible y trazable en Ads Manager (§8.3)
+ÁNGULO	HOOK	PERSONA	IDI.	DUR.	FILENAME_CODE	COSTE
+Ángulo 1	Llevo tres semanas usando este sérum cada mañana y mi piel ya no se apaga	Nora F4 Premium	ES	12s	serum-hidratante-angulo-1-hook01-01kxvphe3n5s-es-12s	$3.60 – $5.20
+
+=== confirm button ===
+Confirmar y crear 1 variantes
+
+=== estimate region (COSTE ESTIMADO) ===
+estimado del lote
+CP2 estimate per-variant (batch=1): $3.60 – $5.20 (midpoint ~$4.40)

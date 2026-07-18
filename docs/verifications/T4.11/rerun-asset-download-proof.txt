@@ -1,0 +1,7 @@
+Asset download endpoint (the exact URL the UI <video>/<audio>/<img> loads) — all HTTP 200, real bytes:
+N7a-shot1: HTTP/1.1 200 OK | content-type: image/png | content-length: 386813
+N7a-shot2: HTTP/1.1 200 OK | content-type: image/png | content-length: 331857
+N7c-avatar: HTTP/1.1 200 OK | content-type: video/mp4 | content-length: 466625
+N7d-broll: HTTP/1.1 200 OK | content-type: video/mp4 | content-length: 463567
+N7b-voice: HTTP/1.1 200 OK | content-type: audio/mpeg | content-length: 25122
+N7e-music: HTTP/1.1 200 OK | content-type: audio/wav | content-length: 2313538

@@ -1,0 +1,13 @@
+=== generations: id, status, fal_request_id (real fal ids prove real calls), cost, resolved_prompt present? ===
+             id             | node_key |  status   |       fal_req        | cost_actual | has_prompt | duration_s 
+----------------------------+----------+-----------+----------------------+-------------+------------+------------
+ 01KXVQ3BNHBDREFFF8D2EZVFKS | N7e      | completed | 019f7771-b118-7ba3-a |           0 | t          |         12
+ 01KXVQ3BNVQ1FN8RKM6GNBA97T | N7b      | completed | 019f7771-b111-7100-9 |           0 | t          |       0.98
+ 01KXVQ3BNW3PN289MF5APYV3CZ | N7a      | completed | 019f7771-b10e-7421-8 |           1 | t          |      5.259
+ 01KXVQ3GTC95XZ7E38T3S1TVN8 | N7a      | completed | 019f7771-c3de-7951-8 |           1 | t          |      4.119
+ 01KXVQ3H8C9YYCZ26MF7HF6QQP | N7b      | completed | 019f7771-c59b-7e00-8 |           0 | t          |      1.479
+ 01KXVQ3NZ9F65DSF1KTC7G88W8 | N7b      | completed | 019f7771-d875-79e1-a |           0 | t          |      1.059
+ 01KXVQ3PXT4YYZVGKY619DKH3R | N7d      | completed | 019f7771-dc46-7143-a |          80 | t          |          4
+ 01KXVQ3WBRVNSD6YGTGZCGWQJ5 | N7c      | completed | 019f7771-f206-7a00-9 |          25 | t          |   1.567312
+(8 rows)
+

@@ -1,0 +1,16 @@
+=== N7a fan-out shots (2 shots, both charged, no race-recovery this run) ===
+{"route": "ai_packshot", "shots": [{"assetId": "01KXVQ3GT75GQ7QGC0J5JT8V6Y", "costCents": 1, "generationId": "01KXVQ3BNW3PN289MF5APYV3CZ"}, {"assetId": "01KXVQ3MV4HJYXTXZDQMAV6552", "costCents": 1, "generationId": "01KXVQ3GTC95XZ7E38T3S1TVN8"}], "syntheticProduct": true}
+
+=== per-step actual cost (cents) ===
+ node_key | cost_actual 
+----------+-------------
+ N7a      |           2
+ N7b      |           0
+ N7c      |          25
+ N7d      |          80
+ N7e      |           0
+(5 rows)
+
+
+=== total fal real cost ===
+107

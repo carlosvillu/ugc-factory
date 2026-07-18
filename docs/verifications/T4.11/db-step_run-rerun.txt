@@ -1,0 +1,23 @@
+=== step_run (run + variant) — all N6,N7a-e succeeded, same variant_id ===
+ node_key |  status   |         variant_id         | cost_estimated | cost_actual |         started_at         |        finished_at         
+----------+-----------+----------------------------+----------------+-------------+----------------------------+----------------------------
+ N3       | succeeded |                            |                |           8 | 2026-07-18 22:48:39.663+00 | 2026-07-18 22:51:34.214+00
+ N4       | succeeded |                            |                |           0 | 2026-07-18 22:51:34.416+00 | 2026-07-18 22:53:14.593+00
+ N2       | succeeded |                            |                |           0 | 2026-07-18 22:48:39.159+00 | 2026-07-18 22:48:39.204+00
+ N1       | succeeded |                            |                |           0 | 2026-07-18 22:48:38.66+00  | 2026-07-18 22:48:38.742+00
+ N5       | succeeded |                            |                |           2 | 2026-07-18 22:53:15.072+00 | 2026-07-18 22:56:06.189+00
+ N6       | succeeded | 01KXVPY3FV2Z3XTX6PYC89CXBK |                |           0 | 2026-07-18 22:56:06.326+00 | 2026-07-18 22:56:06.355+00
+ N7b      | succeeded | 01KXVPY3FV2Z3XTX6PYC89CXBK |                |           0 | 2026-07-18 22:56:06.826+00 | 2026-07-18 22:56:22.506+00
+ N7a      | succeeded | 01KXVPY3FV2Z3XTX6PYC89CXBK |                |           2 | 2026-07-18 22:56:06.826+00 | 2026-07-18 22:56:16.232+00
+ N7e      | succeeded | 01KXVPY3FV2Z3XTX6PYC89CXBK |                |           0 | 2026-07-18 22:56:06.825+00 | 2026-07-18 22:56:13.668+00
+ N7d      | succeeded | 01KXVPY3FV2Z3XTX6PYC89CXBK |                |          80 | 2026-07-18 22:56:16.243+00 | 2026-07-18 22:57:06.051+00
+ N7c      | succeeded | 01KXVPY3FV2Z3XTX6PYC89CXBK |                |          25 | 2026-07-18 22:56:22.519+00 | 2026-07-18 22:58:02.981+00
+(11 rows)
+
+
+=== ad_variant — audio_source must be ai_bed ===
+             id             | angle_name |         persona_id         | audio_source |  status  
+----------------------------+------------+----------------------------+--------------+----------
+ 01KXVPY3FV2Z3XTX6PYC89CXBK | Ángulo 1   | 01KXVPHE3N5S8RPVKP6P3034Z5 | ai_bed       | scripted
+(1 row)
+

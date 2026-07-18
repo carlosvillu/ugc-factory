@@ -36,13 +36,14 @@ Un registro `node_key → StepExecutor` (`executors/index.ts`):
 
 - **`analysis.ts`** — `N1`, `N2`, `N3`: cáscaras finas sobre [`@ugc/services`](../../packages/services) (`runFirecrawlIngest`, `runVisualAnalyze`, `runSynthesizeBrief`). Toda la lógica está allí; aquí solo el enganche con el pipeline. `N2` sabe auto-descartarse cuando no hay imágenes que analizar: el step cierra como `skipped`, no como fallo.
 - **`write-scripts.ts`** — `N5`: escribe los guiones del lote (`runWriteScripts`, Sonnet 5), los pasa por el linter FTC (guardrails de §15) y persiste las filas `ad_script` v1. Es el primer step de un run de lote **nuevo** (arrancado al confirmar la matriz en CP2) y a la vez el checkpoint **CP3**: al terminar pausa en `waiting_approval` con los guiones listos para editar. Idempotente por `step_run.id` — un reintento no vuelve a pagar Sonnet.
+- **`generation.ts`** + **`generate-voice.ts`** / **`generate-avatar.ts`** / **`generate-broll.ts`** / **`generate-music.ts`** — el sub-DAG N7 (§7.2): `N7a` product shots (`ai_packshot`, flux-2), `N7b` voz (TTS + ASR con word timestamps), `N7c` avatar, `N7d` b-roll (i2v), `N7e` música (ace-step). Cáscaras finas sobre [`@ugc/services`](../../packages/services); cada una **paga fal de verdad** (lee `FAL_KEY` del entorno, submitea, pollea, descarga el asset a nuestro storage y registra el `cost_entry`). Dedup por content-hash (§9.6) para no re-pagar generaciones idénticas; los executors N7c/N7d derivan sus punteros cross-node del output de su dep de la MISMA variante (aislamiento por grafo).
 - **`demo.ts`** — una única implementación parametrizada (`sleepMs`, `failRate`, `hang`) registrada bajo varios `node_key`. Es el andamiaje que permite ejercitar el orquestador —retries, backoff, timeouts, checkpoints, cancelación— **sin gastar un céntimo en APIs reales**.
 
-Los executors de generación (fal.ai) y composición (FFmpeg) aún no existen: son las fases F4 y F5.
+Los executors de composición (FFmpeg) aún no existen: son la fase F5.
 
 ## El sweeper
 
-Un intervalo que llama a `sweepExpiredSteps`: los steps `running` cuyo `timeout_at` ya pasó se marcan como `expired`. Deliberadamente **no** usa el cron de pg-boss, cuya precisión es de un minuto — demasiado grueso para lo que aquí se necesita.
+Un intervalo con dos piezas. La primera llama a `sweepExpiredSteps`: los steps `running` cuyo `timeout_at` ya pasó se marcan como `expired`. La segunda, `sweepStuckGenerations` (F4): reconcilia contra fal las generaciones colgadas (`submitted`/`in_queue`) polleando su `status_url` guardado y encolando la descarga si fal ya terminó — es la red que recupera un asset cuando el webhook no llega. Deliberadamente **no** usa el cron de pg-boss, cuya precisión es de un minuto — demasiado grueso para lo que aquí se necesita. (Esta reconciliación compite con el polling propio de cada executor; que ambas rutas liquiden idempotentemente —sin doble-cobro ni pisar un `completed`— es lo que garantiza el finalizer bajo lock `FOR UPDATE`.)
 
 ## Convención
 

@@ -1,0 +1,25 @@
+=== cost_entry provider=fal joined to generation + step (REAL money proof) ===
+ provider | amount_cents |       generation_id        | node_key |          occurred_at          
+----------+--------------+----------------------------+----------+-------------------------------
+ fal      |            0 | 01KXVQ3BNVQ1FN8RKM6GNBA97T | N7b      | 2026-07-18 22:56:11.060831+00
+ fal      |            1 | 01KXVQ3BNW3PN289MF5APYV3CZ | N7a      | 2026-07-18 22:56:12.101271+00
+ fal      |            0 | 01KXVQ3BNVQ1FN8RKM6GNBA97T | N7b      | 2026-07-18 22:56:12.54687+00
+ fal      |            0 | 01KXVQ3BNHBDREFFF8D2EZVFKS | N7e      | 2026-07-18 22:56:13.661284+00
+ fal      |            0 | 01KXVQ3H8C9YYCZ26MF7HF6QQP | N7b      | 2026-07-18 22:56:15.839157+00
+ fal      |            1 | 01KXVQ3GTC95XZ7E38T3S1TVN8 | N7a      | 2026-07-18 22:56:16.225903+00
+ fal      |            0 | 01KXVQ3H8C9YYCZ26MF7HF6QQP | N7b      | 2026-07-18 22:56:17.371238+00
+ fal      |            0 | 01KXVQ3NZ9F65DSF1KTC7G88W8 | N7b      | 2026-07-18 22:56:20.954537+00
+ fal      |            0 | 01KXVQ3NZ9F65DSF1KTC7G88W8 | N7b      | 2026-07-18 22:56:22.495757+00
+ fal      |           80 | 01KXVQ3PXT4YYZVGKY619DKH3R | N7d      | 2026-07-18 22:57:06.045575+00
+ fal      |           25 | 01KXVQ3WBRVNSD6YGTGZCGWQJ5 | N7c      | 2026-07-18 22:58:02.973254+00
+(11 rows)
+
+
+=== all cost_entry (fake N1-N5 vs real fal) ===
+ provider  | count | cents 
+-----------+-------+-------
+ fal       |    11 |   107
+ anthropic |     3 |    10
+ firecrawl |     1 |     0
+(3 rows)
+

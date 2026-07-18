@@ -5,7 +5,7 @@
 **Herramienta personal, mono-usuario y self-hosted.** No es un SaaS: no tiene billing, ni multi-tenancy, ni onboarding. Es la máquina de anuncios de un único operador técnico, y ese recorte es deliberado — permite invertir toda la complejidad en lo que de verdad importa.
 
 > [!IMPORTANT]
-> **Estado: en construcción (59 de 103 tareas, ~57 %).** Hoy el sistema **analiza productos, planifica lotes de anuncios, escribe sus guiones (aprobables en CP3) y compila prompts auditables desde su galería facetada de templates, pero todavía no fabrica ni un solo vídeo.** La generación de media (fal.ai) y la composición (FFmpeg) aún no están construidas. Detalle honesto en [Estado del proyecto](#estado-del-proyecto).
+> **Estado: en construcción (72 de 107 tareas, ~67 %).** Hoy el sistema **analiza productos, planifica lotes de anuncios, escribe sus guiones (aprobables en CP3), compila prompts auditables desde su galería facetada de templates y genera los assets de media en fal.ai** — una variante completa su sub-DAG N7 (product shots, voz, avatar, b-roll, música) con coste real por sub-step visible en el canvas. **Lo que aún no hace: componer esos assets en el vídeo final** (F5, FFmpeg: concat, mezcla de audio con ducking, subtítulos karaoke, C2PA), publicarlos y leer sus métricas. Detalle honesto en [Estado del proyecto](#estado-del-proyecto).
 
 ---
 
@@ -149,7 +149,6 @@ flowchart TD
     style CP2 fill:#8b6914,color:#fff
     style CP3 fill:#8b6914,color:#fff
     style CP4 fill:#8b6914,color:#fff
-    style N7 fill:#6b2d5c,color:#fff
     style N8 fill:#6b2d5c,color:#fff
 ```
 
@@ -171,7 +170,7 @@ El desarrollo va por fases, tarea a tarea, con verificación observable en cada 
 
 <!-- STATUS-TABLE:BEGIN — generado por `pnpm readme:status`, no editar a mano -->
 
-**71 de 107 tareas cerradas (66 %).**
+**72 de 107 tareas cerradas (67 %).**
 
 | Fase                                                  | Qué entrega                                                                         | Estado         |
 | ----------------------------------------------------- | ----------------------------------------------------------------------------------- | -------------- |
@@ -183,7 +182,7 @@ El desarrollo va por fases, tarea a tarea, con verificación observable en cada 
 | **F2** · Estrategia y guiones                         | Matriz con coste estimado → guiones aprobados                                       | ✅ Completa    |
 | **F2b** · Deuda destapada por la verificación de T2.3 | Deuda destapada por la verificación de T2.3 (acordada con el usuario el 2026-07-14) | ✅ Completa    |
 | **F3** · Galería de prompts y compilador              | Templates facetados → prompts auditables                                            | ✅ Completa    |
-| **F4** · Generación fal.ai                            | Los assets de una variante, generados de verdad en fal.ai                           | 🔨 11/15       |
+| **F4** · Generación fal.ai                            | Los assets de una variante, generados de verdad en fal.ai                           | 🔨 12/15       |
 | **F5** · Composición, QA y export                     | El anuncio 9:16 completo, con subtítulos, C2PA y QA                                 | ⬜ No empezada |
 | **F6** · Publicación                                  | Publicar en TikTok/IG y crear el ad draft                                           | ⬜ No empezada |
 | **F7** · Medición y flywheel                          | Métricas por variante + kill/scale + scoring                                        | ⬜ No empezada |
@@ -191,9 +190,9 @@ El desarrollo va por fases, tarea a tarea, con verificación observable en cada 
 
 <!-- STATUS-TABLE:END -->
 
-**Lo que funciona hoy**, de verdad y verificado: el monorepo con Postgres y Drizzle · auth mono-usuario · storage con descarga proxificada · colas pg-boss · **el orquestador transaccional del DAG** (checkpoints, retries, timeouts, cancelación, invalidación con linaje) · SSE en vivo · el canvas de React Flow · el ledger de gasto con credenciales cifradas · el design system completo · **el pipeline de análisis real N1→N2→N3** (Firecrawl/Jina + Haiku 4.5 + Sonnet 5) que produce un ProductBrief editable y aprobable · el listado de runs · la librería de personas · el compositor de la matriz de lote con su estimador de coste y su confirmación de gasto en CP2 · y **la escritura de guiones (N5, Sonnet 5) con sus guardrails FTC, editables y aprobables por variante en CP3** — el lote pasa a `scripted` cuando apruebas · y **la galería facetada de templates de prompt (`/gallery`, ~50 templates es/en) con el compilador N6** que interpola variables tipadas, resuelve guard packs y aplica los adapters por familia de modelo para producir un prompt auditable por escena.
+**Lo que funciona hoy**, de verdad y verificado: el monorepo con Postgres y Drizzle · auth mono-usuario · storage con descarga proxificada · colas pg-boss · **el orquestador transaccional del DAG** (checkpoints, retries, timeouts, cancelación, invalidación con linaje) · SSE en vivo · el canvas de React Flow · el ledger de gasto con credenciales cifradas · el design system completo · **el pipeline de análisis real N1→N2→N3** (Firecrawl/Jina + Haiku 4.5 + Sonnet 5) que produce un ProductBrief editable y aprobable · el listado de runs · la librería de personas · el compositor de la matriz de lote con su estimador de coste y su confirmación de gasto en CP2 · y **la escritura de guiones (N5, Sonnet 5) con sus guardrails FTC, editables y aprobables por variante en CP3** — el lote pasa a `scripted` cuando apruebas · y **la galería facetada de templates de prompt (`/gallery`, ~50 templates es/en) con el compilador N6** que interpola variables tipadas, resuelve guard packs y aplica los adapters por familia de modelo para producir un prompt auditable por escena · y **la generación de media en fal.ai (N7)**: el sub-DAG por variante (N7a product shots · N7b voz TTS+ASR · N7c avatar · N7d b-roll i2v · N7e música) cableado al canvas, con dedup por content-hash, reconciliación idempotente de generaciones colgadas y coste real por sub-step — verificado end-to-end con fal real (una variante beauty premium completa N6→N7, assets reproducibles en el panel).
 
-**Lo que no existe todavía:** **cualquier generación de vídeo o audio con fal.ai (N7)** · la composición con FFmpeg (N8) · el export, la publicación y las métricas.
+**Lo que no existe todavía:** la composición con FFmpeg (N8: concat, mezcla de audio con ducking, subtítulos karaoke, C2PA) · el export, la publicación y las métricas.
 
 > [!NOTE]
 > **Producción está en marcha** en [ugc.carlosvillu.dev](https://ugc.carlosvillu.dev) (desplegada en un VPS con Caddy; T0.13). El desarrollo local sigue siendo `pnpm dev` + Docker Compose. El despliegue es manual por ahora (CI y branch protection son una tarea pendiente).

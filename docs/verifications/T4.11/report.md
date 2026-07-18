@@ -1,4 +1,15 @@
-# T4.11 — Verificación E2E de fase (F4) · **FAIL**
+# T4.11 — Verificación E2E de fase (F4)
+
+> **VEREDICTO FINAL: PASS** (2026-07-19). Este documento es el **1.er intento (FAIL)**; se conserva como
+> evidencia del proceso. El fallo que cazó (race sweeper↔polling en N7a) se arregló en **T4.13** (commit
+> `065ce53`) y el **re-run live PASÓ** — ver **`report-rerun.md`** en este mismo directorio (1 variante
+> completa N6→N7 con fal real, todos los sub-steps `succeeded`, coste real $1.07). F4 cierra con el re-run.
+> El valor de este FAIL: demostró que el E2E de fase live hace lo que debe — cazar un fallo real que la
+> suite fake (verde) no podía reproducir.
+
+---
+
+## 1.er intento — **FAIL** (histórico)
 
 **Fecha:** 2026-07-19
 **Veredicto:** **FAIL** — la variante NO completa N6→N7 en el sistema real. El E2E de fase live cazó un fallo real de correctness+dinero que la suite fake (verde) no podía reproducir.

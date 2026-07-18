@@ -47,7 +47,6 @@ import { newUlid } from '@ugc/core/contracts';
 import type { Logger, StorageAdapter } from '@ugc/core';
 import {
   createAsset,
-  createGeneration,
   getAssetByGenerationKind,
   getGenerationForUpdate,
   getModelProfile,
@@ -62,6 +61,7 @@ import {
 } from '@ugc/db';
 
 import { falTtsCostOf, falAsrCostOf } from './fal-pricing';
+import { resolveProductionDedup } from './generation-dedup';
 import { NOOP_LOGGER } from './noop-logger';
 
 /** El nombre del campo DE TEXTO en el submit del TTS: NO es el mismo entre proveedores (verificado en
@@ -112,14 +112,18 @@ export interface GenerateAudioResult {
   generation: Generation;
   /** El asset del audio (kind='tts_audio') con `word_timestamps` sellados. */
   assetId: string;
-  /** El coste del TTS en céntimos (cost_entry #1). */
+  /** El coste del TTS en céntimos (cost_entry #1). 0 en un acierto de dedup. */
   ttsCostCents: number;
-  /** El coste del ASR en céntimos (cost_entry #2). */
+  /** El coste del ASR en céntimos (cost_entry #2). 0 en un acierto de dedup. */
   asrCostCents: number;
   /** Duración del voiceover en segundos (derivada del último `end` del ASR). */
   durationSeconds: number;
-  /** Nº de palabras (`type:'word'`) del ASR con tiempos válidos (== total → cobertura 100%). */
+  /** Nº de palabras (`type:'word'`) del ASR con tiempos válidos (== total → cobertura 100%). 0 en un
+   *  acierto de dedup (los timestamps ya viven en el asset reutilizado). */
   wordCount: number;
+  /** `true` si el voiceover se REUTILIZÓ de una generación `completed` idéntica (dedup §9.6): 0 llamadas
+   *  a fal (ni TTS ni ASR), 0 `cost_entry`. `false` si esta llamada lo generó. */
+  reused: boolean;
   /** Warnings observables (coste incalculable, cobertura parcial…). */
   warnings: string[];
 }
@@ -499,18 +503,43 @@ export async function runGenerateAudio(
     inputs: ttsSubmitInputs,
   });
 
-  // 3) Persistir la INTENCIÓN en `submitting` ANTES del submit (§9.6). El `resolved_prompt` es la
-  //    narración; `inputs` guarda voz/velocidad + prompt (evidencia reconciliable).
-  const startedAt = new Date();
-  let generation = await createGeneration(db, {
-    modelProfileId: input.ttsModelProfileId,
-    stepRunId: input.stepRunId,
-    resolvedPrompt: input.narration,
-    inputs: ttsSubmitInputs,
+  // 2b–3) DEDUP (§9.6) + persistir la INTENCIÓN en `submitting` ANTES del submit: un voiceover de PRODUCCIÓN
+  //     `completed` idéntico (misma narración+voz+modelo) se REUTILIZA —con sus `word_timestamps` ya
+  //     sellados— sin fal (ni TTS ni ASR) ni `cost_entry` (0 coste, visible en /spend). El filtro
+  //     `voice_preview=false` del lookup impide reutilizar una MUESTRA de preview (otro texto y scope). Si no
+  //     hay hit, `resolveProductionDedup` inserta la fila viva (dedup atómico) o —tras perder la carrera—
+  //     re-lee o lanza para reintentar. `resolved_prompt` es la narración; `inputs` guarda voz/velocidad+prompt.
+  const dedup = await resolveProductionDedup(db, {
     contentHash,
-    status: 'submitting',
-    startedAt,
+    assetKind: 'tts_audio',
+    serviceLabel: 'runGenerateAudio',
+    assetLabel: 'un voiceover',
+    insertValues: {
+      modelProfileId: input.ttsModelProfileId,
+      stepRunId: input.stepRunId,
+      resolvedPrompt: input.narration,
+      inputs: ttsSubmitInputs,
+      contentHash,
+      status: 'submitting',
+      startedAt: new Date(),
+    },
+    logger: log,
   });
+  if ('reused' in dedup) {
+    return {
+      generation: dedup.reused.generation,
+      assetId: dedup.reused.assetId,
+      ttsCostCents: 0,
+      asrCostCents: 0,
+      // `word_timestamps` ya viven en el asset reutilizado; `wordCount` es un rastro de ESTA ejecución
+      // (que no corrió el ASR), así que es 0 en un hit — el consumidor lee los timestamps del asset.
+      durationSeconds: dedup.reused.asset.durationS ?? 0,
+      wordCount: 0,
+      reused: true,
+      warnings,
+    };
+  }
+  let generation: Generation = dedup.generation;
 
   const fal = makeFalClient({
     credentials: deps.falKey,
@@ -694,6 +723,7 @@ export async function runGenerateAudio(
       asrCostCents: asrCost.cents,
       durationSeconds,
       wordCount: coverage.wordCount,
+      reused: false,
       warnings,
     };
   } catch (err) {

@@ -41,7 +41,6 @@ import { isBrollModelKind } from '@ugc/core/gallery';
 import type { Logger, StorageAdapter } from '@ugc/core';
 import {
   createAsset,
-  createGeneration,
   getAsset,
   getAssetByGenerationKind,
   getGenerationForUpdate,
@@ -54,6 +53,7 @@ import {
 
 import { falVideoCostOf } from './fal-pricing';
 import { uploadInputCached } from './generate';
+import { resolveProductionDedup } from './generation-dedup';
 import { NOOP_LOGGER } from './noop-logger';
 
 /** Prompt por defecto si el caller no suministra uno (ambos endpoints lo requieren `min(1)`). En
@@ -95,6 +95,13 @@ export interface GenerateBrollInput {
   resolution?: string;
   /** El step que originó el gasto (T4.11): atribuye el `cost_entry`. OPCIONAL (stepless → NULL). */
   stepRunId?: string;
+  /** SALT DE DEDUP (T4.10): un discriminador que entra SOLO en el `content_hash` (NO en el payload de
+   *  fal). Existe para el TROCEO §7.5: dos clips de la MISMA escena larga tienen keyframe+prompt+duración
+   *  IDÉNTICOS → mismo hash → el dedup los colapsaría en uno (y el vídeo repetiría el clip). El executor
+   *  N7d pasa aquí el índice del clip dentro de su escena (`escena:clip`), que hace el hash único por
+   *  posición SIN filtrar a Veo. OMITIDO → sin salt → dos b-rolls con los mismos inputs SÍ deduplican
+   *  (lo deseado entre variantes que comparten body/CTA). NO va nunca en `submitInputs`. */
+  dedupSalt?: string;
 }
 
 export interface GenerateBrollResult {
@@ -102,10 +109,13 @@ export interface GenerateBrollResult {
   generation: Generation;
   /** El asset del clip (kind='broll_clip') con `duration_s`. */
   assetId: string;
-  /** El coste del clip en céntimos (por segundo). */
+  /** El coste del clip en céntimos (por segundo). 0 en un acierto de dedup. */
   costCents: number;
   /** Duración del clip en segundos (= el enum enviado; el output de Veo no la emite). */
   durationSeconds: number;
+  /** `true` si el clip se REUTILIZÓ de una generación `completed` idéntica (dedup §9.6): 0 llamadas a
+   *  fal, 0 `cost_entry`. `false` si esta llamada lo generó. */
+  reused: boolean;
   /** Warnings observables (coste incalculable…). */
   warnings: string[];
 }
@@ -200,24 +210,51 @@ export async function runGenerateBroll(
     ...imageInput,
   };
 
-  // 4) content_hash de dedupe (§9.6): imágenes + prompt + duración + modelo lo determinan.
+  // 4) content_hash de dedupe (§9.6): imágenes + prompt + duración + modelo lo determinan. El SALT (T4.10)
+  //    entra SOLO en el material del hash (bajo una clave reservada `__dedup_salt` que NO existe en
+  //    `submitInputs` → jamás llega a fal): distingue dos clips troceados de la misma escena sin partir la
+  //    dedup entre variantes (que no pasan salt, o pasan el mismo `escena:clip`). Sin salt, el hash es
+  //    idéntico al de T4.8 (retrocompatible: los golden y smokes sin salt no cambian).
   const contentHash = computeContentHash({
     resolvedPrompt: prompt,
     modelProfileId: input.brollModelProfileId,
-    inputs: submitInputs,
+    inputs:
+      input.dedupSalt !== undefined
+        ? { ...submitInputs, __dedup_salt: input.dedupSalt }
+        : submitInputs,
   });
 
-  // 5) Persistir la INTENCIÓN en `submitting` ANTES del submit (§9.6): un crash deja rastro reconciliable.
-  const startedAt = new Date();
-  let generation = await createGeneration(db, {
-    modelProfileId: input.brollModelProfileId,
-    stepRunId: input.stepRunId,
-    resolvedPrompt: prompt,
-    inputs: submitInputs,
+  // 4b–5) DEDUP (§9.6) + persistir la INTENCIÓN en `submitting` ANTES del submit: un b-roll `completed`
+  //     idéntico se REUTILIZA sin fal ni `cost_entry` (0 coste, visible en /spend; el upload de imágenes ya
+  //     está cacheado, un hit no gasta render); si no, `resolveProductionDedup` inserta la fila viva (dedup
+  //     atómico vía índice único parcial) o —tras perder la carrera— re-lee o lanza para reintentar.
+  const dedup = await resolveProductionDedup(db, {
     contentHash,
-    status: 'submitting',
-    startedAt,
+    assetKind: 'broll_clip',
+    serviceLabel: 'runGenerateBroll',
+    assetLabel: 'un b-roll',
+    insertValues: {
+      modelProfileId: input.brollModelProfileId,
+      stepRunId: input.stepRunId,
+      resolvedPrompt: prompt,
+      inputs: submitInputs,
+      contentHash,
+      status: 'submitting',
+      startedAt: new Date(),
+    },
+    logger: log,
   });
+  if ('reused' in dedup) {
+    return {
+      generation: dedup.reused.generation,
+      assetId: dedup.reused.assetId,
+      costCents: 0,
+      durationSeconds: dedup.reused.asset.durationS ?? input.durationSeconds,
+      reused: true,
+      warnings,
+    };
+  }
+  let generation: Generation = dedup.generation;
 
   const fal = makeFalClient({
     credentials: deps.falKey,
@@ -343,6 +380,7 @@ export async function runGenerateBroll(
       assetId,
       costCents: cost.cents,
       durationSeconds,
+      reused: false,
       warnings,
     };
   } catch (err) {

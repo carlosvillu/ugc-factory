@@ -50,6 +50,10 @@ export { runGenerateBroll } from './generate-broll';
 // audio-family (`extractAudioOutput`, finalizer `kind:'music_bed'`) — NO reusa el finalizer de N7b
 // (fusionado con el ASR). Lo consume el smoke del verifier y, en T4.11, el executor N7e.
 export { runGenerateMusic } from './generate-music';
+// El dedup de generación (T4.10, §9.6: `resolveProductionDedup` en `generation-dedup.ts`) NO
+// se re-exporta: es una pieza INTERNA que los 6 servicios de generación importan por ruta relativa antes
+// de crear la fila `submitting`. Exportarla sería superficie muerta (misma disciplina que el resto del
+// índice: nada "por si acaso").
 // Submit VÍA WEBHOOK sin polling (T4.2, §9.6): deja la fila `generation` en `submitted` keyed por
 // el request_id REAL de fal; la completion la conduce el webhook. Lo consume el smoke del verifier.
 export { submitGenerationForWebhook } from './submit-generation';

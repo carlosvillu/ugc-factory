@@ -80,6 +80,78 @@ export async function insertVoicePreviewGenerationIfAbsent(
   return row;
 }
 
+// ── Dedup GLOBAL de producción (T4.10, §9.6) ────────────────────────────────────
+// La ECONOMÍA Hook×Body×CTA: un lote de N variantes del mismo ángulo comparte body y CTA, así que sus
+// generaciones tienen el MISMO `content_hash` y se reutiliza el asset de la primera (las demás no
+// submitean ni gastan). Espeja el par de la caché de previews (`getVoicePreviewGenerationByContentHash`
+// + `insertVoicePreviewGenerationIfAbsent`) pero sobre el índice único parcial GLOBAL de producción
+// (`generation_production_content_hash_key`: `voice_preview = false` AND status NOT IN ('failed',
+// 'cancelled')). NO toca la caché scoped de previews (índice disjunto).
+
+/**
+ * Lookup del dedup de PRODUCCIÓN por `content_hash` (T4.10): la generación `completed` NO-preview con ese
+ * hash cuyo asset se puede reutilizar. `undefined` si no hay ninguna (es una generación nueva a producir).
+ * Es el lookup OPTIMISTA de la ruta caliente (sin `FOR UPDATE`): el servicio lo llama ANTES de crear la
+ * fila `submitting` y, si hay hit, reutiliza el asset SIN llamar a fal ni escribir `cost_entry`. Filtra
+ * `voice_preview = false` (una muestra de preview NO es un asset de producción reutilizable) y
+ * `status = 'completed'` (solo un asset ya materializado sirve). El índice parcial garantiza ≤1 fila viva
+ * por hash, pero puede coexistir con filas `failed` del mismo hash (retries): por eso se filtra por
+ * `completed` explícitamente y se hace `limit(1)` por higiene determinista.
+ */
+export async function getCompletedGenerationByContentHash(
+  db: Db,
+  contentHash: string,
+): Promise<Generation | undefined> {
+  const [row] = await db
+    .select()
+    .from(generation)
+    .where(
+      and(
+        eq(generation.contentHash, contentHash),
+        eq(generation.voicePreview, false),
+        eq(generation.status, 'completed'),
+      ),
+    )
+    .limit(1);
+  return row;
+}
+
+/**
+ * Inserta la INTENCIÓN de una generación de PRODUCCIÓN en `submitting` SI NO EXISTE ya una fila
+ * viva-o-exitosa con el mismo `content_hash` — `ON CONFLICT DO NOTHING` contra el índice único parcial
+ * `generation_production_content_hash_key`. Es la escritura ATÓMICA del dedup (§9.6): dos generaciones
+ * idénticas concurrentes (mismo hash, p.ej. el body de dos variantes del mismo ángulo lanzadas a la vez)
+ * NO crean dos filas `submitting` → solo UNA submitea a fal (la otra choca y el INSERT no devuelve fila).
+ * `voice_preview` se fuerza a `false` (el scope de este índice; un preview usa `insertVoicePreviewGeneration
+ * IfAbsent`). Retorno:
+ *  - la fila creada, si ESTE insert ganó la carrera (el caller sigue con submit→poll→liquidación);
+ *  - `undefined`, si ya existe una fila viva-o-completed con ese hash (el caller re-lee: si hay una
+ *    `completed` reutiliza su asset; si aún está en vuelo, lanza para que el cliente reintente).
+ * Un retry de una fila `failed`/`cancelled` NO choca (esos estados quedan FUERA del predicado del índice):
+ * su `submitting` se inserta y devuelve fila, como debe.
+ */
+export async function insertProductionGenerationIfAbsent(
+  db: Db,
+  values: NewGeneration,
+): Promise<Generation | undefined> {
+  const [row] = await db
+    .insert(generation)
+    .values({ ...values, voicePreview: false })
+    // Target del índice único PARCIAL: la columna + el MISMO predicado LITERAL que el índice
+    // (`generation_production_content_hash_key`). El predicado DEBE ser un literal, no un parámetro `$1`:
+    // el arbiter de Postgres compara el predicado del ON CONFLICT con el del índice y un parámetro no casa
+    // (42P10). Incluye `voice_preview = false` para que el arbiter elija ESTE índice y no el de previews
+    // (los dos índices parciales sobre `content_hash` son disjuntos por este conjunto). Mismo criterio que
+    // `insertVoicePreviewGenerationIfAbsent` / `insertManualUrlAnalysisIfAbsent`.
+    .onConflictDoNothing({
+      target: generation.contentHash,
+      where: sql`${generation.voicePreview} = false and ${generation.status} not in ('failed', 'cancelled')`,
+    })
+    .returning();
+  // `undefined` cuando hubo conflicto (otra tx ya tiene una fila viva-o-completed): NO es un error.
+  return row;
+}
+
 /** Los campos que una transición de estado de la generación puede tocar. Todos opcionales:
  *  cada transición estampa solo lo suyo (submit → request_id/urls/status; result →
  *  status/payload/coste/timestamps). `updated_at` lo refresca el `$onUpdateFn` del schema. */

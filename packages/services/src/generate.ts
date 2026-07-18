@@ -21,7 +21,6 @@ import {
 } from '@ugc/core/generation';
 import type { Logger, StorageAdapter } from '@ugc/core';
 import {
-  createGeneration,
   getModelProfile,
   setAssetFalUpload,
   updateGeneration,
@@ -30,6 +29,7 @@ import {
 } from '@ugc/db';
 
 import { finalizeGeneration } from './finalize-generation';
+import { resolveProductionDedup } from './generation-dedup';
 import { NOOP_LOGGER } from './noop-logger';
 
 export interface GenerateDeps {
@@ -75,8 +75,11 @@ export interface GenerateResult {
   assetId: string;
   /** La URL del output en fal (efímera). */
   falOutputUrl: string;
-  /** El coste en céntimos registrado en `cost_entry` (provider='fal'). */
+  /** El coste en céntimos registrado en `cost_entry` (provider='fal'). 0 en un acierto de dedup. */
   costCents: number;
+  /** `true` si el asset se REUTILIZÓ de una generación `completed` idéntica (dedup §9.6): 0 llamadas a
+   *  fal, 0 `cost_entry`. Lo observable de la economía Hook×Body×CTA. `false` si esta llamada la generó. */
+  reused: boolean;
   /** Warnings observables (precio incalculable, dimensiones ausentes…). */
   warnings: string[];
 }
@@ -143,28 +146,55 @@ export async function runGenerate(
     throw new FalResponseError(`runGenerate: model_profile ${input.modelProfileId} no existe`);
   }
 
-  // 2) content_hash de dedupe (§9.6). Base para la deuda de dedup completa (F4/F5).
+  // 2) content_hash de dedupe (§9.6): base de la economía Hook×Body×CTA.
   const contentHash = computeContentHash({
     resolvedPrompt: input.resolvedPrompt,
     modelProfileId: input.modelProfileId,
     inputs,
   });
 
-  // 3) Persistir la INTENCIÓN en `submitting` ANTES del submit (§9.6). La fila existe antes de
-  //    llamar a fal → un crash deja rastro reconciliable (no un job facturándose sin registro).
-  let generation = await createGeneration(db, {
-    modelProfileId: input.modelProfileId,
-    stepRunId: input.stepRunId,
-    variantId: input.variantId,
-    resolvedPrompt: input.resolvedPrompt,
-    inputs,
+  // 2b–3) DEDUP (§9.6) + persistir la INTENCIÓN en `submitting` ANTES del submit: una generación `completed`
+  //     idéntica se REUTILIZA su asset SIN fal ni `cost_entry` (0 coste, visible en /spend como menos filas);
+  //     si no, `resolveProductionDedup` inserta la fila viva (dedup atómico vía índice único parcial) o —tras
+  //     perder la carrera— re-lee o lanza. El `synthetic_product` (procedencia, T4.4) NO entra en el hash y se
+  //     estampa en el MISMO INSERT que crea la fila (así una lectura concurrente nunca la ve a medio marcar).
+  const dedup = await resolveProductionDedup(db, {
     contentHash,
-    // Procedencia (T4.4): se estampa en el MISMO INSERT que crea la fila (no un UPDATE suelto),
-    // así la fila nace con su flag y una lectura concurrente nunca la ve a medio marcar.
-    syntheticProduct: input.syntheticProduct ?? false,
-    status: 'submitting',
-    startedAt: new Date(),
+    assetKind: 'keyframe',
+    serviceLabel: 'runGenerate',
+    assetLabel: 'una generación',
+    insertValues: {
+      modelProfileId: input.modelProfileId,
+      stepRunId: input.stepRunId,
+      variantId: input.variantId,
+      resolvedPrompt: input.resolvedPrompt,
+      inputs,
+      contentHash,
+      syntheticProduct: input.syntheticProduct ?? false,
+      status: 'submitting',
+      startedAt: new Date(),
+    },
+    ...(deps.logger !== undefined ? { logger: deps.logger } : {}),
   });
+  if ('reused' in dedup) {
+    return {
+      generation: dedup.reused.generation,
+      assetId: dedup.reused.assetId,
+      // `''` es CORRECTO en el reúso: el asset reutilizado es un OUTPUT (`kind='keyframe'`), y su
+      // columna `fal_url` es null (esa columna es la CACHÉ DE UPLOAD de INPUTS a fal storage, NO la
+      // URL efímera del output — ver schema/generation.ts). La URL efímera de fal del output ORIGINAL
+      // ya expiró hace tiempo para un asset reutilizado; el artefacto usable es el PNG en `storage_key`
+      // (compartido correctamente, descargable por GET /api/assets/:id/download). NINGÚN consumidor lee
+      // `falOutputUrl` en el reúso: el executor N7a (T4.4) usa solo generation.id/assetId/costCents, y
+      // el único lector de este campo es el console.log de smoke-generate.ts (camino NO-reúso). Devolver
+      // una URL fabricada aquí sería mentir; `''` = "no hay URL efímera viva para un asset reutilizado".
+      falOutputUrl: dedup.reused.asset.falUrl ?? '',
+      costCents: 0,
+      reused: true,
+      warnings,
+    };
+  }
+  let generation: Generation = dedup.generation;
 
   const fal = makeFalClient({
     credentials: deps.falKey,
@@ -216,6 +246,7 @@ export async function runGenerate(
       assetId: finalized.assetId,
       falOutputUrl: finalized.falOutputUrl,
       costCents: finalized.costCents,
+      reused: false,
       warnings: [...warnings, ...finalized.warnings],
     };
   } catch (err) {

@@ -123,6 +123,8 @@ export {
   claimGenerationForReconcile,
   getVoicePreviewGenerationByContentHash,
   insertVoicePreviewGenerationIfAbsent,
+  getCompletedGenerationByContentHash,
+  insertProductionGenerationIfAbsent,
 } from './repos/generation.repo';
 export type { GenerationPatch } from './repos/generation.repo';
 export type { Generation, NewGeneration } from './schema/generation';

@@ -1,0 +1,113 @@
+
+=== VARIANTE 1 (primera pasada: 4 submits reales) ===
+
+[submit] V1.hook1 :: "t410-verify-1784369655739 hook-1: excited person…"
+{"level":30,"time":1784369660364,"pid":21576,"hostname":"MBP-de-Carlos","name":"worker","event":"fal_generation_finalized","generationId":"01KXTBGBYPQ8PTD94V8472VSMJ","assetId":"01KXTBGGE6GZRJRG0JYSEJQXKQ","costCents":0,"msg":"generación finalizada: output descargado, coste registrado, completed"}
+  → gen 01KXTBGBYPQ8PTD94V8472VSMJ status=completed reused=false cost=0¢ asset=01KXTBGGE6GZRJRG0JYSEJQXKQ outUrl=set
+
+[submit] V1.body :: "t410-verify-1784369655739 body: close-up demo of…"
+{"level":30,"time":1784369664050,"pid":21576,"hostname":"MBP-de-Carlos","name":"worker","event":"fal_generation_finalized","generationId":"01KXTBGGEEDY78H15T37JB3NWE","assetId":"01KXTBGM1CA9VAW823X2B7GNVK","costCents":0,"msg":"generación finalizada: output descargado, coste registrado, completed"}
+  → gen 01KXTBGGEEDY78H15T37JB3NWE status=completed reused=false cost=0¢ asset=01KXTBGM1CA9VAW823X2B7GNVK outUrl=set
+
+[submit] V1.cta :: "t410-verify-1784369655739 cta: red gadget with a…"
+{"level":30,"time":1784369667527,"pid":21576,"hostname":"MBP-de-Carlos","name":"worker","event":"fal_generation_finalized","generationId":"01KXTBGM1MMW981S3RJFQW9QP6","assetId":"01KXTBGQE1SNKQ86AE8PEEP604","costCents":0,"msg":"generación finalizada: output descargado, coste registrado, completed"}
+  → gen 01KXTBGM1MMW981S3RJFQW9QP6 status=completed reused=false cost=0¢ asset=01KXTBGQE1SNKQ86AE8PEEP604 outUrl=set
+
+[submit] V1.shot :: "t410-verify-1784369655739 shot: clean product pa…"
+{"level":30,"time":1784369670868,"pid":21576,"hostname":"MBP-de-Carlos","name":"worker","event":"fal_generation_finalized","generationId":"01KXTBGQE9BF1XDWX83TFFETCF","assetId":"01KXTBGTPH73XAZTC23WW98FBE","costCents":0,"msg":"generación finalizada: output descargado, coste registrado, completed"}
+  → gen 01KXTBGQE9BF1XDWX83TFFETCF status=completed reused=false cost=0¢ asset=01KXTBGTPH73XAZTC23WW98FBE outUrl=set
+
+--- Asserts V1 (todas nuevas) ---
+  ✓ V1.hook1 reused=false (asset nuevo)
+  ✗ FALLO: V1.hook1 cost>0 (0¢, submit real)
+  ✓ V1.hook1 generation completed
+  ✓ V1.hook1 falOutputUrl no vacío
+  ✓ V1.body reused=false (asset nuevo)
+  ✗ FALLO: V1.body cost>0 (0¢, submit real)
+  ✓ V1.body generation completed
+  ✓ V1.body falOutputUrl no vacío
+  ✓ V1.cta reused=false (asset nuevo)
+  ✗ FALLO: V1.cta cost>0 (0¢, submit real)
+  ✓ V1.cta generation completed
+  ✓ V1.cta falOutputUrl no vacío
+  ✓ V1.shot reused=false (asset nuevo)
+  ✗ FALLO: V1.shot cost>0 (0¢, submit real)
+  ✓ V1.shot generation completed
+  ✓ V1.shot falOutputUrl no vacío
+
+=== V2 (hook nuevo real + body/cta/shot reutilizados) ===
+
+[submit] V2.hook2 :: "t410-verify-1784369655739 hook-2: surprised pers…"
+{"level":30,"time":1784369674518,"pid":21576,"hostname":"MBP-de-Carlos","name":"worker","event":"fal_generation_finalized","generationId":"01KXTBGTPPHE937SZCG7Q4BTAN","assetId":"01KXTBGY8KNWYTBPG1N52GRYPS","costCents":0,"msg":"generación finalizada: output descargado, coste registrado, completed"}
+  → gen 01KXTBGTPPHE937SZCG7Q4BTAN status=completed reused=false cost=0¢ asset=01KXTBGY8KNWYTBPG1N52GRYPS outUrl=set
+  ✓ V2.hook2 reused=false (hook único, submit real)
+  ✗ FALLO: V2.hook2 cost>0 (0¢)
+
+[submit] V2.body :: "t410-verify-1784369655739 body: close-up demo of…"
+{"level":30,"time":1784369674520,"pid":21576,"hostname":"MBP-de-Carlos","name":"worker","event":"generation_dedup_hit","generationId":"01KXTBGGEEDY78H15T37JB3NWE","assetId":"01KXTBGM1CA9VAW823X2B7GNVK","msg":"generación reutilizada de una completed idéntica (0 coste)"}
+  → gen 01KXTBGGEEDY78H15T37JB3NWE status=completed reused=true cost=0¢ asset=01KXTBGM1CA9VAW823X2B7GNVK outUrl=EMPTY
+
+[submit] V2.cta :: "t410-verify-1784369655739 cta: red gadget with a…"
+{"level":30,"time":1784369674522,"pid":21576,"hostname":"MBP-de-Carlos","name":"worker","event":"generation_dedup_hit","generationId":"01KXTBGM1MMW981S3RJFQW9QP6","assetId":"01KXTBGQE1SNKQ86AE8PEEP604","msg":"generación reutilizada de una completed idéntica (0 coste)"}
+  → gen 01KXTBGM1MMW981S3RJFQW9QP6 status=completed reused=true cost=0¢ asset=01KXTBGQE1SNKQ86AE8PEEP604 outUrl=EMPTY
+
+[submit] V2.shot :: "t410-verify-1784369655739 shot: clean product pa…"
+{"level":30,"time":1784369674524,"pid":21576,"hostname":"MBP-de-Carlos","name":"worker","event":"generation_dedup_hit","generationId":"01KXTBGQE9BF1XDWX83TFFETCF","assetId":"01KXTBGTPH73XAZTC23WW98FBE","msg":"generación reutilizada de una completed idéntica (0 coste)"}
+  → gen 01KXTBGQE9BF1XDWX83TFFETCF status=completed reused=true cost=0¢ asset=01KXTBGTPH73XAZTC23WW98FBE outUrl=EMPTY
+
+=== V3 (hook nuevo real + body/cta/shot reutilizados) ===
+
+[submit] V3.hook3 :: "t410-verify-1784369655739 hook-3: happy person u…"
+{"level":30,"time":1784369678987,"pid":21576,"hostname":"MBP-de-Carlos","name":"worker","event":"fal_generation_finalized","generationId":"01KXTBGY8Y9Y5ZJZD89J87TEQQ","assetId":"01KXTBH2M64FYG0MMVQ7WMJ5RN","costCents":0,"msg":"generación finalizada: output descargado, coste registrado, completed"}
+  → gen 01KXTBGY8Y9Y5ZJZD89J87TEQQ status=completed reused=false cost=0¢ asset=01KXTBH2M64FYG0MMVQ7WMJ5RN outUrl=set
+  ✓ V3.hook3 reused=false (hook único, submit real)
+  ✗ FALLO: V3.hook3 cost>0 (0¢)
+
+[submit] V3.body :: "t410-verify-1784369655739 body: close-up demo of…"
+{"level":30,"time":1784369678990,"pid":21576,"hostname":"MBP-de-Carlos","name":"worker","event":"generation_dedup_hit","generationId":"01KXTBGGEEDY78H15T37JB3NWE","assetId":"01KXTBGM1CA9VAW823X2B7GNVK","msg":"generación reutilizada de una completed idéntica (0 coste)"}
+  → gen 01KXTBGGEEDY78H15T37JB3NWE status=completed reused=true cost=0¢ asset=01KXTBGM1CA9VAW823X2B7GNVK outUrl=EMPTY
+
+[submit] V3.cta :: "t410-verify-1784369655739 cta: red gadget with a…"
+{"level":30,"time":1784369678992,"pid":21576,"hostname":"MBP-de-Carlos","name":"worker","event":"generation_dedup_hit","generationId":"01KXTBGM1MMW981S3RJFQW9QP6","assetId":"01KXTBGQE1SNKQ86AE8PEEP604","msg":"generación reutilizada de una completed idéntica (0 coste)"}
+  → gen 01KXTBGM1MMW981S3RJFQW9QP6 status=completed reused=true cost=0¢ asset=01KXTBGQE1SNKQ86AE8PEEP604 outUrl=EMPTY
+
+[submit] V3.shot :: "t410-verify-1784369655739 shot: clean product pa…"
+{"level":30,"time":1784369678995,"pid":21576,"hostname":"MBP-de-Carlos","name":"worker","event":"generation_dedup_hit","generationId":"01KXTBGQE9BF1XDWX83TFFETCF","assetId":"01KXTBGTPH73XAZTC23WW98FBE","msg":"generación reutilizada de una completed idéntica (0 coste)"}
+  → gen 01KXTBGQE9BF1XDWX83TFFETCF status=completed reused=true cost=0¢ asset=01KXTBGTPH73XAZTC23WW98FBE outUrl=EMPTY
+
+--- Asserts REÚSO (body/cta/shot en V2/V3) ---
+  ✓ V2.body reused=true
+  ✓ V2.body cost=0 (0¢, 0 gasto)
+  ✓ V2.body reusa la MISMA generation (01KXTBGGEEDY78H15T37JB3NWE === 01KXTBGGEEDY78H15T37JB3NWE)
+  ✓ V2.body reusa el MISMO asset (01KXTBGM1CA9VAW823X2B7GNVK)
+  ✗ FALLO: V2.body falOutputUrl del asset reutilizado no vacío
+  ✓ V2.cta reused=true
+  ✓ V2.cta cost=0 (0¢, 0 gasto)
+  ✓ V2.cta reusa la MISMA generation (01KXTBGM1MMW981S3RJFQW9QP6 === 01KXTBGM1MMW981S3RJFQW9QP6)
+  ✓ V2.cta reusa el MISMO asset (01KXTBGQE1SNKQ86AE8PEEP604)
+  ✗ FALLO: V2.cta falOutputUrl del asset reutilizado no vacío
+  ✓ V2.shot reused=true
+  ✓ V2.shot cost=0 (0¢, 0 gasto)
+  ✓ V2.shot reusa la MISMA generation (01KXTBGQE9BF1XDWX83TFFETCF === 01KXTBGQE9BF1XDWX83TFFETCF)
+  ✓ V2.shot reusa el MISMO asset (01KXTBGTPH73XAZTC23WW98FBE)
+  ✗ FALLO: V2.shot falOutputUrl del asset reutilizado no vacío
+  ✓ V3.body reused=true
+  ✓ V3.body cost=0 (0¢, 0 gasto)
+  ✓ V3.body reusa la MISMA generation (01KXTBGGEEDY78H15T37JB3NWE === 01KXTBGGEEDY78H15T37JB3NWE)
+  ✓ V3.body reusa el MISMO asset (01KXTBGM1CA9VAW823X2B7GNVK)
+  ✗ FALLO: V3.body falOutputUrl del asset reutilizado no vacío
+  ✓ V3.cta reused=true
+  ✓ V3.cta cost=0 (0¢, 0 gasto)
+  ✓ V3.cta reusa la MISMA generation (01KXTBGM1MMW981S3RJFQW9QP6 === 01KXTBGM1MMW981S3RJFQW9QP6)
+  ✓ V3.cta reusa el MISMO asset (01KXTBGQE1SNKQ86AE8PEEP604)
+  ✗ FALLO: V3.cta falOutputUrl del asset reutilizado no vacío
+  ✓ V3.shot reused=true
+  ✓ V3.shot cost=0 (0¢, 0 gasto)
+  ✓ V3.shot reusa la MISMA generation (01KXTBGQE9BF1XDWX83TFFETCF === 01KXTBGQE9BF1XDWX83TFFETCF)
+  ✓ V3.shot reusa el MISMO asset (01KXTBGTPH73XAZTC23WW98FBE)
+  ✗ FALLO: V3.shot falOutputUrl del asset reutilizado no vacío
+
+=== NONCE de esta corrida (para las queries SQL) ===
+t410-verify-1784369655739
+
+=== RESULTADO: 12 FALLO(S) ✗

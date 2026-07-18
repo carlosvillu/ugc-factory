@@ -1,0 +1,26 @@
+
+> @ugc/web@0.0.0 dev /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/web
+> node scripts/dev.mjs
+
+▲ Next.js 16.2.10 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.1.132:3000
+✓ Ready in 334ms
+{"level":30,"time":1784372520588,"pid":51904,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","msg":"running startup migrations"}
+{"level":30,"time":1784372520645,"pid":51904,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","msg":"startup migrations applied"}
+{"level":30,"time":1784372520698,"pid":51904,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","seeded":false,"msg":"auth.password_hash ya existía"}
+{"level":30,"time":1784372520735,"pid":51904,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","provider":"fal","seeded":false,"msg":"secret.fal ya existía en BD (env ignorada; la BD es la fuente)"}
+{"level":30,"time":1784372520742,"pid":51904,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","provider":"anthropic","seeded":false,"msg":"secret.anthropic ya existía en BD (env ignorada; la BD es la fuente)"}
+{"level":30,"time":1784372520742,"pid":51904,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","provider":"firecrawl","seeded":false,"msg":"secret.firecrawl ya existía en BD (env ignorada; la BD es la fuente)"}
+{"level":30,"time":1784372520767,"pid":51904,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","msg":"sembrando datos de referencia (T3.9)"}
+{"level":30,"time":1784372520795,"pid":51904,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","hookLines":80,"ctaLines":30,"recipes":3,"msg":"librería sembrada o ya presente (insert-only)"}
+{"level":30,"time":1784372520834,"pid":51904,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","templates":56,"guardPacks":10,"modelProfiles":18,"msg":"galería sembrada o ya presente (insert-only)"}
+{"level":30,"time":1784372520841,"pid":51904,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","personas":5,"imagesCreated":0,"imagesFailed":0,"msg":"personas sembradas o ya presentes"}
+{"level":30,"time":1784372520841,"pid":51904,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","msg":"datos de referencia sembrados (T3.9)"}
+
+ GET /login 200 in 1152ms (next.js: 1017ms, application-code: 135ms)
+ GET /login 200 in 61ms (next.js: 4ms, application-code: 57ms)
+ POST /api/login 200 in 751ms (next.js: 643ms, application-code: 108ms)
+ GET / 200 in 340ms (next.js: 267ms, proxy.ts: 4ms, application-code: 69ms)
+ GET /api/spend 200 in 215ms (next.js: 197ms, application-code: 18ms)
+ GET /spend 200 in 1063ms (next.js: 355ms, proxy.ts: 4ms, application-code: 704ms)

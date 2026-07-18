@@ -197,6 +197,28 @@ export const generation = pgTable(
     uniqueIndex('generation_voice_preview_content_hash_key')
       .on(t.contentHash)
       .where(sql`${t.voicePreview} = true`),
+    // DEDUP GLOBAL DE PRODUCCIÓN (T4.10, §9.6): unicidad de `content_hash` entre las generaciones de
+    // PRODUCCIÓN VIVAS-O-EXITOSAS — `voice_preview = false` AND status NOT IN ('failed','cancelled'). Es
+    // la clave de la economía Hook×Body×CTA: un lote de 3 variantes del mismo ángulo comparte body/CTA,
+    // así que sus generaciones colisionan aquí y el `ON CONFLICT DO NOTHING` del repo hace que solo UNA
+    // submitee a fal (las demás reutilizan su asset — cero coste). La atomicidad vive en el INSERT de la
+    // fila `submitting`, NO en la completion: dos generaciones idénticas concurrentes MISS del lookup y
+    // ambas intentan insertar `submitting`; la segunda choca contra este índice y no crea fila (ni gasta).
+    //
+    // PREDICADO `status NOT IN ('failed','cancelled')`, NO `= 'completed'` NI global:
+    //  · `= 'completed'` NO frenaría la carrera (dos `submitting` no están en el índice → ambas gastan) y
+    //    ADEMÁS corrompería: la 2ª completion chocaría 23505, el catch la degradaría a `failed` — una
+    //    generación que fal SÍ facturó quedaría registrada como fallo. Inaceptable (dinero + correctness).
+    //  · global (todos los estados) ROMPERÍA los retries: una generación `failed` conserva su hash y
+    //    bloquearía el `submitting` del reintento. Por eso `failed`/`cancelled` quedan FUERA del predicado
+    //    (un retry de una fila terminal-fallida vuelve a insertar sin conflicto).
+    // DISJUNTO del índice de previews (`voice_preview = false` aquí vs `= true` allí): los dos índices
+    // parciales sobre `content_hash` no se solapan, así que el arbiter del `ON CONFLICT` elige sin
+    // ambigüedad (el `where` del repo DEBE ser el literal EXACTO de este predicado, ver
+    // `insertProductionGenerationIfAbsent`; un parámetro `$1` da 42P10).
+    uniqueIndex('generation_production_content_hash_key')
+      .on(t.contentHash)
+      .where(sql`${t.voicePreview} = false and ${t.status} not in ('failed', 'cancelled')`),
   ],
 );
 

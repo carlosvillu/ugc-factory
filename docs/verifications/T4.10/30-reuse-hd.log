@@ -1,0 +1,47 @@
+
+=== PIEZAS ÚNICAS (2 submits reales, cost>0) ===
+
+[submit] pieceA (unique) :: "t410-reverify-hd-1784372451441 pieceA: close-up demo…"
+{"level":30,"time":1784372457162,"pid":51391,"hostname":"MBP-de-Carlos","name":"worker","event":"fal_generation_finalized","generationId":"01KXTE5P4QT1686GD9Y16VVVRM","assetId":"01KXTE5VP08BAM4NBFSKT8888E","costCents":1,"msg":"generación finalizada: output descargado, coste registrado, completed"}
+  → gen 01KXTE5P4QT1686GD9Y16VVVRM status=completed reused=false cost=1¢ asset=01KXTE5VP08BAM4NBFSKT8888E
+
+[submit] pieceB (unique) :: "t410-reverify-hd-1784372451441 pieceB: clean product…"
+{"level":30,"time":1784372462557,"pid":51391,"hostname":"MBP-de-Carlos","name":"worker","event":"fal_generation_finalized","generationId":"01KXTE5VPCHS07KEX7GJQM1MKC","assetId":"01KXTE60YS3JPH4EXR5XJFP0X8","costCents":1,"msg":"generación finalizada: output descargado, coste registrado, completed"}
+  → gen 01KXTE5VPCHS07KEX7GJQM1MKC status=completed reused=false cost=1¢ asset=01KXTE60YS3JPH4EXR5XJFP0X8
+
+--- Asserts piezas únicas ---
+  ✓ pieceA reused=false (submit real)
+  ✓ pieceA cost>0 (1¢ — square_hd factura ≥1¢)
+  ✓ pieceA generation completed
+  ✓ pieceA assetId real (01KXTE5VP08BAM4NBFSKT8888E)
+  ✓ pieceB reused=false (submit real)
+  ✓ pieceB cost>0 (1¢ — square_hd factura ≥1¢)
+  ✓ pieceB generation completed
+  ✓ pieceB assetId real (01KXTE60YS3JPH4EXR5XJFP0X8)
+
+=== REÚSOS (2 re-peticiones idénticas, reused:true cost:0) ===
+
+[submit] pieceA' (reuse) :: "t410-reverify-hd-1784372451441 pieceA: close-up demo…"
+{"level":30,"time":1784372462565,"pid":51391,"hostname":"MBP-de-Carlos","name":"worker","event":"generation_dedup_hit","generationId":"01KXTE5P4QT1686GD9Y16VVVRM","assetId":"01KXTE5VP08BAM4NBFSKT8888E","msg":"generación reutilizada de una completed idéntica (0 coste)"}
+  → gen 01KXTE5P4QT1686GD9Y16VVVRM status=completed reused=true cost=0¢ asset=01KXTE5VP08BAM4NBFSKT8888E
+
+[submit] pieceB' (reuse) :: "t410-reverify-hd-1784372451441 pieceB: clean product…"
+{"level":30,"time":1784372462567,"pid":51391,"hostname":"MBP-de-Carlos","name":"worker","event":"generation_dedup_hit","generationId":"01KXTE5VPCHS07KEX7GJQM1MKC","assetId":"01KXTE60YS3JPH4EXR5XJFP0X8","msg":"generación reutilizada de una completed idéntica (0 coste)"}
+  → gen 01KXTE5VPCHS07KEX7GJQM1MKC status=completed reused=true cost=0¢ asset=01KXTE60YS3JPH4EXR5XJFP0X8
+
+--- Asserts reúso (dedup muerde end-to-end) ---
+  ✓ pieceA' reused=true
+  ✓ pieceA' cost=0 (0 gasto, 0¢)
+  ✓ pieceA' MISMA generation.id (01KXTE5P4QT1686GD9Y16VVVRM === 01KXTE5P4QT1686GD9Y16VVVRM)
+  ✓ pieceA' MISMO assetId (01KXTE5VP08BAM4NBFSKT8888E)
+  ✓ pieceB' reused=true
+  ✓ pieceB' cost=0 (0 gasto, 0¢)
+  ✓ pieceB' MISMA generation.id (01KXTE5VPCHS07KEX7GJQM1MKC === 01KXTE5VPCHS07KEX7GJQM1MKC)
+  ✓ pieceB' MISMO assetId (01KXTE60YS3JPH4EXR5XJFP0X8)
+
+=== NONCE de esta corrida (para queries SQL) ===
+t410-reverify-hd-1784372451441
+
+=== IDs únicos: A=01KXTE5P4QT1686GD9Y16VVVRM B=01KXTE5VPCHS07KEX7GJQM1MKC ===
+
+=== RESULTADO: TODOS LOS ASSERTS OK ✓

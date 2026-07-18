@@ -1,0 +1,61 @@
+### T4.10 — MIGRATION 0020 FALLA sobre la BD dev POBLADA (hallazgo primario) ###
+
+=== Duplicados de content_hash entre filas VIVAS de producción (lo que rompe el índice) ===
+                           content_hash                           | count |       statuses        
+------------------------------------------------------------------+-------+-----------------------
+ 01ec42a8dc12dfbc195269adff2a441dee80af736808b63aa4debe7a7381f5ed |     2 | {completed,completed}
+ 83d55eec934c892adeadf0b0471f3e27a81293b7df5e6289eff94c2de469db88 |     2 | {completed,completed}
+(2 rows)
+
+
+=== Índices de producción presentes en dev ANTES de migrar (0020 NO aplicado) ===
+                 indexname                 
+-------------------------------------------
+ generation_voice_preview_content_hash_key
+(1 row)
+
+
+=== pnpm db:migrate contra dev poblada — ABORTA con 23505 ===
+db:migrate: falló DrizzleQueryError: Failed query: CREATE UNIQUE INDEX "generation_production_content_hash_key" ON "generation" USING btree ("content_hash") WHERE "generation"."voice_preview" = false and "generation"."status" not in ('failed', 'cancelled');
+params: 
+    at NodePgPreparedQuery.queryWithCache (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/drizzle-orm@0.44.7_@types+pg@8.20.0_pg@8.22.0/node_modules/src/pg-core/session.ts:73:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async <anonymous> (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/drizzle-orm@0.44.7_@types+pg@8.20.0_pg@8.22.0/node_modules/src/pg-core/dialect.ts:102:7)
+    ... 4 lines matching cause stack trace ...
+    at async main (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/db/scripts/migrate.ts:15:3) {
+  query: `CREATE UNIQUE INDEX "generation_production_content_hash_key" ON "generation" USING btree ("content_hash") WHERE "generation"."voice_preview" = false and "generation"."status" not in ('failed', 'cancelled');`,
+  params: [],
+  cause: error: could not create unique index "generation_production_content_hash_key"
+      at /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/pg@8.22.0/node_modules/pg/lib/client.js:652:17
+      at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+      at async <anonymous> (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/drizzle-orm@0.44.7_@types+pg@8.20.0_pg@8.22.0/node_modules/src/node-postgres/session.ts:149:14)
+      at async NodePgPreparedQuery.queryWithCache (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/drizzle-orm@0.44.7_@types+pg@8.20.0_pg@8.22.0/node_modules/src/pg-core/session.ts:71:12)
+      at async <anonymous> (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/drizzle-orm@0.44.7_@types+pg@8.20.0_pg@8.22.0/node_modules/src/pg-core/dialect.ts:102:7)
+      at async NodePgSession.transaction (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/drizzle-orm@0.44.7_@types+pg@8.20.0_pg@8.22.0/node_modules/src/node-postgres/session.ts:258:19)
+      at async PgDialect.migrate (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/drizzle-orm@0.44.7_@types+pg@8.20.0_pg@8.22.0/node_modules/src/pg-core/dialect.ts:95:3)
+      at async migrate (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/drizzle-orm@0.44.7_@types+pg@8.20.0_pg@8.22.0/node_modules/src/node-postgres/migrator.ts:10:2)
+      at async runMigrations (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/db/src/migrate.ts:61:7)
+      at async main (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/db/scripts/migrate.ts:15:3) {
+    length: 311,
+    severity: 'ERROR',
+    code: '23505',
+    detail: 'Key (content_hash)=(01ec42a8dc12dfbc195269adff2a441dee80af736808b63aa4debe7a7381f5ed) is duplicated.',
+    hint: undefined,
+    position: undefined,
+    internalPosition: undefined,
+    internalQuery: undefined,
+    where: undefined,
+    schema: 'public',
+    table: 'generation',
+    column: undefined,
+    dataType: undefined,
+    constraint: 'generation_production_content_hash_key',
+    file: 'tuplesortvariants.c',
+    line: '1361',
+    routine: 'comparetup_index_btree'
+  }
+}
+undefined
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/db:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: tsx scripts/migrate.ts
+MIGRATE_EXIT: 1

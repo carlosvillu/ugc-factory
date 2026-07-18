@@ -35,7 +35,6 @@ import { newUlid } from '@ugc/core/contracts';
 import type { Logger, StorageAdapter } from '@ugc/core';
 import {
   createAsset,
-  createGeneration,
   getAsset,
   getAssetByGenerationKind,
   getGenerationForUpdate,
@@ -48,6 +47,7 @@ import {
 
 import { falVideoCostOf } from './fal-pricing';
 import { uploadInputCached } from './generate';
+import { resolveProductionDedup } from './generation-dedup';
 import { NOOP_LOGGER } from './noop-logger';
 
 /** El prompt por defecto de fal para los avatares (Kling declara default `"."`); se usa si el caller no
@@ -90,10 +90,13 @@ export interface GenerateAvatarResult {
   generation: Generation;
   /** El asset del clip (kind='avatar_clip') con `duration_s`. */
   assetId: string;
-  /** El coste del clip en céntimos (por segundo). */
+  /** El coste del clip en céntimos (por segundo). 0 en un acierto de dedup. */
   costCents: number;
   /** Duración del clip en segundos (del output de fal, o del audio de entrada en su defecto). */
   durationSeconds: number;
+  /** `true` si el clip se REUTILIZÓ de una generación `completed` idéntica (dedup §9.6): 0 llamadas a
+   *  fal, 0 `cost_entry`. `false` si esta llamada lo generó. */
+  reused: boolean;
   /** Warnings observables (coste incalculable, duración ausente en el output…). */
   warnings: string[];
 }
@@ -193,17 +196,37 @@ export async function runGenerateAvatar(
     inputs: submitInputs,
   });
 
-  // 5) Persistir la INTENCIÓN en `submitting` ANTES del submit (§9.6): un crash deja rastro reconciliable.
-  const startedAt = new Date();
-  let generation = await createGeneration(db, {
-    modelProfileId: input.avatarModelProfileId,
-    stepRunId: input.stepRunId,
-    resolvedPrompt: submitInputs.prompt as string,
-    inputs: submitInputs,
+  // 4b–5) DEDUP (§9.6) + persistir la INTENCIÓN en `submitting` ANTES del submit: un clip de avatar
+  //     `completed` idéntico se REUTILIZA sin fal ni `cost_entry` (0 coste, visible en /spend; el upload de
+  //     imagen+audio ya está cacheado, un hit no gasta render); si no, `resolveProductionDedup` inserta la
+  //     fila viva (dedup atómico vía índice único parcial) o —tras perder la carrera— re-lee o lanza.
+  const dedup = await resolveProductionDedup(db, {
     contentHash,
-    status: 'submitting',
-    startedAt,
+    assetKind: 'avatar_clip',
+    serviceLabel: 'runGenerateAvatar',
+    assetLabel: 'un clip de avatar',
+    insertValues: {
+      modelProfileId: input.avatarModelProfileId,
+      stepRunId: input.stepRunId,
+      resolvedPrompt: submitInputs.prompt as string,
+      inputs: submitInputs,
+      contentHash,
+      status: 'submitting',
+      startedAt: new Date(),
+    },
+    logger: log,
   });
+  if ('reused' in dedup) {
+    return {
+      generation: dedup.reused.generation,
+      assetId: dedup.reused.assetId,
+      costCents: 0,
+      durationSeconds: dedup.reused.asset.durationS ?? audioDurationS ?? 0,
+      reused: true,
+      warnings,
+    };
+  }
+  let generation: Generation = dedup.generation;
 
   const fal = makeFalClient({
     credentials: deps.falKey,
@@ -334,6 +357,7 @@ export async function runGenerateAvatar(
       assetId,
       costCents: cost.cents,
       durationSeconds,
+      reused: false,
       warnings,
     };
   } catch (err) {

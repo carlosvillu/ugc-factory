@@ -324,6 +324,60 @@ describe('runGenerateBroll — clip de b-roll (Verificación T4.8)', () => {
     expect((err as Error).message).not.toContain('degrade boom');
   });
 
+  it('DEDUP (T4.10): un 2º b-roll idéntico (mismo keyframe/prompt/duración) REUTILIZA el asset — 0 submit, reused', async () => {
+    const { getSubmitBody } = happyBroll(I2V_ENDPOINT, 'dedup-hit');
+    const keyframe = await makeImageAsset('keyframe');
+    const args = {
+      brollModelProfileId: i2vProfile.id,
+      imageAssetIds: [keyframe.id],
+      durationSeconds: 8,
+      aspectRatio: '9:16',
+      prompt: 'A unique scene for the dedup hit test',
+    };
+
+    const first = await runGenerateBroll(deps(), args);
+    expect(first.reused).toBe(false);
+    expect(getSubmitBody()).toBeDefined();
+
+    // 2ª llamada IDÉNTICA: NO se registran nuevos handlers de submit (resetHandlers los limpió salvo los
+    // de upload). Si intentara submitear, msw reventaría (onUnhandledRequest:'error'). Reutiliza el asset.
+    server.use(...uploadHandlers());
+    const second = await runGenerateBroll(deps(), args);
+    expect(second.reused).toBe(true);
+    expect(second.assetId).toBe(first.assetId);
+    expect(second.costCents).toBe(0);
+  });
+
+  it('DEDUP SALT (T4.10, §7.5): dos clips troceados de la misma escena (mismo input, salt distinto) NO deduplican', async () => {
+    // El salt de dedup existe para el troceo: dos clips de la misma escena larga con keyframe+prompt+
+    // duración IDÉNTICOS deben generar DOS assets (no colapsar en uno). El salt `escena:clip` distingue.
+    happyBroll(I2V_ENDPOINT, 'salt-0');
+    const keyframe = await makeImageAsset('keyframe');
+    const base = {
+      brollModelProfileId: i2vProfile.id,
+      imageAssetIds: [keyframe.id],
+      durationSeconds: 8,
+      aspectRatio: '9:16',
+      prompt: 'A long scene split into two identical chunks',
+    };
+
+    const clip0 = await runGenerateBroll(deps(), { ...base, dedupSalt: '0:0' });
+    expect(clip0.reused).toBe(false);
+
+    // Mismo input, salt distinto (2º chunk) → hash distinto → SÍ genera (no reutiliza).
+    happyBroll(I2V_ENDPOINT, 'salt-1');
+    const clip1 = await runGenerateBroll(deps(), { ...base, dedupSalt: '0:1' });
+    expect(clip1.reused).toBe(false);
+    expect(clip1.assetId).not.toBe(clip0.assetId); // dos clips distintos
+
+    // Y el MISMO salt SÍ deduplica (retrocompatibilidad de la reutilización entre variantes que comparten
+    // la estructura de body): repetir el chunk 0 reutiliza su asset.
+    server.use(...uploadHandlers());
+    const clip0again = await runGenerateBroll(deps(), { ...base, dedupSalt: '0:0' });
+    expect(clip0again.reused).toBe(true);
+    expect(clip0again.assetId).toBe(clip0.assetId);
+  });
+
   it('R2V sin imágenes de referencia → falla ANTES de gastar (no submit)', async () => {
     // Sin referencias no hay fidelidad de producto: fallo honesto ANTES de llamar. NO se registra ningún
     // handler de fal: si intentara subir/llamar, msw reventaría con onUnhandledRequest:'error'.

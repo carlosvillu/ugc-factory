@@ -1,0 +1,30 @@
+### T4.10 DEDUP — CONTEOS (competencia de DINERO) — clean DB (ugc-t410-clean) ###
+
+=== ASSERT #1: generation completed de este run = piezas ÚNICAS (esperado 6, NO 12) ===
+ completed_gens 
+----------------
+              6
+(1 row)
+
+  Llamadas runGenerate emitidas: 10 (V1:4 + V2:3 + V3:3). Únicas esperadas: 6. Counterfactual: 12.
+
+=== ASSERT #1b: distinct content_hash vivos = 6 ===
+ distinct_hashes 
+-----------------
+               6
+(1 row)
+
+
+=== ASSERT #3: cost_entry(provider=fal) = 6 (una por pieza única, NO 12) ===
+ fal_cost_entries 
+------------------
+                6
+(1 row)
+
+
+=== ASSERT #4: /spend agregado (getSpendSummary, spend.repo.ts:229 — sin filtrar step_run_id) ===
+ provider | entries | total_cents 
+----------+---------+-------------
+ fal      |       6 |           0
+(1 row)
+

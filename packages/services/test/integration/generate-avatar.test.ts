@@ -303,6 +303,11 @@ describe('runGenerateAvatar — clip de avatar image+audio (Verificación T4.7)'
       avatarModelProfileId: klingProfile.id,
       imageAssetId: image.id,
       audioAssetId: audio.id,
+      // Prompt DISTINTO por test: el upload handler devuelve una `file_url` FIJA para todos los inputs, así
+      // que sin un prompt propio el content_hash colisionaría con el del happy-path (mismo image_url/
+      // audio_url/prompt) y el DEDUP (T4.10) devolvería su generación `completed` en vez de ejecutar fal —
+      // este control negativo NUNCA alcanzaría la validación de vídeo. El prompt único fuerza un hash nuevo.
+      prompt: 'negativo: output sin video',
     }).catch((e: unknown) => e);
     expect(res).toBeInstanceOf(Error);
 
@@ -362,6 +367,9 @@ describe('runGenerateAvatar — clip de avatar image+audio (Verificación T4.7)'
         avatarModelProfileId: klingProfile.id,
         imageAssetId: image.id,
         audioAssetId: audio.id,
+        // Prompt DISTINTO (ver el control negativo anterior): evita que el DEDUP (T4.10) cortocircuite con
+        // una generación `completed` de hash idéntico y este test no llegue a la validación de vídeo.
+        prompt: 'negativo: enmascarar causa raiz',
       },
     ).catch((e: unknown) => e);
 

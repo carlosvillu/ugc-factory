@@ -41,7 +41,6 @@ import { isMusicModelKind } from '@ugc/core/gallery';
 import type { Logger, StorageAdapter } from '@ugc/core';
 import {
   createAsset,
-  createGeneration,
   getAssetByGenerationKind,
   getGenerationForUpdate,
   getModelProfile,
@@ -52,6 +51,7 @@ import {
 } from '@ugc/db';
 
 import { falMusicCostOf } from './fal-pricing';
+import { resolveProductionDedup } from './generation-dedup';
 import { NOOP_LOGGER } from './noop-logger';
 
 /** Un bed musical es INSTRUMENTAL: la voz la pone N7b (el bed suena DEBAJO del voiceover). ace-step usa
@@ -99,10 +99,13 @@ export interface GenerateMusicResult {
   generation: Generation;
   /** El asset del bed (kind='music_bed') con `duration_s`. */
   assetId: string;
-  /** El coste del bed en céntimos (por segundo). */
+  /** El coste del bed en céntimos (por segundo). 0 en un acierto de dedup. */
   costCents: number;
   /** Duración del bed en segundos (= el input enviado; ace-step genera exactamente lo pedido). */
   durationSeconds: number;
+  /** `true` si el bed se REUTILIZÓ de una generación `completed` idéntica (dedup §9.6): 0 llamadas a
+   *  fal, 0 `cost_entry`. `false` si esta llamada lo generó. */
+  reused: boolean;
   /** Warnings observables (coste incalculable…). */
   warnings: string[];
 }
@@ -154,17 +157,37 @@ export async function runGenerateMusic(
     inputs: submitInputs,
   });
 
-  // 4) Persistir la INTENCIÓN en `submitting` ANTES del submit (§9.6): un crash deja rastro reconciliable.
-  const startedAt = new Date();
-  let generation = await createGeneration(db, {
-    modelProfileId: input.musicModelProfileId,
-    stepRunId: input.stepRunId,
-    resolvedPrompt: mood,
-    inputs: submitInputs,
+  // 3b–4) DEDUP (§9.6) + persistir la INTENCIÓN en `submitting` ANTES del submit: un bed `completed` idéntico
+  //     (mismo mood+duración+modelo) se REUTILIZA sin fal ni `cost_entry` (0 coste, visible en /spend); si no,
+  //     `resolveProductionDedup` inserta la fila viva (dedup atómico vía índice único parcial) o —tras perder
+  //     la carrera— re-lee o lanza para reintentar. Así dos beds idénticos concurrentes NO submitean ambos.
+  const dedup = await resolveProductionDedup(db, {
     contentHash,
-    status: 'submitting',
-    startedAt,
+    assetKind: 'music_bed',
+    serviceLabel: 'runGenerateMusic',
+    assetLabel: 'un bed',
+    insertValues: {
+      modelProfileId: input.musicModelProfileId,
+      stepRunId: input.stepRunId,
+      resolvedPrompt: mood,
+      inputs: submitInputs,
+      contentHash,
+      status: 'submitting',
+      startedAt: new Date(),
+    },
+    logger: log,
   });
+  if ('reused' in dedup) {
+    return {
+      generation: dedup.reused.generation,
+      assetId: dedup.reused.assetId,
+      costCents: 0,
+      durationSeconds: dedup.reused.asset.durationS ?? input.durationSeconds,
+      reused: true,
+      warnings,
+    };
+  }
+  let generation: Generation = dedup.generation;
 
   const fal = makeFalClient({
     credentials: deps.falKey,
@@ -293,6 +316,7 @@ export async function runGenerateMusic(
       assetId,
       costCents: cost.cents,
       durationSeconds,
+      reused: false,
       warnings,
     };
   } catch (err) {

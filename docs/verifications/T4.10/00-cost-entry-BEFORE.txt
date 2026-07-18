@@ -1,0 +1,7 @@
+ provider  | entries | total_cents 
+-----------+---------+-------------
+ fal       |      34 |         762
+ anthropic |      21 |         201
+ firecrawl |       7 |           0
+(3 rows)
+

@@ -1,0 +1,21 @@
+=== BEFORE MIGRATE — BD dev :55432 (volumen que falló en 1er pase) ===
+generation rows: 32
+Index generation_production_content_hash_key: ABSENT (correcto pre-migrate)
+
+DUPLICATE GROUPS (voice_preview=false, status NOT IN failed/cancelled, content_hash NOT NULL):
+Grupo 1: 01ec42a8dc12... (red apple / T4.1)  count=2  statuses={completed,completed}
+  ids: 01KXNFEBGCCZX83JZDTD85PZVH (created 2026-07-16 12:46) , 01KXNHPHVTRFQDGA1J8V6QEP9F (created 2026-07-16 13:26)
+  predicted winner = 01KXNFEBGCCZX83JZDTD85PZVH (min id ASC), loser = 01KXNHPHVTRFQDGA1J8V6QEP9F
+Grupo 2: 83d55eec934c... (b-roll / T4.8)  count=2  statuses={completed,completed}
+  ids: 01KXRN9GPR7WGMS6XJX8G16KHZ (created 2026-07-17 18:26) , 01KXRNBN2QDDCG79K4MS86QSSB (created 2026-07-17 18:27)
+  predicted winner = 01KXRN9GPR7WGMS6XJX8G16KHZ (min id ASC), loser = 01KXRNBN2QDDCG79K4MS86QSSB
+
+*** NINGUN grupo en vuelo (todas completed) => sin nota de job fal huerfano ***
+
+cost_entry de las 4 filas (deben SOBREVIVIR tras demote):
+ 01KXNTHKFT... -> gen 01KXNFEBGC... (winner G1) fal 1c
+ 01KXNHPPTR... -> gen 01KXNHPHVT... (LOSER  G1) fal 1c    <- debe sobrevivir
+ 01KXRNBN2B... -> gen 01KXRN9GPR... (winner G2) fal 160c
+ 01KXRNDFTW... -> gen 01KXRNBN2Q... (LOSER  G2) fal 160c  <- debe sobrevivir
+
+spend fal total BEFORE: 762 cents (34 fal cost_entry rows)

@@ -179,6 +179,11 @@ export function makeN7dExecutor(deps: GenerationExecutorDeps): StepExecutor {
             aspectRatio: cfg.aspect,
             resolution: cfg.resolution,
             ...(stepId !== undefined ? { stepRunId: stepId } : {}),
+            // SALT DE DEDUP (T4.10): dos clips de la MISMA escena troceada (§7.5) tienen keyframe+prompt+
+            // duración idénticos → mismo content_hash → el dedup los colapsaría en uno solo (el vídeo
+            // repetiría el clip). El salt `escena:clip` los distingue en el hash SIN filtrarse al payload de
+            // fal. Variantes distintas que comparten la misma estructura de body reusan igual (mismo salt).
+            dedupSalt: `${String(bodySceneIndex)}:${String(planned.clipIndex)}`,
           },
         );
         clips.push({

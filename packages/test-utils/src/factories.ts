@@ -2,6 +2,7 @@
 // filas válidas con overrides, para que cuando el schema evolucione se arregle la
 // factory y no cincuenta tests. Crece tarea a tarea (makeBrief, makeVariant… con
 // sus tablas).
+import { createHash } from 'node:crypto';
 import { newUlid } from '@ugc/core/contracts';
 import type { Angle, ProductBrief, RawContent, VisualAnalysis } from '@ugc/core/contracts';
 import type {
@@ -84,6 +85,10 @@ export function makeAsset(overrides: Partial<NewAsset> = {}): NewAsset {
  * webhook de fal la encuentra (el submit por webhook ya ocurrió). `model_profile_id` es NOT NULL:
  * el test lo pasa (id de un `model_profile` sembrado) o acepta el placeholder por defecto.
  * `fal_request_id` es UNIQUE: para dos generaciones en el mismo test, pásalo distinto.
+ * `content_hash` por defecto es ÚNICO por generación (derivado del `id`): desde T4.10 hay un índice único
+ * PARCIAL global de producción (`voice_preview=false` AND status NOT IN ('failed','cancelled')) — dos
+ * generaciones sembradas con el MISMO hash colisionarían. Un test que quiera probar la dedup pasa un
+ * `contentHash` explícito compartido; el resto obtiene hashes distintos y filas independientes.
  */
 export function makeGeneration(overrides: Partial<NewGeneration> = {}): NewGeneration {
   const id = overrides.id ?? newUlid();
@@ -92,7 +97,8 @@ export function makeGeneration(overrides: Partial<NewGeneration> = {}): NewGener
     modelProfileId: overrides.modelProfileId ?? newUlid(),
     resolvedPrompt: 'a red apple on a white table',
     inputs: {},
-    contentHash: 'a'.repeat(64),
+    // Hash único por defecto (sha256 del id → 64 hex): evita colisiones con el índice de dedup de T4.10.
+    contentHash: createHash('sha256').update(id).digest('hex'),
     status: 'submitted',
     falRequestId: `req-${id}`,
     statusUrl: `https://queue.fal.run/x/requests/${id}/status`,

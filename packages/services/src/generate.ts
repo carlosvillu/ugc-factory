@@ -21,6 +21,7 @@ import {
 } from '@ugc/core/generation';
 import type { Logger, StorageAdapter } from '@ugc/core';
 import {
+  getAssetByGenerationKind,
   getModelProfile,
   setAssetFalUpload,
   updateGeneration,
@@ -28,6 +29,7 @@ import {
   type Generation,
 } from '@ugc/db';
 
+import { degradeGenerationOnError } from './finalize-single-call-per-second';
 import { finalizeGeneration } from './finalize-generation';
 import { resolveProductionDedup } from './generation-dedup';
 import { NOOP_LOGGER } from './noop-logger';
@@ -233,23 +235,51 @@ export async function runGenerate(
   //   cualquier error (poll, validación, descarga) a `failed` con el estado real —nunca un
   //   `completed` mentiroso— y re-lanza para que el caller (executor T4.11) decida el reintento por
   //   el tipo (FalProviderError reintentable vs FalResponseError de contrato).
+  const logger = deps.logger ?? NOOP_LOGGER;
   try {
     const polled = await fal.poll({
       statusUrl: submitted.statusUrl,
       responseUrl: submitted.responseUrl,
     });
     const finalized = await finalizeGeneration(
-      { db, storage, downloader: fal, logger: deps.logger ?? NOOP_LOGGER },
+      { db, storage, downloader: fal, logger },
       { generation, output: polled.output, statusPayload: polled.statusPayload },
     );
-    // El camino de polling (T4.1) es el ÚNICO liquidador de esta generación recién creada: NO puede
-    // encontrarla ya `completed` bajo el lock (no hay webhook ni otro job compitiendo por una fila
-    // que este mismo call acaba de crear). Un `assetId` null aquí (= la carrera se perdió) sería un
-    // invariante roto (¿otra ruta liquidó una generación de polling?) → surface honesto, no un null silencioso.
+    // CARRERA sweeper↔polling (T4.13): el polling YA NO es el único liquidador de esta fila. Desde
+    // T4.3 el SWEEPER reconcilia generaciones `submitted` polleando su `status_url` y, si fal ya
+    // terminó, encola `output.download` que las finaliza (asset+cost+completed bajo lock). N7a hace
+    // fan-out de 2-3 shots secuenciales con ~5s entre medias: el sweeper (cada 5s) puede ganarle la
+    // liquidación a NUESTRO propio poll. Cuando eso pasa, `finalizeGeneration` re-chequea `completed`
+    // bajo el lock y devuelve `assetId===null` (su NO-OP GRACIOSO documentado: "otra ruta ya la
+    // finalizó"). Ese null NO es un invariante roto — es la señal idempotente. RECUPERAMOS el asset
+    // que la ruta ganadora creó (por generation_id + kind, mismo patrón que
+    // `finalizeSingleCallPerSecondGeneration` para vídeo/audio) y lo devolvemos como ÉXITO REUTILIZADO
+    // (`reused:true`, `costCents:0`: la otra ruta ya escribió el `cost_entry`; re-cobrar sería
+    // doble-cobro). SOLO si la fila está `completed` pero SIN su asset (invariante genuinamente roto:
+    // una `completed` DEBE tener asset) LANZAMOS — surface honesto, no un null silencioso.
     if (finalized.assetId === null) {
-      throw new FalResponseError(
-        `runGenerate: la generación ${generation.id} fue finalizada por otra ruta durante el polling (invariante roto)`,
+      const existing = await getAssetByGenerationKind(db, generation.id, 'keyframe');
+      if (existing === undefined) {
+        throw new FalResponseError(
+          `runGenerate: la generación ${generation.id} está completed pero sin asset keyframe (invariante roto)`,
+        );
+      }
+      logger.info(
+        {
+          event: 'fal_generation_reconciled_by_other_route',
+          generationId: generation.id,
+          assetId: existing.id,
+        },
+        'runGenerate: la generación ya la finalizó otra ruta (sweeper) durante el polling; se reutiliza su asset (0 coste)',
       );
+      return {
+        generation: finalized.generation,
+        assetId: existing.id,
+        falOutputUrl: finalized.falOutputUrl,
+        costCents: 0,
+        reused: true,
+        warnings: [...warnings, ...finalized.warnings],
+      };
     }
     return {
       generation: finalized.generation,
@@ -260,7 +290,16 @@ export async function runGenerate(
       warnings: [...warnings, ...finalized.warnings],
     };
   } catch (err) {
-    await updateGeneration(db, generation.id, { status: 'failed', completedAt: new Date() });
+    // Degrada a `failed` SOLO si la fila NO es ya terminal (`completed`): una ruta concurrente (el
+    // sweeper, T4.3) pudo haberla llevado legítimamente a `completed` antes de que un error POSTERIOR
+    // e INDEPENDIENTE cayera aquí (p.ej. la descarga del output falla DESPUÉS de que la otra ruta ya
+    // completó). Marcar `failed` incondicionalmente pisaría un `completed` legítimo (completed→failed
+    // + asset huérfano). `degradeGenerationOnError` (T4.11) hace el UPDATE condicional a `!= completed`
+    // bajo lock y NO propaga un fallo secundario de la degradación (la causa raíz `err` siempre sobrevive).
+    await degradeGenerationOnError(
+      { db, logger },
+      { generationId: generation.id, originalError: err, event: 'fal_generation_degrade_failed' },
+    );
     throw err;
   }
 }

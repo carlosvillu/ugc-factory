@@ -1,0 +1,13 @@
+
+> @ugc/services@0.0.0 test /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/services
+> vitest run
+
+
+ RUN  v4.1.10 /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/services
+
+
+ Test Files  4 passed (4)
+      Tests  42 passed (42)
+   Start at  00:36:54
+   Duration  932ms (transform 556ms, setup 64ms, import 1.10s, tests 27ms, environment 0ms)
+

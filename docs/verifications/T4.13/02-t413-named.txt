@@ -1,0 +1,16 @@
+
+ RUN  v4.1.10 /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/services
+
+ ✓ |services:integration| test/integration/generate.test.ts > runGenerate — cadena end-to-end (Verificación T4.1) > genera una imagen: generation completed, PNG en storage, cost_entry fal 44ms
+ ✓ |services:integration| test/integration/generate.test.ts > runGenerate — cadena end-to-end (Verificación T4.1) > T4.4: `syntheticProduct:true` se persiste en la fila `generation` (procedencia, no dedupe) 14ms
+ ✓ |services:integration| test/integration/generate.test.ts > runGenerate — cadena end-to-end (Verificación T4.1) > §9.6: la fila existe en `submitting` ANTES del submit (500-on-submit) 8ms
+ ✓ |services:integration| test/integration/generate.test.ts > runGenerate — cadena end-to-end (Verificación T4.1) > la descarga del output falla → generation `failed`, sin coste (nunca se cuelga) 12ms
+ ✓ |services:integration| test/integration/generate.test.ts > runGenerate — race sweeper↔polling: reconciliación idempotente (T4.13) > (a) el sweeper completa la fila mid-poll → runGenerate RECUPERA su asset (reused, 0 coste, no lanza) 19ms
+ ✓ |services:integration| test/integration/generate.test.ts > runGenerate — race sweeper↔polling: reconciliación idempotente (T4.13) > (b) fila ya `completed` por el sweeper + fallo POSTERIOR de descarga → NO se degrada a `failed` 15ms
+ ✓ |services:integration| test/integration/generate.test.ts > uploadInputCached — caché de upload a fal storage (§9.6, Verificación #2) > primer upload sube y estampa fal_url; segundo es cache-hit sin re-subir 6ms
+
+ Test Files  1 passed (1)
+      Tests  7 passed (7)
+   Start at  00:37:35
+   Duration  6.81s (transform 457ms, setup 9ms, import 1.29s, tests 243ms, environment 0ms)
+

@@ -1,0 +1,33 @@
+
+ RUN  v4.1.10 /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/services
+
+ ✓ |services:integration| test/integration/generate.test.ts > runGenerate — cadena end-to-end (Verificación T4.1) > genera una imagen: generation completed, PNG en storage, cost_entry fal 46ms
+ ✓ |services:integration| test/integration/generate.test.ts > runGenerate — cadena end-to-end (Verificación T4.1) > T4.4: `syntheticProduct:true` se persiste en la fila `generation` (procedencia, no dedupe) 14ms
+ ✓ |services:integration| test/integration/generate.test.ts > runGenerate — cadena end-to-end (Verificación T4.1) > §9.6: la fila existe en `submitting` ANTES del submit (500-on-submit) 8ms
+ ✓ |services:integration| test/integration/generate.test.ts > runGenerate — cadena end-to-end (Verificación T4.1) > la descarga del output falla → generation `failed`, sin coste (nunca se cuelga) 13ms
+ × |services:integration| test/integration/generate.test.ts > runGenerate — race sweeper↔polling: reconciliación idempotente (T4.13) > (a) el sweeper completa la fila mid-poll → runGenerate RECUPERA su asset (reused, 0 coste, no lanza) 15ms
+   → runGenerate: la generación 01KXVP2Q6B2BKAC88M7F1R2ZV0 fue finalizada por otra ruta durante el polling (invariante roto)
+ ✓ |services:integration| test/integration/generate.test.ts > runGenerate — race sweeper↔polling: reconciliación idempotente (T4.13) > (b) fila ya `completed` por el sweeper + fallo POSTERIOR de descarga → NO se degrada a `failed` 14ms
+ ✓ |services:integration| test/integration/generate.test.ts > uploadInputCached — caché de upload a fal storage (§9.6, Verificación #2) > primer upload sube y estampa fal_url; segundo es cache-hit sin re-subir 5ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |services:integration| test/integration/generate.test.ts > runGenerate — race sweeper↔polling: reconciliación idempotente (T4.13) > (a) el sweeper completa la fila mid-poll → runGenerate RECUPERA su asset (reused, 0 coste, no lanza)
+FalResponseError: runGenerate: la generación 01KXVP2Q6B2BKAC88M7F1R2ZV0 fue finalizada por otra ruta durante el polling (invariante roto)
+ ❯ runGenerate src/generate.ts:261:13
+    259|     // una `completed` DEBE tener asset) LANZAMOS — surface honesto, n…
+    260|     if (finalized.assetId === null) {
+    261|       throw new FalResponseError(
+       |             ^
+    262|         `runGenerate: la generación ${generation.id} fue finalizada po…
+    263|       );
+ ❯ test/integration/generate.test.ts:322:17
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 6 passed (7)
+   Start at  00:38:11
+   Duration  6.40s (transform 442ms, setup 8ms, import 1.12s, tests 330ms, environment 0ms)
+

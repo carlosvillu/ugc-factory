@@ -16,7 +16,9 @@ import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 import {
   createAsset,
   getAsset,
+  getAssetByGenerationKind,
   getGeneration,
+  getGenerationByFalRequestId,
   getModelProfileByEndpoint,
   getSpendSummary,
   listGenerationsByStatus,
@@ -29,6 +31,7 @@ import { computeContentHash } from '@ugc/core/generation';
 import { createTestDatabase, makeTestLogger, server, type TestDatabase } from '@ugc/test-utils';
 import type { StorageAdapter } from '@ugc/core';
 
+import { finalizeGeneration } from '../../src/finalize-generation';
 import { runGenerate, uploadInputCached } from '../../src/generate';
 
 const ENDPOINT = 'fal-ai/flux-2';
@@ -250,6 +253,144 @@ describe('runGenerate — cadena end-to-end (Verificación T4.1)', () => {
     const failed = await listGenerationsByStatus(tdb.db, 'failed');
     expect(failed.some((g) => g.resolvedPrompt === 'output que falla al descargar')).toBe(true);
     expect((await getSpendSummary(tdb.db)).totalCents).toBe(before);
+  });
+});
+
+describe('runGenerate — race sweeper↔polling: reconciliación idempotente (T4.13)', () => {
+  // El SWEEPER (T4.3) reconcilia generaciones `submitted` polleando su status_url y, si fal ya
+  // terminó, las finaliza vía el consumer `output.download` → el MISMO `finalizeGeneration` que usa
+  // el poll de runGenerate. En N7a (fan-out de shots) el sweeper puede GANARLE la liquidación al poll
+  // del propio executor. Estos tests reproducen esa carrera de forma DETERMINISTA: un side-effect en
+  // el handler de status ejecuta el `finalizeGeneration` REAL (la ruta ganadora escribe el asset+cost
+  // EXACTAMENTE con el shape que producción produce — principio 9a) ANTES de que el poll de runGenerate
+  // llegue a su propio finalize. Sin este unit, la suite fake completa síncrona sin race y el bug de
+  // T4.11 (completed→failed, invariante roto) queda tan no-verificado como escapó al E2E fake.
+
+  /** Un downloader mínimo que cumple `OutputDownloader` devolviendo el PNG canario: la ruta ganadora
+   *  (sweeper) descarga el output a storage igual que producción. El shape del asset lo fija
+   *  `finalizeGeneration`, no este downloader — solo aporta los bytes. */
+  const winnerDownloader = {
+    download: (): Promise<Response> =>
+      Promise.resolve(new Response(PNG_BYTES, { headers: { 'content-type': 'image/png' } })),
+  };
+
+  /** Registra submit→status→response→output con un request_id propio, y ejecuta `onStatus` como
+   *  side-effect del GET de status (la ventana donde el sweeper gana la carrera antes de que el poll
+   *  de runGenerate lea el output). `onStatus` recibe el request_id para localizar la fila `submitted`. */
+  function racePath(req: string, onStatus: (req: string) => Promise<void>): void {
+    const statusUrl = `https://queue.fal.run/${ENDPOINT}/requests/${req}/status`;
+    const responseUrl = `https://queue.fal.run/${ENDPOINT}/requests/${req}`;
+    server.use(
+      http.post(SUBMIT_URL, () =>
+        HttpResponse.json({
+          request_id: req,
+          status_url: statusUrl,
+          response_url: responseUrl,
+          cancel_url: `${responseUrl}/cancel`,
+          status: 'IN_QUEUE',
+          queue_position: 0,
+        }),
+      ),
+      http.get(statusUrl, async () => {
+        await onStatus(req);
+        return HttpResponse.json({ status: 'COMPLETED', request_id: req });
+      }),
+      http.get(responseUrl, () => HttpResponse.json(RESPONSE_BODY)),
+      http.get(OUTPUT_URL, () =>
+        HttpResponse.arrayBuffer(PNG_BYTES.buffer, { headers: { 'content-type': 'image/png' } }),
+      ),
+    );
+  }
+
+  it('(a) el sweeper completa la fila mid-poll → runGenerate RECUPERA su asset (reused, 0 coste, no lanza)', async () => {
+    const REQ = 'T413-req-recover';
+    let winnerAssetId: string | null = null;
+    // Side-effect: el sweeper (ruta ganadora) finaliza la MISMA fila con el finalizeGeneration REAL
+    // ANTES de que el poll de runGenerate llegue a su propio finalize.
+    racePath(REQ, async (req) => {
+      if (winnerAssetId !== null) return; // idempotente: solo la primera pasada de status finaliza
+      const row = await getGenerationByFalRequestId(tdb.db, req);
+      if (row === undefined) throw new Error('la fila submitted no existe en el side-effect');
+      const won = await finalizeGeneration(
+        { db: tdb.db, storage, downloader: winnerDownloader, logger: makeTestLogger() },
+        { generation: row, output: RESPONSE_BODY, statusPayload: { status: 'COMPLETED' } },
+      );
+      winnerAssetId = won.assetId;
+    });
+
+    const spendBefore = (await getSpendSummary(tdb.db)).totalCents;
+    const res = await runGenerate(deps(), {
+      modelProfileId: fluxProfile.id,
+      resolvedPrompt: 'T4.13 recover-on-null: shot que el sweeper finaliza primero',
+    });
+
+    // NO lanzó, y devolvió el asset que la ruta GANADORA creó (no re-creó uno nuevo).
+    expect(winnerAssetId).not.toBeNull();
+    expect(res.assetId).toBe(winnerAssetId);
+    // Es un ÉXITO REUTILIZADO: reused:true, 0 coste en el resultado (la otra ruta ya cobró).
+    expect(res.reused).toBe(true);
+    expect(res.costCents).toBe(0);
+    // La fila quedó `completed` (jamás `failed`).
+    const gen = await getGeneration(tdb.db, res.generation.id);
+    expect(gen?.status).toBe('completed');
+    // Exactamente UN cost_entry por esta generación (el de la ruta ganadora): +1 céntimo, NO +2.
+    // Si runGenerate re-cobrara en el camino de recuperación, el delta sería 2.
+    const spendAfter = (await getSpendSummary(tdb.db)).totalCents;
+    expect(spendAfter - spendBefore).toBe(1);
+    // El asset recuperado es el keyframe de la generación (no hay un segundo asset re-creado).
+    const keyframe = await getAssetByGenerationKind(tdb.db, res.generation.id, 'keyframe');
+    expect(keyframe?.id).toBe(winnerAssetId);
+  });
+
+  it('(b) fila ya `completed` por el sweeper + fallo POSTERIOR de descarga → NO se degrada a `failed`', async () => {
+    const REQ = 'T413-req-nodestroy';
+    let generationId: string | null = null;
+    // El sweeper completa la fila mid-poll (finalize REAL), luego la descarga del propio poll de
+    // runGenerate falla (OUTPUT 503) → finalizeGeneration lanza en la descarga ANTES de su recheck →
+    // cae en el catch de runGenerate. El fix (b) NO debe pisar el `completed` legítimo.
+    const statusUrl = `https://queue.fal.run/${ENDPOINT}/requests/${REQ}/status`;
+    const responseUrl = `https://queue.fal.run/${ENDPOINT}/requests/${REQ}`;
+    server.use(
+      http.post(SUBMIT_URL, () =>
+        HttpResponse.json({
+          request_id: REQ,
+          status_url: statusUrl,
+          response_url: responseUrl,
+          cancel_url: `${responseUrl}/cancel`,
+          status: 'IN_QUEUE',
+          queue_position: 0,
+        }),
+      ),
+      http.get(statusUrl, async () => {
+        if (generationId === null) {
+          const row = await getGenerationByFalRequestId(tdb.db, REQ);
+          if (row === undefined) throw new Error('la fila submitted no existe en el side-effect');
+          await finalizeGeneration(
+            { db: tdb.db, storage, downloader: winnerDownloader, logger: makeTestLogger() },
+            { generation: row, output: RESPONSE_BODY, statusPayload: { status: 'COMPLETED' } },
+          );
+          generationId = row.id;
+        }
+        return HttpResponse.json({ status: 'COMPLETED', request_id: REQ });
+      }),
+      http.get(responseUrl, () => HttpResponse.json(RESPONSE_BODY)),
+      // La descarga del poll de runGenerate falla: finalizeGeneration lanza ANTES del recheck.
+      http.get(OUTPUT_URL, () => new HttpResponse(null, { status: 503 })),
+    );
+
+    // runGenerate lanza (el error de descarga propaga: es correcto, el executor decide el reintento).
+    await expect(
+      runGenerate(deps(), {
+        modelProfileId: fluxProfile.id,
+        resolvedPrompt: 'T4.13 catch no-destructivo: descarga falla tras completar la otra ruta',
+      }),
+    ).rejects.toThrow();
+
+    // CRÍTICO: la fila sigue `completed` (la ruta ganadora la dejó así). El catch NO la degradó a
+    // `failed`: un `updateGeneration` incondicional habría hecho completed→failed + asset huérfano.
+    expect(generationId).not.toBeNull();
+    const gen = await getGeneration(tdb.db, generationId!);
+    expect(gen?.status).toBe('completed');
   });
 });
 

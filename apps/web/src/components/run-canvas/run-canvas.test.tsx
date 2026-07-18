@@ -32,6 +32,7 @@ function snap(
     costActual: null,
     durationMs: null,
     errorExcerpt: null,
+    variantId: null,
     ...overrides,
   };
 }
@@ -81,4 +82,30 @@ test('el nodo muestra el título humano y conserva la clave en el accessible nam
   const n3 = screen.getByRole('article', { name: /demo\.canvas\.N3/ });
   expect(within(n3).getByText('ProductBrief')).toBeInTheDocument();
   expect(within(n3).getByText('demo.canvas.N3')).toBeInTheDocument();
+});
+
+// T4.11: los N7 de variantes distintas se pintan como grupos compuestos DISTINTOS, cada uno con
+// su etiqueta de variante y el título humano del sub-DAG («Generación de assets»). El accessible
+// name conserva la clave de grupo cruda (el variantId) — API de tests, como el node_key.
+test('pinta un grupo N7 compuesto POR VARIANTE con su etiqueta y título', () => {
+  const steps = [
+    snap({ id: 'a1', nodeKey: 'N7a', variantId: 'VAR001abcdef', status: 'succeeded' }),
+    snap({ id: 'b1', nodeKey: 'N7b', variantId: 'VAR001abcdef', status: 'running' }),
+    snap({ id: 'a2', nodeKey: 'N7a', variantId: 'VAR002ghijkl', status: 'failed' }),
+  ];
+  render(<RunCanvas />, { wrapper: withStore(steps) });
+
+  const g1 = screen.getByRole('article', { name: /VAR001abcdef/ });
+  expect(g1).toHaveAttribute('data-slot', 'n7-group-node');
+  expect(g1).toHaveAttribute('data-variant-id', 'VAR001abcdef');
+  // Etiqueta legible de variante (cola del ULID) + título humano del sub-DAG.
+  expect(within(g1).getByText(/Variante abcdef/)).toBeInTheDocument();
+  expect(within(g1).getByText('Generación de assets')).toBeInTheDocument();
+  // Estado agregado: el peor de sus hijos (running gana a succeeded).
+  expect(g1).toHaveAttribute('data-status', 'running');
+
+  const g2 = screen.getByRole('article', { name: /VAR002ghijkl/ });
+  expect(g2).toHaveAttribute('data-status', 'failed');
+  // Son DOS grupos distintos, no uno.
+  expect(g1).not.toBe(g2);
 });

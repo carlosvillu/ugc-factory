@@ -9,15 +9,17 @@
 // necesita el `PipelineRun` (el objeto run vive aparte en el store, sembrado por
 // REST). Por eso la firma real es `stepsToGraph(steps: StepSnapshot[], opts?)`.
 //
-// N7: el DAG de demo de F0 es lineal (N0–N5) y NO ejercita N7 (guard de alcance de
-// T0.11). La agrupación se implementa igual (con sus tests) por fidelidad al
-// contrato, keyed por el prefijo `N7` del node_key: la proyección SSE delgada NO
-// porta `variant_id`, así que en F0 los N7a–N7e de un run caen en UN grupo. Cuando
-// F2+ traiga variantes reales, el snapshot llevará `variantId` y el agrupado se
-// afinará por variante (decisión explícita, no deriva silenciosa).
+// N7: los sub-steps N7a–N7e de un run de GENERACIÓN (§7.2) se agrupan en un nodo
+// compuesto POR VARIANTE (T4.11). La identidad de grupo es el `variantId` del step
+// (proyectado al snapshot en T4.11): cada variante `scripted` recibe su propio grupo
+// expandible con sus N7a–N7e. Un step N7 SIN `variantId` (el DAG de demo de F0, que no
+// ejercita variantes) cae en el grupo genérico `'N7'` — el fallback que conserva los
+// tests de T0.11. La clave del grupo (`variantId ?? 'N7'`) es también la que indexa
+// `expandedVariants`, así que expandir/colapsar es por-variante.
 import type { Edge, Node } from '@xyflow/react';
 import type { StepSnapshot } from '@ugc/core/orchestrator';
 import { visualGroupOf, type StepVisualGroup, type StepStatus } from './status';
+import { groupHeight, GROUP_WIDTH } from './layout';
 
 interface StepNodeData extends Record<string, unknown> {
   stepId: string;
@@ -30,10 +32,12 @@ interface StepNodeData extends Record<string, unknown> {
   durationMs: number | null;
   outputExcerpt: string | null;
   errorExcerpt: string | null;
+  variantId: string | null;
 }
 
 interface N7GroupData extends Record<string, unknown> {
-  groupKey: string; // 'N7' (en F2+: por variante)
+  groupKey: string; // 'N7' (F0 sin variante) o el `variantId` de la variante (T4.11)
+  variantId: string | null; // la variante que este grupo materializa (null en el fallback F0)
   status: StepStatus; // estado agregado de los hijos (peor estado gana)
   visualGroup: StepVisualGroup;
   childCount: number;
@@ -51,9 +55,24 @@ export interface StepsToGraphOptions {
 
 // Un node_key pertenece al sub-DAG N7 si empieza por 'N7' y tiene sufijo de letra
 // (N7a…N7e). 'N7' pelado (sin letra) NO existe como step; el grupo lo emitimos
-// nosotros con `groupKey='N7'`.
+// nosotros.
 const N7_CHILD = /^N7[a-z]/i;
-const N7_GROUP_KEY = 'N7';
+// La clave del grupo genérico (fallback F0): los N7 sin `variantId` caen aquí. En
+// producción cada grupo se keyed por su `variantId`.
+const N7_FALLBACK_GROUP_KEY = 'N7';
+
+// La clave de agrupación de un hijo N7: su variante, o el fallback genérico si no la
+// trae (DAG de demo de F0). Es también la clave que indexa `expandedVariants`.
+function groupKeyOf(child: StepSnapshot): string {
+  return child.variantId ?? N7_FALLBACK_GROUP_KEY;
+}
+
+// El id de NODO React Flow del grupo de una clave: estable por clave (expandir/colapsar
+// es idempotente) y único entre variantes. El fallback conserva el `'n7-group'` literal
+// que esperan los tests de T0.11.
+function groupNodeIdOf(groupKey: string): string {
+  return groupKey === N7_FALLBACK_GROUP_KEY ? 'n7-group' : `n7-group-${groupKey}`;
+}
 
 // Orden de "peor estado gana" para el estado agregado de un grupo N7: un grupo con
 // un hijo fallido se pinta fallido; con uno esperando aprobación, checkpoint; etc.
@@ -94,6 +113,7 @@ function toStepNode(s: StepSnapshot): StepNode {
       durationMs: s.durationMs,
       outputExcerpt: s.outputExcerpt,
       errorExcerpt: s.errorExcerpt,
+      variantId: s.variantId,
     },
   };
 }
@@ -111,14 +131,26 @@ export function stepsToGraph(
 
   const nodes: AppNode[] = regular.map(toStepNode);
 
-  // 2. Agrupa los N7a–N7e en UN nodo de grupo (F0: sin variant_id ⇒ un grupo). El
-  //    id del grupo es estable ('n7-group') para que expandir/colapsar sea idempotente.
-  const groupId = 'n7-group';
-  const expanded = opts.expandedVariants.has(N7_GROUP_KEY);
-  let hasGroup = false;
-  const [firstChild, ...restChildren] = n7Children;
-  if (firstChild !== undefined) {
-    hasGroup = true;
+  // 2. Agrupa los N7a–N7e POR VARIANTE (`variantId ?? 'N7'`). Cada grupo es un nodo
+  //    compuesto expandible con su propio id estable; el orden de aparición es el del
+  //    primer hijo de cada variante (determinista respecto al orden de `steps`).
+  const childrenByGroup = new Map<string, StepSnapshot[]>();
+  for (const c of n7Children) {
+    const key = groupKeyOf(c);
+    const bucket = childrenByGroup.get(key);
+    if (bucket === undefined) childrenByGroup.set(key, [c]);
+    else bucket.push(c);
+  }
+
+  // A qué id de grupo se remapean las edges de un hijo COLAPSADO (stepId → groupNodeId). Un hijo de
+  // grupo EXPANDIDO no se registra: conserva su propio id como endpoint (cae al `?? id` de `resolveEndpoint`).
+  const collapsedChildToGroup = new Map<string, string>();
+
+  for (const [groupKey, children] of childrenByGroup) {
+    const groupId = groupNodeIdOf(groupKey);
+    const expanded = opts.expandedVariants.has(groupKey);
+    const [firstChild, ...restChildren] = children;
+    if (firstChild === undefined) continue;
     const aggStatus = restChildren.reduce<StepStatus>(
       (acc, c) => worseStatus(acc, c.status),
       firstChild.status,
@@ -127,41 +159,43 @@ export function stepsToGraph(
       id: groupId,
       type: 'n7-group',
       position: { x: 0, y: 0 },
+      // Ancho/alto EXPLÍCITOS del nodo (contrato de subflows de React Flow v12): con `extent:'parent'`
+      // los hijos se recortan a la caja del padre, así que la caja debe MEDIR lo que ocupa la pila de
+      // hijos o el hit-test de pointer los solaparía (T4.11). La altura es la MISMA `groupHeight` que
+      // dagre reserva en layout.ts (una sola fuente de verdad): colapsado 120, expandido = la pila.
+      width: GROUP_WIDTH,
+      height: groupHeight(expanded, children.length),
       data: {
-        groupKey: N7_GROUP_KEY,
+        groupKey,
+        variantId: firstChild.variantId,
         status: aggStatus,
         visualGroup: visualGroupOf(aggStatus),
-        childCount: n7Children.length,
+        childCount: children.length,
         expanded,
       },
     };
     nodes.push(groupNode);
-    // Si el grupo está expandido, emite los hijos con parentId + extent 'parent'
-    // (contrato de subflows de v12). Colapsado: los hijos NO se pintan.
-    if (expanded) {
-      for (const c of n7Children) {
-        nodes.push({
-          ...toStepNode(c),
-          parentId: groupId,
-          extent: 'parent',
-        });
+    for (const c of children) {
+      if (expanded) {
+        // Subflow de v12: parentId + extent 'parent'. El hijo conserva su id (NO se remapea).
+        nodes.push({ ...toStepNode(c), parentId: groupId, extent: 'parent' });
+      } else {
+        // Colapsado: el hijo NO se pinta y sus edges se remapean al grupo.
+        collapsedChildToGroup.set(c.id, groupId);
       }
     }
   }
 
   // 3. Edges desde dependsOn (dep → step). Si un extremo es un hijo N7 de un grupo
-  //    COLAPSADO, la edge se remapea al grupo (con dedupe: N hijos no ⇒ N edges
+  //    COLAPSADO, la edge se remapea a SU grupo (con dedupe: N hijos no ⇒ N edges
   //    paralelas idénticas). Un extremo superseded/inexistente descarta la edge.
   const stepById = new Map(visible.map((s) => [s.id, s]));
-  const childIds = new Set(n7Children.map((c) => c.id));
 
   const resolveEndpoint = (id: string): string | null => {
     if (!stepById.has(id)) return null; // superseded o desconocido
-    if (childIds.has(id)) {
-      if (!hasGroup) return null;
-      return expanded ? id : groupId; // colapsado ⇒ al grupo; expandido ⇒ el hijo
-    }
-    return id;
+    // hijo N7 de un grupo COLAPSADO ⇒ el id de su grupo; en cualquier otro caso (hijo expandido, nodo
+    // normal) ⇒ su propio id.
+    return collapsedChildToGroup.get(id) ?? id;
   };
 
   const edgeKeys = new Set<string>();

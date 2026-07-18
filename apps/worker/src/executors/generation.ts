@@ -53,6 +53,12 @@ export interface GenerationExecutorDeps {
   logger?: Logger;
   /** `fetch` inyectable (msw en tests); default global en producción. */
   fetch?: typeof globalThis.fetch;
+  /** `FAL_BASE_URL` (E2E, T4.11): se pasa al FalClient de core como `baseUrlOverride` (seam de
+   *  intercepción por-origen). Ausente en producción → fal real; el fake server del stack lo fija para
+   *  que submit/upload/poll/download del WORKER caigan en el fake y la suite NO gaste. Mismo mecanismo
+   *  que el preview de voz de WEB (server/voice-preview.ts). Se lee de `FAL_BASE_URL` SOLO en el
+   *  composition root del worker (boss.ts), nunca en core. */
+  falBaseUrl?: string;
 }
 
 /** El artefacto LIGERO de N7a: los refs de los assets generados (la verdad vive en las filas
@@ -140,6 +146,9 @@ export function makeN7aExecutor(deps: GenerationExecutorDeps): StepExecutor {
             falKey: deps.falKey,
             ...(deps.logger !== undefined ? { logger: deps.logger } : {}),
             ...(deps.fetch !== undefined ? { fetch: deps.fetch } : {}),
+            ...(deps.falBaseUrl !== undefined
+              ? { falOptions: { baseUrlOverride: deps.falBaseUrl } }
+              : {}),
           },
           {
             modelProfileId: profile.id,

@@ -70,6 +70,11 @@ const StepSnapshotSchema = z.object({
   // que el panel del canvas muestra en su visor de logs. `null` si el step no ha
   // fallado. Recortado como `outputExcerpt` (no arrastra un jsonb enorme por SSE).
   errorExcerpt: z.string().nullable(),
+  // La variante del step (T4.11, §12 `step_run.variant_id`): `null` fuera del sub-DAG
+  // de generación (N6→N7). El canvas la usa para AGRUPAR los N7a–N7e POR VARIANTE (sin
+  // ella, los sub-steps de todas las variantes caerían en un único grupo N7). ESTRUCTURA
+  // (no cambia en la vida del step): el delta la re-emite por consistencia.
+  variantId: z.string().nullable(),
 });
 export type StepSnapshot = z.infer<typeof StepSnapshotSchema>;
 
@@ -116,6 +121,9 @@ const StepChangedEventSchema = z.object({
   // Error del step (T0.11): CAMBIA en vivo (aparece al fallar, desaparece al retry),
   // así que el delta lo porta para que el visor se actualice sin re-snapshot.
   errorExcerpt: z.string().nullable(),
+  // La variante del step (T4.11): invariante, pero se re-emite en el delta por
+  // consistencia con el snapshot (misma proyección `toStepSnapshot`).
+  variantId: z.string().nullable(),
 });
 export type StepChangedEvent = z.infer<typeof StepChangedEventSchema>;
 

@@ -187,6 +187,9 @@ export function makeN7dExecutor(deps: GenerationExecutorDeps): StepExecutor {
               falKey: deps.falKey,
               ...(deps.logger !== undefined ? { logger: deps.logger } : {}),
               ...(deps.fetch !== undefined ? { fetch: deps.fetch } : {}),
+              ...(deps.falBaseUrl !== undefined
+                ? { falOptions: { baseUrlOverride: deps.falBaseUrl } }
+                : {}),
             },
             {
               brollModelProfileId: profile.id,

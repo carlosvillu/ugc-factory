@@ -128,6 +128,12 @@ const env: NodeJS.ProcessEnv = {
   // JAMÁS gasta dinero. Fijado INCONDICIONALMENTE (mismo criterio que el resto): un shell con la URL
   // real de fal no debe filtrar una llamada de pago.
   FAL_BASE_URL: fakeApis.falBaseUrl,
+  // FAL_KEY (T4.11): los executors N7 del WORKER leen la key de fal EN CLARO de `process.env.FAL_KEY`
+  // (a diferencia del preview de voz de WEB, que la descifra de la BD). Sin ella, N7a lanza «falta
+  // FAL_KEY» y el sub-DAG de generación no arranca. FALSA — el submit viaja al fake de arriba
+  // (FAL_BASE_URL), nunca a fal real. Fijada INCONDICIONALMENTE: un shell limpio debe pasar igual, y
+  // un shell con la key REAL de fal no debe filtrar una llamada de pago.
+  FAL_KEY: 'fake-fal-key-not-a-secret',
   // StorageAdapter local (T0.5): web sirve /api/assets/:id/download desde aquí.
   // Fijado incondicionalmente (no `?? process.env.ASSETS_DIR`): un shell limpio
   // (`env -u ASSETS_DIR`) debe pasar igual — el fix no puede depender del entorno

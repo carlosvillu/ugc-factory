@@ -55,6 +55,8 @@ export {
   FAKE_BRIEF,
   FAKE_VISUAL_ANALYSIS,
   FAKE_URL_NO_HERO,
+  FAKE_URL_BEAUTY,
+  FAKE_BEAUTY_AVATAR_HINT,
   FAKE_FORBIDDEN_IMAGE_PATH,
 } from './fake-apis';
 export type { FakeExternalApis } from './fake-apis';

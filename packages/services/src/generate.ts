@@ -47,7 +47,12 @@ export interface GenerateDeps {
   /** Overrides del FalClient (concurrencia, timeouts, intervalos de polling). */
   falOptions?: Pick<
     FalClientDeps,
-    'concurrency' | 'timeoutMs' | 'maxRetries' | 'pollIntervalMs' | 'maxPollAttempts'
+    | 'concurrency'
+    | 'timeoutMs'
+    | 'maxRetries'
+    | 'pollIntervalMs'
+    | 'maxPollAttempts'
+    | 'baseUrlOverride'
   >;
 }
 
@@ -99,6 +104,10 @@ export async function uploadInputCached(
     falKey: string;
     fetch?: typeof globalThis.fetch;
     logger?: Logger;
+    /** `baseUrlOverride` del FalClient (E2E, T4.11): el UPLOAD del SDK sale por `rest.fal.ai`; sin este
+     *  override el seam de intercepción no lo reescribe al fake y la subida 401ea contra fal real. Debe
+     *  pasarse (avatar/broll lo propagan desde su `falOptions`). */
+    baseUrlOverride?: string;
   },
   args: { assetId: string; storageKey: string; falUrl: string | null; mime: string },
 ): Promise<{ falUrl: string; cacheHit: boolean }> {
@@ -114,6 +123,7 @@ export async function uploadInputCached(
   const fal = makeFalClient({
     credentials: deps.falKey,
     ...(deps.fetch !== undefined ? { fetch: deps.fetch } : {}),
+    ...(deps.baseUrlOverride !== undefined ? { baseUrlOverride: deps.baseUrlOverride } : {}),
   });
   const stream = await deps.storage.get(args.storageKey);
   const bytes = new Uint8Array(await new Response(stream).arrayBuffer());

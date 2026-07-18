@@ -50,6 +50,7 @@ function snap(id: string, status: string, extra: Record<string, unknown> = {}) {
     costActual: null,
     durationMs: null,
     errorExcerpt: null,
+    variantId: null,
     ...extra,
   };
 }

@@ -123,6 +123,9 @@ export async function createBoss(deps: CreateBossDeps): Promise<PgBoss> {
           }
           return key;
         },
+        // `FAL_BASE_URL` (E2E, T4.11): ausente en producción → fal real; el stack lo fija para que los
+        // N7 del worker peguen al fake (submit/upload/poll/download), no a fal. Se lee SOLO aquí.
+        ...(process.env.FAL_BASE_URL !== undefined ? { falBaseUrl: process.env.FAL_BASE_URL } : {}),
       },
     });
     await registerStepConsumer({

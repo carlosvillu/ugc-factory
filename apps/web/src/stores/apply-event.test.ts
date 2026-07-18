@@ -15,6 +15,7 @@ function snap(
     costActual: null,
     durationMs: null,
     errorExcerpt: null,
+    variantId: null,
     ...overrides,
   };
 }
@@ -56,6 +57,7 @@ test('step_changed parchea SOLO su step, con los campos que cambian en vivo', ()
     costActual: 20,
     durationMs: 5100,
     errorExcerpt: null,
+    variantId: null,
   };
   const next = applyRunEvent(initial, delta);
   expect(next.steps?.s1).toMatchObject({
@@ -83,6 +85,7 @@ test('step_changed de un step DESCONOCIDO se ignora (no inventa fila parcial)', 
     costActual: null,
     durationMs: null,
     errorExcerpt: null,
+    variantId: null,
   };
   const next = applyRunEvent(initial, delta);
   expect(next.steps).toBeUndefined(); // Partial vacío: no toca estado
@@ -103,6 +106,7 @@ test('un fallo trae el error; el retry lo limpia (delta en vivo)', () => {
     costActual: null,
     durationMs: 1000,
     errorExcerpt: '{"message":"demo executor: fallo inyectado"}',
+    variantId: null,
   });
   expect(failed.steps?.s1?.errorExcerpt).toContain('fallo inyectado');
 });

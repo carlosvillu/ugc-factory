@@ -54,6 +54,7 @@ export function applyRunEvent(state: RunEventState, event: RunEvent): Partial<Ru
             costActual: event.costActual,
             durationMs: event.durationMs,
             errorExcerpt: event.errorExcerpt,
+            variantId: event.variantId,
           },
         },
       };

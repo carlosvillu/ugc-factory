@@ -28,6 +28,11 @@ const runtime = JSON.parse(
  *  (`createDb` de @ugc/db) en vez de SQL crudo. */
 export const stackDatabaseUrl = runtime.databaseUrl;
 
+/** El directorio de assets del stack (el mismo que sirve `GET /api/assets/:id/download`). Lo necesita
+ *  quien SIEMBRE assets por repo (p. ej. imágenes de referencia de una Persona en el E2E de F4): el
+ *  StorageAdapter debe escribir DONDE web lee, no en el default de producción. */
+export const assetsDir = runtime.assetsDir;
+
 /**
  * Una consulta contra la BD del stack, con pool EFÍMERO.
  *

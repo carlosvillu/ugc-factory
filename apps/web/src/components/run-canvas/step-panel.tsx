@@ -21,13 +21,21 @@ import { Textarea } from '@/components/ui/textarea';
 import { useRunStore } from '@/stores/run-store';
 import { ApiError, runActions } from '@/lib/api-client';
 import { cn } from '@/lib/utils';
-import { nodeBadgeLabel, nodeTitle } from './node-titles';
+import { canonicalNodeKey, nodeBadgeLabel, nodeTitle } from './node-titles';
 import { StepArtifactDialog } from './step-artifact-dialog';
+import { StepAssetPreview } from './step-asset-preview';
 import { formatCostSplit, formatDuration, statusLabel } from './status';
 
 // Estados en los que el skip es LEGAL (transitions.ts): awaiting_deps / pending. El
 // botón solo aparece ahí (un skip ilegal daría 409; no lo ofrecemos).
 const SKIPPABLE = new Set(['awaiting_deps', 'pending']);
+
+// Los nodos del sub-DAG de generación (§7.2): el inspector les añade el preview rico
+// (resolvedPrompt de N6, players/thumbnails de N7a–N7e). Se reconoce por la clave canónica.
+const GENERATION_NODES = new Set(['N6', 'N7a', 'N7b', 'N7c', 'N7d', 'N7e']);
+function isGenerationNode(nodeKey: string): boolean {
+  return GENERATION_NODES.has(canonicalNodeKey(nodeKey));
+}
 
 export function StepPanel() {
   const selectedStepId = useRunStore((s) => s.selectedStepId);
@@ -167,6 +175,15 @@ export function StepPanel() {
             setViewer('error');
           }}
         />
+      ) : null}
+
+      {/* Preview RICO de los assets de generación (T4.11): resolvedPrompt de N6 + players/thumbnails
+          de N7a–N7e. Solo para nodos del sub-DAG N6→N7 y cuando el step YA produjo output (el
+          componente hace su propio fetch del `output_refs` completo — el excerpt del SSE no basta
+          para extraer los assetId). Se pinta ADEMÁS del visor JSON genérico de abajo, no en su lugar:
+          el JSON crudo sigue disponible para depurar. */}
+      {isGenerationNode(step.nodeKey) && step.outputExcerpt ? (
+        <StepAssetPreview stepId={stepId} nodeKey={step.nodeKey} />
       ) : null}
 
       {/* Visor del output / artefacto JSON. Mismo trato: la caja es CLICABLE y la modal pide el

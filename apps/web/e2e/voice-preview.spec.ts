@@ -71,14 +71,28 @@ function cp3(page: Page) {
   return page.locator('[data-slot="scripts-panel"]');
 }
 
-/** Cuenta las generaciones de PREVIEW de voz (`voice_preview=true`) y las `cost_entry` de fal — las
- *  dos métricas que la caché debe dejar CONSTANTES entre reproducciones de la misma muestra. */
+/** Cuenta las generaciones de PREVIEW de voz (`voice_preview=true`) y las `cost_entry` de fal de ESAS
+ *  previews — las dos métricas que la caché debe dejar CONSTANTES entre reproducciones de la misma
+ *  muestra.
+ *
+ *  El conteo de `cost_entry` está ACOTADO a las previews de voz vía el FK `cost_entry.generation_id →
+ *  generation.id` con `generation.voice_preview = true`. La BD del stack es ÚNICA y COMPARTIDA por
+ *  todos los specs @f4 en paralelo (fullyParallel): otros —f4-generation.spec, y en adelante la
+ *  generación de galería T4.12— también escriben `cost_entry` de fal (con `voice_preview = false`). Un
+ *  conteo GLOBAL de `provider='fal'` los sumaría y este assert de «reproducir no re-paga» mediría ruido
+ *  ajeno (fue exactamente el falso rojo 2 vs 9 al añadir f4-generation). El JOIN scoped preserva la
+ *  MORDIDA del control T1.13: una caché rota crea filas `cost_entry` de una generación
+ *  `voice_preview=true` nueva → el conteo scoped SÍ sube → rojo (verificado con el control negativo del
+ *  forced cache-miss). El INNER JOIN descarta de paso los `cost_entry` con `generation_id` NULL. */
 async function counts(): Promise<{ previews: number; falEntries: number }> {
   const [gen] = await queryStack<{ n: string }>(
     `SELECT count(*)::text AS n FROM generation WHERE voice_preview = true`,
   );
   const [cost] = await queryStack<{ n: string }>(
-    `SELECT count(*)::text AS n FROM cost_entry WHERE provider = 'fal'`,
+    `SELECT count(*)::text AS n
+       FROM cost_entry c
+       JOIN generation g ON g.id = c.generation_id
+      WHERE c.provider = 'fal' AND g.voice_preview = true`,
   );
   return { previews: Number(gen?.n ?? '0'), falEntries: Number(cost?.n ?? '0') };
 }

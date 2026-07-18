@@ -72,6 +72,19 @@ export const FAKE_FORBIDDEN_IMAGE_PATH = '/img/forbidden/next-image.png';
  */
 export const FAKE_URL_NO_HERO = 'https://services.example/no-hero/hoteles';
 
+/**
+ * T4.11 — La URL que el E2E de generación (F4) analiza para obtener un brief de vertical `beauty`. Mismo
+ * mecanismo explícito que `FAKE_URL_NO_HERO`: la URL viaja en el STRUCTURED DATA del user message y el
+ * fake la reconoce. POR QUÉ existe: el brief por defecto (`makeBrief`) trae `category: 'skincare'`, y
+ * NINGÚN template de galería lista `skincare` como vertical → N6 (compilador de prompts) no casaría
+ * template y todo el sub-DAG N7 fallaría en el compilador. `beauty` es la ÚNICA vertical con guard pack
+ * sembrado y golden-tested (beauty+tiktok): el camino production-ready que `demo-pain-point` selecciona
+ * limpio. Se fija el INPUT (`category`) como en producción — NO se hardcodea el vertical derivado (eso
+ * sería la trampa T1.13). El hueco de completitud (verticals fuera de la lista de los pain_point
+ * templates no casan) es un hallazgo de producto de F4, no un problema de este fake.
+ */
+export const FAKE_URL_BEAUTY = 'https://glow.example/beauty/serum';
+
 // Los modelos EXACTOS que piden los clientes reales: `MODEL` de visual-analyzer.ts (N2,
 // T1.7) y `BRIEF_SYNTHESIZER_MODEL` de brief-synthesizer.ts (N3, T1.8). Es lo que usa el
 // fake para saber QUÉ artefacto devolver. Si el código real cambia de modelo, el fake
@@ -181,6 +194,40 @@ export const FAKE_BRIEF = makeBrief({
 });
 
 /**
+ * T4.11 — El brief de vertical `beauty` para el E2E de generación (F4). Es `FAKE_BRIEF` con la categoría
+ * cambiada a `beauty` (la única vertical con template + guard pack sembrados): así N6 casa `demo-pain-point`
+ * y el sub-DAG N7 corre. Todo lo demás (hero, imágenes, ángulos) se hereda del brief canónico.
+ *
+ * `avatar_hint` REESCRITO a propósito (T4.11): el default («Creadora 30 años, estilo natural, baño
+ * luminoso») lo comparten VARIAS personas de test —las «Vera» de voice-preview.spec, que se siembran en
+ * la MISMA BD del stack pero SIN imagen de referencia—. Como N4 ROTA la persona por variante entre TODAS
+ * las candidatas con score>0 (matrix.ts `pickPersona`), una variante premium caería en una «Vera» sin
+ * imagen → `buildVariantGenerationPlan` lanzaría `PermanentStepError` (avatar sin referencia) y CP3
+ * devolvería 500. El score de matching es ciego a la imagen/voz (solo mira descriptor/edad/género), así
+ * que subir el score de la persona buena no basta: hay que dejar a las «Vera» en score 0. Este hint tiene
+ * tokens DISJUNTOS de los descriptores de todas las demás personas de test (Vera: creadora/natural/baño;
+ * Lucía seed: latina/casual; Marcus seed: male→filtrado), y NINGÚN rango de edad (que puntuaría a Vera).
+ * Solo la persona `MATCHING_PERSONA` del spec (descriptor «farmacéutica cosmética … bata blanca») casa →
+ * `candidates` = [ella] y la rotación es un no-op. El spec lo BLINDA con un assert de `matchPersonas` en
+ * su `beforeAll`: si una persona futura contaminara este hint, ese assert se pone rojo en el origen (no
+ * como un timeout opaco 30 s aguas abajo). NB: el `avatar_hint` alimenta SOLO el matching de personas —
+ * es independiente de `category`/templates, así que no toca el camino N6.
+ */
+export const FAKE_BEAUTY_AVATAR_HINT =
+  'Mujer farmacéutica cosmética en laboratorio dermatológico con bata blanca';
+
+const FAKE_BRIEF_BEAUTY: ProductBrief = {
+  ...FAKE_BRIEF,
+  product: { ...FAKE_BRIEF.product, category: 'beauty' },
+  audience: {
+    ...FAKE_BRIEF.audience,
+    segments: FAKE_BRIEF.audience.segments.map((seg, i) =>
+      i === 0 ? { ...seg, avatar_hint: FAKE_BEAUTY_AVATAR_HINT } : seg,
+    ),
+  },
+};
+
+/**
  * El brief que devuelve el Anthropic falso para N3 EN MODO MANUAL SIN IMÁGENES (T1.10b).
  *
  * SIN HERO Y SIN IMÁGENES — y es lo que EMITIRÍA el productor real: si la síntesis no recibe
@@ -288,6 +335,11 @@ function isUrlNoHeroSynthesis(body: Record<string, unknown>): boolean {
   return synthesisMessageIncludes(body, FAKE_URL_NO_HERO);
 }
 
+/** ¿La síntesis es la del E2E de generación (F4, `FAKE_URL_BEAUTY`)? Mismo mecanismo explícito. */
+function isBeautySynthesis(body: Record<string, unknown>): boolean {
+  return synthesisMessageIncludes(body, FAKE_URL_BEAUTY);
+}
+
 /** El user message del sintetizador es un STRING con JSON dentro: se busca sobre su TEXTO. */
 function synthesisMessageIncludes(body: Record<string, unknown>, needle: string): boolean {
   const messages = Array.isArray(body.messages) ? body.messages : [];
@@ -304,6 +356,7 @@ function synthesisMessageIncludes(body: Record<string, unknown>, needle: string)
 function briefForSynthesis(body: Record<string, unknown>, origin: string): ProductBrief {
   if (isManualSynthesis(body)) return FAKE_BRIEF_NO_IMAGES;
   if (isUrlNoHeroSynthesis(body)) return fakeBriefNoHero(origin);
+  if (isBeautySynthesis(body)) return FAKE_BRIEF_BEAUTY;
   return FAKE_BRIEF;
 }
 
@@ -366,6 +419,62 @@ function scriptResponseFor(body: Record<string, unknown>): Record<string, unknow
   return anthropicScriptResponse(scriptDraft(seedCount, language, nonce));
 }
 
+// ── OUTPUT del queue de fal POR ENDPOINT (T4.11) ──────────────────────────────────────────────────
+// Cada FAMILIA de modelo emite una forma distinta (verificado contra los schemas de fal, ver los
+// `fal-*-output.ts` de core): imagen `{images:[…]}`, TTS/música `{audio:{url}}`, ASR `{text, words:[…]}`,
+// vídeo `{video:{url}, duration}`. El fake devuelve la que corresponde al endpoint del submit — un fake
+// que emitiera siempre `{audio:{url}}` (lo de T4.6) haría fallar N7a/N7c/N7d/N7e por output equivocado,
+// enmascarando el fallo determinista que la spec SÍ quiere observar. Las URLs de media cuelgan del
+// propio fake (`origin`), que las sirve como bytes reales.
+const IS_ASR = /speech-to-text/i;
+const IS_VIDEO = /(kling|omnihuman|veo|seedance)/i;
+const IS_IMAGE = /(flux|nano-banana|seedream)/i;
+
+/** Las word timestamps que el ASR (`fal-ai/elevenlabs/speech-to-text`) devuelve: ≥1 `word` con tiempos
+ *  válidos y crecientes (lo exige `WordTimestampsSchema.min(1)` + `computeWordCoverage`). Sin esto N7b
+ *  fallaría por cobertura, no por el fallo que la spec busca. */
+function fakeWordTimestamps(): Record<string, unknown> {
+  return {
+    text: 'Descubre nuestro producto hoy',
+    language_code: 'spa',
+    language_probability: 0.99,
+    words: [
+      { text: 'Descubre', start: 0.0, end: 0.5, type: 'word', speaker_id: 'spk_0' },
+      { text: 'nuestro', start: 0.5, end: 0.9, type: 'word', speaker_id: 'spk_0' },
+      { text: 'producto', start: 0.9, end: 1.4, type: 'word', speaker_id: 'spk_0' },
+      { text: 'hoy', start: 1.4, end: 1.8, type: 'word', speaker_id: 'spk_0' },
+    ],
+  };
+}
+
+/** El output que el fake devuelve para el resultado COMPLETED de un endpoint. Discrimina por familia:
+ *  ASR antes que audio (elevenlabs sirve las dos), luego vídeo, imagen y por defecto audio (TTS/música). */
+function falOutputFor(endpoint: string, origin: string): Record<string, unknown> {
+  if (IS_ASR.test(endpoint)) return fakeWordTimestamps();
+  if (IS_VIDEO.test(endpoint)) {
+    // `duration` a NIVEL RAÍZ (hermana de `video`, no anidada) — así lo valida `fal-video-output.ts`; sin
+    // ella `recoverVideoDurationSeconds` no factura y el vídeo fallaría permanente por la razón equivocada.
+    return {
+      video: { url: `${origin}/fal-media/clip-sample.mp4`, content_type: 'video/mp4' },
+      duration: 5,
+    };
+  }
+  if (IS_IMAGE.test(endpoint)) {
+    return {
+      images: [
+        {
+          url: `${origin}/fal-media/shot-sample.png`,
+          width: 768,
+          height: 1344,
+          content_type: 'image/png',
+        },
+      ],
+    };
+  }
+  // TTS (kokoro/elevenlabs-tts) y música (ace-step): `{audio:{url}}`.
+  return { audio: { url: `${origin}/fal-media/voice-sample.wav`, content_type: 'audio/wav' } };
+}
+
 export interface FakeExternalApis {
   /** Base URL del Firecrawl falso (para `firecrawlBaseUrl`). */
   firecrawlBaseUrl: string;
@@ -423,11 +532,29 @@ export async function startFakeExternalApis(): Promise<FakeExternalApis> {
   // saldría inservible — el test pasaría por la razón equivocada. Se genera una vez, perezosamente.
   let png: Uint8Array | undefined;
 
-  // El .wav de la muestra de voz (T4.6), leído perezosamente la primera vez que se sirve. Y un
-  // contador de submits al queue de fal para dar request_ids únicos (dos previews distintos no deben
-  // colisionar en la misma pasada).
+  // El .wav de la muestra de voz (T4.6) y el .mp4 de muestra de vídeo (T4.11), leídos perezosamente la
+  // primera vez que se sirven. Y un contador de submits al queue de fal para dar request_ids únicos (dos
+  // submits distintos no deben colisionar en la misma pasada).
   let wav: Buffer | undefined;
+  let mp4: Buffer | undefined;
   let falSubmitCounter = 0;
+
+  // Sub-DAG de generación (T4.11): el fake devuelve el OUTPUT correcto POR ENDPOINT (imagen/audio/ASR/
+  // vídeo/música), no el `{audio:{url}}` genérico de T4.6. Para eso RECUERDA qué endpoint pidió cada
+  // request_id en el submit y lo consulta en el GET del resultado.
+  const falEndpointByRequestId = new Map<string, string>();
+
+  // FALLO DETERMINISTA de UN sub-step (T4.11, cláusula «fallo determinista + retry granular» de la spec
+  // de fase): el fake designa el PRIMER submit de una generación de IMAGEN (N7a, flux-2/nano-banana) como
+  // «doomed» y, cuando su resultado se consulta, devuelve un output MALFORMADO (`{}` sin `images`). Eso es
+  // una VIOLACIÓN DE CONTRATO de una generación ya COMPLETED → el servicio la mapea a `FalResponseError` →
+  // el executor N7 a `PermanentStepError` (sin auto-retry: NO es un status `FAILED`, que sí reintentaría
+  // hasta 80 veces). El step queda `failed` y el usuario lo REINTENTA: el retry re-submitea con un
+  // request_id NUEVO (no doomed) → output correcto → succeeds, sin tocar a los hermanos sanos. Se elige
+  // IMAGEN (no vídeo) a propósito: N7a liquida INLINE (`finalizeGeneration`), sin el salto asíncrono del
+  // sweeper del vídeo → la aserción de fallo es más ajustada y menos flaky. Un solo fallo por corrida
+  // (`doomedRequestId` se fija una vez y no se re-arma), así que el retry no vuelve a caer.
+  let doomedRequestId: string | undefined;
 
   async function handle(
     req: import('node:http').IncomingMessage,
@@ -551,15 +678,37 @@ export async function startFakeExternalApis(): Promise<FakeExternalApis> {
       return;
     }
 
-    // ── fal.ai: queue del TTS (T4.6) ────────────────────────────────────────────
-    // El preview de voz llama a fal por el `fetch` que web reescribe (queue.fal.run → este fake, vía
-    // FAL_BASE_URL). Se finge SOLO lo que el TTS-only necesita: submit → status COMPLETED → response
-    // con `{audio:{url}}` → descarga del .wav fixture. NADA de ASR (un preview no lo encadena). El
-    // request_id se deriva del endpoint + un contador para que dos submits no colisionen; status y
-    // response cuelgan de ESTE origen, así que el FalClient los sigue directamente (sin más reescritura).
-    // POST del submit del queue: `/{owner}/{alias}` (p. ej. `/fal-ai/kokoro` o
-    // `/fal-ai/elevenlabs/tts/turbo-v2.5`). Se reconoce por el prefijo `fal-ai/` y que NO sea una
-    // sub-ruta de `requests/`.
+    // ── fal.ai: UPLOAD de inputs (T4.11) ────────────────────────────────────────
+    // El SDK de fal sube un input (audio del hook para N7c, imagen para avatar, audio TTS para el ASR de
+    // N7b) vía `storage.upload`: POST `rest.fal.ai/storage/upload/initiate` → `{upload_url, file_url}`,
+    // luego PUT de los bytes a `upload_url`. La reescritura por-origen del cliente manda `rest.fal.ai` a
+    // ESTE fake (T4.11 añadió el origen). Se finge SOLO el flujo single-part; el multipart se 404ea (el
+    // SDK cae a single-part para ficheros pequeños). El `file_url` cuelga de este origen y NADIE lo baja
+    // (el submit del fake ignora los inputs), así que solo tiene que estar bien formado.
+    if (req.method === 'POST' && url.pathname === '/storage/upload/initiate') {
+      falSubmitCounter += 1;
+      const fileId = `fake-input-${String(falSubmitCounter)}`;
+      json({
+        upload_url: `${origin}/fal-cdn/upload/${fileId}`,
+        file_url: `${origin}/fal-cdn/files/${fileId}`,
+      });
+      return;
+    }
+    if (req.method === 'PUT' && url.pathname.startsWith('/fal-cdn/upload/')) {
+      // Descarta los bytes (el fake no los necesita) y responde 200 — es lo que el SDK espera del PUT.
+      req.resume();
+      res.writeHead(200, { 'content-type': 'application/json' });
+      res.end('{}');
+      return;
+    }
+
+    // ── fal.ai: queue de generación (T4.6 TTS-only; T4.11 sub-DAG N6→N7 completo) ─
+    // El worker llama a fal por el `fetch` que reescribe los orígenes de fal → este fake (FAL_BASE_URL).
+    // Ciclo: submit → status COMPLETED → response con el OUTPUT del endpoint → descarga del media fixture.
+    // El request_id se deriva de un contador (dos submits no colisionan). El fake RECUERDA el endpoint de
+    // cada request_id para devolver el OUTPUT correcto por tipo de modelo en el GET del resultado.
+    // POST del submit del queue: `/{owner}/{alias}` (p. ej. `/fal-ai/kokoro`, `/fal-ai/flux-2`,
+    // `/fal-ai/veo3.1/image-to-video`). Se reconoce por el prefijo `fal-ai/` y que NO sea `requests/`.
     const isFalSubmit =
       req.method === 'POST' &&
       url.pathname.startsWith('/fal-ai/') &&
@@ -568,6 +717,11 @@ export async function startFakeExternalApis(): Promise<FakeExternalApis> {
       const endpoint = url.pathname.slice(1); // sin el '/' inicial
       falSubmitCounter += 1;
       const requestId = `fake-${String(falSubmitCounter)}`;
+      falEndpointByRequestId.set(requestId, endpoint);
+      // Designa el PRIMER submit de IMAGEN como el fallo determinista (una vez por corrida).
+      if (doomedRequestId === undefined && IS_IMAGE.test(endpoint)) {
+        doomedRequestId = requestId;
+      }
       const responseUrl = `${origin}/${endpoint}/requests/${requestId}`;
       json({
         request_id: requestId,
@@ -578,7 +732,9 @@ export async function startFakeExternalApis(): Promise<FakeExternalApis> {
       });
       return;
     }
-    // GET del status del queue: `/{endpoint}/requests/{id}/status` → COMPLETED de una (fake determinista).
+    // GET del status del queue: `/{endpoint}/requests/{id}/status` → COMPLETED (fake determinista). El
+    // fallo NO es un status `FAILED` (eso reintentaría hasta 80 veces): es un output COMPLETED-pero-
+    // malformado, que el servicio trata como violación de contrato terminal (ver `doomedRequestId`).
     if (
       req.method === 'GET' &&
       url.pathname.startsWith('/fal-ai/') &&
@@ -587,15 +743,39 @@ export async function startFakeExternalApis(): Promise<FakeExternalApis> {
       json({ status: 'COMPLETED' });
       return;
     }
-    // GET del resultado del queue: `/{endpoint}/requests/{id}` → el output de AUDIO `{audio:{url}}`
-    // apuntando al .wav servido por este mismo fake.
+    // GET del resultado del queue: `/{endpoint}/requests/{id}` → el OUTPUT correcto POR ENDPOINT.
     if (
       req.method === 'GET' &&
       url.pathname.startsWith('/fal-ai/') &&
       url.pathname.includes('/requests/') &&
       !url.pathname.endsWith('/status')
     ) {
-      json({ audio: { url: `${origin}/fal-media/voice-sample.wav`, content_type: 'audio/wav' } });
+      const requestId = url.pathname.split('/requests/')[1]?.split('/')[0] ?? '';
+      const endpoint = falEndpointByRequestId.get(requestId) ?? '';
+      // FALLO DETERMINISTA: el submit doomed devuelve un output MALFORMADO (violación de contrato) →
+      // `FalResponseError` → `PermanentStepError` → step `failed`, reintentable por el usuario.
+      if (requestId === doomedRequestId) {
+        json({});
+        return;
+      }
+      json(falOutputFor(endpoint, origin));
+      return;
+    }
+    // Descarga del .mp4 de muestra del output de vídeo (URL pública que el "response" emitió, T4.11).
+    if (req.method === 'GET' && url.pathname === '/fal-media/clip-sample.mp4') {
+      mp4 ??= readFileSync(
+        fileURLToPath(new URL('../fixtures/media/clip-sample.mp4', import.meta.url)),
+      );
+      res.writeHead(200, { 'content-type': 'video/mp4', 'content-length': String(mp4.byteLength) });
+      res.end(mp4);
+      return;
+    }
+    // Descarga del .png de muestra del output de imagen (N7a keyframes, T4.11): un PNG real (sharp lo
+    // decodifica en la descarga).
+    if (req.method === 'GET' && url.pathname === '/fal-media/shot-sample.png') {
+      png ??= await makeTestPng(768, 1344);
+      res.writeHead(200, { 'content-type': 'image/png', 'content-length': String(png.byteLength) });
+      res.end(Buffer.from(png));
       return;
     }
     // Descarga del .wav del output (URL pública que el "response" emitió).

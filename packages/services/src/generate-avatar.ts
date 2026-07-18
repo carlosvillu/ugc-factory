@@ -64,7 +64,12 @@ export interface GenerateAvatarDeps {
   sleep?: (ms: number) => Promise<void>;
   falOptions?: Pick<
     FalClientDeps,
-    'concurrency' | 'timeoutMs' | 'maxRetries' | 'pollIntervalMs' | 'maxPollAttempts'
+    | 'concurrency'
+    | 'timeoutMs'
+    | 'maxRetries'
+    | 'pollIntervalMs'
+    | 'maxPollAttempts'
+    | 'baseUrlOverride'
   >;
 }
 
@@ -150,6 +155,11 @@ export async function runGenerateAvatar(
     falKey: deps.falKey,
     ...(deps.fetch !== undefined ? { fetch: deps.fetch } : {}),
     ...(deps.logger !== undefined ? { logger: deps.logger } : {}),
+    // baseUrlOverride (E2E, T4.11): el upload sale por `rest.fal.ai`; sin él la subida 401ea contra fal
+    // real en el stack. Se propaga desde `falOptions` del caller.
+    ...(deps.falOptions?.baseUrlOverride !== undefined
+      ? { baseUrlOverride: deps.falOptions.baseUrlOverride }
+      : {}),
   };
   const [imageUpload, audioUpload] = await Promise.all([
     uploadInputCached(uploadDeps, {

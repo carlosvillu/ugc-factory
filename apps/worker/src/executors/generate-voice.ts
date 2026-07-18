@@ -120,6 +120,9 @@ export function makeN7bExecutor(deps: GenerationExecutorDeps): StepExecutor {
             falKey: deps.falKey,
             ...(deps.logger !== undefined ? { logger: deps.logger } : {}),
             ...(deps.fetch !== undefined ? { fetch: deps.fetch } : {}),
+            ...(deps.falBaseUrl !== undefined
+              ? { falOptions: { baseUrlOverride: deps.falBaseUrl } }
+              : {}),
           },
           {
             ttsModelProfileId: ttsProfile.id,

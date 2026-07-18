@@ -54,6 +54,7 @@ function snap(
     costActual: null,
     durationMs: null,
     errorExcerpt: null,
+    variantId: null,
     ...overrides,
   };
 }

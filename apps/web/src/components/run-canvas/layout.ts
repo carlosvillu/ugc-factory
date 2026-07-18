@@ -25,6 +25,32 @@ const SIZE = {
   'n7-group': { width: 224, height: 120 },
 } as const;
 
+// Sub-layout de los hijos N7 expandidos: apilados verticalmente DENTRO del padre
+// (posiciones relativas al grupo, contrato parentId de v12). La ZANCADA vertical DEBE
+// ser ≥ la altura real del nodo hijo, o cada hijo se solapa con el siguiente (su barra
+// de estado queda debajo del hijo de arriba e intercepta el click — bug de T4.11). Se
+// deriva de la altura del step (NO un número mágico suelto: el drift 84≠124 ERA el bug)
+// más un colchón. `CHILD_PAD_TOP` deja hueco bajo la cabecera del grupo.
+const CHILD_STRIDE = SIZE.step.height + 16;
+const CHILD_PAD_TOP = 40;
+const CHILD_PAD_X = 16;
+const CHILD_PAD_BOTTOM = 16;
+
+// La altura REAL que ocupa un grupo N7: colapsado, su caja de cabecera; EXPANDIDO, la
+// pila de sus hijos. dagre solo ve el nivel superior (no entiende grafos compuestos),
+// así que si el grupo expandido reportara su altura colapsada (120), dagre reservaría
+// 120 px y los vecinos del mismo rango (otros grupos, los N6) se colocarían ENCIMA de
+// la pila de hijos → mismo solape/intercepción, ahora entre grupos. Reportar la altura
+// expandida real es el arreglo honesto (que la constante case con lo que se pinta).
+export function groupHeight(expanded: boolean, childCount: number): number {
+  if (!expanded) return SIZE['n7-group'].height;
+  return CHILD_PAD_TOP + childCount * CHILD_STRIDE + CHILD_PAD_BOTTOM;
+}
+
+/** El ancho fijo del nodo de grupo N7 (única fuente de verdad, reutilizada por el nodo React Flow para
+ *  que su caja VISUAL case con lo que dagre reserva). */
+export const GROUP_WIDTH = SIZE['n7-group'].width;
+
 // Devuelve una COPIA fresca del tamaño por nodo: dagre MUTA el objeto de label del
 // nodo (le escribe x/y) — si todos los nodos compartieran la misma referencia de
 // SIZE.step, dagre pisaría x/y en ese único objeto y todos los nodos acabarían con
@@ -43,6 +69,11 @@ function typeOf(node: AppNode): 'step' | 'n7-group' {
 
 function sizeOf(node: AppNode): { width: number; height: number } {
   const s = SIZE[typeOf(node)];
+  // Un grupo N7 EXPANDIDO ocupa la altura de su pila de hijos (ver `groupHeight`): dagre
+  // debe reservarla para no colocar vecinos encima de los hijos.
+  if (node.type === 'n7-group') {
+    return { width: s.width, height: groupHeight(node.data.expanded, node.data.childCount) };
+  }
   return { width: s.width, height: s.height };
 }
 
@@ -70,11 +101,8 @@ export function layoutGraph({ nodes, edges }: { nodes: AppNode[]; edges: AppEdge
   // conocidos, no desde `any`.
   dagreLayout(g as Parameters<typeof dagreLayout>[0]);
 
-  // Sub-layout determinista de los hijos N7 expandidos: apilados verticalmente
-  // DENTRO del padre (posiciones relativas al grupo, contrato parentId de v12).
-  const CHILD_H = 84;
-  const CHILD_PAD_TOP = 36;
-  const CHILD_PAD_X = 16;
+  // Sub-layout determinista de los hijos N7 expandidos: apilados verticalmente DENTRO
+  // del padre con `CHILD_STRIDE` ≥ altura del hijo (sin solape), relativos al grupo.
   const childIndexByParent = new Map<string, number>();
 
   return {
@@ -84,7 +112,7 @@ export function layoutGraph({ nodes, edges }: { nodes: AppNode[]; edges: AppEdge
         childIndexByParent.set(n.parentId, idx + 1);
         return {
           ...n,
-          position: { x: CHILD_PAD_X, y: CHILD_PAD_TOP + idx * CHILD_H },
+          position: { x: CHILD_PAD_X, y: CHILD_PAD_TOP + idx * CHILD_STRIDE },
         };
       }
       const pos = g.node(n.id) as DagrePos | undefined;

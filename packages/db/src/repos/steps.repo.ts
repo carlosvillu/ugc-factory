@@ -385,6 +385,10 @@ const sseColumns = {
   finishedAt: stepRun.finishedAt,
   outputRefs: stepRun.outputRefs,
   error: stepRun.error,
+  // La variante del step (T4.11): el canvas agrupa los N7a–N7e por ella. `null` fuera
+  // del sub-DAG de generación. Ya existe en `step_run` (T4.11 pass 2b-i); aquí se
+  // proyecta al stream.
+  variantId: stepRun.variantId,
 } as const;
 
 interface SseRow {
@@ -399,6 +403,7 @@ interface SseRow {
   finishedAt: Date | null;
   outputRefs: unknown;
   error: unknown;
+  variantId: string | null;
 }
 
 // `cost` observable = coste REAL si ya se conoce, si no el ESTIMADO (céntimos,
@@ -456,6 +461,7 @@ function toStepSnapshot(row: SseRow): StepSnapshot {
     costActual: row.costActual,
     durationMs: durationOf(row),
     errorExcerpt: errorExcerptOf(row.error),
+    variantId: row.variantId,
   };
 }
 

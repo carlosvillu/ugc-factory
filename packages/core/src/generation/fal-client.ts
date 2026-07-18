@@ -24,8 +24,21 @@ import { createFalClient, type FalClient as SdkFalClient } from '@fal-ai/client'
 /** Los ORÍGENES de la API de fal que el seam de intercepción (`baseUrlOverride`) reescribe. Son los
  *  hosts a los que el SDK hace submit/upload y a los que apuntan las `status_url`/`response_url`
  *  ABSOLUTAS que fal devuelve (y que el cliente sigue TAL CUAL). Fuera de estos orígenes (p.ej. la URL
- *  PÚBLICA del output en `fal.media`) el seam NO reescribe — un fake E2E sirve esas desde su propio host. */
-const FAL_ORIGINS = ['https://queue.fal.run', 'https://rest.fal.run', 'https://fal.run'];
+ *  PÚBLICA del output en `fal.media`) el seam NO reescribe — un fake E2E sirve esas desde su propio host.
+ *
+ *  `rest.fal.ai` (T4.11): el UPLOAD de inputs del SDK (`storage.upload` → POST
+ *  `rest.fal.ai/storage/upload/initiate`, luego PUT a la `upload_url` devuelta) sale por ESTE host, NO
+ *  por `queue.fal.run`. El comentario de cabecera decía "submit/upload" pero el origen del upload faltaba
+ *  en la lista: en producción `baseUrlOverride` está vacío y el seam es inerte, así que el upload real
+ *  nunca se reescribía y esto no se notaba; pero un E2E con fal fake que ejercita N7b(ASR)/N7c/N7d —que
+ *  SUBEN un input a fal storage— fugaría ese upload a fal REAL (gasto/red) sin este origen. Se añade para
+ *  que el seam cubra de verdad las tres fases que su docblock ya prometía (submit + upload + poll/download). */
+const FAL_ORIGINS = [
+  'https://queue.fal.run',
+  'https://rest.fal.run',
+  'https://fal.run',
+  'https://rest.fal.ai',
+];
 
 /**
  * Construye un `fetch` que REESCRIBE POR ORIGEN cualquier request a la API de fal (`FAL_ORIGINS`) al

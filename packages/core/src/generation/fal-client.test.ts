@@ -336,3 +336,53 @@ describe('FalClient.download — descarga del output con timeout duro', () => {
     expect((err as FalProviderError).status).toBeUndefined();
   });
 });
+
+// SEAM DE INTERCEPCIÓN E2E (`baseUrlOverride`, T4.11 deuda T4.6). Era un `fetch` envuelto en la capa web
+// (`makeFalPreviewFetch` de voice-preview.ts); ahora es capacidad de PRIMERA CLASE del FalClient, así que
+// cubre por igual el path de web (preview) y el de worker (executors N7). Se inyecta un `fetch` BASE
+// espía (no msw) para OBSERVAR la URL que el cliente le pasa DESPUÉS de reescribir por origen — el
+// contrato que el landmine de las URLs absolutas de fal exige.
+describe('FalClient — baseUrlOverride reescribe POR ORIGEN (no baseUrl-prepend)', () => {
+  const FAKE = 'http://127.0.0.1:9931';
+
+  /** Un `fetch` base espía que registra las URLs que recibe y devuelve un 200 vacío. */
+  function spyFetch(): { fetch: typeof globalThis.fetch; urls: string[] } {
+    const urls: string[] = [];
+    const fetch = ((input: Parameters<typeof globalThis.fetch>[0]) => {
+      const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
+      urls.push(url);
+      return Promise.resolve(new Response(null, { status: 200 }));
+    }) as typeof globalThis.fetch;
+    return { fetch, urls };
+  }
+
+  it('reescribe protocolo+host de una URL de la API de fal al override, PRESERVANDO path+query', async () => {
+    const { fetch, urls } = spyFetch();
+    // `download` va por `timedFetch`→`fetchImpl` (el path del poll/download que sigue las URLs
+    // ABSOLUTAS de fal). Un `baseUrl`-prepend NO reescribiría esto → fuga a la fal real.
+    await makeFalClient({
+      credentials: 'fal-test-key-not-a-secret',
+      fetch,
+      baseUrlOverride: FAKE,
+    }).download('https://queue.fal.run/fal-ai/kokoro/requests/abc/status?x=1');
+    expect(urls[0]).toBe('http://127.0.0.1:9931/fal-ai/kokoro/requests/abc/status?x=1');
+  });
+
+  it('deja pasar SIN tocar una URL que NO es un origen de la API de fal (CDN de output fal.media)', async () => {
+    const { fetch, urls } = spyFetch();
+    await makeFalClient({
+      credentials: 'fal-test-key-not-a-secret',
+      fetch,
+      baseUrlOverride: FAKE,
+    }).download('https://fal.media/files/output.wav');
+    expect(urls[0]).toBe('https://fal.media/files/output.wav');
+  });
+
+  it('sin baseUrlOverride el fetch inyectado se usa TAL CUAL (producción → fal real)', async () => {
+    const { fetch, urls } = spyFetch();
+    await makeFalClient({ credentials: 'fal-test-key-not-a-secret', fetch }).download(
+      'https://queue.fal.run/fal-ai/kokoro/requests/abc/status',
+    );
+    expect(urls[0]).toBe('https://queue.fal.run/fal-ai/kokoro/requests/abc/status');
+  });
+});

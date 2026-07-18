@@ -128,8 +128,7 @@
       "durations": [4, 6, 8],
       "resolutions": ["720p", "1080p", "4k"]
     },
-    "promptAdapter": "i2v",
-    "notes": "Veo 3.1 base = TEXT-TO-VIDEO (verificado 2026-07-17 vs fal.ai/models/fal-ai/veo3.1: input SIN `image_url` ni referencias — solo prompt). Reetiquetado `t2v` (T4.8): estaba `i2v` por error, pero el b-roll i2v/R2V va por los endpoints hermanos `image-to-video`/`reference-to-video` de abajo. `promptAdapter:i2v` es DEUDA T4.11 (el adapter emite `duration_seconds`/`enable_audio` que Veo NO acepta; los executors de N7d hacen BYPASS). Enums exactos `aspect_ratio`/`duration`/`resolution` cerrados (deuda §13.1 l.600). Precio $0,20/s sin audio (720p/1080p); con-audio/4k con `params` en F4."
+    "notes": "Veo 3.1 base = TEXT-TO-VIDEO (verificado 2026-07-17 vs fal.ai/models/fal-ai/veo3.1: input SIN `image_url` ni referencias — solo prompt). Reetiquetado `t2v` (T4.8): estaba `i2v` por error, pero el b-roll i2v/R2V va por los endpoints hermanos `image-to-video`/`reference-to-video` de abajo. `promptAdapter` ELIMINADO (T4.11, deuda T4.8b saldada): el par `kind:t2v`+`promptAdapter:i2v` era incoherente y VESTIGIAL — `adaptToPayload` no lo consume nadie en producción (los executors de N7d hacen BYPASS con `submitInputs` a mano), y el i2v adapter emitía `duration_seconds`/`aspect_ratio` que el t2v prompt-only de Veo tampoco acepta. Se omite el adapter como el hermano `fal-ai/flux-2`: cuando T4.11+ rutee de verdad un t2v, se siembra el adapter correcto. Enums exactos `aspect_ratio`/`duration`/`resolution` cerrados (deuda §13.1 l.600). Precio $0,20/s sin audio (720p/1080p); con-audio/4k con `params` en F4."
   },
   {
     "falEndpoint": "fal-ai/veo3.1/image-to-video",

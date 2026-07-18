@@ -40,18 +40,15 @@ import { newUlid } from '@ugc/core/contracts';
 import { isBrollModelKind } from '@ugc/core/gallery';
 import type { Logger, StorageAdapter } from '@ugc/core';
 import {
-  createAsset,
   getAsset,
-  getAssetByGenerationKind,
-  getGenerationForUpdate,
   getModelProfile,
-  recordCost,
   updateGeneration,
   type DbClient,
   type Generation,
 } from '@ugc/db';
 
 import { falVideoCostOf } from './fal-pricing';
+import { degradeGenerationOnError, finalizeVideoGeneration } from './finalize-video-generation';
 import { uploadInputCached } from './generate';
 import { resolveProductionDedup } from './generation-dedup';
 import { NOOP_LOGGER } from './noop-logger';
@@ -306,110 +303,38 @@ export async function runGenerateBroll(
     const cost = falVideoCostOf({ cost: profile.cost, durationSeconds });
     if (cost.warning !== null) warnings.push(cost.warning);
 
-    // 11) LIQUIDACIÓN en UNA tx BAJO EL LOCK DE FILA (misma barrera anti-doble-cobro que
-    //     `finalizeGeneration`/`runGenerateAvatar`): re-chequear `completed` bajo el lock antes de
-    //     crear asset/coste/completed. Se mantiene la forma (y su GRACIA) para que T4.11 la cablee al
-    //     worker (webhook+poll+sweeper) sin reintroducir doble-cobro ni corromper una fila terminal.
-    const completedAt = new Date();
-    const settled = await db.transaction(async (tx) => {
-      const locked = await getGenerationForUpdate(tx, generation.id);
-      if (locked?.status === 'completed') {
-        // NO-OP GRACIOSO (como `finalizeGeneration`/`runGenerateAvatar`): otra ruta ya finalizó bajo el
-        // lock. NO se re-crea asset ni se re-cobra y —crítico— NO se lanza (un throw caería en el catch
-        // y VOLTEARÍA a `failed` una fila legítimamente `completed`). El .mp4 descargado queda huérfano
-        // en storage (deuda menor conocida, igual que en `finalizeGeneration`).
-        const existing = await getAssetByGenerationKind(tx, generation.id, 'broll_clip');
-        return { asset: existing ?? null, updated: locked, alreadyFinalized: true } as const;
-      }
-      const asset = await createAsset(tx, {
-        kind: 'broll_clip',
+    // 11) LIQUIDACIÓN en UNA tx BAJO EL LOCK DE FILA vía el finalizer de vídeo COMPARTIDO (T4.11): la
+    //     misma barrera anti-doble-cobro que `runGenerateAvatar` (kind parametrizado). `durationSeconds`
+    //     es el enum enviado (INPUT, no output de Veo) — se deriva en ESTE servicio; el helper persiste.
+    const settled = await finalizeVideoGeneration(
+      { db, logger: log },
+      {
+        generation,
+        assetKind: 'broll_clip',
+        durationSeconds,
+        costCents: cost.cents,
+        put,
         storageKey,
         mime,
-        bytes: put.bytes,
-        checksum: put.checksum,
-        durationS: durationSeconds,
-        generationId: generation.id,
-      });
-      await recordCost(tx, {
-        provider: 'fal',
-        amountCents: cost.cents,
-        // `quantity` es INTEGER en el ledger → segundos ENTEROS; `amount_cents` YA se computó desde la
-        // duración por segundo (`falVideoCostOf`). Como la duración del b-roll ES entera (viene del
-        // enum), el round es idempotente.
-        quantity: Math.round(durationSeconds),
-        unit: 'seconds',
-        ...(generation.stepRunId !== null ? { stepRunId: generation.stepRunId } : {}),
-        generationId: generation.id,
-      });
-      const updated = await updateGeneration(tx, generation.id, {
-        status: 'completed',
-        costActual: cost.cents,
-        falStatusPayload: polled.statusPayload,
-        durationS: durationSeconds,
-        completedAt,
-      });
-      return { asset, updated, alreadyFinalized: false } as const;
-    });
-
-    const assetId = settled.asset?.id ?? null;
-    if (assetId === null) {
-      // La rama `alreadyFinalized` no encontró el asset de vídeo de la ruta ganadora: invariante roto
-      // (una generación `completed` de b-roll DEBE tener su `broll_clip`). Surface honesto — pero NO se
-      // marca `failed` (la fila está legítimamente `completed`): se re-lanza y el catch de abajo NO la
-      // degradará (su UPDATE es condicional a `!= completed`).
-      throw new FalResponseError(
-        `runGenerateBroll: la generación ${generation.id} está completed pero sin asset broll_clip (invariante roto)`,
-      );
-    }
-
-    log.info(
-      {
-        event: 'fal_broll_generation_finalized',
-        generationId: generation.id,
-        assetId,
-        route: profile.kind,
-        costCents: cost.cents,
-        durationSeconds,
-        alreadyFinalized: settled.alreadyFinalized,
+        statusPayload: polled.statusPayload,
       },
-      'clip de b-roll generado: vídeo descargado, coste por segundo registrado, completed',
     );
 
     return {
-      generation: settled.updated,
-      assetId,
+      generation: settled.generation,
+      assetId: settled.assetId,
       costCents: cost.cents,
       durationSeconds,
       reused: false,
       warnings,
     };
   } catch (err) {
-    // Degradar a `failed` SOLO si la fila NO es ya terminal (`completed`): una ruta concurrente (T4.11)
-    // pudo haberla completado. Mismo criterio de gracia que la rama `alreadyFinalized`.
-    //
-    // EL CATCH NO PUEDE ENTERRAR LA CAUSA RAÍZ (lección T1.8). Si la tx de degradación LANZA (conexión
-    // caída/timeout justo en el fallo), ese error secundario NO debe propagarse en lugar de `err`: el
-    // operador vería "connection terminated" en vez del fallo REAL de fal ("output sin vídeo"). Se
-    // envuelve en su propio try/catch: el fallo del UPDATE se LOGUEA (observabilidad del daño colateral)
-    // y SIEMPRE se re-lanza `err` (la causa raíz), nunca el error de la degradación.
-    try {
-      await db.transaction(async (tx) => {
-        const locked = await getGenerationForUpdate(tx, generation.id);
-        if (locked !== undefined && locked.status !== 'completed') {
-          await updateGeneration(tx, generation.id, { status: 'failed', completedAt: new Date() });
-        }
-      });
-    } catch (degradeErr) {
-      log.error(
-        {
-          event: 'fal_broll_degrade_failed',
-          generationId: generation.id,
-          degradeError: degradeErr instanceof Error ? degradeErr.message : String(degradeErr),
-          originalError: err instanceof Error ? err.message : String(err),
-        },
-        'no se pudo marcar la generación de b-roll como failed tras un fallo de fal: la fila puede quedar en un estado no terminal (reconciliable por el sweeper)',
-      );
-    }
+    // Degradar a `failed` (anti-T1.8: el error de fal — causa raíz — SIEMPRE sobrevive, el fallo de la
+    // degradación se LOGUEA pero nunca se propaga). Helper compartido con `runGenerateAvatar`.
+    await degradeGenerationOnError(
+      { db, logger: log },
+      { generationId: generation.id, originalError: err, event: 'fal_broll_degrade_failed' },
+    );
     throw err;
   }
 }

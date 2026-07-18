@@ -20,6 +20,7 @@ import { getAsset, getModelProfileByEndpoint } from '@ugc/db';
 import { runGenerateAvatar } from '@ugc/services';
 
 import type { GenerationExecutorDeps } from './generation';
+import { requireOutputContext } from './_shared';
 
 /** El ref ligero del clip de avatar generado (la verdad vive en `generation`/`asset`). */
 interface N7cOutput {
@@ -37,7 +38,7 @@ interface N7cOutput {
  */
 export function makeN7cExecutor(deps: GenerationExecutorDeps): StepExecutor {
   return async (ctx) => {
-    const { collectOutput, stepId } = requireContext(ctx);
+    const { collectOutput, stepId } = requireOutputContext(ctx, 'N7c');
 
     const parsed = N7cConfigSchema.safeParse(ctx.config);
     if (!parsed.success) {
@@ -117,17 +118,4 @@ export function makeN7cExecutor(deps: GenerationExecutorDeps): StepExecutor {
       costCents: res.costCents,
     } satisfies N7cOutput);
   };
-}
-
-/** Igual que N7a/N7b: `collectOutput` es el canal de salida obligatorio; `stepId` es opcional (stepless
- *  en el smoke). Sin `collectOutput` es un bug de cableado (permanente). */
-function requireContext(ctx: { collectOutput?: (outputRefs: unknown) => void; stepId?: string }): {
-  collectOutput: (outputRefs: unknown) => void;
-  stepId: string | undefined;
-} {
-  const { collectOutput, stepId } = ctx;
-  if (collectOutput === undefined) {
-    throw new PermanentStepError('N7c: el ExecutorContext no trae collectOutput (bug de cableado)');
-  }
-  return { collectOutput, stepId };
 }

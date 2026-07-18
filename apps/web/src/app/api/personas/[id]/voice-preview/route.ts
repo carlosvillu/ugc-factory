@@ -31,8 +31,9 @@ export const POST = withAuth(
           storage: getStorage(),
           logger: getRequestLogger(),
           // `FAL_BASE_URL` (E2E): ausente en producción → fal real; el fake server del stack lo fija.
-          // Se lee del env aquí (borde web); el servicio lo traduce a un `fetch` que reescribe el
-          // origen de fal (nunca se lee `FAL_BASE_URL` en core).
+          // Se lee del env aquí (borde web); el servicio lo pasa al FalClient de core como
+          // `baseUrlOverride` (seam de intercepción por-origen de primera clase; nunca se lee
+          // `FAL_BASE_URL` en core).
           ...(process.env.FAL_BASE_URL !== undefined
             ? { falBaseUrl: process.env.FAL_BASE_URL }
             : {}),

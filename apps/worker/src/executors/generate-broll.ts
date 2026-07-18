@@ -29,6 +29,7 @@ import { getModelProfileByEndpoint, getScriptById } from '@ugc/db';
 import { runGenerateBroll } from '@ugc/services';
 
 import type { GenerationExecutorDeps } from './generation';
+import { requireOutputContext } from './_shared';
 
 /** El ref ligero de un clip de b-roll generado (la verdad vive en `generation`/`asset`). */
 interface N7dClipRef {
@@ -55,7 +56,7 @@ interface N7dOutput {
  */
 export function makeN7dExecutor(deps: GenerationExecutorDeps): StepExecutor {
   return async (ctx) => {
-    const { collectOutput, stepId } = requireContext(ctx);
+    const { collectOutput, stepId } = requireOutputContext(ctx, 'N7d');
 
     const parsed = N7dConfigSchema.safeParse(ctx.config);
     if (!parsed.success) {
@@ -204,17 +205,4 @@ export function makeN7dExecutor(deps: GenerationExecutorDeps): StepExecutor {
       clips,
     } satisfies N7dOutput);
   };
-}
-
-/** Igual que N7a/N7b/N7c: `collectOutput` es el canal de salida obligatorio; `stepId` es opcional
- *  (stepless en el smoke). Sin `collectOutput` es un bug de cableado (permanente). */
-function requireContext(ctx: { collectOutput?: (outputRefs: unknown) => void; stepId?: string }): {
-  collectOutput: (outputRefs: unknown) => void;
-  stepId: string | undefined;
-} {
-  const { collectOutput, stepId } = ctx;
-  if (collectOutput === undefined) {
-    throw new PermanentStepError('N7d: el ExecutorContext no trae collectOutput (bug de cableado)');
-  }
-  return { collectOutput, stepId };
 }

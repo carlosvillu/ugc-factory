@@ -21,6 +21,7 @@ import { getModelProfileByEndpoint } from '@ugc/db';
 import { runGenerateMusic } from '@ugc/services';
 
 import type { GenerationExecutorDeps } from './generation';
+import { requireOutputContext } from './_shared';
 
 /** El ref ligero del bed musical generado (la verdad vive en `generation`/`asset`). */
 interface N7eOutput {
@@ -38,7 +39,7 @@ interface N7eOutput {
  */
 export function makeN7eExecutor(deps: GenerationExecutorDeps): StepExecutor {
   return async (ctx) => {
-    const { collectOutput, stepId } = requireContext(ctx);
+    const { collectOutput, stepId } = requireOutputContext(ctx, 'N7e');
 
     const parsed = N7eConfigSchema.safeParse(ctx.config);
     if (!parsed.success) {
@@ -87,17 +88,4 @@ export function makeN7eExecutor(deps: GenerationExecutorDeps): StepExecutor {
       costCents: res.costCents,
     } satisfies N7eOutput);
   };
-}
-
-/** Igual que N7a-N7d: `collectOutput` es el canal de salida obligatorio; `stepId` es opcional
- *  (stepless en el smoke). Sin `collectOutput` es un bug de cableado (permanente). */
-function requireContext(ctx: { collectOutput?: (outputRefs: unknown) => void; stepId?: string }): {
-  collectOutput: (outputRefs: unknown) => void;
-  stepId: string | undefined;
-} {
-  const { collectOutput, stepId } = ctx;
-  if (collectOutput === undefined) {
-    throw new PermanentStepError('N7e: el ExecutorContext no trae collectOutput (bug de cableado)');
-  }
-  return { collectOutput, stepId };
 }

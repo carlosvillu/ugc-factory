@@ -21,6 +21,39 @@
 // corrupto re-tira el dado. `FalProviderError` lleva el `status`; `FalResponseError` no.
 import { createFalClient, type FalClient as SdkFalClient } from '@fal-ai/client';
 
+/** Los ORÍGENES de la API de fal que el seam de intercepción (`baseUrlOverride`) reescribe. Son los
+ *  hosts a los que el SDK hace submit/upload y a los que apuntan las `status_url`/`response_url`
+ *  ABSOLUTAS que fal devuelve (y que el cliente sigue TAL CUAL). Fuera de estos orígenes (p.ej. la URL
+ *  PÚBLICA del output en `fal.media`) el seam NO reescribe — un fake E2E sirve esas desde su propio host. */
+const FAL_ORIGINS = ['https://queue.fal.run', 'https://rest.fal.run', 'https://fal.run'];
+
+/**
+ * Construye un `fetch` que REESCRIBE POR ORIGEN cualquier request a la API de fal (`FAL_ORIGINS`) al
+ * `baseUrl` dado (E2E: un fake server). Es una reescritura de PROTOCOLO+HOST+PUERTO que PRESERVA
+ * path+query — NUNCA un `baseUrl`-prepend. La distinción es CRÍTICA (landmine T4.6): fal devuelve
+ * `status_url`/`response_url` ABSOLUTAS y auto-referenciales que el cliente SIGUE tal cual (poll +
+ * download del output leído de response_url); un prepend reescribiría el submit pero NO el poll/download,
+ * que fugarían a la fal REAL y quemarían dinero. La reescritura por-origen intercepta las TRES fases.
+ * Fuera de `FAL_ORIGINS`, delega al `base` sin tocar (p.ej. descarga del output público en fal.media,
+ * que el fake E2E sirve desde su propio host y no matchea un origen de fal).
+ */
+function makeOriginRewriteFetch(
+  base: typeof globalThis.fetch,
+  baseUrl: string,
+): typeof globalThis.fetch {
+  const target = new URL(baseUrl);
+  return (input, init) => {
+    const rawUrl =
+      typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
+    const origin = FAL_ORIGINS.find((o) => rawUrl.startsWith(o));
+    if (origin === undefined) return base(input, init);
+    const rewritten = new URL(rawUrl);
+    rewritten.protocol = target.protocol;
+    rewritten.host = target.host;
+    return base(rewritten.href, init);
+  };
+}
+
 /** Concurrencia por defecto del rate limiter (~8): la concurrencia del queue de fal es
  *  ~10; se deja margen para webhooks/polling en paralelo (PRD §6.3.4). */
 export const DEFAULT_FAL_CONCURRENCY = 8;
@@ -101,6 +134,14 @@ export interface FalClientDeps {
   /** `fetch` inyectable — msw en tests, global en producción. Lo usa TANTO el SDK (submit,
    *  upload) como el polling directo, para que un solo mock intercepte todo. */
   fetch?: typeof globalThis.fetch;
+  /** SEAM DE INTERCEPCIÓN E2E (T4.11, deuda T4.6): la `baseUrl` de un fake server de fal. Cuando se
+   *  pasa, el cliente REESCRIBE POR ORIGEN (protocolo+host, preservando path+query) toda request a
+   *  `FAL_ORIGINS` hacia esa baseUrl — el submit del SDK Y el poll/download que siguen las
+   *  `status_url`/`response_url` ABSOLUTAS de fal. Es una capacidad de PRIMERA CLASE del FalClient (no
+   *  un `fetch` envuelto en la capa web), así que cubre por igual el path de WEB (preview de voz) y el
+   *  de WORKER (executors N7). AUSENTE en producción → el fetch va a la fal REAL sin tocar. NO es un
+   *  `baseUrl`-prepend (rompería el poll/download → fuga a fal real): ver `makeOriginRewriteFetch`. */
+  baseUrlOverride?: string;
   /** Concurrencia máxima del rate limiter. Default `DEFAULT_FAL_CONCURRENCY`. */
   concurrency?: number;
   /** Timeout por request (ms). */
@@ -159,15 +200,23 @@ export function makeFalClient(deps: FalClientDeps) {
   const pollIntervalMs = deps.pollIntervalMs ?? 1000;
   const maxPollAttempts = deps.maxPollAttempts ?? 600;
   const limiter = new ConcurrencyLimiter(deps.concurrency ?? DEFAULT_FAL_CONCURRENCY);
-  const fetchImpl = deps.fetch ?? globalThis.fetch;
+  // EL FETCH EFECTIVO: el inyectado (msw/global) envuelto por el seam de intercepción por-origen si
+  // `baseUrlOverride` está (E2E). Se computa UNA vez y se usa TANTO en el polling/download directo
+  // (`fetchImpl`→`timedFetch`) COMO en el SDK (submit/upload) — un solo seam cubre las tres fases
+  // (submit + poll siguiendo status_url absoluta + download siguiendo response_url absoluta).
+  const baseFetch = deps.fetch ?? globalThis.fetch;
+  const fetchImpl =
+    deps.baseUrlOverride !== undefined && deps.baseUrlOverride !== ''
+      ? makeOriginRewriteFetch(baseFetch, deps.baseUrlOverride)
+      : baseFetch;
 
-  // El SDK se construye AL VUELO con el `fetch` inyectado. `retry: { maxRetries: 0 }`:
-  // NOSOTROS controlamos el 429/`Retry-After` (§6.3.4) — el retry interno del SDK haría el
-  // test de 429 no determinista y reintentaría a su ritmo, no al del header.
+  // El SDK se construye AL VUELO con el `fetch` EFECTIVO (ya envuelto por el seam si aplica).
+  // `retry: { maxRetries: 0 }`: NOSOTROS controlamos el 429/`Retry-After` (§6.3.4) — el retry interno
+  // del SDK haría el test de 429 no determinista y reintentaría a su ritmo, no al del header.
   function sdk(): SdkFalClient {
     return createFalClient({
       credentials: deps.credentials,
-      ...(deps.fetch !== undefined ? { fetch: deps.fetch } : {}),
+      fetch: fetchImpl,
       retry: { maxRetries: 0 },
       suppressLocalCredentialsWarning: true,
     });

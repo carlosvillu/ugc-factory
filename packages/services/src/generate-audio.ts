@@ -83,7 +83,12 @@ export interface GenerateAudioDeps {
   sleep?: (ms: number) => Promise<void>;
   falOptions?: Pick<
     FalClientDeps,
-    'concurrency' | 'timeoutMs' | 'maxRetries' | 'pollIntervalMs' | 'maxPollAttempts'
+    | 'concurrency'
+    | 'timeoutMs'
+    | 'maxRetries'
+    | 'pollIntervalMs'
+    | 'maxPollAttempts'
+    | 'baseUrlOverride'
   >;
 }
 
@@ -255,7 +260,12 @@ export interface VoicePreviewDeps {
   sleep?: (ms: number) => Promise<void>;
   falOptions?: Pick<
     FalClientDeps,
-    'concurrency' | 'timeoutMs' | 'maxRetries' | 'pollIntervalMs' | 'maxPollAttempts'
+    | 'concurrency'
+    | 'timeoutMs'
+    | 'maxRetries'
+    | 'pollIntervalMs'
+    | 'maxPollAttempts'
+    | 'baseUrlOverride'
   >;
 }
 

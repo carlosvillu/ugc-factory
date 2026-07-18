@@ -30,38 +30,6 @@ const PROVIDER_TTS_ENDPOINT: Readonly<Record<VoiceProvider, string | null>> = {
   minimax: null,
 };
 
-/** El host base de la API de fal a interceptar en E2E (`FAL_BASE_URL`): en producción está AUSENTE y
- *  el fetch global va a la fal real; en el stack E2E apunta al fake server (`startFakeExternalApis`),
- *  así que la suite JAMÁS gasta dinero. Los orígenes de fal que el `fetch` inyectado reescribe. */
-const FAL_ORIGINS = ['https://queue.fal.run', 'https://rest.fal.run', 'https://fal.run'];
-
-/**
- * El `fetch` que se inyecta en el FalClient para el preview. En producción (`FAL_BASE_URL` ausente) es
- * el `fetch` global sin cambios. En E2E, REESCRIBE el origen de cualquier request a la API de fal
- * (`queue.fal.run`, etc.) al `FAL_BASE_URL` del fake server — así el submit del SDK y el polling/download
- * (que siguen las URLs que el fake devuelve, auto-referenciales) se interceptan sin tocar el FalClient
- * de core (menor blast radius que un middleware en `makeFalClient`, que TODA la generación de imagen
- * comparte). Se lee `FAL_BASE_URL` SOLO aquí (web), nunca en core.
- */
-export function makeFalPreviewFetch(
-  falBaseUrl: string | undefined,
-): typeof globalThis.fetch | undefined {
-  if (falBaseUrl === undefined || falBaseUrl === '') return undefined;
-  const target = new URL(falBaseUrl);
-  return (input, init) => {
-    const rawUrl =
-      typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
-    const origin = FAL_ORIGINS.find((o) => rawUrl.startsWith(o));
-    if (origin === undefined) return globalThis.fetch(input, init);
-    // Reescribe SOLO el origen (protocolo+host+puerto); preserva path+query tal cual, para que las
-    // rutas del queue (`/fal-ai/kokoro/requests/:id/status`) caigan en el fake que las sirve.
-    const rewritten = new URL(rawUrl);
-    rewritten.protocol = target.protocol;
-    rewritten.host = target.host;
-    return globalThis.fetch(rewritten.href, init);
-  };
-}
-
 /** La API key de fal EN CLARO desde `app_setting` (cifrada, §19.2). Lanza `provider_error` si no hay
  *  key configurada (no se puede generar la muestra) — accionable, no un 500 opaco. */
 async function loadFalKey(db: DbClient): Promise<string> {
@@ -80,7 +48,8 @@ export interface GenerateVoicePreviewDeps {
   db: DbClient;
   storage: import('@ugc/core').StorageAdapter;
   logger?: import('@ugc/core').Logger;
-  /** `FAL_BASE_URL` (E2E) — ver `makeFalPreviewFetch`. Lo pasa el route handler desde su accessor. */
+  /** `FAL_BASE_URL` (E2E): se pasa al FalClient de core como `baseUrlOverride` (seam de intercepción
+   *  por-origen de primera clase). Lo pasa el route handler desde su accessor. AUSENTE en producción. */
   falBaseUrl?: string;
 }
 
@@ -139,7 +108,13 @@ export async function generateVoicePreview(
     throw new AppError('provider_error', `no hay model_profile sembrado para «${ttsEndpoint}»`);
   }
 
-  const previewFetch = makeFalPreviewFetch(deps.falBaseUrl);
+  // SEAM DE INTERCEPCIÓN E2E (T4.11, deuda T4.6 saldada): en vez de envolver un `fetch` aquí (capa web),
+  // se pasa `FAL_BASE_URL` al FalClient de core como `baseUrlOverride` — capacidad de PRIMERA CLASE que
+  // reescribe por-origen el submit + poll + download (las `status_url`/`response_url` absolutas de fal),
+  // y que cubre por igual el path de worker (executors N7) cuando T4.11 lo cablee. AUSENTE en producción
+  // → fetch a la fal real. Se lee `FAL_BASE_URL` SOLO aquí (web), nunca en core.
+  const baseUrlOverride =
+    deps.falBaseUrl !== undefined && deps.falBaseUrl !== '' ? deps.falBaseUrl : undefined;
 
   return runTtsOnly(
     {
@@ -149,7 +124,7 @@ export async function generateVoicePreview(
       // reproducción cacheada no paga el `getSecretBlob`+descifrado de `loadFalKey`.
       falKey: () => loadFalKey(db),
       ...(deps.logger !== undefined ? { logger: deps.logger } : {}),
-      ...(previewFetch !== undefined ? { fetch: previewFetch } : {}),
+      ...(baseUrlOverride !== undefined ? { falOptions: { baseUrlOverride } } : {}),
     },
     // `voiceInputs` es una interfaz (`{voice, speed?}`) sin index signature; se copia a un objeto
     // plano para encajar en `GenerationInputs` (`Record<string, unknown>`).

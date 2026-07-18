@@ -274,16 +274,86 @@ describe('assert (c) — aspect/duración con los nombres y enums EXACTOS del mo
     expect(res.issues[0]!.message).toContain('16:9');
   });
 
-  it('un profile SIN aspects declaradas (OmniHuman) acepta cualquier aspect (el modelo no restringe)', () => {
-    const res = avatarAdapter({
+  it('un profile SIN aspects declaradas (Veo i2v-image-to-video) acepta cualquier aspect (el modelo no restringe)', () => {
+    // El i2v de Veo `image-to-video` declara `aspects:["auto","9:16","16:9"]` y sí restringe; el que NO
+    // restringe es cualquier profile i2v sin `aspects` — pero para preservar la PROPIEDAD «sin aspects ⇒
+    // el modelo no restringe» con un vehículo i2v real, se usa el fixture SEEDANCE (kind i2v, sin
+    // `aspects` declaradas): resolveAspect deja pasar el aspect tal cual. (El vehículo ANTERIOR era
+    // OmniHuman/avatar, pero el adapter avatar ya NO emite `aspect_ratio` — ver el bloque de más abajo.)
+    const res = seedanceAdapter({
       resolvedPrompt: CANONICAL_PROMPT,
-      profile: byEndpoint('fal-ai/bytedance/omnihuman/v1.5'),
+      profile: { ...SEEDANCE_FIXTURE, capabilities: { refImages: 1 } },
       aspect: '4:5',
       durationSeconds: 8,
     });
     expect(res.ok).toBe(true);
     if (!res.ok) return;
     expect(res.payload.aspect_ratio).toBe('4:5');
+  });
+});
+
+describe('avatar dialect — NO emite los campos que Kling/OmniHuman rechazan (fix T4.11 de la deuda T4.7)', () => {
+  // Kling AI Avatar v2 y OmniHuman v1.5 aceptan SOLO `{prompt, image_url?, audio_url?, resolution?}`;
+  // `aspect_ratio`/`duration_seconds`/`enable_audio` los RECHAZAN. El adapter avatar debe emitir el
+  // dialecto EXACTO que los servicios construyen a mano (generate-avatar.ts submitInputs). Estos asserts
+  // muerden esa propiedad (cláusula determinista → test permanente del gate, regla 8 del planning).
+  it('Kling: payload = {audio_url, image_url, prompt} — SIN aspect_ratio/duration_seconds/enable_audio', () => {
+    const res = avatarAdapter({
+      resolvedPrompt: CANONICAL_PROMPT,
+      profile: byEndpoint('fal-ai/kling-video/ai-avatar/v2/standard'),
+      aspect: '9:16',
+      durationSeconds: 5,
+      assets: { refImages: [PERSONA_IMG], refAudios: [VOICE_AUDIO] },
+    });
+    expect(res.ok).toBe(true);
+    if (!res.ok) return;
+    expect(res.payload).not.toHaveProperty('aspect_ratio');
+    expect(res.payload).not.toHaveProperty('duration_seconds');
+    expect(res.payload).not.toHaveProperty('enable_audio');
+    expect(res.payload.image_url).toBe(PERSONA_IMG);
+    expect(res.payload.audio_url).toBe(VOICE_AUDIO);
+    expect(res.payload.prompt).toBe(CANONICAL_PROMPT);
+  });
+
+  it('OmniHuman: `resolution` del input se refleja; sin input.resolution ⇒ no aparece', () => {
+    const withRes = avatarAdapter({
+      resolvedPrompt: CANONICAL_PROMPT,
+      profile: byEndpoint('fal-ai/bytedance/omnihuman/v1.5'),
+      aspect: '9:16',
+      durationSeconds: 8,
+      resolution: '1080p',
+      assets: { refAudios: [VOICE_AUDIO] },
+    });
+    expect(withRes.ok).toBe(true);
+    if (!withRes.ok) return;
+    expect(withRes.payload.resolution).toBe('1080p');
+    expect(withRes.payload).not.toHaveProperty('aspect_ratio');
+
+    const withoutRes = avatarAdapter({
+      resolvedPrompt: CANONICAL_PROMPT,
+      profile: byEndpoint('fal-ai/bytedance/omnihuman/v1.5'),
+      aspect: '9:16',
+      durationSeconds: 8,
+      assets: { refAudios: [VOICE_AUDIO] },
+    });
+    expect(withoutRes.ok).toBe(true);
+    if (!withoutRes.ok) return;
+    expect(withoutRes.payload).not.toHaveProperty('resolution');
+  });
+
+  // CONTROL NEGATIVO: un avatar con audio/dialogue pero SIN pista aportada ⇒ NO hay audio_url (que el
+  // gate del audio muerda). Sin `enable_audio` en ningún caso.
+  it('avatar con caps.audio pero sin refAudios aportado ⇒ payload SIN audio_url ni enable_audio', () => {
+    const res = avatarAdapter({
+      resolvedPrompt: CANONICAL_PROMPT,
+      profile: byEndpoint('fal-ai/bytedance/omnihuman/v1.5'),
+      aspect: '9:16',
+      durationSeconds: 8,
+    });
+    expect(res.ok).toBe(true);
+    if (!res.ok) return;
+    expect(res.payload).not.toHaveProperty('audio_url');
+    expect(res.payload).not.toHaveProperty('enable_audio');
   });
 });
 

@@ -53,6 +53,14 @@ export const adVariantStatus = pgEnum('ad_variant_status', [
   'published',
 ]);
 
+// §7.2 N7e / §8.4: de dónde sale la pista de audio de fondo de una variante. `ai_bed` = bed musical
+// generado por IA (N7e, `runGenerateMusic`); `own_license` = música con licencia propia aportada por
+// el usuario; `native_trending` = audio nativo/trending de la plataforma (se marca en publicación, la
+// pista no se compone). Hasta ahora estos valores solo vivían en COMENTARIOS (generate-music.ts,
+// executors/index.ts, smoke-music.ts); T4.11 los materializa como enum + columna. NULLABLE: se marca
+// cuando N7e genera el bed (Pase 2 de T4.11); una variante sin bed decidido la deja NULL.
+export const audioSource = pgEnum('audio_source', ['ai_bed', 'own_license', 'native_trending']);
+
 export const adBatch = pgTable(
   'ad_batch',
   {
@@ -140,6 +148,9 @@ export const adVariant = pgTable(
     // fuera de toda BD, y ahí no hay lote que lo desambigüe.
     filenameCode: text('filename_code').notNull().unique(),
     status: adVariantStatus('status').notNull().default('planned'),
+    // §7.2 N7e: de dónde viene el audio de fondo de la variante (bed IA / licencia propia / nativo).
+    // NULLABLE: lo escribe N7e cuando genera el bed (Pase 2 de T4.11); una variante sin bed lo deja NULL.
+    audioSource: audioSource('audio_source'),
     // Assets finales (F5). `set null`: borrar el asset no borra la variante.
     masterAssetId: text('master_asset_id').references(() => asset.id, { onDelete: 'set null' }),
     thumbnailAssetId: text('thumbnail_asset_id').references(() => asset.id, {

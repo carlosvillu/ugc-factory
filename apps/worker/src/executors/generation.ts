@@ -19,12 +19,14 @@
 // NO reintentables (config inválida, ruta no soportada): reintentarlos no los arregla y quemaría
 // dinero de fal.
 import { N7aConfigSchema, PermanentStepError } from '@ugc/core/orchestrator';
-import type { ExecutorDep, StepExecutor } from '@ugc/core/orchestrator';
+import type { StepExecutor } from '@ugc/core/orchestrator';
 import { buildPackshotPrompt, type GenerationInputs } from '@ugc/core/generation';
 import { ProductBriefSchema } from '@ugc/core/contracts';
 import type { Logger, StorageAdapter } from '@ugc/core';
 import { getBrief, getModelProfileByEndpoint, type DbClient } from '@ugc/db';
 import { runGenerate } from '@ugc/services';
+
+import { requireOutputContext } from './_shared';
 
 /** El endpoint del ÚNICO modelo text-to-image sembrado (§13.1): `fal-ai/flux-2`. NO usa el sistema
  *  de adapters (no tiene `promptAdapter`): N7a le pasa `image_size`/`num_images` directo por
@@ -51,26 +53,6 @@ export interface GenerationExecutorDeps {
   logger?: Logger;
   /** `fetch` inyectable (msw en tests); default global en producción. */
   fetch?: typeof globalThis.fetch;
-}
-
-/** Lo que el consumer SIEMPRE inyecta en producción (el canal de salida). Sin él, N7a pagaría fal y
- *  terminaría con `output_refs` vacío — un bug de CABLEADO, no un caso a tolerar (mismo criterio de
- *  dinero que N1/N3/N5). `stepId` es OPCIONAL aquí: N7a corre STEPLESS en el smoke (sin step) y
- *  `runGenerate` lo propaga si está (atribución de coste). El `variantId` NO se lee del ctx: el
- *  `ExecutorContext` de core no lo expone hoy (solo `stepId`); cuando T4.11 lo añada, se recablea. */
-function requireContext(ctx: {
-  collectOutput?: (outputRefs: unknown) => void;
-  stepId?: string;
-  deps?: ExecutorDep[];
-}): {
-  collectOutput: (outputRefs: unknown) => void;
-  stepId: string | undefined;
-} {
-  const { collectOutput, stepId } = ctx;
-  if (collectOutput === undefined) {
-    throw new PermanentStepError('N7a: el ExecutorContext no trae collectOutput (bug de cableado)');
-  }
-  return { collectOutput, stepId };
 }
 
 /** El artefacto LIGERO de N7a: los refs de los assets generados (la verdad vive en las filas
@@ -105,7 +87,7 @@ interface N7aOutput {
  */
 export function makeN7aExecutor(deps: GenerationExecutorDeps): StepExecutor {
   return async (ctx) => {
-    const { collectOutput, stepId } = requireContext(ctx);
+    const { collectOutput, stepId } = requireOutputContext(ctx, 'N7a');
 
     const parsed = N7aConfigSchema.safeParse(ctx.config);
     if (!parsed.success) {

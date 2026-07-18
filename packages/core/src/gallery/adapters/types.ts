@@ -24,6 +24,10 @@ export interface AdapterInput {
   aspect: string;
   /** Duración objetivo del clip en segundos (ya ≤ maxDuration: el scene-planner trocea antes). */
   durationSeconds: number;
+  /** Resolución objetivo (`720p|1080p`…), del `capabilities.resolutions` del profile. OPCIONAL: solo
+   *  el dialecto avatar (OmniHuman) la usa hoy — si el input la trae, el adapter la refleja en el
+   *  payload; si no, se omite (Kling la ignora). Los dialectos i2v/seedance/image-edit no la leen. */
+  resolution?: string;
   /** Los assets resueltos de la variante. En producción son URLs de fal storage (T4.1); en test
    *  son ids/URLs fijos (input legítimo de una función pura, no un hand-fix). */
   assets?: AdapterAssets;

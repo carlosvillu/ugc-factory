@@ -11,8 +11,10 @@
 //                    fal HOY, no sembrado: se testea con un FIXTURE de model_profile).
 //   - `image-edit` → edición de imagen con referencias (Seedream v4.5 edit, Nano-Banana 2 edit).
 //
-// Todos usan `resolveAspect` (aspect ∈ capabilities.aspects) y recortan los refs a la capacidad
-// declarada. El aspect/duración usan los NOMBRES y ENUMS EXACTOS del `model_profile` (assert (c)).
+// La mayoría usan `resolveAspect` (aspect ∈ capabilities.aspects) y recortan los refs a la capacidad
+// declarada; `avatar` es la excepción (Kling/OmniHuman rechazan aspect/duration/enable_audio → emite
+// solo prompt+image_url+audio_url+resolution). El aspect/duración usan los NOMBRES y ENUMS EXACTOS del
+// `model_profile` (assert (c)).
 import type { AdapterInput, AdapterIssue, AdapterPayload, AdapterResult } from './types';
 
 /** Valida el aspect contra `capabilities.aspects`. Si el profile declara `aspects` y el pedido no
@@ -43,22 +45,28 @@ function takeRefs(refs: string[] | undefined, max: number | undefined): string[]
 }
 
 /**
- * ADAPTER `avatar` (Kling ai-avatar, OmniHuman, VEED). Avatar parlante: prompt + imagen de
- * referencia (identity lock) cuando `capabilities.refImages > 0` (assert (a)) + voice control
- * cuando el modelo lleva audio/dialogue. El aspect usa el enum exacto del profile.
+ * ADAPTER `avatar` (Kling AI Avatar v2, OmniHuman v1.5, VEED). Avatar parlante image+audio. El
+ * dialecto REAL de esta familia es SOLO `{prompt, image_url?, audio_url?, resolution?}` — es el mismo
+ * payload que los servicios `runGenerateAvatar` construyen a mano (BYPASS, generate-avatar.ts:183-190),
+ * la fuente de verdad de lo que fal ACEPTA. Kling AI Avatar v2 y OmniHuman v1.5 RECHAZAN
+ * `aspect_ratio`/`duration_seconds`/`enable_audio` (la duración del clip = la del audio automáticamente;
+ * no hay aspect ni flag de audio en la request), así que este adapter NO los emite (fix T4.11 de la
+ * deuda T4.7: la versión previa snapshoteaba un payload aún-inválido que fal habría rechazado).
+ *   · `image_url`: identity lock por la imagen de la Persona, SOLO cuando el modelo declara
+ *     `capabilities.refImages > 0` Y hay una imagen (assert (a) + control negativo: refImages:0/ausente
+ *     ⇒ sin `image_url`, p.ej. VEED text-to-video).
+ *   · `audio_url`: la pista de voz (voiceover de N7b) para el lipsync, cuando el modelo lleva
+ *     audio/dialogue Y hay una pista aportada.
+ *   · `resolution`: solo si el input la trae (OmniHuman `720p|1080p`); Kling la ignora.
+ * NO usa `resolveAspect`: el dialecto avatar no lleva aspect, así que no lo valida ni lo emite.
  */
 export function avatarAdapter(input: AdapterInput): AdapterResult {
-  const aspectRes = resolveAspect(input);
-  if ('issue' in aspectRes) return { ok: false, issues: [aspectRes.issue] };
-
   const caps = input.profile.capabilities;
   const refImages = takeRefs(input.assets?.refImages, caps.refImages);
   const refAudios = takeRefs(input.assets?.refAudios, caps.refAudios);
 
   const payload: AdapterPayload = {
     prompt: input.resolvedPrompt,
-    aspect_ratio: aspectRes.aspect,
-    duration_seconds: input.durationSeconds,
   };
   // Identity lock: SOLO cuando el modelo declara refImages > 0 Y hay una imagen (assert (a) +
   // control negativo: refImages:0/ausente ⇒ sin `image_url`).
@@ -66,11 +74,13 @@ export function avatarAdapter(input: AdapterInput): AdapterResult {
     payload.image_url = refImages[0];
   }
   // Voice control: los avatares con audio/dialogue reciben la pista de voz (lipsync a la narración).
-  if (caps.audio === true || caps.dialogue === true) {
-    payload.enable_audio = true;
-    if (refAudios.length > 0) {
-      payload.audio_url = refAudios[0];
-    }
+  // Sin `enable_audio` (fal lo rechaza): el clip lleva audio POR el `audio_url`, no por un flag.
+  if ((caps.audio === true || caps.dialogue === true) && refAudios.length > 0) {
+    payload.audio_url = refAudios[0];
+  }
+  // Resolución (OmniHuman): solo si el input la trae. Kling la ignora.
+  if (input.resolution !== undefined) {
+    payload.resolution = input.resolution;
   }
   return { ok: true, payload };
 }

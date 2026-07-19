@@ -139,7 +139,7 @@ test.describe('/personas — librería de personas (T2.0)', () => {
   );
 
   test(
-    'las acciones de fases futuras se VEN pero están DESHABILITADAS, y dicen por qué',
+    'la acción de fase futura se VE pero está DESHABILITADA y dice por qué; «Generar variación» ya está VIVA (T4.12)',
     { tag: ['@f2'] },
     async ({ page }) => {
       // Precedente de T1.13 (nav): un afordance de una fase futura NO se omite —se pinta
@@ -155,15 +155,21 @@ test.describe('/personas — librería de personas (T2.0)', () => {
       await expect(page.getByRole('heading', { name, level: 2 })).toBeVisible();
 
       const card = page.getByRole('article');
-      for (const { action, reason } of [
-        { action: 'Usar en lote', reason: /T2\.3/ },
-        { action: 'Generar variación', reason: /fase F4/ },
-      ]) {
-        const button = card.getByRole('button', { name: new RegExp(`^${action} · `) });
-        await expect(button).toBeVisible(); // se VE (no está omitido)
-        await expect(button).toBeDisabled(); // pero NO se puede pulsar (no engaña)
-        await expect(button).toHaveAccessibleName(reason); // y DICE por qué / cuándo llega
-      }
+
+      // «Usar en lote» sigue en el futuro (T2.3, la UI de matriz de variantes): deshabilitada y
+      // anunciando su motivo en el aria-label.
+      const batch = card.getByRole('button', { name: /^Usar en lote · / });
+      await expect(batch).toBeVisible();
+      await expect(batch).toBeDisabled();
+      await expect(batch).toHaveAccessibleName(/T2\.3/);
+
+      // «Generar variación» YA NO es una promesa de fase futura: T4.12 pase B la cableó (genera
+      // reference-images IA del mismo sujeto). Se pinta HABILITADA (el flujo de generación con su
+      // coste lo cubre `gallery-generation.spec.ts` con fal fake); aquí basta con que NO engañe
+      // estando disabled.
+      const generate = card.getByRole('button', { name: /Generar variación/ });
+      await expect(generate).toBeVisible();
+      await expect(generate).toBeEnabled();
     },
   );
 

@@ -17,3 +17,17 @@ export async function loadFalKey(db: DbClient): Promise<string> {
     throw new AppError('provider_error', 'la API key de fal no se pudo descifrar');
   }
 }
+
+/**
+ * El `falOptions` con el override de base URL cuando el seam E2E `FAL_BASE_URL` está presente
+ * (intercepción por-origen del FalClient de core). Compartido por los servidores de web que gastan fal
+ * (preview de voz, thumbnail/probar-template, referencias de persona). En producción `FAL_BASE_URL`
+ * está ausente → `undefined` → fal real.
+ */
+export function falOptionsFrom(
+  falBaseUrl: string | undefined,
+): { baseUrlOverride: string } | undefined {
+  return falBaseUrl !== undefined && falBaseUrl !== ''
+    ? { baseUrlOverride: falBaseUrl }
+    : undefined;
+}

@@ -20,7 +20,7 @@ import {
   FLUX2_ENDPOINT,
   type TemplateThumbnailResult,
 } from '@ugc/services';
-import { loadFalKey } from './fal-key';
+import { loadFalKey, falOptionsFrom } from './fal-key';
 
 export interface TemplateGenerationDeps {
   db: DbClient;
@@ -29,14 +29,6 @@ export interface TemplateGenerationDeps {
   /** `FAL_BASE_URL` (E2E): se pasa al FalClient de core como `baseUrlOverride` (seam de intercepción
    *  por-origen). Lo pasa el route handler desde su accessor. AUSENTE en producción → fal real. */
   falBaseUrl?: string;
-}
-
-/** El `falOptions` con el override de base URL si el seam E2E está presente (idéntico al de
- *  voice-preview). En producción `undefined` → fal real. */
-function falOptionsFrom(deps: TemplateGenerationDeps): { baseUrlOverride: string } | undefined {
-  return deps.falBaseUrl !== undefined && deps.falBaseUrl !== ''
-    ? { baseUrlOverride: deps.falBaseUrl }
-    : undefined;
 }
 
 /**
@@ -74,7 +66,7 @@ export async function generateTemplateTestImage(
     description: template.description,
     body: template.body,
   });
-  const falOptions = falOptionsFrom(deps);
+  const falOptions = falOptionsFrom(deps.falBaseUrl);
 
   return runTemplateTest(
     {
@@ -108,7 +100,7 @@ export async function generateTemplateThumbnailImage(
   }
 
   const falKey = await loadFalKey(db);
-  const falOptions = falOptionsFrom(deps);
+  const falOptions = falOptionsFrom(deps.falBaseUrl);
 
   return generateTemplateThumbnail(
     {

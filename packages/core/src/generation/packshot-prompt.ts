@@ -9,20 +9,12 @@
 // UGC con persona (eso es N7c/N7d). El aspecto 9:16 lo fija el `image_size` del payload (flux-2 no
 // tiene adapter que lo derive), no este texto; aun así lo mencionamos para reforzar la composición.
 import type { ProductBrief } from '../contracts';
+import { trimForPrompt } from './prompt-text';
 
 /** Un shot de packshot vive dentro de un rango acotado (§7.5-ish): 2 o 3 imágenes por generación de
  *  N7a. Se exporta para que el config Zod del executor lo reuse en vez de duplicar los límites. */
 export const PACKSHOT_MIN_SHOTS = 2;
 export const PACKSHOT_MAX_SHOTS = 3;
-
-/** Recorta un texto libre a un tamaño razonable para el prompt: la `description` del brief puede ser
- *  larga y el prompt de una imagen no gana nada más allá de un par de frases. No es validación (el
- *  brief ya validó): es higiene del prompt. */
-function trimForPrompt(value: string, maxChars: number): string {
-  const clean = value.trim().replace(/\s+/g, ' ');
-  if (clean.length <= maxChars) return clean;
-  return `${clean.slice(0, maxChars).trimEnd()}…`;
-}
 
 /**
  * Construye el prompt de packshot a partir del `ProductBrief`. Toma la identidad del producto

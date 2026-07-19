@@ -188,6 +188,31 @@ export const VoicePreviewRequestSchema = z.object({
 });
 
 /**
+ * UNA reference-image IA generada (T4.12 pase B): su asset (descargable por
+ * `/api/assets/:id/download`), el encuadre que la produjo y sus dimensiones reales (≥2K). El coste va
+ * en el total de la respuesta, no por imagen (el ledger es la verdad del gasto).
+ */
+const GeneratedReferenceImageSchema = z.object({
+  assetId: z.string().min(1),
+  framingId: z.string().min(1),
+  width: z.number().int().positive(),
+  height: z.number().int().positive(),
+});
+
+/**
+ * Respuesta de `POST /api/personas/:id/reference-images/generate` (T4.12 pase B): la persona ya
+ * actualizada (con las nuevas referencias en su lista, sin un segundo GET), las imágenes generadas en
+ * esta llamada y el coste total en céntimos (visible también en `/spend`). «Generar variación» produce
+ * output FRESCO (sin dedup): el coste NUNCA es 0 en una generación real.
+ */
+export const GeneratePersonaImagesResponseSchema = z.object({
+  persona: PersonaSchema,
+  images: z.array(GeneratedReferenceImageSchema),
+  costCents: z.number().int().nonnegative(),
+});
+export type GeneratePersonaImagesResponse = z.infer<typeof GeneratePersonaImagesResponseSchema>;
+
+/**
  * MÍNIMO de imágenes de referencia por persona (§11: «retratos consistentes, mismo sujeto en
  * 2–3 encuadres»). No lo impone la BD (una persona nace sin imágenes y se le suben después):
  * lo impone la UI y lo comprueba la Verificación («crear una persona con 2 imágenes ≥2K»).

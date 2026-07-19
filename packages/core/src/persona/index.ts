@@ -38,6 +38,9 @@ export {
   VoicePreviewRequestSchema,
   VoicePreviewResponseSchema,
   type VoicePreviewResponse,
+  // Generación IA de reference-images (T4.12 pase B): respuesta del botón «Generar variación».
+  GeneratePersonaImagesResponseSchema,
+  type GeneratePersonaImagesResponse,
   type Persona,
   type PersonaBody,
   type PersonaPatch,
@@ -49,6 +52,15 @@ export {
 // sin sharp, sin BD — el endpoint de candidatas es un passthrough sobre esto y T2.2 la
 // reutilizará sin re-implementarla.
 export { matchPersonas } from './candidates';
+// El prompt de las IMÁGENES DE REFERENCIA (T4.12 pase B, identity lock). PURO (sin sharp): compone el
+// retrato base (FLUX.2) y los encuadres de NB2 desde los campos de la persona. Lo consume el servicio
+// `runGeneratePersonaImages` (@ugc/services) y el server helper de web.
+export {
+  buildPersonaPortraitPrompt,
+  REFERENCE_FRAMINGS,
+  type PersonaPortraitInput,
+  type ReferenceFraming,
+} from './persona-image-prompt';
 // Resolución de voz para N7b (T4.5, §13.1): valida la coherencia proveedor↔endpoint↔voiceId del triple
 // del TTS. PURA: sin red ni BD. La ejecución (TTS→ASR) vive en @ugc/services.
 export {

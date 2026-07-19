@@ -4,7 +4,38 @@
 // 0¢ con warning observable). Las cost fns reciben el `cost` CRUDO del profile y validan internamente.
 import { describe, expect, it } from 'vitest';
 
-import { falTtsCostOf, falAsrCostOf, falVideoCostOf, falMusicCostOf } from './fal-pricing';
+import {
+  falTtsCostOf,
+  falAsrCostOf,
+  falVideoCostOf,
+  falMusicCostOf,
+  falPerImageCostOf,
+} from './fal-pricing';
+
+describe('falPerImageCostOf — imagen POR IMAGEN (NB2 edit, T4.12 pase B)', () => {
+  it('2 imágenes a 8¢/img (nano-banana-2) = 16¢', () => {
+    const c = falPerImageCostOf({ cost: { unit: 'image', amountCents: 8 }, imageCount: 2 });
+    expect(c.cents).toBe(16);
+    expect(c.imageCount).toBe(2);
+    expect(c.warning).toBeNull();
+  });
+
+  it('1 imagen a 8¢/img = 8¢', () => {
+    const c = falPerImageCostOf({ cost: { unit: 'image', amountCents: 8 }, imageCount: 1 });
+    expect(c.cents).toBe(8);
+  });
+
+  it('CONTROL NEGATIVO: unidad inesperada (megapixel) → 0¢ con warning, NO lanza', () => {
+    const c = falPerImageCostOf({ cost: { unit: 'megapixel', amountCents: 8 }, imageCount: 1 });
+    expect(c.cents).toBe(0);
+    expect(c.warning).toMatch(/unidad inesperada/);
+  });
+
+  it('CONTROL NEGATIVO: cost jsonb inválido/ausente → 0¢ con warning, NO lanza', () => {
+    expect(falPerImageCostOf({ cost: null, imageCount: 1 }).cents).toBe(0);
+    expect(falPerImageCostOf({ cost: null, imageCount: 1 }).warning).toMatch(/inválido o ausente/);
+  });
+});
 
 describe('falTtsCostOf — TTS por 1000 caracteres (T4.5)', () => {
   it('1000 chars a 2¢/1k (kokoro) = 2¢', () => {

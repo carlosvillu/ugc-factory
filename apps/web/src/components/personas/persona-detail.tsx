@@ -13,15 +13,14 @@
 //
 // LO QUE EL MOCKUP DIBUJA Y AQUÍ AÚN NO FUNCIONA — y CÓMO se resuelve (dictamen del ds-reviewer):
 //
-//   · LA FILA DE ACCIONES («Usar en lote», «Generar variación») SE PINTA, DESHABILITADA. Mi
-//     primera versión la omitía entera, con el argumento de que «un botón que no lleva a ningún
-//     sitio engaña». Es el MISMO argumento que el usuario ya descartó en T1.13 para «Biblioteca»
-//     (F2), «Galería» (F5) y «Métricas» (F6): allí decidió MOSTRARLAS deshabilitadas con el
-//     motivo en el nombre accesible, y preguntado de nuevo ha vuelto a elegir lo mismo. «Es de
-//     una fase futura» no distingue este caso del precedente. Así que se reusa EXACTAMENTE el
-//     patrón de `app-nav.tsx`: el motivo viaja en el `aria-label` (no solo en el `title`, que no
-//     llega ni a teclado ni a lector de pantalla) y el `disabled` es prop de primera clase del
-//     `Button` del DS — nunca simulado con clases.
+//   · LA FILA DE ACCIONES («Usar en lote», «Generar variación»). «Usar en lote» sigue DESHABILITADA
+//     (llega en T2.3); «Generar variación» YA FUNCIONA desde T4.12 pase B (genera reference-images IA
+//     del mismo sujeto — identity lock §11 — y las añade, con coste). El botón deshabilitado se pinta
+//     con el patrón de `app-nav.tsx`: el motivo viaja en el `aria-label` (no solo en el `title`, que no
+//     llega ni a teclado ni a lector de pantalla) y el `disabled` es prop de primera clase del `Button`
+//     del DS — nunca simulado con clases. El motivo de este patrón: el usuario ya descartó en T1.13
+//     («Biblioteca» F2, «Galería» F5, «Métricas» F6) omitir un afordance de fase futura; prefirió
+//     mostrarlo deshabilitado y anunciado.
 //
 //   · LOS ▶ DE «ESCUCHA SU VOZ» siguen omitidos (el ds-reviewer lo concede): el bloque de voz
 //     conserva forma y jerarquía —las filas por idioma están, con proveedor y voiceId— y lleva su
@@ -36,6 +35,7 @@ import { Alert } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Image } from '@/components/ui/image';
+import { formatCost } from '@/lib/money';
 
 const GENDER_LABEL = {
   female: 'femenino',
@@ -59,6 +59,11 @@ export function PersonaDetail({ persona, onChange, onEdit, onDelete }: PersonaDe
   // El error del upload (típicamente el RECHAZO ≥2K). Vive en el componente y no en el store:
   // es feedback de una acción, no estado del dominio.
   const [uploadError, setUploadError] = useState<string | null>(null);
+  // GENERACIÓN IA (T4.12 pase B): «Generar variación» gasta y no cachea. Estado local de la acción
+  // (loading/coste/error), como el botón de probar-template — feedback, no dominio.
+  const [generating, setGenerating] = useState(false);
+  const [generateCost, setGenerateCost] = useState<number | null>(null);
+  const [generateError, setGenerateError] = useState<string | null>(null);
 
   const voices = Object.entries(persona.voiceMap);
   const images = persona.referenceImageIds;
@@ -89,6 +94,31 @@ export function PersonaDetail({ persona, onChange, onEdit, onDelete }: PersonaDe
   async function handleRemoveImage(assetId: string): Promise<void> {
     setUploadError(null);
     onChange(await personaActions.removeReferenceImage(persona.id, assetId));
+  }
+
+  // «Generar variación» (T4.12 pase B, §11 identity lock): genera 2–3 referencias IA del mismo sujeto
+  // (retrato base FLUX.2 → encuadres NB2 ≥2K) y las añade. El servidor GASTA (sin caché): el coste se
+  // muestra al acabar. La respuesta trae la persona ya actualizada → `onChange` repinta la lista de
+  // referencias con las nuevas.
+  async function handleGenerate(): Promise<void> {
+    setGenerateError(null);
+    setGenerateCost(null);
+    setGenerating(true);
+    try {
+      const { persona: updated, costCents } = await personaActions.generateReferenceImages(
+        persona.id,
+      );
+      setGenerateCost(costCents);
+      onChange(updated);
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setGenerateError(firstFormError(err) ?? err.message);
+        return;
+      }
+      throw err;
+    } finally {
+      setGenerating(false);
+    }
   }
 
   // EL CONTENEDOR: NI `Card` NI EL CHROME QUE YO LE HABÍA PUESTO. El ds-reviewer preguntó si esto
@@ -260,7 +290,7 @@ export function PersonaDetail({ persona, onChange, onEdit, onDelete }: PersonaDe
             oiría «Usar en lote, botón, deshabilitado» sin saber por qué ni cuándo llega. Es
             literalmente el patrón que T1.13 dejó escrito para los destinos de nav de fases
             futuras (`app-nav.tsx`), reusado tal cual. */}
-        <div className="mt-6 flex flex-wrap items-center gap-2.5">
+        <div className="mt-6 flex flex-wrap items-center gap-2.5" data-slot="persona-actions">
           <Button
             disabled
             aria-label="Usar en lote · llega en T2.3 (la UI de matriz de variantes)"
@@ -268,15 +298,28 @@ export function PersonaDetail({ persona, onChange, onEdit, onDelete }: PersonaDe
           >
             Usar en lote
           </Button>
+          {/* «Generar variación» (T4.12 pase B): YA funciona — genera referencias IA del mismo sujeto
+              (identity lock §11). GASTA (sin caché), así que el coste se muestra al terminar. */}
           <Button
             variant="secondary"
-            disabled
-            aria-label="Generar variación · llega en la fase F4 (generación IA de referencias)"
-            title="Llega en la fase F4 (generación IA de referencias)"
+            loading={generating}
+            data-slot="persona-generate-button"
+            aria-label="Generar variación de referencias (identity lock, genera imágenes IA con coste)"
+            onClick={() => void handleGenerate()}
           >
             Generar variación
           </Button>
+          {generateCost !== null && (
+            <span className="text-micro text-text-3" data-slot="persona-generate-cost">
+              Coste: {formatCost(generateCost)}
+            </span>
+          )}
         </div>
+        {generateError && (
+          <div className="mt-2" data-slot="persona-generate-error">
+            <Alert tone="danger">{generateError}</Alert>
+          </div>
+        )}
 
         {/* Editar/Eliminar NO están en el mockup (que dibuja una ficha de solo lectura): son el
             CRUD que ESTA tarea entrega, así que van en su propia fila, subordinados a las

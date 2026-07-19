@@ -1,5 +1,5 @@
-// E2E PERMANENTE de la GENERACIÓN DE GALERÍA (T4.12, pase A). Contra el stack real (Postgres + web) y
-// con fal FINGIDO (startFakeExternalApis vía FAL_BASE_URL → CERO gasto real), prueba las piezas de $0
+// E2E PERMANENTE de la GENERACIÓN DE GALERÍA (T4.12, pases A y B). Contra el stack real (Postgres + web)
+// y con fal FINGIDO (startFakeExternalApis vía FAL_BASE_URL → CERO gasto real), prueba las piezas de $0
 // del pase A:
 //   1. THUMBNAIL + GUARD: un template `kind:'image'` SIN thumbnail NO se puede publicar (el guard §10.2
 //      regla 2 muerde con 400); tras generar su thumbnail (`POST /api/templates/:id/thumbnail`), pasa a
@@ -15,8 +15,9 @@
 // 400» se pone ROJO. Documentado en el informe; el guard también está cubierto por los tests de
 // integración (`gallery-repo.test.ts`, `api/templates.test.ts`), que son la red permanente.
 //
-// PASE B (curación de referencias de Personas IA): FUERA de este pase — ver el `test.skip` anotado al
-// final. NO se implementa aquí ($ + juicio del usuario).
+// PASE B (generación IA de reference-images de Personas · identity-lock): el ÚLTIMO test de este fichero
+// lo cubre con fal fake ($0). La CONSISTENCIA «mismo sujeto» es juicio humano (no automatizable aquí);
+// se prueba el MECANISMO: «Generar variación» → aparecen reference-images ≥2K con coste en /spend.
 import { expect, test, type APIRequestContext } from '@playwright/test';
 import { apiCall } from './support/http';
 import { queryStack } from './support/stack-db';
@@ -61,6 +62,21 @@ async function templateTestFalEntries(): Promise<number> {
        FROM cost_entry c
        JOIN generation g ON g.id = c.generation_id
       WHERE c.provider = 'fal' AND g.template_test = true`,
+  );
+  return Number(row?.n ?? '0');
+}
+
+/** Cuenta las `cost_entry` de fal de GENERACIONES DE REFERENCE-IMAGE de persona (la generación produjo un
+ *  asset `kind='reference_image'`). El JOIN scoped evita el ruido de otros specs @f4 que también escriben
+ *  `cost_entry` de fal (keyframes, thumbnails, clips…): solo cuenta las que materializaron una referencia.
+ *  El retrato base (flux-2) NO produce reference_image → su cost_entry no cuenta aquí, pero cada ENCUADRE
+ *  sí, así que una generación real siempre sube este contador. */
+async function personaReferenceFalEntries(): Promise<number> {
+  const [row] = await queryStack<{ n: string }>(
+    `SELECT count(DISTINCT c.id)::text AS n
+       FROM cost_entry c
+       JOIN asset a ON a.generation_id = c.generation_id
+      WHERE c.provider = 'fal' AND a.kind = 'reference_image'`,
   );
   return Number(row?.n ?? '0');
 }
@@ -169,11 +185,72 @@ test.describe('Generación de galería (T4.12 pase A) — fal fake, $0', () => {
     },
   );
 
-  // ── PASE B (NO en este pase): curación de las imágenes de referencia de Personas IA. ──
-  // La Verificación completa de T4.12 incluye «10 personas activas con referencias curadas»; eso es la
-  // generación IA de Personas (identity-lock), que el pase B implementa con gasto real y juicio del
-  // usuario. Aquí se deja anotado explícitamente para no fingir cobertura que no existe.
-  test.skip('PASE B: curación de imágenes de referencia de Personas IA (identity-lock)', () => {
-    // Implementar en el pase B de T4.12 (generación IA de Personas, sample-first, gasto + juicio).
-  });
+  // ── PASE B: generación IA de reference-images de Personas (identity-lock), con fal fake, $0 ──
+  // El botón «Generar variación» de la ficha genera 2–3 referencias del MISMO sujeto (retrato base
+  // FLUX.2 → encuadres NB2 ≥2K) y las añade a la persona, con su coste. Contra el stack real + fal fake:
+  // el fake sirve un PNG ≥2048 REAL para `nano-banana-2/edit` (que el servidor VALIDA por bytes) y
+  // registra un cost_entry por imagen. CERO gasto real ($0). La CONSISTENCIA «mismo sujeto» es juicio
+  // humano (fuera del alcance de este assert); aquí se prueba el MECANISMO: dispara → aparece una nueva
+  // reference-image con coste, y el ledger scoped a referencias sube.
+  test(
+    'generar variación: el botón de la ficha genera reference-images IA con coste visible',
+    { tag: ['@f4', '@gallery'] },
+    async ({ page }) => {
+      const name = `E2E genref ${tag()}`;
+
+      // Crear una persona fresca (sin depender del seed): abre su ficha al crearla.
+      await page.goto('/personas');
+      await page.getByRole('button', { name: /nueva persona/i }).click();
+      await page.getByLabel('Nombre').fill(name);
+      await page.getByLabel('Rango de edad').fill('25-34');
+      await page.getByLabel('Etnia').fill('latina');
+      await page.getByLabel('Estilo').fill('casual');
+      await page.getByLabel('Descriptor').fill('mujer de 29 años, latina, look casual');
+      await page.getByLabel('Escenario').fill('baño con luz natural, encimera con productos');
+      await page.getByLabel('Personalidad').fill('Cercana y directa.');
+      await page.getByLabel('Voice ID · Español').fill('v_es_genref');
+      await page.getByLabel('Voice ID · English').fill('v_en_genref');
+      await page.getByRole('button', { name: /crear persona/i }).click();
+
+      const detail = page.getByRole('article');
+      await expect(detail.getByRole('heading', { name, level: 2 })).toBeVisible();
+      // Recién creada: sin reference-images.
+      await expect(detail.locator('[data-testid^="persona-reference-"]')).toHaveCount(0);
+
+      // ── Generar variación → genera reference-images IA + cost_entry(s) de fal (reference_image) ──
+      const before = await personaReferenceFalEntries();
+      const generateButton = detail.locator('[data-slot="persona-generate-button"]');
+      await expect(generateButton).toBeVisible();
+      const waitGen = page.waitForResponse(
+        (r) => r.url().includes('/reference-images/generate') && r.request().method() === 'POST',
+      );
+      await generateButton.click();
+      const genRes = await waitGen;
+      expect(genRes.status()).toBe(200);
+
+      // Al menos una reference-image nueva aparece en la ficha, y el coste se muestra.
+      await expect(detail.locator('[data-testid^="persona-reference-"]').first()).toBeVisible({
+        timeout: 60_000,
+      });
+      await expect(detail.locator('[data-slot="persona-generate-cost"]')).toBeVisible();
+
+      // La persona quedó «activa»: ≥ REFERENCE_IMAGES_MIN (2) reference-images IA en la BD.
+      const [refRow] = await queryStack<{ n: string }>(
+        `SELECT array_length(reference_image_ids, 1)::text AS n FROM persona WHERE name = $1`,
+        [name],
+      );
+      expect(Number(refRow?.n ?? '0')).toBeGreaterThanOrEqual(2);
+
+      // El ledger scoped a referencias subió (la generación pagó por imagen; base + encuadres).
+      const after = await personaReferenceFalEntries();
+      expect(after).toBeGreaterThan(before);
+
+      // El coste es visible en /spend: la fila de fal.ai existe con un total no-cero.
+      await page.goto('/spend');
+      const providerTable = page.getByRole('table').first();
+      const falRow = providerTable.getByRole('row').filter({ hasText: 'fal.ai' });
+      await expect(falRow).toBeVisible({ timeout: 30_000 });
+      await expect(falRow).not.toContainText('$0.00');
+    },
+  );
 });

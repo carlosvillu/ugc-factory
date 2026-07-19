@@ -429,6 +429,15 @@ function scriptResponseFor(body: Record<string, unknown>): Record<string, unknow
 const IS_ASR = /speech-to-text/i;
 const IS_VIDEO = /(kling|omnihuman|veo|seedance)/i;
 const IS_IMAGE = /(flux|nano-banana|seedream)/i;
+// REFERENCE-IMAGES de Persona (T4.12 pase B): el editor `nano-banana-2/edit` produce las imágenes de
+// identity lock a `resolution:"2K"` → el servicio EXIGE ≥2048 (`validateReferenceImage`). Discriminado
+// APARTE de la imagen genérica de $0 (768×1344): así el fake sirve un PNG de verdad ≥2048 SOLO para este
+// endpoint, sin tocar las dims que f4-generation espera de los keyframes N7a. Los `flux-2` del retrato
+// base de persona NO caen aquí (usan las dims genéricas — su lado largo del preset ya no importa: el base
+// es intermedio y no se valida ≥2K). Solo el OUTPUT de NB2 se valida contra el guard.
+const IS_PERSONA_REFERENCE_EDIT = /nano-banana-2\/edit/i;
+/** Dimensiones ≥2048 del PNG de referencia que el fake sirve para NB2 edit (probe real: ~1536×2752). */
+const PERSONA_REFERENCE_PNG = { width: 1536, height: 2752 } as const;
 
 /** Las word timestamps que el ASR (`fal-ai/elevenlabs/speech-to-text`) devuelve: ≥1 `word` con tiempos
  *  válidos y crecientes (lo exige `WordTimestampsSchema.min(1)` + `computeWordCoverage`). Sin esto N7b
@@ -451,6 +460,23 @@ function fakeWordTimestamps(): Record<string, unknown> {
  *  ASR antes que audio (elevenlabs sirve las dos), luego vídeo, imagen y por defecto audio (TTS/música). */
 function falOutputFor(endpoint: string, origin: string): Record<string, unknown> {
   if (IS_ASR.test(endpoint)) return fakeWordTimestamps();
+  // Reference-image de Persona (NB2 edit, T4.12): un PNG ≥2K REAL (el servicio lo valida por bytes). ANTES
+  // de `IS_IMAGE` (que también casaría `nano-banana`): esta rama es la específica.
+  // FIDELIDAD (principio 9): NB2/edit REAL emite `width:null, height:null` en el output — el fake reproduce
+  // ESOS nulls (no las dims reales del PNG) para que los tests ejerciten el parser tolerante del servicio.
+  // Las dimensiones ≥2K se releen de los BYTES del PNG servido, no de este output.
+  if (IS_PERSONA_REFERENCE_EDIT.test(endpoint)) {
+    return {
+      images: [
+        {
+          url: `${origin}/fal-media/reference-sample.png`,
+          width: null,
+          height: null,
+          content_type: 'image/png',
+        },
+      ],
+    };
+  }
   if (IS_VIDEO.test(endpoint)) {
     // `duration` a NIVEL RAÍZ (hermana de `video`, no anidada) — así lo valida `fal-video-output.ts`; sin
     // ella `recoverVideoDurationSeconds` no factura y el vídeo fallaría permanente por la razón equivocada.
@@ -537,6 +563,9 @@ export async function startFakeExternalApis(): Promise<FakeExternalApis> {
   // submits distintos no deben colisionar en la misma pasada).
   let wav: Buffer | undefined;
   let mp4: Buffer | undefined;
+  // El PNG ≥2K de la reference-image de Persona (T4.12 pase B), servido perezosamente. Variable propia
+  // (no la `png` genérica de 768×1344/600×600): sus dims han de ser ≥2048 y el servicio las valida.
+  let refPng: Uint8Array | undefined;
   let falSubmitCounter = 0;
 
   // Sub-DAG de generación (T4.11): el fake devuelve el OUTPUT correcto POR ENDPOINT (imagen/audio/ASR/
@@ -787,6 +816,17 @@ export async function startFakeExternalApis(): Promise<FakeExternalApis> {
       png ??= await makeTestPng(768, 1344);
       res.writeHead(200, { 'content-type': 'image/png', 'content-length': String(png.byteLength) });
       res.end(Buffer.from(png));
+      return;
+    }
+    // Descarga del .png ≥2K de la REFERENCE-IMAGE de Persona (T4.12 pase B, NB2 edit): un PNG real de
+    // 1536×2752 (sharp lo decodifica; `validateReferenceImage` exige lado largo ≥2048 y lo lee del fichero).
+    if (req.method === 'GET' && url.pathname === '/fal-media/reference-sample.png') {
+      refPng ??= await makeTestPng(PERSONA_REFERENCE_PNG.width, PERSONA_REFERENCE_PNG.height);
+      res.writeHead(200, {
+        'content-type': 'image/png',
+        'content-length': String(refPng.byteLength),
+      });
+      res.end(Buffer.from(refPng));
       return;
     }
     // Descarga del .wav del output (URL pública que el "response" emitió).

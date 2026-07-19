@@ -15,6 +15,7 @@ import {
   type ErrorEnvelope,
 } from '@ugc/core/contracts';
 import {
+  GeneratePersonaImagesResponseSchema,
   PersonaCandidateListSchema,
   PersonaSchema,
   VoicePreviewResponseSchema,
@@ -271,6 +272,15 @@ export const personaActions = {
    *  el servidor: un hit no toca fal ni el ledger). */
   voicePreview: (id: string, language: string) =>
     api.post(`/api/personas/${id}/voice-preview`, VoicePreviewResponseSchema, { language }),
+  /** Genera reference-images IA de la persona (T4.12 pase B, identity lock §11): retrato base + 2–3
+   *  encuadres del mismo sujeto (≥2K), persistidos y devueltos con la persona actualizada + coste. A
+   *  diferencia del preview de voz, GASTA (sin caché: «Generar variación» produce output fresco). */
+  generateReferenceImages: (id: string) =>
+    api.post(
+      `/api/personas/${id}/reference-images/generate`,
+      GeneratePersonaImagesResponseSchema,
+      {},
+    ),
 };
 
 // ── CP2 · matriz y coste del lote (T2.3) ─────────────────────────────────────

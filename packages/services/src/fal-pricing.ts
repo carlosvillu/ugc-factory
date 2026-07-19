@@ -80,6 +80,59 @@ export function falImageCostOf(args: {
   };
 }
 
+// ── T4.12 pase B (referencias IA de Persona · NB2 edit): coste por IMAGEN ─────────────────────────
+// `fal-ai/nano-banana-2/edit` factura por IMAGEN (`unit='image'`, 8¢/img — §13.1), NO por megapíxel
+// como flux-2. `falImageCostOf` solo sabe de megapíxeles (degrada a 0¢ con warning ante `unit='image'`),
+// así que las referencias de persona necesitan su propia función POR IMAGEN. Mismo INVARIANTE DE DINERO:
+// NUNCA lanza (la llamada de pago YA ocurrió), degrada a 0¢ con warning OBSERVABLE si la unidad no es
+// 'image' o el `cost` jsonb no valida.
+//
+// NOTA DE FIDELIDAD DEL LEDGER (deuda menor conocida): a `resolution:"2K"` fal cobra ~1.5× el precio
+// base por imagen (probe 2026-07-19: ~12¢ vs los 8¢ del perfil). El perfil declara el precio BASE por
+// imagen; este helper registra ese precio base. El delta del multiplicador 2K NO se modela aquí (igual
+// que el 4k-tier de Veo no se modela en el estimador): el `/spend` queda ligeramente por debajo del
+// gasto real de fal en las referencias 2K. Se documenta en el sample; modelar el multiplicador es una
+// mejora futura.
+
+export interface FalPerImageCost {
+  /** `amount_cents` ENTERO del `cost_entry` (redondeado). */
+  cents: number;
+  /** La VERDAD granular → `quantity` (unit='images'): nº de imágenes facturadas. */
+  imageCount: number;
+  warning: string | null;
+}
+
+/**
+ * Coste de un output de imagen de fal facturado POR IMAGEN (NB2 edit, T4.12). Recibe el `cost` jsonb
+ * CRUDO del `model_profile` y valida `ModelCostSchema` INTERNAMENTE (misma política que `falTtsCostOf`).
+ * `unit` DEBE ser 'image'; cualquier otra degrada a 0¢ con warning (nunca un cálculo silencioso erróneo).
+ */
+export function falPerImageCostOf(args: { cost: unknown; imageCount: number }): FalPerImageCost {
+  const parsed = ModelCostSchema.safeParse(args.cost);
+  if (!parsed.success) {
+    return {
+      cents: 0,
+      imageCount: args.imageCount,
+      warning:
+        'fal-pricing: model_profile de imagen (por imagen).cost inválido o ausente: amount_cents=0.',
+    };
+  }
+  if (parsed.data.unit !== 'image') {
+    return {
+      cents: 0,
+      imageCount: args.imageCount,
+      warning:
+        `fal-pricing: unidad inesperada '${parsed.data.unit}' para un output por imagen (se esperaba ` +
+        "'image'): el cost_entry se registra con amount_cents=0. Revisa el model_profile.",
+    };
+  }
+  return {
+    cents: Math.round(args.imageCount * parsed.data.amountCents),
+    imageCount: args.imageCount,
+    warning: null,
+  };
+}
+
 // ── T4.5 (N7b · TTS + ASR): dos unidades de coste DISTINTAS por escena ────────────────────────────
 // La cadena N7b hace DOS llamadas fal facturadas por separado (anti-doble-cobro: un `cost_entry` por
 // cada una): el TTS por `1k_chars` (kokoro 2¢, turbo 5¢, eleven-v3 10¢/1000 chars) y el ASR por

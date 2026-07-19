@@ -61,6 +61,13 @@ export { runGenerateBroll } from './generate-broll';
 // audio-family (`extractAudioOutput`, finalizer `kind:'music_bed'`) — NO reusa el finalizer de N7b
 // (fusionado con el ASR). Lo consume el smoke del verifier y, en T4.11, el executor N7e.
 export { runGenerateMusic } from './generate-music';
+// Generación IA de IMÁGENES DE REFERENCIA de una Persona (T4.12 pase B, §11 identity lock): retrato base
+// (FLUX.2 t2i, ≥2K) → cada encuadre (`fal-ai/nano-banana-2/edit`, ≥2K validado) → persistido en la
+// persona. Sin dedup ni seed (cada «Generar variación» = output fresco). Finalizer PROPIO
+// (`kind:'reference_image'`, `unit:'images'`). Lo consume el route handler
+// `POST /api/personas/[id]/reference-images/generate`. Los endpoints y tipos internos NO se re-exportan
+// (los tests del módulo los importan por ruta relativa).
+export { runGeneratePersonaImages } from './generate-persona-images';
 // El dedup de generación (T4.10, §9.6: `resolveProductionDedup` en `generation-dedup.ts`) NO
 // se re-exporta: es una pieza INTERNA que los 6 servicios de generación importan por ruta relativa antes
 // de crear la fila `submitting`. Exportarla sería superficie muerta (misma disciplina que el resto del

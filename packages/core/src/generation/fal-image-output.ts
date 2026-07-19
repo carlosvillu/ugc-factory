@@ -33,3 +33,28 @@ export function extractImageOutput(output: unknown): FalImageOutput | null {
   const parsed = FalImageOutputSchema.safeParse(output);
   return parsed.success ? parsed.data : null;
 }
+
+/** Una imagen de la que SOLO nos importa la URL (las dimensiones se releen del fichero). */
+const FalImageUrlSchema = z.object({
+  url: z.string().min(1),
+  content_type: z.string().optional(),
+});
+export type FalImageUrl = z.infer<typeof FalImageUrlSchema>;
+
+const FalImageUrlOutputSchema = z.object({
+  images: z.array(FalImageUrlSchema).min(1),
+});
+export type FalImageUrlOutput = z.infer<typeof FalImageUrlOutputSchema>;
+
+/**
+ * Variante TOLERANTE de `extractImageOutput` para consumidores que NO facturan por megapíxel
+ * y releen las dimensiones DEL FICHERO descargado (p. ej. las reference-images de personas, que
+ * pasan por `validateReferenceImage(bytes)`). `nano-banana-2/edit` REAL emite `width:null,
+ * height:null` en el output — nulls que el `FalImageSchema` estricto rechaza (`.optional()` acepta
+ * ausente, no `null`). Aquí solo exigimos la URL descargable; el resto del output se ignora.
+ * Devuelve `null` si no encaja (el servicio lo mapea a `FalResponseError`). Nunca lanza.
+ */
+export function extractImageUrlOutput(output: unknown): FalImageUrlOutput | null {
+  const parsed = FalImageUrlOutputSchema.safeParse(output);
+  return parsed.success ? parsed.data : null;
+}

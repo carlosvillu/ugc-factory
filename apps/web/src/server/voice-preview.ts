@@ -14,7 +14,7 @@ import { AppError } from '@ugc/core/contracts';
 import { PersonaSchema, resolveVoiceStep, type VoiceProvider } from '@ugc/core/persona';
 import { getModelProfileByEndpoint, getPersona, type DbClient } from '@ugc/db';
 import { runTtsOnly, type VoicePreviewResult } from '@ugc/services';
-import { loadFalKey } from './fal-key';
+import { loadFalKey, falOptionsFrom } from './fal-key';
 
 /**
  * El endpoint del TTS de fal que le corresponde a cada proveedor de voz (T4.6, resolución MÍNIMA). Es
@@ -99,8 +99,7 @@ export async function generateVoicePreview(
   // reescribe por-origen el submit + poll + download (las `status_url`/`response_url` absolutas de fal),
   // y que cubre por igual el path de worker (executors N7) cuando T4.11 lo cablee. AUSENTE en producción
   // → fetch a la fal real. Se lee `FAL_BASE_URL` SOLO aquí (web), nunca en core.
-  const baseUrlOverride =
-    deps.falBaseUrl !== undefined && deps.falBaseUrl !== '' ? deps.falBaseUrl : undefined;
+  const falOptions = falOptionsFrom(deps.falBaseUrl);
 
   return runTtsOnly(
     {
@@ -110,7 +109,7 @@ export async function generateVoicePreview(
       // reproducción cacheada no paga el `getSecretBlob`+descifrado de `loadFalKey`.
       falKey: () => loadFalKey(db),
       ...(deps.logger !== undefined ? { logger: deps.logger } : {}),
-      ...(baseUrlOverride !== undefined ? { falOptions: { baseUrlOverride } } : {}),
+      ...(falOptions !== undefined ? { falOptions } : {}),
     },
     // `voiceInputs` es una interfaz (`{voice, speed?}`) sin index signature; se copia a un objeto
     // plano para encajar en `GenerationInputs` (`Record<string, unknown>`).

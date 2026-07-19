@@ -14,13 +14,7 @@
 // slot queda como palabra descriptiva, p.ej. `{product.name}` → `product name`) para que el modelo
 // componga una escena representativa sin inventar un producto concreto. Es «lo más simple que produce
 // una imagen representativa» (alcance T4.12 pase A), no el compilador de F3.
-
-/** Recorta un texto libre a un tamaño razonable para el prompt (higiene, no validación). */
-function trimForPrompt(value: string, maxChars: number): string {
-  const clean = value.trim().replace(/\s+/g, ' ');
-  if (clean.length <= maxChars) return clean;
-  return `${clean.slice(0, maxChars).trimEnd()}…`;
-}
+import { trimForPrompt } from '../generation/prompt-text';
 
 /** Desnuda los slots `{namespace.field}` del body a palabras planas: `{product.name}` → `product name`.
  *  Determinista y sin dependencias del compilador (§10.4): para una miniatura basta con que el texto

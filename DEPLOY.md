@@ -183,9 +183,14 @@ que depende su arranque en el compose).
 
 ## Limitaciones conocidas / notas
 
-- **ffmpeg/libass/c2patool NO están en la imagen del worker**: ningún executor
-  de F0/F1 los usa. Se añadirán a la imagen en F5 (composición), que es cuando
-  `test:media` pasará a correr dentro de la imagen.
+- **La imagen del worker se construye SIEMPRE para amd64** (`--platform
+linux/amd64`): c2patool solo publica binario `x86_64-unknown-linux-gnu` y el
+  VPS es x86_64. Un build native-arm64 falla a propósito en el stage `c2patool`.
+- **El toolchain de render vive en la imagen del worker desde T5.1**: ffmpeg
+  (libass + libfreetype + `sidechaincompress`), ffprobe, las fuentes OFL
+  vendorizadas (TikTok Sans, Poppins, Noto fallback vía fontconfig) y c2patool
+  (fijado a `c2patool-v0.27.0`, checksum verificado). Un `HEALTHCHECK` de
+  capacidades (`scripts/healthcheck-capabilities.sh`) asevera que todo responde.
 - El contenedor de web corre `USER node`; el volumen de assets se inicializa
   con owner `node` desde las imágenes. Si el volumen `ugc-assets` ya existiera
   con owner root, el worker no podría escribir: `docker run --rm -v

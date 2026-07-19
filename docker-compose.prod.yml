@@ -98,6 +98,12 @@ services:
         max-file: '3'
 
   worker:
+    # amd64 SIEMPRE (T5.1): la imagen del worker de render incluye c2patool, que
+    # upstream solo publica para x86_64-unknown-linux-gnu. El Dockerfile aborta el
+    # build en cualquier otro TARGETARCH. Fijar la plataforma hace explícito el
+    # invariante y permite construir/correr por qemu en una máquina arm64 (p.ej.
+    # el verifier en Mac Apple Silicon). El VPS es x86_64: aquí es un no-op.
+    platform: linux/amd64
     build:
       context: .
       dockerfile: apps/worker/Dockerfile

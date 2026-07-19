@@ -13,11 +13,13 @@ import { eq } from 'drizzle-orm';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createTestDatabase, type TestDatabase } from '@ugc/test-utils';
 import { promptTemplate, promptVersion, type NewPromptTemplate } from '../../src/schema/gallery';
+import { AppError } from '@ugc/core/contracts';
 import {
   createTemplateVersion,
   getTemplateWithVersions,
   listTemplates,
   setTemplateStatus,
+  setTemplateThumbnail,
 } from '../../src/repos/gallery.repo';
 
 let tdb: TestDatabase;
@@ -174,7 +176,7 @@ describe('createTemplateVersion — versionado inmutable (§10.1)', () => {
 });
 
 describe('setTemplateStatus — transición de estado (§10.2)', () => {
-  it('cambia draft→review→published', async () => {
+  it('cambia draft→review→published cuando el template TIENE thumbnail (§10.2 regla 2, T4.12)', async () => {
     const [seeded] = await tdb.db
       .insert(promptTemplate)
       .values(tpl({ slug: 'st-1', status: 'draft' }))
@@ -183,7 +185,52 @@ describe('setTemplateStatus — transición de estado (§10.2)', () => {
 
     const review = await setTemplateStatus(tdb.db, id, 'review');
     expect(review!.status).toBe('review');
+    // T4.12: publicar EXIGE thumbnail. Se asocia uno (id opaco; el guard solo mira que no sea null) y
+    // recién entonces la transición a `published` es válida.
+    await setTemplateThumbnail(tdb.db, id, 'asset-thumb-not-a-secret');
     const published = await setTemplateStatus(tdb.db, id, 'published');
     expect(published!.status).toBe('published');
+  });
+
+  it('RECHAZA publicar un template SIN thumbnail (§10.2 regla 2, guard de T4.12)', async () => {
+    // EL GUARD. Un template en `review` SIN `thumbnail_asset_id` no puede pasar a `published`: la
+    // transición lanza `validation_error` y NO muta el estado (queda en `review`). Es el control que la
+    // Verificación de T4.12 exige («ninguno publicado sin thumbnail»).
+    const [seeded] = await tdb.db
+      .insert(promptTemplate)
+      .values(tpl({ slug: 'st-no-thumb', status: 'review' }))
+      .returning();
+    const id = seeded!.id;
+
+    const err = await setTemplateStatus(tdb.db, id, 'published').then(
+      () => undefined,
+      (e: unknown) => e,
+    );
+    expect(err).toBeInstanceOf(AppError);
+    expect((err as AppError).code).toBe('validation_error');
+    // El estado NO cambió: sigue en `review` (la tx del guard aborta el UPDATE).
+    const after = await getTemplateWithVersions(tdb.db, id);
+    expect(after?.template.status).toBe('review');
+    expect(after?.template.thumbnailAssetId).toBeNull();
+  });
+
+  it('las transiciones a estados NO-published (draft→review) no exigen thumbnail', async () => {
+    const [seeded] = await tdb.db
+      .insert(promptTemplate)
+      .values(tpl({ slug: 'st-noguard', status: 'draft' }))
+      .returning();
+    const review = await setTemplateStatus(tdb.db, seeded!.id, 'review');
+    expect(review!.status).toBe('review');
+  });
+
+  it('setTemplateThumbnail asocia (y des-asocia con null) el asset de miniatura', async () => {
+    const [seeded] = await tdb.db
+      .insert(promptTemplate)
+      .values(tpl({ slug: 'st-thumb', status: 'draft' }))
+      .returning();
+    const withThumb = await setTemplateThumbnail(tdb.db, seeded!.id, 'asset-x-not-a-secret');
+    expect(withThumb!.thumbnailAssetId).toBe('asset-x-not-a-secret');
+    const cleared = await setTemplateThumbnail(tdb.db, seeded!.id, null);
+    expect(cleared!.thumbnailAssetId).toBeNull();
   });
 });

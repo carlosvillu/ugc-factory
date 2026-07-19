@@ -333,6 +333,16 @@ export const promptTemplate = pgTable(
 
     // ── Curación / autoría (§10.1) ──────────────────────────────────────────
     status: promptStatus('status').notNull().default('draft'),
+    // THUMBNAIL DE GALERÍA (T4.12, §10.2 regla 2): el asset de la MINIATURA-IMAGEN que promociona el
+    // template a `published`. Es una IMAGEN generada con fal (flux-2 t2i) a partir del `body`
+    // compilado — la cara del template en la rejilla. INVARIANTE DE PRODUCTO (§10.2 regla 2): «ningún
+    // template a published sin thumbnail», que el endpoint de transición valida (no un CHECK: el guard
+    // vive en la capa de aplicación como el resto de reglas §10.2). Nullable: un template `draft`/
+    // `review` aún no lo tiene. Sin FK de columna a `asset` por el mismo desacoplo que
+    // `asset.generation_id`/`generation.step_run_id` (integridad por repo, no constraint circular).
+    // OJO: NO es `ad_variant.thumbnail_asset_id` (batch.ts) — ese es el frame-thumbnail del VÍDEO final
+    // (F5); ESTE es la miniatura-imagen del TEMPLATE de galería.
+    thumbnailAssetId: text('thumbnail_asset_id'),
     featured: boolean('featured').notNull().default(false),
     license: text('license'),
     author: text('author'),

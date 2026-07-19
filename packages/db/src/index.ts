@@ -125,6 +125,8 @@ export {
   insertVoicePreviewGenerationIfAbsent,
   getCompletedGenerationByContentHash,
   insertProductionGenerationIfAbsent,
+  getTemplateTestGenerationByContentHash,
+  insertTemplateTestGenerationIfAbsent,
 } from './repos/generation.repo';
 export type { GenerationPatch } from './repos/generation.repo';
 export type { Generation, NewGeneration } from './schema/generation';
@@ -295,6 +297,8 @@ export {
   getTemplateWithVersions,
   createTemplateVersion,
   setTemplateStatus,
+  setTemplateThumbnail,
+  getTemplate,
   listGuardPacks,
   getModelProfile,
   getModelProfileByEndpoint,

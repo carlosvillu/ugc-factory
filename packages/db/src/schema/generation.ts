@@ -174,6 +174,23 @@ export const generation = pgTable(
     // queda garantizado a nivel BD incluso con clicks concurrentes. Default `false`: la inmensa mayoría
     // de generaciones (imagen, voiceover de producción) no son previews.
     voicePreview: boolean('voice_preview').notNull().default(false),
+    // DISCRIMINADOR DE PRIMERA CLASE (T4.12, «probar template»): `true` cuando esta generación es una
+    // IMAGEN DE PRUEBA de un template disparada por el botón «Probar template» de la ficha, no una
+    // generación de producción. Precedente EXACTO de `voice_preview` (T4.6): `generation` no tiene
+    // columna `kind` propia, así que las procedencias que gatean un ÍNDICE o una query se modelan como
+    // booleanos de primera clase FUERA de `content_hash`. Aquí gatea la CACHÉ SCOPED de pruebas: el
+    // índice único parcial de abajo impone unicidad de `content_hash` SOLO entre pruebas (lookup-then-
+    // insert atómico, patrón `voice_preview`), sin tocar la unicidad global de producción. Así «N
+    // clicks de probar, 0 coste» queda garantizado a nivel BD incluso con clicks concurrentes.
+    //
+    // DISJUNCIÓN con el índice de producción (crítico, T4.10): una fila `template_test=true` lleva
+    // `voice_preview=false`, así que SIN cuidado casaría también el predicado del índice de producción
+    // (`voice_preview=false AND status NOT IN (failed,cancelled)`) → el 2º click chocaría 23505 contra
+    // ESE índice (no el arbiter del ON CONFLICT de pruebas) → error no gestionado, no un no-op gracioso.
+    // Por eso el predicado del índice de producción se AMPLÍA abajo con `template_test = false`, dejando
+    // los tres índices parciales sobre `content_hash` mutuamente disjuntos. Default `false`: la inmensa
+    // mayoría de generaciones (producción, previews de voz) no son pruebas de template.
+    templateTest: boolean('template_test').notNull().default(false),
     startedAt: timestamp('started_at', { withTimezone: true }),
     completedAt: timestamp('completed_at', { withTimezone: true }),
     ...timestamps,
@@ -197,6 +214,16 @@ export const generation = pgTable(
     uniqueIndex('generation_voice_preview_content_hash_key')
       .on(t.contentHash)
       .where(sql`${t.voicePreview} = true`),
+    // CACHÉ SCOPED DE PRUEBAS DE TEMPLATE (T4.12, «probar template»): unicidad de `content_hash` SOLO
+    // entre las filas `template_test=true`. GEMELO del índice de previews de voz: índice PARCIAL,
+    // deliberadamente NO global. El `content_hash` de una prueba lo determinan prompt-de-prueba + modelo
+    // + inputs, así que dos clicks del MISMO «Probar template» colisionan aquí y el `ON CONFLICT DO
+    // NOTHING` del repo hace que el segundo no cree fila ni cost_entry («N clicks, 0 coste» a nivel BD).
+    // DISJUNTO del índice de producción (que ahora exige `template_test = false`) y del de previews
+    // (`voice_preview = true` implica `template_test = false`): los tres arbiters eligen sin ambigüedad.
+    uniqueIndex('generation_template_test_content_hash_key')
+      .on(t.contentHash)
+      .where(sql`${t.templateTest} = true`),
     // DEDUP GLOBAL DE PRODUCCIÓN (T4.10, §9.6): unicidad de `content_hash` entre las generaciones de
     // PRODUCCIÓN VIVAS-O-EXITOSAS — `voice_preview = false` AND status NOT IN ('failed','cancelled'). Es
     // la clave de la economía Hook×Body×CTA: un lote de 3 variantes del mismo ángulo comparte body/CTA,
@@ -212,13 +239,19 @@ export const generation = pgTable(
     //  · global (todos los estados) ROMPERÍA los retries: una generación `failed` conserva su hash y
     //    bloquearía el `submitting` del reintento. Por eso `failed`/`cancelled` quedan FUERA del predicado
     //    (un retry de una fila terminal-fallida vuelve a insertar sin conflicto).
-    // DISJUNTO del índice de previews (`voice_preview = false` aquí vs `= true` allí): los dos índices
-    // parciales sobre `content_hash` no se solapan, así que el arbiter del `ON CONFLICT` elige sin
-    // ambigüedad (el `where` del repo DEBE ser el literal EXACTO de este predicado, ver
-    // `insertProductionGenerationIfAbsent`; un parámetro `$1` da 42P10).
+    // DISJUNTO de los índices de previews y de pruebas de template (`voice_preview = false AND
+    // template_test = false` aquí vs `voice_preview = true` / `template_test = true` allí): los TRES
+    // índices parciales sobre `content_hash` no se solapan, así que el arbiter del `ON CONFLICT` elige
+    // sin ambigüedad (el `where` del repo DEBE ser el literal EXACTO de este predicado, ver
+    // `insertProductionGenerationIfAbsent`; un parámetro `$1` da 42P10). El `template_test = false`
+    // se AÑADIÓ en T4.12: sin él, una fila `template_test=true` (que lleva `voice_preview=false`)
+    // casaría este índice y el 2º click de «probar template» chocaría 23505 contra ESTE índice en vez
+    // de ser un no-op del arbiter de pruebas.
     uniqueIndex('generation_production_content_hash_key')
       .on(t.contentHash)
-      .where(sql`${t.voicePreview} = false and ${t.status} not in ('failed', 'cancelled')`),
+      .where(
+        sql`${t.voicePreview} = false and ${t.templateTest} = false and ${t.status} not in ('failed', 'cancelled')`,
+      ),
   ],
 );
 

@@ -12,6 +12,7 @@
 //     siguiente versión, y actualiza `template.body`/`head_version`. Todo en UNA transacción.
 //   · TRANSICIÓN de estado (`setTemplateStatus`): draft→review→published (§10.2).
 import { and, arrayContains, desc, eq, sql } from 'drizzle-orm';
+import { AppError } from '@ugc/core/contracts';
 import type { Db } from '../client';
 import {
   guardPack,
@@ -172,8 +173,9 @@ export async function createTemplate(db: Db, values: NewPromptTemplate): Promise
   return row;
 }
 
-/** Un template por id; `undefined` si no existe. Interno: la ficha usa `getTemplateWithVersions`. */
-async function getTemplate(db: Db, id: string): Promise<PromptTemplate | undefined> {
+/** Un template por id; `undefined` si no existe. Lo usan la ficha (`getTemplateWithVersions`) y los
+ *  servidores de generación de T4.12 (thumbnail / probar template), que necesitan el body/title. */
+export async function getTemplate(db: Db, id: string): Promise<PromptTemplate | undefined> {
   const [row] = await db.select().from(promptTemplate).where(eq(promptTemplate.id, id));
   return row;
 }
@@ -304,17 +306,56 @@ export async function listGuardPacks(db: Db): Promise<GuardPack[]> {
   return db.select().from(guardPack);
 }
 
+/** Asocia (o des-asocia con `null`) el asset de THUMBNAIL de un template (T4.12): la miniatura-imagen
+ *  que el job de galería genera con fal y que §10.2 regla 2 exige para publicar. `undefined` si el
+ *  template no existe. Escritura simple y directa (el asset ya existe cuando se llama). */
+export async function setTemplateThumbnail(
+  db: Db,
+  id: string,
+  thumbnailAssetId: string | null,
+): Promise<PromptTemplate | undefined> {
+  const [row] = await db
+    .update(promptTemplate)
+    .set({ thumbnailAssetId, updatedAt: new Date() })
+    .where(eq(promptTemplate.id, id))
+    .returning();
+  return row;
+}
+
 /** Cambia el estado del template (§10.2 draft→review→published). `undefined` si no existe.
- *  La validez de la transición la gobierna el contrato §10.2; aquí solo se persiste. */
+ *  La validez de la SECUENCIA de la transición la gobierna el contrato §10.2; aquí se persiste Y se
+ *  hace cumplir la REGLA 2: **ningún template a `published` sin `thumbnail_asset_id`** (T4.12; en T3.8
+ *  esta transición se permitía sin thumbnail porque la generación de thumbnail no existía todavía).
+ *  El guard es un INVARIANTE DE PRODUCTO en la capa de aplicación (no un CHECK): se lee la fila BAJO
+ *  LOCK (`FOR UPDATE`) y se decide en la MISMA tx que el UPDATE, para que un thumbnail borrado en
+ *  paralelo no cuele una publicación sin miniatura. Lanza `AppError('validation_error')` si se intenta
+ *  publicar sin thumbnail (el route lo mapea al envelope 400 del Apéndice E). */
 export async function setTemplateStatus(
   db: Db,
   id: string,
   status: TemplateStatus,
 ): Promise<PromptTemplate | undefined> {
-  const [row] = await db
-    .update(promptTemplate)
-    .set({ status, updatedAt: new Date() })
-    .where(eq(promptTemplate.id, id))
-    .returning();
-  return row;
+  return db.transaction(async (tx) => {
+    const [current] = await tx
+      .select({ thumbnailAssetId: promptTemplate.thumbnailAssetId })
+      .from(promptTemplate)
+      .where(eq(promptTemplate.id, id))
+      .for('update');
+    if (!current) return undefined;
+    if (
+      status === 'published' &&
+      (current.thumbnailAssetId === null || current.thumbnailAssetId === '')
+    ) {
+      throw new AppError(
+        'validation_error',
+        'no se puede publicar un template sin thumbnail (§10.2): genera su miniatura primero',
+      );
+    }
+    const [row] = await tx
+      .update(promptTemplate)
+      .set({ status, updatedAt: new Date() })
+      .where(eq(promptTemplate.id, id))
+      .returning();
+    return row;
+  });
 }

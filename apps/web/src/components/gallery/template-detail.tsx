@@ -16,6 +16,7 @@ import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { SlotBody } from '@/components/gallery/slot-body';
 import { TemplateEditor } from '@/components/gallery/template-editor';
+import { TemplateTestButton } from '@/components/gallery/template-test-button';
 import { VersionDiff } from '@/components/gallery/version-diff';
 import { statusBadgeTone, statusLabel } from '@/components/gallery/status-badge';
 
@@ -151,6 +152,10 @@ export function TemplateDetail({ templateId, onEdited, onStatusChanged }: Templa
           <p className="text-body-sm text-text-2">{template.description}</p>
         ) : null}
       </header>
+
+      {/* ── Probar template (T4.12): imagen de prueba barata ANTES de comprometer un run. Solo
+             `kind:'image'` (los de vídeo son caros; el servidor los rechaza igualmente). ── */}
+      {template.kind === 'image' ? <TemplateTestButton templateId={templateId} /> : null}
 
       <Separator />
 

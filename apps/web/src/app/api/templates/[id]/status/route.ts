@@ -1,10 +1,11 @@
 // `PATCH /api/templates/:id/status` — transición de estado del template (draft→review→published,
-// §10.2). T3.8.
+// §10.2). T3.8; guard de thumbnail cableado en T4.12.
 //
-// NOTA DE ALCANCE (§10.2 regla 2 vs T4.12): «ningún template a published sin thumbnail», pero la
-// GENERACIÓN de thumbnail es T4.12 (fal). En T3.8 la transición a published se PERMITE sin
-// thumbnail: el estado es lo que se maneja aquí; el guard de thumbnail se cablea cuando el
-// thumbnail exista (T4.12). Documentado en el journal.
+// GUARD §10.2 regla 2 (T4.12): «ningún template a published sin thumbnail». El invariante lo hace
+// cumplir `setTemplateStatus` en la BD (lee bajo lock + decide en la misma tx): si se intenta publicar
+// un template sin `thumbnail_asset_id`, lanza `AppError('validation_error')` que `withRoute` mapea al
+// envelope 400 del Apéndice E. Antes (T3.8) la generación de thumbnail no existía y la transición se
+// permitía sin él; T4.12 trajo la generación (`generateTemplateThumbnail`) y con ella este guard.
 import { z } from 'zod';
 import { AppError } from '@ugc/core/contracts';
 import { TemplateStatusChangeSchema } from '@ugc/core/gallery';

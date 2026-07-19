@@ -715,11 +715,22 @@ export async function startFakeExternalApis(): Promise<FakeExternalApis> {
       !url.pathname.includes('/requests/');
     if (isFalSubmit) {
       const endpoint = url.pathname.slice(1); // sin el '/' inicial
+      const submitBody = await readJson(req);
       falSubmitCounter += 1;
       const requestId = `fake-${String(falSubmitCounter)}`;
       falEndpointByRequestId.set(requestId, endpoint);
-      // Designa el PRIMER submit de IMAGEN como el fallo determinista (una vez por corrida).
-      if (doomedRequestId === undefined && IS_IMAGE.test(endpoint)) {
+      // Designa el PRIMER submit de IMAGEN DEL PIPELINE como el fallo determinista (una vez por corrida).
+      // El discriminador es `seed` en el payload: SOLO las generaciones del pipeline N7a (packshot) lo
+      // llevan (`seed: i` por shot, generation.ts). Las imágenes de $0 de T4.12 (thumbnail de galería,
+      // «probar template») son SEEDLESS → nunca doom-elegibles → coexisten con f4-generation.spec sin
+      // robarle su fallo (si CUALQUIER submit de imagen fuese doom-elegible, gallery-generation.spec —
+      // más rápido que el pipeline — ganaría la carrera y consumiría el doom, dejando a f4-generation
+      // sin su fallo determinista: el falso rojo de acoplamiento cross-spec en BD/fake compartidos).
+      if (
+        doomedRequestId === undefined &&
+        IS_IMAGE.test(endpoint) &&
+        submitBody.seed !== undefined
+      ) {
         doomedRequestId = requestId;
       }
       const responseUrl = `${origin}/${endpoint}/requests/${requestId}`;

@@ -12,9 +12,9 @@
 // resolución COMPLETA (recipe del tier × voice_map × idioma) es T4.11.
 import { AppError } from '@ugc/core/contracts';
 import { PersonaSchema, resolveVoiceStep, type VoiceProvider } from '@ugc/core/persona';
-import { getSecretsKeyFromEnv, decryptSecret, type SecretBlob } from '@ugc/core/secrets';
-import { getModelProfileByEndpoint, getPersona, getSecretBlob, type DbClient } from '@ugc/db';
+import { getModelProfileByEndpoint, getPersona, type DbClient } from '@ugc/db';
 import { runTtsOnly, type VoicePreviewResult } from '@ugc/services';
+import { loadFalKey } from './fal-key';
 
 /**
  * El endpoint del TTS de fal que le corresponde a cada proveedor de voz (T4.6, resolución MÍNIMA). Es
@@ -29,20 +29,6 @@ const PROVIDER_TTS_ENDPOINT: Readonly<Record<VoiceProvider, string | null>> = {
   kokoro: 'fal-ai/kokoro',
   minimax: null,
 };
-
-/** La API key de fal EN CLARO desde `app_setting` (cifrada, §19.2). Lanza `provider_error` si no hay
- *  key configurada (no se puede generar la muestra) — accionable, no un 500 opaco. */
-async function loadFalKey(db: DbClient): Promise<string> {
-  const blob = await getSecretBlob(db, 'fal');
-  if (blob === undefined || blob === null) {
-    throw new AppError('provider_error', 'no hay API key de fal configurada (Ajustes → fal)');
-  }
-  try {
-    return decryptSecret(blob as SecretBlob, getSecretsKeyFromEnv());
-  } catch {
-    throw new AppError('provider_error', 'la API key de fal no se pudo descifrar');
-  }
-}
 
 export interface GenerateVoicePreviewDeps {
   db: DbClient;

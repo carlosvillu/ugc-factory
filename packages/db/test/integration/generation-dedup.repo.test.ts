@@ -16,7 +16,9 @@ import { createTestDatabase, type TestDatabase } from '@ugc/test-utils';
 import {
   createGeneration,
   getCompletedGenerationByContentHash,
+  getTemplateTestGenerationByContentHash,
   insertProductionGenerationIfAbsent,
+  insertTemplateTestGenerationIfAbsent,
 } from '../../src/repos/generation.repo';
 import type { Generation } from '../../src/schema/generation';
 
@@ -44,10 +46,11 @@ async function seed(status: Generation['status'], overrides: Partial<Generation>
   });
 }
 
-/** Ejecuta un INSERT que se espera que VIOLE el índice de dedup de producción y devuelve el `cause` del
- *  driver pg (donde viaja el SQLSTATE 23505 + el nombre de la constraint). Assertar el nombre distingue
- *  ESTE índice de cualquier otro UNIQUE de la tabla (un match genérico de mensaje lo satisfaría). */
-async function expectDedupConflict(insert: Promise<unknown>): Promise<void> {
+/** Ejecuta un INSERT que se espera que VIOLE un índice único parcial concreto y aserta el SQLSTATE 23505
+ *  + el nombre EXACTO de la constraint (`constraint`) del `cause` del driver pg. Assertar el nombre
+ *  distingue ESE índice de cualquier otro UNIQUE de la tabla (un match genérico de mensaje lo
+ *  satisfaría). Parametrizado por constraint: sirve para el índice de producción y el de pruebas. */
+async function expectConflict(insert: Promise<unknown>, constraint: string): Promise<void> {
   const err = await insert.then(
     () => undefined,
     (e: unknown) => e,
@@ -55,7 +58,12 @@ async function expectDedupConflict(insert: Promise<unknown>): Promise<void> {
   expect(err).toBeDefined();
   const cause = (err as { cause?: { code?: string; constraint?: string } }).cause;
   expect(cause?.code).toBe('23505');
-  expect(cause?.constraint).toBe('generation_production_content_hash_key');
+  expect(cause?.constraint).toBe(constraint);
+}
+
+/** El INSERT viola el índice de dedup de PRODUCCIÓN. */
+function expectDedupConflict(insert: Promise<unknown>): Promise<void> {
+  return expectConflict(insert, 'generation_production_content_hash_key');
 }
 
 describe('índice único parcial de dedup de producción (T4.10)', () => {
@@ -104,6 +112,87 @@ describe('índice único parcial de dedup de producción (T4.10)', () => {
     await seed('completed', { voicePreview: true });
     const prod = await seed('submitting', { voicePreview: false });
     expect(prod.status).toBe('submitting');
+  });
+
+  it('NO colisiona con una PRUEBA de template del mismo hash (índices disjuntos: template_test=false vs true)', async () => {
+    // LA REGRESIÓN CLAVE DE T4.12 (disjunción). Una fila `template_test=true` lleva `voice_preview=false`
+    // y un estado NO-terminal, así que SIN el `template_test = false` añadido al predicado de producción
+    // casaría ESTE índice — y el 2º click de «probar template» chocaría 23505 contra el índice de
+    // PRODUCCIÓN (no el arbiter de pruebas), rompiendo el no-op gracioso. Con la disjunción correcta, una
+    // prueba `completed` y una producción `submitting` con el MISMO hash conviven — cada una en su índice.
+    await seed('completed', { templateTest: true });
+    const prod = await seed('submitting', { templateTest: false });
+    expect(prod.status).toBe('submitting');
+    const rows = await tdb.db.query.generation.findMany({
+      where: (g, { eq }) => eq(g.contentHash, HASH),
+    });
+    expect(rows).toHaveLength(2);
+  });
+});
+
+// ── CACHÉ SCOPED de pruebas de template (T4.12) ──────────────────────────────────
+// Gemela de la de previews de voz, sobre `generation_template_test_content_hash_key`. Fija la
+// disjunción con los OTROS dos scopes (producción y previews) y el roundtrip del repo.
+describe('índice único parcial de pruebas de template (T4.12)', () => {
+  it('RECHAZA una 2ª prueba con el mismo content_hash (la carrera de clicks se serializa en el INSERT)', async () => {
+    await seed('submitting', { templateTest: true });
+    await expectConflict(
+      seed('submitting', { templateTest: true }),
+      'generation_template_test_content_hash_key',
+    );
+  });
+
+  it('NO colisiona con una generación de PRODUCCIÓN del mismo hash (índices disjuntos)', async () => {
+    // El reverso del control de arriba: una producción viva y una prueba con el mismo hash conviven.
+    await seed('submitting', { templateTest: false });
+    const test = await seed('submitting', { templateTest: true });
+    expect(test.status).toBe('submitting');
+  });
+
+  it('NO colisiona con una PREVIEW de voz del mismo hash (los tres scopes son disjuntos)', async () => {
+    await seed('completed', { voicePreview: true });
+    const test = await seed('submitting', { templateTest: true });
+    expect(test.status).toBe('submitting');
+    const rows = await tdb.db.query.generation.findMany({
+      where: (g, { eq }) => eq(g.contentHash, HASH),
+    });
+    expect(rows).toHaveLength(2);
+  });
+});
+
+describe('insertTemplateTestGenerationIfAbsent / getTemplateTestGenerationByContentHash (T4.12)', () => {
+  it('inserta la fila si no hay conflicto y fuerza template_test=true', async () => {
+    const row = await insertTemplateTestGenerationIfAbsent(tdb.db, {
+      modelProfileId: 'mp-flux',
+      contentHash: HASH,
+      status: 'submitting',
+      templateTest: false, // se DEBE forzar a true (es el scope del índice de pruebas)
+    });
+    expect(row?.templateTest).toBe(true);
+    expect(row?.status).toBe('submitting');
+  });
+
+  it('devuelve undefined (no crea 2ª fila) si ya hay una prueba con ese hash — ON CONFLICT DO NOTHING', async () => {
+    await seed('submitting', { templateTest: true });
+    const second = await insertTemplateTestGenerationIfAbsent(tdb.db, {
+      modelProfileId: 'mp-flux',
+      contentHash: HASH,
+      status: 'submitting',
+    });
+    expect(second).toBeUndefined();
+    const rows = await tdb.db.query.generation.findMany({
+      where: (g, { eq }) => eq(g.contentHash, HASH),
+    });
+    expect(rows).toHaveLength(1);
+  });
+
+  it('getTemplateTestGenerationByContentHash devuelve solo la prueba con ese hash', async () => {
+    const test = await seed('completed', { templateTest: true });
+    // Una producción con el MISMO hash NO la debe devolver este lookup scoped.
+    await seed('completed', { templateTest: false });
+    const hit = await getTemplateTestGenerationByContentHash(tdb.db, HASH);
+    expect(hit?.id).toBe(test.id);
+    expect(hit?.templateTest).toBe(true);
   });
 });
 

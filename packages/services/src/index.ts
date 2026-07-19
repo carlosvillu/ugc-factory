@@ -33,6 +33,17 @@ export { runGenerateAudio } from './generate-audio';
 // (`voice_preview=true`) para que N reproducciones no añadan coste. Lo consume el route handler
 // `POST /api/personas/[id]/voice-preview`.
 export { runTtsOnly, type VoicePreviewResult } from './generate-audio';
+// Imagen de PRUEBA de un template cacheada (T4.12, botón «Probar template»): el equivalente-imagen del
+// preview de voz. Text-to-image flux-2 con caché scoped (`template_test=true`) para que N clicks de
+// probar no añadan coste. Lo consume el route handler `POST /api/templates/[id]/test`.
+export { runTemplateTest, FLUX2_ENDPOINT } from './generate-template-test';
+// THUMBNAIL de galería de un template (T4.12): genera la miniatura-imagen con flux-2 (dedup de
+// producción) y la asocia a `prompt_template.thumbnail_asset_id` — la pieza que permite publicar
+// (§10.2 regla 2). Lo consume el route handler `POST /api/templates/[id]/thumbnail`.
+export {
+  generateTemplateThumbnail,
+  type TemplateThumbnailResult,
+} from './generate-template-thumbnail';
 // Generación de CLIP DE AVATAR contra fal (T4.7, §7.2 N7c): anima una imagen de la Persona con el audio
 // del hook (image+audio: Kling Std / OmniHuman Premium). Servicio NUEVO con finalizer PROPIO
 // (`kind:'avatar_clip'`) — NO `finalizeGeneration` (solo-imagen). Lo consume el smoke del verifier y, en

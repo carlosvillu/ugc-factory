@@ -80,6 +80,62 @@ export async function insertVoicePreviewGenerationIfAbsent(
   return row;
 }
 
+// ── Caché SCOPED de pruebas de template (T4.12, «probar template») ───────────────
+// GEMELO EXACTO del par de previews de voz, sobre el índice único PARCIAL
+// `generation_template_test_content_hash_key` (unicidad de `content_hash` SOLO entre
+// `template_test=true`). NO toca la unicidad global de producción (índice disjunto: producción exige
+// ahora `template_test = false`).
+
+/**
+ * Lookup de la caché de una prueba de template PREVIA por su `content_hash` (T4.12). Lookup-then-insert
+ * a nivel de aplicación: el servicio lo llama ANTES de generar y, si hay fila `completed`, reutiliza su
+ * asset SIN una segunda llamada a fal ni un segundo `cost_entry` — así «N clicks de probar, 0 coste».
+ * Gateado por `template_test=true` (el índice parcial garantiza ≤1 fila por hash entre pruebas).
+ * `undefined` si no hay caché (es una prueba nueva a generar).
+ */
+export async function getTemplateTestGenerationByContentHash(
+  db: Db,
+  contentHash: string,
+): Promise<Generation | undefined> {
+  const [row] = await db
+    .select()
+    .from(generation)
+    .where(and(eq(generation.contentHash, contentHash), eq(generation.templateTest, true)))
+    // El índice único parcial garantiza ≤1 fila; `limit(1)` por higiene (determinista).
+    .limit(1);
+  return row;
+}
+
+/**
+ * Inserta la INTENCIÓN de una prueba de template en `submitting` SI NO EXISTE ya una fila de prueba con
+ * el mismo `content_hash` — `ON CONFLICT DO NOTHING` contra el índice único parcial
+ * `generation_template_test_content_hash_key`. Es la escritura ATÓMICA de la caché: dos clicks
+ * concurrentes del MISMO «Probar template» NO crean dos generaciones (ni dos `cost_entry`) — la segunda
+ * choca y el INSERT no devuelve fila. `template_test` se fuerza a `true` aquí (es la clave del scope).
+ * Retorno:
+ *  - la fila creada, si ESTE insert ganó la carrera (created → el caller sigue con submit→poll→…);
+ *  - `undefined`, si otra transacción ya la insertó (el caller re-SELECTa y reutiliza su asset).
+ */
+export async function insertTemplateTestGenerationIfAbsent(
+  db: Db,
+  values: NewGeneration,
+): Promise<Generation | undefined> {
+  const [row] = await db
+    .insert(generation)
+    .values({ ...values, templateTest: true })
+    // Target del índice único PARCIAL: la columna + el MISMO predicado LITERAL que el índice. El
+    // predicado DEBE ser un literal (no un parámetro `$1`): el arbiter de Postgres compara el predicado
+    // del ON CONFLICT con el del índice y un parámetro no casa (42P10) — mismo criterio que
+    // `insertVoicePreviewGenerationIfAbsent`.
+    .onConflictDoNothing({
+      target: generation.contentHash,
+      where: sql`${generation.templateTest} = true`,
+    })
+    .returning();
+  // `undefined` cuando hubo conflicto (otra tx insertó primero): NO es un error.
+  return row;
+}
+
 // ── Dedup GLOBAL de producción (T4.10, §9.6) ────────────────────────────────────
 // La ECONOMÍA Hook×Body×CTA: un lote de N variantes del mismo ángulo comparte body y CTA, así que sus
 // generaciones tienen el MISMO `content_hash` y se reutiliza el asset de la primera (las demás no
@@ -109,6 +165,9 @@ export async function getCompletedGenerationByContentHash(
       and(
         eq(generation.contentHash, contentHash),
         eq(generation.voicePreview, false),
+        // T4.12: una IMAGEN DE PRUEBA de template NO es un asset de producción reutilizable (mismo
+        // criterio que excluir los previews de voz). Los tres scopes de `content_hash` son disjuntos.
+        eq(generation.templateTest, false),
         eq(generation.status, 'completed'),
       ),
     )
@@ -145,7 +204,7 @@ export async function insertProductionGenerationIfAbsent(
     // `insertVoicePreviewGenerationIfAbsent` / `insertManualUrlAnalysisIfAbsent`.
     .onConflictDoNothing({
       target: generation.contentHash,
-      where: sql`${generation.voicePreview} = false and ${generation.status} not in ('failed', 'cancelled')`,
+      where: sql`${generation.voicePreview} = false and ${generation.templateTest} = false and ${generation.status} not in ('failed', 'cancelled')`,
     })
     .returning();
   // `undefined` cuando hubo conflicto (otra tx ya tiene una fila viva-o-completed): NO es un error.

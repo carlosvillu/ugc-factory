@@ -63,6 +63,9 @@ export const TemplateDetailSchema = TemplateSummarySchema.extend({
   variables: z.array(VariableSpecSeedSchema),
   assetSlots: z.array(AssetSlotSeedSchema),
   guardPackKeys: z.array(z.string()),
+  // El asset de la MINIATURA-IMAGEN del template (T4.12): la ficha lo pinta y el guard §10.2 regla 2
+  // exige su presencia para publicar. `null` mientras el template no tiene thumbnail generado.
+  thumbnailAssetId: z.string().nullable(),
 });
 export type TemplateDetail = z.infer<typeof TemplateDetailSchema>;
 
@@ -272,3 +275,18 @@ export type TemplateEditResult = z.infer<typeof TemplateEditResultSchema>;
 /** El cambio de estado (`PATCH /api/templates/:id/status`): draft→review→published (§10.2). */
 export const TemplateStatusChangeSchema = z.object({ status: PromptStatusSchema }).strict();
 export type TemplateStatusChange = z.infer<typeof TemplateStatusChangeSchema>;
+
+/**
+ * La respuesta de `POST /api/templates/:id/test` (botón «Probar template», T4.12): el asset de la
+ * imagen de prueba generada (descargable por `GET /api/assets/:id/download`), si fue un cache-hit de una
+ * prueba previa (0 coste) y el coste en céntimos registrado en `cost_entry` (0 en el hit). Espeja
+ * `VoicePreviewResponseSchema` de T4.6 — la misma economía «generar una prueba barata antes de gastar».
+ */
+export const TemplateTestResultSchema = z
+  .object({
+    assetId: z.string(),
+    cached: z.boolean(),
+    costCents: z.number().int().nonnegative(),
+  })
+  .strict();
+export type TemplateTestResult = z.infer<typeof TemplateTestResultSchema>;

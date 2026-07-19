@@ -252,11 +252,14 @@ export default defineConfig(
       ...vitest.configs.recommended.rules,
       // expectGolden (test-utils/golden.ts) encapsula su expect: los tests de
       // golden files no siempre tienen un expect visible en el cuerpo.
-      // expectDedupConflict (generation-dedup.repo.test.ts, T4.10) encapsula el
-      // assert del SQLSTATE 23505 + nombre de constraint del índice de dedup.
+      // expectConflict (generation-dedup.repo.test.ts) y su envoltorio expectDedupConflict
+      // encapsulan el assert del SQLSTATE 23505 + nombre de constraint del índice (T4.10/T4.12:
+      // el mismo helper parametrizado sirve al índice de producción y al de pruebas de template).
       'vitest/expect-expect': [
         'error',
-        { assertFunctionNames: ['expect', 'expectGolden', 'expectDedupConflict'] },
+        {
+          assertFunctionNames: ['expect', 'expectGolden', 'expectConflict', 'expectDedupConflict'],
+        },
       ],
     },
   },

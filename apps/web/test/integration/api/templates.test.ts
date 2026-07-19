@@ -12,7 +12,7 @@
 //      y la ficha lista ambas versiones.
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { createTestDatabase, type TestDatabase } from '@ugc/test-utils';
-import { createTemplate } from '@ugc/db';
+import { createTemplate, setTemplateThumbnail } from '@ugc/db';
 import { promptTemplate, promptVersion, type NewPromptTemplate } from '@ugc/db/schema';
 import { setDbForTests } from '@/server/db';
 import { createSessionValue, setMasterKeyForTests, SESSION_COOKIE } from '@/server/session';
@@ -254,29 +254,51 @@ describe('PATCH /api/templates/:id — guardar edición (crea v2)', () => {
 });
 
 describe('PATCH /api/templates/:id/status — transición de estado (§10.2)', () => {
-  it('cambia draft→review→published', async () => {
+  function patchStatus(id: string, status: string): Promise<Response> {
+    return statusRoute(
+      new Request(`http://test.local/api/templates/${id}/status`, {
+        method: 'PATCH',
+        headers: { cookie: cookie(), 'content-type': 'application/json' },
+        body: JSON.stringify({ status }),
+      }),
+      { params: Promise.resolve({ id }) },
+    );
+  }
+
+  it('cambia draft→review→published cuando el template TIENE thumbnail (§10.2 regla 2, T4.12)', async () => {
     const created = await createTemplate(
       tdb.db,
       templateBody({ slug: 'status-tpl', status: 'draft' }),
     );
-    const toReview = await statusRoute(
-      new Request(`http://test.local/api/templates/${created.id}/status`, {
-        method: 'PATCH',
-        headers: { cookie: cookie(), 'content-type': 'application/json' },
-        body: JSON.stringify({ status: 'review' }),
-      }),
-      { params: Promise.resolve({ id: created.id }) },
-    );
+    const toReview = await patchStatus(created.id, 'review');
     expect(((await toReview.json()) as { status: string }).status).toBe('review');
 
-    const toPublished = await statusRoute(
-      new Request(`http://test.local/api/templates/${created.id}/status`, {
-        method: 'PATCH',
-        headers: { cookie: cookie(), 'content-type': 'application/json' },
-        body: JSON.stringify({ status: 'published' }),
+    // T4.12: publicar EXIGE thumbnail. Se asocia uno y recién entonces la publicación es válida.
+    await setTemplateThumbnail(tdb.db, created.id, 'asset-thumb-not-a-secret');
+    const toPublished = await patchStatus(created.id, 'published');
+    expect(toPublished.status).toBe(200);
+    expect(((await toPublished.json()) as { status: string }).status).toBe('published');
+  });
+
+  it('RECHAZA publicar sin thumbnail con un validation_error 400 (guard §10.2 regla 2, T4.12)', async () => {
+    // EL GUARD en la frontera del servidor: un template en `review` SIN thumbnail no puede publicarse.
+    const created = await createTemplate(
+      tdb.db,
+      templateBody({ slug: 'status-nothumb', status: 'review' }),
+    );
+    const res = await patchStatus(created.id, 'published');
+    expect(res.status).toBe(400);
+    const body = (await res.json()) as { code: string };
+    expect(body.code).toBe('validation_error');
+
+    // El estado NO cambió: sigue en `review`.
+    const ficha = await fichaRoute(
+      new Request(`http://test.local/api/templates/${created.id}`, {
+        headers: { cookie: cookie() },
       }),
       { params: Promise.resolve({ id: created.id }) },
     );
-    expect(((await toPublished.json()) as { status: string }).status).toBe('published');
+    const fichaBody = (await ficha.json()) as { template: { status: string } };
+    expect(fichaBody.template.status).toBe('review');
   });
 });

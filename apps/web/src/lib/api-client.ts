@@ -26,6 +26,7 @@ import {
   TemplateEditResultSchema,
   TemplateListSchema,
   TemplateSummarySchema,
+  TemplateTestResultSchema,
   TemplateWithVersionsSchema,
   templateFilterToQuery,
   type PromptTemplateSeedInput,
@@ -352,7 +353,12 @@ export const templateActions = {
    *  el cliente renderice el diff con `diffLines` sin un segundo GET. */
   createVersion: (id: string, edit: TemplateEdit) =>
     api.patch(`/api/templates/${id}`, TemplateEditResultSchema, edit),
-  /** Cambia el estado (draft→review→published, §10.2). */
+  /** Cambia el estado (draft→review→published, §10.2). El servidor RECHAZA `published` sin thumbnail
+   *  (§10.2 regla 2) con un `validation_error` — el cliente lo verá como `ApiError`. */
   setStatus: (id: string, status: PromptStatus) =>
     api.patch(`/api/templates/${id}/status`, TemplateDetailSchema, { status }),
+  /** Genera (o reutiliza de caché) una IMAGEN DE PRUEBA del template (T4.12, botón «Probar template»):
+   *  SOLO templates `kind:'image'`. Devuelve `{assetId, cached, costCents}`; el `<img src>` apunta a
+   *  `/api/assets/${assetId}/download`. Probar N veces NO añade coste (caché scoped en el servidor). */
+  test: (id: string) => api.post(`/api/templates/${id}/test`, TemplateTestResultSchema, undefined),
 };

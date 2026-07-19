@@ -23,6 +23,14 @@ export { runWriteScripts } from './write-scripts';
 // `cost_entry`. Lo consumen el smoke del verifier (`smoke-generate.ts`) y, en T4.11, el executor
 // del nodo de generación. `uploadInputCached` es la base §9.6 de la caché de upload a fal storage.
 export { runGenerate, uploadInputCached } from './generate';
+// Puente URL→asset de las fotos hero del brief (T4.4b, N7a ruta de referencias): descarga la URL,
+// re-valida que es descargable ANTES de gastar en fal (planning:352), normaliza a PNG (defensa AVIF)
+// y crea la fila `asset` subible a fal por `uploadInputCached`. Lo consume el executor N7a.
+export {
+  bridgeReferenceImageUrl,
+  HeroReferenceUnavailableError,
+  type BridgedReferenceImage,
+} from './reference-image-bridge';
 // Generación de AUDIO contra fal (T4.5, §7.2 N7b + §13.1): la CADENA TTS→ASR que produce un voiceover
 // con word timestamps. Servicio NUEVO (no `runGenerate`, cuyo tail es solo-imagen). Lo consume el
 // smoke del verifier y, en T4.11, el executor N7b.

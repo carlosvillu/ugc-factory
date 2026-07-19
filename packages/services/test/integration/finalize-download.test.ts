@@ -80,6 +80,7 @@ beforeAll(async () => {
   await seedGallery(tdb.db, seed.seed);
   for (const [key, endpoint] of Object.entries({
     image: 'fal-ai/flux-2',
+    imageEdit: 'fal-ai/bytedance/seedream/v4.5/edit', // image-edit, coste por 'image', output width/height null
     avatar: 'fal-ai/bytedance/omnihuman/v1.5', // avatar, coste por 'second'
     video: 'fal-ai/veo3.1/image-to-video', // i2v, coste por 'second'
     music: 'fal-ai/ace-step', // music, coste por 'second'
@@ -182,6 +183,31 @@ describe('finalizeGenerationByKind — dispatch kind-aware (T4.11 money point)',
     const asset = await getAsset(tdb.db, res.assetId!);
     expect(asset?.kind).toBe('keyframe');
     expect(await costUnit(gen.id)).toBe('images');
+  });
+
+  // EL CAMINO DE PRODUCCIÓN de la ruta de referencias de N7a (T4.4b): el worker completa por
+  // webhook+sweeper → `finalizeGenerationByKind` (kind 'image') → `finalizeGeneration`, NO por poll.
+  // seedream/nano-banana EDIT emiten `width:null, height:null`; sin el parser tolerante derivado del
+  // `promptAdapter`, el parser estricto los rechazaba → 0 asset + 0 cost_entry (el bug de money-path que
+  // el verifier cazó, EN el camino que el test de poll no mira). Este test lo blinda AQUÍ.
+  it('IMAGE-EDIT (seedream, width:null) → finaliza OK por la vía webhook/sweeper con coste por IMAGEN no-cero', async () => {
+    const gen = await seedGen('imageEdit');
+    const res = await finalizeGenerationByKind(deps(), {
+      generation: gen,
+      // La forma REAL de seedream/edit: width/height null (no ausentes).
+      output: {
+        images: [{ url: IMAGE_URL, width: null, height: null, content_type: 'image/png' }],
+      },
+      statusPayload: { status: 'OK' },
+    });
+    const asset = await getAsset(tdb.db, res.assetId!);
+    expect(asset?.kind).toBe('keyframe');
+    // Sin dims → el asset se persiste con width/height null (se releen del fichero aguas abajo si hace falta).
+    expect(asset?.width).toBeNull();
+    // COSTE POR IMAGEN no-cero: seedream 4¢/img × 1 imagen. NO 0¢ (la fuga que el fix cierra).
+    expect(await costUnit(gen.id)).toBe('images');
+    expect(res.costCents).toBe(4);
+    expect((await getGeneration(tdb.db, gen.id))?.costActual).toBe(4);
   });
 
   it('TTS → NO se liquida por descarga (necesita ASR) → PermanentStepError, sin asset ni completed', async () => {

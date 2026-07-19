@@ -1,0 +1,20 @@
+drive: sirviendo producto en http://127.0.0.1:53639
+drive: brief sembrado 01KXXRJ0YKN0DJB95FXWDK4GRM (3 fotos referencia)
+drive: ejecutando makeN7aExecutor (upload_images, 3 shots) contra fal REAL…
+drive: OUTPUT route=upload_images syntheticProduct=false shots=3
+──────────────────────────────────────────────────────────────────────
+drive: shot 1 → 2304×4096 px · ratio=0.5625 (9:16=0.5625) · costCents=4 · asset.width=null asset.height=null · /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/docs/verifications/T4.4b/01-shot-1.png
+drive: shot 2 → 2304×4096 px · ratio=0.5625 (9:16=0.5625) · costCents=4 · asset.width=null asset.height=null · /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/docs/verifications/T4.4b/02-shot-2.png
+drive: shot 3 → 2304×4096 px · ratio=0.5625 (9:16=0.5625) · costCents=4 · asset.width=null asset.height=null · /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/docs/verifications/T4.4b/03-shot-3.png
+──────────────────────────────────────────────────────────────────────
+drive: generation rows (THIS run) = 3
+  01KXXRJ4WPE6F5HGQ6C87Z8V9D status=completed synthetic_product=false image_size=portrait_16_9 refs=3 num_images=1
+  01KXXRKBYCWK0GDX1PF0MADAFM status=completed synthetic_product=false image_size=portrait_16_9 refs=3 num_images=1
+  01KXXRN04ZSHX1FG7BW85VA2FD status=completed synthetic_product=false image_size=portrait_16_9 refs=3 num_images=1
+drive: cost_entry fal del step = 6 filas · total 24 · MIN 4 · MAX 4 céntimos (esperado: 3 filas, cada una 4, total 12)
+  cost_entry: amount_cents=4 quantity=1 unit=images gen=01KXXR7102ZEHHK8M8PKBBX2S5
+  cost_entry: amount_cents=4 quantity=1 unit=images gen=01KXXR883953KF08R3WZDM74YR
+  cost_entry: amount_cents=4 quantity=1 unit=images gen=01KXXR9B7FZSVTXR14MAR28H0Q
+  cost_entry: amount_cents=4 quantity=1 unit=images gen=01KXXRJ4WPE6F5HGQ6C87Z8V9D
+  cost_entry: amount_cents=4 quantity=1 unit=images gen=01KXXRKBYCWK0GDX1PF0MADAFM
+  cost_entry: amount_cents=4 quantity=1 unit=images gen=01KXXRN04ZSHX1FG7BW85VA2FD

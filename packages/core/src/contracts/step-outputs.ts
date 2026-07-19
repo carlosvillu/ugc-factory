@@ -181,13 +181,30 @@ export const N7aShotRefSchema = z.object({
   assetId: z.string(),
   costCents: z.number(),
 });
-/** N7a · PRODUCT SHOTS / KEYFRAMES (ruta `ai_packshot`). Sus `shots[].assetId` son los KEYFRAMES que
- *  N7d (b-roll i2v) consume de su dep. */
-export const N7aOutputSchema = z.object({
-  route: z.literal('ai_packshot'),
-  syntheticProduct: z.literal(true),
-  shots: z.array(N7aShotRefSchema),
-});
+/** N7a · PRODUCT SHOTS / KEYFRAMES. Sus `shots[].assetId` son los KEYFRAMES que N7d (b-roll i2v)
+ *  consume de su dep. DOS FORMAS por RUTA (T4.4b amplía a las de referencias):
+ *   · `ai_packshot` (T4.4): shots GENERADOS por IA sin fotos reales → `syntheticProduct:true`.
+ *   · `upload_images`/`promote_scraped` (T4.4b): shots editados desde las fotos hero REALES del brief
+ *     con seedream/nano-banana edit → `syntheticProduct:false` (el producto es real, no sintético).
+ *  Unión discriminada por `route`: N7d lee `shots[].assetId` igual en ambas (los keyframes son la
+ *  frontera cross-node); `syntheticProduct` acompaña a la ruta por construcción (no un flag suelto). */
+export const N7aOutputSchema = z.discriminatedUnion('route', [
+  z.object({
+    route: z.literal('ai_packshot'),
+    syntheticProduct: z.literal(true),
+    shots: z.array(N7aShotRefSchema),
+  }),
+  z.object({
+    route: z.literal('upload_images'),
+    syntheticProduct: z.literal(false),
+    shots: z.array(N7aShotRefSchema),
+  }),
+  z.object({
+    route: z.literal('promote_scraped'),
+    syntheticProduct: z.literal(false),
+    shots: z.array(N7aShotRefSchema),
+  }),
+]);
 export type N7aOutput = z.infer<typeof N7aOutputSchema>;
 
 /** El ref de UN voiceover de N7b (uno por escena). `sceneIndex` + `assetId`: N7c consume el asset de la

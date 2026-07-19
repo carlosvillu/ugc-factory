@@ -19,7 +19,7 @@
 // caller decide: `runGenerate` mapea a `failed` terminal (su contrato de T4.1); el consumer deja
 // que el throw propague para que pg-boss reintente con backoff (una descarga caída es transitoria).
 import { newUlid } from '@ugc/core/contracts';
-import { extractImageOutput, FalResponseError } from '@ugc/core/generation';
+import { extractImageOutput, extractImageUrlOutput, FalResponseError } from '@ugc/core/generation';
 import { ModelCostSchema } from '@ugc/core/gallery';
 import type { Logger, StorageAdapter } from '@ugc/core';
 import {
@@ -30,9 +30,72 @@ import {
   updateGeneration,
   type DbClient,
   type Generation,
+  type ModelProfile,
 } from '@ugc/db';
 
-import { falImageCostOf } from './fal-pricing';
+import { falImageCostOf, falPerImageCostOf } from './fal-pricing';
+
+/** Una imagen del output NORMALIZADA para el tail: URL + mime + dims OPCIONALES. Los dos parsers de
+ *  output (`extractImageOutput` estricto CON dims / `extractImageUrlOutput` tolerante SIN dims) colapsan
+ *  a esta forma para que el resto del tail (createAsset, cost) no tenga que saber cuál corrió. */
+interface NormalizedImage {
+  url: string;
+  content_type?: string;
+  width?: number;
+  height?: number;
+}
+
+/**
+ * Extrae+normaliza el output de imagen ELIGIENDO el parser según la FAMILIA del modelo (T4.4b, fix del
+ * bug de money-path). Los endpoints de EDICIÓN (`promptAdapter === 'image-edit'`: seedream v4.5/edit,
+ * nano-banana-2/edit) emiten `width:null, height:null` en el output — nulls que el parser ESTRICTO
+ * (`extractImageOutput`, `.optional()` acepta ausente pero NO null) rechaza → parse null → la ruta de
+ * referencias SIEMPRE fallaba contra output real (0 shots, 0 cost_entry ⇒ fuga de dinero). Estos usan el
+ * parser TOLERANTE (`extractImageUrlOutput`, solo exige la URL; las dims se releen del fichero o se
+ * omiten — no facturan por megapíxel). Todo lo demás (flux-2 t2i, que SÍ trae dims y factura por MP) sigue
+ * ESTRICTO, sin cambios. `profile===undefined` (rama degradada) → estricto (preserva el comportamiento
+ * previo). Devuelve `null` si el output no encaja con el parser elegido (el caller lo mapea a error). */
+function extractImagesForProfile(
+  output: unknown,
+  profile: ModelProfile | undefined,
+): NormalizedImage[] | null {
+  if (profile?.promptAdapter === 'image-edit') {
+    const parsed = extractImageUrlOutput(output);
+    return parsed === null ? null : parsed.images.map((img) => ({ ...img }));
+  }
+  const parsed = extractImageOutput(output);
+  return parsed === null ? null : parsed.images.map((img) => ({ ...img }));
+}
+
+/** El coste del `cost_entry` RUTADO por la UNIDAD de facturación del perfil (la fuente de verdad):
+ *  `image` → por imagen (edit: seedream 4¢, NB2 8¢; `falPerImageCostOf`); `megapixel` → por MP (flux-2
+ *  t2i; `falImageCostOf`). Sin este ruteo, `falImageCostOf` DEGRADABA `unit='image'` a 0¢ con warning →
+ *  los shots de referencia se registraban a coste 0 (la 2ª cara del bug de T4.4b: /spend subreporta).
+ *  Perfil/`cost` ausente o inválido → 0¢ con warning (record-first: la llamada de pago YA ocurrió). */
+function computeImageCost(
+  profile: ModelProfile | undefined,
+  images: NormalizedImage[],
+  imageCount: number,
+): { cents: number; imageCount: number; warning: string | null } {
+  if (profile === undefined) {
+    return { cents: 0, imageCount, warning: 'fal-pricing: model_profile.cost inválido o ausente' };
+  }
+  const costParsed = ModelCostSchema.safeParse(profile.cost);
+  if (!costParsed.success) {
+    return { cents: 0, imageCount, warning: 'fal-pricing: model_profile.cost inválido o ausente' };
+  }
+  if (costParsed.data.unit === 'image') {
+    return falPerImageCostOf({ cost: profile.cost, imageCount });
+  }
+  // `unit==='megapixel'` (t2i con dims). El parser tolerante no trae dims, pero el ruteo por unidad
+  // garantiza que esta rama solo corre para t2i (que sí las trae); en el borde raro de un t2i sin dims,
+  // `falImageCostOf` degrada con warning, sin lanzar.
+  return falImageCostOf({
+    output: { images },
+    unit: costParsed.data.unit,
+    centsPerUnit: costParsed.data.amountCents,
+  });
+}
 
 /** El puerto de red que `finalizeGeneration` necesita: solo descargar la URL de output de fal.
  *  El `FalClient` de core lo cumple (`download`), pero se declara mínimo para no acoplar el tail al
@@ -77,15 +140,22 @@ export async function finalizeGeneration(
   const { generation } = args;
   const warnings: string[] = [];
 
-  // 1) Validar el output (rama de VALIDACIÓN §9.6: fal ya respondió/facturó, pero el contrato debe
-  //    cumplirse). Un output sin `images[]` es `FalResponseError` (no reintentable por red).
-  const parsed = extractImageOutput(args.output);
-  if (parsed === null) {
+  // 1) Perfil del modelo PRIMERO (antes que el parse): del `promptAdapter` se DERIVA qué parser de
+  //    output usar (estricto para t2i con dims; tolerante para los edit que emiten width/height null —
+  //    T4.4b), y de su `cost.unit` qué función de coste. Se lee FUERA de la tx (solo lectura).
+  const profile = await getModelProfile(db, generation.modelProfileId);
+
+  // 2) Validar el output con el parser de la FAMILIA (rama de VALIDACIÓN §9.6: fal ya respondió/facturó,
+  //    pero el contrato debe cumplirse). Un output que no encaja es `FalResponseError` (no reintentable
+  //    por red). Sin este dispatch, un output de EDICIÓN (`width:null`) reventaba el parser estricto →
+  //    0 shots + 0 cost_entry (fuga de dinero) en la ruta de referencias de N7a.
+  const images = extractImagesForProfile(args.output, profile);
+  if (images === null) {
     throw new FalResponseError(
       `finalizeGeneration: el output de la generación ${generation.id} no trae images[]: ${JSON.stringify(args.output)}`,
     );
   }
-  const firstImage = parsed.images[0];
+  const firstImage = images[0];
   if (firstImage === undefined) {
     throw new FalResponseError(
       `finalizeGeneration: el output de la generación ${generation.id} no trae imágenes`,
@@ -93,25 +163,14 @@ export async function finalizeGeneration(
   }
   const falOutputUrl = firstImage.url;
 
-  // 2) Precio del perfil (para el `cost_entry`). Se lee FUERA de la tx (solo lectura); si el perfil
-  //    o su `cost` no valida, se degrada a 0 con warning — la llamada de pago YA ocurrió, la fila se
-  //    escribe igual (record-first, mismo criterio que runGenerate).
-  const profile = await getModelProfile(db, generation.modelProfileId);
-  const costParsed = profile
-    ? ModelCostSchema.safeParse(profile.cost)
-    : { success: false as const };
-  const cost = costParsed.success
-    ? falImageCostOf({
-        output: parsed,
-        unit: costParsed.data.unit,
-        centsPerUnit: costParsed.data.amountCents,
-      })
-    : {
-        cents: 0,
-        megapixels: 0,
-        imageCount: parsed.images.length,
-        warning: 'fal-pricing: model_profile.cost inválido o ausente',
-      };
+  // 3) Precio del `cost_entry`, RUTADO por la UNIDAD del perfil (la fuente de verdad de facturación):
+  //    `image` → por imagen (edit: seedream 4¢, NB2 8¢; `falPerImageCostOf`); `megapixel` → por MP
+  //    (flux-2 t2i; `falImageCostOf`). Sin este ruteo, `falImageCostOf` DEGRADABA `unit='image'` a 0¢
+  //    con warning → los shots de referencia se registraban a coste 0 (la 2ª cara del bug: /spend
+  //    subreporta). Si el perfil o su `cost` no valida, se degrada a 0 con warning — la llamada de pago
+  //    YA ocurrió, la fila se escribe igual (record-first, mismo criterio que runGenerate).
+  const imageCount = images.length;
+  const cost = computeImageCost(profile, images, imageCount);
   if (cost.warning !== null) warnings.push(cost.warning);
 
   // 3) DESCARGAR el output a NUESTRO storage. Fuera de la tx (I/O de red potencialmente de cientos

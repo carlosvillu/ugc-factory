@@ -4,7 +4,7 @@
 // forma ligera y rechaza que alguien meta un guion completo inline (drift silencioso).
 import { describe, expect, it } from 'vitest';
 import { newUlid } from './ids';
-import { N5OutputSchema } from './step-outputs';
+import { N5OutputSchema, N7aOutputSchema } from './step-outputs';
 
 const BATCH = newUlid();
 const VALID: unknown = {
@@ -51,6 +51,53 @@ describe('N5OutputSchema (T2.6)', () => {
         status: 'scripted',
         warnings: [],
       }).success,
+    ).toBe(false);
+  });
+});
+
+describe('N7aOutputSchema (T4.4 + T4.4b): unión discriminada por ruta', () => {
+  const shot = () => ({ generationId: newUlid(), assetId: newUlid(), costCents: 1 });
+
+  it('ai_packshot acepta syntheticProduct:true (T4.4)', () => {
+    const parsed = N7aOutputSchema.safeParse({
+      route: 'ai_packshot',
+      syntheticProduct: true,
+      shots: [shot(), shot()],
+    });
+    expect(parsed.success).toBe(true);
+  });
+
+  it('upload_images / promote_scraped aceptan syntheticProduct:false (T4.4b: producto real)', () => {
+    for (const route of ['upload_images', 'promote_scraped'] as const) {
+      expect(
+        N7aOutputSchema.safeParse({ route, syntheticProduct: false, shots: [shot()] }).success,
+      ).toBe(true);
+    }
+  });
+
+  // CONTROL NEGATIVO: el flag de procedencia acompaña a la ruta por CONSTRUCCIÓN. Un shot desde
+  // referencias reales NO puede declararse `syntheticProduct:true` (mentiría sobre la procedencia), ni
+  // un ai_packshot declararse `false`.
+  it('RECHAZA promote_scraped con syntheticProduct:true (procedencia incoherente con la ruta)', () => {
+    expect(
+      N7aOutputSchema.safeParse({
+        route: 'promote_scraped',
+        syntheticProduct: true,
+        shots: [shot()],
+      }).success,
+    ).toBe(false);
+  });
+
+  it('RECHAZA ai_packshot con syntheticProduct:false', () => {
+    expect(
+      N7aOutputSchema.safeParse({ route: 'ai_packshot', syntheticProduct: false, shots: [shot()] })
+        .success,
+    ).toBe(false);
+  });
+
+  it('RECHAZA una ruta desconocida', () => {
+    expect(
+      N7aOutputSchema.safeParse({ route: 'teleport', syntheticProduct: false, shots: [] }).success,
     ).toBe(false);
   });
 });

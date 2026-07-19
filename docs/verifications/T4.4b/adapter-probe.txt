@@ -1,0 +1,18 @@
+Probe $0 (verifier-side) — adaptToPayload sobre el model_profile seedream REAL de la BD, tras re-seed.
+Aísla si el 9:16 llega al payload del adapter image-edit (antes del gasto en fal).
+
+=== ANTES del re-seed (DB stale, capabilities incompletas) ===
+profileRow.capabilities RAW: {"refImages":10}
+adaptToPayload → payload: { prompt, image_urls }        ← SIN image_size (el 9:16 NO se emite)
+baseInputs: {"image_urls":[...]}                        ← fal cae a default cuadrado (2048×2048)
+
+=== DESPUÉS del re-seed (pnpm seed:gallery, capabilities del seed file T4.4b) ===
+profileRow.capabilities RAW: {"aspects":["9:16","16:9","1:1"],"refImages":10,"aspectParam":"image_size","aspectValues":{"1:1":"square_hd","16:9":"landscape_16_9","9:16":"portrait_16_9"}}
+adaptToPayload → payload: { prompt, image_urls, image_size: "portrait_16_9" }   ← 9:16 EMITIDO
+baseInputs: {"image_urls":[...],"image_size":"portrait_16_9"}
+
+CONCLUSIÓN: el adapter image-edit propaga el 9:16 correctamente CUANDO el model_profile de la BD
+declara aspectParam/aspectValues (los añade el seed de T4.4b). La DB de dev estaba STALE (seed previo
+al diff) → producía cuadrado hasta re-seed. El re-seed es setup legítimo (el seed file forma parte del
+diff de T4.4b, git-Modified). RAREZA a vigilar: cualquier entorno ya desplegado que NO re-corra
+seed:gallery con este cambio seguirá emitiendo cuadrado.

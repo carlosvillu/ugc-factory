@@ -65,7 +65,7 @@ export type { FakeExternalApis } from './fake-apis';
 // que dicen. Los consumen los tests handler-level del upload de referencias (apps/web) y el spec
 // de Playwright de /personas — la validación ≥2K LEE el fichero, así que el fixture tiene que ser
 // un fichero (principio 9 de la skill testing).
-export { makeTestPng, writeTestPng } from './image-fixtures';
+export { makeTestPng, makeTestAvif, writeTestPng } from './image-fixtures';
 // Logger silencioso para tests (T1.20): las suites de integración cablean el mismo
 // `makeWithTransaction` que producción, que EXIGE un `Logger` (el rollup del coste traga sus
 // errores y sin traza estructurada la columna del dinero volvería a mentir en silencio). Guarda

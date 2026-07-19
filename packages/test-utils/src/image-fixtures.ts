@@ -31,6 +31,19 @@ export async function makeTestPng(width: number, height: number): Promise<Uint8A
   return new Uint8Array(buf);
 }
 
+/** Un AVIF REAL de `width`×`height` px, en memoria (T4.4b). Lo consume el test del puente URL→asset:
+ *  las fotos hero del producto llegan a veces en AVIF (miniaturas de CDN), y el puente debe
+ *  re-codificarlas a PNG antes de subirlas a fal (que no garantiza soporte AVIF). Con BYTES AVIF reales
+ *  (no un mime fabricado) el test prueba que la re-codificación ocurre de verdad (principio 9). */
+export async function makeTestAvif(width: number, height: number): Promise<Uint8Array> {
+  const buf = await sharp({
+    create: { width, height, channels: 3, background: { r: 200, g: 120, b: 90 } },
+  })
+    .avif()
+    .toBuffer();
+  return new Uint8Array(buf);
+}
+
 /** Escribe un PNG real de `width`×`height` en `filePath` y devuelve la ruta. Lo usa el spec de
  *  Playwright, que necesita un FICHERO en disco para `setInputFiles` (no puede subir bytes). */
 export async function writeTestPng(

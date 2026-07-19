@@ -1,0 +1,13 @@
+
+> @ugc/worker@0.0.0 probe:seedream /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/worker
+> tsx --env-file-if-exists=../../.env scripts/probe-seedream-edit.ts
+
+probe:seedream: AVIF crudo /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/docs/verifications/T4.4b/producto/retinol-hero-1.avif (5620 bytes)
+probe:seedream: AVIF subido a fal storage → https://v3b.fal.media/files/b/0aa2e70e/Bh5rL014vAAsLvSYRcNc4_1784481428153.avif
+probe:seedream: submit fal-ai/bytedance/seedream/v4.5/edit con image_size=portrait_16_9 (RED REAL, ~1¢)…
+──────────────────────────────────────────────────────────────────────
+probe:seedream: OUTPUT dims REALES = 2304×4096 px
+probe:seedream: ¿vertical 9:16? SÍ (h>w = true)
+probe:seedream: imagen guardada en /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/docs/verifications/T4.4b/probe-output.png — JUICIO HUMANO: ¿se reconoce «Retinol»?
+──────────────────────────────────────────────────────────────────────
+probe:seedream: coste real ≈ 1¢ (seedream/edit $0,04/img — verifica en /spend).

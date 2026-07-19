@@ -156,6 +156,17 @@ export function seedanceAdapter(input: AdapterInput): AdapterResult {
  * referencias (packshots del producto): prompt + hasta `capabilities.refImages` imágenes de
  * referencia. No lleva duración/aspect de vídeo; el aspect (si el modelo lo declara) fija el ratio
  * de salida. Es `kind: image`, no vídeo.
+ *
+ * PROPAGACIÓN DEL ASPECT AL PAYLOAD (T4.4b, N7a ruta de referencias). Antes de T4.4b este adapter
+ * VALIDABA el aspect (vía `resolveAspect`) pero NO lo emitía — el 9:16 pedido se descartaba y fal
+ * componía en su default (típicamente 1:1). Ahora, si el perfil declara `capabilities.aspectParam`
+ * (el nombre de la clave del payload) el adapter emite el aspect bajo ESA clave, traducido por
+ * `capabilities.aspectValues` al valor del endpoint (`9:16` → `portrait_16_9` en seedream). El
+ * dialecto vive en el DATO del catálogo, no en el string del endpoint (principio de `select-adapter`):
+ *   · seedream v4.5/edit → `aspectParam:"image_size"`, `aspectValues:{"9:16":"portrait_16_9", …}`
+ *   · nano-banana-2/edit → `aspectParam:"aspect_ratio"` (aspectValues ausente → `9:16` verbatim)
+ * Un perfil SIN `aspectParam` (p. ej. nano-banana-pro/edit, `capabilities:{}`) no emite aspect — el
+ * comportamiento previo a T4.4b, sin ramificar por endpoint.
  */
 export function imageEditAdapter(input: AdapterInput): AdapterResult {
   const aspectRes = resolveAspect(input);
@@ -169,6 +180,13 @@ export function imageEditAdapter(input: AdapterInput): AdapterResult {
   };
   if (refImages.length > 0) {
     payload.image_urls = refImages;
+  }
+  // Emitir el aspect BAJO LA CLAVE que el perfil declara (`aspectParam`), con el valor traducido por
+  // `aspectValues` (o el aspect canónico verbatim si el mapa no lo cubre). Sin `aspectParam` no se
+  // emite: el modelo no parametriza aspect en el payload (nano-banana-pro/edit). `aspectRes.aspect`
+  // es el aspect ya VALIDADO contra `capabilities.aspects` (assert (c): enum exacto del profile).
+  if (caps.aspectParam !== undefined && caps.aspectParam !== '') {
+    payload[caps.aspectParam] = caps.aspectValues?.[aspectRes.aspect] ?? aspectRes.aspect;
   }
   return { ok: true, payload };
 }

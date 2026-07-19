@@ -249,6 +249,23 @@ export const ModelCapabilitiesSchema = z.object({
   durations: z.array(z.number().positive()).optional(),
   /** Presets de resolución del modelo (`"720p"`, `"1080p"`, `"4k"`), enum exacto de su input schema. */
   resolutions: z.array(z.string()).optional(),
+  // ── DIALECTO DE ASPECT DE LA FAMILIA `image-edit` (T4.4b, N7a ruta de referencias) ──────────────
+  // Los endpoints edit de fal NO comparten un mismo parámetro de aspect/tamaño de salida:
+  //   · seedream v4.5/edit toma `image_size` con un enum de PRESETS (`portrait_16_9` = 9:16 vertical,
+  //     misma familia que flux-2);
+  //   · nano-banana-2/edit toma `aspect_ratio:"9:16"` (verbatim) + un `resolution` propio.
+  // El `imageEditAdapter` NO puede hardcodear ninguno de los dos (rompería el otro) ni ramificar por
+  // el string del endpoint (viola `select-adapter`: el dialecto vive en el DATO del catálogo, no en
+  // código). Estos dos campos declaran, POR PERFIL, cómo expresa su aspect: `aspectParam` = el nombre
+  // de la clave del payload; `aspectValues` = el mapa aspect-canónico (`9:16`) → valor del endpoint
+  // (`portrait_16_9`). Ausentes = el perfil no parametriza aspect en el payload (el adapter no lo
+  // emite — comportamiento previo a T4.4b, p. ej. nano-banana-pro/edit sin dialecto declarado).
+  /** Nombre de la clave del payload que fija el aspect/tamaño de salida (`image_size`, `aspect_ratio`).
+   *  Ausente = el modelo no parametriza aspect en el payload (el adapter no lo emite). */
+  aspectParam: z.string().optional(),
+  /** Mapa aspect-canónico (`"9:16"`) → valor del endpoint (`"portrait_16_9"`). Un aspect declarado en
+   *  `aspects` pero ausente aquí se emite VERBATIM (dialecto que usa `9:16` tal cual, p. ej. NB2). */
+  aspectValues: z.record(z.string(), z.string()).optional(),
 });
 export type ModelCapabilities = z.infer<typeof ModelCapabilitiesSchema>;
 

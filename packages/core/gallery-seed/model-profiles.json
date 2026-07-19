@@ -33,17 +33,30 @@
     "falEndpoint": "fal-ai/bytedance/seedream/v4.5/edit",
     "kind": "image",
     "cost": { "unit": "image", "amountCents": 4 },
-    "capabilities": { "refImages": 10 },
+    "capabilities": {
+      "refImages": 10,
+      "aspects": ["9:16", "16:9", "1:1"],
+      "aspectParam": "image_size",
+      "aspectValues": {
+        "9:16": "portrait_16_9",
+        "16:9": "landscape_16_9",
+        "1:1": "square_hd"
+      }
+    },
     "promptAdapter": "image-edit",
-    "notes": "Product shots / keyframes (Test+Standard). Hasta 10 imagenes de referencia. Precio verificado 2026-07-15 vs §13.1 ($0,04/img, 10 refs)."
+    "notes": "Product shots / keyframes (Test+Standard). Hasta 10 imagenes de referencia. Precio verificado 2026-07-15 vs §13.1 ($0,04/img, 10 refs). ASPECT (T4.4b): `image_size` con enum de presets (verificado vs fal.ai/models/fal-ai/bytedance/seedream/v4.5/edit: square_hd|square|portrait_4_3|portrait_16_9|landscape_4_3|landscape_16_9|auto_2K|auto_4K); 9:16 vertical = `portrait_16_9`. El `imageEditAdapter` lo emite bajo `image_size` (aspectParam) traducido por aspectValues."
   },
   {
     "falEndpoint": "fal-ai/nano-banana-2/edit",
     "kind": "image",
     "cost": { "unit": "image", "amountCents": 8 },
-    "capabilities": { "refImages": 14 },
+    "capabilities": {
+      "refImages": 14,
+      "aspects": ["9:16", "16:9", "1:1"],
+      "aspectParam": "aspect_ratio"
+    },
     "promptAdapter": "image-edit",
-    "notes": "Product shots (Standard). Hasta 14 imagenes de referencia. Precio verificado 2026-07-15 vs §13.1 ($0,08/img, 14 refs). 2K/4K se cobran 1,5x/2x (base tier verificado)."
+    "notes": "Product shots (Standard). Hasta 14 imagenes de referencia. Precio verificado 2026-07-15 vs §13.1 ($0,08/img, 14 refs). 2K/4K se cobran 1,5x/2x (base tier verificado). ASPECT (T4.4b): NB2 toma `aspect_ratio:\"9:16\"` VERBATIM (sin aspectValues → el adapter emite el aspect canonico tal cual); es el FALLBACK de la ruta de referencias de N7a (generate-persona-images ya lo usa por bypass con `resolution:\"2K\"`+`aspect_ratio:\"9:16\"`)."
   },
   {
     "falEndpoint": "fal-ai/nano-banana-pro/edit",

@@ -1,0 +1,10 @@
+drive: sirviendo producto en http://127.0.0.1:50210
+drive: brief sembrado 01KXXPC5MSZ3JTFTP34X6HM6EK (3 fotos referencia)
+drive: ejecutando makeN7aExecutor (upload_images, 3 shots) contra fal REAL…
+drive: FALLO — PermanentStepError: finalizeGeneration: el output de la generación 01KXXPC9S4FDTCADMMSA9R3JGG no trae images[]: {"images":[{"url":"https://v3b.fal.media/files/b/0aa2e730/VOxa0WiqoWa5SPmVuGG7f_8ae99f67fa6a4666b089725ded23ff9b.png","content_type":"image/png","file_name":"8ae99f67fa6a4666b089725ded23ff9b.png","file_size":1827173,"width":null,"height":null}]}
+    at runGenerationStep (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/worker/src/executors/_shared.ts:73:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async runShotLoop (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/worker/src/executors/generation.ts:213:17)
+    at async runReferenceRoute (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/worker/src/executors/generation.ts:383:17)
+    at async <anonymous> (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/worker/src/executors/generation.ts:172:11)
+    at async main (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/worker/scripts/_verifier-drive-t44b.ts:108:5)

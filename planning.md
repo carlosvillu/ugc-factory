@@ -579,7 +579,7 @@ Decisiones del usuario (2026-07-07): la fase se ejecuta tras T0.1 y **antes** de
 - **Coste estimado**: ~$0,25 (solo packshot-IA)
 - **Verificación**: el flujo sin fotos produce packshots 9:16 **razonables a juicio humano** con el flag `synthetic_product=true` persistido. Smoke STEPLESS (sin `step_run_id`), molde `smoke-generate.ts` de T4.1. El bucle genera los 2–3 shots en vivo y los presenta al usuario para su juicio.
 
-#### T4.4b · N7a: product shots con referencias reales ⚠ (fotos del usuario)
+#### T4.4b · N7a: product shots con referencias reales ⚠ (fotos del usuario) [x] 2026-07-19 — PASS (2 ciclos: FAIL money-path→fix→PASS), ver docs/verifications/T4.4b/ (coste fal real ~$0,24; juicio humano de "producto reconocible" OK del usuario)
 - **Depende de**: T4.4
 - **⚠ Prerequisito**: fotos hero reales de un producto propio (las aporta el usuario) — sin ellas la Verificación (juicio humano sobre "producto reconocible") no es ejecutable.
 - **Entrega**: la ruta con referencias del executor N7a: `fal-ai/bytedance/seedream/v4.5/edit` (fallback `fal-ai/nano-banana-2/edit`) con las fotos hero del brief como referencia vía `imageEditAdapter` (T3.6) + `uploadInputCached` (T4.1); 2–3 shots 9:16. Cablea el **puente URL→asset** (descargar las URLs de `brief.assets` a filas `asset` de nuestro storage, subibles a fal — deuda diferida de planning.md:299/357) + **re-validación del hero promovido antes de gastar en fal** (planning.md:352: una URL 200 hoy puede dar 403 mañana). Propaga 9:16 al payload de seedream (los adapters edit descartan el aspect hoy — verificar el parámetro real de seedream v4.5 edit).

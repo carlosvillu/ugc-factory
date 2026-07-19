@@ -120,7 +120,7 @@ beforeEach(async () => {
 });
 
 /** Siembra proyecto + análisis + brief; devuelve el briefId (el forward-pointer de la config N7a). */
-async function seedBrief(): Promise<string> {
+async function seedBrief(data: ProductBrief = BRIEF): Promise<string> {
   const [p] = await tdb.db.insert(project).values(makeProject()).returning();
   const [ua] = await tdb.db
     .insert(urlAnalysis)
@@ -128,7 +128,7 @@ async function seedBrief(): Promise<string> {
     .returning();
   const [brief] = await tdb.db
     .insert(productBrief)
-    .values(makeProductBrief({ urlAnalysisId: ua!.id, data: BRIEF }))
+    .values(makeProductBrief({ urlAnalysisId: ua!.id, data }))
     .returning();
   return brief!.id;
 }
@@ -235,18 +235,30 @@ describe('N7a executor (T4.4): packshots IA 9:16 con synthetic_product', () => {
     expect(prompt).toContain('9:16');
   });
 
-  it('ruta con referencias reales (upload_images) → PermanentStepError (es T4.4b, no T4.4)', async () => {
+  // El SEAM T4.4/T4.4b (la ruta de referencias LANZABA como «no implementada») lo CIERRA T4.4b: ahora
+  // `upload_images`/`promote_scraped` corren el puente + editor de referencias. El camino feliz y sus
+  // controles viven en `n7a-references.test.ts`; aquí solo se ancla que la ruta YA NO se rechaza como
+  // no-soportada — con un brief SIN fotos hero, la ruta llega a su propio guard de dominio (sin
+  // referencias que subir) en vez del throw de seam de T4.4.
+  it('ruta con referencias reales (upload_images) YA NO es un seam no-implementado (T4.4b la cablea)', async () => {
     const { db, pool } = createDbPool(tdb.connectionString);
     try {
-      const briefId = await seedBrief();
+      const brief = makeBrief();
+      // Brief SIN fotos: la ruta de refs llega a su guard «no hay referencias» (dominio de T4.4b), no al
+      // throw de seam «esta ruta es de T4.4b» de T4.4. El error sigue siendo PermanentStepError, pero por
+      // OTRA causa — el mensaje lo distingue (el seam nombraba «T4.4 solo implementa ai_packshot»).
+      const briefId = await seedBrief({
+        ...brief,
+        assets: { ...brief.assets, hero_image_url: null, images: [] },
+      });
       await expect(
         makeExecutor(db)({
           config: { route: 'upload_images', briefId, numShots: 2, aspect: '9:16' },
           collectOutput: noopCollect,
           deps: [],
         }),
-      ).rejects.toBeInstanceOf(PermanentStepError);
-      // NO se creó ninguna generación (rechazo ANTES de gastar).
+      ).rejects.toThrow(/no hay referencias que subir/);
+      // Sigue sin gastar (rechazo ANTES de tocar fal).
       const { rows } = await tdb.pool.query('SELECT id FROM generation');
       expect(rows).toHaveLength(0);
     } finally {

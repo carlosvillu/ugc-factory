@@ -8,7 +8,8 @@
     "build": "tsup",
     "start": "node dist/main.js",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "probe:seedream": "tsx --env-file-if-exists=../../.env scripts/probe-seedream-edit.ts"
   },
   "dependencies": {
     "@ugc/core": "workspace:*",

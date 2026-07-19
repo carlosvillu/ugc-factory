@@ -357,6 +357,72 @@ describe('avatar dialect — NO emite los campos que Kling/OmniHuman rechazan (f
   });
 });
 
+describe('image-edit dialect — el aspect LLEGA al payload bajo la clave del profile (T4.4b)', () => {
+  // La ruta de referencias de N7a (T4.4b) manda 9:16 a seedream/nano-banana edit. Antes de T4.4b el
+  // adapter VALIDABA el aspect pero NO lo emitía → el 9:16 se descartaba y fal componía en su default
+  // (típicamente 1:1). Estos asserts muerden la PROPIEDAD «el aspect pedido llega al payload bajo el
+  // parámetro que el profile declara, traducido al valor del endpoint» (cláusula determinista →
+  // test permanente del gate, regla 8 del planning). Los profiles son los REALES sembrados.
+  it('seedream: 9:16 se emite como `image_size:portrait_16_9` (aspectParam + aspectValues del profile)', () => {
+    const res = imageEditAdapter({
+      resolvedPrompt: CANONICAL_PROMPT,
+      profile: byEndpoint('fal-ai/bytedance/seedream/v4.5/edit'),
+      aspect: '9:16',
+      durationSeconds: 0,
+      assets: { refImages: [PRODUCT_IMG] },
+    });
+    expect(res.ok).toBe(true);
+    if (!res.ok) return;
+    expect(res.payload.image_size).toBe('portrait_16_9');
+    expect(res.payload).not.toHaveProperty('aspect_ratio');
+    expect(res.payload.image_urls).toEqual([PRODUCT_IMG]);
+  });
+
+  it('nano-banana-2 (fallback): 9:16 se emite como `aspect_ratio:"9:16"` VERBATIM (sin aspectValues)', () => {
+    const res = imageEditAdapter({
+      resolvedPrompt: CANONICAL_PROMPT,
+      profile: byEndpoint('fal-ai/nano-banana-2/edit'),
+      aspect: '9:16',
+      durationSeconds: 0,
+      assets: { refImages: [PRODUCT_IMG] },
+    });
+    expect(res.ok).toBe(true);
+    if (!res.ok) return;
+    expect(res.payload.aspect_ratio).toBe('9:16');
+    expect(res.payload).not.toHaveProperty('image_size');
+  });
+
+  // CONTROL NEGATIVO: un profile image-edit SIN `aspectParam` (nano-banana-pro/edit, capabilities:{})
+  // NO emite aspect en el payload (comportamiento previo a T4.4b, sin ramificar por endpoint).
+  it('nano-banana-pro (sin aspectParam) ⇒ el payload NO lleva image_size ni aspect_ratio', () => {
+    const res = imageEditAdapter({
+      resolvedPrompt: CANONICAL_PROMPT,
+      profile: byEndpoint('fal-ai/nano-banana-pro/edit'),
+      aspect: '9:16',
+      durationSeconds: 0,
+      assets: { refImages: [PRODUCT_IMG] },
+    });
+    expect(res.ok).toBe(true);
+    if (!res.ok) return;
+    expect(res.payload).not.toHaveProperty('image_size');
+    expect(res.payload).not.toHaveProperty('aspect_ratio');
+  });
+
+  // CONTROL: un aspect FUERA de capabilities.aspects ⇒ error tipado accionable, NO clamp ni emisión.
+  it('seedream rechaza "4:5" (no está en aspects) con aspect_unsupported', () => {
+    const res = imageEditAdapter({
+      resolvedPrompt: CANONICAL_PROMPT,
+      profile: byEndpoint('fal-ai/bytedance/seedream/v4.5/edit'),
+      aspect: '4:5',
+      durationSeconds: 0,
+      assets: { refImages: [PRODUCT_IMG] },
+    });
+    expect(res.ok).toBe(false);
+    if (res.ok) return;
+    expect(res.issues[0]!.code).toBe('aspect_unsupported');
+  });
+});
+
 describe('dispatch por promptAdapter (NO por prefijo de endpoint)', () => {
   it('cada profile sembrado despacha al adapter de su familia y produce un payload', () => {
     const seededWithAdapter = profiles.filter((p) => p.promptAdapter !== undefined);

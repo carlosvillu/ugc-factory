@@ -94,9 +94,10 @@ test.describe('Generación de galería (T4.12 pase A) — fal fake, $0', () => {
   test(
     'thumbnail: un template sin thumbnail NO se publica; con thumbnail generado, sí',
     { tag: ['@f4', '@gallery'] },
-    async ({ request }) => {
+    async ({ page, request }) => {
       const t = tag();
-      const id = await createImageTemplate(request, `e2e-thumb-${t}`, `E2E thumb ${t}`);
+      const thumbTitle = `E2E thumb ${t}`;
+      const id = await createImageTemplate(request, `e2e-thumb-${t}`, thumbTitle);
 
       // Pasar a `review` (no exige thumbnail).
       const toReview = await apiCall(
@@ -136,6 +137,23 @@ test.describe('Generación de galería (T4.12 pase A) — fal fake, $0', () => {
         `SELECT count(*)::text AS n FROM prompt_template WHERE status = 'published' AND thumbnail_asset_id IS NULL`,
       );
       expect(Number(orphan?.n ?? '0')).toBe(0);
+
+      // OBSERVABLE en `/gallery` (cláusula 2 de la Verificación: «published con thumbnail EN
+      // /gallery»): la tarjeta del template published NO pinta el hatch-placeholder — renderiza la
+      // MINIATURA real servida por `GET /api/assets/:id/download`. No basta con que exista el `<img>`
+      // (la primitiva `Image` lo monta en `opacity-0` mientras carga y `toBeVisible` ignora la
+      // opacidad): el observable que prueba los BYTES es `data-status="loaded"` del wrapper, que solo
+      // se alcanza cuando el round-trip a `/api/assets/.../download` devolvió una imagen con
+      // `naturalWidth > 0`. El `src` con el path real prueba el WIRING (no el hatch).
+      await page.goto('/gallery');
+      const card = page.getByRole('button', { name: `Abrir template ${thumbTitle}` });
+      await expect(card).toBeVisible();
+      const cardImage = card.locator('[data-slot="image"]');
+      await expect(cardImage.locator('img')).toHaveAttribute(
+        'src',
+        new RegExp(`/api/assets/${thumbBody.assetId}/download`),
+      );
+      await expect(cardImage).toHaveAttribute('data-status', 'loaded', { timeout: 30_000 });
     },
   );
 
@@ -147,9 +165,23 @@ test.describe('Generación de galería (T4.12 pase A) — fal fake, $0', () => {
       const title = `E2E probar ${t}`;
       const id = await createImageTemplate(request, `e2e-test-${t}`, title);
 
-      // Abrir la ficha del template en la galería.
+      // CONTROL NEGATIVO del fallback: este template es un DRAFT sin thumbnail generado. Su tarjeta
+      // monta la primitiva `Image` del DS en su estado VACÍO (`src={undefined}` → `data-status="empty"`),
+      // que pinta el hatch-placeholder del DS — NO una imagen cargada. El discriminador fuerte
+      // anti-falso-PASS es `data-status="empty"` (≠ "loaded"): distingue «placeholder vacío» de
+      // «miniatura real» tan estrictamente como antes. (Nota: `.hatch` YA NO discrimina — tras adoptar
+      // la primitiva, su wrapper lleva la clase `hatch` en TODOS los estados; el peso recae en
+      // `data-status`.)
       await page.goto('/gallery');
-      await page.getByRole('button', { name: `Abrir template ${title}` }).click();
+      const draftCard = page.getByRole('button', { name: `Abrir template ${title}` });
+      await expect(draftCard).toBeVisible();
+      await expect(draftCard.locator('[data-slot="image"]')).toHaveAttribute(
+        'data-status',
+        'empty',
+      );
+
+      // Abrir la ficha del template en la galería.
+      await draftCard.click();
       const dialog = page.getByRole('dialog');
       await expect(dialog.getByRole('heading', { name: title })).toBeVisible();
 

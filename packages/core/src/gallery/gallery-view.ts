@@ -52,6 +52,11 @@ export const TemplateSummarySchema = z.object({
   // `perf` opaco (§12): el flywheel de F7 lo escribe; la tarjeta enseña `hr` si existe. `null`
   // en un template nuevo.
   perf: z.unknown().nullable(),
+  // El asset de la MINIATURA-IMAGEN del template (T4.12): la tarjeta lo pinta (y la ficha también)
+  // y el guard §10.2 regla 2 exige su presencia para publicar. Vive en el RESUMEN (no solo en el
+  // detalle) porque la rejilla de `/gallery` lo renderiza sin abrir la ficha. `null` mientras el
+  // template no tiene thumbnail generado.
+  thumbnailAssetId: z.string().nullable(),
 });
 export type TemplateSummary = z.infer<typeof TemplateSummarySchema>;
 
@@ -63,9 +68,7 @@ export const TemplateDetailSchema = TemplateSummarySchema.extend({
   variables: z.array(VariableSpecSeedSchema),
   assetSlots: z.array(AssetSlotSeedSchema),
   guardPackKeys: z.array(z.string()),
-  // El asset de la MINIATURA-IMAGEN del template (T4.12): la ficha lo pinta y el guard §10.2 regla 2
-  // exige su presencia para publicar. `null` mientras el template no tiene thumbnail generado.
-  thumbnailAssetId: z.string().nullable(),
+  // `thumbnailAssetId` lo HEREDA de `TemplateSummarySchema` (la ficha lo pinta igual que la tarjeta).
 });
 export type TemplateDetail = z.infer<typeof TemplateDetailSchema>;
 

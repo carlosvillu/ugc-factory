@@ -1,0 +1,88 @@
+[WebServer] seed: persona «Lucía (placeholder)» ← imagen sintética 1638×2048 px (personas/01KXXDWHXX7PWK3EMZYXR1N564/01KXXDWHZ0X3NRT4WP8RSTS46E.png)
+[WebServer] seed: persona «Lucía (placeholder)» ← imagen sintética 1638×2048 px (personas/01KXXDWHXX7PWK3EMZYXR1N564/01KXXDWHZJ57TMDKMGA0FRZVYG.png)
+[WebServer] seed: persona «Marcus (placeholder)» ← imagen sintética 1638×2048 px (personas/01KXXDWHZPHA1JFVN8NPG397J2/01KXXDWJ06NH4YAJ7K5GDQ1GH8.png)
+[WebServer] seed: persona «Marcus (placeholder)» ← imagen sintética 1638×2048 px (personas/01KXXDWHZPHA1JFVN8NPG397J2/01KXXDWJ0PZKY62CZ43TNTHY04.png)
+[WebServer] seed: persona «Nerea (placeholder)» ← imagen sintética 1638×2048 px (personas/01KXXDWJ0TJ8BSNJ6ZMT9QZR1W/01KXXDWJ1ARTQW9DXYCMJZRAC5.png)
+[WebServer] seed: persona «Nerea (placeholder)» ← imagen sintética 1638×2048 px (personas/01KXXDWJ0TJ8BSNJ6ZMT9QZR1W/01KXXDWJ1V6SFSJXT4KKDP73XV.png)
+[WebServer] seed: persona «Carmen (placeholder)» ← imagen sintética 1638×2048 px (personas/01KXXDWJ20T7517KG0Y1PWRWPA/01KXXDWJ2HVBM1AA26KNW2GY6P.png)
+[WebServer] seed: persona «Carmen (placeholder)» ← imagen sintética 1638×2048 px (personas/01KXXDWJ20T7517KG0Y1PWRWPA/01KXXDWJ32B83BHZV3R97D5KSK.png)
+[WebServer] seed: persona «Alex (placeholder)» ← imagen sintética 1638×2048 px (personas/01KXXDWJ361QEK3QNJCBC8XCBN/01KXXDWJ3M8GAH66VYK4Q5CM9Q.png)
+[WebServer] seed: persona «Alex (placeholder)» ← imagen sintética 1638×2048 px (personas/01KXXDWJ361QEK3QNJCBC8XCBN/01KXXDWJ45D8WGHS209JFSEP9G.png)
+[WebServer] seed: persona «Rosa (placeholder)» ← imagen sintética 1638×2048 px (personas/01KXXDWJ49RMX9R76ZRAZ367ZP/01KXXDWJ4RAYW48T56HDS18W6W.png)
+[WebServer] seed: persona «Rosa (placeholder)» ← imagen sintética 1638×2048 px (personas/01KXXDWJ49RMX9R76ZRAZ367ZP/01KXXDWJ59QGF40ZWA9SSC26S6.png)
+[WebServer] seed: persona «Priya (placeholder)» ← imagen sintética 1638×2048 px (personas/01KXXDWJ5C9GP7T0EKTYCFZFR2/01KXXDWJ5WBZZ139KSM697F6E7.png)
+[WebServer] seed: persona «Priya (placeholder)» ← imagen sintética 1638×2048 px (personas/01KXXDWJ5C9GP7T0EKTYCFZFR2/01KXXDWJ6D7QWYBN6QHQZG8W2Y.png)
+[WebServer] seed: persona «David (placeholder)» ← imagen sintética 1638×2048 px (personas/01KXXDWJ6HMYBRZ9HRCNP0JJAX/01KXXDWJ7008AMGZ2H3T99BW2J.png)
+[WebServer] seed: persona «David (placeholder)» ← imagen sintética 1638×2048 px (personas/01KXXDWJ6HMYBRZ9HRCNP0JJAX/01KXXDWJ7HEZN5734H7ZCNJWZA.png)
+[WebServer] seed: persona «Chloe (placeholder)» ← imagen sintética 1638×2048 px (personas/01KXXDWJ7N7SZWH2M0NVV4TP3F/01KXXDWJ847G9N0W144TVRZ9RT.png)
+[WebServer] seed: persona «Chloe (placeholder)» ← imagen sintética 1638×2048 px (personas/01KXXDWJ7N7SZWH2M0NVV4TP3F/01KXXDWJ8NHWB9DX703KDJ2ATT.png)
+[WebServer] seed: persona «Kenji (placeholder)» ← imagen sintética 1638×2048 px (personas/01KXXDWJ8R7B7BRE9YQ3QDKNRB/01KXXDWJ98W5HYCWRA69DM8AGZ.png)
+[WebServer] seed: persona «Kenji (placeholder)» ← imagen sintética 1638×2048 px (personas/01KXXDWJ8R7B7BRE9YQ3QDKNRB/01KXXDWJ9SHV7670JH6TBFJT9S.png)
+[WebServer] ▲ Next.js 16.2.10 (Turbopack)
+[WebServer] - Local:         http://localhost:3100
+[WebServer] - Network:       http://192.168.1.132:3100
+[WebServer] ✓ Ready in 352ms
+[WebServer] {"level":30,"time":1784472817010,"pid":49419,"hostname":"MBP-de-Carlos","name":"worker","intervalMs":5000,"generationReconcile":true,"msg":"sweeper arrancado"}
+[WebServer] {"level":30,"time":1784472817011,"pid":49419,"hostname":"MBP-de-Carlos","name":"worker","queue":"demo.noop","msg":"pg-boss arrancado: colas y consumers listos"}
+[WebServer] {"level":30,"time":1784472817011,"pid":49419,"hostname":"MBP-de-Carlos","name":"worker","health":{"ok":true,"db":true},"msg":"worker ready"}
+[WebServer] {"level":30,"time":1784472818160,"pid":49420,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","msg":"running startup migrations"}
+[WebServer] {"level":30,"time":1784472818336,"pid":49420,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","msg":"startup migrations applied"}
+[WebServer] {"level":30,"time":1784472818446,"pid":49420,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","seeded":true,"msg":"auth.password_hash sembrado (first boot)"}
+[WebServer] {"level":30,"time":1784472818495,"pid":49420,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","provider":"fal","seeded":false,"msg":"secret.fal ya existía en BD (env ignorada; la BD es la fuente)"}
+[WebServer] {"level":30,"time":1784472818512,"pid":49420,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","provider":"anthropic","seeded":false,"msg":"secret.anthropic ya existía en BD (env ignorada; la BD es la fuente)"}
+[WebServer] {"level":30,"time":1784472818512,"pid":49420,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","provider":"firecrawl","seeded":false,"msg":"secret.firecrawl ya existía en BD (env ignorada; la BD es la fuente)"}
+[WebServer] {"level":30,"time":1784472818562,"pid":49420,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","msg":"sembrando datos de referencia (T3.9)"}
+[WebServer] {"level":30,"time":1784472818603,"pid":49420,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","hookLines":80,"ctaLines":30,"recipes":3,"msg":"librería sembrada o ya presente (insert-only)"}
+[WebServer] {"level":30,"time":1784472818679,"pid":49420,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","templates":56,"guardPacks":10,"modelProfiles":18,"msg":"galería sembrada o ya presente (insert-only)"}
+[WebServer] {"level":30,"time":1784472818743,"pid":49420,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","personas":10,"imagesCreated":0,"imagesFailed":0,"msg":"personas sembradas o ya presentes"}
+[WebServer] {"level":30,"time":1784472818743,"pid":49420,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","msg":"datos de referencia sembrados (T3.9)"}
+[WebServer] 
+
+Running 4 tests using 3 workers
+
+[WebServer]  GET /login 200 in 266ms (next.js: 130ms, application-code: 136ms)
+[WebServer]  POST /api/login 200 in 290ms (next.js: 181ms, application-code: 108ms)
+[WebServer]  GET / 200 in 155ms (next.js: 20ms, proxy.ts: 33ms, application-code: 102ms)
+  ✓  1 [setup] › e2e/auth.setup.ts:10:1 › login y persistir sesión (1.5s)
+[WebServer]  POST /api/templates 201 in 334ms (next.js: 89ms, application-code: 245ms)
+[WebServer]  GET /api/personas 200 in 52ms (next.js: 43ms, application-code: 8ms)
+[WebServer]  POST /api/templates 201 in 756ms (next.js: 1720µs, application-code: 754ms)
+[WebServer]  GET /personas 200 in 929ms (next.js: 209ms, proxy.ts: 11ms, application-code: 709ms)
+[WebServer]  GET /api/templates 200 in 182ms (next.js: 5ms, application-code: 177ms)
+[WebServer]  GET /gallery 200 in 781ms (next.js: 58ms, proxy.ts: 85ms, application-code: 638ms)
+[WebServer]  GET /api/assets/01KXXDWJ3M8GAH66VYK4Q5CM9Q/download 200 in 1455ms (next.js: 1370ms, application-code: 85ms)
+[WebServer]  GET /api/assets/01KXXDWJ45D8WGHS209JFSEP9G/download 200 in 1386ms (next.js: 1300ms, application-code: 86ms)
+[WebServer]  PATCH /api/templates/01KXXDWRX9D93REX2G39EDVRTN/status 200 in 1236ms (next.js: 1207ms, application-code: 29ms)
+[WebServer]  PATCH /api/templates/01KXXDWRX9D93REX2G39EDVRTN/status 400 in 17ms (next.js: 7ms, application-code: 10ms)
+[WebServer]  POST /api/personas 201 in 32ms (next.js: 7ms, application-code: 26ms)
+[WebServer]  GET /api/templates/01KXXDWRVYXKC2QP37MRJECFGM 200 in 1251ms (next.js: 1235ms, application-code: 16ms)
+[WebServer]  GET /api/templates/01KXXDWRVYXKC2QP37MRJECFGM 200 in 1259ms (next.js: 1240ms, application-code: 19ms)
+[WebServer] {"level":30,"time":1784472826244,"pid":49420,"hostname":"MBP-de-Carlos","name":"web","request_id":"b0558e86-1dde-4a8a-8e8f-40b0a554d1be","event":"fal_generation_finalized","generationId":"01KXXDWWACXX75GBY9KD12K6R9","assetId":"01KXXDWWBWDW2SMP5837X8WF1E","costCents":1,"msg":"generación finalizada: output descargado, coste registrado, completed"}
+[WebServer] {"level":30,"time":1784472826246,"pid":49420,"hostname":"MBP-de-Carlos","name":"web","request_id":"b0558e86-1dde-4a8a-8e8f-40b0a554d1be","event":"template_thumbnail_generated","templateId":"01KXXDWRX9D93REX2G39EDVRTN","assetId":"01KXXDWWBWDW2SMP5837X8WF1E","msg":"thumbnail de template generado y asociado"}
+[WebServer]  POST /api/templates/01KXXDWRX9D93REX2G39EDVRTN/thumbnail 200 in 1341ms (next.js: 1194ms, application-code: 147ms)
+[WebServer]  PATCH /api/templates/01KXXDWRX9D93REX2G39EDVRTN/status 200 in 14ms (next.js: 5ms, application-code: 9ms)
+[WebServer]  GET /api/templates 200 in 25ms (next.js: 5ms, application-code: 20ms)
+[WebServer]  GET /gallery 200 in 212ms (next.js: 5ms, proxy.ts: 3ms, application-code: 204ms)
+[WebServer]  GET /api/assets/01KXXDWWBWDW2SMP5837X8WF1E/download 200 in 35ms (next.js: 4ms, application-code: 31ms)
+[WebServer] {"level":30,"time":1784472826781,"pid":49420,"hostname":"MBP-de-Carlos","name":"web","request_id":"da01fc23-ba34-49e8-922b-767f8c6c7ddd","event":"persona_base_portrait_generated","generationId":"01KXXDWWTXF2NCGF8BYGM1B5GG","costCents":1,"msg":"retrato base de persona generado y subido a fal storage"}
+[WebServer] {"level":30,"time":1784472826912,"pid":49420,"hostname":"MBP-de-Carlos","name":"web","request_id":"da01fc23-ba34-49e8-922b-767f8c6c7ddd","event":"persona_reference_image_generated","generationId":"01KXXDWWWXTNDB7T1NP39SS1HV","assetId":"01KXXDWWZ96676G8AWE7T8SA7Q","framingId":"frontal_headshot","width":1536,"height":2752,"costCents":8,"msg":"reference-image IA de persona generada, validada ≥2K y añadida"}
+[WebServer] {"level":30,"time":1784472826962,"pid":49420,"hostname":"MBP-de-Carlos","name":"web","request_id":"da01fc23-ba34-49e8-922b-767f8c6c7ddd","event":"persona_reference_image_generated","generationId":"01KXXDWX10JQ26DBV2SHD7D5MY","assetId":"01KXXDWX1W6Z8GJM4M57QCWR95","framingId":"three_quarter_portrait","width":1536,"height":2752,"costCents":8,"msg":"reference-image IA de persona generada, validada ≥2K y añadida"}
+[WebServer] {"level":30,"time":1784472827016,"pid":49420,"hostname":"MBP-de-Carlos","name":"web","request_id":"da01fc23-ba34-49e8-922b-767f8c6c7ddd","event":"persona_reference_image_generated","generationId":"01KXXDWX2KV70YRV0W0EFJZ54B","assetId":"01KXXDWX3CTCNN40XT4724JXRN","framingId":"full_body","width":1536,"height":2752,"costCents":8,"msg":"reference-image IA de persona generada, validada ≥2K y añadida"}
+[WebServer] {"level":30,"time":1784472827016,"pid":49420,"hostname":"MBP-de-Carlos","name":"web","request_id":"da01fc23-ba34-49e8-922b-767f8c6c7ddd","event":"persona_images_generated","personaId":"01KXXDWVFFB91GK41YWEHS5XP7","count":3,"costCents":25,"msg":"reference-images IA de persona generadas"}
+[WebServer]  POST /api/personas/01KXXDWVFFB91GK41YWEHS5XP7/reference-images/generate 200 in 1435ms (next.js: 1115ms, application-code: 319ms)
+[WebServer]  GET /api/assets/01KXXDWX3CTCNN40XT4724JXRN/download 200 in 29ms (next.js: 6ms, application-code: 24ms)
+[WebServer]  GET /api/assets/01KXXDWWZ96676G8AWE7T8SA7Q/download 200 in 31ms (next.js: 12ms, application-code: 19ms)
+[WebServer]  GET /api/assets/01KXXDWX1W6Z8GJM4M57QCWR95/download 200 in 32ms (next.js: 15ms, application-code: 17ms)
+  ✓  3 [chromium] › e2e/gallery-generation.spec.ts:94:3 › Generación de galería (T4.12 pase A) — fal fake, $0 › thumbnail: un template sin thumbnail NO se publica; con thumbnail generado, sí @f4 @gallery (5.0s)
+[WebServer]  GET /api/spend 200 in 49ms (next.js: 41ms, application-code: 8ms)
+[WebServer]  GET /spend 200 in 580ms (next.js: 37ms, proxy.ts: 9ms, application-code: 534ms)
+[WebServer] {"level":30,"time":1784472827769,"pid":49420,"hostname":"MBP-de-Carlos","name":"web","request_id":"0767c67f-13ef-4527-81b9-3f3d347407c5","event":"fal_generation_finalized","generationId":"01KXXDWXT3B158ZFHVD0AY5ZHQ","assetId":"01KXXDWXVK7AHZA04JVP8HS1W9","costCents":1,"msg":"generación finalizada: output descargado, coste registrado, completed"}
+[WebServer]  POST /api/templates/01KXXDWRVYXKC2QP37MRJECFGM/test 200 in 1624ms (next.js: 1553ms, application-code: 71ms)
+[WebServer] {"level":30,"time":1784472827769,"pid":49420,"hostname":"MBP-de-Carlos","name":"web","request_id":"0767c67f-13ef-4527-81b9-3f3d347407c5","event":"template_test_generated","generationId":"01KXXDWXT3B158ZFHVD0AY5ZHQ","assetId":"01KXXDWXVK7AHZA04JVP8HS1W9","costCents":1,"msg":"imagen de prueba de template generada"}
+[WebServer]  GET /api/assets/01KXXDWXVK7AHZA04JVP8HS1W9/download 200 in 13ms (next.js: 6ms, application-code: 7ms)
+[WebServer]  GET /api/spend 200 in 5ms (next.js: 2ms, application-code: 3ms)
+[WebServer]  GET /spend 200 in 57ms (next.js: 3ms, proxy.ts: 3ms, application-code: 51ms)
+  ✓  2 [chromium] › e2e/gallery-generation.spec.ts:227:3 › Generación de galería (T4.12 pase A) — fal fake, $0 › generar variación: el botón de la ficha genera reference-images IA con coste visible @f4 @gallery (5.6s)
+  ✓  4 [chromium] › e2e/gallery-generation.spec.ts:160:3 › Generación de galería (T4.12 pase A) — fal fake, $0 › probar template: el botón de la ficha genera una imagen de prueba con coste visible en /spend @f4 @gallery (5.7s)
+
+  4 passed (18.9s)

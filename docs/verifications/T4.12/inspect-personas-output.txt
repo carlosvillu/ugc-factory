@@ -1,0 +1,33 @@
+
+> @ugc/web@0.0.0 inspect:personas /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/web
+> tsx --env-file-if-exists=../../.env scripts/inspect-persona-state.ts
+
+
+=== ROSTER: 10 personas ===
+  Alex (placeholder)       refs=3  AI=3 [1536x2752,1536x2752,1536x2752]  synthetic(null gen)=0
+  Carmen (placeholder)     refs=3  AI=3 [1536x2752,1536x2752,1536x2752]  synthetic(null gen)=0
+  Chloe (placeholder)      refs=3  AI=3 [1536x2752,1536x2752,1536x2752]  synthetic(null gen)=0
+  David (placeholder)      refs=3  AI=3 [1536x2752,1536x2752,1536x2752]  synthetic(null gen)=0
+  Kenji (placeholder)      refs=3  AI=3 [1536x2752,1536x2752,1536x2752]  synthetic(null gen)=0
+  Lucía (placeholder)      refs=3  AI=3 [1536x2752,1536x2752,1536x2752]  synthetic(null gen)=0
+  Marcus (placeholder)     refs=3  AI=3 [1536x2752,1536x2752,1536x2752]  synthetic(null gen)=0
+  Nerea (placeholder)      refs=3  AI=3 [1536x2752,1536x2752,1536x2752]  synthetic(null gen)=0
+  Priya (placeholder)      refs=3  AI=3 [1536x2752,1536x2752,1536x2752]  synthetic(null gen)=0
+  Rosa (placeholder)       refs=3  AI=3 [1536x2752,1536x2752,1536x2752]  synthetic(null gen)=0
+
+=== SEGURIDAD DEL CLEANUP: reference_image con generationId null ===
+Total null-generationId reference assets: 0
+Esperado si TODO son sintéticas del seed: 2 × 10 = 20
+⚠ NO coincide (0 vs 20). Revisar: puede haber uploads manuales o personas con refs desiguales.
+Detalle por persona (null-gen count): {
+  "Alex (placeholder)": 0,
+  "Carmen (placeholder)": 0,
+  "Chloe (placeholder)": 0,
+  "David (placeholder)": 0,
+  "Kenji (placeholder)": 0,
+  "Lucía (placeholder)": 0,
+  "Marcus (placeholder)": 0,
+  "Nerea (placeholder)": 0,
+  "Priya (placeholder)": 0,
+  "Rosa (placeholder)": 0
+}

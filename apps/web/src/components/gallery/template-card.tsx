@@ -7,6 +7,7 @@
 import type { TemplateSummary } from '@ugc/core/gallery';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
+import { Image } from '@/components/ui/image';
 import { statusBadgeTone, statusLabel } from '@/components/gallery/status-badge';
 
 interface TemplateCardProps {
@@ -21,6 +22,7 @@ export function TemplateCard({ template, onOpen }: TemplateCardProps) {
     3,
   );
   const isDraft = template.status === 'draft';
+  const hasThumbnail = template.thumbnailAssetId != null && template.thumbnailAssetId !== '';
 
   return (
     <button
@@ -30,13 +32,26 @@ export function TemplateCard({ template, onOpen }: TemplateCardProps) {
       aria-label={`Abrir template ${template.title}`}
     >
       <Card className={isDraft ? 'opacity-80' : undefined}>
-        {/* Thumbnail placeholder: el hatch del DS (design-system.md §3.8). El thumbnail REAL lo
-            genera T4.12 (fal); en T3.8 es un placeholder que dice si falta. */}
-        <div
-          className="hatch flex aspect-16/10 items-center justify-center rounded-t-lg font-mono text-micro text-text-3"
-          aria-hidden
-        >
-          {isDraft ? 'sin thumbnail' : 'thumbnail'}
+        {/* Thumbnail: la MINIATURA-IMAGEN real generada por T4.12 (fal), servida por
+            `GET /api/assets/:id/download`. La primitiva `Image` del DS (no un `<img>` crudo:
+            política frontend §1) la pinta con su máquina de estados. El estado SIN thumbnail (draft
+            sin generar) NO se pinta a mano: se pasa `src={undefined}`, con lo que `Image` entra en
+            su estado `empty` y pinta su propio hatch-placeholder del DS con el `placeholder` label
+            — el mismo hatch que un div bespoke, pero de la primitiva que lo posee. El wrapper
+            conserva la geometría de la tarjeta (`aspect-16/10`, esquinas superiores redondeadas, sin
+            borde interno); por eso `Image` va con `radius="none"` y `bordered={false}`. */}
+        <div className="aspect-16/10 overflow-hidden rounded-t-lg">
+          <Image
+            src={
+              hasThumbnail ? `/api/assets/${String(template.thumbnailAssetId)}/download` : undefined
+            }
+            alt={hasThumbnail ? `Miniatura de ${template.title}` : ''}
+            placeholder={isDraft ? 'sin thumbnail' : 'thumbnail'}
+            ratio="16/10"
+            radius="none"
+            bordered={false}
+            className="size-full"
+          />
         </div>
         <div className="flex flex-col gap-2.5 px-3.5 py-3">
           <div className="flex items-start justify-between gap-2">

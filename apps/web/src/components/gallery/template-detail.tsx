@@ -13,6 +13,7 @@ import { ApiError, templateActions } from '@/lib/api-client';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import { Image } from '@/components/ui/image';
 import { Skeleton } from '@/components/ui/skeleton';
 import { SlotBody } from '@/components/gallery/slot-body';
 import { TemplateEditor } from '@/components/gallery/template-editor';
@@ -152,6 +153,22 @@ export function TemplateDetail({ templateId, onEdited, onStatusChanged }: Templa
           <p className="text-body-sm text-text-2">{template.description}</p>
         ) : null}
       </header>
+
+      {/* ── Miniatura-imagen del template (T4.12): la MISMA imagen que la tarjeta de `/gallery`,
+             servida por `GET /api/assets/:id/download`. Distinta de la imagen de PRUEBA de «Probar
+             template» (el output efímero de un run de prueba): esta es el thumbnail persistido del
+             template. Solo si existe; un draft sin thumbnail no la pinta. ── */}
+      {template.thumbnailAssetId ? (
+        <div className="max-w-xs" data-slot="template-thumbnail">
+          <Image
+            src={`/api/assets/${template.thumbnailAssetId}/download`}
+            alt={`Miniatura de ${template.title}`}
+            ratio="16/10"
+            radius="md"
+            className="w-full"
+          />
+        </div>
+      ) : null}
 
       {/* ── Probar template (T4.12): imagen de prueba barata ANTES de comprometer un run. Solo
              `kind:'image'` (los de vídeo son caros; el servidor los rechaza igualmente). ── */}

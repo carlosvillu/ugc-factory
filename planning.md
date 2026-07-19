@@ -674,6 +674,7 @@ Decisiones del usuario (2026-07-07): la fase se ejecuta tras T0.1 y **antes** de
 #### T5.1 · Imagen Docker del worker de render
 - **Depende de**: T0.13
 - **Entrega**: imagen del worker con ffmpeg (libass/libfreetype), ffprobe, fuentes OFL (TikTok Sans, Poppins, Noto fallback) y `c2patool`; healthcheck de capacidades.
+- **⚠ Deuda de rollout heredada de T4.4b (2026-07-19)**: el diff de T4.4b añadió `capabilities.aspectParam`/`aspectValues` al seed de `model_profile` (seedream/NB2 edit) — SIN re-correr `pnpm seed:gallery` en un entorno ya desplegado, los product shots de referencia salen CUADRADOS en vez de 9:16 (el `model_profile` de prod queda stale). T3.9 siembra en boot contra BD VACÍA, pero NO re-upsertea capabilities cambiadas sobre una BD ya poblada. **Cualquier rollout que suba código con seeds modificados debe garantizar el re-seed (upsert) de gallery** — verificar que el arranque de prod (o un paso de deploy) lo hace, o el bug resurge silencioso. Detalle en docs/verifications/T4.4b/report.md §9:16.
 - **Verificación**: `docker exec worker ffmpeg -filters | grep sidechaincompress` OK; `c2patool --version` responde; `fc-list` muestra TikTok Sans.
 
 #### T5.2 · Normalización canónica con caché (vídeo + audio)

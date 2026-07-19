@@ -68,6 +68,11 @@ export { runGenerateMusic } from './generate-music';
 // `POST /api/personas/[id]/reference-images/generate`. Los endpoints y tipos internos NO se re-exportan
 // (los tests del módulo los importan por ruta relativa).
 export { runGeneratePersonaImages } from './generate-persona-images';
+// Discriminador PURO de limpieza de referencias de persona (T4.12 escalado): parte los assets de una
+// persona en IA (a conservar) vs sintéticas del seed (a borrar) por `generationId`. Lo consume el script
+// de escalado (`apps/web/scripts/seed-persona-images.ts`), que borra las sintéticas tras generar las IA
+// para que cada persona quede SOLO con referencias consistentes del mismo sujeto (cláusula 1 de T4.12).
+export { partitionPersonaReferences, MIN_AI_REFERENCES } from './persona-reference-cleanup';
 // El dedup de generación (T4.10, §9.6: `resolveProductionDedup` en `generation-dedup.ts`) NO
 // se re-exporta: es una pieza INTERNA que los 6 servicios de generación importan por ruta relativa antes
 // de crear la fila `submitting`. Exportarla sería superficie muerta (misma disciplina que el resto del

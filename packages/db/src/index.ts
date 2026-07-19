@@ -104,6 +104,7 @@ export { makeLocalStorageAdapterFromEnv } from './adapters/local-storage';
 export {
   createAsset,
   getAsset,
+  getAssetsByIds,
   getAssetByGenerationKind,
   setAssetFalUpload,
   setAssetWordTimestamps,

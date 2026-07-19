@@ -7,7 +7,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { sql } from 'drizzle-orm';
 import { createTestDatabase, makeAsset, type TestDatabase } from '@ugc/test-utils';
-import { createAsset, getAsset } from '../../src/repos/asset.repo';
+import { createAsset, getAsset, getAssetsByIds } from '../../src/repos/asset.repo';
 
 let tdb: TestDatabase;
 
@@ -73,6 +73,35 @@ describe('asset repo (T0.5)', () => {
     const cause = (err as { cause?: { message?: string; code?: string } }).cause;
     expect(cause?.message).toMatch(/invalid input value for enum/);
     expect(cause?.code).toBe('22P02'); // invalid_text_representation
+  });
+
+  it('getAssetsByIds lee por lote y distingue IA (generationId no-null) de sintéticas (null)', async () => {
+    // El discriminador de la limpieza de personas (T4.12) se apoya en este campo: las referencias IA
+    // llevan generationId, las sintéticas del seed no. Se fija contra la BD real (el mapeo del NULL).
+    const ai = await createAsset(
+      tdb.db,
+      makeAsset({ kind: 'reference_image', generationId: '01ARZ3NDEKTSV4RRFFQ69G5FAV' }),
+    );
+    const synthetic = await createAsset(
+      tdb.db,
+      makeAsset({ kind: 'reference_image', generationId: null }),
+    );
+    const rows = await getAssetsByIds(tdb.db, [ai.id, synthetic.id]);
+    expect(rows).toHaveLength(2);
+    const byId = new Map(rows.map((r) => [r.id, r]));
+    expect(byId.get(ai.id)?.generationId).toBe('01ARZ3NDEKTSV4RRFFQ69G5FAV');
+    expect(byId.get(synthetic.id)?.generationId).toBeNull();
+  });
+
+  it('getAssetsByIds con lista vacía devuelve [] SIN tocar la BD (footgun inArray([]))', async () => {
+    expect(await getAssetsByIds(tdb.db, [])).toEqual([]);
+  });
+
+  it('getAssetsByIds ignora ids inexistentes (devuelve solo los que existen)', async () => {
+    const created = await createAsset(tdb.db, makeAsset({ kind: 'reference_image' }));
+    const rows = await getAssetsByIds(tdb.db, [created.id, '00000000000000000000000000']);
+    expect(rows).toHaveLength(1);
+    expect(rows[0]?.id).toBe(created.id);
   });
 
   it('acepta todos los valores de §12 del enum asset_kind', async () => {

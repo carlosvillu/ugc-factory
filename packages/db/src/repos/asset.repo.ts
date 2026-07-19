@@ -3,7 +3,7 @@
 // getAsset(:id); el smoke/seed hace createAsset tras subir el fichero al
 // StorageAdapter). list/update/delete llegan con sus consumidores. Nada de generic
 // repository/active record.
-import { and, eq } from 'drizzle-orm';
+import { and, eq, inArray } from 'drizzle-orm';
 import type { Db } from '../client';
 import { asset, type Asset, type NewAsset } from '../schema/generation';
 
@@ -23,6 +23,21 @@ export async function createAsset(db: Db, values: NewAsset): Promise<Asset> {
 export async function getAsset(db: Db, id: string): Promise<Asset | undefined> {
   const [row] = await db.select().from(asset).where(eq(asset.id, id));
   return row;
+}
+
+/**
+ * Lee los assets cuyos ids están en `ids` (lectura por lote). Lo usa el script de escalado de personas
+ * (T4.12) para inspeccionar las `reference_image_ids` de una persona y distinguir las referencias IA
+ * (`generationId !== null`, estampado por `createAsset` en generate-persona-images) de las sintéticas
+ * del seed (`generationId === null`) que hay que limpiar. NO garantiza el orden de `ids` (irrelevante
+ * para el filtro por `generationId`). `[]` in → `[]` out SIN tocar la BD (`inArray(col, [])` es un
+ * footgun de Drizzle: genera SQL inválido / degenerado; se corta aquí). */
+export async function getAssetsByIds(db: Db, ids: readonly string[]): Promise<Asset[]> {
+  if (ids.length === 0) return [];
+  return db
+    .select()
+    .from(asset)
+    .where(inArray(asset.id, [...ids]));
 }
 
 /**

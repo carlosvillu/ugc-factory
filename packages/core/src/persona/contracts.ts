@@ -220,6 +220,15 @@ export type GeneratePersonaImagesResponse = z.infer<typeof GeneratePersonaImages
 export const REFERENCE_IMAGES_MIN = 2;
 
 /**
+ * MÍNIMO de referencias IA (identity lock) para que una persona sea «activa» (§11: mismo sujeto en
+ * ≥2 encuadres). Distinto de `REFERENCE_IMAGES_MIN` aunque el número coincida: aquel cuenta CUALQUIER
+ * referencia (para UI/creación), este cuenta SOLO las IA (`generationId` no-null) y hace además de suelo
+ * anti-stranding del escalado (T4.12): nunca se borran las sintéticas del seed si la persona no alcanzaría
+ * este número de referencias IA. Vive aquí, junto a los umbrales §11 de persona; `@ugc/services` lo consume.
+ */
+export const MIN_AI_REFERENCES = 2;
+
+/**
  * EL UMBRAL «≥2K» de §11 («referenceImages[] ≥2K (identity lock)»), en píxeles.
  *
  * El PRD dice «≥2K» y no dice sobre qué lado. Se interpreta —y se DEJA ESCRITO aquí, que es

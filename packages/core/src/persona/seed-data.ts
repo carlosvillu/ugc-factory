@@ -20,6 +20,13 @@ import type { PersonaBody } from './contracts';
  *  clave natural), así el usuario la reconoce de un vistazo en la lista y sabe que la sustituye. */
 const PLACEHOLDER_SUFFIX = '(placeholder)';
 
+/** El aviso administrativo (idéntico en las 10) que abre `personality`: marca la persona como de
+ *  ejemplo y le dice al usuario cómo sustituirla. Es un marcador fijo del placeholder, no dato de
+ *  catálogo — por eso es una constante y no se copia en cada seed (solo la voz distintiva de cada
+ *  persona se escribe a mano tras este prefijo). */
+const PLACEHOLDER_PERSONALITY_PREFIX =
+  'PERSONA DE EJEMPLO — sustitúyeme: edítame desde /personas y sube tus propias imágenes de referencia. ';
+
 /**
  * Una persona del seed: su cuerpo + cuántas imágenes de referencia sintéticas se le generan.
  * El seed es la fuente de verdad de los METADATOS (mismo criterio que la librería de T2.1:
@@ -41,7 +48,7 @@ const LUCIA: PersonaSeed = {
   descriptor: 'mujer de 29 años, latina, look casual de diario',
   setting: 'baño con luz natural de ventana, encimera con dos o tres productos',
   personality:
-    'PERSONA DE EJEMPLO — sustitúyeme: edítame desde /personas y sube tus propias imágenes de referencia. ' +
+    PLACEHOLDER_PERSONALITY_PREFIX +
     'Cercana y directa, habla como una amiga que recomienda algo que de verdad le funcionó. ' +
     'Nunca afirma ser clienta real: presenta el producto como demo estilo creator (§10.3, rol honesto).',
   wardrobeNotes: 'Camiseta lisa de color plano y pelo recogido; misma ropa en todos los CUTs.',
@@ -62,7 +69,7 @@ const MARCUS: PersonaSeed = {
   descriptor: 'man in his late 30s, black, sporty everyday look',
   setting: 'home gym corner with a yoga mat and a window behind',
   personality:
-    'PERSONA DE EJEMPLO — sustitúyeme: edítame desde /personas y sube tus propias imágenes de referencia. ' +
+    PLACEHOLDER_PERSONALITY_PREFIX +
     'Calm and matter-of-fact, explains rather than sells; the educator role of §10.3. ' +
     'Never claims to be a real customer.',
   wardrobeNotes: 'Plain training tee, no logos; same outfit across CUTs.',
@@ -73,5 +80,202 @@ const MARCUS: PersonaSeed = {
   referenceImageCount: 2,
 };
 
-/** Las personas que siembra `pnpm seed`. Una `es`, una `en` (§17: el seed cubre es+en). */
-export const PERSONA_SEEDS: readonly PersonaSeed[] = [LUCIA, MARCUS];
+// ────────────────────────────────────────────────────────────────────────────────────────────────
+// EL CATÁLOGO DE 10 PERSONAS (T4.12 Pase B: «seed hasta 10–20 Personas (es/en) con curación manual»).
+// LUCIA/MARCUS (arriba) fueron el molde de T2.0; las 8 de aquí completan un catálogo UGC creíble:
+// diversidad REAL de etnia, edad (18-24 → 55-64), género (incl. `non_binary`) y estilo, balanceado
+// es/en (5 es · 5 en). SIGUEN siendo placeholders (`(placeholder)` en el nombre, el usuario las
+// sustituye por el CRUD) y su `voice_map` sigue con `voiceId` PLACEHOLDER (la asignación de voz real
+// con preview no es parte de la Verificación de T4.12 — §11 la deja a F4).
+//
+// El `descriptor` es la frase rica de §10.4 que ALIMENTA el prompt del retrato (buildPersonaPortraitPrompt):
+// por eso es concreto y visual (edad + etnia + look). El resto de campos (setting/wardrobeNotes) dan al
+// identity-lock su escena y su vestuario coherente entre CUTs.
+
+/** Persona ES — creadora de belleza/skincare, joven. */
+const NEREA: PersonaSeed = {
+  name: `Nerea ${PLACEHOLDER_SUFFIX}`,
+  ageRange: '18-24',
+  gender: 'female',
+  ethnicity: 'white',
+  style: 'trendy',
+  descriptor: 'mujer de 22 años, blanca, estética trendy de creadora de skincare, piel luminosa',
+  setting: 'tocador junto a una ventana grande, luz de día suave, estantería con productos detrás',
+  personality:
+    PLACEHOLDER_PERSONALITY_PREFIX +
+    'Entusiasta y detallista, comparte rutinas paso a paso como con una amiga cercana. ' +
+    'Nunca afirma ser clienta real: presenta el producto como demo estilo creator (§10.3, rol honesto).',
+  wardrobeNotes:
+    'Top básico de tirantes en tono neutro y pelo suelto; mismo look en todos los CUTs.',
+  voiceMap: {
+    es: { provider: 'elevenlabs', voiceId: 'placeholder-es-nerea', label: 'Placeholder ES' },
+    en: { provider: 'elevenlabs', voiceId: 'placeholder-en-nerea', label: 'Placeholder EN' },
+  },
+  referenceImageCount: 2,
+};
+
+/** Persona ES — cocina/hogar, mediana edad. */
+const CARMEN: PersonaSeed = {
+  name: `Carmen ${PLACEHOLDER_SUFFIX}`,
+  ageRange: '45-54',
+  gender: 'female',
+  ethnicity: 'latina',
+  style: 'homey',
+  descriptor: 'mujer de 49 años, latina, look hogareño y cálido, sonrisa amable',
+  setting: 'cocina luminosa con encimera de madera, plantas en la ventana y utensilios a la vista',
+  personality:
+    PLACEHOLDER_PERSONALITY_PREFIX +
+    'Maternal y práctica, explica con calma trucos que usa a diario en casa. ' +
+    'Nunca afirma ser clienta real: presenta el producto como demo estilo creator (§10.3, rol honesto).',
+  wardrobeNotes: 'Blusa lisa de manga corta y delantal opcional; mismo conjunto en todos los CUTs.',
+  voiceMap: {
+    es: { provider: 'elevenlabs', voiceId: 'placeholder-es-carmen', label: 'Placeholder ES' },
+    en: { provider: 'elevenlabs', voiceId: 'placeholder-en-carmen', label: 'Placeholder EN' },
+  },
+  referenceImageCount: 2,
+};
+
+/** Persona ES — tech/gadgets, no binaria. */
+const ALEX: PersonaSeed = {
+  name: `Alex ${PLACEHOLDER_SUFFIX}`,
+  ageRange: '25-34',
+  gender: 'non_binary',
+  ethnicity: 'asian',
+  style: 'streetwear',
+  descriptor: 'persona andrógina de 27 años, asiática, estética streetwear urbana, pelo corto',
+  setting: 'escritorio con setup de tech, luz de neón tenue y una estantería de gadgets al fondo',
+  personality:
+    PLACEHOLDER_PERSONALITY_PREFIX +
+    'Curiosa y directa, desmonta gadgets con criterio y sin postureo. ' +
+    'Nunca afirma ser cliente real: presenta el producto como demo estilo creator (§10.3, rol honesto).',
+  wardrobeNotes: 'Sudadera oversize lisa sin logos; mismo look en todos los CUTs.',
+  voiceMap: {
+    es: { provider: 'elevenlabs', voiceId: 'placeholder-es-alex', label: 'Placeholder ES' },
+    en: { provider: 'elevenlabs', voiceId: 'placeholder-en-alex', label: 'Placeholder EN' },
+  },
+  referenceImageCount: 2,
+};
+
+/** Persona ES — bienestar/senior, mayor. */
+const ROSA: PersonaSeed = {
+  name: `Rosa ${PLACEHOLDER_SUFFIX}`,
+  ageRange: '55-64',
+  gender: 'female',
+  ethnicity: 'white',
+  style: 'elegant',
+  descriptor: 'mujer de 58 años, blanca, estilo elegante y sereno, pelo canoso cuidado',
+  setting: 'salón luminoso con sillón junto a una ventana, plantas y luz natural cálida',
+  personality:
+    PLACEHOLDER_PERSONALITY_PREFIX +
+    'Cálida y pausada, habla del bienestar diario con confianza y cercanía. ' +
+    'Nunca afirma ser clienta real: presenta el producto como demo estilo creator (§10.3, rol honesto).',
+  wardrobeNotes: 'Blusa de tono suave y un pañuelo ligero; mismo conjunto en todos los CUTs.',
+  voiceMap: {
+    es: { provider: 'elevenlabs', voiceId: 'placeholder-es-rosa', label: 'Placeholder ES' },
+    en: { provider: 'elevenlabs', voiceId: 'placeholder-en-rosa', label: 'Placeholder EN' },
+  },
+  referenceImageCount: 2,
+};
+
+/** Persona EN — fitness/nutrition, young adult. */
+const PRIYA: PersonaSeed = {
+  name: `Priya ${PLACEHOLDER_SUFFIX}`,
+  ageRange: '25-34',
+  gender: 'female',
+  ethnicity: 'south asian',
+  style: 'athleisure',
+  descriptor: 'woman in her late 20s, south asian, athleisure look, fit and energetic',
+  setting: 'bright home studio with a yoga mat, dumbbells and a large window behind',
+  personality:
+    PLACEHOLDER_PERSONALITY_PREFIX +
+    'Upbeat and encouraging, coaches like a friend who wants you to win. ' +
+    'Never claims to be a real customer: presents the product as a creator-style demo (§10.3, honest role).',
+  wardrobeNotes: 'Plain fitted training top, no logos; same outfit across CUTs.',
+  voiceMap: {
+    es: { provider: 'elevenlabs', voiceId: 'placeholder-es-priya', label: 'Placeholder ES' },
+    en: { provider: 'elevenlabs', voiceId: 'placeholder-en-priya', label: 'Placeholder EN' },
+  },
+  referenceImageCount: 2,
+};
+
+/** Persona EN — home/DIY, middle-aged man. */
+const DAVID: PersonaSeed = {
+  name: `David ${PLACEHOLDER_SUFFIX}`,
+  ageRange: '45-54',
+  gender: 'male',
+  ethnicity: 'white',
+  style: 'rugged',
+  descriptor: 'man in his late 40s, white, rugged everyday look, short beard',
+  setting: 'garage workshop corner with tools on a pegboard and warm work lighting',
+  personality:
+    PLACEHOLDER_PERSONALITY_PREFIX +
+    'Down-to-earth and hands-on, explains how things work without overselling. ' +
+    'Never claims to be a real customer: presents the product as a creator-style demo (§10.3, honest role).',
+  wardrobeNotes: 'Plain flannel shirt, sleeves rolled; same outfit across CUTs.',
+  voiceMap: {
+    es: { provider: 'elevenlabs', voiceId: 'placeholder-es-david', label: 'Placeholder ES' },
+    en: { provider: 'elevenlabs', voiceId: 'placeholder-en-david', label: 'Placeholder EN' },
+  },
+  referenceImageCount: 2,
+};
+
+/** Persona EN — fashion/lifestyle, young. */
+const CHLOE: PersonaSeed = {
+  name: `Chloe ${PLACEHOLDER_SUFFIX}`,
+  ageRange: '18-24',
+  gender: 'female',
+  ethnicity: 'black',
+  style: 'chic',
+  descriptor: 'woman of 23, black, chic modern fashion look, natural curls',
+  setting: 'minimal bedroom with a clothing rack and soft window light',
+  personality:
+    PLACEHOLDER_PERSONALITY_PREFIX +
+    'Warm and stylish, talks fashion like getting ready with a friend. ' +
+    'Never claims to be a real customer: presents the product as a creator-style demo (§10.3, honest role).',
+  wardrobeNotes: 'Plain fitted top in a neutral tone; same look across CUTs.',
+  voiceMap: {
+    es: { provider: 'elevenlabs', voiceId: 'placeholder-es-chloe', label: 'Placeholder ES' },
+    en: { provider: 'elevenlabs', voiceId: 'placeholder-en-chloe', label: 'Placeholder EN' },
+  },
+  referenceImageCount: 2,
+};
+
+/** Persona EN — outdoors/gear, middle-aged. */
+const KENJI: PersonaSeed = {
+  name: `Kenji ${PLACEHOLDER_SUFFIX}`,
+  ageRange: '35-44',
+  gender: 'male',
+  ethnicity: 'asian',
+  style: 'outdoorsy',
+  descriptor: 'man in his late 30s, asian, outdoorsy look, weathered and friendly face',
+  setting: 'cabin porch with pine trees behind and soft natural daylight',
+  personality:
+    PLACEHOLDER_PERSONALITY_PREFIX +
+    'Calm and adventurous, reviews gear from real trail experience. ' +
+    'Never claims to be a real customer: presents the product as a creator-style demo (§10.3, honest role).',
+  wardrobeNotes: 'Plain technical jacket, no logos; same outfit across CUTs.',
+  voiceMap: {
+    es: { provider: 'elevenlabs', voiceId: 'placeholder-es-kenji', label: 'Placeholder ES' },
+    en: { provider: 'elevenlabs', voiceId: 'placeholder-en-kenji', label: 'Placeholder EN' },
+  },
+  referenceImageCount: 2,
+};
+
+/**
+ * Las personas que siembra `pnpm seed` — el CATÁLOGO de 10 (§17: el seed cubre es+en; T4.12 lo escala
+ * de 2 a 10 con curación manual). Balance de locale por `descriptor`: 5 es (Lucía, Nerea, Carmen, Alex,
+ * Rosa) · 5 en (Marcus, Priya, David, Chloe, Kenji). Diversidad de edad (18-24 → 55-64), género (incl.
+ * `non_binary`) y etnia deliberada — un catálogo UGC creíble, no diez clones.
+ */
+export const PERSONA_SEEDS: readonly PersonaSeed[] = [
+  LUCIA,
+  MARCUS,
+  NEREA,
+  CARMEN,
+  ALEX,
+  ROSA,
+  PRIYA,
+  DAVID,
+  CHLOE,
+  KENJI,
+];

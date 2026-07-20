@@ -5,3 +5,8 @@
 // `./fixtures/*` y `./live-budget`).
 export { makeTestVideo, makeTestAudio, makeTestVideoWithVoice } from './synthetic';
 export { ffprobeJson, assertVideoProfile, assertAudioProfile } from './ffprobe';
+// Mediciones de loudness/RMS con ffmpeg (T5.3): loudness integrado del máster (-14 LUFS) y caída del bed
+// bajo la voz (ducking). Solo la suite `worker:media` los consume.
+export { measureIntegratedLufs, measureRmsDb } from './loudness';
+// StorageAdapter local de producción con raíz aislada, compartido por las suites de media (T5.2/T5.3).
+export { makeMediaTestStorage } from './storage';

@@ -684,9 +684,10 @@ Decisiones del usuario (2026-07-07): la fase se ejecuta tras T0.1 y **antes** de
 - **Decisión de interpretación (§9.7 l.407 vs §12 l.533)**: el normalizado es su PROPIA fila `asset` (checksum de sus bytes, `normalized_cache_key` = checksum-origen + params, `parent_asset_ids=[origen]`), NO una columna sobre el origen — así N perfiles del mismo origen coexisten (F8 multi-plataforma/HQ) sin pisarse. El discriminador «es un normalizado» = `normalized_cache_key IS NOT NULL`, no un kind nuevo (el kind refleja el contenido). Migración 0023 puramente aditiva (columnas + índice parcial, sin `ALTER TYPE`). El PRD no cambia (§12 ya anticipa las columnas).
 - **Verificación**: normalizar los assets reales de una variante → ffprobe de cada salida cumple el perfil exacto (script de asserts); segunda ejecución = 100 % cache hits (0 trabajos ffmpeg en logs y mtime de los normalizados intacto); un clip 16:9 de prueba queda crop-to-fill sin letterbox.
 
-#### T5.3 · Concat + mezcla de audio
+#### T5.3 · Concat + mezcla de audio [x] 2026-07-20 — PASS, ver docs/verifications/T5.3/ (coste $0; suite media 13/13 en la imagen worker amd64; concat dur 7.000s exacta + perfil intacto, −14.0 LUFS con y sin bed, ducking 10.59 dB con buildDuckingGraph de producción)
 - **Depende de**: T5.2
 - **Entrega**: ensamblado por `CompositionSpec`: concat demuxer `-c copy` + voz por segmento + bed con `volume` 0,2–0,3, `sidechaincompress`, `afade` out y `loudnorm` I=-14.
+- **Alcance (decisión de la tarea, validada con advisor)**: T5.3 entrega el MÓDULO reutilizable `composeMaster` (patrón T5.2), NO el executor cableado al DAG (eso es T5.5). Introduce el contrato `CompositionSpec` con `segments`+`music`+`output`; `captions` se DIFIERE a T5.4 (su autor, aditivo). El máster es INTERMEDIO (sin burn-in ni qa_report/C2PA).
 - **Verificación**: master intermedio de una variante real sin glitches en los cortes; `ffmpeg -af ebur128` mide −14 LUFS ±1; el ducking es audible y visible en la waveform.
 
 #### T5.4 · Subtítulos ASS karaoke

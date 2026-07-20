@@ -115,8 +115,10 @@ export function defaultFfmpegRunner(args: string[]): Promise<FfmpegRunResult> {
 export type FfprobeRunner = (args: string[]) => Promise<FfprobeRunResult>;
 
 /** Runner por defecto de ffprobe: `spawn('ffprobe', args)`, captura stdout Y stderr, resuelve al cerrar.
- *  Un error de spawn (ENOENT: ffprobe no está en PATH) resuelve con `code:null` y el mensaje como stderr. */
-function defaultFfprobeRunner(args: string[]): Promise<FfprobeRunResult> {
+ *  Un error de spawn (ENOENT: ffprobe no está en PATH) resuelve con `code:null` y el mensaje como stderr.
+ *  EXPORTADO para que `compose-master` (T5.3) mida la duración de un fichero LOCAL (no de storage, que es
+ *  lo que hace `probeVideoDurationSeconds`) al anclar el fade-out. */
+export function defaultFfprobeRunner(args: string[]): Promise<FfprobeRunResult> {
   return new Promise((resolve) => {
     const child = nodeSpawn('ffprobe', args);
     let stdout = '';
@@ -163,6 +165,17 @@ export function tailStderr(stderr: string): string {
   return stderr.length > MAX ? stderr.slice(-MAX) : stderr;
 }
 
+/** Materializa un asset de storage (stream web) a bytes en memoria — ffmpeg lee ficheros/bytes, no
+ *  `ReadableStream`s de storage. Helper COMPARTIDO por los módulos de media (extracción T4.7b,
+ *  normalización T5.2, composición T5.3): todos hacen `storage.get → Response → arrayBuffer` idéntico. */
+export async function materializeToBytes(
+  storage: StorageAdapter,
+  key: string,
+): Promise<Uint8Array> {
+  const stream = await storage.get(key);
+  return new Uint8Array(await new Response(stream).arrayBuffer());
+}
+
 /**
  * Extrae la pista de audio de un clip de vídeo (en NUESTRO storage) a un WAV en memoria, con ffmpeg.
  * Materializa el vídeo a un temp file, corre `ffmpeg -i <in> -vn -acodec pcm_s16le -ac 1 <out>.wav`
@@ -186,9 +199,7 @@ export async function extractAudioTrack(
   const inPath = join(dir, `in.mp4`);
   const outPath = join(dir, `out.wav`);
   try {
-    const stream = await deps.storage.get(args.storageKey);
-    const videoBytes = new Uint8Array(await new Response(stream).arrayBuffer());
-    await writeFile(inPath, videoBytes);
+    await writeFile(inPath, await materializeToBytes(deps.storage, args.storageKey));
 
     const result = await runFfmpeg([
       '-hide_banner',
@@ -259,9 +270,7 @@ export async function probeVideoDurationSeconds(
   const dir = await mkdtemp(join(tmpdir(), 'ugc-probe-'));
   const inPath = join(dir, `in.mp4`);
   try {
-    const stream = await deps.storage.get(args.storageKey);
-    const videoBytes = new Uint8Array(await new Response(stream).arrayBuffer());
-    await writeFile(inPath, videoBytes);
+    await writeFile(inPath, await materializeToBytes(deps.storage, args.storageKey));
 
     const result = await runFfprobe([
       '-v',

@@ -16,7 +16,6 @@ import { promisify } from 'node:util';
 
 import type { StorageAdapter } from '@ugc/core';
 import { newUlid } from '@ugc/core/contracts';
-import { makeLocalStorageAdapter } from '@ugc/db';
 import {
   createNormalizer,
   computeNormalizedCacheKey,
@@ -29,6 +28,7 @@ import {
 import {
   assertAudioProfile,
   assertVideoProfile,
+  makeMediaTestStorage,
   makeTestAudio,
   makeTestVideo,
   makeTestVideoWithVoice,
@@ -40,13 +40,6 @@ import { mediaToolsAvailable } from './setup';
 const run = promisify(execFile);
 
 // ── Fakes (sin BD): storage local de producción + caché en Maps ──────────────────────────────────────
-
-/** El StorageAdapter local de producción (`@ugc/db`), con una raíz por test bajo `workDir`: mismo `put`
- *  (bytes+sha256), `get` (ReadableStream web), `stat`, `delete` que corre en el VPS. No se re-implementa
- *  un fake — se ejercita el adaptador real. */
-function makeTestStorage(): StorageAdapter {
-  return makeLocalStorageAdapter({ root: join(workDir, `storage-${newUlid()}`) });
-}
 
 /** Materializa un asset de storage a un fichero local para sondearlo con ffprobe (el patrón repetido en
  *  cada test de perfil: leer el normalizado del storage y escribirlo a disco). */
@@ -137,7 +130,7 @@ describe.skipIf(!mediaToolsAvailable)('normalización canónica y caché (T5.2)'
   // ── 1. PERFIL CANÓNICO: inputs «malos» → cada salida cumple assertVideoProfile / assertAudioProfile ──
 
   test('un vídeo 720p/25fps/16:9 CON audio sale 1080×1920/30fps/H.264/yuv420p/SAR1:1/-an', async () => {
-    const storage = makeTestStorage();
+    const storage = makeMediaTestStorage(workDir);
     const store = makeInMemoryStore();
     // INPUT CON pista de audio (el caso real del clip de avatar): así el assert de «sin stream de audio»
     // en la salida prueba que `-an` DE VERDAD la descartó. Con un input mudo el assert pasaría aunque
@@ -203,7 +196,7 @@ describe.skipIf(!mediaToolsAvailable)('normalización canónica y caché (T5.2)'
   });
 
   test('un audio arbitrario sale AAC 48 kHz estéreo (audio canónico)', async () => {
-    const storage = makeTestStorage();
+    const storage = makeMediaTestStorage(workDir);
     const store = makeInMemoryStore();
     // Un audio «malo»: mono a 44,1 kHz.
     const localAudio = p('bad-audio.m4a');
@@ -235,7 +228,7 @@ describe.skipIf(!mediaToolsAvailable)('normalización canónica y caché (T5.2)'
   });
 
   test('la voz EMBEBIDA de un clip (VEED/voz nativa) se extrae y normaliza a AAC 48 kHz estéreo', async () => {
-    const storage = makeTestStorage();
+    const storage = makeMediaTestStorage(workDir);
     const store = makeInMemoryStore();
     const clip = await makeTestVideoWithVoice({ out: p('voiced-clip.mp4'), seconds: 2 });
     const source = await seedSource(storage, clip, 'src/voiced-clip.mp4');
@@ -254,7 +247,7 @@ describe.skipIf(!mediaToolsAvailable)('normalización canónica y caché (T5.2)'
   // ── 2. CACHÉ: 2ª pasada = 0 ffmpeg ──────────────────────────────────────────────────────────────
 
   test('la 2ª pasada sobre los mismos assets no lanza ningún ffmpeg (100% cache hits)', async () => {
-    const storage = makeTestStorage();
+    const storage = makeMediaTestStorage(workDir);
     const store = makeInMemoryStore();
     const { runner, getCalls } = makeCountingRunner();
     const normalizer = createNormalizer({ storage, ...store, runner, ffmpeg: runner });
@@ -315,7 +308,7 @@ describe.skipIf(!mediaToolsAvailable)('normalización canónica y caché (T5.2)'
   // ── 3. CROP-TO-FILL sin letterbox ──────────────────────────────────────────────────────────────
 
   test('un clip 16:9 de color sólido queda crop-to-fill, sin bandas negras', async () => {
-    const storage = makeTestStorage();
+    const storage = makeMediaTestStorage(workDir);
     const store = makeInMemoryStore();
     const src = await makeTestVideo({
       out: p('wide.mp4'),

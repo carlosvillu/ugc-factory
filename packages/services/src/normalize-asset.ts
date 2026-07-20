@@ -35,6 +35,7 @@ import type { Asset } from '@ugc/db';
 import {
   defaultFfmpegRunner,
   extractAudioTrack,
+  materializeToBytes,
   tailStderr,
   type FfmpegRunner,
 } from './extract-audio-track';
@@ -312,12 +313,12 @@ export function createNormalizer(deps: NormalizerDeps): Normalizer {
       let mime: string;
       if (isVideo) {
         const inPath = join(dir, 'in');
-        await writeFile(inPath, await materialize(deps.storage, source.storageKey));
+        await writeFile(inPath, await materializeToBytes(deps.storage, source.storageKey));
         await normalizeVideoFile(inPath, outPath, { runner, profile });
         mime = 'video/mp4';
       } else if (source.normalizeAs === 'audio') {
         const inPath = join(dir, 'in');
-        await writeFile(inPath, await materialize(deps.storage, source.storageKey));
+        await writeFile(inPath, await materializeToBytes(deps.storage, source.storageKey));
         await normalizeAudioFile(inPath, outPath, { runner, profile });
         mime = 'audio/mp4';
       } else {
@@ -390,10 +391,4 @@ export function createNormalizer(deps: NormalizerDeps): Normalizer {
   }
 
   return { normalize, normalizeAll };
-}
-
-/** Materializa un asset de storage (stream web) a bytes en memoria (ffmpeg lee ficheros, no streams). */
-async function materialize(storage: StorageAdapter, key: string): Promise<Uint8Array> {
-  const stream = await storage.get(key);
-  return new Uint8Array(await new Response(stream).arrayBuffer());
 }

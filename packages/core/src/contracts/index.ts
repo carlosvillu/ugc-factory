@@ -143,6 +143,23 @@ export {
   type N7aOutput,
   type N7bOutput,
 } from './step-outputs';
+// El CONTRATO DEL RENDERER (T5.3, §9.7): `CompositionSpec` describe qué ensamblar en el máster de una
+// variante (segmentos hook/body/cta + bed musical + perfil de salida). Vive en core porque
+// `ad_variant.composition_spec` (jsonb, §12) es una interfaz PÚBLICA: la escribe el orquestador de render
+// (T5.5), la lee el módulo de composición (`@ugc/services`) y la relee la UI. `captions` se AÑADIRÁ en
+// T5.4 (aditivo); T5.3 entrega segments + music + output.
+export {
+  CompositionSpecSchema,
+  CompositionSegmentSchema,
+  CompositionMusicSchema,
+  CompositionOutputSchema,
+  MUSIC_VOLUME_MIN,
+  MUSIC_VOLUME_MAX,
+  type CompositionSpec,
+  type CompositionSegment,
+  type CompositionMusic,
+  type CompositionOutput,
+} from './composition-spec';
 // La DECISIÓN de un checkpoint (T1.11): lo que el humano RESUELVE (CP1: subir fotos vs generar
 // packshot-IA; CP2: con qué config se compone el lote), que NO es el artefacto que edita. Canal
 // genérico: unión discriminada por `kind`, a la que CP3/CP4 añaden su miembro. Ver la cabecera de

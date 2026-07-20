@@ -141,6 +141,28 @@ export {
   type NormalizedAsset,
   type CreateNormalizedAssetInput,
 } from './normalize-asset';
+// CONCAT + MEZCLA DE AUDIO → MÁSTER INTERMEDIO (T5.3, §9.7): el módulo que ensambla el máster de una
+// variante desde su `CompositionSpec` (contrato en @ugc/core) — concat demuxer `-c copy` del vídeo (válido
+// porque T5.2 ya normalizó los segmentos) + mezcla voz/bed con ducking (`sidechaincompress`), `afade` out y
+// `loudnorm I=-14`. `composeMaster` es la orquestación (materializa + ffmpeg + bytes-out, NO crea asset);
+// `buildDuckingGraph` es el builder de ducking que el test media importa y renderiza aislado (principio 9).
+// Es un MÁSTER INTERMEDIO: sin burn-in (T5.4) ni qa_report/C2PA (T5.5). T5.3 entrega el módulo reutilizable,
+// NO cablea el executor (patrón T5.2).
+export {
+  composeMaster,
+  buildDuckingGraph,
+  buildAudioMixGraph,
+  buildConcatArgs,
+  buildConcatListFile,
+  buildAudioConcatArgs,
+  buildMuxArgs,
+  ComposeError,
+  DUCKING_PARAMS,
+  LOUDNORM_TARGET_I,
+  type ComposeMasterDeps,
+  type ComposeMasterResult,
+  type ResolveAssetKey,
+} from './compose-master';
 // El tipo del runner de ffmpeg INYECTABLE (default: subproceso real): lo comparten `extract-audio-track`
 // (T4.7b) y el normalizador (T5.2). Sale al barrel porque la suite media inyecta un runner que CUENTA
 // invocaciones (el instrumento del test «2ª pasada = 0 ffmpeg») y necesita tiparlo.

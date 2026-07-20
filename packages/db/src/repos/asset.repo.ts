@@ -60,6 +60,27 @@ export async function getAssetByGenerationKind(
 }
 
 /**
+ * LOOKUP de la CACHÉ NORMALIZE-ONCE del render (T5.2, §9.7): el asset NORMALIZADO cuya
+ * `normalized_cache_key` coincide (= derivación pura de `checksum-del-origen + perfil`). Lo usa el
+ * normalizador ANTES de encodear: si existe, es un CACHE HIT (no lanza ffmpeg, reutiliza el asset ya
+ * normalizado); si `undefined`, encoda, sube y crea la fila con esta key. Molde de `getAssetByGenerationKind`.
+ * `undefined` = miss (nadie ha normalizado ese origen×perfil todavía). El índice PARCIAL
+ * `asset_normalized_cache_key_idx` acelera este SELECT. Si por una carrera hubiera >1 fila con la misma
+ * key (posible: el índice NO es único, ver el schema), devuelve una cualquiera — ambas son normalizados
+ * equivalentes del mismo origen×perfil, así que el hit es correcto sea cual sea.
+ */
+export async function getAssetByNormalizedCacheKey(
+  db: Db,
+  normalizedCacheKey: string,
+): Promise<Asset | undefined> {
+  const [row] = await db
+    .select()
+    .from(asset)
+    .where(eq(asset.normalizedCacheKey, normalizedCacheKey));
+  return row;
+}
+
+/**
  * Estampa la caché de upload a fal storage (T4.1, §9.6): la `fal_url` que fal devolvió y
  * el `fal_uploaded_at` = ahora. Se llama SOLO tras un upload REAL. La 2ª vez que se sube
  * el mismo input NO se llama aquí (cache-hit), así que `fal_uploaded_at` no cambia — que

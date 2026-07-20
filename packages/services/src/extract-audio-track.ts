@@ -93,7 +93,7 @@ export type FfmpegRunner = (args: string[]) => Promise<FfmpegRunResult>;
 /** Runner por defecto: `spawn('ffmpeg', args)`, captura stderr, resuelve al cerrar. Un error de spawn
  *  (ENOENT: ffmpeg no está en PATH) resuelve con `code:null` y el mensaje del error como stderr — el
  *  caller lo mapea a `AudioExtractionError` con el resto. */
-function defaultFfmpegRunner(args: string[]): Promise<FfmpegRunResult> {
+export function defaultFfmpegRunner(args: string[]): Promise<FfmpegRunResult> {
   return new Promise((resolve) => {
     const child = nodeSpawn('ffmpeg', args);
     let stderr = '';
@@ -158,7 +158,7 @@ export interface ExtractAudioTrackResult {
 }
 
 /** Los últimos ~2 KB del stderr de ffmpeg: suficiente para el diagnóstico sin volcar megabytes de log. */
-function tailStderr(stderr: string): string {
+export function tailStderr(stderr: string): string {
   const MAX = 2048;
   return stderr.length > MAX ? stderr.slice(-MAX) : stderr;
 }

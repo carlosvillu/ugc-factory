@@ -258,7 +258,17 @@ export default defineConfig(
       'vitest/expect-expect': [
         'error',
         {
-          assertFunctionNames: ['expect', 'expectGolden', 'expectConflict', 'expectDedupConflict'],
+          // assertVideoProfile/assertAudioProfile (T5.2, @ugc/test-utils/media): asserts de perfil
+          // ffprobe que LANZAN si la salida no cumple el perfil canónico — la primitiva de aserción de
+          // la capa media (media-composition.md construye los tests de perfil sobre ellas).
+          assertFunctionNames: [
+            'expect',
+            'expectGolden',
+            'expectConflict',
+            'expectDedupConflict',
+            'assertVideoProfile',
+            'assertAudioProfile',
+          ],
         },
       ],
     },

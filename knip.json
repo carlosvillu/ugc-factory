@@ -29,6 +29,17 @@
       // justifica sin ignore. tsx tampoco se ignora: `smoke:assets` lo invoca.
     },
     "apps/worker": {
+      // Los tests de la capa MEDIA (T5.2+) viven en `test/media/**` y corren en el proyecto vitest
+      // transversal `worker:media` (raíz vitest.config.ts, gated por RUN_MEDIA con `root:'./apps/worker'`).
+      // El plugin de knip solo reconoce el proyecto vitest LOCAL de apps/worker (test/integration), no ese
+      // proyecto transversal, así que sin declararlos como entries los ve «unused». `setup.ts` es el
+      // preflight que importa cada suite media (mediaToolsAvailable + skip ruidoso).
+      "entry": ["test/media/**/*.test.ts", "test/media/setup.ts"],
+      // ffmpeg/ffprobe: la suite media (T5.2+) hace shell-out a estos binarios del SISTEMA (viven en la
+      // imagen del worker desde T5.1), NO son paquetes npm — knip no puede resolverlos como dependency.
+      // Mismo criterio que `ffmpeg`/`ffprobe` en packages/services (T4.7b). c2patool se declarará cuando
+      // su tarea (T5.5, QA+C2PA) lo consuma — no se anticipa.
+      "ignoreBinaries": ["ffmpeg", "ffprobe"],
       // pino y pg no se importan directo (pino vía @ugc/core; pg vía @ugc/db),
       // pero el bundle de tsup los deja external: el artefacto dist/ los requiere
       // en runtime. Declararlos como dependency es lo que fuerza esa

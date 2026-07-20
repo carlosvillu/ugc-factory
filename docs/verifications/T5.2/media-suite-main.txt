@@ -1,0 +1,22 @@
+WARNING: The requested image's platform (linux/amd64) does not match the detected host platform (linux/arm64/v8) and no specific platform was requested
+=== MAIN PASS: worker:media (verbose) + verifier extra ===
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.10 [39m[90m/build[39m
+
+ [32m✓[39m [30m[42m worker:media [49m[39m test/media/verifier-extra.test.ts[2m > [22mVERIFIER extra (T5.2): mtime intacto + ffprobe raw[2m > [22mel fichero normalizado NO cambia de mtime en la 2ª pasada (cache hit, sin re-encode)[33m 3434[2mms[22m[39m
+ [32m✓[39m [30m[42m worker:media [49m[39m test/media/normalize-asset.test.ts[2m > [22mnormalización canónica y caché (T5.2)[2m > [22mun vídeo 720p/25fps/16:9 CON audio sale 1080×1920/30fps/H.264/yuv420p/SAR1:1/-an[33m 3465[2mms[22m[39m
+ [32m✓[39m [30m[42m worker:media [49m[39m test/media/normalize-asset.test.ts[2m > [22mnormalización canónica y caché (T5.2)[2m > [22mun audio arbitrario sale AAC 48 kHz estéreo (audio canónico)[33m 837[2mms[22m[39m
+[90mstdout[2m | test/media/verifier-extra.test.ts[2m > [22m[2mVERIFIER extra (T5.2): mtime intacto + ffprobe raw[2m > [22m[2mffprobe raw del normalizado de un 16:9 → dump para inspección de SAR
+[22m[39mVERIFIER_FFPROBE_VIDEO_STREAM={"index":0,"codec_name":"h264","codec_long_name":"H.264 / AVC / MPEG-4 AVC / MPEG-4 part 10","profile":"High","codec_type":"video","codec_tag_string":"avc1","codec_tag":"0x31637661","width":1080,"height":1920,"coded_width":1080,"coded_height":1920,"closed_captions":0,"film_grain":0,"has_b_frames":2,"sample_aspect_ratio":"1:1","display_aspect_ratio":"9:16","pix_fmt":"yuv420p","level":40,"chroma_location":"left","field_order":"progressive","refs":1,"is_avc":"true","nal_length_size":"4","id":"0x1","r_frame_rate":"30/1","avg_frame_rate":"30/1","time_base":"1/15360","start_pts":0,"start_time":"0.000000","duration_ts":15360,"duration":"1.000000","bit_rate":"25408","bits_per_raw_sample":"8","nb_frames":"30","extradata_size":48,"disposition":{"default":1,"dub":0,"original":0,"comment":0,"lyrics":0,"karaoke":0,"forced":0,"hearing_impaired":0,"visual_impaired":0,"clean_effects":0,"attached_pic":0,"timed_thumbnails":0,"captions":0,"descriptions":0,"metadata":0,"dependent":0,"still_image":0},"tags":{"language":"und","handler_name":"VideoHandler","vendor_id":"[0][0][0][0]","encoder":"Lavc59.37.100 libx264"}}
+
+ [32m✓[39m [30m[42m worker:media [49m[39m test/media/verifier-extra.test.ts[2m > [22mVERIFIER extra (T5.2): mtime intacto + ffprobe raw[2m > [22mffprobe raw del normalizado de un 16:9 → dump para inspección de SAR[33m 1413[2mms[22m[39m
+ [32m✓[39m [30m[42m worker:media [49m[39m test/media/normalize-asset.test.ts[2m > [22mnormalización canónica y caché (T5.2)[2m > [22mla voz EMBEBIDA de un clip (VEED/voz nativa) se extrae y normaliza a AAC 48 kHz estéreo[33m 1370[2mms[22m[39m
+ [32m✓[39m [30m[42m worker:media [49m[39m test/media/normalize-asset.test.ts[2m > [22mnormalización canónica y caché (T5.2)[2m > [22mla 2ª pasada sobre los mismos assets no lanza ningún ffmpeg (100% cache hits)[33m 1953[2mms[22m[39m
+ [32m✓[39m [30m[42m worker:media [49m[39m test/media/normalize-asset.test.ts[2m > [22mnormalización canónica y caché (T5.2)[2m > [22mla normalized_cache_key cambia con otra resolución y con otra versión de receta[32m 3[2mms[22m[39m
+ [32m✓[39m [30m[42m worker:media [49m[39m test/media/normalize-asset.test.ts[2m > [22mnormalización canónica y caché (T5.2)[2m > [22mun clip 16:9 de color sólido queda crop-to-fill, sin bandas negras[33m 1554[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m2 passed[39m[22m[90m (2)[39m
+[2m      Tests [22m [1m[32m8 passed[39m[22m[90m (8)[39m
+[2m   Start at [22m 16:16:22
+[2m   Duration [22m 14.55s[2m (transform 4.98s, setup 227ms, import 8.77s, tests 14.06s, environment 0ms)[22m
+

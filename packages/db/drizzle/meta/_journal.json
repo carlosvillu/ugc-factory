@@ -162,6 +162,13 @@
       "when": 1784449528280,
       "tag": "0022_wise_mojo",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1784560298438,
+      "tag": "0023_square_roxanne_simpson",
+      "breakpoints": true
     }
   ]
 }

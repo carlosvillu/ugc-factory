@@ -122,3 +122,36 @@ export { buildVariantGenerationPlan } from './build-variant-generation-plan';
 // y el WORKER (executors N7 + sweeper de reconciliación). `falOptionsFrom` deriva el override E2E de base
 // URL del FalClient. Antes el worker leía `process.env.FAL_KEY`; ahora ambos resuelven de la BD.
 export { loadFalKey, falOptionsFrom } from './fal-key';
+// NORMALIZACIÓN CANÓNICA con caché normalize-once (T5.2, §9.7): el módulo que lleva cada asset de una
+// variante al perfil de salida exacto (1080×1920/30fps/H.264 con `-an`, o audio AAC 48k estéreo) ANTES
+// del concat+mix de T5.3. `createNormalizer` es la capa de orquestación (materializa + caché por
+// inyección + persiste); `normalizeVideoFile`/`normalizeAudioFile` son la capa de encode file-in/file-out
+// (ffmpeg inyectable), que la suite media sondea con ffprobe. Lo consumirá el executor de render (T5.3/
+// T5.5); T5.2 entrega el módulo reutilizable, NO cablea el executor.
+export {
+  createNormalizer,
+  normalizeVideoFile,
+  normalizeAudioFile,
+  buildVideoNormalizeArgs,
+  buildAudioNormalizeArgs,
+  NormalizeError,
+  type Normalizer,
+  type NormalizerDeps,
+  type NormalizeSourceAsset,
+  type NormalizedAsset,
+  type CreateNormalizedAssetInput,
+} from './normalize-asset';
+// El tipo del runner de ffmpeg INYECTABLE (default: subproceso real): lo comparten `extract-audio-track`
+// (T4.7b) y el normalizador (T5.2). Sale al barrel porque la suite media inyecta un runner que CUENTA
+// invocaciones (el instrumento del test «2ª pasada = 0 ffmpeg») y necesita tiparlo.
+export type { FfmpegRunner, FfprobeRunner } from './extract-audio-track';
+// DERIVACIÓN PURA de la `normalized_cache_key` (T5.2, §9.7): la clave de lookup de la caché =
+// `checksum-del-origen + perfil de salida` (w×h, fps, códec/CRF, autorotate, versión de receta). Su unit
+// test co-locado corre en el gate (services:unit) — la caché no se puede envenenar en silencio.
+export {
+  computeNormalizedCacheKey,
+  NORMALIZE_RECIPE_VERSION,
+  CANONICAL_VIDEO_PROFILE,
+  CANONICAL_AUDIO_PROFILE,
+  type NormalizeProfile,
+} from './normalized-cache-key';

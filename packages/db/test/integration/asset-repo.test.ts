@@ -6,8 +6,14 @@
 // para que un cambio accidental de la lista de §12 rompa un test, no producción.
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { sql } from 'drizzle-orm';
+import { newUlid } from '@ugc/core/contracts';
 import { createTestDatabase, makeAsset, type TestDatabase } from '@ugc/test-utils';
-import { createAsset, getAsset, getAssetsByIds } from '../../src/repos/asset.repo';
+import {
+  createAsset,
+  getAsset,
+  getAssetByNormalizedCacheKey,
+  getAssetsByIds,
+} from '../../src/repos/asset.repo';
 
 let tdb: TestDatabase;
 
@@ -102,6 +108,57 @@ describe('asset repo (T0.5)', () => {
     const rows = await getAssetsByIds(tdb.db, [created.id, '00000000000000000000000000']);
     expect(rows).toHaveLength(1);
     expect(rows[0]?.id).toBe(created.id);
+  });
+
+  // ── T5.2: columnas normalized_cache_key + parent_asset_ids, índice de caché normalize-once ──────────
+
+  it('un asset nuevo tiene normalized_cache_key null y parent_asset_ids [] por defecto', async () => {
+    // El default de las columnas de T5.2 solo existe en la BD — se fija con roundtrip real.
+    const created = await createAsset(tdb.db, makeAsset({ kind: 'avatar_clip' }));
+    expect(created.normalizedCacheKey).toBeNull();
+    expect(created.parentAssetIds).toEqual([]);
+  });
+
+  it('persiste normalized_cache_key + parent_asset_ids (linaje del normalizado) y hace roundtrip', async () => {
+    const parentId = newUlid();
+    const created = await createAsset(
+      tdb.db,
+      makeAsset({
+        kind: 'avatar_clip',
+        normalizedCacheKey: 'k'.repeat(64),
+        parentAssetIds: [parentId],
+      }),
+    );
+    const fetched = await getAsset(tdb.db, created.id);
+    expect(fetched?.normalizedCacheKey).toBe('k'.repeat(64));
+    expect(fetched?.parentAssetIds).toEqual([parentId]);
+  });
+
+  it('getAssetByNormalizedCacheKey encuentra el normalizado por su key (lookup de la caché)', async () => {
+    const key = `nk-${newUlid()}`;
+    const created = await createAsset(
+      tdb.db,
+      makeAsset({ kind: 'tts_audio', normalizedCacheKey: key }),
+    );
+    const found = await getAssetByNormalizedCacheKey(tdb.db, key);
+    expect(found?.id).toBe(created.id);
+    expect(found?.normalizedCacheKey).toBe(key);
+  });
+
+  it('getAssetByNormalizedCacheKey devuelve undefined si nadie normalizó ese origen×perfil (miss)', async () => {
+    expect(await getAssetByNormalizedCacheKey(tdb.db, `nope-${newUlid()}`)).toBeUndefined();
+  });
+
+  it('el índice de la caché NO es único: dos assets pueden compartir key transitoriamente', async () => {
+    // Justifica la decisión de diseño (índice normal, no único): la unicidad la garantiza el
+    // lookup-then-create del normalizador, no un constraint. Dos INSERT con la misma key NO chocan.
+    const key = `dup-${newUlid()}`;
+    const a = await createAsset(tdb.db, makeAsset({ kind: 'broll_clip', normalizedCacheKey: key }));
+    const b = await createAsset(tdb.db, makeAsset({ kind: 'broll_clip', normalizedCacheKey: key }));
+    expect(a.id).not.toBe(b.id);
+    // El lookup devuelve UNO de ellos (ambos son normalizados equivalentes del mismo origen×perfil).
+    const found = await getAssetByNormalizedCacheKey(tdb.db, key);
+    expect([a.id, b.id]).toContain(found?.id);
   });
 
   it('acepta todos los valores de §12 del enum asset_kind', async () => {

@@ -8,6 +8,7 @@
 import { sql } from 'drizzle-orm';
 import {
   boolean,
+  index,
   integer,
   jsonb,
   pgEnum,
@@ -37,54 +38,95 @@ export const assetKind = pgEnum('asset_kind', [
   'other',
 ]);
 
-export const asset = pgTable('asset', {
-  id: ulidPk(),
-  kind: assetKind('kind').notNull(),
-  // Clave RELATIVA en el StorageAdapter (§19.2): nunca una ruta cruda del cliente.
-  // El endpoint de download resuelve `:id` → esta columna → adapter.get(storage_key).
-  storageKey: text('storage_key').notNull(),
-  mime: text('mime').notNull(),
-  // `integer` (no `bigint`): cabe hasta 2 GB, suficiente para los assets del
-  // pipeline, y pg lo devuelve como `number` — `bigint` volvería string y rompería
-  // el tipo `bytes: number` del contrato del adaptador.
-  bytes: integer('bytes').notNull(),
-  // sha256 hex calculado por el StorageAdapter en `put` (32 bytes → 64 chars hex).
-  checksum: text('checksum').notNull(),
-  // ── T4.1 (§9.6, §12 l.528-534) ──────────────────────────────────────────────
-  // CACHÉ DE UPLOAD A FAL STORAGE. Los inputs de una generación (imágenes de
-  // producto/persona, audio) se suben a fal storage y fal devuelve una URL; subir el
-  // MISMO asset dos veces desperdicia ancho de banda y tiempo. La caché es
-  // `(asset_id, checksum)`: si `fal_url` ya está poblada Y el checksum del asset no
-  // cambió, se reutiliza. `fal_uploaded_at` es la marca observable de "se subió" (la
-  // Verificación comprueba que NO cambia en la 2ª pasada: cache-hit, no re-upload).
-  falUrl: text('fal_url'),
-  falUploadedAt: timestamp('fal_uploaded_at', { withTimezone: true }),
-  // Dimensiones/duración del asset (§12 l.531-532). Un output de imagen (FLUX) las
-  // lleva; se persisten para el estimador de coste por megapíxel y el compositor.
-  // Nullable: un asset de input arbitrario puede no tenerlas.
-  width: integer('width'),
-  height: integer('height'),
-  durationS: real('duration_s'),
-  // La generación que PRODUJO este asset (§12 l.533). Nullable: los assets de INPUT
-  // (imágenes de producto subidas por el usuario) no salen de ninguna generación. Sin
-  // FK a `generation` a nivel de columna para evitar el ciclo de definición
-  // (generation.qa referencia assets, asset.generation_id referencia generación): la
-  // integridad la garantiza el repo, no un constraint circular.
-  generationId: text('generation_id'),
-  // ── T4.5 (§9.7, §12; N7b · TTS + word timestamps) ────────────────────────────
-  // WORD-LEVEL TIMESTAMPS del voiceover (`kind='tts_audio'`). §13.1 fija la RUTA POR
-  // DEFECTO: los timestamps NO vienen del TTS (kokoro/elevenlabs no los emiten
-  // nativos — confirmado 2026-07-16 en el openapi de `fal-ai/kokoro`: el output es
-  // solo `{audio:{url}}`), sino de un ASR encadenado (`fal-ai/elevenlabs/speech-to-text`)
-  // sobre el audio TTS ya generado. El ASR devuelve JSON (no un fichero): por eso NO es
-  // un asset propio — sus timestamps se SELLAN sobre ESTE mismo asset de audio (UPDATE de
-  // esta columna). Los consume el generador ASS/subtítulos de F5. jsonb OPACO en la BD; su
-  // shape lo valida `WordTimestampsSchema` de core (construido desde el output ASR REAL
-  // capturado en vivo, disciplina anti-arnés). Nullable: un asset que no es voiceover, o un
-  // voiceover cuyo ASR aún no corrió, no tiene timestamps (≠ `[]` = ASR corrió sin palabras).
-  wordTimestamps: jsonb('word_timestamps'),
-  ...timestamps,
-});
+export const asset = pgTable(
+  'asset',
+  {
+    id: ulidPk(),
+    kind: assetKind('kind').notNull(),
+    // Clave RELATIVA en el StorageAdapter (§19.2): nunca una ruta cruda del cliente.
+    // El endpoint de download resuelve `:id` → esta columna → adapter.get(storage_key).
+    storageKey: text('storage_key').notNull(),
+    mime: text('mime').notNull(),
+    // `integer` (no `bigint`): cabe hasta 2 GB, suficiente para los assets del
+    // pipeline, y pg lo devuelve como `number` — `bigint` volvería string y rompería
+    // el tipo `bytes: number` del contrato del adaptador.
+    bytes: integer('bytes').notNull(),
+    // sha256 hex calculado por el StorageAdapter en `put` (32 bytes → 64 chars hex).
+    checksum: text('checksum').notNull(),
+    // ── T4.1 (§9.6, §12 l.528-534) ──────────────────────────────────────────────
+    // CACHÉ DE UPLOAD A FAL STORAGE. Los inputs de una generación (imágenes de
+    // producto/persona, audio) se suben a fal storage y fal devuelve una URL; subir el
+    // MISMO asset dos veces desperdicia ancho de banda y tiempo. La caché es
+    // `(asset_id, checksum)`: si `fal_url` ya está poblada Y el checksum del asset no
+    // cambió, se reutiliza. `fal_uploaded_at` es la marca observable de "se subió" (la
+    // Verificación comprueba que NO cambia en la 2ª pasada: cache-hit, no re-upload).
+    falUrl: text('fal_url'),
+    falUploadedAt: timestamp('fal_uploaded_at', { withTimezone: true }),
+    // Dimensiones/duración del asset (§12 l.531-532). Un output de imagen (FLUX) las
+    // lleva; se persisten para el estimador de coste por megapíxel y el compositor.
+    // Nullable: un asset de input arbitrario puede no tenerlas.
+    width: integer('width'),
+    height: integer('height'),
+    durationS: real('duration_s'),
+    // La generación que PRODUJO este asset (§12 l.533). Nullable: los assets de INPUT
+    // (imágenes de producto subidas por el usuario) no salen de ninguna generación. Sin
+    // FK a `generation` a nivel de columna para evitar el ciclo de definición
+    // (generation.qa referencia assets, asset.generation_id referencia generación): la
+    // integridad la garantiza el repo, no un constraint circular.
+    generationId: text('generation_id'),
+    // ── T4.5 (§9.7, §12; N7b · TTS + word timestamps) ────────────────────────────
+    // WORD-LEVEL TIMESTAMPS del voiceover (`kind='tts_audio'`). §13.1 fija la RUTA POR
+    // DEFECTO: los timestamps NO vienen del TTS (kokoro/elevenlabs no los emiten
+    // nativos — confirmado 2026-07-16 en el openapi de `fal-ai/kokoro`: el output es
+    // solo `{audio:{url}}`), sino de un ASR encadenado (`fal-ai/elevenlabs/speech-to-text`)
+    // sobre el audio TTS ya generado. El ASR devuelve JSON (no un fichero): por eso NO es
+    // un asset propio — sus timestamps se SELLAN sobre ESTE mismo asset de audio (UPDATE de
+    // esta columna). Los consume el generador ASS/subtítulos de F5. jsonb OPACO en la BD; su
+    // shape lo valida `WordTimestampsSchema` de core (construido desde el output ASR REAL
+    // capturado en vivo, disciplina anti-arnés). Nullable: un asset que no es voiceover, o un
+    // voiceover cuyo ASR aún no corrió, no tiene timestamps (≠ `[]` = ASR corrió sin palabras).
+    wordTimestamps: jsonb('word_timestamps'),
+    // ── T5.2 (§9.7, §12 l.531-533; normalización canónica con caché) ─────────────
+    // CACHÉ NORMALIZE-ONCE del render (§9.7). Un asset NORMALIZADO (vídeo 1080×1920/30fps/
+    // H.264 con `-an`, o pista de audio AAC 48k estéreo) es su PROPIA fila `asset` —NO una
+    // columna estampada sobre el origen—: su `checksum` es el sha256 de SUS bytes, y ESTA
+    // columna es la CLAVE DE LOOKUP de la caché = derivación pura de `checksum-del-origen +
+    // params de normalización` (w×h, fps, códec/CRF, autorotate, versión de receta;
+    // `computeNormalizedCacheKey` en @ugc/services). El discriminador «es un normalizado» es
+    // `normalized_cache_key IS NOT NULL`, NO el kind (un vídeo normalizado conserva
+    // avatar_clip/broll_clip; la voz canónica es tts_audio) — por eso NO se añade un kind
+    // `normalized` al enum. Nullable: la inmensa mayoría de assets (inputs, outputs crudos de
+    // fal) no son normalizados. Un MISMO origen puede tener N normalizados (perfil por
+    // plataforma / preset HQ de F8), uno por combinación asset×perfil → N filas con distinta
+    // key: por eso el perfil ya entra en la key hoy, aunque solo se siembre el perfil canónico.
+    normalizedCacheKey: text('normalized_cache_key'),
+    // LINAJE (§12 l.531). Los ids de los assets ORIGEN de los que deriva este (para un
+    // normalizado: `[assetOrigenId]`; para un futuro concat: los N segmentos). Default `{}`
+    // (asset sin padres: inputs, outputs crudos). Se modela como `text[]` de ULIDs, gemelo de
+    // `step_run.depends_on` — el cast `::text[]` del default es obligatorio (sin él el array
+    // default se comporta mal en Drizzle).
+    parentAssetIds: text('parent_asset_ids')
+      .array()
+      .notNull()
+      .default(sql`'{}'::text[]`),
+    ...timestamps,
+  },
+  (t) => [
+    // ÍNDICE DE LA CACHÉ NORMALIZE-ONCE (§9.7, db.md §8): el worker busca por esta key
+    // ANTES de re-normalizar (lookup-then-create). Índice NORMAL, NO único —
+    // deliberadamente: la unicidad la garantiza el propio lookup-then-create del
+    // normalizador (busca; si no hay, encoda y crea), no un constraint. En un mundo
+    // concurrente dos encodes del MISMO origen×perfil podrían crear transitoriamente dos
+    // filas con la misma key antes de que ninguno vea a la otra; un UNIQUE convertiría esa
+    // carrera benigna (dos normalizados idénticos, uno huérfano) en un 23505 que aborta un
+    // render — coste alto para impedir una duplicación barata y auto-corregible. El índice
+    // solo acelera el lookup; la key es nullable, así que Postgres no indexa las filas
+    // no-normalizadas de más (la inmensa mayoría) y el índice queda pequeño.
+    index('asset_normalized_cache_key_idx')
+      .on(t.normalizedCacheKey)
+      .where(sql`${t.normalizedCacheKey} is not null`),
+  ],
+);
 
 export type Asset = typeof asset.$inferSelect;
 export type NewAsset = typeof asset.$inferInsert;

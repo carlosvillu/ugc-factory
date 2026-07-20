@@ -9,7 +9,8 @@
     "./global-setup": "./src/global-setup.ts",
     "./fixtures/firecrawl": "./src/fixtures/firecrawl.ts",
     "./fixtures/anthropic": "./src/fixtures/anthropic.ts",
-    "./live-budget": "./src/live-budget.ts"
+    "./live-budget": "./src/live-budget.ts",
+    "./media": "./src/media/index.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",

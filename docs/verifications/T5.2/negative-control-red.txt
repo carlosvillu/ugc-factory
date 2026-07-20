@@ -1,0 +1,46 @@
+WARNING: The requested image's platform (linux/amd64) does not match the detected host platform (linux/arm64/v8) and no specific platform was requested
+=== NEGATIVE CONTROL: bypass cache (findByCacheKey -> always undefined) ===
+--- confirm the bypass line is in place: ---
+97:      Promise.resolve(undefined), // BYPASS caché (verifier negative control)
+293:    //     findByCacheKey: (key: string) => Promise.resolve(undefined), // BYPASS caché (verifier negative control)
+295:    //     findByCacheKey: (_key: string) => Promise.resolve(undefined), // BYPASS caché
+=== RUN (expect RED: expected 4 to be 2) ===
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.10 [39m[90m/build[39m
+
+ [31m❯[39m [30m[42m worker:media [49m[39m test/media/normalize-asset.test.ts [2m([22m[2m6 tests[22m[2m | [22m[31m1 failed[39m[2m | [22m[33m5 skipped[39m[2m)[22m[33m 4164[2mms[22m[39m
+     [2m[90m↓[39m[22m un vídeo 720p/25fps/16:9 CON audio sale 1080×1920/30fps/H.264/yuv420p/SAR1:1/-an
+     [2m[90m↓[39m[22m un audio arbitrario sale AAC 48 kHz estéreo (audio canónico)
+     [2m[90m↓[39m[22m la voz EMBEBIDA de un clip (VEED/voz nativa) se extrae y normaliza a AAC 48 kHz estéreo
+[31m     [31m×[31m la 2ª pasada sobre los mismos assets no lanza ningún ffmpeg (100% cache hits)[39m[33m 4154[2mms[22m[39m
+     [2m[90m↓[39m[22m la normalized_cache_key cambia con otra resolución y con otra versión de receta
+     [2m[90m↓[39m[22m un clip 16:9 de color sólido queda crop-to-fill, sin bandas negras
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 1 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m [30m[42m worker:media [49m[39m test/media/normalize-asset.test.ts[2m > [22mnormalización canónica y caché (T5.2)[2m > [22mla 2ª pasada sobre los mismos assets no lanza ningún ffmpeg (100% cache hits)
+[31m[1mAssertionError[22m: expected 4 to be 2 // Object.is equality[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- 2[39m
+[31m+ 4[39m
+
+[36m [2m❯[22m test/media/normalize-asset.test.ts:[2m288:24[22m[39m
+    [90m286|[39m
+    [90m287|[39m     await normalizer.normalizeAll(sources); // mismos checksums, mismo…
+    [90m288|[39m     [34mexpect[39m([34mgetCalls[39m())[33m.[39m[34mtoBe[39m(firstPass)[33m;[39m [90m// 0 trabajos ffmpeg nuevos[39m
+    [90m   |[39m                        [31m^[39m
+    [90m289|[39m
+    [90m290|[39m     // ─── CONTROL NEGATIVO (reproducible por el verifier) ───────────…
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[33m5 skipped[39m[90m (6)[39m
+[2m   Start at [22m 16:17:57
+[2m   Duration [22m 9.40s[2m (transform 2.64s, setup 101ms, import 4.42s, tests 4.16s, environment 0ms)[22m
+
+EXIT_CODE=0

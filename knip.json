@@ -45,6 +45,15 @@
       // knip como entry vía el `scripts` del tsconfig — no necesita entry explícito.
       "ignoreDependencies": ["pino-pretty"]
     },
+    "packages/services": {
+      // ffmpeg/ffprobe: el wrapper de N7c/VEED (T4.7b, `extract-audio-track.ts`) hace `spawn('ffmpeg')`
+      // para sacar la pista de audio del clip y `spawn('ffprobe')` para medir su duración (VEED no la
+      // emite en el output). Son binarios del SISTEMA (en la imagen Docker del worker desde T5.1), NO
+      // paquetes npm — los spawns son inyectables y en tests se fakean; los binarios reales viven en el
+      // contenedor. knip no puede resolverlos como dependency: se ignoran explícito (mismo criterio que
+      // `ffprobe` en apps/web).
+      "ignoreBinaries": ["ffmpeg", "ffprobe"]
+    },
     "packages/test-utils": {
       // Con includeEntryExports (packages/*), knip mira los exports del barrel.
       // expectGolden (golden.ts) es un helper de test de T0.1 SIN consumidor

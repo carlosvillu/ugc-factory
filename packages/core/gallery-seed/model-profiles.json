@@ -2,10 +2,15 @@
   {
     "falEndpoint": "veed/avatars/text-to-video",
     "kind": "avatar",
-    "cost": { "unit": "minute", "amountCents": 35 },
-    "capabilities": { "audio": true, "dialogue": true, "aspects": ["9:16", "16:9", "1:1"] },
+    "cost": { "unit": "minute", "amountCents": 35, "minBilledSeconds": 60 },
+    "capabilities": {
+      "audio": true,
+      "dialogue": true,
+      "aspects": ["9:16", "16:9", "1:1"],
+      "avatarId": "emily_vertical_primary"
+    },
     "promptAdapter": "avatar",
-    "notes": "Tier Test — avatar parlante (hook), voz incluida. Precio verificado 2026-07-15 vs §13.1 ($0,35/min)."
+    "notes": "Tier Test — text-to-video con avatar de LIBRERÍA (no la Persona). Input {text, avatar_id}; avatarId='emily_vertical_primary' (preset VERTICAL 9:16 para UGC, enum de 28 validado vs fal 2026-07-20). Precio verificado 2026-07-15 vs §13.1 ($0,35/min, mínimo de facturación 1 min)."
   },
   {
     "falEndpoint": "fal-ai/kling-video/ai-avatar/v2/standard",

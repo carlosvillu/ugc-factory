@@ -1,0 +1,19 @@
+
+> @ugc/web@0.0.0 smoke:avatar-veed /verify/apps/web
+> tsx --env-file-if-exists=../../.env scripts/smoke-avatar-veed.ts
+
+../../.env not found. Continuing without it.
+../../.env not found. Continuing without it.
+smoke:avatar-veed: veed/avatars/text-to-video (voz de librería) — texto: "Tired of ads that feel fake? This one is different, watch what happens next." — RED REAL (extracción ffmpeg en el worker)…
+
+{"level":30,"time":1784533421794,"pid":36,"hostname":"0bde456c537d","name":"worker","event":"video_duration_probed","sourceStorageKey":"generations/01KXZ7KVP1192HDVQ15QGJF9F2/01KXZ7P2A829ADF54Y9C0F7FZQ.mp4","durationSeconds":5.457,"msg":"duración del clip de vídeo medida con ffprobe"}
+{"level":30,"time":1784533421862,"pid":36,"hostname":"0bde456c537d","name":"worker","event":"fal_single_call_per_second_generation_finalized","generationId":"01KXZ7KVP1192HDVQ15QGJF9F2","assetId":"01KXZ7P3RPJJQ30R9PA9CM3KSY","assetKind":"avatar_clip","costCents":35,"durationSeconds":5.457,"alreadyFinalized":false,"msg":"asset single-call-per-second generado: descargado, coste por segundo registrado, completed"}
+{"level":30,"time":1784533422283,"pid":36,"hostname":"0bde456c537d","name":"worker","event":"audio_track_extracted","sourceStorageKey":"generations/01KXZ7KVP1192HDVQ15QGJF9F2/01KXZ7P2A829ADF54Y9C0F7FZQ.mp4","bytes":481358,"msg":"pista de audio extraída del clip de vídeo con ffmpeg"}
+{"level":30,"time":1784533424156,"pid":36,"hostname":"0bde456c537d","name":"worker","event":"fal_input_upload","assetId":"01KXZ7P46MBFEW9AZDN8S64NZC","falUrl":"https://v3b.fal.media/files/b/0aa2fb5e/tswB-P5me0q2qgqARntZ0_1784533422307.wav","bytes":481358,"msg":"fal storage upload: input subido por primera vez"}
+{"level":30,"time":1784533427413,"pid":36,"hostname":"0bde456c537d","name":"worker","event":"veed_avatar_completed","generationId":"01KXZ7KVP1192HDVQ15QGJF9F2","clipAssetId":"01KXZ7P3RPJJQ30R9PA9CM3KSY","audioAssetId":"01KXZ7P46MBFEW9AZDN8S64NZC","wordCount":14,"msg":"clip VEED generado, audio extraído y word timestamps sellados"}
+smoke:avatar-veed: generation 01KXZ7KVP1192HDVQ15QGJF9F2 (completed)
+  clip:  asset 01KXZ7P3RPJJQ30R9PA9CM3KSY (avatar_clip, 5.46s), coste 35¢
+  audio: asset 01KXZ7P46MBFEW9AZDN8S64NZC (tts_audio, 14 palabras con timestamps), ASR 0¢
+  coste total 35¢ (→ /spend)
+
+smoke:avatar-veed: OK ✓ — clip VEED generado, audio extraído con ffmpeg, 14 word timestamps sellados. Descarga el clip (GET /api/assets/01KXZ7P3RPJJQ30R9PA9CM3KSY/download) y JÚZGALO: ¿el avatar habla el hook con LIPSYNC aceptable?

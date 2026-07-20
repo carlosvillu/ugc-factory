@@ -221,6 +221,11 @@ export type CostUnit = z.infer<typeof CostUnitSchema>;
 export const ModelCostSchema = z.object({
   unit: CostUnitSchema,
   amountCents: z.number().nonnegative(),
+  /** MÍNIMO de facturación (en segundos), para modelos que cobran un mínimo aunque el clip sea más corto
+   *  (T4.7b: VEED cobra 1 min = 60 s mínimo aunque el clip dure ~8 s). El coste usa `max(duración,
+   *  minBilledSeconds)`; la VERDAD granular del ledger (`quantity`) sigue siendo la duración REAL. Ausente
+   *  = sin mínimo (se factura la duración exacta). Solo aplica a unidades temporales (`second`/`minute`). */
+  minBilledSeconds: z.number().positive().optional(),
 });
 export type ModelCost = z.infer<typeof ModelCostSchema>;
 
@@ -266,6 +271,14 @@ export const ModelCapabilitiesSchema = z.object({
   /** Mapa aspect-canónico (`"9:16"`) → valor del endpoint (`"portrait_16_9"`). Un aspect declarado en
    *  `aspects` pero ausente aquí se emite VERBATIM (dialecto que usa `9:16` tal cual, p. ej. NB2). */
   aspectValues: z.record(z.string(), z.string()).optional(),
+  // ── DIALECTO DEL AVATAR DE LIBRERÍA (T4.7b, N7c ruta VEED) ───────────────────────────────────────
+  // `veed/avatars/text-to-video` es text-to-video con AVATAR DE LIBRERÍA: su input exige `avatar_id`
+  // (un enum de presets propios de VEED — `emily_vertical_primary`, `marcus_vertical_primary`…), NO la
+  // imagen de la Persona. Es un dialecto del modelo (como `aspectValues`): el `avatar_id` a usar vive en
+  // el DATO del catálogo, no en código. Ausente = el perfil no es un avatar de librería (Kling/OmniHuman
+  // animan una imagen, no llevan `avatar_id`).
+  /** El `avatar_id` de librería a usar en el submit (solo modelos avatar text-to-video como VEED). */
+  avatarId: z.string().optional(),
 });
 export type ModelCapabilities = z.infer<typeof ModelCapabilitiesSchema>;
 

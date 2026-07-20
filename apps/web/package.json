@@ -18,6 +18,7 @@
     "smoke:packshot": "tsx --env-file-if-exists=../../.env scripts/smoke-packshot.ts",
     "smoke:voiceover": "tsx --env-file-if-exists=../../.env scripts/smoke-voiceover.ts",
     "smoke:avatar": "tsx --env-file-if-exists=../../.env scripts/smoke-avatar.ts",
+    "smoke:avatar-veed": "tsx --env-file-if-exists=../../.env scripts/smoke-avatar-veed.ts",
     "smoke:broll": "tsx --env-file-if-exists=../../.env scripts/smoke-broll.ts",
     "smoke:music": "tsx --env-file-if-exists=../../.env scripts/smoke-music.ts",
     "seed:persona-images": "tsx --env-file-if-exists=../../.env scripts/seed-persona-images.ts",

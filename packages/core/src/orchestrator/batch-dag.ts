@@ -142,8 +142,11 @@ export const N7cConfigSchema = z.object({
   /** El endpoint del modelo de avatar del tier (Kling Std / OmniHuman Premium). Clave natural del
    *  catálogo (el executor resuelve el perfil por endpoint, patrón N7a/N7b). */
   avatarEndpoint: z.string().min(1),
-  /** El `asset` de la IMAGEN de la Persona (kind `reference_image`): sube a fal → `image_url`. */
-  imageAssetId: z.string().min(1),
+  /** El `asset` de la IMAGEN de la Persona (kind `reference_image`): sube a fal → `image_url`.
+   *  OPCIONAL: solo las rutas image+audio (Kling Std / OmniHuman Premium) lo usan; la ruta VEED
+   *  (text-to-video, T4.7b) NO anima una imagen de Persona. El executor exige su presencia en la ruta
+   *  image+audio y su AUSENCIA no bloquea la ruta VEED. */
+  imageAssetId: z.string().min(1).optional(),
   /** El `asset` del AUDIO del hook (kind `tts_audio`, de N7b): sube a fal → `audio_url`. La duración
    *  del clip = la de este audio automáticamente.
    *
@@ -151,7 +154,7 @@ export const N7cConfigSchema = z.object({
    *  (N7b aún no ha corrido) — el executor lo DERIVA del output de su dep N7b de la MISMA variante
    *  (`ctx.deps`, precedencia dep-wins). Este campo es la costura STEPLESS (el smoke lo fija sin DAG).
    *  Si hay dep N7b, la dep MANDA y este valor se ignora (un puntero rancio a OTRA variante quemaría
-   *  vídeo real — §9.6). */
+   *  vídeo real — §9.6). La ruta VEED NO usa audio de N7b (voz de librería propia). */
   audioAssetId: z.string().min(1).optional(),
   /** Prompt opcional del avatar (guía de la actuación). Ambos modelos lo aceptan. */
   prompt: z.string().min(1).optional(),
@@ -159,6 +162,15 @@ export const N7cConfigSchema = z.object({
    *  OmniHuman depende de ella (≤30 s @1080p, ≤60 s @720p) — pero el executor valida contra
    *  `capabilities.maxDuration` del perfil, no contra este enum. */
   resolution: z.enum(['720p', '1080p']).optional(),
+  /** RUTA VEED (T4.7b, §7.5): el TEXTO del hook que VEED (`veed/avatars/text-to-video`) habla con su voz
+   *  de librería. Su PRESENCIA discrimina la ruta VEED de la de image+audio. NO se usa en Std/Premium. */
+  text: z.string().min(1).optional(),
+  /** RUTA VEED (T4.7b): el endpoint del ASR (`fal-ai/elevenlabs/speech-to-text`) que transcribe el audio
+   *  EXTRAÍDO del clip VEED para los word timestamps. Solo la ruta VEED lo necesita (Std/Premium reciben
+   *  su audio de N7b, ya con timestamps sellados). */
+  asrEndpoint: z.string().min(1).optional(),
+  /** RUTA VEED (T4.7b): el código de idioma para el ASR (`eng`/`spa`/…). OPCIONAL: el ASR autodetecta. */
+  asrLanguageCode: z.string().min(1).optional(),
 });
 export type N7cConfig = z.infer<typeof N7cConfigSchema>;
 

@@ -19,10 +19,14 @@ import { ModelCapabilitiesSchema } from '@ugc/core/gallery';
 import { deriveHookAudioAssetId, findN7bDep } from '@ugc/core/generation';
 import { AdScriptSchema } from '@ugc/core/contracts';
 import { getAsset, getModelProfileByEndpoint, getScriptById } from '@ugc/db';
-import { runGenerateAvatar } from '@ugc/services';
+import { runGenerateAvatar, runGenerateVeedAvatar } from '@ugc/services';
 
 import type { GenerationExecutorDeps } from './generation';
 import { requireOutputContext, runGenerationStep } from './_shared';
+
+/** El endpoint de VEED (tier Test, text-to-video). Su presencia en la config (junto con `text`) enruta a
+ *  la cadena VEED (clip → extracción de audio con ffmpeg → ASR), distinta de la de image+audio. */
+const VEED_ENDPOINT = 'veed/avatars/text-to-video';
 
 /** Índice de la escena del HOOK del guion (segment `hook`) cuyo voiceover (N7b) anima el avatar. Lee la
  *  fila `ad_script` REAL (la fuente de verdad de los segmentos) por el `scriptId` que N7b dejó en su
@@ -85,6 +89,15 @@ export function makeN7cExecutor(deps: GenerationExecutorDeps): StepExecutor {
     }
     const cfg = parsed.data;
 
+    // DISPATCH POR RUTA. VEED (tier Test, T4.7b) es text-to-video con voz de librería: NO anima una
+    // imagen de Persona ni usa el audio de N7b, así que su cadena es distinta (clip → extracción de audio
+    // con ffmpeg → ASR). Se discrimina por el endpoint VEED. Las rutas image+audio (Std/Premium) siguen
+    // el camino de abajo sin cambios.
+    if (cfg.avatarEndpoint === VEED_ENDPOINT) {
+      await runVeedRoute(deps, { cfg, stepId, collectOutput });
+      return;
+    }
+
     // CROSS-NODE (T4.11 §9.6, el money-path de F4): el AUDIO DEL HOOK que N7c anima viene del voiceover
     // de N7b de la MISMA variante. En un RUN se DERIVA del output de la dep N7b (`ctx.deps`, resueltas
     // por el consumer desde `step.dependsOn` → aisladas por variante por construcción); la config
@@ -96,6 +109,14 @@ export function makeN7cExecutor(deps: GenerationExecutorDeps): StepExecutor {
     if (audioAssetId === undefined) {
       throw new PermanentStepError(
         'N7c: no hay audio del hook — ni dep N7b (run) ni cfg.audioAssetId (stepless). Cableado roto.',
+      );
+    }
+    // Las rutas image+audio (Std/Premium) exigen la imagen de la Persona (`imageAssetId` es opcional en
+    // el schema SOLO por la ruta VEED, que no la usa). Aquí ya estamos fuera de la ruta VEED.
+    const imageAssetId = cfg.imageAssetId;
+    if (imageAssetId === undefined) {
+      throw new PermanentStepError(
+        'N7c: falta `imageAssetId` (la imagen de la Persona a animar) en la ruta image+audio',
       );
     }
 
@@ -159,7 +180,7 @@ export function makeN7cExecutor(deps: GenerationExecutorDeps): StepExecutor {
         },
         {
           avatarModelProfileId: profile.id,
-          imageAssetId: cfg.imageAssetId,
+          imageAssetId,
           audioAssetId,
           ...(cfg.prompt !== undefined ? { prompt: cfg.prompt } : {}),
           ...(cfg.resolution !== undefined ? { resolution: cfg.resolution } : {}),
@@ -176,4 +197,83 @@ export function makeN7cExecutor(deps: GenerationExecutorDeps): StepExecutor {
       costCents: res.costCents,
     } satisfies N7cOutput);
   };
+}
+
+/**
+ * RUTA VEED (tier Test, T4.7b, §7.5): text-to-video con voz de librería propia. NO anima la imagen de la
+ * Persona ni usa el audio de N7b — le manda el TEXTO del hook y devuelve un clip con la voz embebida.
+ * Tras el clip, `runGenerateVeedAvatar` extrae el audio con ffmpeg y lo pasa por el ASR para los word
+ * timestamps. NO hay guard de `≤maxDuration` sobre un audio de entrada (VEED no recibe audio); la
+ * duración del clip la fija VEED. Los word timestamps se sellan en el asset de audio EXTRAÍDO.
+ */
+async function runVeedRoute(
+  deps: GenerationExecutorDeps,
+  args: {
+    cfg: { avatarEndpoint: string; text?: string; asrEndpoint?: string; asrLanguageCode?: string };
+    stepId: string | undefined;
+    collectOutput: (output: N7cOutput) => void;
+  },
+): Promise<void> {
+  const { cfg, stepId, collectOutput } = args;
+  const { text, asrEndpoint } = cfg;
+  if (text === undefined) {
+    throw new PermanentStepError(
+      'N7c (VEED): falta `text` (el hook que VEED habla) — la ruta VEED es text-to-video, no hay nada que decir',
+    );
+  }
+  if (asrEndpoint === undefined) {
+    throw new PermanentStepError(
+      'N7c (VEED): falta `asrEndpoint` — el audio extraído del clip necesita el ASR para los word timestamps',
+    );
+  }
+
+  const [veedProfile, asrProfile] = await Promise.all([
+    getModelProfileByEndpoint(deps.db, cfg.avatarEndpoint),
+    getModelProfileByEndpoint(deps.db, asrEndpoint),
+  ]);
+  if (veedProfile === undefined) {
+    throw new PermanentStepError(
+      `N7c (VEED): no existe el model_profile ${cfg.avatarEndpoint} (¿galería sin sembrar?)`,
+    );
+  }
+  if (veedProfile.kind !== 'avatar') {
+    throw new PermanentStepError(
+      `N7c (VEED): el model_profile ${cfg.avatarEndpoint} es kind '${veedProfile.kind}', no 'avatar'`,
+    );
+  }
+  if (asrProfile === undefined) {
+    throw new PermanentStepError(
+      `N7c (VEED): no existe el model_profile ASR ${asrEndpoint} (¿galería sin sembrar?)`,
+    );
+  }
+
+  const res = await runGenerationStep(() =>
+    runGenerateVeedAvatar(
+      {
+        db: deps.db,
+        storage: deps.storage,
+        falKey: deps.falKey,
+        ...(deps.logger !== undefined ? { logger: deps.logger } : {}),
+        ...(deps.fetch !== undefined ? { fetch: deps.fetch } : {}),
+        ...(deps.falBaseUrl !== undefined
+          ? { falOptions: { baseUrlOverride: deps.falBaseUrl } }
+          : {}),
+      },
+      {
+        veedModelProfileId: veedProfile.id,
+        asrModelProfileId: asrProfile.id,
+        text,
+        ...(cfg.asrLanguageCode !== undefined ? { asrLanguageCode: cfg.asrLanguageCode } : {}),
+        ...(stepId !== undefined ? { stepRunId: stepId } : {}),
+      },
+    ),
+  );
+
+  collectOutput({
+    avatarEndpoint: cfg.avatarEndpoint,
+    generationId: res.generation.id,
+    assetId: res.assetId,
+    durationSeconds: res.durationSeconds,
+    costCents: res.clipCostCents + res.asrCostCents,
+  } satisfies N7cOutput);
 }

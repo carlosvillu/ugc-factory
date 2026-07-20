@@ -251,9 +251,16 @@ export interface FalVideoCost {
 }
 
 /**
- * Coste de una llamada de avatar image+audio de fal (por SEGUNDO). El insumo facturado es la DURACIÓN
- * del clip (del output de fal, o del audio de entrada si el modelo no la emite). Recibe el `cost` jsonb
- * CRUDO del `model_profile` y valida `ModelCostSchema` INTERNAMENTE (misma política que `falAsrCostOf`).
+ * Coste de una llamada de avatar/clip de vídeo de fal. El insumo facturado es la DURACIÓN del clip (del
+ * output de fal, o del audio de entrada si el modelo no la emite). Recibe el `cost` jsonb CRUDO del
+ * `model_profile` y valida `ModelCostSchema` INTERNAMENTE (misma política que `falAsrCostOf`).
+ *
+ * DOS UNIDADES DE FACTURACIÓN (T4.7b): los avatares image+audio (Kling Std 5,62¢/s, OmniHuman 16¢/s)
+ * facturan por SEGUNDO; VEED text-to-video factura por MINUTO (35¢/min). Se rutea por `unit` — el mismo
+ * criterio que `falAsrCostOf` (que ya factura por minuto sobre `durationSeconds`). El `durationSeconds`
+ * que se devuelve va al ledger en `unit='seconds'` sea cual sea la unidad de facturación (la VERDAD
+ * granular es siempre segundos de vídeo; el precio unitario es lo que cambia). Un `unit` no reconocido
+ * degrada a 0¢ con warning OBSERVABLE (la llamada de pago YA ocurrió — NUNCA lanza).
  */
 export function falVideoCostOf(args: { cost: unknown; durationSeconds: number }): FalVideoCost {
   const parsed = ModelCostSchema.safeParse(args.cost);
@@ -264,19 +271,31 @@ export function falVideoCostOf(args: { cost: unknown; durationSeconds: number })
       warning: 'fal-pricing: model_profile de avatar .cost inválido o ausente: amount_cents=0.',
     };
   }
-  if (parsed.data.unit !== 'second') {
+  // MÍNIMO DE FACTURACIÓN (T4.7b): VEED cobra 1 min (60 s) mínimo aunque el clip dure ~8 s. El importe usa
+  // `max(duración, minBilledSeconds)`; la VERDAD granular (`durationSeconds` → `quantity`) sigue siendo la
+  // duración REAL del clip (el ledger no miente sobre cuánto vídeo se produjo, solo cobra el mínimo real de
+  // fal). Ausente = sin mínimo (facturación por duración exacta, como Kling/OmniHuman).
+  const billedSeconds = Math.max(args.durationSeconds, parsed.data.minBilledSeconds ?? 0);
+  if (parsed.data.unit === 'second') {
     return {
-      cents: 0,
+      cents: Math.round(billedSeconds * parsed.data.amountCents),
       durationSeconds: args.durationSeconds,
-      warning:
-        `fal-pricing: unidad inesperada '${parsed.data.unit}' para un avatar (se esperaba 'second'): ` +
-        'el cost_entry se registra con amount_cents=0. Revisa el model_profile.',
+      warning: null,
+    };
+  }
+  if (parsed.data.unit === 'minute') {
+    return {
+      cents: Math.round((billedSeconds / 60) * parsed.data.amountCents),
+      durationSeconds: args.durationSeconds,
+      warning: null,
     };
   }
   return {
-    cents: Math.round(args.durationSeconds * parsed.data.amountCents),
+    cents: 0,
     durationSeconds: args.durationSeconds,
-    warning: null,
+    warning:
+      `fal-pricing: unidad inesperada '${parsed.data.unit}' para un vídeo (se esperaba 'second' o ` +
+      "'minute'): el cost_entry se registra con amount_cents=0. Revisa el model_profile.",
   };
 }
 

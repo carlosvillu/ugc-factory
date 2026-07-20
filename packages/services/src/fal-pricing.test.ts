@@ -121,8 +121,52 @@ describe('falVideoCostOf — avatar image+audio por segundo (T4.7)', () => {
     expect(c.warning).toBeNull();
   });
 
-  it('CONTROL NEGATIVO: unidad inesperada (minute) → 0¢ con warning, NO lanza', () => {
-    const c = falVideoCostOf({ cost: { unit: 'minute', amountCents: 16 }, durationSeconds: 4 });
+  // VEED (tier Test, T4.7b) factura por MINUTO, no por segundo → `falVideoCostOf` rutea por unit. Antes
+  // de T4.7b esta función SOLO aceptaba 'second' y degradaba 'minute' a 0¢ con warning; ese era el bug de
+  // money-path que el verifier de T4.7b habría cazado (fuga silenciosa: un clip VEED registrado a coste
+  // 0). Estos asserts blindan el path por-minuto.
+  it('VEED por MINUTO: 60 s a 35¢/min = 35¢', () => {
+    const c = falVideoCostOf({ cost: { unit: 'minute', amountCents: 35 }, durationSeconds: 60 });
+    expect(c.cents).toBe(35);
+    expect(c.durationSeconds).toBe(60);
+    expect(c.warning).toBeNull();
+  });
+
+  it('VEED por MINUTO SIN mínimo: clip corto de 12 s a 35¢/min = 7¢ (round), NO 0¢ (la fuga)', () => {
+    // CONTROL ANTI-FUGA: un clip VEED de 12 s son 35×(12/60) = 7¢. Con el bug (degradar 'minute' a 0¢)
+    // este clip se registraría a 0¢ — el ledger mentiría. Reintroducir el rechazo de 'minute' pondría
+    // este assert en ROJO. (Sin `minBilledSeconds` → sin piso: facturación por duración exacta.)
+    const c = falVideoCostOf({ cost: { unit: 'minute', amountCents: 35 }, durationSeconds: 12 });
+    expect(c.cents).toBe(7);
+    expect(c.warning).toBeNull();
+  });
+
+  it('FLOOR DE FACTURACIÓN (T4.7b): clip de 8 s con minBilledSeconds=60 factura 35¢ (1 min), NO ~5¢', () => {
+    // VEED cobra un MÍNIMO de 1 min aunque el clip dure 8 s. Sin el floor, 35×(8/60) ≈ 4,67¢ → 5¢: un
+    // under-count de ~7× contra el cargo real de 35¢ de fal. El floor lo corrige (`max(8,60)=60` → 35¢).
+    // La VERDAD granular `durationSeconds` sigue siendo la REAL (8), no la facturada (60): el ledger no
+    // miente sobre cuánto vídeo se produjo, solo cobra el mínimo de fal.
+    const c = falVideoCostOf({
+      cost: { unit: 'minute', amountCents: 35, minBilledSeconds: 60 },
+      durationSeconds: 8,
+    });
+    expect(c.cents).toBe(35);
+    expect(c.durationSeconds).toBe(8);
+    expect(c.warning).toBeNull();
+  });
+
+  it('FLOOR no penaliza clips MÁS LARGOS que el mínimo: 90 s con minBilledSeconds=60 factura por 90 s', () => {
+    // El floor es un PISO, no un valor fijo: un clip de 90 s (> 60 s mínimo) se factura por sus 90 s.
+    const c = falVideoCostOf({
+      cost: { unit: 'minute', amountCents: 35, minBilledSeconds: 60 },
+      durationSeconds: 90,
+    });
+    expect(c.cents).toBe(53); // 35 × (90/60) = 52,5 → 53 (round)
+    expect(c.warning).toBeNull();
+  });
+
+  it('CONTROL NEGATIVO: unidad realmente inesperada (image) → 0¢ con warning, NO lanza', () => {
+    const c = falVideoCostOf({ cost: { unit: 'image', amountCents: 16 }, durationSeconds: 4 });
     expect(c.cents).toBe(0);
     expect(c.warning).toMatch(/unidad inesperada/);
   });

@@ -1,0 +1,5 @@
+             id             | status |                                           inputs                                           | cost_actual |            fal_request_id            
+----------------------------+--------+--------------------------------------------------------------------------------------------+-------------+--------------------------------------
+ 01KXZ5DRBQF92A4TJ827VV0JW5 | failed | {"prompt": "Tired of ads that feel fake? This one is different, watch what happens next."} |             | 019f7e56-e43d-7bb3-ba99-293087909972
+(1 row)
+

@@ -1,0 +1,4 @@
+=== VEED payload the code sends: {prompt} → 422 (missing text AND avatar_id) ===
+{"detail":[{"type":"missing","loc":["body","avatar_id"],"msg":"Field required","input":{"prompt":"Tired of ads that feel fake? This one is different, watch what happens next."}},{"type":"missing","loc":["body","text"],"msg":"Field required","input":{"prompt":"Tired of ads that feel fake? This one is different, watch what happens next."}}]}
+=== Probe with correct {text} but no avatar_id → 422 (avatar_id still required) ===
+{"detail":[{"type":"missing","loc":["body","avatar_id"],"msg":"Field required","input":{"text":"hello world"}}]}

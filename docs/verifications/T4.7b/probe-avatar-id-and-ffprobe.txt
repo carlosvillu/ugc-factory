@@ -1,0 +1,52 @@
+# CHECKS post-FAIL solicitados por el coordinador (2026-07-20)
+
+## CHECK 1 — ffprobe en la imagen del worker: PRESENTE
+docker run ugc-veed-verify:t4.7b (FROM ugc-worker:t5.1):
+  /usr/bin/ffprobe
+  ffprobe version 5.1.9-0+deb12u1 (Debian bookworm, amd64)
+=> ffprobe SÍ está en la imagen del worker. NO hace falta tocar el Dockerfile.
+   (T5.1 lo instala en el mismo paquete `ffmpeg` de apt; su report ya lo citaba
+   como "ffprobe responde" pero desde dentro de la imagen T5.1, no de la verify —
+   confirmado ahora en la imagen verify derivada.)
+
+## CHECK 2 — avatar_id: es un ENUM validado por fal (async, en el body de respuesta)
+- El submit acepta CUALQUIER string sin 422 síncrono; la validación del enum llega
+  en el body de la respuesta del request (type: literal_error), NO en el submit.
+- Un avatar_id fuera del enum (inference_time 0.05s => NO facturado) devuelve la
+  lista COMPLETA de 28 valores válidos:
+
+VERTICAL (9:16, formato UGC — USAR ESTOS):
+  emily_vertical_primary        emily_vertical_secondary
+  marcus_vertical_primary       marcus_vertical_secondary
+  mira_vertical_primary         mira_vertical_secondary
+  jasmine_vertical_primary      jasmine_vertical_secondary   jasmine_vertical_walking
+  aisha_vertical_walking
+  elena_vertical_primary        elena_vertical_secondary
+  any_male_vertical_primary     any_female_vertical_primary
+  any_male_vertical_secondary   any_female_vertical_secondary
+  any_female_vertical_walking
+
+NO-VERTICAL (landscape/side — NO usar para UGC 9:16):
+  emily_primary  emily_side  marcus_primary  marcus_side  aisha_walking
+  elena_primary  elena_side  any_male_primary  any_female_primary
+  any_male_side  any_female_side
+
+=> DEFAULT recomendado para UGC 9:16: `emily_vertical_primary`
+   (de los dos candidatos que la doc te dio: `emily_vertical_primary` es el
+   VÁLIDO; `emily_primary` también existe pero es la variante NO-vertical.)
+
+- Contrato de input COMPLETO confirmado: {text, avatar_id} — con un avatar_id
+  válido fal ya NO da 422 de campos faltantes; pasa a inferencia real.
+
+## ⚠ GASTO ACCIDENTAL DEL PROBE (transparencia)
+- El sondeo inicial usó avatar_id="emily_primary" creyéndolo el candidato a testear.
+  Resultó ser un valor VÁLIDO del enum (variante no-vertical), así que NO dio 422:
+  pasó a inferencia real y corrió inference_time=35.37s ANTES de que el cancel
+  (client_cancelled) llegara. La carrera cancel-vs-completion la perdió el cancel.
+- Estado final del request 019f7e61-3f46-...: status COMPLETED, body "Request was
+  cancelled", error_type=client_cancelled, PERO 35.37s de inferencia consumida.
+- IMPACTO DE COSTE: probablemente ~35¢ facturados por fal (mínimo de 1 min de VEED),
+  a pesar del cancel tardío. NO verificable desde aquí: el probe bypassa la app
+  (0 cost_entry escrito) y fal no expone API de billing con esta key. Confirmar en
+  el dashboard de fal del usuario. El request con avatar_id inválido (0.05s) NO se
+  facturó.

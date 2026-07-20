@@ -57,6 +57,11 @@ export {
 // (`kind:'avatar_clip'`) — NO `finalizeGeneration` (solo-imagen). Lo consume el smoke del verifier y, en
 // T4.11, el executor N7c.
 export { runGenerateAvatar } from './generate-avatar';
+// Generación del CLIP DE AVATAR tier TEST · VEED (T4.7b, §7.2 N7c / §7.5): text-to-video con voz de
+// librería propia → extracción de la pista de audio con ffmpeg (imagen del worker, T5.1) → ASR →
+// word timestamps. Discontinuidad del tier barato (NO usa la Persona ni el TTS de N7b). Lo consume el
+// smoke del verifier (que lo corre EN la imagen del worker, la única con ffmpeg).
+export { runGenerateVeedAvatar } from './generate-veed-avatar';
 // Generación de CLIP DE B-ROLL contra fal (T4.8, §7.2 N7d): 1 clip por escena del body — i2v desde
 // keyframe (`fal-ai/veo3.1/image-to-video`) o R2V del producto (`fal-ai/veo3.1/reference-to-video`).
 // Servicio hermano de `runGenerateAvatar` (vídeo, finalizer `kind:'broll_clip'`), pero SIN audio y con

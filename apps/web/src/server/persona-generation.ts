@@ -3,13 +3,13 @@
 // (api.md §1): parsea → delega aquí → serializa. Aquí se resuelve la fal-key (cifrada en `app_setting`) y
 // el seam `FAL_BASE_URL` (E2E) que la capa de core/services no lee nunca.
 //
-// Molde: `template-generation.ts` (mismo patrón de deps + `falOptionsFrom` + fal-key + baseUrlOverride).
+// Molde: `template-generation.ts` (mismo patrón de deps + `falOptionsFrom` + `loadFalKey` + baseUrlOverride).
 import { AppError } from '@ugc/core/contracts';
 import type { GeneratePersonaImagesResponse } from '@ugc/core/persona';
+import { getSecretsKeyFromEnv } from '@ugc/core/secrets';
 import { getPersona, type DbClient } from '@ugc/db';
-import { runGeneratePersonaImages } from '@ugc/services';
+import { runGeneratePersonaImages, loadFalKey, falOptionsFrom } from '@ugc/services';
 import { toPersonaResponse } from './persona-response';
-import { loadFalKey, falOptionsFrom } from './fal-key';
 
 export interface PersonaGenerationDeps {
   db: DbClient;
@@ -37,7 +37,7 @@ export async function generatePersonaReferenceImages(
     throw new AppError('not_found', 'persona no encontrada');
   }
 
-  const falKey = await loadFalKey(db);
+  const falKey = await loadFalKey(db, getSecretsKeyFromEnv());
   const falOptions = falOptionsFrom(deps.falBaseUrl);
 
   const result = await runGeneratePersonaImages(

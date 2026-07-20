@@ -13,8 +13,8 @@
 import { AppError } from '@ugc/core/contracts';
 import { PersonaSchema, resolveVoiceStep, type VoiceProvider } from '@ugc/core/persona';
 import { getModelProfileByEndpoint, getPersona, type DbClient } from '@ugc/db';
-import { runTtsOnly, type VoicePreviewResult } from '@ugc/services';
-import { loadFalKey, falOptionsFrom } from './fal-key';
+import { getSecretsKeyFromEnv } from '@ugc/core/secrets';
+import { runTtsOnly, loadFalKey, falOptionsFrom, type VoicePreviewResult } from '@ugc/services';
 
 /**
  * El endpoint del TTS de fal que le corresponde a cada proveedor de voz (T4.6, resolución MÍNIMA). Es
@@ -107,7 +107,7 @@ export async function generateVoicePreview(
       storage: deps.storage,
       // Key PEREZOSA: `runTtsOnly` solo la resuelve en el cache-miss (antes de gastar) — una
       // reproducción cacheada no paga el `getSecretBlob`+descifrado de `loadFalKey`.
-      falKey: () => loadFalKey(db),
+      falKey: () => loadFalKey(db, getSecretsKeyFromEnv()),
       ...(deps.logger !== undefined ? { logger: deps.logger } : {}),
       ...(falOptions !== undefined ? { falOptions } : {}),
     },

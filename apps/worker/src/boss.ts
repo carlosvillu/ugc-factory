@@ -9,6 +9,7 @@ import {
   makeWithTransaction,
   recordCost,
 } from '@ugc/db';
+import { loadFalKey } from '@ugc/services';
 import { PgBoss } from 'pg-boss';
 import { type FailDecider, registerNoopConsumer } from './consumers/demo-noop';
 import { registerStepConsumer } from './consumers/step-execute';
@@ -110,19 +111,19 @@ export async function createBoss(deps: CreateBossDeps): Promise<PgBoss> {
         anthropicBaseUrl: process.env.ANTHROPIC_BASE_URL,
       },
       // Nodos de GENERACIÓN (T4.4, N7a): comparten el pool de Drizzle y el storage local del worker.
-      // `falKey` es PEREZOSA (getter): un worker sin FAL_KEY arranca igual y sirve análisis/demo;
-      // solo revienta —con mensaje claro— si un step de generación de verdad la necesita (mismo
-      // criterio que `secretsKey`). El stack E2E no ejerce N7a (no gasta fal real).
+      // `falKey` es un THUNK ASYNC que resuelve la key de `app_setting` (cifrada) EN CADA STEP — la MISMA
+      // fuente que web (`loadFalKey`), no `process.env.FAL_KEY`. Resolver por-step (no cachear al arrancar)
+      // es EL PUNTO: rotar la key en Ajustes → fal la recoge sin recrear el contenedor. El thunk tiene DOS
+      // fallas-de-credencial distintas (diagnósticos opuestos): (a) `secret.fal` ausente/no descifra →
+      // `loadFalKey` lanza `AppError('provider_error')`, que `resolveFalKeyOrPermanent` traduce a Permanent
+      // (accionable, sin retry storm); (b) `APP_MASTER_KEY` ausente → `getSecretsKeyFromEnv()` (evaluado
+      // como ARGUMENTO, antes de `loadFalKey`) lanza `Error` PLANO → sube retryable, IGUAL que la ruta de
+      // análisis (N1-N3 comparten ese getter) — un despliegue sin master key es casi inalcanzable (web no
+      // arranca sin ella y el worker comparte su env) y no deja gasto huérfano. El stack E2E no ejerce N7a.
       generation: {
         db,
         storage: makeLocalStorageAdapterFromEnv(),
-        get falKey() {
-          const key = process.env.FAL_KEY;
-          if (key === undefined || key === '') {
-            throw new Error('N7a: falta FAL_KEY (la generación de packshots la necesita)');
-          }
-          return key;
-        },
+        falKey: () => loadFalKey(db, getSecretsKeyFromEnv()),
         // `FAL_BASE_URL` (E2E, T4.11): ausente en producción → fal real; el stack lo fija para que los
         // N7 del worker peguen al fake (submit/upload/poll/download), no a fal. Se lee SOLO aquí.
         ...(process.env.FAL_BASE_URL !== undefined ? { falBaseUrl: process.env.FAL_BASE_URL } : {}),
@@ -149,15 +150,18 @@ export async function createBoss(deps: CreateBossDeps): Promise<PgBoss> {
     // de main.ts) y el sweep NO corre en modo degradado (createBoss solo se
     // invoca con la BD alcanzable, mismo gate que pg-boss).
     // El sweeper barre steps colgados (T0.9) Y reconcilia generaciones colgadas contra fal (T4.3): le
-    // pasamos el boss (para encolar `output.download`) y la FAL_KEY (para pollear el `status_url`
-    // guardado). Sin FAL_KEY la pieza de generaciones se omite y solo se barren steps (el worker
-    // arranca igual). NB: reconcile NUNCA re-submitea — solo pollea el request ya durable en la fila.
+    // pasamos el boss (para encolar `output.download`) y el thunk de fal-key (para pollear el `status_url`
+    // guardado). Sin key en un tick, la pieza de generaciones se omite ESE tick y solo se barren steps (el
+    // worker arranca igual). NB: reconcile NUNCA re-submitea — solo pollea el request ya durable en la fila.
     const sweeper = startSweeper({
       db,
       transitionDeps,
       logger: deps.logger,
       boss,
-      ...(process.env.FAL_KEY !== undefined ? { falKey: process.env.FAL_KEY } : {}),
+      // La key se resuelve POR TICK de `app_setting` (misma fuente que web y que los executors N7): un
+      // tick sin key registra un warn y reintenta el siguiente (una key añadida en Ajustes se recoge sin
+      // reiniciar). Antes se pasaba `process.env.FAL_KEY` fijado al arrancar — la asimetría que esto cierra.
+      falKey: () => loadFalKey(db, getSecretsKeyFromEnv()),
     });
     boss.once('stopped', () => {
       sweeper.stop();

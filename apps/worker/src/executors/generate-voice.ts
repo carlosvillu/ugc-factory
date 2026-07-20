@@ -22,7 +22,7 @@ import { getModelProfileByEndpoint, getScriptById } from '@ugc/db';
 import { runGenerateAudio } from '@ugc/services';
 
 import type { GenerationExecutorDeps } from './generation';
-import { requireOutputContext, runGenerationStep } from './_shared';
+import { requireOutputContext, runGenerationStep, resolveFalKeyOrPermanent } from './_shared';
 
 /** El endpoint del ASR: la ruta por defecto de word timestamps (§13.1). El mismo para los 3 tiers. */
 const ASR_ENDPOINT = 'fal-ai/elevenlabs/speech-to-text';
@@ -107,6 +107,10 @@ export function makeN7bExecutor(deps: GenerationExecutorDeps): StepExecutor {
 
     const asrLanguageCode = ASR_LANGUAGE_CODE[cfg.language];
 
+    // Resuelve la fal-key UNA vez por step (de `app_setting`): la comparten los voiceovers de todas las
+    // escenas. ANTES del primer submit (no hay gasto huérfano). Sin key/no descifra → falla PERMANENTE
+    // con mensaje accionable (Ajustes → fal), no retry storm.
+    const falKey = await resolveFalKeyOrPermanent(deps.falKey, 'N7b');
     // Un voiceover POR ESCENA. Secuencial (fail-fast de coste, como el bucle de shots de N7a).
     const clips: N7bClipRef[] = [];
     for (let i = 0; i < script.scenes.length; i++) {
@@ -117,7 +121,7 @@ export function makeN7bExecutor(deps: GenerationExecutorDeps): StepExecutor {
           {
             db: deps.db,
             storage: deps.storage,
-            falKey: deps.falKey,
+            falKey,
             ...(deps.logger !== undefined ? { logger: deps.logger } : {}),
             ...(deps.fetch !== undefined ? { fetch: deps.fetch } : {}),
             ...(deps.falBaseUrl !== undefined

@@ -12,6 +12,7 @@
 // (state 'completed' con el output). La descarga real y el billing de 1 solo job son la Verificación
 // live (el verifier), no este test.
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { AppError } from '@ugc/core/contracts';
 import { makeLogger } from '@ugc/core/observability';
 import { outputDownloadJob } from '@ugc/core/jobs';
 import type { ReconcileCheckStatus } from '@ugc/core/generation';
@@ -110,7 +111,7 @@ describe('makeGenerationSweep — reconcilia una generación submitted colgada (
     const sweep = makeGenerationSweep({
       db,
       boss,
-      falKey: 'fal-test-key-not-a-secret',
+      falKey: () => Promise.resolve('fal-test-key-not-a-secret'),
       logger: makeLogger({ name: 'worker', level: 'silent' }),
       checkStatus: completedCheck,
     });
@@ -136,7 +137,7 @@ describe('makeGenerationSweep — reconcilia una generación submitted colgada (
     const sweep = makeGenerationSweep({
       db,
       boss,
-      falKey: 'fal-test-key-not-a-secret',
+      falKey: () => Promise.resolve('fal-test-key-not-a-secret'),
       logger: makeLogger({ name: 'worker', level: 'silent' }),
       checkStatus: completedCheck,
     });
@@ -178,7 +179,7 @@ describe('makeGenerationSweep — reconcilia una generación submitted colgada (
     const sweep = makeGenerationSweep({
       db,
       boss,
-      falKey: 'fal-test-key-not-a-secret',
+      falKey: () => Promise.resolve('fal-test-key-not-a-secret'),
       logger: makeLogger({ name: 'worker', level: 'silent' }),
       // checkStatus NO se llama para una fila in_progress (la sub-lógica es por deadline).
       checkStatus: () => Promise.reject(new Error('checkStatus no debe llamarse para in_progress')),
@@ -216,7 +217,7 @@ describe('makeGenerationSweep — reconcilia una generación submitted colgada (
     const sweep = makeGenerationSweep({
       db,
       boss,
-      falKey: 'fal-test-key-not-a-secret',
+      falKey: () => Promise.resolve('fal-test-key-not-a-secret'),
       logger: makeLogger({ name: 'worker', level: 'silent' }),
       checkStatus: racingCheck,
     });
@@ -233,5 +234,57 @@ describe('makeGenerationSweep — reconcilia una generación submitted colgada (
       [gen.id],
     );
     expect(rows[0]!.n).toBe(1);
+  });
+});
+
+describe('makeGenerationSweep — resuelve la fal-key POR TICK de app_setting (unificación con web)', () => {
+  it('el thunk de fal-key se invoca EN CADA tick (no se cachea al construir): una key rotada en Ajustes se recogería', async () => {
+    // El corazón del fix: la key se resuelve fresca cada tick. Se cuenta cuántas veces se llama al thunk
+    // sobre DOS sweeps. Con `checkStatus` inyectado el sweep no toca la red — pero la resolución de key SÍ
+    // se ejercita (el thunk se resuelve ANTES de decidir el cliente): dos ticks → dos resoluciones.
+    await seedSubmitted('REQ-SWEEP');
+    let calls = 0;
+    const sweep = makeGenerationSweep({
+      db,
+      boss,
+      falKey: () => {
+        calls += 1;
+        return Promise.resolve('fal-test-key-not-a-secret');
+      },
+      logger: makeLogger({ name: 'worker', level: 'silent' }),
+      checkStatus: completedCheck,
+    });
+
+    await sweep();
+    await sweep();
+
+    // Si la key se hubiera cacheado al construir `makeGenerationSweep`, `calls` sería 0 (bypass) o 1.
+    // Que sea 2 es la PRUEBA de que se resuelve por-tick — una key añadida/rotada en Ajustes se vería.
+    expect(calls).toBe(2);
+  });
+
+  it('sin fal-key ese tick (thunk lanza provider_error) el sweep ABORTA antes de tocar la BD — no reconcilia, no encola', async () => {
+    // Control negativo del degrade-limpio: un tick sin key configurada NO debe reconciliar ni encolar nada
+    // (la resolución corre ANTES de listar/pollear). El reject es el `AppError('provider_error')` que
+    // `startSweeper` captura y degrada a warn (sin tumbar el barrido de steps, verificado por su catch).
+    const gen = await seedSubmitted('REQ-SWEEP');
+    const sweep = makeGenerationSweep({
+      db,
+      boss,
+      falKey: () =>
+        Promise.reject(
+          new AppError('provider_error', 'no hay API key de fal configurada (Ajustes → fal)'),
+        ),
+      logger: makeLogger({ name: 'worker', level: 'silent' }),
+      // checkStatus inyectado: NO debe llegar a llamarse (el thunk lanza antes de decidir el cliente).
+      checkStatus: () => Promise.reject(new Error('checkStatus NO debe llamarse sin key resuelta')),
+    });
+
+    await expect(sweep()).rejects.toBeInstanceOf(AppError);
+
+    // La fila submitted quedó INTACTA (no reconciliada) y NINGUNA descarga se encoló: el tick abortó
+    // limpio sin tocar la BD, exactamente lo que permite que el barrido de steps siga sin dinero.
+    expect((await getGeneration(db, gen.id))?.status).toBe('submitted');
+    expect(await countDownloadJobs(gen.id)).toBe(0);
   });
 });

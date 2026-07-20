@@ -118,3 +118,7 @@ export { assembleN6Sources } from './assemble-n6-sources';
 // voice_map). Lo llama `approveScriptsForStep` (CP3) para arrancar el run de generación. Money-safe: una
 // etiqueta-no-endpoint lanza `PermanentStepError` ANTES de crear el run.
 export { buildVariantGenerationPlan } from './build-variant-generation-plan';
+// FUENTE ÚNICA de la API key de fal desde `app_setting` (cifrada): la usan WEB (preview/thumbnail/persona)
+// y el WORKER (executors N7 + sweeper de reconciliación). `falOptionsFrom` deriva el override E2E de base
+// URL del FalClient. Antes el worker leía `process.env.FAL_KEY`; ahora ambos resuelven de la BD.
+export { loadFalKey, falOptionsFrom } from './fal-key';

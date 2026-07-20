@@ -22,7 +22,7 @@ import { getAsset, getModelProfileByEndpoint, getScriptById } from '@ugc/db';
 import { runGenerateAvatar, runGenerateVeedAvatar } from '@ugc/services';
 
 import type { GenerationExecutorDeps } from './generation';
-import { requireOutputContext, runGenerationStep } from './_shared';
+import { requireOutputContext, runGenerationStep, resolveFalKeyOrPermanent } from './_shared';
 
 /** El endpoint de VEED (tier Test, text-to-video). Su presencia en la config (junto con `text`) enruta a
  *  la cadena VEED (clip → extracción de audio con ffmpeg → ASR), distinta de la de image+audio. */
@@ -166,12 +166,14 @@ export function makeN7cExecutor(deps: GenerationExecutorDeps): StepExecutor {
       );
     }
 
+    // La fal-key del step, de `app_setting`, ANTES del submit (ver `resolveFalKeyOrPermanent`).
+    const falKey = await resolveFalKeyOrPermanent(deps.falKey, 'N7c');
     const res = await runGenerationStep(() =>
       runGenerateAvatar(
         {
           db: deps.db,
           storage: deps.storage,
-          falKey: deps.falKey,
+          falKey,
           ...(deps.logger !== undefined ? { logger: deps.logger } : {}),
           ...(deps.fetch !== undefined ? { fetch: deps.fetch } : {}),
           ...(deps.falBaseUrl !== undefined
@@ -247,12 +249,14 @@ async function runVeedRoute(
     );
   }
 
+  // La fal-key del step, de `app_setting`, ANTES del submit (ver `resolveFalKeyOrPermanent`).
+  const falKey = await resolveFalKeyOrPermanent(deps.falKey, 'N7c (VEED)');
   const res = await runGenerationStep(() =>
     runGenerateVeedAvatar(
       {
         db: deps.db,
         storage: deps.storage,
-        falKey: deps.falKey,
+        falKey,
         ...(deps.logger !== undefined ? { logger: deps.logger } : {}),
         ...(deps.fetch !== undefined ? { fetch: deps.fetch } : {}),
         ...(deps.falBaseUrl !== undefined

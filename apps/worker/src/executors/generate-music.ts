@@ -19,7 +19,7 @@ import { getModelProfileByEndpoint, setVariantAudioSource } from '@ugc/db';
 import { runGenerateMusic } from '@ugc/services';
 
 import type { GenerationExecutorDeps } from './generation';
-import { requireOutputContext, runGenerationStep } from './_shared';
+import { requireOutputContext, runGenerationStep, resolveFalKeyOrPermanent } from './_shared';
 
 /** El ref ligero del bed musical generado (la verdad vive en `generation`/`asset`). */
 interface N7eOutput {
@@ -60,12 +60,14 @@ export function makeN7eExecutor(deps: GenerationExecutorDeps): StepExecutor {
       );
     }
 
+    // La fal-key del step, de `app_setting`, ANTES del submit (ver `resolveFalKeyOrPermanent`).
+    const falKey = await resolveFalKeyOrPermanent(deps.falKey, 'N7e');
     const res = await runGenerationStep(() =>
       runGenerateMusic(
         {
           db: deps.db,
           storage: deps.storage,
-          falKey: deps.falKey,
+          falKey,
           ...(deps.logger !== undefined ? { logger: deps.logger } : {}),
           ...(deps.fetch !== undefined ? { fetch: deps.fetch } : {}),
           ...(deps.falBaseUrl !== undefined

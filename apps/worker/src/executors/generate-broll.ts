@@ -30,7 +30,7 @@ import { getModelProfileByEndpoint, getScriptById } from '@ugc/db';
 import { runGenerateBroll } from '@ugc/services';
 
 import type { GenerationExecutorDeps } from './generation';
-import { requireOutputContext, runGenerationStep } from './_shared';
+import { requireOutputContext, runGenerationStep, resolveFalKeyOrPermanent } from './_shared';
 
 /** El ref ligero de un clip de b-roll generado (la verdad vive en `generation`/`asset`). */
 interface N7dClipRef {
@@ -173,6 +173,10 @@ export function makeN7dExecutor(deps: GenerationExecutorDeps): StepExecutor {
     // comparten `bodySceneIndex` y se distinguen por `clipIndex`). Secuencial (fail-fast de coste, como
     // los bucles de N7a/N7b). Cada clip cuantiza su duración al enum del modelo (redondeo-arriba: el clip
     // debe cubrir su ventana).
+    // Resuelve la fal-key UNA vez por step (de `app_setting`): la comparten todos los clips del plan.
+    // ANTES del primer submit (no hay gasto huérfano). Sin key/no descifra → falla PERMANENTE con
+    // mensaje accionable (Ajustes → fal), no retry storm.
+    const falKey = await resolveFalKeyOrPermanent(deps.falKey, 'N7d');
     const clips: N7dClipRef[] = [];
     for (let bodySceneIndex = 0; bodySceneIndex < plan.scenes.length; bodySceneIndex++) {
       const scenePlan = plan.scenes[bodySceneIndex];
@@ -184,7 +188,7 @@ export function makeN7dExecutor(deps: GenerationExecutorDeps): StepExecutor {
             {
               db: deps.db,
               storage: deps.storage,
-              falKey: deps.falKey,
+              falKey,
               ...(deps.logger !== undefined ? { logger: deps.logger } : {}),
               ...(deps.fetch !== undefined ? { fetch: deps.fetch } : {}),
               ...(deps.falBaseUrl !== undefined

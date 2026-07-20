@@ -1,0 +1,4 @@
+apps/worker/src/boss.ts:115:      // fuente que web (`loadFalKey`), no `process.env.FAL_KEY`. Resolver por-step (no cachear al arrancar)
+apps/worker/src/boss.ts:163:      // reiniciar). Antes se pasaba `process.env.FAL_KEY` fijado al arrancar — la asimetría que esto cierra.
+apps/worker/src/executors/generation.ts:70:   *  web (`loadFalKey`), no `process.env.FAL_KEY`. Resolver por-step (no cachear) es EL PUNTO: rotar la
+apps/web/src/instrumentation.ts:122:    { provider: 'fal', env: process.env.FAL_KEY },

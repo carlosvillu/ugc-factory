@@ -14,13 +14,15 @@ import {
   type TemplateTestResult as TemplateTestResultContract,
 } from '@ugc/core/gallery';
 import { getModelProfileByEndpoint, getTemplate, type DbClient } from '@ugc/db';
+import { getSecretsKeyFromEnv } from '@ugc/core/secrets';
 import {
   runTemplateTest,
   generateTemplateThumbnail,
   FLUX2_ENDPOINT,
+  loadFalKey,
+  falOptionsFrom,
   type TemplateThumbnailResult,
 } from '@ugc/services';
-import { loadFalKey, falOptionsFrom } from './fal-key';
 
 export interface TemplateGenerationDeps {
   db: DbClient;
@@ -73,7 +75,7 @@ export async function generateTemplateTestImage(
       db,
       storage: deps.storage,
       // Key PEREZOSA: `runTemplateTest` solo la resuelve en el cache-miss (antes de gastar).
-      falKey: () => loadFalKey(db),
+      falKey: () => loadFalKey(db, getSecretsKeyFromEnv()),
       ...(deps.logger !== undefined ? { logger: deps.logger } : {}),
       ...(falOptions !== undefined ? { falOptions } : {}),
     },
@@ -99,7 +101,7 @@ export async function generateTemplateThumbnailImage(
     throw new AppError('not_found', 'template no encontrado');
   }
 
-  const falKey = await loadFalKey(db);
+  const falKey = await loadFalKey(db, getSecretsKeyFromEnv());
   const falOptions = falOptionsFrom(deps.falBaseUrl);
 
   return generateTemplateThumbnail(

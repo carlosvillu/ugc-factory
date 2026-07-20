@@ -27,9 +27,10 @@ export interface ExecutorRegistryDeps {
   /** Deps de los nodos REALES del análisis (T1.10a): BD, storage, secretos y los
    *  overrides de base URL de los clientes externos (el stack E2E los apunta a su fake). */
   analysis: AnalysisExecutorDeps;
-  /** Deps de los executors de GENERACIÓN (T4.4, N7a): BD + storage + `FAL_KEY`. La `falKey` se lee
-   *  PEREZOSAMENTE (getter) igual que `secretsKey`: un worker sin `FAL_KEY` arranca y sirve todo lo
-   *  demás, y solo revienta —con mensaje claro— el step de generación que de verdad la necesita. */
+  /** Deps de los executors de GENERACIÓN (T4.4, N7a): BD + storage + la fal-key. `falKey` es un THUNK
+   *  async que la resuelve de `app_setting` (cifrada, misma fuente que web) EN CADA STEP: un worker sin
+   *  key configurada arranca y sirve todo lo demás, y el step de generación que la necesita falla
+   *  PERMANENTE —con mensaje accionable (Ajustes → fal)— hasta que se configure. */
   generation: GenerationExecutorDeps;
 }
 

@@ -13,6 +13,7 @@
 // (un flag `requireStepId` que solo N5 activa), así que N5 conserva su propio guard local. El coste de
 // no fusionarlo es una copia; el coste de fusionarlo sería un helper con dos modos — la copia es más
 // honesta (mismo criterio del brief: no forzar una abstracción que fusione semánticas distintas).
+import { AppError } from '@ugc/core/contracts';
 import { PermanentStepError } from '@ugc/core/orchestrator';
 import { FalResponseError, LoserRaceError } from '@ugc/core/generation';
 
@@ -71,6 +72,29 @@ export async function runGenerationStep<T>(fn: () => Promise<T>): Promise<T> {
     if (err instanceof LoserRaceError) throw err;
     if (err instanceof FalResponseError) {
       throw new PermanentStepError(err.message);
+    }
+    throw err;
+  }
+}
+
+/**
+ * Resuelve la fal-key del step de `app_setting` (thunk async del composition root) y traduce el fallo de
+ * credencial a `PermanentStepError`. Un `provider_error` de `loadFalKey` (no hay key configurada / no
+ * descifra) es DETERMINISTA respecto al step: reintentar NO configura la key — el retry inmediato solo
+ * quemaría `max_retries` en milisegundos para acabar igual en `failed`. Se falla LIMPIO y terminal con
+ * mensaje ACCIONABLE (Ajustes → fal); el humano reconfigura y re-dispara el run. La resolución corre
+ * ANTES de cualquier submit, así que un secret ausente no deja gasto huérfano. Cualquier otro error
+ * (BD caída) sube tal cual → retryable (infra transitoria).
+ */
+export async function resolveFalKeyOrPermanent(
+  falKey: () => Promise<string>,
+  nodeLabel: string,
+): Promise<string> {
+  try {
+    return await falKey();
+  } catch (err) {
+    if (err instanceof AppError && err.code === 'provider_error') {
+      throw new PermanentStepError(`${nodeLabel}: ${err.message}`);
     }
     throw err;
   }

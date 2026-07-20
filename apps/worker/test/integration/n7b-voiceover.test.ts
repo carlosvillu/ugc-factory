@@ -186,7 +186,7 @@ function makeExecutor(db: ReturnType<typeof createDbPool>['db']) {
   return makeN7bExecutor({
     db,
     storage,
-    falKey: 'fal-test-key-not-a-secret',
+    falKey: () => Promise.resolve('fal-test-key-not-a-secret'),
     logger: makeTestLogger(),
   });
 }

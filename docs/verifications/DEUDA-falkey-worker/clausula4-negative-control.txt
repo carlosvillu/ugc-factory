@@ -1,0 +1,63 @@
+
+ RUN  v4.1.10 /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/worker
+
+ ✓ |worker:integration| test/integration/generation-sweep.test.ts > makeGenerationSweep — reconcilia una generación submitted colgada (Verificación cláusula 2) > pollea el status_url GUARDADO, persiste el output webhook-shaped, marca in_progress y encola la descarga 26ms
+ ✓ |worker:integration| test/integration/generation-sweep.test.ts > makeGenerationSweep — reconcilia una generación submitted colgada (Verificación cláusula 2) > IDEMPOTENCIA "matar y reiniciar": un 2º tick DENTRO del deadline de descarga NO re-encola 12ms
+ ✓ |worker:integration| test/integration/generation-sweep.test.ts > makeGenerationSweep — reconcilia una generación submitted colgada (Verificación cláusula 2) > RECUPERACIÓN del agujero negro: una fila in_progress colgada PASADO el deadline de descarga se RE-ENCOLA 11ms
+ ✓ |worker:integration| test/integration/generation-sweep.test.ts > makeGenerationSweep — reconcilia una generación submitted colgada (Verificación cláusula 2) > CARRERA anti-doble-cobro: otro actor completa la fila entre listar y el claim → NO se re-encola NI se regresa el completed 11ms
+ × |worker:integration| test/integration/generation-sweep.test.ts > makeGenerationSweep — resuelve la fal-key POR TICK de app_setting (unificación con web) > el thunk de fal-key se invoca EN CADA tick (no se cachea al construir): una key rotada en Ajustes se recogería 13ms
+   → expected +0 to be 2 // Object.is equality
+ × |worker:integration| test/integration/generation-sweep.test.ts > makeGenerationSweep — resuelve la fal-key POR TICK de app_setting (unificación con web) > sin fal-key ese tick (thunk lanza provider_error) el sweep ABORTA antes de tocar la BD — no reconcilia, no encola 9ms
+   → promise resolved "undefined" instead of rejecting
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |worker:integration| test/integration/generation-sweep.test.ts > makeGenerationSweep — resuelve la fal-key POR TICK de app_setting (unificación con web) > el thunk de fal-key se invoca EN CADA tick (no se cachea al construir): una key rotada en Ajustes se recogería
+AssertionError: expected +0 to be 2 // Object.is equality
+
+- Expected
++ Received
+
+- 2
++ 0
+
+ ❯ test/integration/generation-sweep.test.ts:263:19
+    261|     // Si la key se hubiera cacheado al construir `makeGenerationSweep…
+    262|     // Que sea 2 es la PRUEBA de que se resuelve por-tick — una key añ…
+    263|     expect(calls).toBe(2);
+       |                   ^
+    264|   });
+    265|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  |worker:integration| test/integration/generation-sweep.test.ts > makeGenerationSweep — resuelve la fal-key POR TICK de app_setting (unificación con web) > sin fal-key ese tick (thunk lanza provider_error) el sweep ABORTA antes de tocar la BD — no reconcilia, no encola
+AssertionError: promise resolved "undefined" instead of rejecting
+
+- Expected:
+Error {
+  "message": "rejected promise",
+}
+
++ Received:
+undefined
+
+ ❯ test/integration/generation-sweep.test.ts:283:26
+    281|     });
+    282|
+    283|     await expect(sweep()).rejects.toBeInstanceOf(AppError);
+       |                          ^
+    284|
+    285|     // La fila submitted quedó INTACTA (no reconciliada) y NINGUNA des…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 4 passed (6)
+   Start at  12:54:59
+   Duration  6.17s (transform 478ms, setup 7ms, import 1.13s, tests 232ms, environment 0ms)
+
+undefined
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/worker:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run --config vitest.config.integration.ts generation-sweep --reporter=verbose

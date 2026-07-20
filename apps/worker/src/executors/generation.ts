@@ -33,7 +33,7 @@ import {
   type BridgedReferenceImage,
 } from '@ugc/services';
 
-import { requireOutputContext, runGenerationStep } from './_shared';
+import { requireOutputContext, runGenerationStep, resolveFalKeyOrPermanent } from './_shared';
 
 /** El endpoint del ÚNICO modelo text-to-image sembrado (§13.1): `fal-ai/flux-2`. NO usa el sistema
  *  de adapters (no tiene `promptAdapter`): N7a le pasa `image_size`/`num_images` directo por
@@ -66,8 +66,12 @@ const N7A_ASPECT_9_16 = '9:16';
 export interface GenerationExecutorDeps {
   db: DbClient;
   storage: StorageAdapter;
-  /** La API key de fal EN CLARO (el composition root la lee de `FAL_KEY`). */
-  falKey: string;
+  /** THUNK que resuelve la API key de fal (de `app_setting`, cifrada) EN CADA STEP — la MISMA fuente que
+   *  web (`loadFalKey`), no `process.env.FAL_KEY`. Resolver por-step (no cachear) es EL PUNTO: rotar la
+   *  key en Ajustes → fal la recoge sin recrear el contenedor. Lanza `provider_error` si no hay key/no
+   *  descifra (antes de cualquier submit → no hay gasto huérfano). El composition root lo cablea a
+   *  `loadFalKey(db, secretsKey)`. */
+  falKey: () => Promise<string>;
   /** Logger estructurado (observability.md); default no-op vía `runGenerate` si no se inyecta. */
   logger?: Logger;
   /** `fetch` inyectable (msw en tests); default global en producción. */
@@ -206,8 +210,16 @@ async function runShotLoop(
     syntheticProduct: boolean;
     stepId: string | undefined;
     perShotInputs: (i: number) => GenerationInputs;
+    /** La fal-key YA resuelta, cuando el caller la resolvió antes (ruta de referencias, que la usa para
+     *  el `uploadInputCached` previo). Ausente en la ruta `ai_packshot` (entra directa) → se resuelve
+     *  aquí. Evita el doble getSecretBlob+descifrado por step de la ruta de referencias. */
+    falKey?: string;
   },
 ): Promise<N7aShotRef[]> {
+  // Resuelve la fal-key UNA vez por step (no por shot): la key no cambia entre los shots de un mismo N7a,
+  // y resolverla antes del bucle evita N descifrados. Reusa la ya resuelta por el caller si la pasó (ruta
+  // de referencias). ANTES de cualquier submit; sin key → PERMANENTE (accionable, no retry storm).
+  const falKey = args.falKey ?? (await resolveFalKeyOrPermanent(deps.falKey, 'N7a'));
   const shots: N7aShotRef[] = [];
   for (let i = 0; i < args.numShots; i++) {
     const res = await runGenerationStep(() =>
@@ -215,7 +227,7 @@ async function runShotLoop(
         {
           db: deps.db,
           storage: deps.storage,
-          falKey: deps.falKey,
+          falKey,
           ...(deps.logger !== undefined ? { logger: deps.logger } : {}),
           ...(deps.fetch !== undefined ? { fetch: deps.fetch } : {}),
           ...(deps.falBaseUrl !== undefined
@@ -302,6 +314,9 @@ async function runReferenceRoute(
     stepId: string | undefined;
   },
 ): Promise<N7aOutput> {
+  // Resuelve la fal-key UNA vez por step (la usa el `uploadInputCached` de cada referencia). ANTES de
+  // subir nada a fal storage; sin key → PERMANENTE (accionable, no retry storm).
+  const falKey = await resolveFalKeyOrPermanent(deps.falKey, 'N7a');
   // Resolver el editor de referencias: seedream/edit, o NB2/edit como fallback (Entrega T4.4b).
   const profileRow =
     (await getModelProfileByEndpoint(deps.db, SEEDREAM_EDIT_ENDPOINT)) ??
@@ -342,7 +357,7 @@ async function runReferenceRoute(
       {
         db: deps.db,
         storage: deps.storage,
-        falKey: deps.falKey,
+        falKey,
         ...(deps.fetch !== undefined ? { fetch: deps.fetch } : {}),
         ...(deps.logger !== undefined ? { logger: deps.logger } : {}),
         ...(deps.falBaseUrl !== undefined ? { baseUrlOverride: deps.falBaseUrl } : {}),
@@ -379,7 +394,8 @@ async function runReferenceRoute(
   // duplicarlo (el prompt viaja por `resolvedPrompt`, los demás por `inputs` → entran en `content_hash`).
   const { prompt: _prompt, ...baseInputs } = adapted.payload;
 
-  // (5) Bucle `num_images:1` COMPARTIDO. Mismas referencias en cada shot; `seed:i` los diferencia.
+  // (5) Bucle `num_images:1` COMPARTIDO. Mismas referencias en cada shot; `seed:i` los diferencia. Se
+  // reusa la `falKey` ya resuelta arriba (para el `uploadInputCached`) → sin 2ª query+descifrado por step.
   const shots = await runShotLoop(deps, {
     modelProfileId: profileRow.id,
     resolvedPrompt,
@@ -387,6 +403,7 @@ async function runReferenceRoute(
     syntheticProduct: false,
     stepId: args.stepId,
     perShotInputs: (i) => ({ ...baseInputs, num_images: 1, seed: i }),
+    falKey,
   });
   return { route: args.route, syntheticProduct: false, shots };
 }

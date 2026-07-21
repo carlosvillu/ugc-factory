@@ -1,0 +1,129 @@
+// VERIFIER-OWNED (T5.5, NOT product code): closes the loop the two tiers leave open. Takes the REAL measured
+// qaReport JSON produced by composeVariant in the worker image (docs/verifications/T5.5/qa-report.measured.json)
+// and persists it via finalizeVariantMaster against real Postgres, then queries the row back — making the literal
+// "the qa_report row of a real variant contains all checks in pass (query)" true end-to-end. Deleted after the run.
+import { readFile, writeFile } from 'node:fs/promises';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import {
+  createTestDatabase,
+  makeProductBrief,
+  makeProject,
+  makeUrlAnalysis,
+  type TestDatabase,
+} from '@ugc/test-utils';
+import { newUlid } from '@ugc/core/contracts';
+import { QaReportSchema } from '@ugc/core/contracts';
+import { adBatch, adVariant, productBrief, urlAnalysis } from '@ugc/db/schema';
+import { createProject } from '../../src/repos/project.repo';
+import { createAsset } from '../../src/repos/asset.repo';
+import { finalizeVariantMaster } from '../../src/repos/batch.repo';
+
+const HERE = dirname(fileURLToPath(import.meta.url));
+const OUT = join(HERE, '../../../../docs/verifications/T5.5');
+
+let tdb: TestDatabase;
+beforeAll(async () => {
+  tdb = await createTestDatabase({ label: 'db:verifier-real-qa' });
+});
+afterAll(async () => {
+  await tdb.close();
+});
+
+describe('VERIFIER: persist REAL measured qaReport → psql query all-pass', () => {
+  it('la fila qa_report de una variante real tiene todos los checks en pass', async () => {
+    // 1) el qaReport REAL medido por composeVariant en la imagen (no uno hecho a mano).
+    const raw = JSON.parse(await readFile(join(OUT, 'qa-report.measured.json'), 'utf8'));
+    const qa = QaReportSchema.parse(raw); // debe validar contra el contrato de core
+
+    // 2) sembrar una variante real (project → urlAnalysis → brief → batch → variant).
+    const proj = await createProject(tdb.db, makeProject());
+    const [ua] = await tdb.db.insert(urlAnalysis).values(makeUrlAnalysis({ projectId: proj.id })).returning();
+    const [brief] = await tdb.db
+      .insert(productBrief)
+      .values(makeProductBrief({ urlAnalysisId: ua!.id, data: { name: 'x' } }))
+      .returning();
+    const batchId = newUlid();
+    await tdb.db.insert(adBatch).values({
+      id: batchId,
+      projectId: proj.id,
+      briefId: brief!.id,
+      matrix: {},
+      tier: 'premium',
+      objective: 'conversion',
+      languages: ['es'],
+    });
+    const variantId = newUlid();
+    await tdb.db.insert(adVariant).values({
+      id: variantId,
+      batchId,
+      angleName: 'pain_point',
+      framework: 'pain_point',
+      language: 'es',
+      durationTarget: 30,
+      filenameCode: `t55real-${variantId.slice(-6).toLowerCase()}-es-30s`,
+      status: 'scripted',
+    });
+
+    // sembrar los assets origen (linaje) desde el parent-asset-ids REAL medido.
+    const parentIds = JSON.parse(await readFile(join(OUT, 'parent-asset-ids.json'), 'utf8')) as string[];
+    const seededParents: string[] = [];
+    for (const [i] of parentIds.entries()) {
+      const a = await createAsset(tdb.db, {
+        kind: i % 2 === 0 ? 'broll_clip' : 'tts_audio',
+        storageKey: `seg/${newUlid()}.mp4`,
+        mime: 'video/mp4',
+        bytes: 2048,
+        checksum: `p-${String(i)}`,
+      });
+      seededParents.push(a.id);
+    }
+
+    // 3) persistir con la MISMA función de producción.
+    const result = await finalizeVariantMaster(tdb.db, {
+      variantId,
+      master: {
+        storageKey: `masters/${variantId}.mp4`,
+        mime: 'video/mp4',
+        bytes: qa.metrics.filesizeBytes ?? 0,
+        checksum: 'real-master-checksum',
+        width: qa.metrics.width,
+        height: qa.metrics.height,
+        durationS: qa.metrics.videoDurationS,
+      },
+      thumbnail: {
+        storageKey: `thumbs/${variantId}.jpg`,
+        mime: 'image/jpeg',
+        bytes: 17555,
+        checksum: 'real-thumb-checksum',
+      },
+      parentAssetIds: seededParents,
+      qaReport: qa,
+    });
+
+    // 4) QUERY tal cual la Verificación: jsonb path, todos los checks en pass.
+    const q = await tdb.pool.query<{
+      passed: boolean;
+      score: number;
+      all_pass: boolean;
+      checks: unknown;
+    }>(
+      `SELECT
+         (qa_report->>'passed')::bool AS passed,
+         score,
+         (SELECT bool_and(v = 'pass') FROM jsonb_each_text(qa_report->'checks') AS c(k, v)) AS all_pass,
+         qa_report->'checks' AS checks
+       FROM ad_variant WHERE id = $1`,
+      [variantId],
+    );
+    const row = q.rows[0]!;
+    await writeFile(join(OUT, 'sql-real-variant-query.json'), JSON.stringify({ variantId, ...row }, null, 2));
+
+    expect(row.passed).toBe(true);
+    expect(row.all_pass).toBe(true);
+    expect(row.score).toBe(100);
+    expect(result.variant.masterAssetId).toBe(result.master.id);
+    expect(result.master.parentAssetIds).toEqual(seededParents);
+  });
+});

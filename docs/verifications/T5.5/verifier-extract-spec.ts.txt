@@ -1,0 +1,128 @@
+// VERIFIER-OWNED extraction spec (T5.5 gate, NOT product code). Runs composeVariant with the REAL toolchain
+// and copies the SIGNED master + qaReport JSON to docs/verifications/T5.5/ so the verifier can (a) run its OWN
+// independent c2patool dump + grep for trainedAlgorithmicMedia, (b) feed the REAL measured qaReport into the
+// SQL persistence path, and (c) leave the signed master as prepared evidence for clause 3 (human TikTok judgment).
+// This file is deleted from the product tree after the run; a copy lives under docs/verifications/T5.5/.
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+import type { CompositionSpec } from '@ugc/core/contracts';
+import type { StorageAdapter } from '@ugc/core';
+import { newUlid } from '@ugc/core/contracts';
+import { WordTimestampsSchema, type WordTimestamps } from '@ugc/core/generation';
+import { composeVariant, type ComposeVariantDeps } from '@ugc/services';
+import { makeMediaTestStorage, makeTestAudio, makeTestVideo, measureIntegratedLufs } from '@ugc/test-utils/media';
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
+import { beforeAll, describe, expect, test } from 'vitest';
+
+import { checkAssSafeZone } from '../../src/captions/safe-zone';
+import { generateVariantAss } from '../../src/captions/variant-ass';
+import { mediaToolsAvailable } from './setup';
+
+const run = promisify(execFile);
+const HERE = dirname(fileURLToPath(import.meta.url));
+const OUT = join(HERE, '../../../../docs/verifications/T5.5');
+const T47B_WORDS = join(HERE, '../../../../docs/verifications/T4.7b/word-timestamps.json');
+const C2PA_KEY = join(HERE, '../../../../packages/services/test/fixtures/c2pa/es256_private.key');
+const C2PA_CERT = join(HERE, '../../../../packages/services/test/fixtures/c2pa/es256_certs.pem');
+
+let realWords: WordTimestamps;
+beforeAll(async () => {
+  realWords = WordTimestampsSchema.parse(JSON.parse(await readFile(T47B_WORDS, 'utf8')));
+  await mkdir(OUT, { recursive: true });
+});
+
+const ffmpegRunner = async (args: string[]): Promise<{ code: number | null; stderr: string }> => {
+  try {
+    const { stderr } = await run('ffmpeg', args, { maxBuffer: 1024 * 1024 * 64 });
+    return { code: 0, stderr };
+  } catch (err) {
+    const e = err as { code?: number; stderr?: string; message?: string };
+    return { code: e.code ?? 1, stderr: e.stderr ?? e.message ?? '' };
+  }
+};
+const ffprobeRunner = async (args: string[]): Promise<{ code: number | null; stdout: string; stderr: string }> => {
+  try {
+    const { stdout, stderr } = await run('ffprobe', args, { maxBuffer: 1024 * 1024 * 64 });
+    return { code: 0, stdout, stderr };
+  } catch (err) {
+    const e = err as { code?: number; stdout?: string; stderr?: string; message?: string };
+    return { code: e.code ?? 1, stdout: e.stdout ?? '', stderr: e.stderr ?? e.message ?? '' };
+  }
+};
+const c2paSigner = async (args: string[]): Promise<{ code: number | null; stderr: string }> => {
+  try {
+    const { stderr } = await run('c2patool', args, { maxBuffer: 1024 * 1024 * 64 });
+    return { code: 0, stderr };
+  } catch (err) {
+    const e = err as { code?: number; stderr?: string; message?: string };
+    return { code: e.code ?? 1, stderr: e.stderr ?? e.message ?? '' };
+  }
+};
+
+async function seedAsset(storage: StorageAdapter, keyToId: Map<string, string>, localPath: string, key: string): Promise<string> {
+  const bytes = new Uint8Array(await readFile(localPath));
+  await storage.put(key, bytes, {});
+  const id = newUlid();
+  keyToId.set(id, key);
+  return id;
+}
+
+describe.skipIf(!mediaToolsAvailable)('VERIFIER extract: signed master + real qaReport → docs/verifications/T5.5', () => {
+  test('produce máster firmado real y persiste qaReport medido', async () => {
+    const workDir = await mkdtemp(join(tmpdir(), 'ugc-verify-t55-'));
+    const storage = makeMediaTestStorage(workDir);
+    const keyToId = new Map<string, string>();
+    const p = (n: string): string => join(workDir, n);
+
+    const plan = [
+      { type: 'hook', secs: 3 },
+      { type: 'body', secs: 3 },
+      { type: 'cta', secs: 3 },
+    ] as const;
+    const segments: CompositionSpec['segments'] = [];
+    for (const [i, { type, secs }] of plan.entries()) {
+      const v = await makeTestVideo({ out: p(`seg-${String(i)}.mp4`), width: 1080, height: 1920, fps: 30, seconds: secs, color: 'navy' });
+      const a = await makeTestAudio({ out: p(`vo-${String(i)}.m4a`), seconds: secs, freq: 300 });
+      const videoAsset = await seedAsset(storage, keyToId, v, `seg/${String(i)}.mp4`);
+      const voAudio = await seedAsset(storage, keyToId, a, `vo/${String(i)}.m4a`);
+      segments.push({ type, videoAsset, voAudio, voWords: realWords });
+    }
+    const spec: CompositionSpec = {
+      segments,
+      music: null,
+      output: { width: 1080, height: 1920, fps: 30, maxDurationS: 30 },
+      captions: { style: 'karaoke', maxWordsPerPage: 3, platform: 'universal', position: 'safe_zone' },
+    };
+
+    const deps: ComposeVariantDeps = {
+      storage,
+      resolveAssetKey: (id) => {
+        const k = keyToId.get(id);
+        if (k === undefined) throw new Error(`asset no sembrado: ${id}`);
+        return k;
+      },
+      runner: ffmpegRunner,
+      ffprobe: ffprobeRunner,
+      captionGenerator: generateVariantAss,
+      safeZoneChecker: (ass) => checkAssSafeZone(ass).length,
+      c2paSigner,
+      loudnessMeter: measureIntegratedLufs,
+      c2pa: { privateKeyPath: C2PA_KEY, signCertPath: C2PA_CERT, claimGenerator: 'UGC Factory Test' },
+    };
+
+    const result = await composeVariant(deps, spec);
+
+    await writeFile(join(OUT, 'master-signed.mp4'), result.masterBytes);
+    await writeFile(join(OUT, 'thumbnail.jpg'), result.thumbnailBytes);
+    await writeFile(join(OUT, 'qa-report.measured.json'), JSON.stringify(result.qaReport, null, 2));
+    await writeFile(join(OUT, 'parent-asset-ids.json'), JSON.stringify(result.parentAssetIds, null, 2));
+
+    expect(result.qaReport.passed).toBe(true);
+    expect(result.qaReport.score).toBe(100);
+    await rm(workDir, { recursive: true, force: true }).catch(() => undefined);
+  });
+});

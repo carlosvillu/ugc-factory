@@ -1,0 +1,16 @@
+{
+  "variantId": "01KY1T4XJSZXRK1ZWYD90EK6EH",
+  "passed": true,
+  "score": 100,
+  "all_pass": true,
+  "checks": {
+    "fps": "pass",
+    "codec": "pass",
+    "duration": "pass",
+    "filesize": "pass",
+    "loudness": "pass",
+    "resolution": "pass",
+    "av_duration_diff": "pass",
+    "captions_safe_zone": "pass"
+  }
+}

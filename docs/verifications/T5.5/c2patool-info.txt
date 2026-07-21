@@ -1,0 +1,4 @@
+Information for master-signed.mp4
+Manifest store size = 14162 (3.87% of file size 365644)
+Validated
+One manifest

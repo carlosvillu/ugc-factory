@@ -224,6 +224,10 @@ export {
   setVariantAudioSource,
   type CreatedBatch,
 } from './repos/batch.repo';
+// `finalizeVariantMaster` (T5.5, persistencia del pase final) NO sale al barrel TODAVÍA: su consumidor de
+// runtime es el executor N8/N9 (el wiring al DAG, fuera del alcance de T5.5 — deuda de fase anotada en
+// planning; T5.6/T5.8 lo recogen). Hoy solo lo importa su test de integración por ruta relativa. Sale al
+// barrel cuando exista quien lo llame desde fuera del paquete (misma disciplina que `findBatchesByBrief`).
 // La RECETA de un tier (T4.11): `buildVariantGenerationPlan` (@ugc/services) la lee para resolver
 // `recipe.steps` (componente→endpoint fal) por tier de la variante. Vuelve a salir al barrel tras T2.3
 // (era interna) porque ESTRENA consumidor de runtime fuera del paquete. Devuelve `RecipeSeed` parseado.

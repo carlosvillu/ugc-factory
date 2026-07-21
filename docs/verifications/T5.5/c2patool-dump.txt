@@ -1,0 +1,91 @@
+{
+  "active_manifest": "urn:uuid:5021ff2e-f8a2-45c0-9145-6d9ea6ffb56a",
+  "manifests": {
+    "urn:uuid:5021ff2e-f8a2-45c0-9145-6d9ea6ffb56a": {
+      "claim_generator": "UGC Factory Test c2patool/0.9.12 c2pa-rs/0.37.0",
+      "title": "master-signed.mp4",
+      "format": "video/mp4",
+      "instance_id": "xmp:iid:5cce26ff-ebee-46cd-bb77-88facb11ec29",
+      "ingredients": [],
+      "assertions": [
+        {
+          "label": "c2pa.actions",
+          "data": {
+            "actions": [
+              {
+                "action": "c2pa.created",
+                "softwareAgent": "UGC Factory",
+                "digitalSourceType": "http://cv.iptc.org/newscodes/digitalsourcetype/trainedAlgorithmicMedia"
+              }
+            ]
+          }
+        },
+        {
+          "label": "c2pa.hash.bmff.v2",
+          "data": {
+            "exclusions": [
+              {
+                "xpath": "/uuid",
+                "length": null,
+                "data": [
+                  {
+                    "offset": 8,
+                    "value": [
+                      216,
+                      254,
+                      195,
+                      214,
+                      27,
+                      14,
+                      72,
+                      60,
+                      146,
+                      151,
+                      88,
+                      40,
+                      135,
+                      126,
+                      196,
+                      129
+                    ]
+                  }
+                ],
+                "subset": null,
+                "version": null,
+                "flags": null,
+                "exact": null
+              },
+              {
+                "xpath": "/ftyp",
+                "length": null,
+                "data": null,
+                "subset": null,
+                "version": null,
+                "flags": null,
+                "exact": null
+              },
+              {
+                "xpath": "/mfra",
+                "length": null,
+                "data": null,
+                "subset": null,
+                "version": null,
+                "flags": null,
+                "exact": null
+              }
+            ],
+            "alg": "sha256",
+            "hash": "lGmUXUUcKflJ1knIiKzk+dySn64n3/iZzNWTruQ/rxI=",
+            "name": "jumbf manifest"
+          }
+        }
+      ],
+      "signature_info": {
+        "alg": "Es256",
+        "issuer": "C2PA Test Signing Cert",
+        "cert_serial_number": "640229841392226413189608867977836244731148734950"
+      },
+      "label": "urn:uuid:5021ff2e-f8a2-45c0-9145-6d9ea6ffb56a"
+    }
+  }
+}

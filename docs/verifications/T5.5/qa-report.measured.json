@@ -1,0 +1,30 @@
+{
+  "checks": {
+    "resolution": "pass",
+    "fps": "pass",
+    "codec": "pass",
+    "duration": "pass",
+    "loudness": "pass",
+    "av_duration_diff": "pass",
+    "captions_safe_zone": "pass",
+    "filesize": "pass"
+  },
+  "metrics": {
+    "width": 1080,
+    "height": 1920,
+    "fps": 30,
+    "videoCodec": "h264",
+    "pixFmt": "yuv420p",
+    "audioCodec": "aac",
+    "audioSampleRate": 48000,
+    "audioChannels": 2,
+    "audioBitrate": 127948,
+    "videoDurationS": 9,
+    "audioDurationS": 9,
+    "loudnessLufs": -14,
+    "filesizeBytes": 365644,
+    "captionViolations": 0
+  },
+  "passed": true,
+  "score": 100
+}

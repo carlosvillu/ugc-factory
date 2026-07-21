@@ -163,6 +163,37 @@ export {
   type ComposeMasterResult,
   type ResolveAssetKey,
 } from './compose-master';
+// PASE FINAL, EXPORT MASTER + QA + C2PA (T5.5, §9.7 N8/N9 / Apéndice C): el módulo que toma el máster
+// INTERMEDIO de T5.3 y produce el PUBLICABLE — re-encode con burn-in de subtítulos al `EXPORT_MASTER_PRESET`
+// (`-c:a copy` si el audio no cambió, seam de T5.8), thumbnail, firma C2PA (`trainedAlgorithmicMedia`) y QA
+// N9 sobre el fichero FIRMADO → `qa_report`. `composeVariant` es bytes-in/bytes-out (NO escribe BD — eso es
+// `finalizeVariantMaster` en @ugc/db). El generador ASS de la variante y el check de safe zone se INYECTAN
+// (viven en apps/worker/src/captions; services no puede importarlos). `EXPORT_MASTER_PRESET` es la única
+// verdad de los parámetros del pase final; `evaluateQa` deriva de él sus esperados (anti-T1.9). Los builders
+// puros (`buildFinalEncodeArgs`, `buildC2paManifest`, `evaluateQa`) los ejerce el gate; la media va en la
+// imagen. T5.5 entrega el módulo reutilizable, NO cablea el executor N8/N9 (patrón F5).
+export {
+  composeVariant,
+  buildFinalEncodeArgs,
+  buildThumbnailArgs,
+  buildC2paManifest,
+  collectSpecParentAssetIds,
+  escapeFilterPath,
+  evaluateQa,
+  measureAndEvaluateQa,
+  EXPORT_MASTER_PRESET,
+  QA_LOUDNESS_TOLERANCE_LUFS,
+  QA_AV_DURATION_TOLERANCE_S,
+  QA_AUDIO_BITRATE_TOLERANCE,
+  ComposeVariantError,
+  type ComposeVariantDeps,
+  type ComposeVariantResult,
+  type QaMeasurements,
+  type CaptionAssGenerator,
+  type SafeZoneChecker,
+  type C2paSigner,
+  type LoudnessMeter,
+} from './compose-variant';
 // El tipo del runner de ffmpeg INYECTABLE (default: subproceso real): lo comparten `extract-audio-track`
 // (T4.7b) y el normalizador (T5.2). Sale al barrel porque la suite media inyecta un runner que CUENTA
 // invocaciones (el instrumento del test «2ª pasada = 0 ffmpeg») y necesita tiparlo.

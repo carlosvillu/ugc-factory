@@ -23,11 +23,13 @@
 // documento que sobrevive a la llamada, apuntaría a otra línea EN SILENCIO.
 import { eq, inArray } from 'drizzle-orm';
 import { newUlid } from '@ugc/core/contracts';
-import type { BatchPlan } from '@ugc/core/contracts';
+import type { BatchPlan, QaReport } from '@ugc/core/contracts';
 import type { AdObjective, RecipeTier } from '@ugc/core/library';
 import type { Db } from '../client';
 import { adBatch, adVariant, type AdBatch, type AdVariant } from '../schema/batch';
 import { hookLine, persona } from '../schema/gallery';
+import { type Asset } from '../schema/generation';
+import { createAsset } from './asset.repo';
 
 export interface CreateBatchInput {
   projectId: string;
@@ -261,4 +263,108 @@ export async function setVariantAudioSource(
  */
 export async function findBatchesByBrief(db: Db, briefId: string): Promise<AdBatch[]> {
   return db.select().from(adBatch).where(eq(adBatch.briefId, briefId)).orderBy(adBatch.id);
+}
+
+// ── PASE FINAL: persistencia del máster + thumbnail + qa_report (T5.5, §9.7 N8/N9 / §12) ────────────
+//
+// El módulo `composeVariant` (@ugc/services) es bytes-in/bytes-out: NO escribe en la BD. Esta función es su
+// PERSISTENCIA — el gemelo de `finalizeGeneration` para el pase final. El caller (executor N8/N9, fuera del
+// alcance de T5.5) ya subió los bytes del máster y del thumbnail al StorageAdapter y pasa aquí sus
+// `storageKey`/`bytes`/`checksum` (lo que devolvió `storage.put`). Esta función:
+//   1. crea la fila `asset` del MÁSTER (`kind:'final_video'`) con LINAJE `parent_asset_ids` = los assets
+//      origen del que deriva (los clips + voces + bed de los segmentos) — el linaje que T5.7 exige del
+//      máster hasta el hook. Precedente: `finalizeGeneration` crea la fila con checksum, no un update suelto.
+//   2. crea la fila `asset` del THUMBNAIL (`kind:'thumbnail'`), con `parent_asset_ids:[masterId]` (deriva
+//      del máster).
+//   3. actualiza `ad_variant.{master_asset_id, thumbnail_asset_id, qa_report, score}`.
+// TODO en UNA transacción: o quedan las dos filas `asset` + el update de la variante, o nada (un máster
+// registrado en la variante que apunta a un asset inexistente sería un estado roto).
+
+export interface FinalizeVariantMasterInput {
+  variantId: string;
+  /** El máster firmado ya subido a storage (`storage.put` devolvió estos campos). */
+  master: {
+    storageKey: string;
+    mime: string;
+    bytes: number;
+    checksum: string;
+    width?: number;
+    height?: number;
+    durationS?: number;
+  };
+  /** El thumbnail ya subido a storage. */
+  thumbnail: {
+    storageKey: string;
+    mime: string;
+    bytes: number;
+    checksum: string;
+    width?: number;
+    height?: number;
+  };
+  /** LINAJE del máster: los ids de los assets ORIGEN de los que deriva (los clips de vídeo + voces + bed de
+   *  los segmentos del `composition_spec`). T5.7 recorre este linaje del máster hasta el hook. */
+  parentAssetIds: string[];
+  /** El `qa_report` (validado por `QaReportSchema` de core; el repo persiste lo que el servicio validó). */
+  qaReport: QaReport;
+}
+
+export interface FinalizeVariantMasterResult {
+  master: Asset;
+  thumbnail: Asset;
+  variant: AdVariant;
+}
+
+/**
+ * Persiste el resultado del pase final de una variante: la fila `asset` del máster (con linaje) + la del
+ * thumbnail + el update de `ad_variant.{master_asset_id, thumbnail_asset_id, qa_report, score}`. TODO en una
+ * transacción. El `score` sale del `qa_report` (§12: entero 0–100). LANZA si la variante no existe.
+ */
+export async function finalizeVariantMaster(
+  db: Db,
+  input: FinalizeVariantMasterInput,
+): Promise<FinalizeVariantMasterResult> {
+  return db.transaction(async (tx) => {
+    // `createAsset` es el único punto de creación de assets (asset.repo.ts): reusarlo dentro de la tx (Db =
+    // DbClient | DbTx) evita re-implementar el insert+guard dos veces. Drizzle omite los campos `undefined`,
+    // así que las dimensiones nullable se pasan directas (sin spread condicional).
+    const master = await createAsset(tx, {
+      kind: 'final_video',
+      storageKey: input.master.storageKey,
+      mime: input.master.mime,
+      bytes: input.master.bytes,
+      checksum: input.master.checksum,
+      width: input.master.width,
+      height: input.master.height,
+      durationS: input.master.durationS,
+      // El LINAJE: los assets origen del máster (§12 `asset.parent_asset_ids`). T5.7 lo recorre.
+      parentAssetIds: input.parentAssetIds,
+    });
+
+    const thumbnail = await createAsset(tx, {
+      kind: 'thumbnail',
+      storageKey: input.thumbnail.storageKey,
+      mime: input.thumbnail.mime,
+      bytes: input.thumbnail.bytes,
+      checksum: input.thumbnail.checksum,
+      width: input.thumbnail.width,
+      height: input.thumbnail.height,
+      // El thumbnail deriva del máster.
+      parentAssetIds: [master.id],
+    });
+
+    const [variant] = await tx
+      .update(adVariant)
+      .set({
+        masterAssetId: master.id,
+        thumbnailAssetId: thumbnail.id,
+        qaReport: input.qaReport,
+        score: input.qaReport.score,
+      })
+      .where(eq(adVariant.id, input.variantId))
+      .returning();
+    if (!variant)
+      throw new Error(`finalizeVariantMaster: no existe la variante ${input.variantId}`);
+
+    return { master, thumbnail, variant };
+  });
 }

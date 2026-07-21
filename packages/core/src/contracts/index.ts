@@ -166,6 +166,21 @@ export {
   type CaptionStyle,
   type CaptionPlatform,
 } from './composition-spec';
+// El `qa_report` del pase final (T5.5, §9.7 N9 / Apéndice C): el objeto que el validador QA produce y que
+// persiste `ad_variant.qa_report` (jsonb). En core porque es interfaz pública: lo escribe `@ugc/services`
+// (`composeVariant`), lo releen el panel de QA de CP4 (T5.6) y el export bundle (T5.7), y `apps/web` no
+// puede importar de `apps/worker`. Los 8 checks (resolution/fps/codec/duration/loudness/av_duration_diff/
+// captions_safe_zone/filesize) + métricas crudas + `passed` + `score` 0–100.
+export {
+  QaReportSchema,
+  QaChecksSchema,
+  QaMetricsSchema,
+  QaCheckVerdictSchema,
+  type QaReport,
+  type QaChecks,
+  type QaMetrics,
+  type QaCheckVerdict,
+} from './qa-report';
 // La DECISIÓN de un checkpoint (T1.11): lo que el humano RESUELVE (CP1: subir fotos vs generar
 // packshot-IA; CP2: con qué config se compone el lote), que NO es el artefacto que edita. Canal
 // genérico: unión discriminada por `kind`, a la que CP3/CP4 añaden su miembro. Ver la cabecera de

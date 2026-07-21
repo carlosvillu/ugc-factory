@@ -163,6 +163,26 @@ export {
   type ComposeMasterResult,
   type ResolveAssetKey,
 } from './compose-master';
+// SEGMENT FITTER — recorte a la narración + hold del último frame (T5.5b, §9.7 N8 l.288): el módulo que
+// cuadra cada clip crudo de N7 (duración CUANTIZADA al enum del modelo, §7.5) a la duración EXACTA de su
+// narración ANTES de que T5.2 lo normalice y T5.3 lo concatene (que asume segmentos ya cuadrados). `trim`
+// al final (`-t`, nunca `-ss`, re-encode para corte exacto) si el clip es más largo; `hold` del último
+// frame (`tpad=stop_mode=clone`) si el déficit <0,5 s; `FitError` si el déficit ≥0,5 s (desajuste grosero
+// de generación → no se tapa, anti-principio-9). `buildFitArgs`/`planFit` son los builders PUROS que el
+// gate ejerce (boundary del umbral + throw sin ffmpeg); `fitSegmentFile` es file-in/file-out (paths-only,
+// runner+ffprobe inyectables), que la suite media sondea con ffprobe. Lo consumirá el ensamblador N8 de
+// T5.5d; T5.5b entrega el módulo reutilizable, NO cablea el executor (patrón T5.2/T5.3).
+export {
+  fitSegmentFile,
+  planFit,
+  buildFitArgs,
+  FitError,
+  MAX_HOLD_DEFICIT_S,
+  type FitPlan,
+  type FitSegmentDeps,
+  type FitSegmentOptions,
+  type FitSegmentResult,
+} from './fit-segment';
 // PASE FINAL, EXPORT MASTER + QA + C2PA (T5.5, §9.7 N8/N9 / Apéndice C): el módulo que toma el máster
 // INTERMEDIO de T5.3 y produce el PUBLICABLE — re-encode con burn-in de subtítulos al `EXPORT_MASTER_PRESET`
 // (`-c:a copy` si el audio no cambió, seam de T5.8), thumbnail, firma C2PA (`trainedAlgorithmicMedia`) y QA

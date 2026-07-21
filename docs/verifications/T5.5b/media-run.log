@@ -1,0 +1,57 @@
+=== toolchain in image ===
+ffmpeg version 5.1.9-0+deb12u1 Copyright (c) 2000-2026 the FFmpeg developers
+ffprobe version 5.1.9-0+deb12u1 Copyright (c) 2007-2026 the FFmpeg developers
+=== copy repo to /tmp/build (no node_modules/.next/.git/dist) ===
+=== pnpm install (frozen, ignore-scripts) ===
+install OK
+=== run test:media (RUN_MEDIA + REQUIRE_MEDIA) — implementer + verifier suites ===
+
+> ugc-factory@0.0.0 test:media /tmp/build
+> RUN_MEDIA=1 vitest run --project 'worker:media'
+
+
+ RUN  v4.1.10 /tmp/build
+
+stdout | test/media/verifier-fit-segment.test.ts > VERIFIER — segment fitter T5.5b (independent) > (a) clip 6.0s + narration 2.7s → exactly 2.7s AND start preserved (trim al final)
+[VERIFY a] dur=2.700 MAD(out@0.5,src@0.5)=0.462 MAD(out@0.5,src@3.8)=6.570
+
+stdout | test/media/verifier-fit-segment.test.ts > VERIFIER — segment fitter T5.5b (independent) > (b) clip 4.0s + narration 4.25s (deficit 0.25) → 4.25s, tail = held LAST frame
+[VERIFY b] dur=4.267 MAD(tail1,tail2)=0.000 MAD(moving,tail)=3.454 MAD(tail,srcLast)=0.277 luma(tail)=126.48
+
+ ✓  worker:media  test/media/normalize-asset.test.ts (6 tests) 15212ms
+     ✓ un vídeo 720p/25fps/16:9 CON audio sale 1080×1920/30fps/H.264/yuv420p/SAR1:1/-an  5665ms
+     ✓ un audio arbitrario sale AAC 48 kHz estéreo (audio canónico)  962ms
+     ✓ la voz EMBEBIDA de un clip (VEED/voz nativa) se extrae y normaliza a AAC 48 kHz estéreo  2065ms
+     ✓ la 2ª pasada sobre los mismos assets no lanza ningún ffmpeg (100% cache hits)  3478ms
+     ✓ un clip 16:9 de color sólido queda crop-to-fill, sin bandas negras  3007ms
+ ✓  worker:media  test/media/verifier-fit-segment.test.ts (3 tests) 15523ms
+     ✓ (a) clip 6.0s + narration 2.7s → exactly 2.7s AND start preserved (trim al final)  6577ms
+     ✓ (b) clip 4.0s + narration 4.25s (deficit 0.25) → 4.25s, tail = held LAST frame  7540ms
+     ✓ (c) clip 4.0s + narration 4.8s (deficit 0.8) → FitError AND no output written  1352ms
+ ✓  worker:media  test/media/fit-segment.test.ts (4 tests) 16212ms
+     ✓ (a) clip 5,0 s con narración 3,4 s → sale exactamente 3,4 s (trim al final)  5005ms
+     ✓ (b) clip 3,2 s con narración 3,5 s (déficit 0,3) → 3,5 s, últimos 0,3 s = último frame holdeado  6386ms
+     ✓ (c) déficit >0,5 s (clip 3,0 s, narración 3,7 s) → lanza FitError, no tapa el desajuste  1340ms
+     ✓ el trim preserva la pista de audio del clip (no la descarta con -an)  3459ms
+ ✓  worker:media  test/media/compose-variant.test.ts (7 tests) 27681ms
+     ✓ compose end-to-end con captions reales → máster firmado + qa_report TODO en pass + C2PA trainedAlgorithmicMedia  14855ms
+     ✓ sin captions (captions:null): re-encoda igual al preset, captions_safe_zone es vacuous-pass  5000ms
+     ✓ QA negativo: máster a 25 fps → fps=fail  1531ms
+     ✓ QA negativo: máster a −20 LUFS → loudness=fail  1605ms
+     ✓ QA negativo: máster a 720×1280 → resolution=fail  1145ms
+     ✓ QA negativo: captions fuera de la safe zone (violaciones > 0) → captions_safe_zone=fail  1557ms
+     ✓ QA negativo: duración > techo de la variante → duration=fail  1964ms
+ ✓  worker:media  test/media/compose-master.test.ts (7 tests) 29900ms
+     ✓ concat de 3 segmentos: duración = suma, perfil canónico intacto (-c copy no re-encoda)  7926ms
+     ✓ el vídeo del máster conserva el códec del input (copy, no transcode)  3584ms
+     ✓ el máster con voz + bed mide -14 LUFS ±1 (loudnorm)  6591ms
+     ✓ buildDuckingGraph hunde el bed ≥6 dB cuando entra la voz  1447ms
+     ✓ el afade del bed se ancla a la duración REAL, no al maxDurationS (cap > duración)  5624ms
+     ✓ máster sin bed (music:null): solo voz, también a -14 LUFS ±1  4699ms
+
+ Test Files  5 passed (5)
+      Tests  27 passed (27)
+   Start at  20:10:30
+   Duration  34.53s (transform 9.35s, setup 473ms, import 18.53s, tests 104.53s, environment 1ms)
+
+DONE

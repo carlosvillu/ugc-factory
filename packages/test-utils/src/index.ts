@@ -19,6 +19,9 @@ export { server, useHttpMocks, http, HttpResponse } from './msw/index';
 // create-test-database.ts vía imports relativos — no van al barrel.
 export { createTestDatabase, type TestDatabase } from './create-test-database';
 export { makeProject, makePipelineRun, makeStepRun, makeAsset } from './factories';
+// Factory de WordTimestamps sintéticos (T5.4): onsets exactos conocidos para el assert de sincronía
+// karaoke del generador ASS. Válido según WordTimestampsSchema (T4.5); onsets en segundos.
+export { makeWordTimestamps, type MakeWordTimestampsOptions } from './word-timestamps';
 // Factory de `generation` (T4.2, §9.6): fila que un webhook de fal encuentra (submitted con
 // fal_request_id). La insertan los tests handler-level del webhook (@ugc/web).
 export { makeGeneration } from './factories';

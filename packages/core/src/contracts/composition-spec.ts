@@ -23,6 +23,10 @@ import { z } from 'zod';
 
 import { AdSegmentSchema } from './batch-plan';
 import { UlidSchema } from './ids';
+// El shape REAL de los word timestamps (T4.5). T5.4 es su consumidor (generador ASS karaoke) → se estrecha
+// aquí `voWords` de laxo a este schema. Import DIRECTO del módulo (no del barrel `@ugc/core/generation`)
+// para no arrastrar el FalClient/red a un contrato puro (mismo criterio que evita ciclos en core).
+import { WordTimestampsSchema } from '../generation/word-timestamps';
 
 /**
  * UN segmento del máster: su clip de vídeo (YA normalizado por T5.2 → el `-c copy` del concat es válido) y
@@ -39,9 +43,11 @@ export const CompositionSegmentSchema = z.object({
   videoAsset: UlidSchema,
   /** El asset del VOICEOVER de este segmento (ULID). Se mezcla como pista de voz. */
   voAudio: UlidSchema,
-  /** Word timestamps del voiceover (T4.5) — los consume T5.4 (karaoke). LAXO en T5.3 (no se valida ni se
-   *  usa aquí): su shape lo fija el generador ASS de T5.4. */
-  voWords: z.array(z.unknown()).optional(),
+  /** Word timestamps del voiceover (T4.5) — los consume T5.4 (generador ASS karaoke). ESTRECHADO a
+   *  `WordTimestampsSchema` ahora que T5.4 (su consumidor) fija el shape: el generador filtra `type:'word'`
+   *  y convierte los tiempos (segundos → centisegundos) para los tags `\k`. Opcional: una variante sin
+   *  captions no lo lleva. */
+  voWords: WordTimestampsSchema.optional(),
   /** Texto de overlay del segmento — lo consume T5.4. No se quema en T5.3 (máster intermedio sin burn-in). */
   overlayText: z.string().optional(),
 });
@@ -82,15 +88,48 @@ export const CompositionOutputSchema = z.object({
 });
 export type CompositionOutput = z.infer<typeof CompositionOutputSchema>;
 
+/** El PRESET de subtítulos (§9.7): `karaoke` (1–4 palabras/página, word-highlight `\k`) o `subtitle`
+ *  (3–7 palabras/2 líneas, sin karaoke). Lo consume el generador ASS de T5.4. */
+export const CaptionStyleSchema = z.enum(['karaoke', 'subtitle']);
+export type CaptionStyle = z.infer<typeof CaptionStyleSchema>;
+
+/** La PLATAFORMA que decide el ESTILO visual (no la safe zone, que en T5.4 es siempre la universal):
+ *  `universal`/`tiktok` → contorno; `reels` → caja opaca (`BorderStyle=3`, §9.7). Las safe zones por
+ *  plataforma son T8.3. */
+export const CaptionPlatformSchema = z.enum(['universal', 'tiktok', 'reels']);
+export type CaptionPlatform = z.infer<typeof CaptionPlatformSchema>;
+
+/**
+ * LOS SUBTÍTULOS del máster (§9.7 / Apéndice C) — sub-schema AÑADIDO por T5.4 (su autor posee el generador
+ * ASS que lo consume). Es OPCIONAL/nullable en el spec: el máster intermedio de T5.3 no lleva captions.
+ * `position` es un CONSTRAINT de layout dentro de la safe zone: hoy solo `safe_zone` (el generador ancla
+ * el texto en la safe zone universal); se deja como enum para admitir presets por plataforma en T8.3 sin
+ * romper el contrato.
+ */
+export const CompositionCaptionsSchema = z.object({
+  /** Preset de subtítulos: karaoke | subtitle (§9.7). */
+  style: CaptionStyleSchema,
+  /** Máx. de palabras por página. Se clampa al rango del preset en el generador (karaoke 1–4, subtitle
+   *  3–7). Positivo entero. */
+  maxWordsPerPage: z.number().int().positive(),
+  /** La plataforma que fija el estilo (contorno vs caja opaca). Default universal. */
+  platform: CaptionPlatformSchema.default('universal'),
+  /** Constraint de posición: `safe_zone` = anclar dentro del área útil universal (§9.7, Apéndice C). */
+  position: z.enum(['safe_zone']).default('safe_zone'),
+});
+export type CompositionCaptions = z.infer<typeof CompositionCaptionsSchema>;
+
 /**
  * EL CONTRATO DEL RENDERER (§9.7): lo que se ensambla en el máster de una variante. `segments` NO puede
- * estar vacío (un máster sin segmentos no es un máster). `captions` se AÑADIRÁ en T5.4 (aditivo). Se
- * persiste en `ad_variant.composition_spec` (jsonb) y lo consume el módulo de composición.
+ * estar vacío (un máster sin segmentos no es un máster). `captions` es ADITIVO (T5.4): opcional/nullable,
+ * el máster intermedio de T5.3 lo deja ausente. Se persiste en `ad_variant.composition_spec` (jsonb).
  */
 export const CompositionSpecSchema = z.object({
   segments: z.array(CompositionSegmentSchema).min(1),
   /** El bed musical + su mezcla, o `null` si la variante no lleva música. */
   music: CompositionMusicSchema.nullable(),
   output: CompositionOutputSchema,
+  /** Los subtítulos, o `null`/ausente si la variante no lleva captions (máster intermedio de T5.3). */
+  captions: CompositionCaptionsSchema.nullable().optional(),
 });
 export type CompositionSpec = z.infer<typeof CompositionSpecSchema>;

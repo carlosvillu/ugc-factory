@@ -1,0 +1,91 @@
+ffmpeg version 5.1.9-0+deb12u1 Copyright (c) 2000-2026 the FFmpeg developers
+  built with gcc 12 (Debian 12.2.0-14+deb12u1)
+  configuration: --prefix=/usr --extra-version=0+deb12u1 --toolchain=hardened --libdir=/usr/lib/x86_64-linux-gnu --incdir=/usr/include/x86_64-linux-gnu --arch=amd64 --enable-gpl --disable-stripping --enable-gnutls --enable-ladspa --enable-libaom --enable-libass --enable-libbluray --enable-libbs2b --enable-libcaca --enable-libcdio --enable-libcodec2 --enable-libdav1d --enable-libflite --enable-libfontconfig --enable-libfreetype --enable-libfribidi --enable-libglslang --enable-libgme --enable-libgsm --enable-libjack --enable-libmp3lame --enable-libmysofa --enable-libopenjpeg --enable-libopenmpt --enable-libopus --enable-libpulse --enable-librabbitmq --enable-librist --enable-librubberband --enable-libshine --enable-libsnappy --enable-libsoxr --enable-libspeex --enable-libsrt --enable-libssh --enable-libsvtav1 --enable-libtheora --enable-libtwolame --enable-libvidstab --enable-libvorbis --enable-libvpx --enable-libwebp --enable-libx265 --enable-libxml2 --enable-libxvid --enable-libzimg --enable-libzmq --enable-libzvbi --enable-lv2 --enable-omx --enable-openal --enable-opencl --enable-opengl --enable-sdl2 --disable-sndio --enable-libjxl --enable-pocketsphinx --enable-librsvg --enable-libmfx --enable-libdc1394 --enable-libdrm --enable-libiec61883 --enable-chromaprint --enable-frei0r --enable-libx264 --enable-libplacebo --enable-librav1e --enable-shared
+  libavutil      57. 28.100 / 57. 28.100
+  libavcodec     59. 37.100 / 59. 37.100
+  libavformat    59. 27.100 / 59. 27.100
+  libavdevice    59.  7.100 / 59.  7.100
+  libavfilter     8. 44.100 /  8. 44.100
+  libswscale      6.  7.100 /  6.  7.100
+  libswresample   4.  7.100 /  4.  7.100
+  libpostproc    56.  6.100 / 56.  6.100
+[h264 @ 0x5555555e9ac0] Reinit context to 1088x1920, pix_fmt: yuv420p
+Input #0, mov,mp4,m4a,3gp,3g2,mj2, from 'T4.7b/clip-veed.mp4':
+  Metadata:
+    major_brand     : isom
+    minor_version   : 512
+    compatible_brands: isomiso2avc1mp41
+    encoder         : Lavf58.76.100
+  Duration: 00:00:05.46, start: 0.000000, bitrate: 5085 kb/s
+  Stream #0:0[0x1](und): Video: h264 (High), 1 reference frame (avc1 / 0x31637661), yuv420p(progressive, left), 1080x1920 (1088x1920), 4961 kb/s, 25 fps, 25 tbr, 12800 tbn (default)
+    Metadata:
+      handler_name    : VideoHandler
+      vendor_id       : [0][0][0][0]
+  Stream #0:1[0x2](und): Audio: aac (LC) (mp4a / 0x6134706D), 44100 Hz, mono, fltp, 130 kb/s (default)
+    Metadata:
+      handler_name    : SoundHandler
+      vendor_id       : [0][0][0][0]
+Stream mapping:
+  Stream #0:0 -> #0:0 (h264 (native) -> h264 (libx264))
+  Stream #0:1 -> #0:1 (copy)
+Press [q] to stop, [?] for help
+[h264 @ 0x55555561cec0] Reinit context to 1088x1920, pix_fmt: yuv420p
+[Parsed_ass_0 @ 0x5555556e6380] libass API version: 0x1701000
+[Parsed_ass_0 @ 0x5555556e6380] libass source: tarball: 0.17.1
+[Parsed_ass_0 @ 0x5555556e6380] Raster: FreeType 2.12.1
+[Parsed_ass_0 @ 0x5555556e6380] Shaper: FriBidi 1.0.8 (SIMPLE) HarfBuzz-ng 6.0.0 (COMPLEX)
+[Parsed_ass_0 @ 0x5555556e6380] Initialized
+[Parsed_ass_0 @ 0x5555556e6380] Using font provider fontconfig
+[Parsed_ass_0 @ 0x5555556e6380] File size: 672
+[Parsed_ass_0 @ 0x5555556e6380] [0x5555556eee10] Style: Caption,Noto Sans,64,&H00FFFFFF,&H00AAAAAA,&H00000000,&H80000000,1,0,0,0,100,100,0,0,1,4,2,2,0,0,0,1
+[Parsed_ass_0 @ 0x5555556e6380] Added subtitle file: 'T5.4/samples/cyrillic-fallback.ass' (2 styles, 1 events)
+[graph 0 input from stream 0:0 @ 0x5555556ef100] w:1080 h:1920 pixfmt:yuv420p tb:1/12800 fr:25/1 sar:0/1
+[libx264 @ 0x55555560ca80] using cpu capabilities: MMX2 SSE2Fast SSSE3 SSE4.2
+[libx264 @ 0x55555560ca80] profile High, level 4.0, 4:2:0, 8-bit
+[libx264 @ 0x55555560ca80] 264 - core 164 r3095 baee400 - H.264/MPEG-4 AVC codec - Copyleft 2003-2022 - http://www.videolan.org/x264.html - options: cabac=1 ref=1 deblock=1:0:0 analyse=0x3:0x113 me=hex subme=2 psy=1 psy_rd=1.00:0.00 mixed_ref=0 me_range=16 chroma_me=1 trellis=0 8x8dct=1 cqm=0 deadzone=21,11 fast_pskip=1 chroma_qp_offset=0 threads=15 lookahead_threads=5 sliced_threads=0 nr=0 decimate=1 interlaced=0 bluray_compat=0 constrained_intra=0 bframes=3 b_pyramid=2 b_adapt=1 b_bias=0 direct=1 weightb=1 open_gop=0 weightp=1 keyint=250 keyint_min=25 scenecut=40 intra_refresh=0 rc_lookahead=10 rc=crf mbtree=1 crf=20.0 qcomp=0.60 qpmin=0 qpmax=69 qpstep=4 ip_ratio=1.40 aq=1:1.00
+Output #0, mp4, to 'T5.4/image/cyrillic-burn.mp4':
+  Metadata:
+    major_brand     : isom
+    minor_version   : 512
+    compatible_brands: isomiso2avc1mp41
+    encoder         : Lavf59.27.100
+  Stream #0:0(und): Video: h264, 1 reference frame (avc1 / 0x31637661), yuv420p(progressive, left), 1080x1920 (0x0), q=2-31, 25 fps, 12800 tbn (default)
+    Metadata:
+      handler_name    : VideoHandler
+      vendor_id       : [0][0][0][0]
+      encoder         : Lavc59.37.100 libx264
+    Side data:
+      cpb: bitrate max/min/avg: 0/0/0 buffer size: 0 vbv_delay: N/A
+  Stream #0:1(und): Audio: aac (LC) (mp4a / 0x6134706D), 44100 Hz, mono, fltp, 130 kb/s (default)
+    Metadata:
+      handler_name    : SoundHandler
+      vendor_id       : [0][0][0][0]
+frame=    1 fps=0.0 q=0.0 size=       0kB time=00:00:00.41 bitrate=   0.9kbits/s speed=10.6x    [Parsed_ass_0 @ 0x5555556e6380] fontselect: (Noto Sans, 700, 0) -> /usr/share/fonts/truetype/ugc/NotoSans.ttf, 458752, NotoSans_700wght
+frame=   73 fps=0.0 q=25.0 size=     768kB time=00:00:03.32 bitrate=1894.9kbits/s speed=6.11x    No more output streams to write to, finishing.
+frame=  136 fps=134 q=-1.0 Lsize=    2180kB time=00:00:05.45 bitrate=3273.2kbits/s speed=5.38x    
+video:2087kB audio:87kB subtitle:0kB other streams:0kB global headers:0kB muxing overhead: 0.268075%
+Input file #0 (T4.7b/clip-veed.mp4):
+  Input stream #0:0 (video): 136 packets read (3373872 bytes); 136 frames decoded; 
+  Input stream #0:1 (audio): 236 packets read (89181 bytes); 
+  Total: 372 packets (3463053 bytes) demuxed
+Output file #0 (T5.4/image/cyrillic-burn.mp4):
+  Output stream #0:0 (video): 136 frames encoded; 136 packets muxed (2137435 bytes); 
+  Output stream #0:1 (audio): 236 packets muxed (89181 bytes); 
+  Total: 372 packets (2226616 bytes) muxed
+[AVIOContext @ 0x5555555ed900] Statistics: 2232589 bytes written, 2 seeks, 12 writeouts
+[libx264 @ 0x55555560ca80] frame I:1     Avg QP:18.19  size:148605
+[libx264 @ 0x55555560ca80] frame P:35    Avg QP:19.40  size: 37738
+[libx264 @ 0x55555560ca80] frame B:100   Avg QP:22.06  size:  6673
+[libx264 @ 0x55555560ca80] consecutive B-frames:  0.7%  2.9%  2.2% 94.1%
+[libx264 @ 0x55555560ca80] mb I  I16..4:  7.7% 56.2% 36.1%
+[libx264 @ 0x55555560ca80] mb P  I16..4:  2.3% 13.3%  1.4%  P16..4: 24.6% 11.8%  8.4%  0.0%  0.0%    skip:38.1%
+[libx264 @ 0x55555560ca80] mb B  I16..4:  0.6%  1.6%  0.0%  B16..8: 11.4%  4.2%  0.6%  direct: 2.8%  skip:78.7%  L0:37.9% L1:44.8% BI:17.4%
+[libx264 @ 0x55555560ca80] 8x8 transform intra:73.8% inter:37.8%
+[libx264 @ 0x55555560ca80] coded y,uvDC,uvAC intra: 58.8% 62.9% 27.1% inter: 5.0% 6.9% 0.1%
+[libx264 @ 0x55555560ca80] i16 v,h,dc,p: 37% 25% 31%  7%
+[libx264 @ 0x55555560ca80] i8 v,h,dc,ddl,ddr,vr,hd,vl,hu: 29% 25% 28%  3%  2%  3%  3%  3%  3%
+[libx264 @ 0x55555560ca80] i4 v,h,dc,ddl,ddr,vr,hd,vl,hu: 24% 18% 10%  8%  8%  9%  7%  9%  6%
+[libx264 @ 0x55555560ca80] i8c dc,h,v,p: 54% 19% 24%  4%
+[libx264 @ 0x55555560ca80] Weighted P-Frames: Y:0.0% UV:0.0%
+[libx264 @ 0x55555560ca80] kb/s:3142.27
+[AVIOContext @ 0x5555555f11c0] Statistics: 3507647 bytes read, 2 seeks

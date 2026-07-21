@@ -700,7 +700,7 @@ Referencias de mercado para calibrar expectativas: Prizmad vende a ~$3–6/víde
 - **Riesgo conocido**: lipsync degradado en idiomas no ingleses es la debilidad explotable de los competidores (MakeUGC: drift en alemán). Mitigación: QA checklist con revisión de lipsync por idioma en CP4 + A/B interno TTS+avatar vs Kling voice control por idioma antes de fijar la receta por defecto de cada locale.
 - **Galería**: `prompt_template.language` + `translations`; hooks/CTAs por idioma (`hook_line.language`). El seed inicial cubre es + en; añadir un idioma = añadir voces al voice_map + traducir hook/cta libraries (los templates de vídeo son mayormente agnósticos: el diálogo va interpolado).
 - **UI**: en español (fija).
-- **Caption styles**: TikTok Sans cubre latín/cirílico/otros; fallback de fuente por script (Noto) en el generador ASS.
+- **Caption styles**: TikTok Sans + fallback Noto Sans en el generador ASS. Cobertura v1 (seed es+en): latín + los scripts que la Noto Sans base trae (cirílico, griego). El fallback de fuente es **por script** (un único Noto NO cubre todo): CJK/árabe/hebreo/tailandés/devanagari exigen sus familias Noto propias (Noto Sans CJK, Noto Sans Arabic…) en la imagen del worker + selección por-script en el generador — **deuda de T5.4** para cuando F8 añada un idioma de esos scripts (§14, F8: "más idiomas"). Verificado en T5.4 (2026-07-20): con un único Noto Sans, CJK renderiza tofu.
 
 ---
 

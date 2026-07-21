@@ -1,0 +1,23 @@
+WARNING: The requested image's platform (linux/amd64) does not match the detected host platform (linux/arm64/v8) and no specific platform was requested
+=== ffmpeg libass ===
+enable-libass
+=== fc-list noto (count) ===
+10
+=== fc-list noto sans (sample) ===
+/usr/share/fonts/truetype/ugc/NotoSans.ttf: Noto Sans:style=Thin
+/usr/share/fonts/truetype/ugc/NotoSans.ttf: Noto Sans:style=Black
+/usr/share/fonts/truetype/ugc/NotoSans.ttf: Noto Sans:style=ExtraLight
+/usr/share/fonts/truetype/ugc/NotoSans.ttf: Noto Sans
+/usr/share/fonts/truetype/ugc/NotoSans.ttf: Noto Sans:style=Regular
+=== fc-list tiktok ===
+/usr/share/fonts/truetype/ugc/TikTokSans.ttf: TikTok Sans,TikTok Sans Light:style=SemiBold
+/usr/share/fonts/truetype/ugc/TikTokSans.ttf: TikTok Sans,TikTok Sans Light:style=Light Italic
+/usr/share/fonts/truetype/ugc/TikTokSans.ttf: TikTok Sans,TikTok Sans Light:style=Italic
+/usr/share/fonts/truetype/ugc/TikTokSans.ttf: TikTok Sans,TikTok Sans Light:style=SemiBold Italic
+/usr/share/fonts/truetype/ugc/TikTokSans.ttf: TikTok Sans,TikTok Sans Light:style=ExtraBold
+=== fc-match Noto Sans ===
+NotoSans.ttf: "Noto Sans" "Regular"
+=== fc-match Noto Sans CJK ===
+NotoSans.ttf: "Noto Sans" "Regular"
+=== fc-match TikTok Sans ===
+TikTokSans.ttf: "TikTok Sans" "Regular"

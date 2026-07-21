@@ -690,10 +690,11 @@ Decisiones del usuario (2026-07-07): la fase se ejecuta tras T0.1 y **antes** de
 - **Alcance (decisión de la tarea, validada con advisor)**: T5.3 entrega el MÓDULO reutilizable `composeMaster` (patrón T5.2), NO el executor cableado al DAG (eso es T5.5). Introduce el contrato `CompositionSpec` con `segments`+`music`+`output`; `captions` se DIFIERE a T5.4 (su autor, aditivo). El máster es INTERMEDIO (sin burn-in ni qa_report/C2PA).
 - **Verificación**: master intermedio de una variante real sin glitches en los cortes; `ffmpeg -af ebur128` mide −14 LUFS ±1; el ducking es audible y visible en la waveform.
 
-#### T5.4 · Subtítulos ASS karaoke
+#### T5.4 · Subtítulos ASS karaoke [x] 2026-07-21 — PASS, ver docs/verifications/T5.4/ (coste $0)
 - **Depende de**: T5.2
 - **Entrega**: generador de `.ass` desde word timestamps: preset **karaoke** (1–4 palabras/página, `\k`) y **subtitle** (3–7 palabras/2 líneas); estilos TikTok Sans blanco+contorno y caja opaca (BorderStyle) para Reels; posicionamiento como constraint dentro de safe zone (§9.7, Apéndice C); fallback de fuente por script.
 - **Verificación**: vídeo real con captions donde el highlight coincide con la palabra hablada (revisión visual de 3 muestras); un script parsea el `.ass` y confirma que ningún evento posiciona texto fuera del área 875×978; texto no latino renderiza con la fuente fallback.
+- **Deuda anotada (decisión del usuario 2026-07-20)**: el fallback de fuente es POR SCRIPT, pero v1 solo tiene un único `Noto Sans` (base). Cobertura garantizada: latín + cirílico + griego (scripts que Noto Sans base trae). CJK/árabe/hebreo/tailandés/devanagari renderizan **tofu** (□□) — exigen sus familias Noto propias (Noto Sans CJK…) en la imagen del worker (T5.1) + selección por-script en el generador. Deuda para cuando F8 añada un idioma de esos scripts (§14). El test unit fija el comportamiento actual y lo etiqueta como deuda (no bendice el tofu). PRD §17 corregido en la misma sesión (el fallback no es un único Noto universal).
 
 #### T5.5 · Pase final, export master y QA automático
 - **Depende de**: T5.3, T5.4

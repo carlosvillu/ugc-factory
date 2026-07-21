@@ -1,0 +1,18 @@
+SAFE ZONE BOX (universal): {"minX":65,"maxX":940,"minY":270,"maxY":1248}
+Expected per Verificación: x∈[65,940], y∈[270,1248]
+
+[sample] sample1-karaoke-tiktok: 4 events, violations=0 OK
+[sample] sample2-karaoke-reels: 4 events, violations=0 OK
+[sample] sample3-subtitle-universal: 2 events, violations=0 OK
+[fresh-40w] karaoke/universal: 10 events, violations=0 OK
+[fresh-40w] subtitle/universal: 6 events, violations=0 OK
+
+[NEG-CONTROL A width-overflow] violations=1 BITES (red as expected)
+  reason: left -1050 < 65; right 2130 > 940
+[NEG-CONTROL B top-overflow] violations=1 BITES (red as expected)
+  reason: top 200 < 270
+[NEG-CONTROL C desync-k] maxDriftMs=300 BITES (>100ms as expected)
+
+[sample1 sync-to-real-ASR] words matched=14/14, maxDriftMs=1.0000000000004547 ≤100ms OK
+
+=== SAFE-ZONE + SYNC VERIFY: ALL PASS ===

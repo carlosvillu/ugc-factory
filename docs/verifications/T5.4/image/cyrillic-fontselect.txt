@@ -1,0 +1,2 @@
+[Parsed_ass_0 @ 0x5555556e6380] Added subtitle file: 'T5.4/samples/cyrillic-fallback.ass' (2 styles, 1 events)
+frame=    1 fps=0.0 q=0.0 size=       0kB time=00:00:00.41 bitrate=   0.9kbits/s speed=10.6x    [Parsed_ass_0 @ 0x5555556e6380] fontselect: (Noto Sans, 700, 0) -> /usr/share/fonts/truetype/ugc/NotoSans.ttf, 458752, NotoSans_700wght

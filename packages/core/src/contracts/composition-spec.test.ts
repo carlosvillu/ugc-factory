@@ -1,8 +1,11 @@
 import { describe, expect, test } from 'vitest';
 
+import { makeWordTimestamps } from '@ugc/test-utils';
+
 import { newUlid } from './ids';
 import {
   CompositionSpecSchema,
+  CompositionCaptionsSchema,
   CompositionMusicSchema,
   CompositionOutputSchema,
   CompositionSegmentSchema,
@@ -63,14 +66,29 @@ describe('CompositionSpecSchema (T5.3)', () => {
     expect(CompositionSpecSchema.safeParse(bad).success).toBe(false);
   });
 
-  test('transporta voWords/overlayText opcionales sin validar su shape interno (los consume T5.4)', () => {
+  test('voWords transporta un WordTimestamps válido (T5.4 estrechó el shape) + overlayText', () => {
+    const wt = makeWordTimestamps({ words: 3 });
     const parsed = CompositionSegmentSchema.parse({
       ...validSegment(),
-      voWords: [{ word: 'hola', startMs: 0 }, 'lax'],
+      voWords: wt,
       overlayText: '20% off',
     });
-    expect(parsed.voWords).toHaveLength(2);
+    expect(parsed.voWords?.words).toHaveLength(3);
     expect(parsed.overlayText).toBe('20% off');
+  });
+
+  test('voWords YA NO acepta un array laxo (T5.4: es WordTimestampsSchema, no z.array(unknown))', () => {
+    const bad = { ...validSegment(), voWords: [{ word: 'hola', startMs: 0 }, 'lax'] };
+    expect(CompositionSegmentSchema.safeParse(bad).success).toBe(false);
+  });
+
+  test('voWords rechaza un WordTimestamps con words vacío (min(1) del schema T4.5)', () => {
+    const bad = { ...validSegment(), voWords: { text: 'x', words: [] } };
+    expect(CompositionSegmentSchema.safeParse(bad).success).toBe(false);
+  });
+
+  test('un segmento sin voWords sigue siendo válido (opcional)', () => {
+    expect(CompositionSegmentSchema.safeParse(validSegment()).success).toBe(true);
   });
 
   describe('music.volume ∈ [0,2 – 0,3] (§9.7)', () => {
@@ -82,6 +100,48 @@ describe('CompositionSpecSchema (T5.3)', () => {
     test.each([0.1, 0.19, 0.31, 0.5])('rechaza volume=%s (fuera de rango)', (volume) => {
       const spec = { ...validSpec(), music: { asset: ulid(), volume, ducking: true, fadeOutS: 0 } };
       expect(CompositionSpecSchema.safeParse(spec).success).toBe(false);
+    });
+  });
+
+  describe('captions (T5.4, aditivo)', () => {
+    test('un spec sin captions sigue siendo válido (opcional/ausente — máster intermedio de T5.3)', () => {
+      const parsed = CompositionSpecSchema.parse(validSpec());
+      expect(parsed.captions).toBeUndefined();
+    });
+
+    test('acepta captions:null (variante sin subtítulos declarada explícitamente)', () => {
+      const parsed = CompositionSpecSchema.parse({ ...validSpec(), captions: null });
+      expect(parsed.captions).toBeNull();
+    });
+
+    test('parsea captions karaoke aplicando defaults de platform/position', () => {
+      const parsed = CompositionCaptionsSchema.parse({ style: 'karaoke', maxWordsPerPage: 4 });
+      expect(parsed).toEqual({
+        style: 'karaoke',
+        maxWordsPerPage: 4,
+        platform: 'universal',
+        position: 'safe_zone',
+      });
+    });
+
+    test('acepta captions embebido en un spec completo', () => {
+      const spec = {
+        ...validSpec(),
+        captions: { style: 'subtitle' as const, maxWordsPerPage: 6, platform: 'reels' as const },
+      };
+      const parsed = CompositionSpecSchema.parse(spec);
+      expect(parsed.captions?.style).toBe('subtitle');
+      expect(parsed.captions?.platform).toBe('reels');
+    });
+
+    test.each([
+      ['style fuera del enum', { style: 'ticker', maxWordsPerPage: 4 }],
+      ['maxWordsPerPage 0', { style: 'karaoke', maxWordsPerPage: 0 }],
+      ['maxWordsPerPage no entero', { style: 'karaoke', maxWordsPerPage: 2.5 }],
+      ['platform fuera del enum', { style: 'karaoke', maxWordsPerPage: 4, platform: 'youtube' }],
+      ['position fuera del enum', { style: 'karaoke', maxWordsPerPage: 4, position: 'anywhere' }],
+    ])('rechaza: %s', (_name, bad) => {
+      expect(CompositionCaptionsSchema.safeParse(bad).success).toBe(false);
     });
   });
 

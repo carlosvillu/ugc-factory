@@ -63,6 +63,7 @@ export const GENERATION_NODE_KEYS = {
   n7f: 'N7f',
   n7e: 'N7e',
   n8: 'N8',
+  n9: 'N9',
 } as const;
 
 /** Qué sub-steps N7 se materializan para una variante (además de N6, que SIEMPRE está). Cada flag lo
@@ -89,6 +90,10 @@ export interface VariantGenerationPlan {
   /** Config de N8 (composición; CONSUME los N7 de vídeo/voz/bed presentes), o `undefined` para omitir.
    *  N8 no paga fal (compone lo que N7 generó) → $0 runtime. */
   n8Config?: unknown;
+  /** Config de N9 (QA + CHECKPOINT CP4; CONSUME N8), o `undefined` para omitir. N9 NO re-mide (lee el
+   *  `qa_report` que N8 persistió) → $0 runtime; PAUSA el run en `waiting_approval` (§9.0 CP4). Solo se
+   *  materializa si N8 está presente (sin máster no hay QA). */
+  n9Config?: unknown;
 }
 
 /** Una `key` local ÚNICA por (nodo, variante): la referencian los `dependsOn`. El `node_key` se queda
@@ -181,6 +186,24 @@ function variantNodes(plan: VariantGenerationPlan): RunNodeInput[] {
     nodes.push(n7Node(k.n8, plan.n8Config, n8Deps));
   }
 
+  // N9 · QA + CHECKPOINT CP4 (T5.5c, §9.7 N9 / §9.0) ← [N8]. Emite el veredicto de QA de la variante
+  // (LEE el `qa_report` que N8 persistió — NO re-mide → $0 runtime) y PAUSA el run en `waiting_approval`.
+  // Es el ÚNICO checkpoint del DAG de generación: aunque el run corre en `autopilot` (el gasto se autorizó
+  // en CP2), `checkpointConfig.alwaysPause=true` GANA sobre autopilot (checkpoint.ts:shouldPause) — la cola
+  // FINAL del run de generación deja de ser autopilot y espera el juicio humano de CP4 (aprobar/rechazar/
+  // regenerar). Sin `maxRetries` holgado: N9 no paga (sus fallos son deterministas → Permanent, no gastan).
+  if (plan.n9Config !== undefined && plan.n8Config !== undefined) {
+    nodes.push({
+      key: localKey(k.n9, variantId),
+      nodeKey: k.n9,
+      variantId,
+      dependsOn: [localKey(k.n8, variantId)],
+      config: plan.n9Config,
+      isCheckpoint: true,
+      checkpointConfig: { alwaysPause: true },
+    });
+  }
+
   return nodes;
 }
 
@@ -189,9 +212,10 @@ function variantNodes(plan: VariantGenerationPlan): RunNodeInput[] {
  * para todas las variantes `scripted`. Lo arranca `approveScriptsForStep` (CP3) con `createRun` en su
  * misma tx (server/script-checkpoint.ts).
  *
- * `autopilot=true`: los sub-steps de generación NO son checkpoints (§7.2 no marca N6/N7 como CP — el
- * siguiente checkpoint humano es CP4/QA, en F5). El run corre sin pausas hasta agotar el DAG; el gasto
- * ya lo autorizó el usuario en CP2 (la puerta de dinero). No hay `alwaysPause` que forzar aquí.
+ * `autopilot=true`: los sub-steps de generación N6/N7/N8 NO son checkpoints — corren sin pausas; el gasto
+ * ya lo autorizó el usuario en CP2 (la puerta de dinero). La ÚNICA pausa es N9/QA (CP4, T5.5c): aunque el
+ * run está en autopilot, N9 lleva `checkpointConfig.alwaysPause=true`, que GANA sobre autopilot
+ * (checkpoint.ts:shouldPause) — la cola final del run espera el juicio humano de CP4.
  *
  * Lanza (indirectamente, vía `createRun`→`validateDag`) si el resultado es estructuralmente inválido;
  * y aquí mismo si `variants` viene vacío (un run de generación sin variantes no tendría root: ningún

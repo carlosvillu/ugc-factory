@@ -20,6 +20,7 @@ import { makeN7dExecutor } from './generate-broll';
 import { makeN7fExecutor } from './generate-cta';
 import { makeN7eExecutor } from './generate-music';
 import { makeN8Executor } from './compose-variant';
+import { makeN9Executor } from './qa-verdict';
 
 export interface ExecutorRegistryDeps {
   /** Decisor de fallo de los executors de demo, resuelto por bootstrap. */
@@ -116,6 +117,11 @@ export function makeExecutorRegistry({
     // importa el executor directo (funciones puras); C2PA/loudness caen a subproceso real por default (el
     // test los stubea). Sin fal-key: no la toca.
     N8: makeN8Executor({ db: generation.db, storage: generation.storage }),
+    // N9 · QA + CHECKPOINT CP4 (T5.5c, §9.7 N9 / §9.0): emite el veredicto de QA de la variante leyendo el
+    // `qa_report` que N8 persistió (NO re-mide → $0 runtime) y PAUSA el run en `waiting_approval` (el flag
+    // `alwaysPause` del nodo lo fuerza aunque el run esté en autopilot). No necesita deps de infra (ni fal,
+    // ni BD, ni storage): solo lee su dep N8 resuelta y emite → factory sin argumentos.
+    N9: makeN9Executor(),
     'demo.sleep': demo,
     'demo.fail': demo,
     // `demo.hang` (T0.9): el executor no retorna nunca (espera al abort) — es el

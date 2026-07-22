@@ -226,6 +226,7 @@ export {
   getVariant,
   listBatchVariants,
   setVariantAudioSource,
+  setVariantQaVerdict,
   type CreatedBatch,
 } from './repos/batch.repo';
 // `finalizeVariantMaster` (T5.5, persistencia del pase final): sale al barrel en T5.5d, que ESTRENA su

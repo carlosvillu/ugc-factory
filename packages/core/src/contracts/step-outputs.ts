@@ -336,3 +336,24 @@ export const N8OutputSchema = z.object({
   qaReport: z.unknown(),
 });
 export type N8Output = z.infer<typeof N8OutputSchema>;
+
+/**
+ * N9 · QA (T5.5c, §9.7 N9): el VEREDICTO de QA de la variante. N9 NO re-mide — N8 ya corrió el validador
+ * y persistió el `qa_report`; N9 lo LEE de su dep N8 (por schema) y lo re-emite como su artefacto. N9 es el
+ * CHECKPOINT CP4 (`isCheckpoint:true`, `alwaysPause:true` en `generation-dag.ts`): al terminar, el step
+ * PAUSA en `waiting_approval` y las ops de CP4 (aprobar/rechazar/regenerar, `server/qa-checkpoint.ts`) lo
+ * resuelven. El efecto de dominio de CP4 discrimina el artefacto pausado por ESTE schema (`variantId`
+ * presente + `passed`), NO por el de N8 (que lleva `masterAssetId`).
+ *
+ * Distinto de `N8OutputSchema` por su CLAVE distintiva `passed` (el veredicto binario global del QA), que
+ * N8 no tiene: así el registro de efectos (`domain-effects.ts`) empareja CP4 sin ambigüedad con N8.
+ */
+export const N9OutputSchema = z.object({
+  variantId: z.string(),
+  /** ¿El máster pasó TODOS los checks de QA? (copia de `qaReport.passed`, elevada a nivel raíz para que
+   *  el matcher del efecto de CP4 discrimine N9 de N8 sin abrir el jsonb opaco). */
+  passed: z.boolean(),
+  /** El `qa_report` completo que N8 midió sobre el máster firmado (passthrough, `unknown` como en N8). */
+  qaReport: z.unknown(),
+});
+export type N9Output = z.infer<typeof N9OutputSchema>;

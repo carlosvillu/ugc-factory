@@ -1,0 +1,6 @@
+          step_id           | node_key |   step_status    |         variant_id         |   angle_name   | variant_status 
+----------------------------+----------+------------------+----------------------------+----------------+----------------
+ 01KY51HMPQQGAQCJMEPANE09K1 | N9       | waiting_approval | 01KY51HMPQY4X4N2E21YZKPDA7 | verify-approve | planned
+ 01KY51HMPQJ1J1VSEMAJ4ATZ1N | N9       | waiting_approval | 01KY51HMPQDPX685BZ34FRR09M | verify-reject  | planned
+(2 rows)
+

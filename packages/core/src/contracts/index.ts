@@ -139,6 +139,7 @@ export {
   N7fOutputSchema,
   N7fClipRefSchema,
   N8OutputSchema,
+  N9OutputSchema,
   type SkippedOutput,
   type N1Output,
   type N2Output,
@@ -154,6 +155,7 @@ export {
   type N7eOutput,
   type N7fOutput,
   type N8Output,
+  type N9Output,
 } from './step-outputs';
 // El CONTRATO DEL RENDERER (T5.3, §9.7): `CompositionSpec` describe qué ensamblar en el máster de una
 // variante (segmentos hook/body/cta + bed musical + perfil de salida). Vive en core porque

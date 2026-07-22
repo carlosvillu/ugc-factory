@@ -368,3 +368,41 @@ export async function finalizeVariantMaster(
     return { master, thumbnail, variant };
   });
 }
+
+// ── CP4: veredicto humano de QA sobre la variante (T5.5c, §9.0 / §12) ────────────────────────────────
+//
+// El WRITER de `ad_variant.status` a `approved`/`rejected` — la contraparte de `applyScriptVerdicts` (que
+// escribe `scripted`) para el checkpoint de QA. Hasta T5.5c solo `scripted` tenía writer; el resto del
+// enum (`approved`/`rejected`/`published`) esperaba a su fase. CP4 estrena `approved`/`rejected`: el humano
+// aprueba o rechaza el máster de la variante en el panel de QA (N9 pausó en `waiting_approval`).
+//
+// NO abre transacción propia: lo INVOCA el efecto de dominio de CP4 (`server/qa-checkpoint.ts`) DENTRO de
+// la tx de la transición del checkpoint (el `db` que recibe ES la tx). Así el status de la variante y la
+// transición del step (`approve`→succeeded / `reject`→rejected) commitean juntos o nada — el mismo
+// invariante de atomicidad que CP1/CP3 (si el status se escribiera fuera de la tx y la transición fallara,
+// la variante quedaría `approved` sobre un step que sigue en `waiting_approval`).
+
+/** El veredicto humano de CP4 sobre una variante: aprobada (máster publicable) o rechazada (descartada). */
+type QaVerdictStatus = 'approved' | 'rejected';
+
+/**
+ * Fija `ad_variant.status` al veredicto de QA de CP4 (`approved`/`rejected`). Un solo UPDATE dentro de la
+ * tx del caller (sin transacción propia — es una escritura atómica). LANZA si la variante no existe (el
+ * caller apunta a una variante que no es de este run: es más honesto fallar que no-opear en silencio).
+ * Devuelve la fila actualizada.
+ */
+export async function setVariantQaVerdict(
+  db: Db,
+  variantId: string,
+  status: QaVerdictStatus,
+): Promise<AdVariant> {
+  const [variant] = await db
+    .update(adVariant)
+    .set({ status })
+    .where(eq(adVariant.id, variantId))
+    .returning();
+  if (!variant) {
+    throw new Error(`setVariantQaVerdict: no existe la variante ${variantId}`);
+  }
+  return variant;
+}

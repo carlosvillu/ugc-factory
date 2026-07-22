@@ -5,11 +5,27 @@
 // no solo el 200. NO es e2e/Playwright.
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { newUlid } from '@ugc/core/contracts';
+import type { N9Output } from '@ugc/core/contracts';
 import { stepExecuteJob } from '@ugc/core/jobs';
-import { createTestDatabase, makeBrief, makeProject } from '@ugc/test-utils';
+import { planBatch } from '@ugc/core/strategy';
+import { SEED_LIBRARY, validateSeeds } from '@ugc/core/library';
+import {
+  createTestDatabase,
+  makeBrief,
+  makeProductBrief,
+  makeProject,
+  makeUrlAnalysis,
+} from '@ugc/test-utils';
 import type { TestDatabase } from '@ugc/test-utils';
 import { PgBoss } from 'pg-boss';
-import { ensureQueue } from '@ugc/db';
+import {
+  createBatchWithVariants,
+  ensureQueue,
+  listBatchVariants,
+  listPlanningInputs,
+  seedLibrary,
+} from '@ugc/db';
+import { productBrief, project as projectTable, urlAnalysis } from '@ugc/db/schema';
 import { setDbForTests } from '@/server/db';
 import { setBossForTests } from '@/server/boss';
 import { createSessionValue, setMasterKeyForTests, SESSION_COOKIE } from '@/server/session';
@@ -108,6 +124,12 @@ beforeAll(async () => {
   });
   await boss.start();
   await ensureQueue(boss, stepExecuteJob);
+  // La librería real (hooks/recipes/personas): la sección CP4 (T5.5c) siembra un lote+variante con
+  // `createBatchWithVariants`, que planifica sobre estos seeds. Vive fuera de `project`, así que el
+  // TRUNCATE por-test (que cascadea desde `project`) no lo toca — se siembra UNA vez aquí.
+  const validation = validateSeeds(SEED_LIBRARY);
+  if (!validation.library) throw new Error('la librería real no valida');
+  await seedLibrary(tdb.db, validation.library);
   setDbForTests(tdb.db);
   setBossForTests(boss);
 });
@@ -653,5 +675,147 @@ describe('CP1 · el efecto sobre product_brief es ATÓMICO con la transición (T
       expect(res.status).toBe(400);
       expect(await statusOf(stepId)).toBe('waiting_approval');
     });
+  });
+});
+
+// ────────────────────────────────────────────────────────────────────────────────────────────
+// T5.5c — CP4 · QA: las ops de checkpoint a nivel ROUTE (API+BD).
+//
+// La Verificación de T5.5c pide un «test de API+BD en el gate (aprobar/rechazar mutan el estado
+// correcto)». La suite de SEAM (`server/qa-checkpoint.test.ts`) prueba el WRITER de la variante en
+// aislamiento, pero NO atraviesa los route handlers: no ejerce la transición del `step_run` ni el
+// despacho por el registro de efectos (`applyDomainEffect`/`applyDomainEffectOnReject`). Estos tests SÍ
+// —conducen `POST /api/steps/:id/{approve,reject}` con cookie de sesión real (los routes van tras
+// `withAuth`)— y afirman las DOS MITADES en la misma tx: la transición del step Y el status de la variante.
+//
+// El route de RECHAZO es la superficie MÁS NUEVA del diff (reescrito de `rejectStep` genérico a
+// `withDomainTransaction` + `applyDomainEffectOnReject`): el caso de reject de aquí es su ÚNICA cobertura
+// que atraviesa el efecto de dominio de la variante. El control negativo que MUERDE vive en la suite de
+// seam (revertir `rejectApply` ⇒ la variante no pasa a `rejected`); aquí se codifica el comportamiento
+// route-level que el verifier condujo por HTTP a mano.
+describe('CP4 · QA (T5.5c): las ops de checkpoint mutan step_run Y ad_variant a nivel ROUTE', () => {
+  /** Siembra un lote + 1 variante en `planned` y un step N9 en `waiting_approval` cuyo `output_refs` es un
+   *  N9Output apuntando a esa variante (lo que el efecto de dominio de CP4 lee). Devuelve ambos ids. */
+  async function seedQaCheckpoint(passed = true): Promise<{ stepId: string; variantId: string }> {
+    const [p] = await tdb.db.insert(projectTable).values(makeProject()).returning();
+    const [ua] = await tdb.db
+      .insert(urlAnalysis)
+      .values(makeUrlAnalysis({ projectId: p!.id }))
+      .returning();
+    const brief = makeBrief();
+    const [briefRow] = await tdb.db
+      .insert(productBrief)
+      .values(makeProductBrief({ urlAnalysisId: ua!.id, data: brief }))
+      .returning();
+
+    const { libraryHooks, personas, recipe } = await listPlanningInputs(tdb.db, 'test');
+    const config = {
+      angleIndices: [0],
+      hooksPerAngle: 1,
+      objective: 'hook_test' as const,
+      tier: 'test' as const,
+      languages: ['es'],
+      personaMode: 'rotate' as const,
+    };
+    const args = { brief, config, libraryHooks, personas, recipe: recipe! };
+    const preview = planBatch(args);
+    const created = await createBatchWithVariants(tdb.db, {
+      projectId: p!.id,
+      briefId: briefRow!.id,
+      tier: 'test',
+      objective: 'hook_test',
+      languages: ['es'],
+      costEstimatedCents: preview.estimate.total.maxCents,
+      composePlan: (batchId) => planBatch({ ...args, batchDiscriminator: batchId }).plan,
+    });
+    const [variant] = await listBatchVariants(tdb.db, created.batch.id);
+    const variantId = variant!.id;
+
+    // El step N9 en `waiting_approval` con SU artefacto (el veredicto que N9 emitió antes de pausar). El
+    // `output_refs` es un `N9Output` REAL: es lo que `applyQaVerdict` valida por schema para sacar el
+    // `variantId`. Reusa el `seedProjectRunStep` de la suite pero con un run del MISMO proyecto — se hace
+    // a mano porque `seedProjectRunStep` crea su propio proyecto y aquí hace falta uno con lote/variante.
+    const runId = newUlid();
+    await tdb.pool.query(`INSERT INTO pipeline_run (id, project_id) VALUES ($1, $2)`, [
+      runId,
+      p!.id,
+    ]);
+    const stepId = newUlid();
+    const artifact: N9Output = {
+      variantId,
+      passed,
+      qaReport: {
+        checks: {
+          resolution: 'pass',
+          fps: 'pass',
+          codec: 'pass',
+          duration: 'pass',
+          loudness: 'pass',
+          av_duration_diff: 'pass',
+          captions_safe_zone: 'pass',
+          filesize: 'pass',
+        },
+        metrics: {},
+        passed,
+        score: passed ? 100 : 88,
+      },
+    };
+    await tdb.pool.query(
+      `INSERT INTO step_run (id, run_id, node_key, variant_id, status, is_checkpoint, checkpoint_config, output_refs, depends_on)
+       VALUES ($1, $2, 'N9', $3, 'waiting_approval', true, $4, $5, '{}')`,
+      [stepId, runId, variantId, JSON.stringify({ alwaysPause: true }), JSON.stringify(artifact)],
+    );
+    return { stepId, variantId };
+  }
+
+  async function variantStatusOf(variantId: string): Promise<string> {
+    const { rows } = await tdb.pool.query<{ status: string }>(
+      `SELECT status FROM ad_variant WHERE id = $1`,
+      [variantId],
+    );
+    return rows[0]!.status;
+  }
+
+  it('APROBAR: POST /approve → 200, step succeeded Y ad_variant approved (ambas mitades, misma tx)', async () => {
+    const { stepId, variantId } = await seedQaCheckpoint();
+    expect(await variantStatusOf(variantId)).toBe('planned');
+
+    const res = await call(approvePost, stepId, `/api/steps/${stepId}/approve`);
+
+    expect(res.status).toBe(200);
+    // Mitad 1 (transición del orquestador): el step avanza a succeeded.
+    expect(await statusOf(stepId)).toBe('succeeded');
+    // Mitad 2 (efecto de dominio de CP4): la variante pasa a approved. Que las DOS ocurran es lo que el
+    // seam-test no puede afirmar (bypasea el route) — aquí se atraviesa `applyDomainEffect`.
+    expect(await variantStatusOf(variantId)).toBe('approved');
+  });
+
+  it('RECHAZAR: POST /reject → 200, step rejected Y ad_variant rejected (el route reescrito, net-new)', async () => {
+    // El path MÁS NUEVO: reject dejó de ser `rejectStep` pelado y ahora corre `withDomainTransaction` +
+    // `applyDomainEffectOnReject`. Sin este test, la mitad de la variante viajaría solo en la Playwright
+    // de T5.6. El control negativo que demuestra que el efecto MUERDE está en `server/qa-checkpoint.test.ts`.
+    const { stepId, variantId } = await seedQaCheckpoint(false);
+
+    const res = await call(rejectPost, stepId, `/api/steps/${stepId}/reject`);
+
+    expect(res.status).toBe(200);
+    expect(await statusOf(stepId)).toBe('rejected');
+    expect(await variantStatusOf(variantId)).toBe('rejected');
+  });
+
+  it('ATOMICIDAD: si la transición del reject FALLA (step no está en waiting_approval), la variante NO se muta', async () => {
+    // El invariante que hace load-bearing la tx compartida del route de reject: si el step ya no está en
+    // `waiting_approval` (doble clic / redelivery) la transición lanza 409, y el efecto de dominio
+    // (ad_variant→rejected) NO debe haber quedado escrito. Sin la tx compartida, la variante quedaría
+    // `rejected` sobre un step que nunca se rechazó.
+    const { stepId, variantId } = await seedQaCheckpoint(false);
+    // Se fuerza el estado terminal: el step ya está succeeded (aprobado antes) ⇒ reject es ilegal.
+    await tdb.pool.query(`UPDATE step_run SET status = 'succeeded' WHERE id = $1`, [stepId]);
+
+    const res = await call(rejectPost, stepId, `/api/steps/${stepId}/reject`);
+
+    expect(res.status).toBe(409);
+    // La variante sigue como estaba: el rollback deshizo cualquier escritura del efecto de dominio.
+    expect(await variantStatusOf(variantId)).toBe('planned');
   });
 });

@@ -27,6 +27,7 @@ import {
   N3OutputSchema,
   N4OutputSchema,
   N5OutputSchema,
+  N9OutputSchema,
   type CheckpointDecision,
 } from '@ugc/core/contracts';
 import type { WithTransaction } from '@ugc/core/orchestrator';
@@ -34,6 +35,7 @@ import type { Db } from '@ugc/db';
 import { approveBriefForStep } from './brief-checkpoint';
 import { createBatchForStep } from './batch-checkpoint';
 import { approveScriptsForStep } from './script-checkpoint';
+import { applyQaVerdict } from './qa-checkpoint';
 
 /** El resultado de un efecto de dominio. Hoy solo CP2 aporta algo: el `nextRunId` del run de N5 que
  *  su aprobación arranca (T2.6) — el cliente lo usa para navegar a CP3. El resto no devuelve nada. */
@@ -62,6 +64,13 @@ interface DomainEffect {
     // Un efecto puede no devolver nada (CP1/CP3: solo mutan estado) o devolver un
     // `DomainEffectResult` (CP2: su `nextRunId`). `applyDomainEffect` normaliza el `undefined` a `{}`.
   ) => Promise<DomainEffectResult> | Promise<void>;
+  /**
+   * Efecto de la rama de RECHAZO (CP4, T5.5c): lo despacha `applyDomainEffectOnReject` desde el route de
+   * reject. OPCIONAL: solo CP4 lo tiene (rechazar una variante en QA la marca `rejected`); CP1/CP2/CP3 no
+   * tienen efecto de dominio al rechazar —una rama rechazada simplemente no continuaba— y lo dejan
+   * ausente. Recibe solo `db` (la tx) + `outputRefs`: rechazar no arranca ningún run ni consume decisión.
+   */
+  rejectApply?: (db: Db, outputRefs: unknown) => Promise<void>;
 }
 
 const EFFECTS: DomainEffect[] = [
@@ -90,6 +99,15 @@ const EFFECTS: DomainEffect[] = [
     apply: (db, withTransaction, outputRefs, decision) =>
       approveScriptsForStep(db, withTransaction, outputRefs, decision),
   },
+  {
+    // CP4 · QA (T5.5c): el ÚNICO checkpoint con efecto de dominio en AMBAS ramas. Aprobar el máster de la
+    // variante la lleva a `ad_variant.status='approved'` (`apply`); rechazarla, a `rejected` (`rejectApply`,
+    // despachado por el route de reject). Sin decisión: el `variantId` viaja en el artefacto N9 (como CP1).
+    // «Regenerar» NO está aquí (no es aprobar/rechazar el step): es un run `kind='regen'` nuevo (op aparte).
+    matches: (outputRefs) => N9OutputSchema.safeParse(outputRefs).success,
+    apply: (db, _withTransaction, outputRefs) => applyQaVerdict(db, outputRefs, 'approved'),
+    rejectApply: (db, outputRefs) => applyQaVerdict(db, outputRefs, 'rejected'),
+  },
 ];
 
 /**
@@ -110,4 +128,18 @@ export async function applyDomainEffect(
   const effect = EFFECTS.find((e) => e.matches(outputRefs));
   if (effect === undefined) return {};
   return (await effect.apply(db, withTransaction, outputRefs, decision)) ?? {};
+}
+
+/**
+ * Ejecuta el efecto de dominio de la rama de RECHAZO de este step, si su artefacto tiene uno (T5.5c: solo
+ * CP4 — rechazar una variante en QA la marca `rejected`). Se llama DENTRO de la misma tx que la transición
+ * `reject` del checkpoint (el `db` que recibe ES la tx): el status de la variante y la transición del step
+ * commitean juntos o nada — el mismo invariante de atomicidad que `applyDomainEffect`. Un step SIN efecto
+ * de rechazo (CP1/CP2/CP3, o un checkpoint de demo) es un NO-OP legítimo: la mayoría de los rechazos solo
+ * mueven el step a `rejected` sin tocar el dominio.
+ */
+export async function applyDomainEffectOnReject(db: Db, outputRefs: unknown): Promise<void> {
+  const effect = EFFECTS.find((e) => e.matches(outputRefs));
+  if (effect?.rejectApply === undefined) return;
+  await effect.rejectApply(db, outputRefs);
 }

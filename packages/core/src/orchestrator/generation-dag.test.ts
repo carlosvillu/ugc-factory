@@ -8,7 +8,7 @@ import { N7_MAX_RETRIES } from './executor';
 import type { VariantGenerationPlan } from './generation-dag';
 import type { RunNodeInput } from './run-definition';
 
-/** Un plan de variante con los seis N7 + N8 presentes (config opaca de relleno: el builder no la mira). */
+/** Un plan de variante con los seis N7 + N8 + N9 presentes (config opaca de relleno: el builder no la mira). */
 function fullVariant(variantId: string): VariantGenerationPlan {
   return {
     variantId,
@@ -20,6 +20,7 @@ function fullVariant(variantId: string): VariantGenerationPlan {
     n7fConfig: { scriptId: 's1', ctaEndpoint: 'fal-ai/x' },
     n7eConfig: { musicEndpoint: 'fal-ai/ace-step' },
     n8Config: { variantId },
+    n9Config: { variantId },
   };
 }
 
@@ -33,23 +34,54 @@ describe('generationRunDefinition', () => {
     expect(validateDag(def)).toBeNull();
   });
 
-  it('arranca en autopilot (N6/N7 no son checkpoints; el gasto ya se autorizó en CP2)', () => {
+  it('arranca en autopilot; el ÚNICO checkpoint es N9/QA (CP4, alwaysPause gana sobre autopilot)', () => {
     const def = generationRunDefinition('p', [fullVariant('v1')]);
     expect(def.autopilot).toBe(true);
-    expect(def.nodes.every((n) => n.isCheckpoint !== true)).toBe(true);
+    // N6/N7/N8 NO son checkpoints; solo N9 lo es.
+    const checkpoints = def.nodes.filter((n) => n.isCheckpoint === true);
+    expect(checkpoints).toHaveLength(1);
+    expect(checkpoints[0]?.nodeKey).toBe('N9');
   });
 
-  it('EXPANDE por variante: N variantes → N sub-DAGs de 8 nodos (N6 + 6 N7 + N8)', () => {
+  it('N9 · CP4: checkpoint con alwaysPause ← [N8] (T5.5c): pausa aunque el run esté en autopilot', () => {
+    const def = generationRunDefinition('p', [fullVariant('v1')]);
+    const n9 = byKey(def.nodes, `${K.n9}__v1`);
+    expect(n9?.nodeKey).toBe('N9'); // node_key LIMPIO (el registro de executors resuelve por él)
+    expect(n9?.variantId).toBe('v1');
+    expect(n9?.dependsOn).toEqual([`${K.n8}__v1`]); // N9 ← [N8]: lee el qa_report que N8 persistió
+    expect(n9?.isCheckpoint).toBe(true);
+    // El override que HACE la pausa: sin él, N9 navegaría a `succeeded` bajo autopilot (control negativo
+    // en el test de worker). GANA sobre `autopilot=true` (checkpoint.ts:shouldPause).
+    expect(n9?.checkpointConfig).toEqual({ alwaysPause: true });
+    // N9 no paga: NO fija maxRetries holgado (a diferencia de los N7).
+    expect(n9?.maxRetries).toBeUndefined();
+  });
+
+  it('N9 solo se materializa si N8 está presente (sin máster no hay QA que hacer)', () => {
+    // Un plan con n9Config pero SIN n8Config: N9 no se emite (no habría máster que validar).
+    const def = generationRunDefinition('p', [
+      {
+        variantId: 'v1',
+        n6Config: {},
+        n7bConfig: {},
+        n7cConfig: {},
+        n9Config: { variantId: 'v1' },
+      },
+    ]);
+    expect(def.nodes.some((n) => n.nodeKey === 'N9')).toBe(false);
+  });
+
+  it('EXPANDE por variante: N variantes → N sub-DAGs de 9 nodos (N6 + 6 N7 + N8 + N9)', () => {
     const def = generationRunDefinition('p', [
       fullVariant('v1'),
       fullVariant('v2'),
       fullVariant('v3'),
     ]);
-    expect(def.nodes).toHaveLength(3 * 8);
-    // Cada variante tiene sus 8 nodos con SU variantId.
+    expect(def.nodes).toHaveLength(3 * 9);
+    // Cada variante tiene sus 9 nodos con SU variantId.
     for (const v of ['v1', 'v2', 'v3']) {
       const nodesOfV = def.nodes.filter((n) => n.variantId === v);
-      expect(nodesOfV).toHaveLength(8);
+      expect(nodesOfV).toHaveLength(9);
     }
   });
 

@@ -1,0 +1,5 @@
+          step_id           | step_status |         variant_id         | variant_status 
+----------------------------+-------------+----------------------------+----------------
+ 01KY51HMPQJ1J1VSEMAJ4ATZ1N | rejected    | 01KY51HMPQDPX685BZ34FRR09M | rejected
+(1 row)
+

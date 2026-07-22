@@ -2291,7 +2291,7 @@ Esta tarea se salvó **tres veces** por ir al servicio REAL en vez de fiarse de 
 - Estado del árbol: código de T5.5a SIN commitear (gate verde). Evidencia en docs/verifications/T5.5a/.
 
 ## 2026-07-22 · T5.5a cerrada — PASS
-- Coste: $0,80 (i2v live real, dentro del cap $1 autorizado) · Ciclos verifier: 2 (1º bloqueado por saldo fal agotado, 2º PASS tras recarga de 10€ del usuario) · Commit: <pendiente>
+- Coste: $0,80 (i2v live real, dentro del cap $1 autorizado) · Ciclos verifier: 2 (1º bloqueado por saldo fal agotado, 2º PASS tras recarga de 10€ del usuario) · Commit: 928d7db
 - N7f (clip de CTA i2v) cierra el hueco de la escena `cta` que destapó T5.5d. Cableado en ambas caras (planner + sub-DAG), reusa runGenerateBroll con assetKind='cta_clip', endpoint=broll (YAGNI), output con clave distintiva ctaEndpoint (para que T5.5d discrimine N7f de N7d).
 - **Bug money-path cazado en code-review y cerrado**: content_hash no incluía assetKind + índice único de producción global por hash → N7f/N7d colisionaban (mismo endpoint+keyframe+salt "0:0") → la CTA nunca se generaba (LoserRaceError en bucle). Fix: salt namespaceado `cta:...` (solo toca el fichero nuevo, N7d byte-idéntico). Control negativo probado que muerde.
 - **Guard de catálogo extraído** a `resolveVideoModelCaps` en `_shared.ts` (pase simplify; N7d/N7f comparten, N7d preservado byte-equivalente).

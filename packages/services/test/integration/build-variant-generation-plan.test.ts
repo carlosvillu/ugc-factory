@@ -55,8 +55,41 @@ beforeEach(async () => {
 
 /** Siembra proyecto + brief + persona (con voz es + imagen de referencia) + lote + variante + guion.
  *  `tier` gobierna el recipe (premium = todos resolubles; test = broll etiqueta). Devuelve el variantId. */
+/** Escenas por defecto del guion sembrado (hook + body + cta): la variante de conversión que ejerce
+ *  las ramas N7c/N7d/N7f. Un test puede pasar `scenes` a `seedVariant` para probar un guion SIN cta. */
+const DEFAULT_SEED_SCENES = [
+  {
+    t: 0,
+    seconds: 3,
+    segment: 'hook' as const,
+    narration: 'Si te pasa esto, mira.',
+    visual: 'v',
+    camera: 'c',
+    emotion: 'e',
+  },
+  {
+    t: 3,
+    seconds: 6,
+    segment: 'body' as const,
+    narration: 'Mira cómo funciona de verdad.',
+    visual: 'v',
+    camera: 'c',
+    emotion: 'e',
+  },
+  {
+    t: 9,
+    seconds: 2,
+    segment: 'cta' as const,
+    narration: 'Enlace en la bio.',
+    visual: 'v',
+    camera: 'c',
+    emotion: 'e',
+  },
+];
+
 async function seedVariant(
   tier: 'test' | 'premium',
+  scenes: typeof DEFAULT_SEED_SCENES = DEFAULT_SEED_SCENES,
 ): Promise<{ variantId: string; personaId: string; briefId: string }> {
   const project = await createProject(tdb.db, makeProject());
   const [ua] = await tdb.db
@@ -129,35 +162,7 @@ async function seedVariant(
           sharedBodyKey: 'body_x',
           hook: 'Si te pasa esto, mira.',
           cta: 'Enlace en la bio.',
-          scenes: [
-            {
-              t: 0,
-              seconds: 3,
-              segment: 'hook',
-              narration: 'Si te pasa esto, mira.',
-              visual: 'v',
-              camera: 'c',
-              emotion: 'e',
-            },
-            {
-              t: 3,
-              seconds: 6,
-              segment: 'body',
-              narration: 'Mira cómo funciona de verdad.',
-              visual: 'v',
-              camera: 'c',
-              emotion: 'e',
-            },
-            {
-              t: 9,
-              seconds: 2,
-              segment: 'cta',
-              narration: 'Enlace en la bio.',
-              visual: 'v',
-              camera: 'c',
-              emotion: 'e',
-            },
-          ],
+          scenes,
           subtitles: [{ start: 0, end: 3, text: 'Si te pasa esto, mira.' }],
           fullText: 'Si te pasa esto, mira. Mira cómo funciona de verdad. Enlace en la bio.',
           wordCount: 13,
@@ -218,10 +223,53 @@ describe('buildVariantGenerationPlan (T4.11 pass 2b-ii)', () => {
     expect(n7d.brollEndpoint).toBe('fal-ai/veo3.1/image-to-video');
     expect(n7d.imageAssetIds).toBeUndefined();
 
+    // N7f · CLIP DE CTA (T5.5a): REUSA el endpoint i2v del b-roll (`ctaEndpoint`), + scriptId. Es la
+    // generación de la escena `cta` (product shot animado): sin ella el planner dejaba la CTA sin clip.
+    // imageAssetIds NO se fija (keyframes de N7a dep-derivados, como N7d).
+    const n7f = plan.n7fConfig as {
+      ctaEndpoint: string;
+      scriptId: string;
+      imageAssetIds?: string[];
+    };
+    expect(n7f.ctaEndpoint).toBe('fal-ai/veo3.1/image-to-video');
+    expect(n7f.scriptId).toBeTruthy();
+    expect(n7f.imageAssetIds).toBeUndefined();
+
     // N7e · música: endpoint constante ace-step + duración de la variante.
     const n7e = plan.n7eConfig as { musicEndpoint: string; durationSeconds: number };
     expect(n7e.musicEndpoint).toBe('fal-ai/ace-step');
     expect(n7e.durationSeconds).toBe(30);
+  });
+
+  it('N7f: un guion SIN escena cta → el plan NO incluye n7fConfig (nada que animar)', async () => {
+    // Guion hook + body, sin cta: N7f no se emite (a diferencia de N7d, que solo mira el endpoint). El
+    // resto de ramas (voz/avatar/broll/música) siguen presentes — solo cae la de CTA.
+    const { variantId } = await seedVariant('premium', [
+      {
+        t: 0,
+        seconds: 3,
+        segment: 'hook',
+        narration: 'Si te pasa esto, mira.',
+        visual: 'v',
+        camera: 'c',
+        emotion: 'e',
+      },
+      {
+        t: 3,
+        seconds: 6,
+        segment: 'body',
+        narration: 'Mira cómo funciona de verdad.',
+        visual: 'v',
+        camera: 'c',
+        emotion: 'e',
+      },
+    ]);
+
+    const plan = await buildVariantGenerationPlan({ db: tdb.db }, { variantId });
+
+    expect(plan.n7fConfig).toBeUndefined();
+    // Control: el b-roll (mismo endpoint) SÍ sigue presente — el gate de N7f es la escena cta, no el endpoint.
+    expect(plan.n7dConfig).toBeDefined();
   });
 
   it('MONEY-GATE: tier con broll ETIQUETA (test) → PermanentStepError ANTES de devolver el plan', async () => {

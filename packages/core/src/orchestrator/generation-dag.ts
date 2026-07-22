@@ -60,6 +60,7 @@ export const GENERATION_NODE_KEYS = {
   n7b: 'N7b',
   n7c: 'N7c',
   n7d: 'N7d',
+  n7f: 'N7f',
   n7e: 'N7e',
 } as const;
 
@@ -80,6 +81,8 @@ export interface VariantGenerationPlan {
   n7cConfig?: unknown;
   /** Config de N7d (b-roll; CONSUME los keyframes de N7a), o `undefined` para omitir. */
   n7dConfig?: unknown;
+  /** Config de N7f (clip de CTA i2v; CONSUME los keyframes de N7a, como N7d), o `undefined` para omitir. */
+  n7fConfig?: unknown;
   /** Config de N7e (bed musical), o `undefined` para omitir. */
   n7eConfig?: unknown;
 }
@@ -145,6 +148,13 @@ function variantNodes(plan: VariantGenerationPlan): RunNodeInput[] {
   if (plan.n7dConfig !== undefined) {
     const keyframeDep = plan.n7aConfig !== undefined ? [localKey(k.n7a, variantId)] : [];
     nodes.push(n7Node(k.n7d, plan.n7dConfig, keyframeDep));
+  }
+  // N7f · CLIP DE CTA ← [N6, N7a]: anima el keyframe de product shot de N7a por i2v (§7.5 «la CTA es
+  // product shot animado»), MISMA regla de dep que N7d respecto a N7a (si N7a está, es su fuente de
+  // keyframe; si no, el executor cae a la costura stepless).
+  if (plan.n7fConfig !== undefined) {
+    const keyframeDep = plan.n7aConfig !== undefined ? [localKey(k.n7a, variantId)] : [];
+    nodes.push(n7Node(k.n7f, plan.n7fConfig, keyframeDep));
   }
   // N7e · BED MUSICAL ← [N6]. Independiente.
   if (plan.n7eConfig !== undefined) {

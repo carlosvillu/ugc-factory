@@ -100,6 +100,18 @@ export interface GenerateBrollInput {
   resolution?: string;
   /** El step que originó el gasto (T4.11): atribuye el `cost_entry`. OPCIONAL (stepless → NULL). */
   stepRunId?: string;
+  /** El `kind` del asset a crear. DEFAULT `'broll_clip'` (N7d, intacto). N7f (T5.5a) pasa `'cta_clip'`:
+   *  la CTA animada ES i2v de un keyframe, MECÁNICAMENTE idéntica al b-roll (mismo Veo i2v, mismo
+   *  upload→submit→poll→finalize) — REUSAR este servicio con el kind parametrizado evita una 3ª copia de
+   *  la liquidación (justo lo que la deuda 644 pide dejar de duplicar). El kind viaja al finalizer (que
+   *  YA está parametrizado por `assetKind`) Y a la clave de dedup (`broll_clip` y `cta_clip` deduplican
+   *  por separado: un b-roll y una CTA con los mismos inputs NO deben colapsarse en el mismo asset). */
+  assetKind?: 'broll_clip' | 'cta_clip';
+  /** LINAJE (§12 `asset.parent_asset_ids`): los ids de los assets origen de los que deriva el clip.
+   *  OPCIONAL. N7f (T5.5a) pasa aquí el keyframe de N7a animado (verificación: el clip de CTA tiene
+   *  `parent_asset_ids` = el keyframe). OMITIDO → sin linaje (N7d queda intacto, como hoy). Se aplica
+   *  solo al crear el asset (no en un acierto de dedup: el asset es el del ganador). */
+  parentAssetIds?: string[];
   /** SALT DE DEDUP (T4.10): un discriminador que entra SOLO en el `content_hash` (NO en el payload de
    *  fal). Existe para el TROCEO §7.5: dos clips de la MISMA escena larga tienen keyframe+prompt+duración
    *  IDÉNTICOS → mismo hash → el dedup los colapsaría en uno (y el vídeo repetiría el clip). El executor
@@ -138,6 +150,8 @@ export async function runGenerateBroll(
   const { db, storage } = deps;
   const log = deps.logger ?? NOOP_LOGGER;
   const warnings: string[] = [];
+  // El kind del asset/dedup: b-roll por defecto (N7d), `cta_clip` cuando N7f (T5.5a) reusa este servicio.
+  const assetKind = input.assetKind ?? 'broll_clip';
 
   // 1) Resolver el model_profile del b-roll + leer los assets de imagen de entrada. Independientes →
   //    en PARALELO (patrón N7a/N7c).
@@ -240,9 +254,9 @@ export async function runGenerateBroll(
   //     atómico vía índice único parcial) o —tras perder la carrera— re-lee o lanza para reintentar.
   const dedup = await resolveProductionDedup(db, {
     contentHash,
-    assetKind: 'broll_clip',
+    assetKind,
     serviceLabel: 'runGenerateBroll',
-    assetLabel: 'un b-roll',
+    assetLabel: assetKind === 'cta_clip' ? 'un clip de CTA' : 'un b-roll',
     insertValues: {
       modelProfileId: input.brollModelProfileId,
       stepRunId: input.stepRunId,
@@ -323,12 +337,13 @@ export async function runGenerateBroll(
       { db, logger: log },
       {
         generation,
-        assetKind: 'broll_clip',
+        assetKind,
         durationSeconds,
         costCents: cost.cents,
         put,
         storageKey,
         mime,
+        ...(input.parentAssetIds !== undefined ? { parentAssetIds: input.parentAssetIds } : {}),
         statusPayload: polled.statusPayload,
       },
     );

@@ -1,0 +1,1 @@
+ALTER TYPE "public"."asset_kind" ADD VALUE 'cta_clip' BEFORE 'music_bed';

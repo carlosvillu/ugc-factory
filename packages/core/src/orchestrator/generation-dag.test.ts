@@ -8,7 +8,7 @@ import { N7_MAX_RETRIES } from './executor';
 import type { VariantGenerationPlan } from './generation-dag';
 import type { RunNodeInput } from './run-definition';
 
-/** Un plan de variante con los cinco N7 presentes (config opaca de relleno: el builder no la mira). */
+/** Un plan de variante con los seis N7 presentes (config opaca de relleno: el builder no la mira). */
 function fullVariant(variantId: string): VariantGenerationPlan {
   return {
     variantId,
@@ -17,6 +17,7 @@ function fullVariant(variantId: string): VariantGenerationPlan {
     n7bConfig: { scriptId: 's1' },
     n7cConfig: { avatarEndpoint: 'fal-ai/x' },
     n7dConfig: { scriptId: 's1' },
+    n7fConfig: { scriptId: 's1', ctaEndpoint: 'fal-ai/x' },
     n7eConfig: { musicEndpoint: 'fal-ai/ace-step' },
   };
 }
@@ -37,17 +38,17 @@ describe('generationRunDefinition', () => {
     expect(def.nodes.every((n) => n.isCheckpoint !== true)).toBe(true);
   });
 
-  it('EXPANDE por variante: N variantes → N sub-DAGs de 6 nodos (N6 + 5 N7)', () => {
+  it('EXPANDE por variante: N variantes → N sub-DAGs de 7 nodos (N6 + 6 N7)', () => {
     const def = generationRunDefinition('p', [
       fullVariant('v1'),
       fullVariant('v2'),
       fullVariant('v3'),
     ]);
-    expect(def.nodes).toHaveLength(3 * 6);
-    // Cada variante tiene sus 6 nodos con SU variantId.
+    expect(def.nodes).toHaveLength(3 * 7);
+    // Cada variante tiene sus 7 nodos con SU variantId.
     for (const v of ['v1', 'v2', 'v3']) {
       const nodesOfV = def.nodes.filter((n) => n.variantId === v);
-      expect(nodesOfV).toHaveLength(6);
+      expect(nodesOfV).toHaveLength(7);
     }
   });
 
@@ -73,6 +74,26 @@ describe('generationRunDefinition', () => {
     expect(n7d?.dependsOn).toEqual([`${K.n6}__v1`, `${K.n7a}__v1`]);
   });
 
+  it('N7f (clip de CTA) depende de N6 Y N7a (anima el keyframe de product shot, como N7d)', () => {
+    const def = generationRunDefinition('p', [fullVariant('v1')]);
+    const n7f = byKey(def.nodes, `${K.n7f}__v1`);
+    expect(n7f?.dependsOn).toEqual([`${K.n6}__v1`, `${K.n7a}__v1`]);
+    // node_key LIMPIO 'N7f' (el registro de executors resuelve por él).
+    expect(n7f?.nodeKey).toBe('N7f');
+  });
+
+  it('N7f sin N7a presente depende SOLO de N6 (surface honesto: su executor fallará al no hallar keyframe)', () => {
+    const def = generationRunDefinition('p', [
+      {
+        variantId: 'v1',
+        n6Config: { variantId: 'v1' },
+        n7fConfig: { scriptId: 's1', ctaEndpoint: 'x' },
+      },
+    ]);
+    expect(byKey(def.nodes, `${K.n7f}__v1`)?.dependsOn).toEqual([`${K.n6}__v1`]);
+    expect(validateDag(def)).toBeNull();
+  });
+
   it('N7a/N7b/N7e dependen SOLO de N6 (independientes entre sí)', () => {
     const def = generationRunDefinition('p', [fullVariant('v1')]);
     expect(byKey(def.nodes, `${K.n7a}__v1`)?.dependsOn).toEqual([`${K.n6}__v1`]);
@@ -87,7 +108,7 @@ describe('generationRunDefinition', () => {
 
   it('MONEY: todo N7 fija maxRetries=N7_MAX_RETRIES; N6 NO (default de BD)', () => {
     const def = generationRunDefinition('p', [fullVariant('v1')]);
-    for (const nodeKey of [K.n7a, K.n7b, K.n7c, K.n7d, K.n7e]) {
+    for (const nodeKey of [K.n7a, K.n7b, K.n7c, K.n7d, K.n7f, K.n7e]) {
       const n = def.nodes.find((x) => x.nodeKey === nodeKey);
       expect(n?.maxRetries).toBe(N7_MAX_RETRIES);
     }

@@ -1,0 +1,2 @@
+[fal auth probe] key prefix a67710… len 69 → HTTP 403 Forbidden
+[fal auth probe] body: {"detail":"User is locked. Reason: Exhausted balance. Top up your balance at fal.ai/dashboard/billing"}

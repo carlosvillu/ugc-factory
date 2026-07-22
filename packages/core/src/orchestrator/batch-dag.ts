@@ -219,6 +219,35 @@ export const N7dConfigSchema = z.object({
 export type N7dConfig = z.infer<typeof N7dConfigSchema>;
 
 /**
+ * Config del step N7f · CLIP DE CTA (T5.5a, §7.5 «la CTA es product shot animado»). N7f anima el
+ * KEYFRAME de product shot (N7a) por i2v — MISMA mecánica que N7d (b-roll) pero para la escena `cta`
+ * (§7.5 l.292-294, opción A del PRD). REUSA el endpoint i2v del recipe (`endpoints.broll`): la CTA
+ * animada ES i2v de un keyframe, idéntica al b-roll (mismo Veo i2v); NO hay un componente 'cta' en el
+ * recipe (YAGNI — el proyecto ya hardcodea por nodo). El executor filtra la escena `cta` del guion,
+ * cuantiza al enum del modelo y llama `runGenerateBroll` con `assetKind:'cta_clip'`.
+ *
+ * `imageAssetIds` es OPCIONAL (igual que en N7d): en un RUN los keyframes NO existen al construir el
+ * plan (N7a aún no ha corrido) — el executor los DERIVA del output de su dep N7a de la MISMA variante
+ * (`deriveKeyframeAssetIds`, precedencia dep-wins). Es la costura STEPLESS del test/smoke.
+ */
+export const N7fConfigSchema = z.object({
+  /** El guion cuya escena `cta` se materializa en clip animado (fila `ad_script` real). */
+  scriptId: z.string().min(1),
+  /** El endpoint del modelo i2v de la CTA (REUSA el de b-roll del recipe, Veo i2v). Clave natural del
+   *  catálogo; el executor resuelve el perfil por endpoint y su `kind` decide la ruta. Money-gate: una
+   *  ETIQUETA-no-endpoint lanza (el planner ya lo valida con `assertEndpointResolvable`). */
+  ctaEndpoint: z.string().min(1),
+  /** Los `asset` de imagen de entrada (el keyframe de product shot de N7a). OPCIONAL: en un RUN los
+   *  DERIVA el executor de su dep N7a (dep-wins); este campo es la costura STEPLESS del test/smoke. */
+  imageAssetIds: z.array(z.string().min(1)).min(1).optional(),
+  /** Aspecto vertical del clip (default 9:16). Debe estar en `capabilities.aspects` del modelo. */
+  aspect: z.string().min(1).default('9:16'),
+  /** Preset de resolución (`720p|1080p|4k`, default 720p). Debe estar en `capabilities.resolutions`. */
+  resolution: z.string().min(1).default('720p'),
+});
+export type N7fConfig = z.infer<typeof N7fConfigSchema>;
+
+/**
  * Config del step N7e · BED MUSICAL IA (T4.9, §7.2 N7e). N7e genera UN bed de música por MOOD y
  * DURACIÓN con ace-step (`fal-ai/ace-step`, text-to-music) para poner DEBAJO del voiceover (§14). A
  * diferencia de N7b (voz), el bed no tiene texto ni ASR y su duración es un INPUT (se pide 30s), no

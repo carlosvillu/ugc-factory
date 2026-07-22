@@ -98,6 +98,8 @@ export {
   type N7cConfig,
   N7dConfigSchema,
   type N7dConfig,
+  N7fConfigSchema,
+  type N7fConfig,
   N7eConfigSchema,
   type N7eConfig,
   PackshotRouteSchema,

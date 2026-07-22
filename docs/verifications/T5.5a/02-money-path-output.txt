@@ -1,0 +1,18 @@
+{
+  "scriptId": "01KY4P41JBEJW4G1YGAJYNQP11",
+  "keyframeAssetId": "01KY4P41JFNJRND314WF0JDMF7"
+}
+[plumbing] fal key resolved from process.env.FAL_KEY : a67710… len= 69
+MONEY-PATH FAILED: FalProviderError: fal storage upload falló: Forbidden
+    at <anonymous> (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/core/src/generation/fal-client.ts:335:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async ConcurrencyLimiter.run (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/core/src/generation/fal-client.ts:222:14)
+    at async uploadInputCached (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/services/src/generate.ts:132:15)
+    at async Promise.all (index 0)
+    at async runGenerateBroll (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/services/src/generate-broll.ts:201:19)
+    at async runGenerationStep (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/worker/src/executors/_shared.ts:70:12)
+    at async <anonymous> (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/worker/src/executors/generate-cta.ts:138:21)
+    at async main (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/worker/verif-t55a-money-path.mts:82:3) {
+  status: undefined,
+  retryAfterMs: undefined
+}

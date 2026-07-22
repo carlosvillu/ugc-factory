@@ -18,7 +18,8 @@
 // Mantener `finalizeGeneration` intacto es la invariante que importa.
 //
 // QUÉ SE PARAMETRIZA vs QUÉ NO:
-//   · `assetKind`: `'avatar_clip'` (N7c) | `'broll_clip'` (N7d) | `'music_bed'` (N7e) — la ÚNICA
+//   · `assetKind`: `'avatar_clip'` (N7c) | `'broll_clip'` (N7d) | `'cta_clip'` (N7f, T5.5a: mismo
+//     servicio `runGenerateBroll` con el kind del clip de CTA) | `'music_bed'` (N7e) — la ÚNICA
 //     divergencia de datos.
 //   · `durationSeconds`: se pasa YA CALCULADA por el servicio (avatar: `videoOut.duration ?? audio`,
 //     fraccionaria; broll: `input.durationSeconds`, enum entero; música: `input.durationSeconds`, el
@@ -48,7 +49,7 @@ import {
  *  `completed` bajo lock. Lo consumen los servicios LIVE (avatar/broll/música) Y la vía de
  *  reconciliación kind-aware de `output.download` (finalize-download.ts).
  *  Interno (no se re-exporta desde el barrel): solo lo consumen las firmas de este módulo. */
-type SingleCallPerSecondAssetKind = 'avatar_clip' | 'broll_clip' | 'music_bed';
+type SingleCallPerSecondAssetKind = 'avatar_clip' | 'broll_clip' | 'cta_clip' | 'music_bed';
 
 export interface FinalizeSingleCallPerSecondDeps {
   db: DbClient;
@@ -70,6 +71,12 @@ export interface FinalizeSingleCallPerSecondArgs {
   storageKey: string;
   /** El mime del asset (`video/mp4`, `audio/mpeg`…). */
   mime: string;
+  /** LINAJE (§12 `asset.parent_asset_ids`): los ids de los assets ORIGEN de los que deriva este clip.
+   *  OPCIONAL, default `[]` (la mayoría de outputs de fal no tienen padres). N7f (T5.5a) pasa aquí el
+   *  keyframe de N7a que se animó — el linaje que T5.7 recorre. Se aplica SOLO en la rama de CREACIÓN:
+   *  en la rama `alreadyFinalized`/reuse el asset es el del GANADOR (dedup §9.6), y mutar su linaje
+   *  corromperia una fila compartida — la creación es el único punto correcto (el reuse nunca crea). */
+  parentAssetIds?: string[];
   /** El último payload de status del poll (para `fal_status_payload`). */
   statusPayload: unknown;
 }
@@ -123,6 +130,9 @@ export async function finalizeSingleCallPerSecondGeneration(
       checksum: put.checksum,
       durationS: durationSeconds,
       generationId: generation.id,
+      // LINAJE §12 (solo en la rama de creación): default `[]` deja las filas de N7c/N7d/N7e intactas
+      // (mismo comportamiento previo); N7f pasa el keyframe de N7a que se animó.
+      ...(args.parentAssetIds !== undefined ? { parentAssetIds: args.parentAssetIds } : {}),
     });
     await recordCost(tx, {
       provider: 'fal',

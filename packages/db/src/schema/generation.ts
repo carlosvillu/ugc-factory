@@ -30,6 +30,7 @@ export const assetKind = pgEnum('asset_kind', [
   'tts_audio',
   'avatar_clip',
   'broll_clip',
+  'cta_clip',
   'music_bed',
   'final_video',
   'thumbnail',

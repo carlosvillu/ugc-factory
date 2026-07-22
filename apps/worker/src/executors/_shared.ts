@@ -16,6 +16,7 @@
 import { AppError } from '@ugc/core/contracts';
 import { PermanentStepError } from '@ugc/core/orchestrator';
 import { FalResponseError, LoserRaceError } from '@ugc/core/generation';
+import { ModelCapabilitiesSchema, type ModelCapabilities } from '@ugc/core/gallery';
 
 /** El contexto mínimo que `requireOutputContext` inspecciona. Acepta campos extra (p.ej. `deps` de
  *  N7a) por estructura — solo lee `collectOutput`/`stepId`. */
@@ -98,4 +99,80 @@ export async function resolveFalKeyOrPermanent(
     }
     throw err;
   }
+}
+
+/** El resultado de `resolveVideoModelCaps`: las capabilities YA validadas del modelo de vídeo, con
+ *  `durations` y `maxDuration` ya comprobados no-vacío/coherentes (por eso NO son opcionales aquí, al
+ *  contrario que en `ModelCapabilities`). El caller los pasa a `planGeneration`/`quantizeDurationToEnum`
+ *  sin re-chequear. */
+export interface ResolvedVideoModelCaps {
+  caps: ModelCapabilities;
+  durations: number[];
+  maxDuration: number;
+}
+
+/**
+ * GUARD DE CATÁLOGO COMPARTIDO de los executors de vídeo por-segundo (N7d b-roll, N7f clip de CTA):
+ * valida las `capabilities` del `model_profile` ANTES de gastar y devuelve `caps`/`durations`/
+ * `maxDuration` ya comprobados. Extrae el bloque que N7d y N7f duplicaban byte-a-byte (salvo el label del
+ * nodo y el endpoint) — la MISMA defensa de dinero en DOS executors de producción (deuda de reuso T5.5a).
+ *
+ * MONEY-GATE (todos los checks abortan con `PermanentStepError` — reintentar no re-siembra el catálogo):
+ *   1. `capabilities` es jsonb OPACO al salir de la BD → se VALIDA (no se castea). Shape inválido = bug
+ *      de datos permanente (galería mal sembrada).
+ *   2. `aspect`/`resolution` DEBEN estar en los enums que el modelo declara: un valor no soportado haría
+ *      que fal rechace la request y queme dinero. Data-driven (lee los enums del perfil), no hardcodeado.
+ *   3. `durations` presente y no vacío (sin enum de duración no se puede cuantizar el clip).
+ *   4. INVARIANTE `maxDuration === max(durations)`: el troceo §7.5 usa `maxDuration` (`planGeneration`) y
+ *      la cuantización usa `durations` (`quantizeDurationToEnum`) — DOS fuentes de verdad de duración que
+ *      DEBEN coincidir; si divergen (o falta `maxDuration` con `durations` presente), una escena larga se
+ *      facturaría por debajo de su ventana (clamp silencioso, ledger deshonesto).
+ *
+ * `nodeLabel` (`'N7d'`/`'N7f'`) y `endpoint` (el `falEndpoint` del perfil) entran en los mensajes de
+ * error — así N7d conserva su semántica de mensajes exacta y N7f nombra su propio nodo/endpoint.
+ */
+export function resolveVideoModelCaps(
+  rawCapabilities: unknown,
+  input: { aspect: string; resolution: string },
+  nodeLabel: string,
+  endpoint: string,
+): ResolvedVideoModelCaps {
+  const capsParsed = ModelCapabilitiesSchema.safeParse(rawCapabilities);
+  if (!capsParsed.success) {
+    throw new PermanentStepError(
+      `${nodeLabel}: capabilities inválidas en ${endpoint}: ${capsParsed.error.message}`,
+    );
+  }
+  const caps = capsParsed.data;
+
+  if (caps.aspects !== undefined && !caps.aspects.includes(input.aspect)) {
+    throw new PermanentStepError(
+      `${nodeLabel}: el aspect "${input.aspect}" no está en aspects=[${caps.aspects.join(', ')}] de ${endpoint}`,
+    );
+  }
+  if (caps.resolutions !== undefined && !caps.resolutions.includes(input.resolution)) {
+    throw new PermanentStepError(
+      `${nodeLabel}: la resolución "${input.resolution}" no está en resolutions=[${caps.resolutions.join(', ')}] de ${endpoint}`,
+    );
+  }
+  const durations = caps.durations;
+  if (durations === undefined || durations.length === 0) {
+    throw new PermanentStepError(
+      `${nodeLabel}: el model_profile ${endpoint} no declara capabilities.durations (enum de duración): no se puede cuantizar el clip`,
+    );
+  }
+  const maxDuration = caps.maxDuration;
+  if (maxDuration === undefined) {
+    throw new PermanentStepError(
+      `${nodeLabel}: el model_profile ${endpoint} declara durations=[${durations.join(', ')}] pero no maxDuration: el troceo §7.5 no topa la duración → clamp silencioso. Siembra maxDuration = max(durations).`,
+    );
+  }
+  const maxAllowedDuration = Math.max(...durations);
+  if (maxDuration !== maxAllowedDuration) {
+    throw new PermanentStepError(
+      `${nodeLabel}: incoherencia de catálogo en ${endpoint}: maxDuration=${String(maxDuration)} pero max(durations)=${String(maxAllowedDuration)} (durations=[${durations.join(', ')}]). El troceo y la cuantización usan fuentes distintas y deben coincidir — corrige el seed.`,
+    );
+  }
+
+  return { caps, durations, maxDuration };
 }

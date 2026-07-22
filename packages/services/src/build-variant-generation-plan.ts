@@ -17,6 +17,7 @@
 // verificación existe en DOS momentos con DOS propósitos: aquí (no crear un run condenado) y en el
 // executor (no submitear un payload malo / catch de misseeding kind/caps) — no es duplicación dañina.
 import { resolveComponentEndpoints, resolveVoiceTriple, type VoiceMap } from '@ugc/core/generation';
+import { AdScriptSchema } from '@ugc/core/contracts';
 import { PermanentStepError } from '@ugc/core/orchestrator';
 import type { VariantGenerationPlan } from '@ugc/core/orchestrator';
 import {
@@ -148,6 +149,25 @@ export async function buildVariantGenerationPlan(
   if (endpoints.broll !== undefined) {
     await assertEndpointResolvable(db, endpoints.broll, 'N7d (b-roll)');
     plan.n7dConfig = { scriptId, brollEndpoint: endpoints.broll };
+  }
+
+  // N7f · CLIP DE CTA (T5.5a, §7.5 «la CTA es product shot animado»): la escena `cta` se anima por i2v
+  // del keyframe de N7a — MISMA mecánica que N7d, distinto segmento. REUSA el endpoint i2v del recipe
+  // (`endpoints.broll`): NO hay un componente 'cta' propio (YAGNI — el proyecto hardcodea por nodo). El
+  // planner rutea hook→N7c y body→N7d; sin esta rama la escena `cta` no tendría ninguna generación (el
+  // hueco que originó T5.5a). `imageAssetIds` los DERIVA el executor de su dep N7a; `scriptId` para
+  // localizar la escena cta. Money-gate: el endpoint YA se validó arriba (misma clave broll). Se GATEA
+  // además en que el guion TENGA una escena `cta` (a diferencia de N7d, aquí se puede saber sin gastar:
+  // las escenas ya están en la fila `ad_script` leída): un guion sin cta NO emite N7f (no habría clip
+  // que animar) — evita un nodo condenado a `PermanentStepError` en runtime. El jsonb `scenes` es OPACO
+  // al salir de la BD → se VALIDA en la frontera (nunca castear), patrón del executor N7d.
+  if (endpoints.broll !== undefined) {
+    const scenes = AdScriptSchema.pick({ scenes: true }).parse({
+      scenes: scriptRow.script.scenes,
+    }).scenes;
+    if (scenes.some((s) => s.segment === 'cta')) {
+      plan.n7fConfig = { scriptId, ctaEndpoint: endpoints.broll };
+    }
   }
 
   // N7e · BED MUSICAL: un bed por variante (§14). Endpoint constante (ace-step, no sale del recipe).

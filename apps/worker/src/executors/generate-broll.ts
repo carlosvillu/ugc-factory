@@ -18,19 +18,19 @@
 //     vía de imagen del sweeper explotaría — marcadores en output-download.ts + reconcile.ts).
 import { N7dConfigSchema, PermanentStepError } from '@ugc/core/orchestrator';
 import type { StepExecutor } from '@ugc/core/orchestrator';
-import {
-  isBrollModelKind,
-  ModelCapabilitiesSchema,
-  planGeneration,
-  quantizeDurationToEnum,
-} from '@ugc/core/gallery';
+import { isBrollModelKind, planGeneration, quantizeDurationToEnum } from '@ugc/core/gallery';
 import { deriveKeyframeAssetIds } from '@ugc/core/generation';
 import { AdScriptSchema } from '@ugc/core/contracts';
 import { getModelProfileByEndpoint, getScriptById } from '@ugc/db';
 import { runGenerateBroll } from '@ugc/services';
 
 import type { GenerationExecutorDeps } from './generation';
-import { requireOutputContext, runGenerationStep, resolveFalKeyOrPermanent } from './_shared';
+import {
+  requireOutputContext,
+  runGenerationStep,
+  resolveFalKeyOrPermanent,
+  resolveVideoModelCaps,
+} from './_shared';
 
 /** El ref ligero de un clip de b-roll generado (la verdad vive en `generation`/`asset`). */
 interface N7dClipRef {
@@ -102,56 +102,17 @@ export function makeN7dExecutor(deps: GenerationExecutorDeps): StepExecutor {
       );
     }
 
-    // `capabilities` es jsonb OPACO al salir de la BD → se VALIDA en la frontera (patrón adapter/N7c),
-    // no se castea. Un shape inválido es un bug de datos permanente (galería mal sembrada).
-    const capsParsed = ModelCapabilitiesSchema.safeParse(profile.capabilities);
-    if (!capsParsed.success) {
-      throw new PermanentStepError(
-        `N7d: capabilities inválidas en ${cfg.brollEndpoint}: ${capsParsed.error.message}`,
-      );
-    }
-    const caps = capsParsed.data;
-
-    // GUARD DE CATÁLOGO (aspect/resolution/durations válidos ANTES de gastar): un aspect/resolución que
-    // el modelo no declara haría que fal rechace la request y quemaría dinero → se ABORTA con
-    // `PermanentStepError` (reintentarlo no lo arregla). Data-driven (lee los enums del perfil), no un
-    // `if endpoint === veo` hardcodeado.
-    if (caps.aspects !== undefined && !caps.aspects.includes(cfg.aspect)) {
-      throw new PermanentStepError(
-        `N7d: el aspect "${cfg.aspect}" no está en aspects=[${caps.aspects.join(', ')}] de ${cfg.brollEndpoint}`,
-      );
-    }
-    if (caps.resolutions !== undefined && !caps.resolutions.includes(cfg.resolution)) {
-      throw new PermanentStepError(
-        `N7d: la resolución "${cfg.resolution}" no está en resolutions=[${caps.resolutions.join(', ')}] de ${cfg.brollEndpoint}`,
-      );
-    }
-    const durations = caps.durations;
-    if (durations === undefined || durations.length === 0) {
-      throw new PermanentStepError(
-        `N7d: el model_profile ${cfg.brollEndpoint} no declara capabilities.durations (enum de duración): no se puede cuantizar el clip`,
-      );
-    }
-    // INVARIANTE `maxDuration === max(durations)` (dinero, ANTES de gastar). El troceo usa `maxDuration`
-    // (`planScene`) y la cuantización usa `durations` (`quantizeDurationToEnum`): DOS fuentes de verdad
-    // de duración que DEBEN coincidir. Si un perfil declarara `maxDuration:12, durations:[4,6,8]`, una
-    // escena de 12 s NO se trocearía (12 ≤ 12) → 1 clip de 12 s → la cuantización lo CLAMPA a 8 → se
-    // generaría y FACTURARÍA 8 s para una ventana de 12 s (body corto, ledger deshonesto). Y si el perfil
-    // NO declara `maxDuration` con `durations` presente, el troceo NO topa nada → el mismo clamp
-    // silencioso sobre cualquier escena larga. Ambos son bug de DATOS permanente (galería mal sembrada):
-    // se ABORTA con `PermanentStepError` que nombra ambos valores (reintentar no re-siembra el catálogo).
-    const maxDuration = caps.maxDuration;
-    if (maxDuration === undefined) {
-      throw new PermanentStepError(
-        `N7d: el model_profile ${cfg.brollEndpoint} declara durations=[${durations.join(', ')}] pero no maxDuration: el troceo §7.5 no topa la duración → clamp silencioso. Siembra maxDuration = max(durations).`,
-      );
-    }
-    const maxAllowedDuration = Math.max(...durations);
-    if (maxDuration !== maxAllowedDuration) {
-      throw new PermanentStepError(
-        `N7d: incoherencia de catálogo en ${cfg.brollEndpoint}: maxDuration=${String(maxDuration)} pero max(durations)=${String(maxAllowedDuration)} (durations=[${durations.join(', ')}]). El troceo y la cuantización usan fuentes distintas y deben coincidir — corrige el seed.`,
-      );
-    }
+    // GUARD DE CATÁLOGO COMPARTIDO (money-gate, ANTES de gastar): valida `capabilities` (jsonb opaco de
+    // la BD, patrón adapter/N7c) y comprueba aspect/resolution/durations + el invariante
+    // `maxDuration === max(durations)`. Extraído a `_shared.ts` (lo comparte N7f, clip de CTA — misma
+    // mecánica i2v). Un aspect/resolución/duración que el modelo no declara haría que fal rechace la
+    // request y queme dinero → `PermanentStepError` (reintentarlo no re-siembra el catálogo).
+    const { durations, maxDuration } = resolveVideoModelCaps(
+      profile.capabilities,
+      { aspect: cfg.aspect, resolution: cfg.resolution },
+      'N7d',
+      cfg.brollEndpoint,
+    );
 
     // §7.5: EL B-ROLL ES EL BODY. Se filtra a las escenas de segment 'body' ANTES de planificar —
     // generar hook/cta como b-roll rompería el presupuesto (1 avatar + 2 b-roll en conversión) y

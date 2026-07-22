@@ -1,0 +1,2 @@
+[fal auth probe] key prefix a67710… len 69 → HTTP 200 OK
+[fal auth probe] body: {"file_url":"https://v3b.fal.media/files/b/0aa34344/6m3jArNd5C2GY8vdqZHcP_probe.png","upload_url":"https://v3b.fal.media/files/b/0aa34344/6m3jArNd5C2GY8vdqZHcP_probe.png?signature=MD-tSvwiivV89j8O"}

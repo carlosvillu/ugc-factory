@@ -1,0 +1,70 @@
+{
+  "scriptId": "01KY4Q7VXEFDE0WXCYKK82P20J",
+  "keyframeAssetId": "01KY4Q7VXJC9F56YYPT9XJSM46"
+}
+[plumbing] fal key resolved from process.env.FAL_KEY : a67710… len= 69
+[executor] N7f done in 50.2 s
+[output] {
+  "scriptId": "01KY4Q7VXEFDE0WXCYKK82P20J",
+  "ctaEndpoint": "fal-ai/veo3.1/image-to-video",
+  "route": "i2v",
+  "clips": [
+    {
+      "ctaSceneIndex": 0,
+      "clipIndex": 0,
+      "generationId": "01KY4Q7XW0J9PTBK3091KJAP3A",
+      "assetId": "01KY4Q9CYPFV01X6ZZSAS5CTEA",
+      "durationSeconds": 4,
+      "costCents": 80
+    }
+  ]
+}
+[asset cta_clip] {
+  "id": "01KY4Q9CYPFV01X6ZZSAS5CTEA",
+  "kind": "cta_clip",
+  "mime": "video/mp4",
+  "duration_s": 4,
+  "parent_asset_ids": [
+    "01KY4Q7VXJC9F56YYPT9XJSM46"
+  ],
+  "storage_key": "generations/01KY4Q7XW0J9PTBK3091KJAP3A/01KY4Q9CDFS39DEJH4RNTWK7ZA.mp4",
+  "checksum": "8d515ab0e96b6ed9eb295015aad41f4ea90fc677575342ab6b0a2d9c152f715f",
+  "bytes": 407660
+}
+[generation] {
+  "id": "01KY4Q7XW0J9PTBK3091KJAP3A",
+  "status": "completed",
+  "fal_request_id": "019f8973-f925-7732-9342-5c800fed6c4d"
+}
+MONEY-PATH FAILED: DrizzleQueryError: Failed query: SELECT id, provider, amount_cents, quantity, unit, created_at FROM cost_entry WHERE provider='fal' ORDER BY created_at DESC LIMIT 1
+params: 
+    at NodePgPreparedQuery.queryWithCache (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/drizzle-orm@0.44.7_@types+pg@8.20.0_pg@8.22.0/node_modules/src/pg-core/session.ts:73:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async main (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/worker/verif-t55a-money-path.mts:104:16) {
+  query: "SELECT id, provider, amount_cents, quantity, unit, created_at FROM cost_entry WHERE provider='fal' ORDER BY created_at DESC LIMIT 1",
+  params: [],
+  cause: error: column "created_at" does not exist
+      at /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/pg-pool@3.14.0_pg@8.22.0/node_modules/pg-pool/index.js:45:11
+      at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+      at async <anonymous> (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/drizzle-orm@0.44.7_@types+pg@8.20.0_pg@8.22.0/node_modules/src/node-postgres/session.ts:149:14)
+      at async NodePgPreparedQuery.queryWithCache (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/drizzle-orm@0.44.7_@types+pg@8.20.0_pg@8.22.0/node_modules/src/pg-core/session.ts:71:12)
+      at async main (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/worker/verif-t55a-money-path.mts:104:16) {
+    length: 110,
+    severity: 'ERROR',
+    code: '42703',
+    detail: undefined,
+    hint: undefined,
+    position: '52',
+    internalPosition: undefined,
+    internalQuery: undefined,
+    where: undefined,
+    schema: undefined,
+    table: undefined,
+    column: undefined,
+    dataType: undefined,
+    constraint: undefined,
+    file: 'parse_relation.c',
+    line: '3722',
+    routine: 'errorMissingColumn'
+  }
+}

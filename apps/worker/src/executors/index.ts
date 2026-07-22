@@ -17,6 +17,7 @@ import { type GenerationExecutorDeps, makeN7aExecutor } from './generation';
 import { makeN7bExecutor } from './generate-voice';
 import { makeN7cExecutor } from './generate-avatar';
 import { makeN7dExecutor } from './generate-broll';
+import { makeN7fExecutor } from './generate-cta';
 import { makeN7eExecutor } from './generate-music';
 
 export interface ExecutorRegistryDeps {
@@ -95,6 +96,11 @@ export function makeExecutorRegistry({
     // sweeper/`output.download` kind-aware ANTES de cablearlo (una generación de VÍDEO recogida por la
     // vía de imagen del sweeper explotaría — marcadores en output-download.ts + reconcile.ts).
     N7d: makeN7dExecutor(generation),
+    // N7f · CLIP DE CTA (T5.5a, §7.5 «la CTA es product shot animado»). PAGA fal (Veo 3.1 i2v por
+    // segundo): reusa el grupo de deps `generation` Y el servicio `runGenerateBroll` con
+    // `assetKind:'cta_clip'` (la CTA animada es i2v de un keyframe, idéntica al b-roll). Genera el clip
+    // de la escena `cta` animando el keyframe de product shot de N7a; clip SILENCIOSO (la voz es de N7b).
+    N7f: makeN7fExecutor(generation),
     // N7e · BED MUSICAL IA (T4.9, §7.2 N7e). PAGA fal (ace-step por segundo, $0,0002/s): reusa el mismo
     // grupo de deps `generation` (BD + storage + FAL_KEY perezosa). Genera UN bed instrumental por MOOD
     // (`tags`) y DURACIÓN para poner debajo del voiceover (§14); no itera escenas (uno cubre la variante).

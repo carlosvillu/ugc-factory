@@ -106,6 +106,9 @@ export {
   getAsset,
   getAssetsByIds,
   getAssetByGenerationKind,
+  // `getAssetByNormalizedCacheKey` (T5.2): el LOOKUP de la caché normalize-once. Sale al barrel en T5.5d,
+  // que ESTRENA su consumidor de runtime fuera del paquete: el executor N8 cablea el normalizador con él.
+  getAssetByNormalizedCacheKey,
   setAssetFalUpload,
   setAssetWordTimestamps,
 } from './repos/asset.repo';
@@ -218,16 +221,16 @@ export { seedGallery } from './repos/gallery-seed.repo';
 // persistir cada guion (`listBatchVariants`).
 export {
   createBatchWithVariants,
+  finalizeVariantMaster,
   getBatch,
   getVariant,
   listBatchVariants,
   setVariantAudioSource,
   type CreatedBatch,
 } from './repos/batch.repo';
-// `finalizeVariantMaster` (T5.5, persistencia del pase final) NO sale al barrel TODAVÍA: su consumidor de
-// runtime es el executor N8/N9 (el wiring al DAG, fuera del alcance de T5.5 — deuda de fase anotada en
-// planning; T5.6/T5.8 lo recogen). Hoy solo lo importa su test de integración por ruta relativa. Sale al
-// barrel cuando exista quien lo llame desde fuera del paquete (misma disciplina que `findBatchesByBrief`).
+// `finalizeVariantMaster` (T5.5, persistencia del pase final): sale al barrel en T5.5d, que ESTRENA su
+// consumidor de runtime fuera del paquete — el executor N8 persiste con él el máster+thumbnail+update de
+// ad_variant tras el pase final (era deuda de fase de T5.5, la recoge el wiring de N8).
 // La RECETA de un tier (T4.11): `buildVariantGenerationPlan` (@ugc/services) la lee para resolver
 // `recipe.steps` (componente→endpoint fal) por tier de la variante. Vuelve a salir al barrel tras T2.3
 // (era interna) porque ESTRENA consumidor de runtime fuera del paquete. Devuelve `RecipeSeed` parseado.

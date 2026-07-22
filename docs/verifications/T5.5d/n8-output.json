@@ -1,0 +1,35 @@
+{
+  "variantId": "01KY4VC2VRDXVEG1PD5GCNG5HY",
+  "masterAssetId": "01KY4VC2Z6J2N26644D21FTWP0",
+  "thumbnailAssetId": "01KY4VC2Z7BP72JBNQGJC6MAPF",
+  "qaReport": {
+    "checks": {
+      "resolution": "pass",
+      "fps": "pass",
+      "codec": "pass",
+      "duration": "pass",
+      "loudness": "pass",
+      "av_duration_diff": "pass",
+      "captions_safe_zone": "pass",
+      "filesize": "pass"
+    },
+    "metrics": {
+      "width": 1080,
+      "height": 1920,
+      "fps": 30,
+      "videoCodec": "h264",
+      "pixFmt": "yuv420p",
+      "audioCodec": "aac",
+      "audioSampleRate": 48000,
+      "audioChannels": 2,
+      "audioBitrate": 128000,
+      "videoDurationS": 3,
+      "audioDurationS": 3,
+      "loudnessLufs": -14,
+      "filesizeBytes": 8,
+      "captionViolations": 0
+    },
+    "passed": true,
+    "score": 100
+  }
+}

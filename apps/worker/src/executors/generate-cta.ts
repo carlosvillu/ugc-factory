@@ -18,7 +18,7 @@ import { N7fConfigSchema, PermanentStepError } from '@ugc/core/orchestrator';
 import type { StepExecutor } from '@ugc/core/orchestrator';
 import { isBrollModelKind, planGeneration, quantizeDurationToEnum } from '@ugc/core/gallery';
 import { deriveKeyframeAssetIds } from '@ugc/core/generation';
-import { AdScriptSchema } from '@ugc/core/contracts';
+import { AdScriptSchema, type N7fOutput } from '@ugc/core/contracts';
 import { getModelProfileByEndpoint, getScriptById } from '@ugc/db';
 import { runGenerateBroll } from '@ugc/services';
 
@@ -30,25 +30,12 @@ import {
   resolveVideoModelCaps,
 } from './_shared';
 
-/** El ref ligero de un clip de CTA generado (la verdad vive en `generation`/`asset`). */
-interface N7fClipRef {
-  /** Índice de la escena de CTA (en el subconjunto filtrado) que originó el clip. */
-  ctaSceneIndex: number;
-  /** Índice del clip DENTRO de su escena (0-based; >0 si la escena se troceó). */
-  clipIndex: number;
-  generationId: string;
-  assetId: string;
-  durationSeconds: number;
-  costCents: number;
-}
-interface N7fOutput {
-  scriptId: string;
-  /** CLAVE DISTINTIVA (T5.5a): `ctaEndpoint`, NO `brollEndpoint`. Es lo que en T5.5d permite a N8
-   *  discriminar la dep N7f (clip de CTA) de la dep N7d (b-roll), que comparten la mecánica i2v. */
-  ctaEndpoint: string;
-  route: 'i2v' | 'r2v' | 't2v';
-  clips: N7fClipRef[];
-}
+// El shape del artefacto vive en core (`N7fOutputSchema`, contracts/step-outputs.ts): es la FRONTERA
+// CROSS-NODE por la que N8 consume los clips de la CTA (`clips[].assetId`, indexados por `ctaSceneIndex`).
+// Su CLAVE DISTINTIVA es `ctaEndpoint` (NO `brollEndpoint`) — lo que en T5.5d permite a `findDepBySchema`
+// discriminar la dep N7f (clip de CTA) de la dep N7d (b-roll), que comparten la mecánica i2v (par de riesgo).
+// El executor solo lo produce tipado contra ella (`satisfies N7fOutput`); nadie llama `.parse()` en el emit.
+type N7fClipRef = N7fOutput['clips'][number];
 
 /**
  * N7f · CLIP DE CTA (T5.5a, §7.5). Genera el clip de vídeo de la escena `cta` por i2v del keyframe de

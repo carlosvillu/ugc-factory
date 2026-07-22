@@ -20,7 +20,7 @@ import { N7dConfigSchema, PermanentStepError } from '@ugc/core/orchestrator';
 import type { StepExecutor } from '@ugc/core/orchestrator';
 import { isBrollModelKind, planGeneration, quantizeDurationToEnum } from '@ugc/core/gallery';
 import { deriveKeyframeAssetIds } from '@ugc/core/generation';
-import { AdScriptSchema } from '@ugc/core/contracts';
+import { AdScriptSchema, type N7dOutput } from '@ugc/core/contracts';
 import { getModelProfileByEndpoint, getScriptById } from '@ugc/db';
 import { runGenerateBroll } from '@ugc/services';
 
@@ -32,23 +32,10 @@ import {
   resolveVideoModelCaps,
 } from './_shared';
 
-/** El ref ligero de un clip de b-roll generado (la verdad vive en `generation`/`asset`). */
-interface N7dClipRef {
-  /** Índice de la escena de BODY (en el subconjunto filtrado) que originó el clip. */
-  bodySceneIndex: number;
-  /** Índice del clip DENTRO de su escena (0-based; >0 si la escena se troceó). */
-  clipIndex: number;
-  generationId: string;
-  assetId: string;
-  durationSeconds: number;
-  costCents: number;
-}
-interface N7dOutput {
-  scriptId: string;
-  brollEndpoint: string;
-  route: 'i2v' | 'r2v' | 't2v';
-  clips: N7dClipRef[];
-}
+// El shape del artefacto vive en core (`N7dOutputSchema`, contracts/step-outputs.ts): es la FRONTERA
+// CROSS-NODE por la que N8 consume los clips del body (`clips[].assetId`, indexados por `bodySceneIndex`).
+// El executor solo lo produce tipado contra ella (`satisfies N7dOutput`); nadie llama `.parse()` en el emit.
+type N7dClipRef = N7dOutput['clips'][number];
 
 /**
  * N7d · B-ROLL POR ESCENA (T4.8, §7.2). Genera 1 clip de vídeo por escena del BODY (§7.5): i2v desde

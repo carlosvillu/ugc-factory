@@ -218,6 +218,9 @@ export {
 // (T4.7b) y el normalizador (T5.2). Sale al barrel porque la suite media inyecta un runner que CUENTA
 // invocaciones (el instrumento del test «2ª pasada = 0 ffmpeg») y necesita tiparlo.
 export type { FfmpegRunner, FfprobeRunner } from './extract-audio-track';
+// `materializeToBytes` (helper storage→bytes): lo estrena como consumidor externo el executor N8 (T5.5d),
+// que materializa cada clip crudo de N7 a temp antes de fittearlo. Sale al barrel aquí.
+export { materializeToBytes } from './extract-audio-track';
 // DERIVACIÓN PURA de la `normalized_cache_key` (T5.2, §9.7): la clave de lookup de la caché =
 // `checksum-del-origen + perfil de salida` (w×h, fps, códec/CRF, autorotate, versión de receta). Su unit
 // test co-locado corre en el gate (services:unit) — la caché no se puede envenenar en silencio.
@@ -228,3 +231,12 @@ export {
   CANONICAL_AUDIO_PROFILE,
   type NormalizeProfile,
 } from './normalized-cache-key';
+// ENSAMBLADOR del `CompositionSpec` de una variante (T5.5d, §9.7 N8): el gemelo INVERSO de
+// `buildVariantGenerationPlan` (guion→plan de generación); aquí generaciones N7→spec de composición. Lo
+// llama el executor N8 (apps/worker), que luego encadena fitter→normalize→concat→compose→persist. Su unit
+// test co-locado corre en el gate (services:unit) — el mapeo escena→clip no se corrompe en silencio.
+export {
+  assembleCompositionSpec,
+  type AssembleCompositionSpecDeps,
+  type AssembleCompositionSpecInput,
+} from './assemble-composition-spec';

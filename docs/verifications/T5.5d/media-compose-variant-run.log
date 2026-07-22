@@ -1,0 +1,19 @@
+install OK
+=== media: compose-variant (ffprobe export profile) ===
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.10 [39m[90m/build[39m
+
+ [32m✓[39m [30m[42m worker:media [49m[39m test/media/compose-variant.test.ts [2m([22m[2m7 tests[22m[2m)[22m[33m 24352[2mms[22m[39m
+     [33m[2m✓[22m[39m compose end-to-end con captions reales → máster firmado + qa_report TODO en pass + C2PA trainedAlgorithmicMedia [33m 10456[2mms[22m[39m
+     [33m[2m✓[22m[39m sin captions (captions:null): re-encoda igual al preset, captions_safe_zone es vacuous-pass [33m 4881[2mms[22m[39m
+     [33m[2m✓[22m[39m QA negativo: máster a 25 fps → fps=fail [33m 1816[2mms[22m[39m
+     [33m[2m✓[22m[39m QA negativo: máster a −20 LUFS → loudness=fail [33m 1902[2mms[22m[39m
+     [33m[2m✓[22m[39m QA negativo: máster a 720×1280 → resolution=fail [33m 1359[2mms[22m[39m
+     [33m[2m✓[22m[39m QA negativo: captions fuera de la safe zone (violaciones > 0) → captions_safe_zone=fail [33m 1767[2mms[22m[39m
+     [33m[2m✓[22m[39m QA negativo: duración > techo de la variante → duration=fail [33m 2148[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m7 passed[39m[22m[90m (7)[39m
+[2m   Start at [22m 12:07:52
+[2m   Duration [22m 30.33s[2m (transform 3.03s, setup 144ms, import 4.92s, tests 24.35s, environment 0ms)[22m
+

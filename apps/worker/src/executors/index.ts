@@ -19,6 +19,7 @@ import { makeN7cExecutor } from './generate-avatar';
 import { makeN7dExecutor } from './generate-broll';
 import { makeN7fExecutor } from './generate-cta';
 import { makeN7eExecutor } from './generate-music';
+import { makeN8Executor } from './compose-variant';
 
 export interface ExecutorRegistryDeps {
   /** Decisor de fallo de los executors de demo, resuelto por bootstrap. */
@@ -109,6 +110,12 @@ export function makeExecutorRegistry({
     // kind-aware ANTES de cablearlo (una generación de AUDIO recogida por la vía de imagen del sweeper
     // explotaría — deuda compartida con N7b/N7d).
     N7e: makeN7eExecutor(generation),
+    // N8 · COMPOSICIÓN (T5.5d, §9.7): ensambla la CompositionSpec desde los N7 y encadena el render local
+    // (fitter→normalize→concat+mix→pase final+C2PA+QA→persistencia). NO paga fal → $0 runtime: solo necesita
+    // BD + storage (reusa el grupo `generation`, como N4 reusa `analysis.db`). Los ports de captions los
+    // importa el executor directo (funciones puras); C2PA/loudness caen a subproceso real por default (el
+    // test los stubea). Sin fal-key: no la toca.
+    N8: makeN8Executor({ db: generation.db, storage: generation.storage }),
     'demo.sleep': demo,
     'demo.fail': demo,
     // `demo.hang` (T0.9): el executor no retorna nunca (espera al abort) — es el

@@ -17,7 +17,7 @@ import { N7cConfigSchema, PermanentStepError } from '@ugc/core/orchestrator';
 import type { StepExecutor } from '@ugc/core/orchestrator';
 import { ModelCapabilitiesSchema } from '@ugc/core/gallery';
 import { deriveHookAudioAssetId, findN7bDep } from '@ugc/core/generation';
-import { AdScriptSchema } from '@ugc/core/contracts';
+import { AdScriptSchema, type N7cOutput } from '@ugc/core/contracts';
 import { getAsset, getModelProfileByEndpoint, getScriptById } from '@ugc/db';
 import { runGenerateAvatar, runGenerateVeedAvatar } from '@ugc/services';
 
@@ -65,14 +65,9 @@ async function resolveHookAudioFromDeps(
   return deriveHookAudioAssetId(n7b, hookSceneIndex);
 }
 
-/** El ref ligero del clip de avatar generado (la verdad vive en `generation`/`asset`). */
-interface N7cOutput {
-  avatarEndpoint: string;
-  generationId: string;
-  assetId: string;
-  durationSeconds: number;
-  costCents: number;
-}
+// El shape del artefacto vive en core (`N7cOutputSchema`, contracts/step-outputs.ts): es la FRONTERA
+// CROSS-NODE por la que N8 consume el clip del hook (`assetId`). El executor solo lo produce tipado
+// contra ella (`satisfies N7cOutput`); nadie llama `.parse()` en el emit.
 
 /**
  * N7c · CLIP DE AVATAR, tiers image+audio (T4.7, §7.2). Anima la imagen de la Persona con el audio del

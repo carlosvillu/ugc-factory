@@ -15,21 +15,16 @@
 import { N7eConfigSchema, PermanentStepError } from '@ugc/core/orchestrator';
 import type { StepExecutor } from '@ugc/core/orchestrator';
 import { isMusicModelKind } from '@ugc/core/gallery';
+import type { N7eOutput } from '@ugc/core/contracts';
 import { getModelProfileByEndpoint, setVariantAudioSource } from '@ugc/db';
 import { runGenerateMusic } from '@ugc/services';
 
 import type { GenerationExecutorDeps } from './generation';
 import { requireOutputContext, runGenerationStep, resolveFalKeyOrPermanent } from './_shared';
 
-/** El ref ligero del bed musical generado (la verdad vive en `generation`/`asset`). */
-interface N7eOutput {
-  musicEndpoint: string;
-  mood: string;
-  generationId: string;
-  assetId: string;
-  durationSeconds: number;
-  costCents: number;
-}
+// El shape del artefacto vive en core (`N7eOutputSchema`, contracts/step-outputs.ts): es la FRONTERA
+// CROSS-NODE por la que N8 consume el bed (`assetId` → `music.asset`). El executor solo lo produce tipado
+// contra ella (`satisfies N7eOutput`); nadie llama `.parse()` en el emit.
 
 /**
  * N7e · BED MUSICAL IA (T4.9, §7.2). Genera UN bed de música por MOOD y DURACIÓN con ace-step para

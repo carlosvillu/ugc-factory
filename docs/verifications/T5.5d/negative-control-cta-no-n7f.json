@@ -1,0 +1,8 @@
+{
+  "threw": {
+    "name": "PermanentStepError",
+    "message": "assembleCompositionSpec: la escena 1 es una CTA pero la variante 01KY4VC30HPG9R22RA0T6XX3H0 no tiene dep N7f (clip de CTA) que la cubra"
+  },
+  "isPermanentStepError": true,
+  "mastersCreated": 0
+}

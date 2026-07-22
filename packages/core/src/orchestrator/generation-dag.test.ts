@@ -8,7 +8,7 @@ import { N7_MAX_RETRIES } from './executor';
 import type { VariantGenerationPlan } from './generation-dag';
 import type { RunNodeInput } from './run-definition';
 
-/** Un plan de variante con los seis N7 presentes (config opaca de relleno: el builder no la mira). */
+/** Un plan de variante con los seis N7 + N8 presentes (config opaca de relleno: el builder no la mira). */
 function fullVariant(variantId: string): VariantGenerationPlan {
   return {
     variantId,
@@ -19,6 +19,7 @@ function fullVariant(variantId: string): VariantGenerationPlan {
     n7dConfig: { scriptId: 's1' },
     n7fConfig: { scriptId: 's1', ctaEndpoint: 'fal-ai/x' },
     n7eConfig: { musicEndpoint: 'fal-ai/ace-step' },
+    n8Config: { variantId },
   };
 }
 
@@ -38,18 +39,48 @@ describe('generationRunDefinition', () => {
     expect(def.nodes.every((n) => n.isCheckpoint !== true)).toBe(true);
   });
 
-  it('EXPANDE por variante: N variantes → N sub-DAGs de 7 nodos (N6 + 6 N7)', () => {
+  it('EXPANDE por variante: N variantes → N sub-DAGs de 8 nodos (N6 + 6 N7 + N8)', () => {
     const def = generationRunDefinition('p', [
       fullVariant('v1'),
       fullVariant('v2'),
       fullVariant('v3'),
     ]);
-    expect(def.nodes).toHaveLength(3 * 7);
-    // Cada variante tiene sus 7 nodos con SU variantId.
+    expect(def.nodes).toHaveLength(3 * 8);
+    // Cada variante tiene sus 8 nodos con SU variantId.
     for (const v of ['v1', 'v2', 'v3']) {
       const nodesOfV = def.nodes.filter((n) => n.variantId === v);
-      expect(nodesOfV).toHaveLength(7);
+      expect(nodesOfV).toHaveLength(8);
     }
+  });
+
+  it('N8 depende de los N7 de vídeo/voz/bed PRESENTES (N7b/N7c/N7d/N7f/N7e) + N6; NO de N7a', () => {
+    const def = generationRunDefinition('p', [fullVariant('v1')]);
+    const n8 = byKey(def.nodes, `${K.n8}__v1`);
+    // `n7Node` prepone N6 (raíz del sub-DAG) a todo nodo N7/N8; N8 añade sus productores de input
+    // N7b/N7c/N7d/N7f/N7e. NO depende de N7a (sus keyframes los consumen N7d/N7f, no N8).
+    expect(n8?.dependsOn?.slice().sort()).toEqual(
+      [
+        `${K.n6}__v1`,
+        `${K.n7b}__v1`,
+        `${K.n7c}__v1`,
+        `${K.n7d}__v1`,
+        `${K.n7f}__v1`,
+        `${K.n7e}__v1`,
+      ].sort(),
+    );
+    expect(n8?.dependsOn).not.toContain(`${K.n7a}__v1`);
+  });
+
+  it('N8 solo depende de los N7 PRESENTES (sin b-roll ni CTA → N8 no depende de N7d/N7f)', () => {
+    const def = generationRunDefinition('p', [
+      { variantId: 'v1', n6Config: {}, n7bConfig: {}, n7cConfig: {}, n8Config: {} },
+    ]);
+    const n8 = byKey(def.nodes, `${K.n8}__v1`);
+    expect(n8?.dependsOn?.slice().sort()).toEqual(
+      [`${K.n6}__v1`, `${K.n7b}__v1`, `${K.n7c}__v1`].sort(),
+    );
+    expect(n8?.dependsOn).not.toContain(`${K.n7d}__v1`);
+    expect(n8?.dependsOn).not.toContain(`${K.n7f}__v1`);
   });
 
   it('node_key LIMPIO (§12) reutilizado entre variantes; la identidad está en variantId', () => {

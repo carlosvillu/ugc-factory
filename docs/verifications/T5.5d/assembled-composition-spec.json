@@ -1,0 +1,60 @@
+{
+  "rawN7Ids": {
+    "avatar": "01KY4VC2VX88CVEAG781ZJD928",
+    "brollA": "01KY4VC2W0DGVRCMGV8H4CC50V",
+    "brollB": "01KY4VC2W1NM0GSXYT1NACY5SE",
+    "ctaClip": "01KY4VC2W3MT86KAT88ASK3E5S",
+    "bed": "01KY4VC2W529NQ9T6B0C0G69TF",
+    "vo0": "01KY4VC2W84MBTNX8RKAGN2H47",
+    "vo1": "01KY4VC2W923XVSY61H6XN0E66",
+    "vo2": "01KY4VC2WB6W3K2VC8RHBNNR4A",
+    "vo3": "01KY4VC2WDE8K77XMAYQ9Y5QY0"
+  },
+  "rawSpec": {
+    "segments": [
+      {
+        "type": "hook",
+        "videoAsset": "01KY4VC2VX88CVEAG781ZJD928",
+        "voAudio": "01KY4VC2W84MBTNX8RKAGN2H47",
+        "voWords": {
+          "text": "hook line",
+          "words": [
+            {
+              "text": "hook",
+              "start": 0,
+              "end": 0.4,
+              "type": "word"
+            }
+          ]
+        }
+      },
+      {
+        "type": "body",
+        "videoAsset": "01KY4VC2W0DGVRCMGV8H4CC50V",
+        "voAudio": "01KY4VC2W923XVSY61H6XN0E66"
+      },
+      {
+        "type": "cta",
+        "videoAsset": "01KY4VC2W3MT86KAT88ASK3E5S",
+        "voAudio": "01KY4VC2WB6W3K2VC8RHBNNR4A"
+      },
+      {
+        "type": "body",
+        "videoAsset": "01KY4VC2W1NM0GSXYT1NACY5SE",
+        "voAudio": "01KY4VC2WDE8K77XMAYQ9Y5QY0"
+      }
+    ],
+    "music": {
+      "asset": "01KY4VC2W529NQ9T6B0C0G69TF",
+      "volume": 0.2,
+      "ducking": true,
+      "fadeOutS": 1
+    },
+    "output": {
+      "width": 1080,
+      "height": 1920,
+      "fps": 30,
+      "maxDurationS": 30
+    }
+  }
+}

@@ -226,3 +226,113 @@ export const N7bOutputSchema = z.object({
   clips: z.array(N7bClipRefSchema),
 });
 export type N7bOutput = z.infer<typeof N7bOutputSchema>;
+
+// ── OUTPUTS DE N7c/N7d/N7e/N7f + N8 (T5.5d) — FORMALIZADOS COMO SCHEMAS (antes `interface` LOCALES) ─────
+//
+// POR QUÉ AHORA SON SCHEMAS Y NO INTERFACES (T5.5d): el ensamblador N8 (`assembleCompositionSpec`) LEE
+// los refs de asset de sus deps N7c (clip de avatar → hook), N7d (b-roll → body), N7f (clip de CTA → cta)
+// y N7e (bed → music), y los DISCRIMINA POR SCHEMA con `findDepBySchema` (patrón cross-node, igual que N7c
+// hace con N7b y N7d con N7a). Una `interface` local no tiene `.safeParse()`, así que N8 no podría
+// distinguir por schema qué dep es cuál. Los executors emiten el mismo shape con `satisfies` (type-only;
+// nadie llama `.parse()` en el emit — el typecheck del gate caza cualquier desajuste de forma).
+//
+// DISCRIMINABILIDAD (CONSTRAINT DE CORRECCIÓN T5.5d): `findDepBySchema` LANZA si 2+ deps validan el MISMO
+// schema. Los pares de riesgo son:
+//   · N7c ↔ N7e (casi idénticos: endpoint+generationId+assetId+durationSeconds+costCents).
+//   · N7d ↔ N7f (IDÉNTICOS salvo la clave de endpoint y el índice de clip: b-roll y clip de CTA comparten
+//     la mecánica i2v). ESTE es el par MÁS peligroso: si un schema quedara laxo, un output N7d validaría
+//     como N7f (o al revés) y N8 rompería EN RUNTIME (no en el gate) por ambigüedad de dep.
+// Por eso CADA schema DEBE exigir su clave DISTINTIVA con `z.object` NO-strict (basta exigir las claves
+// propias; un output ajeno falla al no traer la clave exigida):
+//   · N7c → `avatarEndpoint`;  N7e → `musicEndpoint` + `mood`.
+//   · N7d → `brollEndpoint`;   N7f → `ctaEndpoint`  (la ÚNICA diferencia estructural entre ambos).
+
+/** N7c · CLIP DE AVATAR (T4.7). Ref ligero del clip generado (la verdad vive en `generation`/`asset`). Su
+ *  `assetId` es el clip de vídeo del segmento HOOK que N8 coloca en la CompositionSpec. Discriminado de N7e
+ *  por `avatarEndpoint` (clave propia). */
+export const N7cOutputSchema = z.object({
+  avatarEndpoint: z.string(),
+  generationId: z.string(),
+  assetId: z.string(),
+  durationSeconds: z.number(),
+  costCents: z.number(),
+});
+export type N7cOutput = z.infer<typeof N7cOutputSchema>;
+
+/** El ref de UN clip de b-roll de N7d (uno por clip de escena de body, posiblemente troceada). El
+ *  `bodySceneIndex` es el índice DENTRO del subconjunto FILTRADO de escenas de body (NO el `sceneIndex`
+ *  absoluto del guion); N8 lo MAPEA al espacio de índice absoluto para emparejar cada clip con su voz. */
+export const N7dClipRefSchema = z.object({
+  /** Índice de la escena de BODY en el subconjunto filtrado (§7.5): 0 = primera escena de body, etc. */
+  bodySceneIndex: z.number(),
+  /** Índice del clip DENTRO de su escena (0-based; >0 si la escena se troceó). */
+  clipIndex: z.number(),
+  generationId: z.string(),
+  assetId: z.string(),
+  durationSeconds: z.number(),
+  costCents: z.number(),
+});
+/** N7d · B-ROLL POR ESCENA (T4.8). Sus `clips[].assetId` son los clips de vídeo de los segmentos BODY que
+ *  N8 coloca en la CompositionSpec. Discriminado de N7f por `brollEndpoint` (clave propia, vs `ctaEndpoint`
+ *  de N7f). */
+export const N7dOutputSchema = z.object({
+  scriptId: z.string(),
+  brollEndpoint: z.string(),
+  route: z.enum(['i2v', 'r2v', 't2v']),
+  clips: z.array(N7dClipRefSchema),
+});
+export type N7dOutput = z.infer<typeof N7dOutputSchema>;
+
+/** El ref de UN clip de CTA de N7f (§7.5 «la CTA es product shot animado»). El `ctaSceneIndex` es el índice
+ *  DENTRO del subconjunto FILTRADO de escenas de CTA (NO el `sceneIndex` absoluto del guion) — el gemelo
+ *  del `bodySceneIndex` de N7d; N8 lo MAPEA al espacio absoluto con un `ctaOrdinal` paralelo al de body. */
+export const N7fClipRefSchema = z.object({
+  /** Índice de la escena de CTA en el subconjunto filtrado (§7.5): 0 = primera escena de CTA, etc. */
+  ctaSceneIndex: z.number(),
+  /** Índice del clip DENTRO de su escena (0-based; >0 si la escena se troceó). */
+  clipIndex: z.number(),
+  generationId: z.string(),
+  assetId: z.string(),
+  durationSeconds: z.number(),
+  costCents: z.number(),
+});
+/** N7f · CLIP DE CTA (T5.5a, §7.5). Sus `clips[].assetId` son los clips de vídeo de los segmentos CTA que
+ *  N8 coloca en la CompositionSpec. GEMELO estructural de N7d salvo la CLAVE DE ENDPOINT: `ctaEndpoint`
+ *  (no `brollEndpoint`) — es lo que permite a `findDepBySchema` distinguir la dep N7f de la N7d (par de
+ *  riesgo T5.5d), y el índice de clip es `ctaSceneIndex` (no `bodySceneIndex`). */
+export const N7fOutputSchema = z.object({
+  scriptId: z.string(),
+  ctaEndpoint: z.string(),
+  route: z.enum(['i2v', 'r2v', 't2v']),
+  clips: z.array(N7fClipRefSchema),
+});
+export type N7fOutput = z.infer<typeof N7fOutputSchema>;
+
+/** N7e · BED MUSICAL IA (T4.9). Ref ligero del bed generado. Su `assetId` es el `music.asset` de la
+ *  CompositionSpec (bed único por variante, §14). Discriminado de N7c por `musicEndpoint` + `mood`. */
+export const N7eOutputSchema = z.object({
+  musicEndpoint: z.string(),
+  mood: z.string(),
+  generationId: z.string(),
+  assetId: z.string(),
+  durationSeconds: z.number(),
+  costCents: z.number(),
+});
+export type N7eOutput = z.infer<typeof N7eOutputSchema>;
+
+/**
+ * N8 · COMPOSICIÓN (T5.5d, §9.7): el máster PUBLICABLE de la variante ya persistido. Ref al
+ * `masterAssetId` (la fila `asset` kind `final_video` que `finalizeVariantMaster` creó) + el
+ * `thumbnailAssetId` + el `qaReport` (el que `composeVariant` devolvió, medido sobre el máster firmado). N8
+ * NO paga fal ($0 runtime): ensambla el spec y encadena la cadena de render local
+ * (fitter→normalize→concat→compose→persist).
+ */
+export const N8OutputSchema = z.object({
+  variantId: z.string(),
+  masterAssetId: z.string(),
+  thumbnailAssetId: z.string(),
+  /** El `qa_report` del pase final (validado por `QaReportSchema` en su frontera; aquí `unknown` para no
+   *  re-validar el objeto entero en cada lectura del artefacto — patrón N3/N4 con `brief`). */
+  qaReport: z.unknown(),
+});
+export type N8Output = z.infer<typeof N8OutputSchema>;

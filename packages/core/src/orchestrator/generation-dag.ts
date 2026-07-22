@@ -62,6 +62,7 @@ export const GENERATION_NODE_KEYS = {
   n7d: 'N7d',
   n7f: 'N7f',
   n7e: 'N7e',
+  n8: 'N8',
 } as const;
 
 /** Qué sub-steps N7 se materializan para una variante (además de N6, que SIEMPRE está). Cada flag lo
@@ -85,6 +86,9 @@ export interface VariantGenerationPlan {
   n7fConfig?: unknown;
   /** Config de N7e (bed musical), o `undefined` para omitir. */
   n7eConfig?: unknown;
+  /** Config de N8 (composición; CONSUME los N7 de vídeo/voz/bed presentes), o `undefined` para omitir.
+   *  N8 no paga fal (compone lo que N7 generó) → $0 runtime. */
+  n8Config?: unknown;
 }
 
 /** Una `key` local ÚNICA por (nodo, variante): la referencian los `dependsOn`. El `node_key` se queda
@@ -159,6 +163,22 @@ function variantNodes(plan: VariantGenerationPlan): RunNodeInput[] {
   // N7e · BED MUSICAL ← [N6]. Independiente.
   if (plan.n7eConfig !== undefined) {
     nodes.push(n7Node(k.n7e, plan.n7eConfig, []));
+  }
+
+  // N8 · COMPOSICIÓN ← [los N7 PRESENTES que producen sus inputs]: los clips de vídeo (N7c avatar /
+  // N7d b-roll / N7f clip de CTA), las voces (N7b) y el bed (N7e). NO depende de N7a (sus keyframes los
+  // consumen N7d/N7f, no N8). `n7Node` prepone N6 (raíz del sub-DAG) por uniformidad, aunque el orden ya lo
+  // garantizarían los N7. N8 lee los outputs de esas deps por SCHEMA (findDepBySchema) para ensamblar la
+  // CompositionSpec. Sin fal → $0 runtime, pero SÍ lleva el maxRetries holgado por uniformidad (sus fallos
+  // de composición son deterministas → Permanent, no gastan).
+  if (plan.n8Config !== undefined) {
+    const n8Deps: string[] = [];
+    if (plan.n7bConfig !== undefined) n8Deps.push(localKey(k.n7b, variantId));
+    if (plan.n7cConfig !== undefined) n8Deps.push(localKey(k.n7c, variantId));
+    if (plan.n7dConfig !== undefined) n8Deps.push(localKey(k.n7d, variantId));
+    if (plan.n7fConfig !== undefined) n8Deps.push(localKey(k.n7f, variantId));
+    if (plan.n7eConfig !== undefined) n8Deps.push(localKey(k.n7e, variantId));
+    nodes.push(n7Node(k.n8, plan.n8Config, n8Deps));
   }
 
   return nodes;

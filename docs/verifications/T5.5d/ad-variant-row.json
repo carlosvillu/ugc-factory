@@ -1,0 +1,35 @@
+{
+  "master_asset_id": "01KY4VC2Z6J2N26644D21FTWP0",
+  "thumbnail_asset_id": "01KY4VC2Z7BP72JBNQGJC6MAPF",
+  "qa_report": {
+    "score": 100,
+    "checks": {
+      "fps": "pass",
+      "codec": "pass",
+      "duration": "pass",
+      "filesize": "pass",
+      "loudness": "pass",
+      "resolution": "pass",
+      "av_duration_diff": "pass",
+      "captions_safe_zone": "pass"
+    },
+    "passed": true,
+    "metrics": {
+      "fps": 30,
+      "width": 1080,
+      "height": 1920,
+      "pixFmt": "yuv420p",
+      "audioCodec": "aac",
+      "videoCodec": "h264",
+      "audioBitrate": 128000,
+      "loudnessLufs": -14,
+      "audioChannels": 2,
+      "filesizeBytes": 8,
+      "audioDurationS": 3,
+      "videoDurationS": 3,
+      "audioSampleRate": 48000,
+      "captionViolations": 0
+    }
+  },
+  "score": 100
+}

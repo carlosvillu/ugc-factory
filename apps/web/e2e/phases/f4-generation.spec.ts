@@ -59,18 +59,28 @@ const MATCHING_PERSONA: PersonaSeed = {
 test.beforeAll(async () => {
   await seedPersonas(stackDb, makeLocalStorageAdapter({ root: assetsDir }), [MATCHING_PERSONA]);
 
-  // BLINDAJE del matching (T4.11): con las personas que HAY ahora en la BD del stack (la mía + las que
-  // otros @f4 specs hayan sembrado antes), `matchPersonas` contra el hint del brief beauty debe devolver
-  // EXACTAMENTE a Nora. Si una persona futura compartiera tokens con el hint —y no tuviera imagen de
-  // referencia— la rotación de N4 caería en ella y el run petaría con un 500 opaco aguas abajo; este
-  // assert lo convierte en un fallo ROJO en el origen, con el nombre del intruso. (La disjunción de
-  // tokens del hint ya protege el run por diseño; esto es la red contra regresión.)
+  // BLINDAJE del matching (T4.11, invariante corregido 2026-07-23 regla 6): lo que el run EXIGE es que la
+  // persona que N4 selecciona —el candidato de MAYOR score, `matchPersonas` ordena desc— sea Nora F4 Premium
+  // Y que tenga imagen de referencia (N7c avatar necesita `referenceImageIds[0]`; sin ella, 500 opaco aguas
+  // abajo). El assert ORIGINAL afirmaba `toEqual(['Nora F4 Premium'])` (Nora es la ÚNICA candidata con
+  // imagen), que era más estricto que el requisito real: al CRECER `PERSONA_SEEDS`, personas placeholder
+  // que SÍ traen imagen (Nerea, Rosa) casan por tokens genéricos ('mujer', 'luminoso') con score MENOR —
+  // candidatas con imagen, sí, pero N4 nunca cae en ellas porque Nora puntúa más alto. El journey pasa
+  // (verificado). El invariante que protege el run es «el top-1 es Nora Y tiene imagen», no «Nora es la
+  // única con imagen». (regla 6: se afina la aserción al requisito real, NO se relaja para tapar un fallo.)
   const personas = await listPersonas(stackDb);
   const candidates = matchPersonas(personas, FAKE_BEAUTY_AVATAR_HINT);
+  expect(candidates.length, 'el hint beauty debe casar con al menos una persona').toBeGreaterThan(
+    0,
+  );
+  const top = candidates[0]?.persona;
+  expect(top?.name, 'N4 usa el candidato de mayor score: debe ser Nora F4 Premium').toBe(
+    'Nora F4 Premium',
+  );
   expect(
-    candidates.map((c) => c.persona.name),
-    'el hint beauty debe casar SOLO con Nora F4 Premium (persona con imagen de referencia)',
-  ).toEqual(['Nora F4 Premium']);
+    (top?.referenceImageIds.length ?? 0) > 0,
+    'el top-1 (Nora F4 Premium) debe traer imagen de referencia: N7c avatar la exige o el run 500ea',
+  ).toBe(true);
 });
 
 function cp2(page: Page) {

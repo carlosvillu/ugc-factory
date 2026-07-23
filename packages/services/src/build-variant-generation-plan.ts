@@ -18,6 +18,7 @@
 // executor (no submitear un payload malo / catch de misseeding kind/caps) — no es duplicación dañina.
 import { resolveComponentEndpoints, resolveVoiceTriple, type VoiceMap } from '@ugc/core/generation';
 import { AdScriptSchema } from '@ugc/core/contracts';
+import type { RecipeTier } from '@ugc/core/library';
 import { PermanentStepError } from '@ugc/core/orchestrator';
 import type { VariantGenerationPlan } from '@ugc/core/orchestrator';
 import {
@@ -179,6 +180,40 @@ export async function buildVariantGenerationPlan(
   };
 
   return plan;
+}
+
+/**
+ * ¿El tier está LISTO para generar? — es decir, ¿TODOS los endpoints de generación de su recipe
+ * resuelven a un `model_profile` REAL? (voice/avatar/broll del recipe + el bed musical constante).
+ *
+ * SEPARA DOS ETAPAS DEL CICLO DE VIDA que T4.11 fusionó (regla 6, 2026-07-23): (1) aprobar guiones →
+ * `scripted` es un hecho sobre el TEXTO, incondicional y agnóstico al tier; (2) arrancar la generación
+ * solo tiene sentido cuando el tier es generation-ready. Los tiers `test`/`standard` dejan `broll` como
+ * ETIQUETA pendiente-F4 (§13.1 l.600) → NO están listos, y aprobar sus guiones NO debe arrancar (ni
+ * fallar por) la generación. `buildVariantGenerationPlan` sigue lanzando RUIDOSO en todos los casos —
+ * este predicado NO lo sustituye: es el gate de control de flujo que decide si SIQUIERA se intenta
+ * construir el plan. Así un fallo REAL (voz incoherente, persona sin imagen) sigue siendo un throw
+ * ruidoso en `buildVariantGenerationPlan`, y solo el endpoint-pendiente-F4 (benigno, esperado) se tolera.
+ *
+ * La DETECCIÓN es preguntar al resolver real (`getModelProfileByEndpoint`), NUNCA string-match sobre el
+ * label (`[`, espacios) — eso reimplementaría la comprobación (trampa T1.8). Mismo mecanismo que
+ * `assertEndpointResolvable`, en forma de PREDICADO (control de flujo esperado ≠ excepción).
+ */
+export async function isTierGenerationReady(db: DbClient, tier: RecipeTier): Promise<boolean> {
+  const recipe = await getRecipe(db, tier);
+  if (recipe === undefined) return false;
+  const endpoints = resolveComponentEndpoints(recipe);
+  // Solo los endpoints QUE SALEN DEL RECIPE del tier (voice/avatar/broll): son los que un tier deja como
+  // ETIQUETA pendiente-F4 (la condición benigna y esperada que este predicado tolera). El bed musical
+  // (`MUSIC_ENDPOINT`) es una CONSTANTE global, no una cuestión de tier-readiness: si estuviera mal
+  // sembrado sería un fallo de configuración REAL que debe LANZAR ruidoso dentro de
+  // `buildVariantGenerationPlan` (su `assertEndpointResolvable`), no colarse aquí y hacer que TODO tier
+  // —premium incluido— deje de generar en silencio (ese sería el gate oscuro un nivel arriba, principio 9).
+  const recipeEndpoints = [endpoints.voice, endpoints.avatar, endpoints.broll].filter(
+    (e): e is string => e !== undefined,
+  );
+  const profiles = await Promise.all(recipeEndpoints.map((e) => getModelProfileByEndpoint(db, e)));
+  return profiles.every((p) => p !== undefined);
 }
 
 /** MONEY-GATE: verifica que `endpoint` resuelve a un `model_profile` REAL. Un `undefined` significa que

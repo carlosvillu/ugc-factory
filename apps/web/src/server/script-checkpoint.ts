@@ -49,7 +49,7 @@ import {
   type DecidedVerdict,
   type Db,
 } from '@ugc/db';
-import { buildVariantGenerationPlan } from '@ugc/services';
+import { buildVariantGenerationPlan, isTierGenerationReady } from '@ugc/services';
 import { AppError } from '@ugc/core/contracts';
 
 /** El artefacto de un step de guiones (N5), o `undefined` si el step no es uno. Se discrimina por
@@ -78,25 +78,29 @@ function isRealEdit(rebuilt: AdScript, currentScenes: readonly { narration: stri
   return narrationFingerprint(rebuilt.scenes) !== narrationFingerprint(currentScenes);
 }
 
-/** El resultado de aprobar CP3 (T4.11): el id del RUN DE GENERACIÓN N6→N7 arrancado en la MISMA tx para
- *  las variantes `scripted`, o `undefined` si CP3 no aprobó ninguna (nada que generar). Viaja hasta la
- *  respuesta de `/approve` para que el cliente navegue al canvas de generación (patrón del `nextRunId`
- *  de CP2). */
+/** El resultado de aprobar CP3: el id del RUN DE GENERACIÓN N6→N7 arrancado en la MISMA tx para las
+ *  variantes `scripted`, o `undefined` si CP3 no aprobó ninguna (nada que generar) O si el tier aún no
+ *  es generation-ready (b-roll pendiente-F4 → las variantes quedan `scripted` sin arrancar run). Viaja
+ *  hasta la respuesta de `/approve` para que el cliente navegue al canvas de generación (patrón del
+ *  `nextRunId` de CP2); su ausencia significa «aprobado, sin run de generación que mostrar». */
 export interface ScriptsCheckpointResult {
   nextRunId?: string;
 }
 
 /**
- * Efecto de APROBAR el checkpoint de guiones (CP3): aplica los veredictos por-variante Y —en la MISMA
- * tx— arranca el RUN DE GENERACIÓN N6→N7 de las variantes que quedaron `scripted` (T4.11).
+ * Efecto de APROBAR el checkpoint de guiones (CP3): aplica los veredictos por-variante y —si el tier es
+ * generation-ready— arranca el RUN DE GENERACIÓN N6→N7 de las variantes que quedaron `scripted`.
  *
  * No-op si el step no es N5 o si la decisión no es `scripts` (mismo criterio que CP1/CP2: un efecto
  * que no reconoce su artefacto/decisión no hace nada) → `{}`.
  *
- * ATOMICIDAD (patrón de CP2, `finalizeMatrixCheckpoint`): los veredictos + el `createRun` del run de
- * generación commitean JUNTOS o nada. Si `buildVariantGenerationPlan` lanza (money-safety: un endpoint
- * de recipe que aún es etiqueta) o `createRun` falla, el rollback de la tx externa DESHACE también los
- * veredictos — no queda una variante `scripted` sin su run, ni un run condenado a medio gastar.
+ * DOS ETAPAS SEPARADAS (regla 6, 2026-07-23 — se relaja deliberadamente la atomicidad que T4.11 declaraba
+ * «ninguna variante scripted sin su run»): (1) los veredictos → `scripted` commitean SIEMPRE que la
+ * aprobación proceda; (2) el arranque de generación es BEST-EFFORT y solo ocurre si `isTierGenerationReady`
+ * (los tiers test/standard con b-roll aún etiqueta NO lo están). Cuando el tier SÍ está listo, veredictos
+ * + `createRun` siguen commiteando juntos (un throw de plan/createRun hace rollback de ambos) — la
+ * money-safety se conserva para los tiers que generan; lo que cambia es que un tier NO-listo ya no tumba
+ * la transición `scripted` (era la regresión: aprobar guiones en tier test daba 500 y revertía todo).
  */
 export async function approveScriptsForStep(
   db: Db,
@@ -179,7 +183,7 @@ async function applyDecidedVerdicts(
 
   await applyScriptVerdicts(db, { batchId, verdicts: decided });
 
-  // ── EL ARRANQUE DEL RUN DE GENERACIÓN N6→N7, EN ESTA MISMA TX (T4.11) ────────────────────────────
+  // ── EL ARRANQUE (BEST-EFFORT) DEL RUN DE GENERACIÓN N6→N7, EN ESTA MISMA TX ───────────────────────
   // Las variantes que quedaron `scripted` (aprobadas + sin flag bloqueante) son EXACTAMENTE las que
   // `applyScriptVerdicts` transicionó — se derivan del `decided` (no se re-consulta la BD): `approve:true`.
   const scriptedVariantIds = decided.filter((d) => d.approve).map((d) => d.variantId);
@@ -189,10 +193,27 @@ async function applyDecidedVerdicts(
     return {};
   }
 
+  // DESACOPLE DE ETAPAS (regla 6, 2026-07-23): aprobar guiones → `scripted` es un hecho sobre el TEXTO,
+  // incondicional. Arrancar la generación es SEPARADO y solo tiene sentido si el tier es generation-ready.
+  // T4.11 los fusionó en una sola tx con atomicidad «ninguna variante scripted sin su run»; eso hacía que
+  // un tier con el b-roll aún ETIQUETA (test/standard, §13.1) reventara la aprobación entera —
+  // `buildVariantGenerationPlan` lanzaba y el rollback deshacía los `scripted` (regresión: N5 nunca
+  // llegaba a `succeeded`, E2E de fase F2 rojo en silencio desde T4.11). Ahora la generación es
+  // BEST-EFFORT: si el tier no está listo, las variantes quedan `scripted` (commit) y NO se arranca run.
+  //
+  // El gate es un PREDICADO explícito (`isTierGenerationReady`), NO un try/catch alrededor de
+  // `buildVariantGenerationPlan` — eso se tragaría los throws REALES (voz incoherente, persona sin
+  // imagen) igual que el benigno endpoint-pendiente-F4 (regla 5a: no colapsar errores tipados en un
+  // estado genérico). Con el tier listo, cualquier throw de `buildVariantGenerationPlan` SIGUE siendo un
+  // bug ruidoso que aborta la aprobación — money-safety intacta para los tiers que SÍ generan.
+  if (!(await isTierGenerationReady(db, batch.tier))) {
+    return {};
+  }
+
   // Un `VariantGenerationPlan` por variante `scripted` (lee recipe×tier + voice_map + guion de la BD —
-  // la MISMA tx). Money-safety: `buildVariantGenerationPlan` LANZA (PermanentStepError) si un endpoint
-  // de recipe aún es etiqueta → el rollback deshace los veredictos (atomicidad). Secuencial: fail-fast
-  // (una variante irresoluble aborta el lote entero antes de crear un run a medias).
+  // la MISMA tx). Con el tier ya confirmado generation-ready, un throw aquí es un fallo REAL (persona mal
+  // configurada, catálogo incoherente), no un endpoint pendiente → sigue ruidoso, aborta el lote entero
+  // (rollback) antes de crear un run a medias. Secuencial: fail-fast.
   const plans: VariantGenerationPlan[] = [];
   for (const variantId of scriptedVariantIds) {
     plans.push(await buildVariantGenerationPlan({ db }, { variantId }));

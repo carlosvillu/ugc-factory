@@ -31,7 +31,6 @@ import {
 } from '@ugc/db';
 import { persona, productBrief, project, urlAnalysis } from '@ugc/db/schema';
 import { RAW_GALLERY_SEED, validateGallerySeed } from '@ugc/core/gallery';
-import { PermanentStepError } from '@ugc/core/orchestrator';
 import {
   createTestDatabase,
   makeBrief,
@@ -527,24 +526,59 @@ describe('CP3 · approveScriptsForStep (T2.6): veredictos, v2 solo si edita, blo
     expect(await pipelineRunCount()).toBe(0);
   });
 
-  // ── T4.11 · MONEY-SAFETY: la aprobación es ATÓMICA con el arranque del run ──────────────────────────
-  it('ATOMICIDAD money-gate: si `buildVariantGenerationPlan` LANZA, el rollback deshace los veredictos', async () => {
-    // Una variante aprobable (sin flag) en tier-TEST: `applyScriptVerdicts` la transicionaría a
-    // `scripted` PERO acto seguido `buildVariantGenerationPlan` LANZA (el broll de tier-test es aún una
-    // etiqueta — money-gate). Como ambas mitades comparten la tx de `withDomainTransaction`, el throw
-    // hace rollback de TODO: la variante NO queda `scripted`, y NO hay ni un `pipeline_run` colgado. El
-    // invariante de dinero: nunca una variante marcada lista sin su run (o con un run condenado).
-    const { output, variantIds } = await seedScriptedBatch(tdb.db, 1, [[]]);
+  // ── MONEY-SAFETY: un tier NO generation-ready nunca crea un pipeline_run ─────────────────────────────
+  // (Reemplaza al viejo test de ATOMICIDAD de T4.11, que afirmaba que aprobar en tier-test LANZA y revierte
+  //  los veredictos — ese era el comportamiento REGRESIVO: la aprobación de guiones fallaba con 500 en todo
+  //  tier no-premium. Corregido con el desacople de etapas 2026-07-23; el invariante money-safety que SIGUE
+  //  vivo es este: jamás se arranca un run —ni se gasta— en un tier cuyo b-roll es aún etiqueta.)
+  it('MONEY-SAFETY: un tier no generation-ready (b-roll etiqueta) aprueba los guiones SIN crear ningún run', async () => {
+    // Dos variantes aprobables (sin flag) en tier-TEST. `isTierGenerationReady('test')` es false (broll
+    // aún etiqueta, §13.1) → la generación NO se intenta: las variantes quedan `scripted` (la aprobación
+    // de guiones es un hecho sobre el texto) y NO se crea ni un `pipeline_run` (nada que pueda gastar).
+    const { output, variantIds } = await seedScriptedBatch(tdb.db, 2, [[], []], 'test');
+
+    const result = await approveInTx(output, {
+      kind: 'scripts',
+      verdicts: [
+        { variantId: variantIds[0]!, approved: true },
+        { variantId: variantIds[1]!, approved: true },
+      ],
+    });
+
+    // Aprobadas y `scripted` (el desacople NO debilita la aprobación)...
+    expect(await variantStatus(variantIds[0]!)).toBe('scripted');
+    expect(await variantStatus(variantIds[1]!)).toBe('scripted');
+    // ...pero CERO runs: el money-gate sigue vivo (ningún gasto en un tier que no puede generar).
+    expect(result.nextRunId).toBeUndefined();
+    expect(await pipelineRunCount()).toBe(0);
+  });
+
+  // ── NEGATIVE CONTROL del desacople: en un tier SÍ generation-ready, un fallo REAL del plan SIGUE ─────
+  // ATÓMICO (throw → rollback de los veredictos). El desacople toleró SOLO el endpoint-pendiente-F4
+  // (benigno) vía predicado; NO debe tragarse los errores REALES (persona sin imagen, voz incoherente).
+  // Guarda contra un futuro try/catch que colapse ambos (la trampa de esta sesión, principio 9 / regla 5a).
+  it('ATOMICIDAD en tier ready: un fallo REAL del plan (persona sin imagen) LANZA y hace rollback de los veredictos', async () => {
+    // Premium ES generation-ready → se construye el plan. Se vacía `reference_image_ids` de la persona de
+    // la variante (dato en reposo, SQL) → `buildVariantGenerationPlan` LANZA en el gate de avatar (N7c
+    // exige `referenceImageIds[0]`). Como comparte la tx de `withDomainTransaction`, el throw revierte
+    // TODO: la variante NO queda `scripted`, sin `pipeline_run` colgado. Es un fallo RUIDOSO (correcto):
+    // el desacople no lo silencia porque no es un endpoint-pendiente, es una persona mal configurada.
+    const { output, variantIds } = await seedScriptedBatch(tdb.db, 1, [[]], 'premium');
+    await tdb.pool.query(
+      `UPDATE persona SET reference_image_ids = '{}'::text[]
+        WHERE id = (SELECT persona_id FROM ad_variant WHERE id = $1)`,
+      [variantIds[0]],
+    );
 
     await expect(
       approveInTx(output, {
         kind: 'scripts',
         verdicts: [{ variantId: variantIds[0]!, approved: true }],
       }),
-    ).rejects.toThrow(PermanentStepError);
+    ).rejects.toThrow(/no tiene imagen de referencia/);
 
-    // El rollback deshizo el veredicto: la variante sigue en `planned`, sin `scripted`, y sin run.
-    expect(await variantStatus(variantIds[0]!)).toBe('planned');
+    // El rollback deshizo el veredicto: la variante sigue sin `scripted`, y CERO runs.
+    expect(await variantStatus(variantIds[0]!)).not.toBe('scripted');
     expect(await pipelineRunCount()).toBe(0);
   });
 });

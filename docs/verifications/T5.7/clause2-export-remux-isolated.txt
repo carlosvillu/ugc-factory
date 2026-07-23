@@ -1,0 +1,14 @@
+
+> ugc-factory@0.0.0 test:media /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads
+> RUN_MEDIA=1 vitest run --project 'worker:media' --reporter=verbose test/media/export-remux.test.ts
+
+
+ RUN  v4.1.10 /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads
+
+ ✓ |worker:media| test/media/export-remux.test.ts > export dual con/sin bed → mismo vídeo, audio distinto (T5.7, §14) > la versión SIN bed tiene el MISMO stream de vídeo que el máster (byte-idéntico, sin re-encode) y audio distinto 2540ms
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+   Start at  12:34:36
+   Duration  3.86s (transform 575ms, setup 17ms, import 1.23s, tests 2.54s, environment 0ms)
+

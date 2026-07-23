@@ -1,0 +1,42 @@
+
+> ugc-factory@0.0.0 dev /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads
+> pnpm --parallel --filter @ugc/web --filter @ugc/worker dev
+
+Scope: 2 of 7 workspace projects
+apps/web dev$ node scripts/dev.mjs
+apps/worker dev$ tsx watch --env-file-if-exists=../../.env src/main.ts
+apps/web dev: ▲ Next.js 16.2.10 (Turbopack)
+apps/web dev: - Local:         http://localhost:3000
+apps/web dev: - Network:       http://192.168.1.132:3000
+apps/web dev: ✓ Ready in 275ms
+apps/worker dev: {"level":30,"time":1784802906535,"pid":27800,"hostname":"MBP-de-Carlos","name":"worker","intervalMs":5000,"generationReconcile":true,"msg":"sweeper arrancado"}
+apps/worker dev: {"level":30,"time":1784802906536,"pid":27800,"hostname":"MBP-de-Carlos","name":"worker","queue":"demo.noop","msg":"pg-boss arrancado: colas y consumers listos"}
+apps/worker dev: {"level":30,"time":1784802906536,"pid":27800,"hostname":"MBP-de-Carlos","name":"worker","health":{"ok":true,"db":true},"msg":"worker ready"}
+apps/web dev: {"level":30,"time":1784802907305,"pid":27799,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","msg":"running startup migrations"}
+apps/web dev: {"level":30,"time":1784802907405,"pid":27799,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","msg":"startup migrations applied"}
+apps/web dev: {"level":30,"time":1784802907499,"pid":27799,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","seeded":false,"msg":"auth.password_hash ya existía"}
+apps/web dev: {"level":30,"time":1784802907549,"pid":27799,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","provider":"fal","seeded":false,"msg":"secret.fal ya existía en BD (env ignorada; la BD es la fuente)"}
+apps/web dev: {"level":30,"time":1784802907560,"pid":27799,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","provider":"anthropic","seeded":false,"msg":"secret.anthropic ya existía en BD (env ignorada; la BD es la fuente)"}
+apps/web dev: {"level":30,"time":1784802907565,"pid":27799,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","provider":"firecrawl","seeded":false,"msg":"secret.firecrawl ya existía en BD (env ignorada; la BD es la fuente)"}
+apps/web dev: {"level":30,"time":1784802907605,"pid":27799,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","msg":"sembrando datos de referencia (T3.9)"}
+apps/web dev: {"level":30,"time":1784802907634,"pid":27799,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","hookLines":80,"ctaLines":30,"recipes":3,"msg":"librería sembrada o ya presente (insert-only)"}
+apps/web dev: {"level":30,"time":1784802907711,"pid":27799,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","templates":56,"guardPacks":10,"modelProfiles":18,"msg":"galería sembrada o ya presente (insert-only)"}
+apps/web dev: {"level":30,"time":1784802907810,"pid":27799,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","personas":10,"imagesCreated":0,"imagesFailed":0,"msg":"personas sembradas o ya presentes"}
+apps/web dev: {"level":30,"time":1784802907810,"pid":27799,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","msg":"datos de referencia sembrados (T3.9)"}
+apps/web dev: {"level":30,"time":1784802911955,"pid":27799,"hostname":"MBP-de-Carlos","name":"web","request_id":"0bf8e262-fa6b-49cc-bb7f-14927df2c113","route":"/api/health","health":{"ok":true,"db":true},"msg":"health check"}
+apps/web dev:  GET /api/health 200 in 234ms (next.js: 208ms, application-code: 26ms)
+apps/web dev: {"level":30,"time":1784802912007,"pid":27799,"hostname":"MBP-de-Carlos","name":"web","request_id":"7643ceb9-8a75-4372-a9dc-2c2f6d7d7bf4","route":"/api/health","health":{"ok":true,"db":true},"msg":"health check"}
+apps/web dev:  GET /api/health 200 in 16ms (next.js: 1817µs, application-code: 15ms)
+apps/web dev:  GET /login 200 in 295ms (next.js: 125ms, application-code: 169ms)
+apps/web dev:  POST /api/login 200 in 155ms (next.js: 39ms, application-code: 116ms)
+apps/web dev:  GET / 200 in 146ms (next.js: 20ms, proxy.ts: 38ms, application-code: 88ms)
+apps/web dev:  GET /api/library 200 in 72ms (next.js: 50ms, application-code: 21ms)
+apps/web dev:  GET /library 200 in 560ms (next.js: 67ms, proxy.ts: 8ms, application-code: 485ms)
+apps/web dev:  GET /api/assets/01KY78QYMYET060DFBYZ46TKXF/download 200 in 670ms (next.js: 654ms, application-code: 16ms)
+apps/web dev:  GET /api/variants/01KY78QYN2RF2YMQHYGN9XZ9QV/lineage 200 in 639ms (next.js: 623ms, application-code: 16ms)
+apps/web dev:  GET /api/variants/01KY78QYN2RF2YMQHYGN9XZ9QV/bundle?audio=with_bed 200 in 843ms (next.js: 812ms, application-code: 31ms)
+apps/web dev:  GET /api/variants/01KY78QYN2RF2YMQHYGN9XZ9QV/bundle?audio=no_bed 200 in 16ms (next.js: 3ms, application-code: 13ms)
+apps/web dev:  GET /api/variants/01KY78QYN2RF2YMQHYGN9XZ9QV/bundle?audio=with_bed 200 in 39ms (next.js: 7ms, application-code: 31ms)
+apps/web dev:  GET /api/variants/01KY78QYN2RF2YMQHYGN9XZ9QV/bundle?audio=no_bed 409 in 24ms (next.js: 4ms, application-code: 20ms)
+apps/web dev:  GET /api/variants/01KY78QYN2RF2YMQHYGN9XZ9QV/bundle?audio=no_bed 409 in 15ms (next.js: 1211µs, application-code: 14ms)
+ ELIFECYCLE  Command failed.

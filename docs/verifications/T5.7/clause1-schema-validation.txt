@@ -1,0 +1,21 @@
+=== POSITIVE: downloaded metadata.json PASSES ExportBundleMetadataSchema ===
+with_bed metadata.json parses: true
+no_bed   metadata.json parses: true
+caption len=46 (<=100:true) hasAt:false hasHash:false
+brand_name="Nuvela" len=6 (<=20:true)
+
+=== NEGATIVE CONTROLS: schema must REJECT (MUERDE) ===
+  REJECTED ✓ — caption con @ (mención)
+  REJECTED ✓ — caption con # (hashtag)
+  REJECTED ✓ — caption con link https://
+  REJECTED ✓ — caption con dominio TLD
+  REJECTED ✓ — caption >100 chars
+  REJECTED ✓ — brand_name >20 chars
+  REJECTED ✓ — aigc_disclosure=false
+
+=== sub-schema direct bite ===
+AdCaptionSchema rejects @: true
+AdCaptionSchema rejects 101: true
+BrandNameSchema rejects 21: true
+
+=== VERDICT clause 1: PASS ===

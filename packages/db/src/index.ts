@@ -225,6 +225,8 @@ export {
   getBatch,
   getVariant,
   listBatchVariants,
+  listLibraryVariants,
+  getVariantLineage,
   setVariantAudioSource,
   setVariantQaVerdict,
   type CreatedBatch,

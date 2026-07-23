@@ -10,9 +10,13 @@ import {
   BatchEstimateSchema,
   BatchScriptsSchema,
   ErrorEnvelopeSchema,
+  LibraryListSchema,
+  VariantLineageSchema,
   type BatchConfig,
   type CheckpointDecision,
   type ErrorEnvelope,
+  type LibraryVariantSummary,
+  type VariantLineageResponse,
 } from '@ugc/core/contracts';
 import {
   GeneratePersonaImagesResponseSchema,
@@ -100,6 +104,26 @@ const base = () =>
     ? resolveServerBaseUrl(process.env)
     : '';
 
+/**
+ * Traduce una respuesta HTTP no-ok a la `ApiError` TIPADA por el `code` del envelope de core. La usan
+ * `apiFetch` (respuestas JSON) y `downloadBundle` (respuesta binaria) por igual: el mapeo de error es el
+ * MISMO en las dos rutas y no debe poder divergir. `ctx` describe de dónde vino (path o descripción) para
+ * el fallback cuando el cuerpo no trae envelope.
+ */
+async function apiErrorFromResponse(res: Response, ctx: string): Promise<ApiError> {
+  const body: unknown = await res.json().catch(() => null);
+  const envelope = ErrorEnvelopeSchema.safeParse(body);
+  if (envelope.success) {
+    return new ApiError(
+      envelope.data.code,
+      envelope.data.message,
+      res.status,
+      envelope.data.details,
+    );
+  }
+  return new ApiError('internal', `Respuesta sin envelope de ${ctx}`, res.status);
+}
+
 export async function apiFetch<S extends z.ZodType>(
   path: string,
   schema: S,
@@ -109,17 +133,7 @@ export async function apiFetch<S extends z.ZodType>(
   const res = await fetch(`${baseUrl ?? base()}${path}`, { ...rest, cache: 'no-store' });
 
   if (!res.ok) {
-    const body: unknown = await res.json().catch(() => null);
-    const envelope = ErrorEnvelopeSchema.safeParse(body);
-    if (envelope.success) {
-      throw new ApiError(
-        envelope.data.code,
-        envelope.data.message,
-        res.status,
-        envelope.data.details,
-      );
-    }
-    throw new ApiError('internal', `Respuesta sin envelope de ${path}`, res.status);
+    throw await apiErrorFromResponse(res, path);
   }
 
   return schema.parse(await res.json());
@@ -319,6 +333,73 @@ export const variantActions = {
   /** La variante por id (CP4, T5.6): su máster + identidad legible + status, para el panel de QA. */
   get: (variantId: string) => api.get(`/api/variants/${variantId}`, VariantResponseSchema),
 };
+
+// ── Biblioteca de vídeos `/library` (T5.7) ───────────────────────────────────
+// La lista de variantes aprobadas + el linaje de una (panel 4c) + la descarga del bundle. La
+// lista/linaje van por REST con sus contratos. La descarga NO puede ser un `<a href download>` crudo: la
+// ruta responde 409 (`invalid_transition`) en casos alcanzables (máster null; versión sin bed aún no
+// materializada, F6), y un `<a download>` guardaría el CUERPO del 409 renombrado a `.zip` — un fallo SIN
+// señal (code-review de T5.7, regla 5a). Por eso la descarga pasa por `downloadBundle`, que mira el
+// STATUS: 200 → `{blob, filename}` para disparar la descarga desde el navegador; no-200 → `ApiError`
+// tipada (mismo `code` del envelope que `apiFetch`) que la UI pinta en un banner en vez de descargar.
+export interface LibraryFilters {
+  objective?: string;
+  language?: string;
+  platform?: string;
+}
+
+/** Serializa los filtros a querystring (vacío = sin filtro). */
+function libraryFiltersToQuery(f: LibraryFilters): string {
+  const params = new URLSearchParams();
+  if (f.objective) params.set('objective', f.objective);
+  if (f.language) params.set('language', f.language);
+  if (f.platform) params.set('platform', f.platform);
+  const qs = params.toString();
+  return qs ? `?${qs}` : '';
+}
+
+/** El nombre de fichero del `Content-Disposition` (`attachment; filename="x.zip"`), o `null` si no viene.
+ *  Un blob object-URL PIERDE la cabecera del servidor, así que el nombre se parsea aquí y se fija en el
+ *  `<a download>` temporal — sin esto la descarga aterriza con un UUID en vez del nombre del bundle. */
+function filenameFromDisposition(header: string | null): string | null {
+  if (!header) return null;
+  const match = /filename\*?=(?:UTF-8'')?"?([^";]+)"?/i.exec(header);
+  return match?.[1] ? decodeURIComponent(match[1]) : null;
+}
+
+export const libraryActions = {
+  /** Las variantes aprobadas (con filtros por objetivo/idioma/plataforma). */
+  list: (filters: LibraryFilters = {}) =>
+    api.get(`/api/library${libraryFiltersToQuery(filters)}`, LibraryListSchema),
+  /** El linaje de una variante (del máster hasta el hook line y el template@version). */
+  lineage: (variantId: string) =>
+    api.get(`/api/variants/${variantId}/lineage`, VariantLineageSchema),
+  /**
+   * Descarga el bundle (ZIP: MP4 + metadata.json) MIRANDO EL STATUS. `audio`: con o sin bed (§14).
+   * 200 → `{blob, filename}` (el llamante crea un object-URL y dispara la descarga). No-200 → `ApiError`
+   * tipada por el `code` del envelope (igual que `apiFetch`), que la UI surfacea en un banner: JAMÁS se
+   * descarga el cuerpo de un error renombrado a `.zip`. `filename` cae al `.zip` del `variantId` si el
+   * servidor no manda `Content-Disposition`.
+   */
+  downloadBundle: async (
+    variantId: string,
+    audio: 'with_bed' | 'no_bed' = 'with_bed',
+  ): Promise<{ blob: Blob; filename: string }> => {
+    const res = await fetch(`/api/variants/${variantId}/bundle?audio=${audio}`, {
+      cache: 'no-store',
+    });
+    if (!res.ok) {
+      throw await apiErrorFromResponse(res, 'la descarga del bundle');
+    }
+    return {
+      blob: await res.blob(),
+      filename:
+        filenameFromDisposition(res.headers.get('content-disposition')) ?? `${variantId}.zip`,
+    };
+  },
+};
+
+export type { LibraryVariantSummary, VariantLineageResponse };
 
 export const runActions = {
   getRun: (runId: string) => api.get(`/api/runs/${runId}`, RunResponseSchema),

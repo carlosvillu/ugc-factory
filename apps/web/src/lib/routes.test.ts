@@ -32,10 +32,11 @@ const RUNS: Destination = { label: 'Runs', href: '/runs', matches: ['/runs'] };
 const GASTO: Destination = { label: 'Gasto', href: '/spend' };
 const INICIO: Destination = { label: 'Inicio', href: '/' };
 // Un destino DESHABILITADO para los tests genéricos de «un destino sin página nunca se resalta».
-// Antes era «Galería», pero desde T3.8 Galería es navegable (`/gallery`): «Biblioteca» sigue sin
-// página (llega en F2), así que asume el papel de fixture-deshabilitado.
-const BIBLIOTECA: Destination = { label: 'Biblioteca', href: null, pending: 'F2' };
+// El papel de fixture-deshabilitado lo ha ido pasando cada destino al encender su fase: Galería (T3.8)
+// y luego Biblioteca (T5.7) ya son navegables. «Métricas» (F6) sigue sin página → asume el papel.
+const METRICAS: Destination = { label: 'Métricas', href: null, pending: 'F6' };
 const GALERIA: Destination = { label: 'Galería', href: '/gallery', matches: ['/gallery'] };
+const BIBLIOTECA: Destination = { label: 'Biblioteca', href: '/library', matches: ['/library'] };
 const RUN_ID = '/runs/01J000000000000000000000';
 
 describe('isHighlighted (resaltado visual del destino)', () => {
@@ -66,12 +67,17 @@ describe('isHighlighted (resaltado visual del destino)', () => {
   });
 
   it('un destino sin página (deshabilitado) nunca se resalta', () => {
-    expect(isHighlighted('/', BIBLIOTECA)).toBe(false);
+    expect(isHighlighted('/', METRICAS)).toBe(false);
   });
 
   it('«Galería» se resalta en su área (T3.8): /gallery activa el destino', () => {
     expect(isHighlighted('/gallery', GALERIA)).toBe(true);
     expect(isHighlighted('/spend', GALERIA)).toBe(false);
+  });
+
+  it('«Biblioteca» se resalta en su área (T5.7): /library activa el destino', () => {
+    expect(isHighlighted('/library', BIBLIOTECA)).toBe(true);
+    expect(isHighlighted('/spend', BIBLIOTECA)).toBe(false);
   });
 });
 
@@ -136,6 +142,7 @@ describe('DESTINATIONS (los 6 del mockup 2a + «Personas» + «Runs»)', () => {
       '/runs',
       RUN_ID,
       '/personas',
+      '/library',
       '/gallery',
       '/spend',
       '/settings',
@@ -150,10 +157,10 @@ describe('DESTINATIONS (los 6 del mockup 2a + «Personas» + «Runs»)', () => {
     }
   });
 
-  it('«Biblioteca» SIGUE deshabilitada: Personas no la activa (es otra área, la de F2)', () => {
+  it('«Biblioteca» está ACTIVA (T5.7, F5): su página de vídeos terminados existe', () => {
     const biblioteca = DESTINATIONS.find((d) => d.label === 'Biblioteca');
-    expect(biblioteca?.href).toBeNull();
-    expect(biblioteca?.pending).toMatch(/fase F2/);
+    expect(biblioteca?.href).toBe('/library');
+    expect(biblioteca?.matches).toEqual(['/library']);
 
     const personas = DESTINATIONS.find((d) => d.label === 'Personas');
     expect(personas?.href).toBe('/personas');
@@ -171,8 +178,12 @@ describe('DESTINATIONS (los 6 del mockup 2a + «Personas» + «Runs»)', () => {
 describe('homeEntries (las tarjetas de la home)', () => {
   it('NO incluye destinos sin página: el invariante lo sostiene el tipo, no un comentario', () => {
     const labels = homeEntries().map((e) => e.label);
-    expect(labels).not.toContain('Biblioteca');
+    // Métricas (F6) sigue sin página → no aparece. Biblioteca (T5.7) SÍ tiene página → aparece (abajo).
     expect(labels).not.toContain('Métricas');
+  });
+
+  it('incluye «Biblioteca» ahora que tiene página (T5.7): activar un destino es darle href', () => {
+    expect(homeEntries().map((e) => e.label)).toContain('Biblioteca');
   });
 
   it('NO incluye la propia home (una tarjeta a la página en la que ya estás no es destino)', () => {

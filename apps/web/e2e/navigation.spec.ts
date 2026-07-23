@@ -119,9 +119,9 @@ test.describe('base URL del fetch de servidor y navegación global (T1.13)', () 
       // Los de fases futuras se VEN (el mockup los tiene) pero están DESHABILITADOS: se
       // anuncian como tales, no tienen destino y no son tabulables. Nunca llevan a una
       // página rota — se activarán solos al cerrar su fase.
-      // «Galería» YA NO está deshabilitada (T3.8): su página `/gallery` existe. El grupo
-      // deshabilitado queda en Biblioteca (F2) y Métricas (F6).
-      for (const name of ['Biblioteca', 'Métricas']) {
+      // «Galería» YA NO está deshabilitada (T3.8) y «Biblioteca» tampoco (T5.7): sus páginas
+      // `/gallery` y `/library` existen. El grupo deshabilitado queda SOLO en Métricas (F6).
+      for (const name of ['Métricas']) {
         const item = nav.getByRole('link', { name });
         await expect(item).toBeVisible();
         await expect(item).toHaveAttribute('aria-disabled', 'true');
@@ -138,6 +138,11 @@ test.describe('base URL del fetch de servidor y navegación global (T1.13)', () 
       const galeria = nav.getByRole('link', { name: 'Galería' });
       await expect(galeria).toHaveAttribute('href', '/gallery');
       await expect(galeria).not.toHaveAttribute('aria-disabled', 'true');
+
+      // «Biblioteca» es un enlace REAL a `/library` (T5.7): su página de vídeos terminados existe.
+      const biblioteca = nav.getByRole('link', { name: 'Biblioteca' });
+      await expect(biblioteca).toHaveAttribute('href', '/library');
+      await expect(biblioteca).not.toHaveAttribute('aria-disabled', 'true');
 
       // «Canvas» lleva al intake, que es la puerta real a un canvas de run.
       await nav.getByRole('link', { name: 'Canvas' }).click();

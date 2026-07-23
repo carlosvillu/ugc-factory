@@ -1,0 +1,43 @@
+
+> ugc-factory@0.0.0 test:media /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads
+> RUN_MEDIA=1 vitest run --project 'worker:media'
+
+
+ RUN  v4.1.10 /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads
+
+ ❯ |worker:media| test/media/compose-variant.test.ts (7 tests | 1 failed) 14349ms
+     × compose end-to-end con captions reales → máster firmado + qa_report TODO en pass + C2PA trainedAlgorithmicMedia 7818ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |worker:media| test/media/compose-variant.test.ts > pase final: encode+burn-in → C2PA → QA (T5.5) > compose end-to-end con captions reales → máster firmado + qa_report TODO en pass + C2PA trainedAlgorithmicMedia
+AssertionError: expected 'Information for \nManifest store size…' to contain 'Validated'
+
+- Expected
++ Received
+
+- Validated
++ Information for 
++ Manifest store size = 13557 (3.97% of file size 341059)
++ Validation issues:
++    signingCredential.untrusted
++ One manifest
++
+
+ ❯ test/media/compose-variant.test.ts:223:18
+    221|       maxBuffer: 1024 * 1024 * 64,
+    222|     });
+    223|     expect(info).toContain('Validated');
+       |                  ^
+    224|   });
+    225|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 4 passed (5)
+      Tests  1 failed | 24 passed (25)
+   Start at  12:34:05
+   Duration  16.93s (transform 2.87s, setup 78ms, import 8.33s, tests 48.51s, environment 0ms)
+
+ ELIFECYCLE  Command failed with exit code 1.

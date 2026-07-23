@@ -232,12 +232,47 @@ export {
   PlannedHookSchema,
   AdSegmentSchema,
   HookSourceSchema,
+  BatchDestinationSchema,
   type BatchPlan,
   type PlannedVariant,
   type PlannedHook,
   type AdSegment,
   type HookSource,
+  type BatchDestination,
 } from './batch-plan';
+// El JSON del EXPORT BUNDLE (T5.7, §9.7 N10 / §15.4): metadatos de compliance que acompañan al MP4 —
+// `ad_caption` (≤100, sin @/#/links), `brand_name` (≤20), flags AIGC, audio_source y checklist por
+// plataforma. Lo construye la ruta de bundle de apps/web; su forma vive en core (interfaz pública de export).
+export {
+  AdCaptionSchema,
+  BrandNameSchema,
+  BundleAudioSourceSchema,
+  AigcFlagsSchema,
+  ComplianceChecklistItemSchema,
+  ExportBundleMetadataSchema,
+  buildComplianceChecklist,
+  buildExportBundleMetadata,
+  deriveProvisionalCaption,
+  deriveBrandName,
+  AD_CAPTION_MAX_LENGTH,
+  BRAND_NAME_MAX_LENGTH,
+  type AudioVersion,
+  type AdCaption,
+  type BrandName,
+  type BundleAudioSource,
+  type AigcFlags,
+  type ComplianceChecklistItem,
+  type ExportBundleMetadata,
+} from './export-bundle';
+// Contratos de la API de `/library` (T5.7): la lista de variantes aprobadas + el linaje de una (panel 4c).
+export {
+  LibraryVariantSummarySchema,
+  LibraryListSchema,
+  VariantLineageSchema,
+  type LibraryVariantSummary,
+  type LibraryList,
+  type VariantLineageResponse,
+} from './library';
 // El GUION de una variante (T2.4, N5): la otra mitad de la frontera §7.4 (`BatchPlan →
 // AdScript[]`) y la fila de `ad_script` (§12). Lo produce `@ugc/core/scripting`, lo edita CP3
 // (T2.6) y lo consume el compilador de prompts (N6, T3.5). El TIMING (`t`, `seconds`,

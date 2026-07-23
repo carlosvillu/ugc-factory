@@ -1,0 +1,54 @@
+{
+  "variant_id": "01KY78QYN2RF2YMQHYGN9XZ9QV",
+  "filename_code": "nuvela-gn9xz9qv-es-15s",
+  "ad_caption": "La vitamina C que de verdad se nota en 15 días",
+  "brand_name": "Nuvela",
+  "hook": "La vitamina C que de verdad se nota en 15 días",
+  "angle": "A1 · Antes/después visible",
+  "duration_seconds": 15,
+  "objective": "hook_test",
+  "platforms": [
+    "tiktok",
+    "meta"
+  ],
+  "destination": "both",
+  "audio_version": "with_bed",
+  "audio_source": "ai_bed",
+  "aigc": {
+    "aigc_disclosure": true,
+    "c2pa_signed": true,
+    "meta_ai_label": true
+  },
+  "checklist": [
+    {
+      "id": "aigc_disclosure",
+      "label": "Declarar el contenido como generado por IA (disclosure AIGC obligatorio)",
+      "platform": "all",
+      "required": true
+    },
+    {
+      "id": "c2pa_present",
+      "label": "Verificar la firma C2PA (trainedAlgorithmicMedia) en el máster antes de subir",
+      "platform": "all",
+      "required": true
+    },
+    {
+      "id": "tiktok_aigc_toggle",
+      "label": "Activar el toggle «Contenido generado por IA» en TikTok Ads Manager antes del submit",
+      "platform": "tiktok",
+      "required": true
+    },
+    {
+      "id": "tiktok_duplicate_recheck",
+      "label": "Al duplicar una campaña en TikTok, RE-VERIFICAR el toggle AIGC (duplicar lo resetea)",
+      "platform": "tiktok",
+      "required": true
+    },
+    {
+      "id": "meta_ai_info_label",
+      "label": "Declarar la etiqueta «AI info» en Meta antes de publicar el ad",
+      "platform": "meta",
+      "required": true
+    }
+  ]
+}

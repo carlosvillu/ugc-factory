@@ -1,0 +1,86 @@
+[WebServer] seed: persona «Lucía (placeholder)» ← imagen sintética 1638×2048 px (personas/01KY79276CZV4GSB21SBHTET3E/01KY79276XPVVBX2NGQBE19Y60.png)
+[WebServer] seed: persona «Lucía (placeholder)» ← imagen sintética 1638×2048 px (personas/01KY79276CZV4GSB21SBHTET3E/01KY79277GP9BX1RNKX3Y0Q1AS.png)
+[WebServer] seed: persona «Marcus (placeholder)» ← imagen sintética 1638×2048 px (personas/01KY79277MAJ20AHGJ8J0HDZA3/01KY792783WZPJ147XQMPWWC6C.png)
+[WebServer] seed: persona «Marcus (placeholder)» ← imagen sintética 1638×2048 px (personas/01KY79277MAJ20AHGJ8J0HDZA3/01KY79278KWHQ5Z3G9RYKJVDG6.png)
+[WebServer] seed: persona «Nerea (placeholder)» ← imagen sintética 1638×2048 px (personas/01KY79278PZA2Q1ZKCGZT51YG3/01KY7927955ZQTRBBBE977DDDK.png)
+[WebServer] seed: persona «Nerea (placeholder)» ← imagen sintética 1638×2048 px (personas/01KY79278PZA2Q1ZKCGZT51YG3/01KY79279NGRGBYN1MKS6DNPAD.png)
+[WebServer] seed: persona «Carmen (placeholder)» ← imagen sintética 1638×2048 px (personas/01KY79279SNPP4Q6ZCC55Y9GTY/01KY7927A9KT2AV3S0F5FEN8NQ.png)
+[WebServer] seed: persona «Carmen (placeholder)» ← imagen sintética 1638×2048 px (personas/01KY79279SNPP4Q6ZCC55Y9GTY/01KY7927ATEDH2G7J2NW1562R2.png)
+[WebServer] seed: persona «Alex (placeholder)» ← imagen sintética 1638×2048 px (personas/01KY7927AYF0AN584PNPYYKNZC/01KY7927BC4ZKAA3WE3P7N5H2S.png)
+[WebServer] seed: persona «Alex (placeholder)» ← imagen sintética 1638×2048 px (personas/01KY7927AYF0AN584PNPYYKNZC/01KY7927BY1XPJME49M6QAXP8B.png)
+[WebServer] seed: persona «Rosa (placeholder)» ← imagen sintética 1638×2048 px (personas/01KY7927C17FP7J8T7C9VJ0CJ7/01KY7927CFNB0DW52EZQ2RAAQC.png)
+[WebServer] seed: persona «Rosa (placeholder)» ← imagen sintética 1638×2048 px (personas/01KY7927C17FP7J8T7C9VJ0CJ7/01KY7927CZA09ERK76X7QKPRZB.png)
+[WebServer] seed: persona «Priya (placeholder)» ← imagen sintética 1638×2048 px (personas/01KY7927D2S2PARKSYX9Z6N2SR/01KY7927DGG3VNJQVZYQZ4VS15.png)
+[WebServer] seed: persona «Priya (placeholder)» ← imagen sintética 1638×2048 px (personas/01KY7927D2S2PARKSYX9Z6N2SR/01KY7927E14TR78XZ0WSJ4W4GY.png)
+[WebServer] seed: persona «David (placeholder)» ← imagen sintética 1638×2048 px (personas/01KY7927E485X5YVTBZDX0R5KV/01KY7927EJD99CYS7YB8FTCSFJ.png)
+[WebServer] seed: persona «David (placeholder)» ← imagen sintética 1638×2048 px (personas/01KY7927E485X5YVTBZDX0R5KV/01KY7927F3A8XEMMMEK73BM2Q3.png)
+[WebServer] seed: persona «Chloe (placeholder)» ← imagen sintética 1638×2048 px (personas/01KY7927F60SGW2SPVHZFJ4WNG/01KY7927FM367VC19X2QYVNQFM.png)
+[WebServer] seed: persona «Chloe (placeholder)» ← imagen sintética 1638×2048 px (personas/01KY7927F60SGW2SPVHZFJ4WNG/01KY7927G5SJRY9VX9T9HECJXM.png)
+[WebServer] seed: persona «Kenji (placeholder)» ← imagen sintética 1638×2048 px (personas/01KY7927G7VRG5N5Y757W63XQ0/01KY7927GQZZT8S802N5V2W1VC.png)
+[WebServer] seed: persona «Kenji (placeholder)» ← imagen sintética 1638×2048 px (personas/01KY7927G7VRG5N5Y757W63XQ0/01KY7927H7KMK7BRXEPHQ21B22.png)
+[WebServer] ▲ Next.js 16.2.10 (Turbopack)
+[WebServer] - Local:         http://localhost:3100
+[WebServer] - Network:       http://192.168.1.132:3100
+[WebServer] ✓ Ready in 267ms
+[WebServer] Attention: Next.js now collects completely anonymous telemetry regarding usage.
+[WebServer] This information is used to shape Next.js' roadmap and prioritize features.
+[WebServer] You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+[WebServer] https://nextjs.org/telemetry
+[WebServer] 
+[WebServer] {"level":30,"time":1784803303894,"pid":31821,"hostname":"MBP-de-Carlos","name":"worker","intervalMs":5000,"generationReconcile":true,"msg":"sweeper arrancado"}
+[WebServer] {"level":30,"time":1784803303894,"pid":31821,"hostname":"MBP-de-Carlos","name":"worker","queue":"demo.noop","msg":"pg-boss arrancado: colas y consumers listos"}
+[WebServer] {"level":30,"time":1784803303894,"pid":31821,"hostname":"MBP-de-Carlos","name":"worker","health":{"ok":true,"db":true},"msg":"worker ready"}
+
+Running 6 tests using 2 workers
+
+[WebServer] {"level":30,"time":1784803305105,"pid":31822,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","msg":"running startup migrations"}
+[WebServer] {"level":30,"time":1784803305297,"pid":31822,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","msg":"startup migrations applied"}
+[WebServer] {"level":30,"time":1784803305380,"pid":31822,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","seeded":true,"msg":"auth.password_hash sembrado (first boot)"}
+[WebServer] {"level":30,"time":1784803305474,"pid":31822,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","provider":"fal","seeded":false,"msg":"secret.fal ya existía en BD (env ignorada; la BD es la fuente)"}
+[WebServer] {"level":30,"time":1784803305491,"pid":31822,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","provider":"firecrawl","seeded":false,"msg":"secret.firecrawl ya existía en BD (env ignorada; la BD es la fuente)"}
+[WebServer] {"level":30,"time":1784803305502,"pid":31822,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","provider":"anthropic","seeded":false,"msg":"secret.anthropic ya existía en BD (env ignorada; la BD es la fuente)"}
+[WebServer] {"level":30,"time":1784803305577,"pid":31822,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","msg":"sembrando datos de referencia (T3.9)"}
+[WebServer] {"level":30,"time":1784803305623,"pid":31822,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","hookLines":80,"ctaLines":30,"recipes":3,"msg":"librería sembrada o ya presente (insert-only)"}
+[WebServer] {"level":30,"time":1784803305696,"pid":31822,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","templates":56,"guardPacks":10,"modelProfiles":18,"msg":"galería sembrada o ya presente (insert-only)"}
+[WebServer] {"level":30,"time":1784803305755,"pid":31822,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","personas":10,"imagesCreated":0,"imagesFailed":0,"msg":"personas sembradas o ya presentes"}
+[WebServer] {"level":30,"time":1784803305755,"pid":31822,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","msg":"datos de referencia sembrados (T3.9)"}
+[WebServer] 
+[WebServer]  GET /login 200 in 306ms (next.js: 118ms, application-code: 189ms)
+[WebServer]  POST /api/login 200 in 263ms (next.js: 160ms, application-code: 103ms)
+[WebServer]  GET / 200 in 133ms (next.js: 13ms, proxy.ts: 35ms, application-code: 85ms)
+  ✓  1 [setup] › e2e/auth.setup.ts:10:1 › login y persistir sesión (1.5s)
+[WebServer]  GET /api/library 200 in 43ms (next.js: 32ms, application-code: 12ms)
+[WebServer]  GET /library 200 in 501ms (next.js: 105ms, proxy.ts: 3ms, application-code: 393ms)
+[WebServer]  GET /api/library 200 in 369ms (next.js: 39ms, application-code: 330ms)
+[WebServer]  GET /library 200 in 595ms (next.js: 34ms, proxy.ts: 3ms, application-code: 558ms)
+[WebServer]  GET /api/assets/01KY792DHQTTZ5NNG95B2S90YH/download 200 in 953ms (next.js: 932ms, application-code: 21ms)
+[WebServer]  GET /api/assets/01KY792DHQTTZ5NNG95B2S90YH/download 200 in 881ms (next.js: 859ms, application-code: 22ms)
+[WebServer]  GET /api/variants/01KY792DHVGMAQT84CHFBXQRMH/lineage 200 in 759ms (next.js: 745ms, application-code: 14ms)
+[WebServer]  GET /api/variants/01KY792DHVGMAQT84CHFBXQRMH/lineage 200 in 669ms (next.js: 653ms, application-code: 15ms)
+[WebServer]  GET /api/variants/01KY792DHV28ZYZQYTCE0DTXZM/lineage 200 in 18ms (next.js: 4ms, application-code: 14ms)
+[WebServer]  GET /api/variants/01KY792DHV28ZYZQYTCE0DTXZM/lineage 200 in 19ms (next.js: 8ms, application-code: 12ms)
+[WebServer]  GET /api/assets/01KY792DHQMCF7M3HSJENFW5GJ/download 200 in 18ms (next.js: 5ms, application-code: 13ms)
+[WebServer]  GET /api/variants/01KY792DHVGMAQT84CHFBXQRMH/bundle?audio=with_bed 200 in 797ms (next.js: 781ms, application-code: 17ms)
+[WebServer]  GET /api/variants/01KY792DHV28ZYZQYTCE0DTXZM/bundle?audio=with_bed 200 in 798ms (next.js: 780ms, application-code: 18ms)
+[WebServer]  GET /api/variants/01KY792DHV28ZYZQYTCE0DTXZM/bundle?audio=no_bed 200 in 10ms (next.js: 3ms, application-code: 7ms)
+  ✓  2 [chromium] › e2e/library.spec.ts:197:3 › biblioteca de vídeos /library (T5.7) › lista, preview, linaje hasta hook/template, y descarga del bundle con checksum (2.9s)
+  ✓  3 [chromium] › e2e/library.spec.ts:261:3 › biblioteca de vídeos /library (T5.7) › caso DUAL con/sin bed: dos versiones del MISMO máster, mismo stream de vídeo, audio_source distinto (2.9s)
+[WebServer]  GET /api/variants/01KY792G900BHZ7YE3PHPMVBGQ/bundle?audio=no_bed 409 in 6ms (next.js: 1162µs, application-code: 5ms)
+  ✓  5 [chromium] › e2e/library.spec.ts:360:3 › biblioteca de vídeos /library (T5.7) › la versión sin bed responde 409 cuando no está materializada (47ms)
+[WebServer]  GET /api/library 200 in 5ms (next.js: 1326µs, application-code: 4ms)
+[WebServer]  GET /api/library 200 in 7ms (next.js: 1510µs, application-code: 6ms)
+[WebServer]  GET /library 200 in 103ms (next.js: 1304µs, proxy.ts: 2ms, application-code: 100ms)
+[WebServer]  GET /library 200 in 100ms (next.js: 12ms, proxy.ts: 4ms, application-code: 85ms)
+[WebServer]  GET /api/assets/01KY792GBJZTEF1MDGQ4H17W5K/download 200 in 56ms (next.js: 12ms, application-code: 44ms)
+[WebServer]  GET /api/assets/01KY792GBJZTEF1MDGQ4H17W5K/download 200 in 282ms (next.js: 62ms, application-code: 220ms)
+[WebServer]  GET /api/variants/01KY792GBKW4N0TRMJ26VHC49N/lineage 200 in 40ms (next.js: 9ms, application-code: 31ms)
+[WebServer]  GET /api/library?language=en 200 in 9ms (next.js: 3ms, application-code: 7ms)
+[WebServer]  GET /api/variants/01KY792GB0Y6D3CRJ3CQKQ058W/lineage 200 in 22ms (next.js: 12ms, application-code: 10ms)
+[WebServer]  GET /api/variants/01KY792GB0Y6D3CRJ3CQKQ058W/lineage 200 in 25ms (next.js: 17ms, application-code: 7ms)
+[WebServer]  GET /api/variants/01KY792GBKW4N0TRMJ26VHC49N/lineage 200 in 24ms (next.js: 15ms, application-code: 9ms)
+[WebServer]  GET /api/assets/01KY792GAZRXY47NWBMYZX0639/download 200 in 39ms (next.js: 16ms, application-code: 23ms)
+  ✓  4 [chromium] › e2e/library.spec.ts:316:3 › biblioteca de vídeos /library (T5.7) › los filtros re-consultan la lista (idioma) (1.2s)
+[WebServer]  GET /api/variants/01KY792GBKW4N0TRMJ26VHC49N/bundle?audio=no_bed 409 in 25ms (next.js: 8ms, application-code: 17ms)
+  ✓  6 [chromium] › e2e/library.spec.ts:380:3 › biblioteca de vídeos /library (T5.7) › CLICAR descargar cuando la ruta da 409 muestra el error en la UI y NO descarga un fichero (3.7s)
+
+  6 passed (19.0s)

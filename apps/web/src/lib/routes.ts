@@ -108,7 +108,17 @@ export const DESTINATIONS: Destination[] = [
     description:
       'Los avatares que protagonizan los anuncios: demografía, personalidad, voz por idioma e imágenes de referencia del identity lock.',
   },
-  { label: 'Biblioteca', href: null, pending: 'llega en la fase F2 (guiones y variantes)' },
+  {
+    // «Biblioteca» (T5.7, F5): los vídeos TERMINADOS — las variantes aprobadas con su máster, linaje
+    // completo (hasta el hook line y el template@version) y descarga del bundle. El `pending` anterior
+    // («fase F2») era una suposición de una tarea previa: la biblioteca de vídeos es F5 (composición y
+    // export), y su página existe desde T5.7. Darle `href` la enciende sola en la nav Y en la home.
+    label: 'Biblioteca',
+    href: '/library',
+    matches: ['/library'],
+    description:
+      'Los vídeos terminados: filtra por objetivo, idioma y plataforma; abre una variante para ver su preview con safe zones, su linaje completo (hook, template, persona, máster) y descargar el bundle (MP4 + metadatos de compliance).',
+  },
   {
     // «Galería» (T3.8, F3): la galería de TEMPLATES DE PROMPT (§10) — navegación facetada, ficha
     // con slots resaltados y guards, editor con validación en vivo y versiones con diff. El

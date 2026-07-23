@@ -21,14 +21,14 @@
 // lo marca `hook_line_id?`: no hay fila que referenciar). El contrato de `PlannedHookSchema`
 // explica por qué NO hay índice posicional: un índice al array de la llamada, guardado en un
 // documento que sobrevive a la llamada, apuntaría a otra línea EN SILENCIO.
-import { eq, inArray } from 'drizzle-orm';
+import { and, desc, eq, inArray, sql } from 'drizzle-orm';
 import { newUlid } from '@ugc/core/contracts';
 import type { BatchPlan, QaReport } from '@ugc/core/contracts';
 import type { AdObjective, RecipeTier } from '@ugc/core/library';
 import type { Db } from '../client';
 import { adBatch, adVariant, type AdBatch, type AdVariant } from '../schema/batch';
-import { hookLine, persona } from '../schema/gallery';
-import { type Asset } from '../schema/generation';
+import { hookLine, persona, promptTemplate } from '../schema/gallery';
+import { asset, type Asset } from '../schema/generation';
 import { createAsset } from './asset.repo';
 
 export interface CreateBatchInput {
@@ -405,4 +405,228 @@ export async function setVariantQaVerdict(
     throw new Error(`setVariantQaVerdict: no existe la variante ${variantId}`);
   }
   return variant;
+}
+
+// ── READ-MODELS DE LA BIBLIOTECA `/library` (T5.7, §9.7 N10) ─────────────────────────────────────────
+//
+// Dos lecturas para la página de vídeos terminados: la LISTA filtrable de variantes aprobadas, y el LINAJE
+// COMPLETO de una (del máster hasta el hook line y el `template@version` EXACTOS). Query builder con join
+// (no relational queries): los punteros a la librería (`hook_line_id`/`persona_id`/`prompt_template_id`) son
+// NULLABLES (una variante con hook del brief no referencia `hook_line`), así que se usa `leftJoin` — un inner
+// join perdería variantes y el linaje debe TOLERAR el null, no lanzar. El `destination` (§14) sale del jsonb
+// `ad_batch.matrix` (modelado mínimo de T5.7): `matrix->>'destination'`, COALESCE a 'organic' para legacy.
+
+/** El destino del lote (§14) desde el jsonb `ad_batch.matrix`, con COALESCE a 'organic' para las matrices
+ *  legacy (sin la clave). Compartido por los DOS read-models de la biblioteca (lista + linaje): la clave
+ *  jsonb y el default viven en UN solo sitio y no pueden divergir. */
+const destinationExpr = () => sql<string>`COALESCE(${adBatch.matrix}->>'destination', 'organic')`;
+
+/** Una fila de la LISTA de `/library`: los campos ligeros de la tarjeta + lo que la lista filtra. */
+export interface LibraryVariantRow {
+  id: string;
+  filenameCode: string;
+  angleName: string;
+  language: string;
+  status: string;
+  durationTarget: number;
+  platformTargets: string[];
+  masterAssetId: string | null;
+  thumbnailAssetId: string | null;
+  score: number | null;
+  objective: string;
+  destination: string;
+}
+
+export interface ListLibraryVariantsFilters {
+  /** Objetivo del lote (`hook_test` | `conversion` | `story`). */
+  objective?: string;
+  /** Idioma de la variante. */
+  language?: string;
+  /** Una plataforma presente en `platform_targets` (`@>` sobre el array). */
+  platform?: string;
+}
+
+/**
+ * Las variantes de la BIBLIOTECA: SOLO las `approved` (§9.7 N10: «por variante aprobada» — las que tienen
+ * máster descargable), filtradas por objetivo/idioma/plataforma. Orden por `created_at` desc (lo último
+ * aprobado primero), estable por id.
+ */
+export async function listLibraryVariants(
+  db: Db,
+  filters: ListLibraryVariantsFilters = {},
+): Promise<LibraryVariantRow[]> {
+  const conditions = [eq(adVariant.status, 'approved')];
+  if (filters.objective !== undefined) {
+    conditions.push(eq(adBatch.objective, filters.objective as AdObjective));
+  }
+  if (filters.language !== undefined) {
+    conditions.push(eq(adVariant.language, filters.language));
+  }
+  if (filters.platform !== undefined) {
+    // `@>` (contiene) sobre `platform_targets`. El valor viaja PARAMETRIZADO como array de un elemento
+    // (nunca interpolado en el SQL) — sin superficie de inyección.
+    conditions.push(sql`${adVariant.platformTargets} @> ARRAY[${filters.platform}]::text[]`);
+  }
+
+  return db
+    .select({
+      id: adVariant.id,
+      filenameCode: adVariant.filenameCode,
+      angleName: adVariant.angleName,
+      language: adVariant.language,
+      status: adVariant.status,
+      durationTarget: adVariant.durationTarget,
+      platformTargets: adVariant.platformTargets,
+      masterAssetId: adVariant.masterAssetId,
+      thumbnailAssetId: adVariant.thumbnailAssetId,
+      score: adVariant.score,
+      objective: adBatch.objective,
+      destination: destinationExpr(),
+    })
+    .from(adVariant)
+    .innerJoin(adBatch, eq(adVariant.batchId, adBatch.id))
+    .where(and(...conditions))
+    .orderBy(desc(adVariant.createdAt), desc(adVariant.id));
+}
+
+/**
+ * El LINAJE COMPLETO de una variante (§12, panel 4c del mockup). Del máster hasta el hook line y el
+ * `template@version` EXACTOS, pasando por persona y objetivo/destino del lote. Todos los punteros a la
+ * librería son NULLABLES (leftJoin): una variante con hook del BRIEF trae `hook: null` — el linaje lo
+ * refleja, NO lanza. `undefined` si la variante no existe.
+ *
+ * `templateVersion` es la versión EXACTA que se usó (columna de la variante, no la última del template): la
+ * identidad reproducible es `template@version` (§10.1), fijada por el compositor al planificar.
+ */
+export interface VariantLineage {
+  variant: {
+    id: string;
+    filenameCode: string;
+    angleName: string;
+    framework: string;
+    language: string;
+    durationTarget: number;
+    platformTargets: string[];
+    status: string;
+    audioSource: string | null;
+    score: number | null;
+    masterAssetId: string | null;
+    thumbnailAssetId: string | null;
+  };
+  /** El hook line (de la librería) o `null` si el hook vino del brief (`hook_line_id` null). */
+  hook: { id: string; text: string; angle: string } | null;
+  /** La persona (avatar) o `null` si la variante no fijó persona. */
+  persona: { id: string; name: string } | null;
+  /** El template + su versión EXACTA (`slug@version`), o `null` si no se registró template. */
+  template: { id: string; slug: string; title: string; version: number } | null;
+  /** El máster final (duración/dimensiones para el linaje), o `null` si aún no se compuso. */
+  master: {
+    id: string;
+    durationS: number | null;
+    width: number | null;
+    height: number | null;
+  } | null;
+  /** El lote: su objetivo, destino (§14) y el brief del que nace (para el brand_name del bundle). */
+  batch: { id: string; briefId: string; objective: string; destination: string };
+}
+
+export async function getVariantLineage(
+  db: Db,
+  variantId: string,
+): Promise<VariantLineage | undefined> {
+  const [row] = await db
+    .select({
+      variantId: adVariant.id,
+      filenameCode: adVariant.filenameCode,
+      angleName: adVariant.angleName,
+      framework: adVariant.framework,
+      language: adVariant.language,
+      durationTarget: adVariant.durationTarget,
+      platformTargets: adVariant.platformTargets,
+      status: adVariant.status,
+      audioSource: adVariant.audioSource,
+      score: adVariant.score,
+      masterAssetId: adVariant.masterAssetId,
+      thumbnailAssetId: adVariant.thumbnailAssetId,
+      templateVersion: adVariant.templateVersion,
+      hookId: hookLine.id,
+      hookText: hookLine.text,
+      hookAngle: hookLine.angle,
+      personaId: persona.id,
+      personaName: persona.name,
+      templateId: promptTemplate.id,
+      templateSlug: promptTemplate.slug,
+      templateTitle: promptTemplate.title,
+      masterId: asset.id,
+      masterDurationS: asset.durationS,
+      masterWidth: asset.width,
+      masterHeight: asset.height,
+      batchId: adBatch.id,
+      briefId: adBatch.briefId,
+      objective: adBatch.objective,
+      destination: destinationExpr(),
+    })
+    .from(adVariant)
+    .innerJoin(adBatch, eq(adVariant.batchId, adBatch.id))
+    .leftJoin(hookLine, eq(adVariant.hookLineId, hookLine.id))
+    .leftJoin(persona, eq(adVariant.personaId, persona.id))
+    .leftJoin(promptTemplate, eq(adVariant.promptTemplateId, promptTemplate.id))
+    .leftJoin(asset, eq(adVariant.masterAssetId, asset.id))
+    .where(eq(adVariant.id, variantId));
+
+  if (row === undefined) return undefined;
+
+  return {
+    variant: {
+      id: row.variantId,
+      filenameCode: row.filenameCode,
+      angleName: row.angleName,
+      framework: row.framework,
+      language: row.language,
+      durationTarget: row.durationTarget,
+      platformTargets: row.platformTargets,
+      status: row.status,
+      audioSource: row.audioSource,
+      score: row.score,
+      masterAssetId: row.masterAssetId,
+      thumbnailAssetId: row.thumbnailAssetId,
+    },
+    hook:
+      row.hookId !== null && row.hookText !== null && row.hookAngle !== null
+        ? { id: row.hookId, text: row.hookText, angle: row.hookAngle }
+        : null,
+    persona:
+      row.personaId !== null && row.personaName !== null
+        ? { id: row.personaId, name: row.personaName }
+        : null,
+    // El template exige AMBOS: la fila del template (slug/title por el join) Y la versión EXACTA de la
+    // variante (columna). Sin versión no hay identidad reproducible `template@version` → null.
+    template:
+      row.templateId !== null &&
+      row.templateSlug !== null &&
+      row.templateTitle !== null &&
+      row.templateVersion !== null
+        ? {
+            id: row.templateId,
+            slug: row.templateSlug,
+            title: row.templateTitle,
+            version: row.templateVersion,
+          }
+        : null,
+    master:
+      row.masterId !== null
+        ? {
+            id: row.masterId,
+            durationS: row.masterDurationS,
+            width: row.masterWidth,
+            height: row.masterHeight,
+          }
+        : null,
+    batch: {
+      id: row.batchId,
+      briefId: row.briefId,
+      objective: row.objective,
+      destination: row.destination,
+    },
+  };
 }

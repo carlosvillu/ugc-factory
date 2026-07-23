@@ -1,0 +1,13 @@
+../../.env not found. Continuing without it.
+{
+  "variantId": "01KY78QYN2RF2YMQHYGN9XZ9QV",
+  "filenameCode": "nuvela-gn9xz9qv-es-15s",
+  "masterChecksum": "32542cf1c4d8053fceac84d196b3dcdf1fb27a0a02dae13643430ecdc9b12a79",
+  "masterAssetId": "01KY78QYMYET060DFBYZ46TKXF",
+  "templateVersion": 7,
+  "templateSlug": "before-after-skincare-verify",
+  "hookText": "La vitamina C que de verdad se nota en 15 días",
+  "personaName": "Lucía Verify",
+  "expectedTemplateRef": "before-after-skincare-verify@7",
+  "sha256OfMasterBytes": "32542cf1c4d8053fceac84d196b3dcdf1fb27a0a02dae13643430ecdc9b12a79"
+}

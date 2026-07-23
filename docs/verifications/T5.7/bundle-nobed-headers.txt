@@ -1,0 +1,12 @@
+HTTP/1.1 200 OK
+vary: rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch
+cache-control: private, no-store
+content-disposition: attachment; filename="nuvela-gn9xz9qv-es-15s-nobed.zip"
+content-length: 10004
+content-type: application/zip
+x-bundle-mp4-checksum: 32542cf1c4d8053fceac84d196b3dcdf1fb27a0a02dae13643430ecdc9b12a79
+x-bundle-mp4-name: nuvela-gn9xz9qv-es-15s-nobed.mp4
+Date: Thu, 23 Jul 2026 10:39:20 GMT
+Connection: keep-alive
+Keep-Alive: timeout=5
+

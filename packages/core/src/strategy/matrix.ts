@@ -19,7 +19,13 @@
 // ángulo A SECAS habría sido más barato… y falso: se estaría prometiendo reutilizar un clip
 // que no existe.
 import type { ProductBrief } from '../contracts/product-brief';
-import type { AdSegment, BatchPlan, PlannedHook, PlannedVariant } from '../contracts/batch-plan';
+import type {
+  AdSegment,
+  BatchDestination,
+  BatchPlan,
+  PlannedHook,
+  PlannedVariant,
+} from '../contracts/batch-plan';
 import type { AdObjective, HookLineSeed, RecipeTier } from '../library/contracts';
 import type { MatchablePersona } from '../persona/contracts';
 import { matchPersonas } from '../persona/candidates';
@@ -56,6 +62,14 @@ export interface ComposeMatrixInput {
   languages: string[];
   objective: AdObjective;
   tier: RecipeTier;
+  /**
+   * DESTINO del lote (§14): `organic` | `paid` | `both`. Decide qué versiones de audio exporta el bundle
+   * (con/sin bed). Opcional con default `organic` (T5.7, desviación menor regla 6): HOY no hay UI que lo
+   * declare — el compositor lo emite a `organic` salvo que el llamante (o un test/seed) lo fije. Viaja en
+   * `ad_batch.matrix` (el `BatchPlan` persistido), no en columna nueva. Cuando F6 cablee la publicación se
+   * promoverá a su sitio del §12.
+   */
+  destination?: BatchDestination;
   /**
    * EL DESAMBIGUADOR DEL LOTE — la defensa real contra una colisión de `filename_code`.
    *
@@ -376,6 +390,8 @@ export function composeMatrix(input: ComposeMatrixInput): BatchPlan {
     durationTargetSeconds: preset.targetSeconds,
     languages,
     sharedBodyAndCta,
+    // §14: destino del lote (con/sin bed). Default `organic` hasta que exista UI que lo declare (T5.7).
+    destination: input.destination ?? 'organic',
     personaSelection,
     variants,
   };

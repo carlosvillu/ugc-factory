@@ -192,6 +192,20 @@ export {
 // verdad de los parámetros del pase final; `evaluateQa` deriva de él sus esperados (anti-T1.9). Los builders
 // puros (`buildFinalEncodeArgs`, `buildC2paManifest`, `evaluateQa`) los ejerce el gate; la media va en la
 // imagen. T5.5 entrega el módulo reutilizable, NO cablea el executor N8/N9 (patrón F5).
+// EXPORT DUAL con/sin bed (T5.7, §14): la versión SIN bed del export de una variante por RE-MUX de audio.
+// Copia el vídeo del máster final persistido (`-c:v copy` — byte-idéntico, sin re-render) y le sustituye el
+// audio por la VOZ SOLA −14 LUFS (rama `hasBed:false` de `buildAudioMixGraph` de T5.3), re-firmando C2PA
+// (§15.3). La versión CON bed es el máster persistido tal cual (no pasa por aquí). bytes-in/bytes-out, NO
+// escribe BD. REUSA los builders de T5.3 (buildAudioConcatArgs/buildAudioMixGraph/buildMuxArgs) — no una
+// invocación fresca de ffmpeg. `ExportRemuxError` es su clase de error propia (anti-T1.8).
+export {
+  exportNoBedVersion,
+  noBedStorageKey,
+  ExportRemuxError,
+  type ExportNoBedDeps,
+  type ExportNoBedInput,
+  type ExportNoBedResult,
+} from './export-remux';
 export {
   composeVariant,
   buildFinalEncodeArgs,

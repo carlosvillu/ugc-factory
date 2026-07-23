@@ -26,6 +26,25 @@ export const HookSourceSchema = z.enum(['brief', 'library']);
 export type HookSource = z.infer<typeof HookSourceSchema>;
 
 /**
+ * DESTINO DEL LOTE (§14). Decide qué versiones de audio exporta N8/el bundle: `organic` (post
+ * orgánico → puede llevar el bed musical IA), `paid` (Spark Ad / ad pagado → solo Commercial Music
+ * Library o licencia propia, así que el export prescinde del bed), `both` (el lote se destina a
+ * ambos → el export DUAL con/sin bed del mismo máster sin re-render del vídeo, §14: «solo re-mux de
+ * audio: segundos de CPU»).
+ *
+ * ⚠ MODELADO MÍNIMO (desviación menor, regla 6, T5.7): el PRD §12 dibuja `publication.audio_source`
+ * y un destino que viaja con la PUBLICACIÓN — pero la publicación es F6 y aún no existe columna. Para
+ * que el lote pueda DECLARAR su destino hoy (y el bundle ejercer el dual con/sin bed), el destino se
+ * modela DENTRO del jsonb `ad_batch.matrix` (este `BatchPlan`), NO como columna nueva: encaja en la
+ * config del lote que ya vive aquí (objective/tier/languages) y evita una migración. `.default('organic')`
+ * lo hace TOLERANTE a matrices legacy (mismo patrón que `personaId.default(null)`): una matriz guardada
+ * antes de T5.7 colapsa a `organic` sin tumbar el `parse` de CP2/CP3. Cuando F6 cablee la publicación,
+ * el destino se PROMOVERÁ a su sitio del §12 (columna + `publication.audio_source`).
+ */
+export const BatchDestinationSchema = z.enum(['organic', 'paid', 'both']);
+export type BatchDestination = z.infer<typeof BatchDestinationSchema>;
+
+/**
  * Un hook concreto de la matriz, con su procedencia.
  *
  * CÓMO SE IDENTIFICA UNA LÍNEA DE LIBRERÍA — y por qué NO por su posición. La primera versión
@@ -123,6 +142,12 @@ export const BatchPlanSchema = z.object({
   languages: z.array(z.string().min(1)).min(1),
   /** `true` cuando el lote comparte body/CTA por ángulo (§7.2 N5: objetivo `hook_test`). */
   sharedBodyAndCta: z.boolean(),
+  /**
+   * DESTINO del lote (§14): `organic` | `paid` | `both`. Decide si el export lleva bed musical
+   * (orgánico) o no (paid), y `both` dispara el export DUAL con/sin bed (re-mux sin re-render, §14).
+   * `.default('organic')`: tolerante a matrices legacy (ver `BatchDestinationSchema`).
+   */
+  destination: BatchDestinationSchema.default('organic'),
   /**
    * POR QUÉ NINGUNA VARIANTE LLEVA PERSONA, cuando no la lleva. Sin esta señal, en la salida
    * **«no había personas en la librería» era INDISTINGUIBLE de «ninguna casó con el segmento»** —

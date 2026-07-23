@@ -299,6 +299,27 @@ export const batchActions = {
   getScripts: (batchId: string) => api.get(`/api/batches/${batchId}/scripts`, BatchScriptsSchema),
 };
 
+/**
+ * La fila `ad_variant` que CP4 (T5.6) necesita para el player de QA. El artefacto de N9 trae el
+ * `qaReport` pero NO el `masterAssetId` (vive en la variante, lo escribió N8) — el panel lo pide por
+ * aquí para resolver el `src` del `<video>`. `masterAssetId` es nullable: una variante cuyo máster
+ * aún no está (o se soltó) no tiene player.
+ */
+const VariantResponseSchema = z.object({
+  id: z.string(),
+  masterAssetId: z.string().nullable(),
+  filenameCode: z.string(),
+  angleName: z.string(),
+  language: z.string(),
+  status: z.string(),
+});
+export type VariantResponse = z.infer<typeof VariantResponseSchema>;
+
+export const variantActions = {
+  /** La variante por id (CP4, T5.6): su máster + identidad legible + status, para el panel de QA. */
+  get: (variantId: string) => api.get(`/api/variants/${variantId}`, VariantResponseSchema),
+};
+
 export const runActions = {
   getRun: (runId: string) => api.get(`/api/runs/${runId}`, RunResponseSchema),
   /** El step con su artefacto COMPLETO (CP1 lo necesita entero; el SSE lo recorta). */

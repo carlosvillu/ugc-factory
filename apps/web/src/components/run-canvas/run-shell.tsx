@@ -16,6 +16,8 @@ import { MatrixPanel } from '@/components/checkpoints/matrix-panel';
 import { useMatrixCheckpoint } from '@/components/checkpoints/use-matrix-checkpoint';
 import { ScriptsPanel } from '@/components/checkpoints/scripts-panel';
 import { useScriptsCheckpoint } from '@/components/checkpoints/use-scripts-checkpoint';
+import { QaPanel } from '@/components/checkpoints/qa-panel';
+import { useQaCheckpoints } from '@/components/checkpoints/use-qa-checkpoints';
 import { RunCanvas } from './run-canvas';
 import { StepPanel } from './step-panel';
 import { formatCost } from './status';
@@ -60,7 +62,13 @@ export function RunShell({ runId }: { runId: string }) {
   // run DISTINTO del de análisis: aquí NUNCA coexiste con CP1/CP2 (son de otro run). El editor pide
   // los guiones del lote por REST; el artefacto de N5 solo trae el `batchId`.
   const cp3 = useScriptsCheckpoint();
-  const checkpointOpen = cp1 !== null || cp2 !== null || cp3 !== null;
+  // CP4 (T5.6): el checkpoint de REVISIÓN DE VARIANTES (N9). A DIFERENCIA de CP1/CP2/CP3, CP4 son N
+  // pausas EN PARALELO (un N9 por variante `scripted`, todos `alwaysPause`), así que aquí NO se toma
+  // «el primer pausado» sino TODOS los N9 en `waiting_approval` (`useQaCheckpoints`). El panel los
+  // lista y resuelve por separado. Vive en el run de GENERACIÓN (el que arranca la aprobación de CP3),
+  // distinto del de análisis/guiones: nunca coexiste con CP1/CP2/CP3.
+  const cp4Steps = useQaCheckpoints();
+  const checkpointOpen = cp1 !== null || cp2 !== null || cp3 !== null || cp4Steps.length > 0;
 
   return (
     // `h-full` (no `h-dvh`): desde T1.13 el viewport lo fija el layout del grupo `(app)`,
@@ -84,6 +92,8 @@ export function RunShell({ runId }: { runId: string }) {
           <MatrixPanel stepId={cp2.stepId} brief={cp2.brief} config={cp2.config} />
         ) : cp3 !== null ? (
           <ScriptsPanel stepId={cp3.stepId} batchId={cp3.batchId} />
+        ) : cp4Steps.length > 0 ? (
+          <QaPanel steps={cp4Steps} />
         ) : (
           <StepPanel />
         )}

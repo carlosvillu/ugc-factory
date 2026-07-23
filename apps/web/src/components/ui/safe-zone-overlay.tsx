@@ -13,7 +13,15 @@ import { cn } from '@/lib/utils';
 // style (percentages Tailwind can't emit as classes; the sanctioned exception,
 // same as Progress's width). The caption is white mono with caption-shadow for
 // legibility over an arbitrary frame.
-type SafeZonePreset = 'universal' | 'tiktok' | 'meta' | 'off';
+//
+// T5.6 (CP4 · variant review): the dashed guide + label are EXTRACTED into
+// `SafeZoneFrame` — a TRANSPARENT overlay (no hatch, no scrim) meant to sit
+// OVER a real <video>. CP4 needs the guide without the placeholder hatch/scrim
+// (which would occlude the frame it plays). Both components share the ONE
+// `PRESETS` map below (the per-platform insets are the source of truth for both
+// the placeholder preview and the live overlay), so a recalibration of a safe
+// area moves both at once.
+export type SafeZonePreset = 'universal' | 'tiktok' | 'meta' | 'off';
 
 interface PresetInset {
   t: number;
@@ -28,6 +36,54 @@ const PRESETS: Record<Exclude<SafeZonePreset, 'off'>, PresetInset> = {
   tiktok: { t: 6.77, r: 12.96, b: 25.2, l: 4.07, label: 'TikTok' },
   meta: { t: 14, r: 6, b: 35, l: 6, label: 'Meta / Reels' },
 };
+
+type SafeZoneFrameProps = React.ComponentProps<'div'> & {
+  /** @default "universal" */
+  preset?: SafeZonePreset;
+};
+
+/**
+ * SafeZoneFrame — the dashed safe-zone guide + label ALONE, TRANSPARENT, to lay
+ * over a real 9:16 frame (a <video> in CP4). It renders NOTHING of its own that
+ * occludes what's under it: no hatch, no scrim — only the dashed --accent box
+ * (inset by the preset) and the caption. The parent must be `relative`; this
+ * fills it (`absolute inset-0`) and is `pointer-events-none` so the video's own
+ * controls stay clickable. `off` renders no box and an empty label.
+ */
+export function SafeZoneFrame({ className, preset = 'universal', ...props }: SafeZoneFrameProps) {
+  const p = preset === 'off' ? undefined : PRESETS[preset];
+  return (
+    <div
+      data-slot="safe-zone-frame"
+      data-preset={preset}
+      aria-hidden
+      className={cn('pointer-events-none absolute inset-0 overflow-hidden', className)}
+      {...props}
+    >
+      {p ? (
+        <div
+          // 1.5px dashed accent guide, radius-sm (5px, nearest token to the
+          // mirror's 4px). The DS has no 1.5px border-width token and TD.6 bans
+          // arbitrary bracket classes, so the runtime-fixed 1.5px goes via inline
+          // style (borderWidth), matching the mirror's borderWidth exactly. NO
+          // fill here (unlike the placeholder overlay): a tint would haze the
+          // video — the box is an outline only.
+          className="absolute rounded-sm border-dashed border-accent"
+          style={{
+            borderWidth: '1.5px',
+            top: `${String(p.t)}%`,
+            right: `${String(p.r)}%`,
+            bottom: `${String(p.b)}%`,
+            left: `${String(p.l)}%`,
+          }}
+        />
+      ) : null}
+      <span className="caption-shadow absolute inset-x-0 bottom-2 text-center font-mono text-micro text-text-on-accent">
+        {p ? p.label : ''}
+      </span>
+    </div>
+  );
+}
 
 type SafeZoneOverlayProps = React.ComponentProps<'div'> & {
   /** @default "universal" */
@@ -58,12 +114,10 @@ export function SafeZoneOverlay({
     >
       <div aria-hidden className="absolute inset-0 bg-overlay" />
       {p ? (
+        // The placeholder preview keeps the tinted fill (--accent-soft): here
+        // there is no video under it, so the fill reads as "safe area", not haze.
         <div
           aria-hidden
-          // 1.5px dashed accent guide, radius-sm (5px, nearest token to the
-          // mirror's 4px). The DS has no 1.5px border-width token and TD.6 bans
-          // arbitrary bracket classes, so the runtime-fixed 1.5px goes via inline
-          // style (borderWidth), matching the mirror's borderWidth exactly.
           className="absolute rounded-sm border-dashed border-accent bg-accent-soft"
           style={{
             borderWidth: '1.5px',

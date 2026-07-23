@@ -1,0 +1,6 @@
+=== ad_variant status final (query BD directa) ===
+01KY6ZSHVT2TV045ZP9C8YT8JQ -> approved
+01KY6ZSHVT60W8GDVFH4HSVH5H -> rejected
+01KY6ZSHVT6MKWX5QDMFRQ7VA6 -> approved
+VEREDICTO BD: CORRECTO (2 approved + 1 rejected, cada una la suya)
+cost_entry total en BD: {"n":0,"cents":0}

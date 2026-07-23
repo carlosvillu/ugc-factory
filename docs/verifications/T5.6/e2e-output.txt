@@ -1,0 +1,107 @@
+[WebServer] seed: persona «Lucía (placeholder)» ← imagen sintética 1638×2048 px (personas/01KY6ZPHC925MMF49EXVHNFR53/01KY6ZPHDDDBNBKHDZE37MKNN7.png)
+[WebServer] seed: persona «Lucía (placeholder)» ← imagen sintética 1638×2048 px (personas/01KY6ZPHC925MMF49EXVHNFR53/01KY6ZPHE1ZA9C55A31GDJ2DDN.png)
+[WebServer] seed: persona «Marcus (placeholder)» ← imagen sintética 1638×2048 px (personas/01KY6ZPHE5VC2TP2PJV9N520PZ/01KY6ZPHEMRYGYG9PG5GMN54BC.png)
+[WebServer] seed: persona «Marcus (placeholder)» ← imagen sintética 1638×2048 px (personas/01KY6ZPHE5VC2TP2PJV9N520PZ/01KY6ZPHF44519JTCA89M4FP56.png)
+[WebServer] seed: persona «Nerea (placeholder)» ← imagen sintética 1638×2048 px (personas/01KY6ZPHF70CYW0ZH6THRVAKSN/01KY6ZPHFPCVMBET57ANREPNP2.png)
+[WebServer] seed: persona «Nerea (placeholder)» ← imagen sintética 1638×2048 px (personas/01KY6ZPHF70CYW0ZH6THRVAKSN/01KY6ZPHG6FBNMKPHTB9N5Y0T9.png)
+[WebServer] seed: persona «Carmen (placeholder)» ← imagen sintética 1638×2048 px (personas/01KY6ZPHG96Q520YS8FCHJJD35/01KY6ZPHGRVC2R7CHBESWZK2SA.png)
+[WebServer] seed: persona «Carmen (placeholder)» ← imagen sintética 1638×2048 px (personas/01KY6ZPHG96Q520YS8FCHJJD35/01KY6ZPHH737DPDM3YR8BKBTAZ.png)
+[WebServer] seed: persona «Alex (placeholder)» ← imagen sintética 1638×2048 px (personas/01KY6ZPHHB664972PTYZSZBNYX/01KY6ZPHHS598E4BSHB6345EF8.png)
+[WebServer] seed: persona «Alex (placeholder)» ← imagen sintética 1638×2048 px (personas/01KY6ZPHHB664972PTYZSZBNYX/01KY6ZPHJ96RP7EVB77PYM5QDK.png)
+[WebServer] seed: persona «Rosa (placeholder)» ← imagen sintética 1638×2048 px (personas/01KY6ZPHJDZX1D9WNX75AC6KP2/01KY6ZPHJTHREJ32R0PXCKHJQ6.png)
+[WebServer] seed: persona «Rosa (placeholder)» ← imagen sintética 1638×2048 px (personas/01KY6ZPHJDZX1D9WNX75AC6KP2/01KY6ZPHKA00H1A9JRKPCTRYHM.png)
+[WebServer] seed: persona «Priya (placeholder)» ← imagen sintética 1638×2048 px (personas/01KY6ZPHKDZ89FSF81QQYJQ6X2/01KY6ZPHKVHN3C06BWMMNWFDX9.png)
+[WebServer] seed: persona «Priya (placeholder)» ← imagen sintética 1638×2048 px (personas/01KY6ZPHKDZ89FSF81QQYJQ6X2/01KY6ZPHMB27DE4MC2M348MP2F.png)
+[WebServer] seed: persona «David (placeholder)» ← imagen sintética 1638×2048 px (personas/01KY6ZPHMEXZ7BGM6AQ9VHCNDM/01KY6ZPHMXPK479HJJSNFXVNBQ.png)
+[WebServer] seed: persona «David (placeholder)» ← imagen sintética 1638×2048 px (personas/01KY6ZPHMEXZ7BGM6AQ9VHCNDM/01KY6ZPHNE6Y6HJ3YFKD9ZS9VY.png)
+[WebServer] seed: persona «Chloe (placeholder)» ← imagen sintética 1638×2048 px (personas/01KY6ZPHNHH72HMZZWF5WCE47W/01KY6ZPHNZGM501R1993NFY81Q.png)
+[WebServer] seed: persona «Chloe (placeholder)» ← imagen sintética 1638×2048 px (personas/01KY6ZPHNHH72HMZZWF5WCE47W/01KY6ZPHPF6GESXETWQD56DEEP.png)
+[WebServer] seed: persona «Kenji (placeholder)» ← imagen sintética 1638×2048 px (personas/01KY6ZPHPJZ8JAFA6KDHZQ7QN4/01KY6ZPHQ11QD4TKRHMQP58760.png)
+[WebServer] seed: persona «Kenji (placeholder)» ← imagen sintética 1638×2048 px (personas/01KY6ZPHPJZ8JAFA6KDHZQ7QN4/01KY6ZPHQJB41T0HPYV9XE19N0.png)
+[WebServer] ▲ Next.js 16.2.10 (Turbopack)
+[WebServer] - Local:         http://localhost:3100
+[WebServer] - Network:       http://192.168.1.132:3100
+[WebServer] ✓ Ready in 271ms
+[WebServer] {"level":30,"time":1784793483955,"pid":25127,"hostname":"MBP-de-Carlos","name":"worker","intervalMs":5000,"generationReconcile":true,"msg":"sweeper arrancado"}
+[WebServer] {"level":30,"time":1784793483955,"pid":25127,"hostname":"MBP-de-Carlos","name":"worker","queue":"demo.noop","msg":"pg-boss arrancado: colas y consumers listos"}
+[WebServer] {"level":30,"time":1784793483955,"pid":25127,"hostname":"MBP-de-Carlos","name":"worker","health":{"ok":true,"db":true},"msg":"worker ready"}
+[WebServer] {"level":30,"time":1784793484663,"pid":25128,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","msg":"running startup migrations"}
+[WebServer] {"level":30,"time":1784793484742,"pid":25128,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","msg":"startup migrations applied"}
+[WebServer] {"level":30,"time":1784793484819,"pid":25128,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","seeded":true,"msg":"auth.password_hash sembrado (first boot)"}
+[WebServer] {"level":30,"time":1784793484859,"pid":25128,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","provider":"fal","seeded":false,"msg":"secret.fal ya existía en BD (env ignorada; la BD es la fuente)"}
+[WebServer] {"level":30,"time":1784793484876,"pid":25128,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","provider":"firecrawl","seeded":false,"msg":"secret.firecrawl ya existía en BD (env ignorada; la BD es la fuente)"}
+[WebServer] {"level":30,"time":1784793484876,"pid":25128,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","provider":"anthropic","seeded":false,"msg":"secret.anthropic ya existía en BD (env ignorada; la BD es la fuente)"}
+[WebServer] {"level":30,"time":1784793484912,"pid":25128,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","msg":"sembrando datos de referencia (T3.9)"}
+[WebServer] {"level":30,"time":1784793484957,"pid":25128,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","hookLines":80,"ctaLines":30,"recipes":3,"msg":"librería sembrada o ya presente (insert-only)"}
+[WebServer] {"level":30,"time":1784793485007,"pid":25128,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","templates":56,"guardPacks":10,"modelProfiles":18,"msg":"galería sembrada o ya presente (insert-only)"}
+[WebServer] {"level":30,"time":1784793485055,"pid":25128,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","personas":10,"imagesCreated":0,"imagesFailed":0,"msg":"personas sembradas o ya presentes"}
+[WebServer] {"level":30,"time":1784793485056,"pid":25128,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","msg":"datos de referencia sembrados (T3.9)"}
+[WebServer] 
+
+Running 3 tests using 2 workers
+
+[WebServer]  GET /login 200 in 223ms (next.js: 96ms, application-code: 127ms)
+[WebServer]  POST /api/login 200 in 243ms (next.js: 150ms, application-code: 93ms)
+[WebServer]  GET / 200 in 126ms (next.js: 12ms, proxy.ts: 34ms, application-code: 80ms)
+  ✓  1 [setup] › e2e/auth.setup.ts:10:1 › login y persistir sesión (1.3s)
+[WebServer]  GET /api/runs/01KY6ZPQ35H9FXAF9XRN2JMH38 200 in 619ms (next.js: 603ms, application-code: 17ms)
+[WebServer]  GET /api/runs/01KY6ZPQ37X46YJDX4F07HTPNE 200 in 621ms (next.js: 603ms, application-code: 18ms)
+[WebServer]  GET /runs/01KY6ZPQ35H9FXAF9XRN2JMH38 200 in 1355ms (next.js: 324ms, proxy.ts: 3ms, application-code: 1028ms)
+[WebServer]  GET /runs/01KY6ZPQ37X46YJDX4F07HTPNE 200 in 1356ms (next.js: 324ms, proxy.ts: 3ms, application-code: 1030ms)
+[WebServer]  GET /api/variants/01KY6ZPQ2XEDBB2Z0DPYJX6GWK 200 in 718ms (next.js: 696ms, application-code: 22ms)
+[WebServer]  GET /api/variants/01KY6ZPQ2YRGYAQPZKX1KH328W 200 in 673ms (next.js: 649ms, application-code: 24ms)
+[WebServer]  GET /api/variants/01KY6ZPQ329DWM8A3Q17REMVW0 200 in 721ms (next.js: 695ms, application-code: 26ms)
+[WebServer]  GET /api/variants/01KY6ZPQ32N4M1A2SRMNM6PE94 200 in 723ms (next.js: 695ms, application-code: 29ms)
+[WebServer]  GET /api/steps/01KY6ZPQ3N4Y94YPM3CYMVC9ZG 200 in 683ms (next.js: 676ms, application-code: 8ms)
+[WebServer]  GET /api/steps/01KY6ZPQ3N0C97XJ0J3HTB4AHC 200 in 684ms (next.js: 675ms, application-code: 9ms)
+[WebServer]  GET /api/steps/01KY6ZPQ3N4Y94YPM3CYMVC9ZG 200 in 27ms (next.js: 7ms, application-code: 20ms)
+[WebServer]  GET /api/steps/01KY6ZPQ3N4Y94YPM3CYMVC9ZG 200 in 27ms (next.js: 9ms, application-code: 18ms)
+[WebServer]  GET /api/steps/01KY6ZPQ3N0C97XJ0J3HTB4AHC 200 in 28ms (next.js: 12ms, application-code: 16ms)
+[WebServer]  GET /api/steps/01KY6ZPQ3N0C97XJ0J3HTB4AHC 200 in 28ms (next.js: 14ms, application-code: 14ms)
+[WebServer]  GET /api/steps/01KY6ZPQ3N4Y94YPM3CYMVC9ZG 200 in 12ms (next.js: 6ms, application-code: 6ms)
+[WebServer]  GET /api/variants/01KY6ZPQ2YHBC6VHF01HAA7680 200 in 738ms (next.js: 649ms, application-code: 89ms)
+[WebServer]  GET /api/steps/01KY6ZPQ3N0C97XJ0J3HTB4AHC 200 in 11ms (next.js: 7ms, application-code: 5ms)
+[WebServer]  GET /api/variants/01KY6ZPQ32N4M1A2SRMNM6PE94 200 in 741ms (next.js: 643ms, application-code: 98ms)
+[WebServer]  GET /api/variants/01KY6ZPQ2XEDBB2Z0DPYJX6GWK 200 in 745ms (next.js: 645ms, application-code: 100ms)
+[WebServer]  GET /api/variants/01KY6ZPQ32900J20RAV648VM0C 200 in 750ms (next.js: 649ms, application-code: 101ms)
+[WebServer]  GET /api/variants/01KY6ZPQ2XEDBB2Z0DPYJX6GWK 200 in 15ms (next.js: 4ms, application-code: 11ms)
+[WebServer]  GET /api/variants/01KY6ZPQ2YRGYAQPZKX1KH328W 200 in 17ms (next.js: 6ms, application-code: 10ms)
+[WebServer]  GET /api/variants/01KY6ZPQ32N4M1A2SRMNM6PE94 200 in 18ms (next.js: 8ms, application-code: 9ms)
+[WebServer]  GET /api/variants/01KY6ZPQ329DWM8A3Q17REMVW0 200 in 22ms (next.js: 10ms, application-code: 12ms)
+[WebServer]  GET /api/variants/01KY6ZPQ2YHBC6VHF01HAA7680 200 in 16ms (next.js: 7ms, application-code: 9ms)
+[WebServer]  GET /api/variants/01KY6ZPQ2XEDBB2Z0DPYJX6GWK 200 in 17ms (next.js: 7ms, application-code: 10ms)
+[WebServer]  GET /api/variants/01KY6ZPQ32900J20RAV648VM0C 200 in 17ms (next.js: 8ms, application-code: 9ms)
+[WebServer]  GET /api/steps/01KY6ZPQ3N4Y94YPM3CYMVC9ZG 200 in 16ms (next.js: 6ms, application-code: 10ms)
+[WebServer]  GET /api/variants/01KY6ZPQ32N4M1A2SRMNM6PE94 200 in 17ms (next.js: 8ms, application-code: 8ms)
+[WebServer]  GET /api/steps/01KY6ZPQ3N0C97XJ0J3HTB4AHC 200 in 14ms (next.js: 8ms, application-code: 6ms)
+[WebServer]  GET /api/variants/01KY6ZPQ2YHBC6VHF01HAA7680 200 in 7ms (next.js: 1598µs, application-code: 5ms)
+[WebServer]  GET /api/steps/01KY6ZPQ4JE9FND2J2F7D1G1H7 200 in 10ms (next.js: 3ms, application-code: 6ms)
+[WebServer]  GET /api/variants/01KY6ZPQ2YHBC6VHF01HAA7680 200 in 8ms (next.js: 2ms, application-code: 6ms)
+[WebServer]  GET /api/steps/01KY6ZPQ4JE9FND2J2F7D1G1H7 200 in 8ms (next.js: 5ms, application-code: 3ms)
+[WebServer]  GET /api/runs/01KY6ZPQ37X46YJDX4F07HTPNE/events 200 in 1831ms (next.js: 613ms, application-code: 1218ms)
+[WebServer]  GET /api/assets/01KY6ZPQ3EW92YTWFDHE271XPG/download 200 in 269ms
+  ✓  2 [chromium] › e2e/variant-review.spec.ts:226:3 › CP4 · revisión de variantes (T5.6) › lista las 3 variantes pausadas, muestra player + overlays de safe zones + resultados de QA @f5 @checkpoint (3.8s)
+[WebServer]  GET /api/assets/01KY6ZPQ4ASC3WC9ADJA1NXTGE/download 200 in 654ms (next.js: 645ms, application-code: 9ms)
+[WebServer] {"level":30,"time":1784793492974,"pid":25128,"hostname":"MBP-de-Carlos","name":"web","request_id":"2a8b2a23-81a3-4ecf-9525-f14ce41b0df0","step_id":"01KY6ZPQ4JE9FND2J2F7D1G1H7","msg":"checkpoint rechazado"}
+[WebServer]  POST /api/steps/01KY6ZPQ4JE9FND2J2F7D1G1H7/reject 200 in 769ms (next.js: 729ms, application-code: 40ms)
+[WebServer]  GET /api/variants/01KY6ZPQ2XEDBB2Z0DPYJX6GWK 200 in 12ms (next.js: 3ms, application-code: 9ms)
+[WebServer]  GET /api/steps/01KY6ZPQ3N4Y94YPM3CYMVC9ZG 200 in 16ms (next.js: 7ms, application-code: 10ms)
+[WebServer]  GET /api/variants/01KY6ZPQ2XEDBB2Z0DPYJX6GWK 200 in 17ms (next.js: 9ms, application-code: 7ms)
+[WebServer]  GET /api/steps/01KY6ZPQ3N4Y94YPM3CYMVC9ZG 200 in 9ms (next.js: 5ms, application-code: 4ms)
+[WebServer]  GET /api/assets/01KY6ZPQ3D5Q8CBB63ZMNJ44JW/download 200 in 13ms (next.js: 6ms, application-code: 7ms)
+[WebServer] {"level":30,"time":1784793493788,"pid":25128,"hostname":"MBP-de-Carlos","name":"web","request_id":"c636799b-69ed-47ed-9f7d-0077eae3c728","step_id":"01KY6ZPQ3N4Y94YPM3CYMVC9ZG","msg":"checkpoint aprobado"}
+[WebServer]  POST /api/steps/01KY6ZPQ3N4Y94YPM3CYMVC9ZG/approve 200 in 712ms (next.js: 694ms, application-code: 18ms)
+[WebServer]  GET /api/variants/01KY6ZPQ2YRGYAQPZKX1KH328W 200 in 11ms (next.js: 4ms, application-code: 7ms)
+[WebServer]  GET /api/steps/01KY6ZPQ44H3H707ZH6DBXW6BM 200 in 14ms (next.js: 7ms, application-code: 7ms)
+[WebServer]  GET /api/steps/01KY6ZPQ44H3H707ZH6DBXW6BM 200 in 11ms (next.js: 2ms, application-code: 9ms)
+[WebServer]  GET /api/steps/01KY6ZPQ44H3H707ZH6DBXW6BM 200 in 11ms (next.js: 5ms, application-code: 6ms)
+[WebServer]  GET /api/steps/01KY6ZPQ44H3H707ZH6DBXW6BM 200 in 11ms (next.js: 7ms, application-code: 4ms)
+[WebServer]  GET /api/variants/01KY6ZPQ2YRGYAQPZKX1KH328W 200 in 8ms (next.js: 899µs, application-code: 7ms)
+[WebServer]  GET /api/steps/01KY6ZPQ44H3H707ZH6DBXW6BM 200 in 9ms (next.js: 6ms, application-code: 3ms)
+[WebServer]  GET /api/assets/01KY6ZPQ3WZ4K4VXST68057VJS/download 200 in 6ms (next.js: 2ms, application-code: 4ms)
+[WebServer] {"level":30,"time":1784793493943,"pid":25128,"hostname":"MBP-de-Carlos","name":"web","request_id":"9ca7964e-29e6-47e7-bb90-1645f99fc76d","step_id":"01KY6ZPQ44H3H707ZH6DBXW6BM","msg":"checkpoint aprobado"}
+[WebServer]  POST /api/steps/01KY6ZPQ44H3H707ZH6DBXW6BM/approve 200 in 24ms (next.js: 4ms, application-code: 20ms)
+[WebServer]  GET /api/runs/01KY6ZPQ35H9FXAF9XRN2JMH38/events 200 in 3.8s (next.js: 612ms, application-code: 3.1s)
+  ✓  3 [chromium] › e2e/variant-review.spec.ts:265:3 › CP4 · revisión de variantes (T5.6) › aprobar 2 variantes y rechazar 1 desde el navegador actualiza `ad_variant.status` (cada una por separado) @f5 @checkpoint (5.7s)
+
+  3 passed (17.4s)

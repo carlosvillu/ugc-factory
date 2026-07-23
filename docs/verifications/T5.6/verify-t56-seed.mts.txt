@@ -1,0 +1,117 @@
+// Siembra independiente del verifier T5.6 (NO es el spec del implementer): crea un run CP4 con 3
+// variantes + 3 N9 pausados y máster sintético, imprime IDs para el pase agent-browser + query BD.
+import { randomBytes } from 'node:crypto';
+import { readFileSync } from 'node:fs';
+import { newUlid } from '@ugc/core/contracts';
+import type { N9Output } from '@ugc/core/contracts';
+import { planBatch } from '@ugc/core/strategy';
+import {
+  createBatchWithVariants,
+  createAsset,
+  createDb,
+  listBatchVariants,
+  listPlanningInputs,
+  makeLocalStorageAdapter,
+} from '@ugc/db';
+import {
+  productBrief as productBriefTable,
+  project as projectTable,
+  urlAnalysis as urlAnalysisTable,
+} from '@ugc/db/schema';
+import { makeAsset, makeBrief, makeProductBrief, makeProject, makeUrlAnalysis } from '@ugc/test-utils';
+
+const runtime = JSON.parse(readFileSync(new URL('../e2e/.runtime.json', import.meta.url), 'utf8')) as {
+  databaseUrl: string;
+  assetsDir: string;
+};
+const db = createDb(runtime.databaseUrl);
+const storage = makeLocalStorageAdapter({ root: runtime.assetsDir });
+const BRIEF = makeBrief();
+
+function n9Output(variantId: string, passed: boolean): N9Output {
+  return {
+    variantId,
+    passed,
+    qaReport: {
+      checks: {
+        resolution: 'pass',
+        fps: 'pass',
+        codec: 'pass',
+        duration: 'pass',
+        loudness: passed ? 'pass' : 'fail',
+        av_duration_diff: 'pass',
+        captions_safe_zone: 'pass',
+        filesize: 'pass',
+      },
+      metrics: {},
+      passed,
+      score: passed ? 100 : 88,
+    },
+  };
+}
+
+async function seedMaster(): Promise<string> {
+  const bytes = randomBytes(4096);
+  const id = newUlid();
+  const storageKey = `verify/t56-${id}.mp4`;
+  const put = await storage.put(storageKey, bytes, { mime: 'video/mp4' });
+  const row = await createAsset(
+    db,
+    makeAsset({ id, kind: 'final_video', storageKey, mime: 'video/mp4', bytes: put.bytes, checksum: put.checksum }),
+  );
+  return row.id;
+}
+
+const [p] = await db.insert(projectTable).values(makeProject()).returning();
+const projectId = p!.id;
+const [ua] = await db.insert(urlAnalysisTable).values(makeUrlAnalysis({ projectId })).returning();
+const [brief] = await db
+  .insert(productBriefTable)
+  .values(makeProductBrief({ urlAnalysisId: ua!.id, data: BRIEF }))
+  .returning();
+
+const { libraryHooks, personas, recipe } = await listPlanningInputs(db, 'test');
+const config = {
+  angleIndices: [0, 1, 2],
+  hooksPerAngle: 1,
+  objective: 'hook_test' as const,
+  tier: 'test' as const,
+  languages: ['es'],
+  personaMode: 'rotate' as const,
+};
+const args = { brief: BRIEF, config, libraryHooks, personas, recipe: recipe! };
+const preview = planBatch(args);
+const created = await createBatchWithVariants(db, {
+  projectId,
+  briefId: brief!.id,
+  tier: 'test',
+  objective: 'hook_test',
+  languages: ['es'],
+  costEstimatedCents: preview.estimate.total.maxCents,
+  composePlan: (batchId) => planBatch({ ...args, batchDiscriminator: batchId }).plan,
+});
+const dbVariants = await listBatchVariants(db, created.batch.id);
+const chosen = dbVariants.slice(0, 3);
+
+const runId = newUlid();
+await db.execute(`INSERT INTO pipeline_run (id, project_id) VALUES ('${runId}', '${projectId}')` as never);
+
+const out: { runId: string; variants: { id: string; stepId: string; passed: boolean }[] } = {
+  runId,
+  variants: [],
+};
+for (let i = 0; i < chosen.length; i++) {
+  const v = chosen[i]!;
+  const masterId = await seedMaster();
+  await db.execute(`UPDATE ad_variant SET master_asset_id = '${masterId}' WHERE id = '${v.id}'` as never);
+  const passed = i < 2;
+  const stepId = newUlid();
+  await db.execute(
+    `INSERT INTO step_run (id, run_id, node_key, variant_id, status, is_checkpoint, checkpoint_config, output_refs, depends_on)
+     VALUES ('${stepId}', '${runId}', 'N9', '${v.id}', 'waiting_approval', true, '${JSON.stringify({ alwaysPause: true })}', '${JSON.stringify(n9Output(v.id, passed)).replace(/'/g, "''")}', '{}')` as never,
+  );
+  out.variants.push({ id: v.id, stepId, passed });
+}
+
+console.log('SEED_RESULT ' + JSON.stringify(out));
+process.exit(0);

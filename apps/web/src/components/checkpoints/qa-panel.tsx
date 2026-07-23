@@ -18,6 +18,7 @@
 //   · el `qaReport` (los 8 checks + score): del ARTEFACTO de N9 por `getStep` (el `outputExcerpt` del
 //     SSE va recortado a 200 caracteres), validado con `QaReportSchema` en la frontera del cliente.
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import type { QaChecks, QaReport } from '@ugc/core/contracts';
 import { N9OutputSchema, QaReportSchema } from '@ugc/core/contracts';
 import { ApiError, runActions, variantActions, type VariantResponse } from '@/lib/api-client';
@@ -28,6 +29,7 @@ import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
 import { MetricsTable } from '@/components/ui/metrics-table';
 import { Tabs } from '@/components/ui/tabs';
+import { Textarea } from '@/components/ui/textarea';
 import {
   AlertDialog,
   AlertDialogClose,
@@ -37,6 +39,15 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import {
+  Dialog,
+  DialogClose,
+  DialogDescription,
+  DialogFooter,
+  DialogPopup,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import { SafeZoneFrame, type SafeZonePreset } from '@/components/ui/safe-zone-overlay';
 
 export interface QaPanelProps {
@@ -207,11 +218,17 @@ function VariantListItem({
 /** El detalle de UNA variante: player + overlay de safe zones (centro) y resultados de QA +
  *  aprobar/rechazar (derecha). Carga su fila (máster) y su `qaReport` (artefacto de N9) al montar. */
 function VariantReview({ step }: { step: QaCheckpointStep }) {
+  const router = useRouter();
   const [detail, setDetail] = useState<VariantDetail | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [preset, setPreset] = useState<SafeZonePreset>('universal');
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  // REGENERAR (CP4, CU4, T5.8): el diálogo con el CTA nuevo. `regenOpen` lo gobierna; `cta` es el texto
+  // que el usuario teclea; `regenError` separa el fallo del submit del de aprobar/rechazar.
+  const [regenOpen, setRegenOpen] = useState(false);
+  const [ctaText, setCtaText] = useState('');
+  const [regenError, setRegenError] = useState<string | null>(null);
 
   // `VariantReview` se REMONTA al cambiar de variante (`key={selectedStepId}` en el padre), así que
   // `detail`/`loadError` ya arrancan limpios en cada montaje — no hace falta resetearlos aquí (y
@@ -258,6 +275,27 @@ function VariantReview({ step }: { step: QaCheckpointStep }) {
       // local que limpiar.
     } catch (e) {
       setSubmitError(e instanceof ApiError ? e.message : 'No se pudo guardar la decisión.');
+      setSubmitting(false);
+    }
+  }
+
+  /** REGENERAR (CU4, T5.8): manda el CTA nuevo, arranca el run de regeneración `kind='regen'` y NAVEGA a
+   *  su canvas para ver el progreso del run parcial (patrón `nextRunId` de CP2/CP3). El step N9 original
+   *  NO se resuelve: la variante aprobada sigue intacta; regenerar produce una variante CLON nueva. */
+  async function regenerate() {
+    const cta = ctaText.trim();
+    if (cta.length === 0) {
+      setRegenError('Escribe el nuevo CTA antes de regenerar.');
+      return;
+    }
+    setSubmitting(true);
+    setRegenError(null);
+    try {
+      const { nextRunId } = await runActions.regenerate(step.stepId, cta);
+      setRegenOpen(false);
+      router.push(`/runs/${nextRunId}`);
+    } catch (e) {
+      setRegenError(e instanceof ApiError ? e.message : 'No se pudo arrancar la regeneración.');
       setSubmitting(false);
     }
   }
@@ -387,6 +425,77 @@ function VariantReview({ step }: { step: QaCheckpointStep }) {
               {submitError}
             </p>
           ) : null}
+
+          {/* REGENERAR (CU4, T5.8): abre un diálogo con el CTA nuevo. NO resuelve la variante (aprobar/
+              rechazar sí); clona la variante y arranca un run de regeneración parcial. Botón ancho arriba
+              de aprobar/rechazar: es una acción de OTRA naturaleza (produce trabajo nuevo, no cierra). */}
+          <Dialog
+            open={regenOpen}
+            onOpenChange={(open) => {
+              setRegenOpen(open);
+              // Al abrir, limpiar el error del intento anterior (el texto se conserva entre aperturas por
+              // si el usuario canceló sin querer). El CTA actual NO se pre-rellena: la variante no lo lleva
+              // en su fila (vive en `ad_script`), y el flujo es teclear el CTA NUEVO.
+              if (open) setRegenError(null);
+            }}
+          >
+            <DialogTrigger
+              render={
+                <Button
+                  type="button"
+                  variant="secondary"
+                  disabled={submitting}
+                  data-slot="regenerate-variant"
+                  className="w-full"
+                />
+              }
+            >
+              Regenerar con otro CTA
+            </DialogTrigger>
+            <DialogPopup className="max-w-lg" data-slot="regenerate-dialog">
+              <DialogTitle>Regenerar la variante</DialogTitle>
+              <DialogDescription>
+                Cambia el CTA y se generará un máster nuevo reutilizando el resto de la variante
+                (hook, cuerpo, avatar, b-roll). La variante actual no se toca.
+              </DialogDescription>
+              <div className="mt-3 flex flex-col gap-2">
+                <label htmlFor="regen-cta" className="text-mono font-medium text-text">
+                  Nuevo CTA
+                </label>
+                <Textarea
+                  id="regen-cta"
+                  data-slot="regenerate-cta-input"
+                  value={ctaText}
+                  onChange={(e) => {
+                    setCtaText(e.target.value);
+                  }}
+                  placeholder="Escribe el nuevo CTA hablado…"
+                  rows={3}
+                />
+                {regenError !== null ? (
+                  <p role="alert" data-slot="regenerate-error" className="text-mono text-danger">
+                    {regenError}
+                  </p>
+                ) : null}
+              </div>
+              <DialogFooter>
+                <DialogClose render={<Button type="button" variant="secondary" size="sm" />}>
+                  Cancelar
+                </DialogClose>
+                <Button
+                  type="button"
+                  variant="primary"
+                  size="sm"
+                  disabled={submitting}
+                  data-slot="confirm-regenerate"
+                  onClick={() => void regenerate()}
+                >
+                  {submitting ? 'Arrancando…' : 'Regenerar'}
+                </Button>
+              </DialogFooter>
+            </DialogPopup>
+          </Dialog>
+
           <div className="flex items-center gap-3">
             {/* RECHAZAR → confirmación (rechazo es destructivo: la variante pasa a `rejected`). */}
             <AlertDialog>

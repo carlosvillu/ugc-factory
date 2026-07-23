@@ -28,8 +28,10 @@ export default defineConfig({
       name: 'chromium',
       use: { ...devices['Desktop Chrome'], storageState: 'e2e/.auth/user.json' },
       dependencies: ['setup'], // todos los specs (salvo los que sobreescriben storageState) arrancan logueados
-      // `spend.spec.ts` NO corre aquí: tiene proyecto propio (ver abajo).
-      testIgnore: /spend\.spec\.ts/,
+      // `spend.spec.ts`, `partial-regeneration.spec.ts` y `normal-generation-composes.spec.ts` NO corren
+      // aquí: tienen proyecto propio (ver abajo).
+      testIgnore:
+        /spend\.spec\.ts|partial-regeneration\.spec\.ts|normal-generation-composes\.spec\.ts/,
     },
     // ── T1.19: el ledger de gasto es GLOBAL, así que su spec necesita EXCLUSIVIDAD ────────
     //
@@ -51,6 +53,43 @@ export default defineConfig({
     {
       name: 'spend',
       testMatch: /spend\.spec\.ts/,
+      use: { ...devices['Desktop Chrome'], storageState: 'e2e/.auth/user.json' },
+      dependencies: ['chromium'],
+    },
+    // ── T5.8: el regen parcial COMPITE por el «doom» global del fake de fal ──────────────
+    //
+    // El fake de fal designa el PRIMER submit de IMAGEN del PROCESO como «doomed» (un solo fallo
+    // determinista por corrida, `doomedRequestId` en `fake-apis.ts`) — un recurso GLOBAL, sin
+    // conciencia de run. `f4-generation.spec.ts` lo REQUIERE (asserta `waitForFailedStep` + retry
+    // granular) y lo ganaba por ordenación: su camino rápido seed→approve→generate submitea la
+    // primera imagen. `partial-regeneration.spec.ts` usa EL MISMO camino rápido (el approve de CP3
+    // siembra el origen) → bajo `fullyParallel` compite con F4 por ese doom y a veces se lo ROBA,
+    // dejando a F4 sin su fallo determinista (rojo en `f4-generation.spec.ts:190`). Mismo pecado
+    // que `spend`: una premisa sostenida por suerte de ordenación.
+    //
+    // FIX sin tocar F4 ni rebajar un assert (ni dooma por-run en el fake, que rompería `gallery`
+    // que NO tiene retry): proyecto PROPIO que DEPENDE de `chromium` ⇒ arranca cuando F4 ya
+    // reclamó y gastó el doom. Los submits del regen reciben request_ids frescos (no doomed) → su
+    // callback de retry no llega a dispararse, y la dedup sigue mordiendo. Los demás specs
+    // conservan su paralelismo; el coste es que 1 test corre al final (como `spend`).
+    {
+      name: 'partial-regeneration',
+      testMatch: /partial-regeneration\.spec\.ts/,
+      use: { ...devices['Desktop Chrome'], storageState: 'e2e/.auth/user.json' },
+      dependencies: ['chromium'],
+    },
+    // ── T5.8b: el flujo normal COMPONE compite por el «doom» global del fake, igual que el regen ──
+    //
+    // `normal-generation-composes.spec.ts` usa EL MISMO camino rápido seed→approve→generate que
+    // `f4-generation.spec.ts` y `partial-regeneration.spec.ts` (el approve de CP3 siembra el origen). Bajo
+    // `fullyParallel` competiría con F4 por el `doom` global del fake de fal (el primer submit de imagen del
+    // proceso, `doomedRequestId`) y a veces se lo ROBARÍA, dejando a F4 sin su fallo determinista (rojo en
+    // `f4-generation.spec.ts:190`). MISMO pecado y MISMO fix que `partial-regeneration`: proyecto PROPIO que
+    // DEPENDE de `chromium` ⇒ arranca cuando F4 ya reclamó el doom; sus submits reciben request_ids frescos
+    // (no doomed) y su retry granular no llega a dispararse. El coste es que 1 test más corre al final.
+    {
+      name: 'normal-generation-composes',
+      testMatch: /normal-generation-composes\.spec\.ts/,
       use: { ...devices['Desktop Chrome'], storageState: 'e2e/.auth/user.json' },
       dependencies: ['chromium'],
     },

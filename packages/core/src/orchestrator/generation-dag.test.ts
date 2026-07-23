@@ -205,4 +205,19 @@ describe('generationRunDefinition', () => {
   it('sin variantes ⇒ lanza (el run no tendría root)', () => {
     expect(() => generationRunDefinition('p', [])).toThrow(/no hay variantes/);
   });
+
+  // ── LINAJE DEL RUN (T5.8, CU4): `kind` opcional para la regeneración parcial ─────────────────────────
+  it('sin opts, el run NO fija kind (generación normal de CP3 → default full)', () => {
+    const def = generationRunDefinition('p', [fullVariant('v1')]);
+    expect(def.kind).toBeUndefined();
+  });
+
+  it('con opts (T5.8): el run lleva kind=regen (lo distingue en la run-list)', () => {
+    const def = generationRunDefinition('p', [fullVariant('v1')], { kind: 'regen' });
+    expect(def.kind).toBe('regen');
+    // La identidad de variante viaja POR-NODO (no a nivel de run): cada N6/N7/N8/N9 la lleva. El linaje al
+    // lote se alcanza vía `step_run.variant_id → ad_variant.batch_id` (no `pipeline_run.batch_id`).
+    expect(byKey(def.nodes, `${K.n6}__v1`)?.variantId).toBe('v1');
+    expect(validateDag(def)).toBeNull();
+  });
 });

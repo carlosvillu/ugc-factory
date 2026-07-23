@@ -38,6 +38,7 @@ import { lintScriptForBrief, rebuildEditedScript } from '@ugc/core/scripting';
 import {
   createRun,
   generationRunDefinition,
+  withComposition,
   type VariantGenerationPlan,
   type WithTransaction,
 } from '@ugc/core/orchestrator';
@@ -78,18 +79,21 @@ function isRealEdit(rebuilt: AdScript, currentScenes: readonly { narration: stri
   return narrationFingerprint(rebuilt.scenes) !== narrationFingerprint(currentScenes);
 }
 
-/** El resultado de aprobar CP3: el id del RUN DE GENERACIÓN N6→N7 arrancado en la MISMA tx para las
- *  variantes `scripted`, o `undefined` si CP3 no aprobó ninguna (nada que generar) O si el tier aún no
- *  es generation-ready (b-roll pendiente-F4 → las variantes quedan `scripted` sin arrancar run). Viaja
- *  hasta la respuesta de `/approve` para que el cliente navegue al canvas de generación (patrón del
- *  `nextRunId` de CP2); su ausencia significa «aprobado, sin run de generación que mostrar». */
+/** El resultado de aprobar CP3: el id del RUN DE GENERACIÓN N6→N7→N8→N9 arrancado en la MISMA tx para las
+ *  variantes `scripted` (con la cola de composición de T5.8b: N8 máster+C2PA → N9 CP4), o `undefined` si
+ *  CP3 no aprobó ninguna (nada que generar) O si el tier aún no es generation-ready (b-roll pendiente-F4 →
+ *  las variantes quedan `scripted` sin arrancar run). Viaja hasta la respuesta de `/approve` para que el
+ *  cliente navegue al canvas de generación (patrón del `nextRunId` de CP2); su ausencia significa
+ *  «aprobado, sin run de generación que mostrar». */
 export interface ScriptsCheckpointResult {
   nextRunId?: string;
 }
 
 /**
  * Efecto de APROBAR el checkpoint de guiones (CP3): aplica los veredictos por-variante y —si el tier es
- * generation-ready— arranca el RUN DE GENERACIÓN N6→N7 de las variantes que quedaron `scripted`.
+ * generation-ready— arranca el RUN DE GENERACIÓN de las variantes que quedaron `scripted`. El run corre el
+ * sub-DAG COMPLETO N6→N7→N8→N9 (con la cola de composición de T5.8b): compone el máster (N8, C2PA) y pausa
+ * en CP4 (N9). Antes de T5.8b el run se cortaba en N7 (sin máster/CP4) — el GAP DE PLAN que T5.8b cerró.
  *
  * No-op si el step no es N5 o si la decisión no es `scripts` (mismo criterio que CP1/CP2: un efecto
  * que no reconoce su artefacto/decisión no hace nada) → `{}`.
@@ -183,7 +187,7 @@ async function applyDecidedVerdicts(
 
   await applyScriptVerdicts(db, { batchId, verdicts: decided });
 
-  // ── EL ARRANQUE (BEST-EFFORT) DEL RUN DE GENERACIÓN N6→N7, EN ESTA MISMA TX ───────────────────────
+  // ── EL ARRANQUE (BEST-EFFORT) DEL RUN DE GENERACIÓN N6→N7→N8→N9, EN ESTA MISMA TX ─────────────────
   // Las variantes que quedaron `scripted` (aprobadas + sin flag bloqueante) son EXACTAMENTE las que
   // `applyScriptVerdicts` transicionó — se derivan del `decided` (no se re-consulta la BD): `approve:true`.
   const scriptedVariantIds = decided.filter((d) => d.approve).map((d) => d.variantId);
@@ -214,9 +218,13 @@ async function applyDecidedVerdicts(
   // la MISMA tx). Con el tier ya confirmado generation-ready, un throw aquí es un fallo REAL (persona mal
   // configurada, catálogo incoherente), no un endpoint pendiente → sigue ruidoso, aborta el lote entero
   // (rollback) antes de crear un run a medias. Secuencial: fail-fast.
+  // Cada plan lleva su cola de COMPOSICIÓN (N8 máster+C2PA → N9 CP4) vía `withComposition` (T5.8b): el
+  // flujo NORMAL debe llegar a componer el máster y pausar en CP4, igual que la op de regen. Antes de
+  // T5.8b, este builder emitía solo N6→N7 y el run se cortaba en N7 (sin máster, sin C2PA, sin CP4) — el
+  // GAP DE PLAN que T5.8b cierra. `withComposition` es el ÚNICO dueño de esta cola (regen la comparte).
   const plans: VariantGenerationPlan[] = [];
   for (const variantId of scriptedVariantIds) {
-    plans.push(await buildVariantGenerationPlan({ db }, { variantId }));
+    plans.push(withComposition(await buildVariantGenerationPlan({ db }, { variantId })));
   }
 
   // `createRun` inserta el `pipeline_run` de generación + su sub-DAG N6→N7a-e POR VARIANTE y encola los

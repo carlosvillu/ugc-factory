@@ -110,6 +110,7 @@ export {
 // (server/script-checkpoint.ts).
 export {
   generationRunDefinition,
+  withComposition,
   GENERATION_NODE_KEYS,
   type VariantGenerationPlan,
 } from './generation-dag';

@@ -96,6 +96,32 @@ export interface VariantGenerationPlan {
   n9Config?: unknown;
 }
 
+/**
+ * AÑADE la cola de COMPOSICIÓN (N8 máster + C2PA) y QA/CHECKPOINT (N9 → CP4) a un plan de generación
+ * N6→N7 (T5.8b). Es el ÚNICO dueño de esa cola: los DOS callers que arrancan un run que debe llegar a un
+ * máster —el flujo NORMAL (CP3-approve, `approveScriptsForStep`) y la op de REGEN (`regenerateVariantCta`)—
+ * la obtienen de aquí, sin duplicar el par `{n8Config, n9Config}` inline.
+ *
+ * POR QUÉ VIVE EN CORE/ORCHESTRATOR Y NO EN EL BUILDER DE SERVICES (backend principio 1): un tail-adder
+ * PURO —añade la cola de composición al SHAPE del `VariantGenerationPlan`, sin tocar la BD— es una cosa
+ * ESTRUCTURALMENTE distinta de un builder que LEE la BD (`buildVariantGenerationPlan` resuelve
+ * variante→lote→recipe→persona→guion). La resolución con I/O vive en @ugc/services; la transformación pura
+ * sobre el tipo del plan vive junto a quien la CONSUME: `variantNodes` (abajo) emite N8 si `n8Config` está,
+ * y N9 si N8+N9 están. Colocar el tail-adder junto al consumidor —no junto al builder de BD— es lo que la
+ * frontera core/servicio pide. No hay ciclo: `withComposition` no importa nada de services.
+ *
+ * SHAPE `{variantId}`: N8/N9 leen su identidad de `ctx.variantId` (por-nodo, `step_run.variant_id`), NO de
+ * su config — su config solo los ACTIVA (marcador de presencia). El `{variantId}` espeja el que el harness
+ * de N8/N9 ya usa. Función PURA: compone un plan nuevo, no muta el de entrada.
+ */
+export function withComposition(plan: VariantGenerationPlan): VariantGenerationPlan {
+  return {
+    ...plan,
+    n8Config: { variantId: plan.variantId },
+    n9Config: { variantId: plan.variantId },
+  };
+}
+
 /** Una `key` local ÚNICA por (nodo, variante): la referencian los `dependsOn`. El `node_key` se queda
  *  limpio; ESTA es la desambiguación local dentro del DAG. */
 function localKey(nodeKey: string, variantId: string): string {
@@ -224,6 +250,7 @@ function variantNodes(plan: VariantGenerationPlan): RunNodeInput[] {
 export function generationRunDefinition(
   projectId: string,
   variants: readonly VariantGenerationPlan[],
+  opts: GenerationRunOptions = {},
 ): RunDefinitionInput {
   if (variants.length === 0) {
     throw new Error(
@@ -234,5 +261,17 @@ export function generationRunDefinition(
     projectId,
     autopilot: true,
     nodes: variants.flatMap((v) => variantNodes(v)),
+    // §12: `kind` del run. La generación normal de CP3 (T4.11) lo OMITE → run 'full' (default de la
+    // columna). La REGENERACIÓN PARCIAL (CU4, T5.8) pasa `kind:'regen'` para que la run-list lo distinga
+    // (ese campo SÍ tiene lector). La IDENTIDAD de variante viaja por-nodo (`variantId` de cada
+    // N6/N7/N8/N9), no a nivel de run; el linaje al lote es alcanzable vía `step_run.variant_id →
+    // ad_variant.batch_id` (no se puebla `pipeline_run.batch_id`: media-columna sin lector = ruido).
+    ...(opts.kind !== undefined ? { kind: opts.kind } : {}),
   };
+}
+
+/** Opciones de linaje del run de generación (T5.8). La generación normal no las usa (run 'full'); la
+ *  regeneración parcial fija `kind:'regen'` (lo distingue en la run-list). */
+export interface GenerationRunOptions {
+  kind?: 'full' | 'partial' | 'regen';
 }

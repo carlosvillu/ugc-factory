@@ -1,0 +1,2 @@
+ALTER TABLE "step_run" ADD COLUMN "spawned_regen_run_id" text;--> statement-breakpoint
+ALTER TABLE "step_run" ADD CONSTRAINT "step_run_spawned_regen_run_id_pipeline_run_id_fk" FOREIGN KEY ("spawned_regen_run_id") REFERENCES "public"."pipeline_run"("id") ON DELETE set null ON UPDATE no action;

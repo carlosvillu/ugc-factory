@@ -160,6 +160,14 @@ const ApproveResponseSchema = z.object({
   nextRunId: z.string().optional(),
 });
 
+/** La respuesta de `POST /api/steps/:id/regenerate` (T5.8, CU4): `ok` + el `nextRunId` del run de
+ *  regeneración `kind='regen'` que se arrancó (SIEMPRE presente en éxito — regenerar arranca un run). El
+ *  cliente navega a ese run para ver el progreso del run parcial. */
+const RegenerateResponseSchema = z.object({
+  ok: z.literal(true),
+  nextRunId: z.string(),
+});
+
 export const api = {
   get: <S extends z.ZodType>(path: string, schema: S) => apiFetch(path, schema),
   post: <S extends z.ZodType>(path: string, schema: S, body?: unknown) =>
@@ -441,6 +449,12 @@ export const runActions = {
   edit: (stepId: string, outputRefs: unknown) =>
     api.post(`/api/steps/${stepId}/edit`, OkSchema, { outputRefs }),
   reject: (stepId: string) => api.post(`/api/steps/${stepId}/reject`, OkSchema),
+  /** REGENERAR (CP4, CU4, T5.8): clona la variante del N9 con el CTA cambiado y arranca su run de
+   *  generación `kind='regen'` (nodo cambiado → N8 → N9, reutilizando por dedup los N7 no afectados).
+   *  Devuelve el `nextRunId` del run parcial para navegar a su canvas. NO resuelve el step N9 (la
+   *  variante original sigue pausada, aún aprobable/rechazable). */
+  regenerate: (stepId: string, cta: string) =>
+    api.post(`/api/steps/${stepId}/regenerate`, RegenerateResponseSchema, { cta }),
   retry: (stepId: string, config?: unknown) =>
     api.post(`/api/steps/${stepId}/retry`, OkSchema, config === undefined ? undefined : { config }),
   skip: (stepId: string) => api.post(`/api/steps/${stepId}/skip`, OkSchema),

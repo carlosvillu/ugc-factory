@@ -370,6 +370,17 @@ async function pipelineRunCount(): Promise<number> {
   return Number(rows[0]?.count);
 }
 
+/** El conjunto de `node_key` DISTINTOS del run de generación (T5.8b): con él se afirma que el flujo NORMAL
+ *  emite la cola de composición N8 (máster+C2PA) → N9 (CP4), no solo N6→N7. Antes de T5.8b el run se
+ *  cortaba en N7 y este set NO contenía N8/N9 — el control negativo de la tarea. */
+async function generationRunNodeKeys(runId: string): Promise<Set<string>> {
+  const { rows } = await tdb.pool.query<{ node_key: string }>(
+    'SELECT DISTINCT node_key FROM step_run WHERE run_id = $1',
+    [runId],
+  );
+  return new Set(rows.map((r) => r.node_key));
+}
+
 describe('CP3 · approveScriptsForStep (T2.6): veredictos, v2 solo si edita, bloqueo server-side', () => {
   // T4.11: los tests cuyas variantes LLEGAN a `scripted` arrancan el run de generación N6→N7 en la
   // misma tx, y `buildVariantGenerationPlan` exige un recipe con endpoints REALES → van en `premium`
@@ -402,6 +413,30 @@ describe('CP3 · approveScriptsForStep (T2.6): veredictos, v2 solo si edita, blo
     // T4.11: aprobar arrancó el run de generación N6→N7 (patrón `nextRunId` de CP2).
     expect(result.nextRunId).toBeTruthy();
     expect(await pipelineRunCount()).toBe(1);
+  });
+
+  it('T5.8b · el run de generación del flujo NORMAL emite la cola de composición N8 (máster) + N9 (CP4)', async () => {
+    // EL GAP DE PLAN de F5 que T5.8b cierra: antes, el flujo normal (CP3-approve) arrancaba un run que se
+    // CORTABA en N7 (sin máster, sin C2PA, sin CP4) — `buildVariantGenerationPlan` no emitía n8/n9. Ahora
+    // `withComposition` añade la cola: el run del flujo normal DEBE incluir N8 y N9. Es la cláusula
+    // determinista de la Verificación (regla 8) protegida contra regresión — si alguien quita
+    // `withComposition` del CP3-approve, este test se pone ROJO (el run vuelve a cortarse en N7).
+    const { output, variantIds } = await seedScriptedBatch(tdb.db, 1, [[]], 'premium');
+
+    const result = await approveInTx(output, {
+      kind: 'scripts',
+      verdicts: [{ variantId: variantIds[0]!, approved: true }],
+    });
+
+    expect(result.nextRunId).toBeTruthy();
+    const nodeKeys = await generationRunNodeKeys(result.nextRunId!);
+    // El sub-DAG completo N6→N7→N8→N9 del flujo normal.
+    for (const k of ['N6', 'N7a', 'N7b', 'N7c', 'N7d', 'N7e']) {
+      expect(nodeKeys, `el sub-DAG premium debe incluir ${k}`).toContain(k);
+    }
+    // La cola de composición de T5.8b (la que faltaba): máster+C2PA (N8) → checkpoint CP4 (N9).
+    expect(nodeKeys, 'el flujo normal debe componer el máster (N8)').toContain('N8');
+    expect(nodeKeys, 'el flujo normal debe pausar en CP4 (N9)').toContain('N9');
   });
 
   it('mandar `editedScript` IDÉNTICO al vigente NO crea v2 (aprobar no es editar)', async () => {

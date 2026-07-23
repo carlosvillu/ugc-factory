@@ -1,0 +1,2 @@
+seed: persona «Nora Verify T58b Premium» ← imagen sintética 1638×2048 px (personas/01KY820M3YNNN3V2B9GDTBWEZD/01KY820M53768N6QP9W734N6K0.png)
+{"projectId":"01KY820M5SYAMS0DJWQ5B1DK35","batchId":"01KY820M6PQZX4AE2YZJYEN0GF","variantId":"01KY820M6TDYZ5Y2CNSYX0TQT9","filenameCode":"serum-hidratante-angulo-1-hook01-01ky820m3ynn-es-12s-01ky820m6pqz","tier":"premium","n5RunId":"01KY820M79E9HPKFHVVVTGWV00","n5StepId":"01KY820M7CVGEMGJEJZ7EFVT6A"}

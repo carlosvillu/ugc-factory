@@ -87,6 +87,16 @@ export const stepRun = pgTable(
     supersedesId: text('supersedes_id').references((): AnyPgColumn => stepRun.id, {
       onDelete: 'set null',
     }),
+    // MARCADOR DE IDEMPOTENCIA de la regeneración de CP4 (T5.8): "este checkpoint N9 YA lanzó ESTE run de
+    // regen". Lo fija `spawnRegenForStep` DENTRO de la tx del checkpoint, bajo el `SELECT … FOR UPDATE` de
+    // la fila N9 → dos POST /regenerate concurrentes sobre el mismo N9 no pueden crear DOS clones + DOS runs
+    // (doble gasto fal): la 2ª petición espera el lock, despierta tras el commit de la 1ª, ve el marcador y
+    // devuelve 409. Distinto de `supersedes_id` (invalidación T0.8, otra semántica). Cierra la deuda de
+    // linaje N9→regen que planning anticipaba (el consumidor que faltaba). Nullable, sin default: un N9 sin
+    // regeneración lo tiene NULL. `set null` si el run apuntado se borrara (no bloquea el borrado del run).
+    spawnedRegenRunId: text('spawned_regen_run_id').references((): AnyPgColumn => pipelineRun.id, {
+      onDelete: 'set null',
+    }),
     isCheckpoint: boolean('is_checkpoint').notNull().default(false),
     checkpointConfig: jsonb('checkpoint_config'),
     // ULIDs de steps del MISMO run cuyo éxito habilita a este step.

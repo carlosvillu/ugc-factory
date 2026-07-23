@@ -22,11 +22,11 @@
 // explica por qué NO hay índice posicional: un índice al array de la llamada, guardado en un
 // documento que sobrevive a la llamada, apuntaría a otra línea EN SILENCIO.
 import { and, desc, eq, inArray, sql } from 'drizzle-orm';
-import { newUlid } from '@ugc/core/contracts';
-import type { BatchPlan, QaReport } from '@ugc/core/contracts';
+import { newUlid, BatchPlanSchema } from '@ugc/core/contracts';
+import type { AdScript, BatchPlan, GuardrailFlag, QaReport } from '@ugc/core/contracts';
 import type { AdObjective, RecipeTier } from '@ugc/core/library';
 import type { Db } from '../client';
-import { adBatch, adVariant, type AdBatch, type AdVariant } from '../schema/batch';
+import { adBatch, adScript, adVariant, type AdBatch, type AdVariant } from '../schema/batch';
 import { hookLine, persona, promptTemplate } from '../schema/gallery';
 import { asset, type Asset } from '../schema/generation';
 import { createAsset } from './asset.repo';
@@ -227,6 +227,129 @@ export async function listBatchVariants(db: Db, batchId: string): Promise<AdVari
     .from(adVariant)
     .where(eq(adVariant.batchId, batchId))
     .orderBy(adVariant.filenameCode);
+}
+
+/**
+ * CLON DE VARIANTE PARA REGENERACIÓN PARCIAL (CU4, T5.8). Crea una variante NUEVA a partir de una
+ * existente —MISMOS ángulo/persona/hook/idioma/duración/plataformas— con su guion clonado como v1 y con
+ * el `AdScript` ya modificado (lo típico: el CTA cambiado). Devuelve el id de la variante clon y el id de
+ * su guion (que `buildVariantGenerationPlan` leerá para componer el sub-DAG del regen).
+ *
+ * POR QUÉ UN CLON Y NO MUTAR LA VARIANTE APROBADA (§9.0 / mockup 4c): la variante original ya está
+ * `approved` con su máster publicable — regenerar NO debe pisarla. El clon es una variante hermana en el
+ * MISMO lote (conserva `batch_id` → mismo tier/recipe/brief, que es lo que `buildVariantGenerationPlan`
+ * necesita) con `status='scripted'`: exactamente el estado del que arranca la generación (como las
+ * variantes que CP3 deja `scripted`). El linaje al origen se ancla en el lote compartido + el guion clon.
+ *
+ * `filename_code` es UNIQUE GLOBAL (§12): el clon toma `<origen>-r<sufijo>` con un sufijo ULID-corto para
+ * no colisionar aunque se regenere la misma variante varias veces. NO se copia `master_asset_id` ni
+ * `qa_report`/`score`: el clon aún no tiene máster (lo producirá N8 del run de regen).
+ *
+ * ATÓMICO en el `db` recibido (será la tx del checkpoint de regen): variante + guion commitean juntos o
+ * nada. El CTA cambiado llega YA aplicado sobre el `AdScript` (el caller lo edita antes) — este repo no
+ * decide qué cambia, solo persiste el guion nuevo del clon.
+ */
+export interface CloneVariantForRegenInput {
+  /** La variante APROBADA de la que se clona (§9.0). */
+  sourceVariantId: string;
+  /** El `AdScript` YA MODIFICADO del clon (p. ej. con el CTA cambiado). Se persiste como v1 del clon. */
+  script: AdScript;
+  /** Los flags del linter del guion clon (normalmente los de la variante origen: el cambio de CTA no
+   *  introduce claims nuevos que re-vetar; el caller re-lintea si el cambio lo exige). */
+  guardrailFlags: GuardrailFlag[];
+}
+
+export interface ClonedVariantForRegen {
+  variantId: string;
+  scriptId: string;
+  batchId: string;
+  filenameCode: string;
+}
+
+export async function cloneVariantForRegen(
+  db: Db,
+  input: CloneVariantForRegenInput,
+): Promise<ClonedVariantForRegen> {
+  const source = await getVariant(db, input.sourceVariantId);
+  if (source === undefined) {
+    throw new Error(`cloneVariantForRegen: la variante origen ${input.sourceVariantId} no existe`);
+  }
+
+  const cloneId = newUlid();
+  // Sufijo ULID-corto (10 chars finales del ULID del clon, que es monótono y único): un `filename_code`
+  // UNIQUE GLOBAL exige que dos regens de la MISMA variante no colisionen. `-r<suffix>` es legible y
+  // marca el fichero como regeneración en el export.
+  const filenameCode = `${source.filenameCode}-r${cloneId.slice(-10).toLowerCase()}`;
+
+  // AÑADIR EL CLON A LA MATRIZ DEL LOTE (`ad_batch.matrix`): N6 (`assembleN6Sources`) reconstruye el
+  // `AdScript` buscando el `filenameCode` de la variante en la matriz para sacar `sharedBodyKey` (§10.1) —
+  // una variante que genera pero NO está en la matriz rompe N6 («sharedBodyKey irresoluble»). El clon hereda
+  // la ENTRADA de matriz del origen (mismo ángulo/hook/persona/segmentKeys), cambiando solo el `filenameCode`.
+  const batchRow = await getBatch(db, source.batchId);
+  if (batchRow === undefined) {
+    throw new Error(`cloneVariantForRegen: el lote ${source.batchId} de la variante no existe`);
+  }
+  const plan = BatchPlanSchema.parse(batchRow.matrix);
+  const sourcePlanned = plan.variants.find((v) => v.filenameCode === source.filenameCode);
+  if (sourcePlanned === undefined) {
+    throw new Error(
+      `cloneVariantForRegen: la variante origen ${source.filenameCode} no está en la matriz del lote (linaje roto)`,
+    );
+  }
+  const clonedPlan: BatchPlan = {
+    ...plan,
+    variants: [...plan.variants, { ...sourcePlanned, filenameCode }],
+  };
+  await db.update(adBatch).set({ matrix: clonedPlan }).where(eq(adBatch.id, source.batchId));
+
+  const [variant] = await db
+    .insert(adVariant)
+    .values({
+      id: cloneId,
+      batchId: source.batchId,
+      angleName: source.angleName,
+      framework: source.framework,
+      hookLineId: source.hookLineId,
+      personaId: source.personaId,
+      language: source.language,
+      promptTemplateId: source.promptTemplateId,
+      templateVersion: source.templateVersion,
+      durationTarget: source.durationTarget,
+      platformTargets: source.platformTargets,
+      filenameCode,
+      // `scripted`: el clon arranca listo para generar (como las variantes que CP3 deja `scripted`). NO se
+      // copia master/qa/score — el clon aún no tiene máster (lo produce N8 del run de regen).
+      status: 'scripted' as const,
+    })
+    .returning();
+  if (!variant)
+    throw new Error('cloneVariantForRegen: el INSERT de la variante clon no devolvió fila');
+
+  const [scriptRow] = await db
+    .insert(adScript)
+    .values({
+      variantId: cloneId,
+      version: 1,
+      hook: input.script.hook,
+      scenes: input.script.scenes,
+      subtitles: input.script.subtitles,
+      cta: input.script.cta,
+      fullText: input.script.fullText,
+      wordCount: input.script.wordCount,
+      estSeconds: input.script.estSeconds,
+      tone: input.script.tone,
+      language: input.script.language,
+      // El guion del clon lo escribió el USUARIO (cambió el CTA) → `edited_by_user`. Sin `origin_step_run_id`
+      // (no nace de un N5): igual que las v2 de CP3.
+      editedByUser: true,
+      guardrailFlags: input.guardrailFlags,
+      originStepRunId: null,
+    })
+    .returning();
+  if (!scriptRow)
+    throw new Error('cloneVariantForRegen: el INSERT del guion clon no devolvió fila');
+
+  return { variantId: cloneId, scriptId: scriptRow.id, batchId: source.batchId, filenameCode };
 }
 
 /** Los valores del enum `audio_source` (§7.2 N7e, migración 0021): de dónde viene el audio de fondo de

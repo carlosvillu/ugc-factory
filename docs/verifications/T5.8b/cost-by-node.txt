@@ -1,0 +1,9 @@
+ node_key |          fal_endpoint           | cost_actual |  status   
+----------+---------------------------------+-------------+-----------
+ N7a      | fal-ai/flux-2                   |           1 | completed
+ N7a      | fal-ai/flux-2                   |           1 | completed
+ N7c      | fal-ai/bytedance/omnihuman/v1.5 |          24 | completed
+ N7d      | fal-ai/veo3.1/image-to-video    |          80 | completed
+ N7f      | fal-ai/veo3.1/image-to-video    |          80 | completed
+(5 rows)
+

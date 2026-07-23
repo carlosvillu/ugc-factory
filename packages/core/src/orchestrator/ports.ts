@@ -324,6 +324,15 @@ export interface NewRunRow {
   // §7.1.b (T0.8): el run arranca en autopilot (sin pausas en checkpoints salvo
   // override per-nodo). Default false. La define `POST /api/runs`.
   autopilot: boolean;
+  // §12: `pipeline_run.kind ENUM(full|partial|regen)`. `undefined` ⇒ la columna usa su default 'full'
+  // (los runs de análisis/lote/generación de F0..F4, que NUNCA lo fijaban). La REGENERACIÓN PARCIAL (CU4,
+  // T5.8) arranca su run con `kind='regen'` para que el linaje del run sea visible sin adivinarlo por
+  // heurística. Opaco para core: el store lo mapea a la columna nativa; el enum lo valida la BD.
+  kind?: 'full' | 'partial' | 'regen';
+  // NOTA (T5.8): `pipeline_run.batch_id` existe en el schema pero NADIE lo lee (ni run-list ni worker); el
+  // linaje del run al lote se alcanza vía `step_run.variant_id → ad_variant.batch_id`. Por eso el run de
+  // regen NO puebla esa columna (poblarla SOLO para regens sería media-columna sin lector = trampa de
+  // observabilidad). La IDENTIDAD DE VARIANTE del run vive en `step_run.variant_id` (por-nodo), no aquí.
 }
 export interface NewStepRow {
   id: string;

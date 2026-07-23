@@ -11,9 +11,15 @@ export function makeRunStore(db: Db): RunStore {
   return {
     async insertRun(run: NewRunRow): Promise<void> {
       // `autopilot` (T0.8): la define POST /api/runs; default false.
-      await db
-        .insert(pipelineRun)
-        .values({ id: run.id, projectId: run.projectId, autopilot: run.autopilot });
+      await db.insert(pipelineRun).values({
+        id: run.id,
+        projectId: run.projectId,
+        autopilot: run.autopilot,
+        // §12: `kind` — solo se fija si core lo trae (omitido ⇒ Drizzle no toca la columna: default 'full').
+        // La regeneración parcial (T5.8) lo trae ('regen'). `pipeline_run.batch_id` NO se puebla aquí: nadie
+        // lo lee (el linaje al lote se alcanza vía `step_run.variant_id → ad_variant.batch_id`).
+        ...(run.kind !== undefined ? { kind: run.kind } : {}),
+      });
     },
     async insertSteps(steps: NewStepRow[]): Promise<void> {
       if (steps.length === 0) return;

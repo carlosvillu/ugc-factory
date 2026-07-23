@@ -216,7 +216,7 @@ export const FAKE_BRIEF = makeBrief({
 export const FAKE_BEAUTY_AVATAR_HINT =
   'Mujer farmacéutica cosmética en laboratorio dermatológico con bata blanca';
 
-const FAKE_BRIEF_BEAUTY: ProductBrief = {
+export const FAKE_BRIEF_BEAUTY: ProductBrief = {
   ...FAKE_BRIEF,
   product: { ...FAKE_BRIEF.product, category: 'beauty' },
   audience: {

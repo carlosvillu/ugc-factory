@@ -82,6 +82,50 @@ export async function findStepForUpdate(db: Db, id: string): Promise<StepRow | u
 }
 
 /**
+ * Lectura BAJO LOCK (`SELECT … FOR UPDATE`) del N9 para el guard de idempotencia de la regeneración de CP4
+ * (T5.8): bloquea la fila hasta el commit y devuelve SOLO lo que `spawnRegenForStep` necesita para su
+ * check-and-set atómico — `status` (el guard de checkpoint pausado), `outputRefs` (el `N9Output` con la
+ * variante a clonar) y `spawnedRegenRunId` (el marcador "este N9 ya lanzó su regen"). Dos POST /regenerate
+ * concurrentes sobre el mismo N9 se serializan aquí: la 2ª espera el lock, despierta tras el commit de la
+ * 1ª y ve el marcador → 409, sin doble gasto fal (y de paso serializa el read-modify-write de `ad_batch.matrix`).
+ *
+ * PROYECCIÓN DEDICADA, no `StepRow`: `spawnedRegenRunId` es una preocupación de CP4 que el orquestador
+ * NUNCA lee; meterlo en el puerto `StepRow` lo contaminaría (mismo criterio que `findStepDetail` mantiene
+ * `error` fuera del puerto). `undefined` si el step no existe.
+ */
+export interface StepRegenGuardRow {
+  status: StepRow['status'];
+  outputRefs: unknown;
+  spawnedRegenRunId: string | null;
+}
+
+export async function findStepForRegenGuard(
+  db: Db,
+  id: string,
+): Promise<StepRegenGuardRow | undefined> {
+  const [row] = await db
+    .select({
+      status: stepRun.status,
+      outputRefs: stepRun.outputRefs,
+      spawnedRegenRunId: stepRun.spawnedRegenRunId,
+    })
+    .from(stepRun)
+    .where(eq(stepRun.id, id))
+    .for('update');
+  return row ?? undefined;
+}
+
+/**
+ * Fija el marcador `spawned_regen_run_id` del N9 (T5.8): "este checkpoint lanzó ESTE run de regen". Se llama
+ * DENTRO de la tx del checkpoint, DESPUÉS de `findStepForRegenGuard` (que tomó el `FOR UPDATE`) y de crear
+ * el run — así el marcador y el clon+run commitean juntos. La 2ª petición concurrente, bloqueada en el
+ * `FOR UPDATE`, lo verá al despertar.
+ */
+export async function markStepRegenSpawned(db: Db, id: string, regenRunId: string): Promise<void> {
+  await db.update(stepRun).set({ spawnedRegenRunId: regenRunId }).where(eq(stepRun.id, id));
+}
+
+/**
  * Lectura simple (sin lock) de un step por id: `undefined` si no existe. La usa
  * el consumer genérico (T0.7b) para obtener `config`/`retry_count`/`max_retries`
  * tras arrancar el step — la revalidación bajo lock la hace `transition()`; esto

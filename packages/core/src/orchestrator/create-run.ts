@@ -96,6 +96,10 @@ export async function createRun(
       id: runId,
       projectId: def.projectId,
       autopilot: def.autopilot ?? false,
+      // §12: `kind` de la definición. Omitido ⇒ el store no fija la columna (default 'full'). La
+      // regeneración parcial (T5.8) lo trae ('regen'). La identidad de variante NO es run-level (vive en
+      // `step_run.variant_id`, ya fijado por nodo en `generationRunDefinition`).
+      ...(def.kind !== undefined ? { kind: def.kind } : {}),
     });
     await runs.insertSteps(stepRows);
 

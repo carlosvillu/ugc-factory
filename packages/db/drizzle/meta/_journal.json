@@ -176,6 +176,13 @@
       "when": 1784711424320,
       "tag": "0024_married_shiver_man",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1784817898170,
+      "tag": "0025_easy_titanium_man",
+      "breakpoints": true
     }
   ]
 }

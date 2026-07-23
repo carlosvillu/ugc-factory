@@ -1,0 +1,27 @@
+# Evidencia /bin/zsh — estado de la BD de dev (ugc-postgres-dev), 2026-07-23T16:14:07Z
+
+## Migración 0025 aplicada
+spawned_regen_run_id
+
+## Tiers generation-ready (broll endpoint resoluble)
+test:     broll = [endpoint pendiente F4]  -> NO ready
+standard: broll = [endpoint pendiente F4]  -> NO ready
+premium:  broll = fal-ai/veo3.1/image-to-video -> READY (unico)
+
+## Variantes approved/rejected (candidatas a origen)
+01KY51HMPQY4X4N2E21YZKPDA7|approved|T55C-VERIFY-APPROVE|01KXGW39RABCDQZV0MAZR0CAWB|standard
+01KY51HMPQDPX685BZ34FRR09M|rejected|T55C-VERIFY-REJECT|01KXGW39RABCDQZV0MAZR0CAWB|standard
+
+## Generaciones production-completed vs ligadas a variante viva
+90
+0
+
+## Evidencia de coste fal por nodo (cost_actual, cents)
+i2v|fal-ai/veo3.1/image-to-video|160|8
+r2v|fal-ai/veo3.1/reference-to-video|160|8
+r2v|fal-ai/veo3.1/reference-to-video|160|8
+i2v|fal-ai/veo3.1/image-to-video|120|6
+i2v|fal-ai/veo3.1/image-to-video|80|4
+avatar|fal-ai/bytedance/omnihuman/v1.5|57|3.575
+avatar|fal-ai/bytedance/omnihuman/v1.5|54|3.36975
+avatar|veed/avatars/text-to-video|35|5.457

@@ -52,6 +52,10 @@ export { findStep } from './repos/steps.repo';
 // `GET /api/steps/:id` (editor de CP1 + visores modales del canvas). Vive aparte del puerto
 // `StepRow` del orquestador a propósito: el motor no necesita el `error`, y la UI sí.
 export { findStepDetail } from './repos/steps.repo';
+// Guard de idempotencia de la regeneración de CP4 (T5.8): lectura BAJO LOCK del N9 + fijado del marcador,
+// para que dos POST /regenerate concurrentes no dupliquen el gasto fal. Proyección dedicada (fuera del
+// puerto `StepRow`, mismo criterio que `findStepDetail`).
+export { findStepForRegenGuard, markStepRegenSpawned } from './repos/steps.repo';
 // Steps por sus ULIDs exactos, sin lock (T1.10a): la usa el consumer de `step.execute`
 // para resolver las DEPENDENCIAS de un step (los ids exactos vienen en `dependsOn`) y
 // entregarle sus outputs al executor. Por id y NUNCA por `node_key`: el supersede de T0.8
@@ -220,6 +224,7 @@ export { seedGallery } from './repos/gallery-seed.repo';
 // N5 saca del lote la matriz y el brief (`getBatch`) y resuelve `filenameCode→variantId` para
 // persistir cada guion (`listBatchVariants`).
 export {
+  cloneVariantForRegen,
   createBatchWithVariants,
   finalizeVariantMaster,
   getBatch,

@@ -1,0 +1,12 @@
+ ✓ |worker:media| test/media/compose-master.test.ts > concat + mezcla de audio → máster intermedio (T5.3) > concat de 3 segmentos: duración = suma, perfil canónico intacto (-c copy no re-encoda) 2244ms
+ ✓ |worker:media| test/media/compose-master.test.ts > concat + mezcla de audio → máster intermedio (T5.3) > el vídeo del máster conserva el códec del input (copy, no transcode) 947ms
+ ✓ |worker:media| test/media/compose-master.test.ts > concat + mezcla de audio → máster intermedio (T5.3) > el máster con voz + bed mide -14 LUFS ±1 (loudnorm) 2433ms
+ ✓ |worker:media| test/media/compose-master.test.ts > concat + mezcla de audio → máster intermedio (T5.3) > buildDuckingGraph hunde el bed ≥6 dB cuando entra la voz 655ms
+ ✓ |worker:media| test/media/compose-master.test.ts > concat + mezcla de audio → máster intermedio (T5.3) > el afade del bed se ancla a la duración REAL, no al maxDurationS (cap > duración) 2645ms
+ ✓ |worker:media| test/media/compose-master.test.ts > concat + mezcla de audio → máster intermedio (T5.3) > máster sin bed (music:null): solo voz, también a -14 LUFS ±1 2249ms
+ ✓ |worker:media| test/media/compose-master.test.ts > concat + mezcla de audio → máster intermedio (T5.3) > composeMaster lanza ComposeError si un input no existe en storage 1ms
+ ✓ |worker:media| test/media/compose-master.test.ts > ducking con bed channel_layout=unknown (T5.8a) > CONTROL NEGATIVO: el bed real de T4.9 (unknown) SIN el aformat rompe la mezcla 298ms
+ ✓ |worker:media| test/media/compose-master.test.ts > ducking con bed channel_layout=unknown (T5.8a) > el bed real de T4.9 (unknown) pasa el buildDuckingGraph de PRODUCCIÓN y sigue hundiéndose ≥6 dB 432ms
+ ✓ |worker:media| test/media/compose-master.test.ts > ducking con bed channel_layout=unknown (T5.8a) > composeMaster produce un MP4 válido con voz + bed real de T4.9 (ducking activo) 2351ms
+ Test Files  1 passed (1)
+      Tests  10 passed (10)

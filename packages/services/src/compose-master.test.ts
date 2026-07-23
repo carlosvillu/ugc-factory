@@ -87,16 +87,32 @@ describe('buildAudioConcatArgs — concat de la voz', () => {
 describe('buildDuckingGraph — la MISMA pieza que renderiza el test de ducking (principio 9)', () => {
   test('conecta bed+voz por sidechaincompress con los PARÁMETROS de producción', () => {
     const graph = buildDuckingGraph({ bedLabel: '0:a', voiceLabel: '1:a', outLabel: 'ducked' });
+    // T5.8a: el bed se estampa con `aformat=channel_layouts=stereo` ADYACENTE al sidechain (a un label
+    // intermedio `bedfmt`) — sidechaincompress no negocia formatos con un main input `channel_layout=unknown`.
     expect(graph).toBe(
-      `[0:a][1:a]sidechaincompress=threshold=${String(DUCKING_PARAMS.threshold)}:` +
+      `[0:a]aformat=channel_layouts=stereo[bedfmt];` +
+        `[bedfmt][1:a]sidechaincompress=threshold=${String(DUCKING_PARAMS.threshold)}:` +
         `ratio=${String(DUCKING_PARAMS.ratio)}:attack=${String(DUCKING_PARAMS.attack)}:` +
         `release=${String(DUCKING_PARAMS.release)}:makeup=${String(DUCKING_PARAMS.makeup)}[ducked]`,
     );
   });
 
+  test('T5.8a: estampa el channel_layout del bed ANTES del sidechaincompress (regresión de producción)', () => {
+    // Guarda determinista del fix (regla de trabajo 8): el `aformat` DEBE preceder al `sidechaincompress` en
+    // la rama del bed. Si alguien reordena y el aformat cae después (o desaparece), el bed `unknown` de
+    // ace-step rompe el mux → este assert de gate lo caza sin ffmpeg.
+    const graph = buildDuckingGraph({ bedLabel: 'bedvol', voiceLabel: '1:a', outLabel: 'ducked' });
+    expect(graph).toContain('aformat=channel_layouts=stereo');
+    expect(graph.indexOf('aformat=channel_layouts=stereo')).toBeLessThan(
+      graph.indexOf('sidechaincompress='),
+    );
+  });
+
   test('las labels son parametrizables (test usa 0:a/1:a; producción sus propias labels)', () => {
     const graph = buildDuckingGraph({ bedLabel: 'bedvol', voiceLabel: '0:a', outLabel: 'ducked' });
-    expect(graph.startsWith('[bedvol][0:a]sidechaincompress=')).toBe(true);
+    // La rama del bed arranca en `[bedvol]` (su aformat), la voz entra como sidechain, y cierra en [ducked].
+    expect(graph.startsWith('[bedvol]aformat=channel_layouts=stereo')).toBe(true);
+    expect(graph).toContain('[0:a]sidechaincompress=');
     expect(graph.endsWith('[ducked]')).toBe(true);
   });
 });

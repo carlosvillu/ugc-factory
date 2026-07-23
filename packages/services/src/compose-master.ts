@@ -88,6 +88,14 @@ const LOUDNORM_TARGET_LRA = 11;
  * justamente lo que no debe divergir entre test y producción. El pre-volumen del bed NO cambia los dB de
  * reducción (sidechaincompress se dispara por el nivel de la SIDECHAIN vs threshold), así que la caída
  * ≥6 dB que el test mide sobre el bed a nivel pleno se transfiere al bed a 0,2 de producción.
+ *
+ * ESTAMPADO DE CHANNEL_LAYOUT (T5.8a): `sidechaincompress` exige que su main input tenga `channel_layout`
+ * DEFINIDO — no negocia formatos si le llega `unknown`. El bed de ace-step es WAV `channel_layout=unknown`
+ * (los WAV no persisten el tag de layout), así que se antepone `aformat=channel_layouts=stereo` al bed
+ * INMEDIATAMENTE antes del `sidechaincompress`. Va aquí, adyacente al filtro, y NO río arriba (p. ej. antes
+ * del `volume` del caller) a propósito: `volume` re-propaga el layout `unknown` de su entrada, así que
+ * cualquier estampa previa a él se pierde y el sidechain vuelve a fallar («could not choose their formats»).
+ * Al vivir en el builder, CUALQUIER caller del grafo de ducking queda blindado, no solo el executor N8.
  */
 export function buildDuckingGraph(labels: {
   bedLabel: string;
@@ -97,7 +105,9 @@ export function buildDuckingGraph(labels: {
   const { bedLabel, voiceLabel, outLabel } = labels;
   const { threshold, ratio, attack, release, makeup } = DUCKING_PARAMS;
   return (
-    `[${bedLabel}][${voiceLabel}]sidechaincompress=` +
+    // Estampa el layout del bed adyacente al sidechain (ver nota de arriba: NO antes del `volume`).
+    `[${bedLabel}]aformat=channel_layouts=stereo[bedfmt];` +
+    `[bedfmt][${voiceLabel}]sidechaincompress=` +
     `threshold=${String(threshold)}:ratio=${String(ratio)}:` +
     `attack=${String(attack)}:release=${String(release)}:makeup=${String(makeup)}` +
     `[${outLabel}]`

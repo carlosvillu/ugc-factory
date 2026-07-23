@@ -10,7 +10,8 @@
 import { execFile } from 'node:child_process';
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 
 import type { CompositionSpec } from '@ugc/core/contracts';
@@ -301,5 +302,132 @@ describe.skipIf(!mediaToolsAvailable)('concat + mezcla de audio → máster inte
     await expect(
       composeMaster({ storage, resolveAssetKey: () => 'missing/key.mp4' }, spec),
     ).rejects.toThrow();
+  });
+});
+
+// ── T5.8a · EL BED CON channel_layout=unknown ENTRA AL DUCKING SIN ROMPER sidechaincompress ──────────────
+// REGRESIÓN de producción (destapada por T5.8): el bed de ace-step es WAV `channel_layout=unknown` (los WAV
+// NO persisten el tag de layout), y `sidechaincompress` exige que su main input tenga el layout DEFINIDO →
+// «could not choose their formats». El fix (T5.8a) antepone `aformat=channel_layouts=stereo` al bed dentro de
+// `buildDuckingGraph`, ADYACENTE al sidechain. Este test corre ffmpeg REAL contra el BED REAL de T4.9 (NO
+// audio sintético limpio: un bed de layout definido re-latentaría el bug — principio 9 aplicado al fix).
+const REAL_BED_T49 = join(
+  dirname(fileURLToPath(import.meta.url)),
+  '../../../../docs/verifications/T4.9/04-music-bed.wav',
+);
+
+/** El grafo de mezcla COMPLETO en su forma PRE-FIX de T5.8a: el bed va `volume → sidechaincompress` SIN el
+ *  `aformat` que estampa el layout. Es el control negativo que MUERDE. El bug NO se ve en un
+ *  `sidechaincompress` AISLADO (ffmpeg lo tolera con un warning «No channel layout»); solo aflora cuando el
+ *  `amix` río abajo FUERZA la negociación de formatos y el bed sigue en `unknown` → «could not choose their
+ *  formats». Por eso el control negativo reproduce la CADENA de mezcla entera (volume→duck→fade→amix→
+ *  loudnorm), que es exactamente lo que `buildAudioMixGraph` emite, pero con la rama del bed pre-fix. Si el
+ *  fix se revierte, producción vuelve a este grafo → este test debe ponerse ROJO. */
+function buildMixGraphPreFix(voiceInput: string, bedInput: string): string {
+  return (
+    `[${bedInput}]volume=0.25[bedvol];` +
+    `[bedvol][${voiceInput}]sidechaincompress=threshold=0.03:ratio=12:attack=20:release=300:makeup=1[ducked];` +
+    `[ducked]afade=t=out:st=1:d=1[bedfaded];` +
+    `[${voiceInput}][bedfaded]amix=inputs=2:normalize=0[amixed];` +
+    `[amixed]loudnorm=I=-14:TP=-1.5:LRA=11[mix]`
+  );
+}
+
+describe.skipIf(!mediaToolsAvailable)('ducking con bed channel_layout=unknown (T5.8a)', () => {
+  test('CONTROL NEGATIVO: el bed real de T4.9 (unknown) SIN el aformat rompe la mezcla', async () => {
+    // Precondición: el bed real es 2ch `channel_layout=unknown` (si esto cambiara, el test perdería sentido).
+    const bedProbe = await ffprobeJson(REAL_BED_T49);
+    const bedStream = bedProbe.streams.find((s) => s.codec_type === 'audio');
+    expect(bedStream?.channels).toBe(2);
+    expect(bedStream?.channel_layout ?? 'unknown').toBe('unknown');
+
+    // Voz AAC estéreo (como la voz normalizada de producción). El grafo de mezcla PRE-FIX contra el bed
+    // `unknown`: ffmpeg DEBE fallar «could not choose their formats» cuando el amix fuerza la negociación.
+    const voice = await makeTestAudio({ out: p('t58a-neg-voice.m4a'), seconds: 2, freq: 880 });
+    await expect(
+      run('ffmpeg', [
+        '-y',
+        '-i',
+        voice,
+        '-i',
+        REAL_BED_T49,
+        '-t',
+        '2',
+        '-filter_complex',
+        buildMixGraphPreFix('0:a', '1:a'),
+        '-map',
+        '[mix]',
+        '-c:a',
+        'aac',
+        p('t58a-neg.m4a'),
+      ]),
+    ).rejects.toThrow(); // ffmpeg sale con código ≠0 → execFile rechaza
+  });
+
+  test('el bed real de T4.9 (unknown) pasa el buildDuckingGraph de PRODUCCIÓN y sigue hundiéndose ≥6 dB', async () => {
+    // El MISMO builder de producción (con el fix aformat) contra el bed REAL. La voz entra en el segundo 2.
+    const voice = await makeTestAudio({
+      out: p('t58a-voice.m4a'),
+      seconds: 2,
+      freq: 880,
+      delaySeconds: 2,
+    });
+    const graph = buildDuckingGraph({ bedLabel: '0:a', voiceLabel: '1:a', outLabel: 'ducked' });
+    const ducked = p('t58a-ducked.m4a');
+    // Con el fix, ffmpeg NO debe rechazar (compone). Recortamos el bed a 4 s para alinear onset de voz.
+    await run('ffmpeg', [
+      '-y',
+      '-i',
+      REAL_BED_T49,
+      '-t',
+      '4',
+      '-i',
+      voice,
+      '-filter_complex',
+      graph,
+      '-map',
+      '[ducked]',
+      ducked,
+    ]);
+
+    // PARIDAD con T5.5d/T4.9: el ducking sigue midiendo ≥6 dB de caída del bed bajo la voz (estampar el
+    // layout NO altera los dB — solo define el layout para que el filtro negocie formatos).
+    const rmsBefore = await measureRmsDb(ducked, 0.5, 1.5); // ventana SIN voz
+    const rmsDuring = await measureRmsDb(ducked, 2.5, 3.5); // ventana CON voz
+    expect(rmsBefore - rmsDuring).toBeGreaterThanOrEqual(6);
+  });
+
+  test('composeMaster produce un MP4 válido con voz + bed real de T4.9 (ducking activo)', async () => {
+    // El caso de PRODUCCIÓN completo (antes: ComposeError): un máster con el bed real `unknown` y ducking on.
+    const storage = makeMediaTestStorage(workDir);
+    const keyToId = new Map<string, string>();
+    const segments: CompositionSpec['segments'] = [];
+    for (const [i, type] of (['hook', 'body', 'cta'] as const).entries()) {
+      const v = await makeNormalizedSegment(p(`t58a-mv-${String(i)}.mp4`), 3);
+      const a = await makeTestAudio({ out: p(`t58a-ma-${String(i)}.m4a`), seconds: 3, freq: 440 });
+      const videoAsset = await seedAsset(storage, keyToId, v, `t58a-mv/${String(i)}.mp4`);
+      const voAudio = await seedAsset(storage, keyToId, a, `t58a-ma/${String(i)}.m4a`);
+      segments.push({ type, videoAsset, voAudio });
+    }
+    // El BED REAL de T4.9 (unknown) como música, con DUCKING activo — el disparador exacto del bug.
+    const bedAsset = await seedAsset(storage, keyToId, REAL_BED_T49, 't58a/bed.wav');
+
+    const spec: CompositionSpec = {
+      segments,
+      music: { asset: bedAsset, volume: 0.25, ducking: true, fadeOutS: 1 },
+      output: { width: 1080, height: 1920, fps: 30, maxDurationS: 9 },
+    };
+    const { bytes, mime } = await composeMaster(
+      { storage, resolveAssetKey: (id) => keyToId.get(id) ?? NEG_ULID },
+      spec,
+    );
+    expect(mime).toBe('video/mp4');
+    const masterPath = p('t58a-master.mp4');
+    await writeFile(masterPath, bytes);
+
+    // MP4 válido: perfil de vídeo intacto (~9 s) + pista de audio AAC mezclada.
+    await assertVideoProfile(masterPath, { durationS: 9, durationToleranceS: 0.5 });
+    const probe = await ffprobeJson(masterPath);
+    expect(probe.streams.find((s) => s.codec_type === 'audio')?.codec_name).toBe('aac');
   });
 });

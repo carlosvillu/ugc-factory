@@ -1,0 +1,39 @@
+
+ RUN  v4.1.10 /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads
+
+ ✓ |worker:media| test/media/compose-master.test.ts > concat + mezcla de audio → máster intermedio (T5.3) > concat de 3 segmentos: duración = suma, perfil canónico intacto (-c copy no re-encoda) 2302ms
+ ✓ |worker:media| test/media/compose-master.test.ts > concat + mezcla de audio → máster intermedio (T5.3) > el vídeo del máster conserva el códec del input (copy, no transcode) 934ms
+ ✓ |worker:media| test/media/compose-master.test.ts > concat + mezcla de audio → máster intermedio (T5.3) > el máster con voz + bed mide -14 LUFS ±1 (loudnorm) 2428ms
+ ✓ |worker:media| test/media/compose-master.test.ts > concat + mezcla de audio → máster intermedio (T5.3) > buildDuckingGraph hunde el bed ≥6 dB cuando entra la voz 562ms
+ ✓ |worker:media| test/media/compose-master.test.ts > concat + mezcla de audio → máster intermedio (T5.3) > el afade del bed se ancla a la duración REAL, no al maxDurationS (cap > duración) 2629ms
+ ✓ |worker:media| test/media/compose-master.test.ts > concat + mezcla de audio → máster intermedio (T5.3) > máster sin bed (music:null): solo voz, también a -14 LUFS ±1 2236ms
+ ✓ |worker:media| test/media/compose-master.test.ts > concat + mezcla de audio → máster intermedio (T5.3) > composeMaster lanza ComposeError si un input no existe en storage 2ms
+ ✓ |worker:media| test/media/compose-master.test.ts > ducking con bed channel_layout=unknown (T5.8a) > CONTROL NEGATIVO: el bed real de T4.9 (unknown) SIN el aformat rompe la mezcla 313ms
+ ✓ |worker:media| test/media/compose-master.test.ts > ducking con bed channel_layout=unknown (T5.8a) > el bed real de T4.9 (unknown) pasa el buildDuckingGraph de PRODUCCIÓN y sigue hundiéndose ≥6 dB 434ms
+ × |worker:media| test/media/compose-master.test.ts > ducking con bed channel_layout=unknown (T5.8a) > composeMaster produce un MP4 válido con voz + bed real de T4.9 (ducking activo) 1873ms
+   → composeMaster: ffmpeg falló en «mux del máster» (código 1)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |worker:media| test/media/compose-master.test.ts > ducking con bed channel_layout=unknown (T5.8a) > composeMaster produce un MP4 válido con voz + bed real de T4.9 (ducking activo)
+ComposeError: composeMaster: ffmpeg falló en «mux del máster» (código 1)
+ ❯ runFfmpeg ../../packages/services/src/compose-master.ts:412:11
+    410|   const result = await runner(args);
+    411|   if (result.code !== 0) {
+    412|     throw new ComposeError(
+       |           ^
+    413|       `composeMaster: ffmpeg falló en «${label}» (código ${String(resu…
+    414|       {
+ ❯ composeMaster ../../packages/services/src/compose-master.ts:374:5
+ ❯ test/media/compose-master.test.ts:420:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+Serialized Error: { exitCode: 1, stderr: '[AVFilterGraph @ 0x7fccf1912ec0] The following filters could not choose their formats: Parsed_sidechaincompress_1\nConsider inserting the (a)format filter near their input or output.\nError reinitializing filters!\nFailed to inject frame into filter network: Input/output error\nError while processing the decoded data for stream #1:0\n' }
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 9 passed (10)
+   Start at  16:01:47
+   Duration  15.21s (transform 595ms, setup 14ms, import 1.38s, tests 13.74s, environment 0ms)
+

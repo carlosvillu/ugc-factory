@@ -4,7 +4,14 @@
   // scripts .ts del verifier): artefactos, no código del grafo de imports
   "ignore": ["docs/design-system/**", "docs/verifications/**"],
   "workspaces": {
-    ".": {},
+    ".": {
+      // check-e2e-wired.mjs (gate, auditoría 2026-07-23) invoca el binario `playwright`
+      // vía `pnpm exec playwright test --list` con cwd=apps/web, DONDE @playwright/test SÍ
+      // es dependencia. En el workspace raíz no lo es (el monorepo no instala playwright
+      // arriba), así que knip lo ve como binario sin declarar — se ignora explícito, mismo
+      // criterio que ffprobe/ffmpeg (binarios resueltos fuera del grafo de deps de este ws).
+      "ignoreBinaries": ["playwright"]
+    },
     "apps/web": {
       // los plugins de knip detectan Next (app router) y Vitest solos. El plugin
       // de Playwright se activa con @playwright/test en devDependencies y toma

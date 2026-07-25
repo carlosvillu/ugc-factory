@@ -2866,3 +2866,25 @@ T5.8 es el primer código que conduce un N8 vivo hasta el mux del máster (su op
 - **Deuda anotada**: (1) no existe primitiva `Disclosure`/`Collapsible` en el DS (2º consumidor potencial);
   (2) PRE-EXISTENTE, `matrix-panel.tsx:443-449` duplica a mano `<Badge tone="neutral">` para las pills de
   `hook_examples`; (3) ligada de §11: sustituir los `voiceId` placeholder del seed por voces reales.
+
+## 2026-07-25 · DEPLOY a producción — ea8cd33 (petición del usuario)
+- **31 commits** desplegados: producción pasa de `9b5a423` (2026-07-20) a **`ea8cd33`**. Cubre toda la
+  cadena T5.5a→T5.13 (N7f CTA, N8/N9 wiring, CP4, T5.7 export, T5.8a/b/8, T5.8c multi-clip, y los 3 bugs
+  de producto T5.11/T5.12/T5.13).
+- **Comprobaciones PREVIAS**: árbol limpio; el diff **NO** toca uploads/assets (la trampa EROFS conocida de
+  `DEPLOY.md` no aplica); **3 migraciones nuevas** (0023/0024/0025) revisadas y **PURAMENTE ADITIVAS**
+  (`ADD COLUMN` con DEFAULT + índices; ningún `DROP`/`RENAME`) ⇒ un rollback de código NO exigiría restaurar
+  la BD; **backup forzado y verificado restaurable** antes de tocar nada (464K, 35 tablas, `pg_restore` lo
+  lee sin error).
+- **Método**: `redeploy.sh` (rsync, el default). NO `--git`: el bucle no hace `git push`, así que un
+  `git pull` en el VPS habría traído código viejo sin avisar.
+- **Resultado**: verify completo VERDE — dominio público (307→/login, /login 200, `/api/health` ok:true
+  db:true), origen directo con TLS válido, 4 contenedores healthy, **producción = HEAD sin deriva**, sin
+  errores en logs, disco 52%.
+- **Post-verificación propia** (más allá de `verify.sh`): **26 migraciones aplicadas** (0000–0025, las 3
+  nuevas entraron), la columna `asset.parent_asset_ids` de T5.8c EXISTE en el schema, y el worker arrancó
+  limpio («pg-boss arrancado: colas y consumers listos», «worker ready», sweeper activo).
+- **Este fue el PRIMER `redeploy.sh` real** (la skill avisaba de que estaba validado sintácticamente pero
+  no ejecutado entero, y de que el deploy inicial a mano no dejó huella `.deployed`). **Funcionó sin
+  incidencias** y ya deja huella: `verify.sh` puede comparar producción con HEAD.
+- Downtime observado: segundos (web healthy tras 5s).

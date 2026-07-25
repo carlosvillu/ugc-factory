@@ -172,6 +172,17 @@ export const N6OutputSchema = z.object({
   guardPackKeysUsed: z.array(z.string()),
   resolvedPrompt: z.string(),
   resolvedBeats: z.array(z.unknown()),
+  /** T5.12 · presente SOLO cuando la selección de template tuvo que DEGRADAR una faceta porque la
+   *  `product.category` del brief es texto libre del LLM que ningún template reconoce. Declarado en el
+   *  contrato (no como campo suelto) para que el rastro de la degradación sea AUDITABLE y no lo
+   *  elimine el `safeParse` de un consumidor — zod descarta las claves no declaradas. */
+  degradedFacet: z
+    .object({
+      facet: z.literal('vertical'),
+      value: z.string(),
+      templateSlug: z.string(),
+    })
+    .optional(),
 });
 export type N6Output = z.infer<typeof N6OutputSchema>;
 

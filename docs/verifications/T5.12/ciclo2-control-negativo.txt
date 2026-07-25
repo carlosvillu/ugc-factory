@@ -1,0 +1,27 @@
+# CICLO 2 — CONTROL NEGATIVO DOBLE, reproducido por el VERIFIER (no aceptado del informe)
+# Guardián: apps/worker/test/integration/boss-wiring.test.ts (Postgres real + pg-boss real)
+
+## BASELINE (árbol con el fix)
+Tests 1 passed (1)
+
+## CONTROL NEGATIVO A — eslabón boss.ts (EL BUG EXACTO que reporté en el ciclo 1)
+Mutación: eliminar `logger: deps.logger,` del grupo `generation` (boss.ts)
+  × el N6 que compone boss.ts emite el warning de degradación por el logger REAL del worker
+  AssertionError: expected [] to have a length of 1 but got +0
+  Tests 1 failed (1)
+=> ROJO. Mensaje IDÉNTICO al reportado por el implementer.
+
+## CONTROL NEGATIVO B — eslabón executors/index.ts
+Mutación: N6: makeN6Executor({ db: analysis.db })  (sin el spread del logger)
+  × el N6 que compone boss.ts emite el warning de degradación por el logger REAL del worker
+  AssertionError: expected [] to have a length of 1 but got +0
+  Tests 1 failed (1)
+=> ROJO. La CADENA ENTERA está guardada, no medio eslabón.
+
+## Ambos ficheros restaurados a su estado con-fix; `git status` confirma el diff intacto.
+
+## N7a–N7f (verificado por identidad, no por lectura)
+Test propio contra la composición real: expect(generation.logger).toBe(logger-de-bootstrap) => PASSED
+El registry pasa `generation` por REFERENCIA a los seis (index.ts:90,96,102,109,114,122).
+9 call sites con el guard `deps.logger !== undefined` que logueaban al vacío desde T4.4:
+  generation.ts:3  generate-avatar.ts:2  generate-music/broll/cta/voice.ts:1 c/u

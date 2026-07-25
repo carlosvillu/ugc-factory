@@ -124,6 +124,14 @@ export async function createBoss(deps: CreateBossDeps): Promise<PgBoss> {
         db,
         storage: makeLocalStorageAdapterFromEnv(),
         falKey: () => loadFalKey(db, getSecretsKeyFromEnv()),
+        // T5.12 · EL LOGGER FALTABA AQUÍ desde T4.4. `GenerationExecutorDeps.logger` es opcional y
+        // TODOS sus consumidores lo usan con `deps.logger !== undefined ? …` — así que su ausencia no
+        // rompía nada: simplemente los N7a–N7e (y el warning de degradación de N6, T5.12) logueaban AL
+        // VACÍO en producción, en silencio. Es el mismo `deps.logger` que ya reciben los consumers
+        // (`registerStepConsumer`/`registerOutputDownloadConsumer`), así que el executor comparte la
+        // MISMA salida estructurada que el resto del worker. Lo protege
+        // `boss-wiring.test.ts` (composición REAL, no un logger inyectado por el test).
+        logger: deps.logger,
         // `FAL_BASE_URL` (E2E, T4.11): ausente en producción → fal real; el stack lo fija para que los
         // N7 del worker peguen al fake (submit/upload/poll/download), no a fal. Se lee SOLO aquí.
         ...(process.env.FAL_BASE_URL !== undefined ? { falBaseUrl: process.env.FAL_BASE_URL } : {}),

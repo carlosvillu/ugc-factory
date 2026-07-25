@@ -32,16 +32,85 @@ describe('selectTemplate — filtro por facetas §9.3', () => {
     expect(res.template?.slug).toBe('unboxing-saas-authority');
   });
 
-  it('un vertical sin template → no_candidates con las facetas buscadas', () => {
-    const res = selectTemplate(templates, { vertical: 'automotive', platform: 'tiktok' });
-    if (res.error === undefined) throw new Error('esperaba no_candidates');
-    expect(res.error).toBe('no_candidates');
-    expect(res.message).toContain('automotive');
+  // T5.12 (SUPERSEDE al contrato original de T3.5, que aquí exigía `no_candidates` para una vertical
+  // desconocida): ese contrato era EL BUG. `product.category` es texto libre del LLM (§12) y una
+  // etiqueta fuera del enum del seed mataba el lote entero en N6. Ninguna aserción se ha eliminado:
+  // se re-apunta al contrato nuevo (degradar, marcado) y `no_candidates` sigue asertado abajo para las
+  // facetas que NO son texto de LLM (kind, hookAngle).
+  it('un vertical sin template (automotive) → DEGRADA a un template marcando la faceta relajada', () => {
+    const res = selectTemplate(templates, {
+      vertical: 'automotive',
+      hookAngle: 'pain_point',
+      platform: 'tiktok',
+    });
+    expect(res.error).toBeUndefined();
+    expect(res.template).toBeDefined();
+    expect(res.relaxedFacet).toBe('vertical');
+    expect(res.unmatchedValue).toBe('automotive');
   });
 
   it('un kind distinto (image) no case ningún template de vídeo', () => {
     const res = selectTemplate(templates, { vertical: 'beauty', kind: 'image' });
     expect(res.error).toBe('no_candidates');
+  });
+
+  it('un hookAngle desconocido SIGUE muriendo en no_candidates (no es texto de LLM, no se relaja)', () => {
+    const res = selectTemplate(templates, {
+      vertical: 'beauty',
+      hookAngle: 'no_such_angle',
+      platform: 'tiktok',
+    });
+    if (res.error === undefined) throw new Error('esperaba no_candidates');
+    expect(res.error).toBe('no_candidates');
+    expect(res.message).toContain('no_such_angle');
+  });
+});
+
+// T5.12 · EL DEFECTO DE PRODUCCIÓN. La MISMA URL de CeraVe dio `beauty` el 2026-07-24 y
+// `Cuidado de la piel` el 2026-07-25: el análisis emite la category como TEXTO LIBRE, en cualquier
+// idioma. El determinismo NO puede vivir en que el LLM acierte la etiqueta — vive aquí, en el
+// consumidor. Los valores de estos tests son los que el LLM emitió DE VERDAD, no inventados cómodos.
+describe('selectTemplate — category libre del LLM (T5.12: degradación, no muerte)', () => {
+  const REAL_FREE_CATEGORIES = [
+    'Cuidado de la piel',
+    'Cuidado bucal',
+    'Skin care',
+    'Higiene bucal',
+  ];
+
+  for (const vertical of REAL_FREE_CATEGORIES) {
+    it(`"${vertical}" encuentra template (degradado y MARCADO), no no_candidates`, () => {
+      const res = selectTemplate(templates, {
+        vertical,
+        hookAngle: 'pain_point',
+        platform: 'tiktok',
+      });
+      expect(res.error).toBeUndefined();
+      expect(res.template?.slug).toBeTruthy();
+      // La degradación es OBSERVABLE: quien consuma esto puede loguear la etiqueta no reconocida.
+      expect(res.relaxedFacet).toBe('vertical');
+      expect(res.unmatchedValue).toBe(vertical);
+    });
+  }
+
+  it('el resultado degradado es DETERMINISTA: mismo ganador con el catálogo barajado', () => {
+    const ctx = { vertical: 'Cuidado bucal', hookAngle: 'pain_point', platform: 'tiktok' };
+    const shuffled = [...templates].reverse();
+    const a = selectTemplate(templates, ctx);
+    const b = selectTemplate(shuffled, ctx);
+    expect(a.template?.slug).toBeTruthy();
+    expect(b.template?.slug).toBe(a.template?.slug);
+  });
+
+  it('la degradación NO se activa cuando la vertical SÍ casa: nada de relaxedFacet', () => {
+    const res = selectTemplate(templates, {
+      vertical: 'beauty',
+      hookAngle: 'pain_point',
+      platform: 'tiktok',
+      format: 'grwm',
+    });
+    expect(res.template?.slug).toBe('grwm-beauty-pain-point');
+    expect(res.relaxedFacet).toBeUndefined();
   });
 });
 
@@ -156,8 +225,23 @@ describe('honestidad de los backstops (§10.3 punto 14 por inyección, no por bo
     expect(irrelevant).toEqual([]);
   });
 
-  it('una vertical DESCONOCIDA (automotive) sigue dando no_candidates (contrato T3.5)', () => {
-    const res = selectTemplate(templates, { hookAngle: 'pain_point', vertical: 'automotive' });
-    expect(res.error).toBe('no_candidates');
+  // T5.12 supersede el contrato T3.5 de esta línea (ver el bloque de arriba): una vertical desconocida
+  // ya no mata el lote; degrada MARCADA. Lo que sigue asertándose —y es lo que importa aquí— es que el
+  // template degradado no puede llevar compliance de OTRA vertical en el body (backstop honesto).
+  it('una vertical DESCONOCIDA (automotive) degrada a un backstop SIN compliance ajena', () => {
+    // La plataforma se fija a propósito: TODOS los templates del seed restringen `platforms`, así que
+    // un contexto sin plataforma no tiene candidatos ni relajando la vertical (y eso es correcto: lo
+    // que T5.12 arregla es la vertical libre, no la ausencia de plataforma).
+    const res = selectTemplate(templates, {
+      hookAngle: 'pain_point',
+      vertical: 'automotive',
+      platform: 'tiktok',
+    });
+    expect(res.relaxedFacet).toBe('vertical');
+    const tpl = res.template;
+    if (tpl === undefined) throw new Error('esperaba un template degradado');
+    // Un ganador DEGRADADO nunca puede llevar compliance de una vertical en el body: la vertical del
+    // brief no casó con ninguna, así que cualquier compliance del cuerpo sería ajena por definición.
+    expect(/Compliance guard pack \(/i.test(tpl.body)).toBe(false);
   });
 });

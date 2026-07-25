@@ -1,0 +1,31 @@
+[A] contextos con match estricto comprobados: 12636
+  PASS  para TODO contexto del cross-product donde el selector VIEJO encontraba template, el nuevo devuelve el MISMO slug
+  PASS  ESPECIFICIDAD: donde la vertical SÍ casa, gana el template restringido y NO hay degradación
+[B] "Cuidado de la piel" → demo-pain-point (degradado)
+  PASS  "Cuidado de la piel": oráculo pre-fix = no_candidates ; código actual = template + relaxedFacet
+[B] "Cuidado bucal" → demo-pain-point (degradado)
+  PASS  "Cuidado bucal": oráculo pre-fix = no_candidates ; código actual = template + relaxedFacet
+[B] "Skin care" → demo-pain-point (degradado)
+  PASS  "Skin care": oráculo pre-fix = no_candidates ; código actual = template + relaxedFacet
+[B] "Higiene bucal" → demo-pain-point (degradado)
+  PASS  "Higiene bucal": oráculo pre-fix = no_candidates ; código actual = template + relaxedFacet
+[B] "Hautpflege" → demo-pain-point (degradado)
+  PASS  "Hautpflege": oráculo pre-fix = no_candidates ; código actual = template + relaxedFacet
+[B] "スキンケア" → demo-pain-point (degradado)
+  PASS  "スキンケア": oráculo pre-fix = no_candidates ; código actual = template + relaxedFacet
+[C] "Cuidado de la piel" → [["original","demo-pain-point"],["reversed","demo-pain-point"],["bySlugDesc","demo-pain-point"],["rotated","demo-pain-point"],["shuffledSeeded","demo-pain-point"]]
+  PASS  "Cuidado de la piel": el MISMO ganador bajo 5 permutaciones del catálogo
+[C] "Cuidado bucal" → [["original","demo-pain-point"],["reversed","demo-pain-point"],["bySlugDesc","demo-pain-point"],["rotated","demo-pain-point"],["shuffledSeeded","demo-pain-point"]]
+  PASS  "Cuidado bucal": el MISMO ganador bajo 5 permutaciones del catálogo
+[C] "Skin care" → [["original","demo-pain-point"],["reversed","demo-pain-point"],["bySlugDesc","demo-pain-point"],["rotated","demo-pain-point"],["shuffledSeeded","demo-pain-point"]]
+  PASS  "Skin care": el MISMO ganador bajo 5 permutaciones del catálogo
+[C] "スキンケア" → [["original","demo-pain-point"],["reversed","demo-pain-point"],["bySlugDesc","demo-pain-point"],["rotated","demo-pain-point"],["shuffledSeeded","demo-pain-point"]]
+  PASS  "スキンケア": el MISMO ganador bajo 5 permutaciones del catálogo
+[C-clausula] [["beauty","demo-pain-point",null],["Cuidado de la piel","demo-pain-point","vertical"],["Skin care","demo-pain-point","vertical"]]
+  PASS  CLAUSULA: 3 "análisis consecutivos" con etiquetas DISTINTAS para el mismo producto → los 3 resuelven template
+  PASS  hookAngle inexistente → no_candidates
+  PASS  kind inexistente → no_candidates
+  PASS  platform inexistente → no_candidates INCLUSO con vertical libre (no se relaja de más)
+  PASS  el contexto ORIGINAL del test reescrito (sin platform) sigue dando no_candidates
+
+=== RESULT: 17 passed, 0 failed ===

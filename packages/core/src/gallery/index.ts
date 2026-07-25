@@ -128,6 +128,7 @@ export {
 export {
   N6SourcesSchema,
   resolveCompileInput,
+  type CompileDegradation,
   type N6Sources,
   type ResolveCompileInputResult,
 } from './compile-executor-contract';

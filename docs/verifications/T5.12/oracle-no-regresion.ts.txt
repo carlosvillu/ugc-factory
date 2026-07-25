@@ -1,0 +1,189 @@
+/**
+ * T5.12 — script de verificación INDEPENDIENTE del verifier.
+ *
+ * NO reutiliza los tests del implementer. Reimplementa el selector PRE-FIX (pase estricto puro) como
+ * ORÁCULO para demostrar por enumeración exhaustiva que:
+ *   (A) NO REGRESIÓN: para TODO contexto donde el selector viejo encontraba template, el nuevo
+ *       devuelve EXACTAMENTE el mismo slug (la especificidad no se ha rebajado).
+ *   (B) CONTROL NEGATIVO: donde el viejo daba no_candidates por vertical libre, el nuevo degrada MARCADO.
+ *   (C) DETERMINISMO: mismo ganador con el catálogo permutado de varias formas.
+ *   (D) no_candidates SIGUE VIVO para facetas que no son texto de LLM.
+ *
+ * Se ejecuta con: pnpm vitest run docs/verifications/T5.12/verify-t512.test.ts --root .
+ */
+import { describe, it, expect } from 'vitest';
+import { selectTemplate, validateGallerySeed, RAW_GALLERY_SEED } from '/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/core/src/gallery/index.ts';
+import type { PromptTemplateSeed } from '/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/core/src/gallery/contracts.ts';
+
+const seed = validateGallerySeed(RAW_GALLERY_SEED);
+if (seed.seed === undefined) throw new Error('seed inválido');
+const templates: readonly PromptTemplateSeed[] = seed.seed.templates;
+
+// ---------------------------------------------------------------------------
+// ORÁCULO: el selector ESTRICTO tal y como era ANTES de T5.12 (reimplementado aquí,
+// sin tocar el árbol de producto). Copia fiel de la semántica pre-fix.
+// ---------------------------------------------------------------------------
+interface Ctx {
+  kind?: string;
+  format?: string;
+  hookAngle?: string;
+  vertical?: string;
+  platform?: string;
+}
+const norm = (v: string): string => v.trim().toLowerCase();
+function facetMatches(templateFacets: readonly string[], ctxValue: string | undefined): boolean {
+  if (templateFacets.length === 0) return true;
+  if (ctxValue === undefined) return false;
+  const target = norm(ctxValue);
+  return templateFacets.some((f) => norm(f) === target);
+}
+function oldPasses(t: PromptTemplateSeed, ctx: Ctx): boolean {
+  const kind = ctx.kind ?? 'video';
+  if (t.kind !== kind) return false;
+  return (
+    facetMatches(t.formats, ctx.format) &&
+    facetMatches(t.hookAngles, ctx.hookAngle) &&
+    facetMatches(t.verticals, ctx.vertical) &&
+    facetMatches(t.platforms, ctx.platform)
+  );
+}
+function oldOverlap(t: PromptTemplateSeed, ctx: Ctx): number {
+  let o = 0;
+  if (t.formats.length > 0 && facetMatches(t.formats, ctx.format)) o += 1;
+  if (t.hookAngles.length > 0 && facetMatches(t.hookAngles, ctx.hookAngle)) o += 1;
+  if (t.verticals.length > 0 && facetMatches(t.verticals, ctx.vertical)) o += 1;
+  if (t.platforms.length > 0 && facetMatches(t.platforms, ctx.platform)) o += 1;
+  return o;
+}
+/** El selector PRE-FIX: devuelve el slug ganador o undefined (= no_candidates). */
+function oldSelect(ts: readonly PromptTemplateSeed[], ctx: Ctx): string | undefined {
+  const cands = ts.filter((t) => oldPasses(t, ctx));
+  if (cands.length === 0) return undefined;
+  const ranked = [...cands].sort((a, b) => {
+    const d = oldOverlap(b, ctx) - oldOverlap(a, ctx);
+    if (d !== 0) return d;
+    return a.slug < b.slug ? -1 : a.slug > b.slug ? 1 : 0;
+  });
+  return ranked[0]?.slug;
+}
+
+// Dominio REAL de facetas, extraído del seed (no inventado).
+const uniq = (xs: string[]): string[] => [...new Set(xs)].sort();
+const KINDS = uniq(templates.map((t) => t.kind));
+const FORMATS = uniq(templates.flatMap((t) => [...t.formats]));
+const ANGLES = uniq(templates.flatMap((t) => [...t.hookAngles]));
+const VERTICALS = uniq(templates.flatMap((t) => [...t.verticals]));
+const PLATFORMS = uniq(templates.flatMap((t) => [...t.platforms]));
+
+describe('T5.12/A — NO REGRESIÓN exhaustiva: el pase estricto es idéntico al pre-fix', () => {
+  it('para TODO contexto del cross-product donde el selector VIEJO encontraba template, el nuevo devuelve el MISMO slug', () => {
+    const divergences: string[] = [];
+    let covered = 0;
+    for (const kind of [...KINDS, undefined])
+      for (const format of [...FORMATS, undefined])
+        for (const hookAngle of [...ANGLES, undefined])
+          for (const vertical of [...VERTICALS, undefined])
+            for (const platform of [...PLATFORMS, undefined]) {
+              const ctx: Ctx = { kind, format, hookAngle, vertical, platform };
+              const oldWinner = oldSelect(templates, ctx);
+              if (oldWinner === undefined) continue; // el caso (B) se cubre aparte
+              covered += 1;
+              const res = selectTemplate(templates, ctx);
+              if (res.template?.slug !== oldWinner || res.relaxedFacet !== undefined) {
+                divergences.push(
+                  `${JSON.stringify(ctx)} viejo=${oldWinner} nuevo=${res.template?.slug ?? res.error} relaxed=${String(res.relaxedFacet)}`,
+                );
+              }
+            }
+    console.log(`[A] contextos con match estricto comprobados: ${covered}`);
+    expect(divergences).toEqual([]);
+    expect(covered).toBeGreaterThan(100);
+  });
+
+  it('ESPECIFICIDAD: donde la vertical SÍ casa, gana el template restringido y NO hay degradación', () => {
+    for (const vertical of VERTICALS)
+      for (const platform of PLATFORMS)
+        for (const hookAngle of ANGLES) {
+          const ctx = { vertical, platform, hookAngle };
+          const oldWinner = oldSelect(templates, ctx);
+          if (oldWinner === undefined) continue;
+          const res = selectTemplate(templates, ctx);
+          expect(res.relaxedFacet, `no debe degradar en ${JSON.stringify(ctx)}`).toBeUndefined();
+          expect(res.template?.slug).toBe(oldWinner);
+        }
+    });
+});
+
+describe('T5.12/B — CONTROL NEGATIVO sin mutar el árbol: donde el viejo MORÍA, el nuevo degrada MARCADO', () => {
+  const REAL_FREE = ['Cuidado de la piel', 'Cuidado bucal', 'Skin care', 'Higiene bucal', 'Hautpflege', 'スキンケア'];
+  for (const vertical of REAL_FREE) {
+    it(`"${vertical}": oráculo pre-fix = no_candidates ; código actual = template + relaxedFacet`, () => {
+      const ctx = { vertical, hookAngle: 'pain_point', platform: 'tiktok' };
+      expect(oldSelect(templates, ctx), 'el selector PRE-FIX debía morir aquí').toBeUndefined();
+      const res = selectTemplate(templates, ctx);
+      expect(res.error).toBeUndefined();
+      expect(res.template?.slug).toBeTruthy();
+      expect(res.relaxedFacet).toBe('vertical');
+      expect(res.unmatchedValue).toBe(vertical);
+      console.log(`[B] "${vertical}" → ${res.template?.slug} (degradado)`);
+    });
+  }
+});
+
+describe('T5.12/C — DETERMINISMO: el ganador degradado no depende del orden del catálogo ni de la etiqueta', () => {
+  const permutations = (ts: readonly PromptTemplateSeed[]): Record<string, PromptTemplateSeed[]> => ({
+    original: [...ts],
+    reversed: [...ts].reverse(),
+    bySlugDesc: [...ts].sort((a, b) => (a.slug < b.slug ? 1 : -1)),
+    rotated: [...ts.slice(7), ...ts.slice(0, 7)],
+    shuffledSeeded: [...ts].sort((a, b) => (a.slug.length % 3) - (b.slug.length % 3)),
+  });
+
+  for (const vertical of ['Cuidado de la piel', 'Cuidado bucal', 'Skin care', 'スキンケア']) {
+    it(`"${vertical}": el MISMO ganador bajo 5 permutaciones del catálogo`, () => {
+      const ctx = { vertical, hookAngle: 'pain_point', platform: 'tiktok' };
+      const winners = Object.entries(permutations(templates)).map(
+        ([name, ts]) => [name, selectTemplate(ts, ctx).template?.slug] as const,
+      );
+      const slugs = new Set(winners.map(([, s]) => s));
+      console.log(`[C] "${vertical}" → ${JSON.stringify(winners)}`);
+      expect(slugs.size, `ganador inestable: ${JSON.stringify(winners)}`).toBe(1);
+      expect([...slugs][0]).toBeTruthy();
+    });
+  }
+
+  it('CLAUSULA: 3 "análisis consecutivos" con etiquetas DISTINTAS para el mismo producto → los 3 resuelven template', () => {
+    // El escenario literal del bug: la MISMA URL (CeraVe) etiquetada distinto en 3 análisis.
+    const cerave = ['beauty', 'Cuidado de la piel', 'Skin care'];
+    const results = cerave.map((vertical) =>
+      selectTemplate(templates, { vertical, hookAngle: 'pain_point', platform: 'tiktok' }),
+    );
+    console.log(
+      `[C-clausula] ${JSON.stringify(cerave.map((v, i) => [v, results[i]?.template?.slug, results[i]?.relaxedFacet]))}`,
+    );
+    for (const r of results) {
+      expect(r.error).toBeUndefined();
+      expect(r.template?.slug).toBeTruthy();
+    }
+  });
+});
+
+describe('T5.12/D — no_candidates SIGUE VIVO para facetas que NO son texto de LLM', () => {
+  it('hookAngle inexistente → no_candidates', () => {
+    const res = selectTemplate(templates, { vertical: 'beauty', hookAngle: 'no_such_angle', platform: 'tiktok' });
+    expect(res.error).toBe('no_candidates');
+  });
+  it('kind inexistente → no_candidates', () => {
+    const res = selectTemplate(templates, { vertical: 'beauty', kind: 'hologram', platform: 'tiktok' });
+    expect(res.error).toBe('no_candidates');
+  });
+  it('platform inexistente → no_candidates INCLUSO con vertical libre (no se relaja de más)', () => {
+    const res = selectTemplate(templates, { vertical: 'Cuidado bucal', hookAngle: 'pain_point', platform: 'myspace' });
+    expect(res.error).toBe('no_candidates');
+  });
+  it('el contexto ORIGINAL del test reescrito (sin platform) sigue dando no_candidates', () => {
+    // La reescritura del implementer AÑADIÓ platform:'tiktok'. Compruebo el input viejo tal cual.
+    const res = selectTemplate(templates, { hookAngle: 'pain_point', vertical: 'automotive' });
+    expect(res.error).toBe('no_candidates');
+  });
+});

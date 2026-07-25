@@ -58,6 +58,8 @@ beforeEach(async () => {
 async function seedBeautyVariant(opts: {
   withScript: boolean;
   withPersona?: boolean;
+  /** T5.12: sobreescribe `product.category` con la etiqueta LIBRE que emite el LLM de análisis. */
+  category?: string;
 }): Promise<string> {
   const project = await createProject(tdb.db, makeProject());
   const [ua] = await tdb.db
@@ -68,9 +70,16 @@ async function seedBeautyVariant(opts: {
   // (pain_point). Como el ensamblador NO fija `format` (no hay fuente en la BD hoy — deuda anotada), la
   // selección recae en el ÚNICO template beauty+pain_point+tiktok format-agnóstico: `demo-pain-point`
   // (que interpola {hook.line}/{cta.line} — lo que hace verificable el ensamblado del guion).
+  const briefData =
+    opts.category === undefined
+      ? DEMO_BEAUTY_BRIEF
+      : {
+          ...DEMO_BEAUTY_BRIEF,
+          product: { ...DEMO_BEAUTY_BRIEF.product, category: opts.category },
+        };
   const [brief] = await tdb.db
     .insert(productBrief)
-    .values(makeProductBrief({ urlAnalysisId: ua!.id, data: DEMO_BEAUTY_BRIEF }))
+    .values(makeProductBrief({ urlAnalysisId: ua!.id, data: briefData }))
     .returning();
 
   let personaId: string | null = null;
@@ -222,12 +231,46 @@ describe('assembleN6Sources → compilePrompt (T4.11 pass 2b-ii)', () => {
     // template format-agnóstico beauty+pain_point+tiktok. Documenta la realidad (no `grwm-beauty-pain-point`,
     // que restringe `formats:['grwm']`) y caza drift del seed. La deuda del `format` está en el report.
     expect(resolved.input.template.slug).toBe('demo-pain-point');
+    // T5.12: con la category CANÓNICA (beauty) la selección NO degrada — la especificidad manda.
+    expect(resolved.degraded).toBeUndefined();
     const result = compilePrompt(resolved.input);
     expect(result.ok).toBe(true);
     if (!result.ok) return;
     expect(result.result.resolvedPrompt).toContain(HOOK_TEXT);
     expect(result.result.resolvedPrompt).toContain(CTA_TEXT);
   });
+
+  // T5.12 · EL CAMINO DE PRODUCCIÓN. El fallo real de T5.9 recorrió ESTA ruta (N6 raíz del sub-DAG →
+  // `assembleN6Sources` desde la BD → `resolveCompileInput`), no la costura stepless: el brief guardado
+  // por CP1 traía `product.category = 'Cuidado bucal'` (lo que emitió el LLM ese día) y la variante moría
+  // en `no_template`. Aquí la category viaja de VERDAD por la BD, como en el run real.
+  for (const category of ['Cuidado de la piel', 'Cuidado bucal']) {
+    it(`una product.category LIBRE en la BD ("${category}") resuelve y compila, marcada como degradada`, async () => {
+      const variantId = await seedBeautyVariant({ withScript: true, category });
+      const sources = await assembleN6Sources({ db: tdb.db }, { variantId });
+      expect(sources.brief.product.category).toBe(category);
+
+      const seed = validateGallerySeed(RAW_GALLERY_SEED);
+      const resolved = resolveCompileInput(sources, seed.seed!.templates, seed.seed!.guardPacks);
+      expect(resolved.ok).toBe(true);
+      if (!resolved.ok) return;
+      // Slug PINCHADO, no `resolved.input.template.slug` (eso pasaría con CUALQUIER ganador). El
+      // ensamblador NO fija `format` (deuda anotada arriba), así que los candidatos degradados empatan
+      // a overlap 2 (hookAngle+platform) y decide el desempate por slug ASC → `demo-pain-point`, el
+      // MISMO que gana en el camino canónico. El pin caza drift del seed.
+      expect(resolved.input.template.slug).toBe('demo-pain-point');
+      expect(resolved.degraded).toEqual({
+        facet: 'vertical',
+        value: category,
+        templateSlug: 'demo-pain-point',
+      });
+      // Y compila de verdad: el guion de ESTA variante sigue llegando al prompt (no es un template vacío).
+      const result = compilePrompt(resolved.input);
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.result.resolvedPrompt).toContain(HOOK_TEXT);
+    });
+  }
 
   it('variante sin Persona → PermanentStepError (no puede resolver los slots de audiencia)', async () => {
     const variantId = await seedBeautyVariant({ withScript: true, withPersona: false });

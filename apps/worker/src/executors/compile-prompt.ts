@@ -26,9 +26,11 @@ import {
   resolveCompileInput,
   validateGallerySeed,
   RAW_GALLERY_SEED,
+  type CompileDegradation,
   type CompileInput,
 } from '@ugc/core/gallery';
 import { assembleN6Sources } from '@ugc/services';
+import type { Logger } from '@ugc/core';
 import type { DbClient } from '@ugc/db';
 
 /** Deps de N6 (T4.11): la BD para ENSAMBLAR el `N6Sources` de la variante (brief+persona+guion+facetas)
@@ -37,6 +39,9 @@ import type { DbClient } from '@ugc/db';
  *  producción (post-CP3) lo lee de la BD por `variantId`. */
 export interface N6ExecutorDeps {
   db?: DbClient;
+  /** T5.12: destino del warning de DEGRADACIÓN de faceta (category libre del LLM que ningún template
+   *  reconoce). Sin logger la degradación sigue siendo visible por `output_refs` (`degraded`). */
+  logger?: Logger;
 }
 
 /**
@@ -75,7 +80,9 @@ export function makeN6Executor(deps: N6ExecutorDeps = {}): StepExecutor {
     const { templates, guardPacks } = validation.seed;
 
     // (1) STEPLESS: fuentes por dep `N6-sources` (precede a la BD para no romper el smoke/unit).
-    let compileInput = extractCompileInput(ctx.deps ?? [], templates, guardPacks);
+    const fromDeps = extractCompileInput(ctx.deps ?? [], templates, guardPacks);
+    let compileInput = fromDeps?.input;
+    let degraded = fromDeps?.degraded;
 
     // (2) PRODUCCIÓN: sin dep pero con BD → ensambla el N6Sources de la variante (assembleN6Sources).
     if (compileInput === undefined && deps.db !== undefined) {
@@ -87,6 +94,7 @@ export function makeN6Executor(deps: N6ExecutorDeps = {}): StepExecutor {
         );
       }
       compileInput = resolved.input;
+      degraded = resolved.degraded;
     }
 
     if (compileInput === undefined) {
@@ -100,6 +108,22 @@ export function makeN6Executor(deps: N6ExecutorDeps = {}): StepExecutor {
       });
       markInapplicable?.();
       return;
+    }
+
+    // T5.12 · DEGRADACIÓN OBSERVABLE. La selección encontró template ignorando la `vertical` porque
+    // la `product.category` del brief es texto libre del LLM (`Cuidado de la piel`, `Cuidado bucal`…).
+    // El lote NO muere — pero la señal "el análisis emite verticales fuera del enum" no se pierde:
+    // queda en el log estructurado Y en los `output_refs` del step (auditable en canvas / step_run).
+    if (degraded !== undefined) {
+      deps.logger?.warn(
+        {
+          variantId,
+          facet: degraded.facet,
+          unmatchedValue: degraded.value,
+          templateSlug: degraded.templateSlug,
+        },
+        'N6: category no reconocida por el catálogo — selección DEGRADADA ignorando la vertical',
+      );
     }
 
     // COMPILACIÓN REAL vía el motor puro de core. NO lanza: resultado tipado (ok / issues).
@@ -119,6 +143,8 @@ export function makeN6Executor(deps: N6ExecutorDeps = {}): StepExecutor {
       guardPackKeysUsed: result.result.guardPackKeysUsed,
       resolvedPrompt: result.result.resolvedPrompt,
       resolvedBeats: result.result.resolvedBeats,
+      // Presente SOLO cuando hubo degradación (T5.12): deja rastro auditable en el step_run.
+      ...(degraded !== undefined ? { degradedFacet: degraded } : {}),
     });
   };
 }
@@ -134,13 +160,17 @@ function extractCompileInput(
   deps: { outputRefs: unknown }[],
   templates: Parameters<typeof resolveCompileInput>[1],
   guardPacks: Parameters<typeof resolveCompileInput>[2],
-): CompileInput | undefined {
+): { input: CompileInput; degraded?: CompileDegradation } | undefined {
   for (const dep of deps) {
     // Un dep que no es un `N6-sources` (p.ej. otro artefacto) se ignora, no falla: `invalid_sources`
     // aquí solo significa "esta dep no es la mía". Solo `no_template` (sí era un N6-sources, pero sus
     // datos no casan el catálogo) es un error duro.
     const resolved = resolveCompileInput(dep.outputRefs, templates, guardPacks);
-    if (resolved.ok) return resolved.input;
+    if (resolved.ok) {
+      return resolved.degraded !== undefined
+        ? { input: resolved.input, degraded: resolved.degraded }
+        : { input: resolved.input };
+    }
     if (resolved.error === 'no_template') {
       throw new PermanentStepError(`N6: no hay template para la variante: ${resolved.message}`);
     }

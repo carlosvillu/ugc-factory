@@ -34,14 +34,30 @@ export const N6SourcesSchema = z.object({
 });
 export type N6Sources = z.infer<typeof N6SourcesSchema>;
 
+/**
+ * T5.12 — la selección tuvo que DEGRADAR una faceta para encontrar template. Viaja hasta el executor
+ * para que emita un warning estructurado: la degradación es OBSERVABLE, nunca muda.
+ */
+export interface CompileDegradation {
+  facet: 'vertical';
+  /** El valor libre que ningún template reconoció (p.ej. `Cuidado de la piel`). */
+  value: string;
+  /** El template que ganó el pase degradado (para poder auditar qué se compiló de verdad). */
+  templateSlug: string;
+}
+
 export type ResolveCompileInputResult =
-  | { ok: true; input: CompileInput }
+  | { ok: true; input: CompileInput; degraded?: CompileDegradation }
   | { ok: false; error: 'invalid_sources' | 'no_template'; message: string };
 
 /**
  * A partir de un `N6-sources` (ya parseado o crudo) + el catálogo sembrado, selecciona el template
  * por facetas §9.3 y arma el `CompileInput`. Función PURA que NO lanza: el executor decide qué hacer
  * con el error (marcar fallo permanente). `aspect` cae al `defaultAspect` del template si no viene.
+ *
+ * T5.12: si la `product.category` del brief es texto libre que ningún template reconoce, la selección
+ * DEGRADA (ignora la vertical) en vez de morir, y el resultado llega con `degraded` puesto — el
+ * executor lo registra como warning. Ver `select-template.ts`.
  */
 export function resolveCompileInput(
   rawSources: unknown,
@@ -72,5 +88,17 @@ export function resolveCompileInput(
       durationSeconds: facets.durationSeconds,
     },
   };
-  return { ok: true, input: { template: selection.template, sources, guardPacks } };
+  const input: CompileInput = { template: selection.template, sources, guardPacks };
+  if (selection.relaxedFacet !== undefined && selection.unmatchedValue !== undefined) {
+    return {
+      ok: true,
+      input,
+      degraded: {
+        facet: selection.relaxedFacet,
+        value: selection.unmatchedValue,
+        templateSlug: selection.template.slug,
+      },
+    };
+  }
+  return { ok: true, input };
 }

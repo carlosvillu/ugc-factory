@@ -1,0 +1,36 @@
+[
+  {
+    "category": "beauty",
+    "slug": "demo-pain-point",
+    "degraded": null,
+    "used": [
+      "guard.general",
+      "guard.fidelity",
+      "guard.vertical.beauty",
+      "guard.platform.tiktok"
+    ],
+    "mentionsBeauty": true
+  },
+  {
+    "category": "Cuidado de la piel",
+    "slug": "demo-pain-point",
+    "degraded": "vertical",
+    "used": [
+      "guard.general",
+      "guard.fidelity",
+      "guard.platform.tiktok"
+    ],
+    "mentionsBeauty": true
+  },
+  {
+    "category": "Cuidado bucal",
+    "slug": "demo-pain-point",
+    "degraded": "vertical",
+    "used": [
+      "guard.general",
+      "guard.fidelity",
+      "guard.platform.tiktok"
+    ],
+    "mentionsBeauty": true
+  }
+]

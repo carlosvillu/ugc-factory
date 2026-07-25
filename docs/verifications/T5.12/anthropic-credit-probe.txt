@@ -1,0 +1,12 @@
+# Probe de saldo del proveedor de análisis (Anthropic) — 2026-07-25
+# Ejecutado ANTES de montar nada, con la MISMA key que usa la app (.env ANTHROPIC_API_KEY).
+$ curl https://api.anthropic.com/v1/messages -H "x-api-key: $ANTHROPIC_API_KEY" \
+    -H "anthropic-version: 2023-06-01" -d '{"model":"claude-haiku-4-5","max_tokens":4,...}'
+
+HTTP 400
+{"type":"error","error":{"type":"invalid_request_error",
+ "message":"Your credit balance is too low to access the Anthropic API. Please go to Plans & Billing to upgrade or purchase credits."},
+ "request_id":"req_011CdP33sFzuzmqf7DvdPdw4"}
+
+=> SALDO AGOTADO CONFIRMADO. Los 3 análisis reales de la cláusula literal NO son ejecutables.
+=> Coste incurrido por el probe: $0 (la petición fue rechazada antes de consumir tokens).

@@ -2750,3 +2750,35 @@ T5.8 es el primer código que conduce un N8 vivo hasta el mux del máster (su op
   `beforeAll` que no se trunca). (3) Los 2 e2e que se caen bajo carga paralela.
 - **Rareza operativa**: el verifier borró+reseedeó `auth.password_hash` (drift del bootstrap). La password
   de login de DEV es ahora `ugc-factory-dev` (`.env`).
+
+## 2026-07-25 · ⏳ T5.12 iniciada (product.category no canónica revienta N6)
+- Elegible sin dependencias. ≤$0,50 (la reproducción del fallo es $0 con fixture).
+- **T5.12 · ciclo 1 del verifier: FAIL** (dos causas independientes; **el fix en sí se sostiene**):
+  1. **BLOQUEANTE — el `logger.warn` es CÓDIGO MUERTO**: `executors/index.ts:82` cablea el logger de N6
+     desde `generation.logger` con un comentario que dice «ya cableado en boss.ts». **FALSO** (verificado
+     por el coordinador en `boss.ts:123-131`: el grupo `generation` pasa `db`/`storage`/`falKey`/
+     `falBaseUrl`, **no `logger`**) ⇒ `deps.logger?.warn(...)` es un no-op y la mitad OBSERVABLE de la
+     entrega no existe. **Ningún test lo cazó porque uno inyecta un logger falso y otro pasa
+     `generation: {} as never`: ninguno ejerce la COMPOSICIÓN REAL** (principio 9 otra vez, en la capa de
+     wiring). Radio mayor PRE-EXISTENTE: `generation.ts:231/344/362` usan el mismo guard ⇒ **N7a-N7e
+     llevan tiempo logueando al vacío**.
+  2. **Prerequisito externo**: saldo Anthropic agotado (probado con la key de la app: `HTTP 400 credit
+     balance too low`) ⇒ la cláusula literal («3 análisis consecutivos») NO es ejecutable. NO es fallo del
+     fix; el verifier lo separó explícitamente.
+- **El verifier mejoró el control negativo en vez de replicarlo**: en lugar de mutar el árbol, reimplementó
+  un **ORÁCULO PRE-FIX** y comparó el cross-product completo — **12.636 contextos, 0 divergencias**. Prueba
+  de no-regresión de especificidad mucho más fuerte que el test del implementer. Determinismo verde (6
+  etiquetas reales en 4 idiomas × 5 permutaciones del catálogo). Coste $0,00.
+- **Deuda menor detectada**: el assert de `assemble-n6-sources.test.ts` era AUTORREFERENCIAL
+  (`templateSlug: resolved.input.template.slug` pasa con cualquier ganador) → sustituir por slug pinchado.
+- **T5.12 · ciclo 2: bloqueante RESUELTO; la tarea queda BLOQUEADA por prerequisito externo (NO es FAIL
+  del fix).** El verifier auditó el test guardián (**sin costuras**: el `vi.mock` delega en la
+  implementación original, `bootstrap`→`createBoss` corre contra Postgres/pg-boss REALES, el único doble es
+  el logger de entrada = la salida observada, y el assert es de **identidad de origen**) y **ejecutó él
+  mismo el control negativo DOBLE**: romper `boss.ts` y romper el registry, ambos ROJOS con el mismo
+  assert ⇒ la cadena entera está guardada. N7a-N7f verificados por **identidad** (`toBe`, no
+  `toBeDefined`): 9 call sites exactos, mudos desde T4.4, restaurados por una línea.
+- **NO se marca `[x]`**: la cláusula literal (3 análisis consecutivos de la URL real) NO se ejecutó por
+  saldo agotado. Se anota el estado en `planning.md` y el report. Coste acumulado T5.12: **$0,00**.
+- **Nota de proceso del verifier**: dos «fallos» de gate que vio al arrancar eran artefactos SUYOS (puerto
+  3000 ocupado + un `noclobber` en su propia redirección), no del código. El gate real: exit 0.

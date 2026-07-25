@@ -74,7 +74,16 @@ export function makeExecutorRegistry({
     // LAS FUENTES. T4.11 le da la BD (`analysis.db`, patrón de N4/N5) para ENSAMBLAR el `N6Sources` de la
     // variante (brief+persona+guion+facetas) cuando corre como RAÍZ del sub-DAG de generación — la costura
     // stepless de T3.5 (fuentes por dep) se conserva y precede a la BD.
-    N6: makeN6Executor({ db: analysis.db }),
+    // T5.12: además del `db`, el LOGGER (reusa el del grupo `generation`) para que la degradación de
+    // faceta —category libre del LLM que ningún template reconoce— salga por el log estructurado en vez
+    // de quedarse muda. ⚠ `generation.logger` es OPCIONAL en el tipo: si el composition root no lo
+    // cablea, esto es un no-op SILENCIOSO (fue exactamente el bug que destapó el verifier de T5.12 —
+    // el comentario anterior afirmaba que boss.ts ya lo pasaba, y era FALSO). Lo que garantiza que
+    // llegue de verdad es `boss-wiring.test.ts`, que monta la composición REAL.
+    N6: makeN6Executor({
+      db: analysis.db,
+      ...(generation.logger !== undefined ? { logger: generation.logger } : {}),
+    }),
     // N7a · PRODUCT SHOTS, ruta packshot-IA (T4.4, §7.2). PAGA fal (text-to-image flux-2): estrena el
     // grupo de deps `generation` (BD + storage + FAL_KEY perezosa). T4.11 lo cablea como nodo del DAG
     // (step_run_id/variant_id); en T4.4 corre STEPLESS (el smoke conduce `ai_packshot` sin step).

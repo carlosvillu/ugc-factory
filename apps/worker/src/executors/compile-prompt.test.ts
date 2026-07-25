@@ -3,6 +3,7 @@
 // VERDAD vía el motor de core y emite el resolvedPrompt con el fidelity guard. El path de PRODUCCIÓN
 // (ensamblado desde la BD por `variantId`, T4.11) se cubre en integración. N6 es $0 y determinista.
 import { describe, expect, it, vi } from 'vitest';
+import type { Logger } from '@ugc/core';
 import type { ExecutorContext } from '@ugc/core/orchestrator';
 import { PermanentStepError } from '@ugc/core/orchestrator';
 import { DEMO_BEAUTY_BRIEF, DEMO_PERSONA, DEMO_SCRIPT, type N6Sources } from '@ugc/core/gallery';
@@ -77,6 +78,72 @@ describe('makeN6Executor (costura stepless: fuentes por dep, sin BD)', () => {
     });
     // Sin guion, {hook.line}/{cta.line} no resuelven → el executor revienta ruidoso antes de un render.
     await expect(makeN6Executor()(ctx)).rejects.toThrow(/slots sin resolver/);
+  });
+
+  // T5.12 · LA PROMESA LITERAL DEL PLANNING: «un brief con `product.category` libre (p.ej.
+  // `Cuidado de la piel`) llega a N6 sin `PermanentStepError`». Antes de T5.12 esto reventaba con
+  // "N6: no hay template para la variante: No hay ningún template de galería que case con las facetas
+  // [... vertical=Cuidado de la piel ...]" y dejaba el lote muerto hasta editar la category a mano.
+  // Los valores son los que el LLM emitió DE VERDAD el 2026-07-25 sobre la URL de CeraVe.
+  for (const category of ['Cuidado de la piel', 'Cuidado bucal']) {
+    it(`una product.category LIBRE ("${category}") compila SIN PermanentStepError y deja rastro`, async () => {
+      const freeCategory: N6Sources = {
+        ...n6Sources,
+        brief: {
+          ...DEMO_BEAUTY_BRIEF,
+          product: { ...DEMO_BEAUTY_BRIEF.product, category },
+        },
+      };
+      const warn = vi.fn();
+      const logger = {
+        trace: vi.fn(),
+        debug: vi.fn(),
+        info: vi.fn(),
+        warn,
+        error: vi.fn(),
+        child: vi.fn(),
+      } as unknown as Logger;
+      const { ctx, outputs } = makeCtx({
+        deps: [
+          { stepId: 's1', nodeKey: 'N6-sources', status: 'succeeded', outputRefs: freeCategory },
+        ],
+      });
+      // No lanza: la Entrega de T5.12 es exactamente esto.
+      await makeN6Executor({ logger })(ctx);
+
+      const out = outputs[0] as {
+        node: string;
+        resolvedPrompt: string;
+        degradedFacet?: { facet: string; value: string; templateSlug: string };
+      };
+      expect(out.node).toBe('N6');
+      expect(out.resolvedPrompt.length).toBeGreaterThan(0);
+      // La degradación NO es silenciosa: warning estructurado + rastro en los output_refs del step.
+      expect(out.degradedFacet).toMatchObject({ facet: 'vertical', value: category });
+      expect(warn).toHaveBeenCalledOnce();
+      expect(warn.mock.calls[0]?.[0]).toMatchObject({
+        facet: 'vertical',
+        unmatchedValue: category,
+      });
+    });
+  }
+
+  it('una category CANÓNICA no degrada: sin warning ni degradedFacet', async () => {
+    const warn = vi.fn();
+    const logger = {
+      trace: vi.fn(),
+      debug: vi.fn(),
+      info: vi.fn(),
+      warn,
+      error: vi.fn(),
+      child: vi.fn(),
+    } as unknown as Logger;
+    const { ctx, outputs } = makeCtx({
+      deps: [{ stepId: 's1', nodeKey: 'N6-sources', status: 'succeeded', outputRefs: n6Sources }],
+    });
+    await makeN6Executor({ logger })(ctx);
+    expect(warn).not.toHaveBeenCalled();
+    expect(outputs[0]).not.toHaveProperty('degradedFacet');
   });
 
   it('está REGISTRADO en el orquestador bajo la clave N6 (Entrega: "registro del executor N6")', () => {

@@ -2700,3 +2700,18 @@ T5.8 es el primer código que conduce un N8 vivo hasta el mux del máster (su op
   `seed-data.ts`.
 - **Reserva sobre (c)**: ambas voces del seed son English-origin multilingües (Sarah/Rachel); 22.8 pide
   voces NATIVAS → puede fallar por naturalidad haga lo que haga el verifier.
+- **TRES TAREAS ABIERTAS** (planning.md, entre T5.9 y T5.10) a partir de los defectos que destapó el run:
+  **T5.11** (N5 parcial se presenta como éxito → se puede aprobar un lote truncado y disparar gasto real;
+  severidad ALTA), **T5.12** (`product.category` no canónica revienta N6; la cláusula de verificación es el
+  DETERMINISMO: 3 análisis consecutivos, no que funcione una vez), **T5.13** (persona con voz usable
+  inalcanzable en CP2). T5.9 ahora depende de las tres.
+- **DIAGNÓSTICO AFINADO por el coordinador sobre el informe del verifier** (verificado en código, no
+  aceptado tal cual): los 10 `placeholder-*` NO son un bug del seed — están DECLARADOS a propósito
+  (`packages/core/src/persona/seed-data.ts:15`: «la asignación de voz CON PREVIEW llega en F4») y
+  `persona-form.tsx` SÍ permite crear una persona con `voice_map` real. El bug REAL es más acotado: el
+  selector de CP2 se puebla SOLO con `candidates(avatarHint)` (`matrix-panel.tsx:157`), así que una
+  persona con voz válida que no case con el `avatar_hint` es INALCANZABLE — aunque `selectPersona`
+  (`:224`) sí soporte `personaMode:'fixed'`. Por eso T5.13 es UI de selección, no re-sembrar voces.
+- **Gotcha del `next dev` huérfano, 3ª vez**: el gate salió rojo por `sse-contract.test.ts` con DOS
+  procesos vivos en :3000 que dejó el stack del verifier. `lsof -ti:3000 | xargs kill -9` + `rm -rf
+  apps/web/.next` → verde. **El reflejo de cierre debe incluir ambas limpiezas.**

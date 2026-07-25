@@ -360,6 +360,149 @@ describe('N8 executor (T5.5d): composición', () => {
     }
   });
 
+  // ── T5.8c · ESCENA TROCEADA: TODOS los clips se USAN (fuga de dinero cerrada) ─────────────────────────
+  it('escena de body TROCEADA en 2 clips: el segmento fitteado deriva de AMBOS (ninguno pagado-sin-usar)', async () => {
+    const { db, pool } = createDbPool(tdb.connectionString);
+    try {
+      const { variantId, scriptId } = await seedVariantWithScript(db, [
+        { segment: 'body', narration: 'a very long body line that overflows one clip' },
+      ]);
+
+      // §7.5 troceó la escena: N7d generó Y PAGÓ 2 clips (mismo bodySceneIndex, clipIndex 0 y 1). ANTES de
+      // T5.8c la composición usaba solo el `clipIndex 0` → el 1 quedaba pagado-sin-usar.
+      const brollA = await makeAsset(db, 'broll_clip', 6);
+      const brollB = await makeAsset(db, 'broll_clip', 6);
+      const vo0 = await makeAsset(db, 'tts_audio', 2.5);
+
+      await makeExecutor(db)({
+        variantId,
+        config: {},
+        collectOutput: () => undefined,
+        deps: [
+          dep('N7b', {
+            scriptId,
+            language: 'es',
+            clips: [
+              {
+                sceneIndex: 0,
+                generationId: 'g0',
+                assetId: vo0.id,
+                durationSeconds: 2.5,
+                wordCount: 8,
+                ttsCostCents: 1,
+                asrCostCents: 1,
+              },
+            ],
+          }),
+          dep('N7d', {
+            scriptId,
+            brollEndpoint: 'fal-ai/veo3.1/image-to-video',
+            route: 'i2v',
+            // DESORDENADOS: el ensamblador debe ordenarlos por `clipIndex` (el orden ES el del concat).
+            clips: [
+              {
+                bodySceneIndex: 0,
+                clipIndex: 1,
+                generationId: 'gb1',
+                assetId: brollB.id,
+                durationSeconds: 6,
+                costCents: 30,
+              },
+              {
+                bodySceneIndex: 0,
+                clipIndex: 0,
+                generationId: 'gb0',
+                assetId: brollA.id,
+                durationSeconds: 6,
+                costCents: 30,
+              },
+            ],
+          }),
+        ],
+      });
+
+      // LA PRUEBA DE QUE LA FUGA ESTÁ CERRADA: el asset FITTEADO del segmento (el que entra al máster)
+      // declara como padres AMBOS clips pagados, en orden de `clipIndex`. Con el bug viejo `parent_asset_ids`
+      // sería solo `[brollA]` y `brollB` no aparecería en ningún linaje.
+      const { rows: fitted } = await tdb.pool.query<{ parent_asset_ids: string[] }>(
+        "SELECT parent_asset_ids FROM asset WHERE storage_key LIKE 'fitted/%' ORDER BY created_at",
+      );
+      expect(fitted).toHaveLength(1);
+      expect(fitted[0]?.parent_asset_ids).toEqual([brollA.id, brollB.id]);
+
+      // Y el máster se compuso igualmente (la cadena entera pasó).
+      const { rows: masters } = await tdb.pool.query(
+        "SELECT id FROM asset WHERE kind = 'final_video'",
+      );
+      expect(masters).toHaveLength(1);
+    } finally {
+      await pool.end();
+    }
+  });
+
+  // CONTROL NEGATIVO del cableado (T5.8c, principio 9): con UN SOLO clip genuinamente más corto que su
+  // narración (sin clips extra que concatenar) el `FitError` SIGUE subiendo por el executor. El fix NO
+  // relaja el umbral de 0,5 s del fitter — hace que el vídeo concatenado CUBRA la narración.
+  it('CONTROL NEGATIVO: 1 clip corto (sin troceo) contra narración larga → FitError sigue mordiendo', async () => {
+    const { db, pool } = createDbPool(tdb.connectionString);
+    try {
+      const { variantId, scriptId } = await seedVariantWithScript(db, [
+        { segment: 'body', narration: 'body line' },
+      ]);
+      const broll = await makeAsset(db, 'broll_clip', 3);
+      const vo0 = await makeAsset(db, 'tts_audio', 8.68);
+
+      await expect(
+        makeExecutor(db)({
+          variantId,
+          config: {},
+          collectOutput: () => undefined,
+          deps: [
+            dep('N7b', {
+              scriptId,
+              language: 'es',
+              clips: [
+                {
+                  sceneIndex: 0,
+                  // El fake ffprobe mide el clip a 3,0 s; narración 8,68 s → déficit 5,68 s ≫ 0,5 s.
+                  generationId: 'g0',
+                  assetId: vo0.id,
+                  durationSeconds: 8.68,
+                  wordCount: 20,
+                  ttsCostCents: 1,
+                  asrCostCents: 1,
+                },
+              ],
+            }),
+            dep('N7d', {
+              scriptId,
+              brollEndpoint: 'fal-ai/veo3.1/image-to-video',
+              route: 'i2v',
+              clips: [
+                {
+                  bodySceneIndex: 0,
+                  clipIndex: 0,
+                  generationId: 'gb0',
+                  assetId: broll.id,
+                  durationSeconds: 3,
+                  costCents: 30,
+                },
+              ],
+            }),
+          ],
+        }),
+      ).rejects.toThrow(/FitError|más corto que su narración/);
+
+      // Y NO se compuso ningún máster (el fallo es DURO, no una degradación silenciosa).
+      const { rows: masters } = await tdb.pool.query(
+        "SELECT id FROM asset WHERE kind = 'final_video'",
+      );
+      expect(masters).toHaveLength(0);
+    } finally {
+      await pool.end();
+    }
+  });
+
   it('sin variantId en el ctx → PermanentStepError (composición es POR VARIANTE)', async () => {
     const { db, pool } = createDbPool(tdb.connectionString);
     try {

@@ -2483,3 +2483,155 @@ T5.8 es el primer código que conduce un N8 vivo hasta el mux del máster (su op
 - **HALLAZGO DE CORRECCIÓN destapado (NO arreglado, es de T5.9)**: `f5-export.spec.ts` está ROJO ahora — corre solo bajo `chromium` (su proyecto de ordenación dedicado NUNCA se añadió al config; la prosa que lo describe no tiene código) y compite con f4 por el `doom` global del fake de fal. Por eso `test:e2e:phases` excluye f5 hasta que T5.9 lo cierre y le dé su proyecto `dependencies:['chromium']`. Diagnóstico primario (log del worker: `PermanentStepError finalizeGeneration … no trae images[]`). Es el patrón en vivo; anotado para T5.9.
 - **Fuera de alcance hoy (2 propuestas más de la auditoría, en prosa por diseño)**: política de stalls de API en dev-loop y premisas-con-cita en el BRIEF (ocurren en tiempo de orquestación, invisibles para hooks/gate). Y P5 (preflight de entorno anti-`next dev` huérfano) — que la entrada anterior de este journal documenta ocurriendo OTRA vez (puerto 3000). Candidatas si el usuario quiere seguir.
 - **Gate completo VERDE (exit 0) con los 4 cambios cableados** — `pnpm gate` = lint + typecheck + format + knip + readme + **check:contrast** + **e2e:wired:check** + `pnpm test` (incluye **paid-surface-registry.test.ts**) + **test:e2e:phases** (f1+f2+f4, `4 passed`). Coste: $0 (sin fal real; los E2E de fase usan APIs falsas). Tres iteraciones del gate hasta verde: (1) `expect(value, msg)` prohibido por `vitest/valid-expect` → mensajes a comentarios; (2) prettier sobre los 3 ficheros nuevos; (3) knip veía `playwright` como binario sin declarar en el ws raíz → `ignoreBinaries:["playwright"]` en `knip.json`. Sin commit (el usuario publica; y hay trabajo de T5.9 sin commitear entrelazado en PRD/planning/f5-export que NO es mío).
+
+## 2026-07-24 · T5.9 · PARADA: circuit breaker (4 terminaciones de verifier) + duda de feasibility de coste
+- **Coste real: $0** (ni un céntimo de fal gastado en los 4 intentos). Cap ($15) intacto.
+- **Circuit breaker disparado**: 4 terminaciones del verifier sin que la verificación llegue a correr nunca. (1) y (2) muertes por API stall «Response stalled mid-stream» en orientación. (3) BLOCKED honesto — árbol contaminado con el trabajo uncommitted de la auditoría del journal (editándose durante la sesión) → gate rojo no atribuible → NO arrancó run estateful de $15 (correcto). DESBLOQUEADO al commitearse la auditoría (`d5c0e7e`) + gate re-verificado verde. (4) 4º intento: OTRO stall de API, esta vez proyectando coste a CP3, sin gastar. Es el patrón «política de stalls de API» que la propia auditoría dejó en prosa como candidata (entrada anterior). Relanzar un 5º verifier largo idéntico = comportamiento ATASCADO (regla del bucle: sin progreso real / mismo error). NO se hace.
+- **DUDA DE FEASIBILITY (lo que decide si T5.9(a) es posible bajo $15)**: el modelo de coste real es POR SEGUNDO (videos de 15-30s, no los clips de 4s de T4.11): b-roll i2v veo3.1 20¢/s [4,6,8], CTA i2v 20¢/s, avatar omnihuman 16¢/s (deriva de la duración del audio), keyframes flux-2 1,2¢/MP, voz elevenlabs 5¢/1k chars, música 0,02¢/s. Peor caso SIN dedup ≈ **$66 para 12 variantes** (recuperado por el verifier 4 antes de morir). La feasibility depende de DOS dedups, ambos verificados a $0 en el código pero DATA-DEPENDENT en su efecto real:
+  - **cross-idioma** (es/en): b-roll/CTA usan `DEFAULT_BROLL_PROMPT` neutral → deduplican SOLO si es/en cuantizan al mismo bucket de duración Y mismo nº de clips (troceo). Avatar NO (consume audio). Keyframes SÍ.
+  - **cross-variante** (los 3 hooks del mismo ángulo comparten `sharedBodyKey` = MISMO body): el content_hash del b-roll body (`generate-broll.ts:157`, `dedupSalt=bodySceneIndex:clipIndex`, SIN variantId) es idéntico entre variantes que comparten body+keyframe → **el b-roll body se genera 1× por ÁNGULO (2×), no por combo (6×)**. Esto mata la ficción del $66-sin-dedup.
+  - El coste real depende de las duraciones de escena que el LLM genere (no existen en el código) → NO fijable con más análisis estático. Se mide a CP3 (scripts = Anthropic, céntimos, ANTES de aprobar cualquier fal).
+- **PLAN aprobado por advisor (romper el bucle: dividir la verificación para que el run caro no sea lo que deba sobrevivir a un stall)**:
+  - **Fase A ($0-fal, corta, resumible)**: un subagente conduce intake→CP1→CP2→CP3 con la URL real, lee las duraciones REALES + el estimado de CP3, computa el mapa de dedup real (cross-idioma × cross-variante) y PARA reportando la proyección. Minutos. Decide la feasibility sin poder quemar $15.
+  - **Fase B (solo si A proyecta claramente <$15)**: calibrar 1 combo (es+en ≈ $2-3, bajo el cap) → medir coste real por endpoint + dedup HIT/MISS reales → proyectar resto → completar o FAIL-on-cost.
+- **DECISIÓN DEL USUARIO PENDIENTE (parada de alcance mayor si Fase A proyecta >$15)**: el bound <$15 de 22.1 se escribió para el tier BARATO (PRD §296/§607: VEED + Kokoro, ~mitad del coste basis de premium). En premium (el único generation-ready) con facturación por segundo sobre 15-30s de vídeo, puede simplemente NO caber. Opciones: reducir la matriz de la verificación, bound recalibrado a premium (~$25-30), o financiar generation en tier test (grande, deuda §13.1/§607). Se lleva al usuario CON el número real de Fase A, no antes.
+- **Estado del código de T5.9**: spec permanente `f5-export.spec.ts` en verde ($0), tier reconciliado a premium (planning+PRD, regla 6), aritmética de coste corregida en planning.md:785. Evidencia BLOCKED en `docs/verifications/T5.9/`. Sin commit (T5.9 no cerrada).
+
+## 2026-07-24 · T5.9 · Fase A ($0) → VEREDICTO: NO cabe en $15 en premium (decisión de producto)
+- **Coste real: $0** (Fase A no gastó fal; el subagente murió por el MISMO stall de API tras leer CP2/CP3, 5º stall de la serie). Evidencia persistida: `docs/verifications/T5.9/phase-a-projection/01-cost-model-verified.md`.
+- **NÚMERO DECISIVO (fuente autoritativa: el estimado que la UI muestra al usuario en CP2/CP3)**: premium, 12 variantes hook_test (2 áng × 3 hooks × es+en) = **$24,00–$34,64**, YA con dedup por ángulo+idioma aplicado. **Supera $15 antes de generar nada.**
+- **Por qué NO cabe estructuralmente** (no es incertidumbre de aritmética):
+  - Estimación propia del recipe premium (`est_cost_30s_min/max`): **$9–13/variante de 30s** → 12 naive = $108–156. La feasibility <$15 dependía ENTERAMENTE del dedup.
+  - El dedup de b-roll/CTA/keyframes SÍ funciona (keyframe N7a = `{route, briefId}` SIN variantId → 1 set byte-idéntico compartido por las 12 variantes e idiomas; content_hash del b-roll sin variantId/language → colapsa cross-variante y cross-idioma cuando duración+salt coinciden).
+  - PERO el **avatar N7c (16¢/s) NO deduplica** — consume el audio TTS del hook, idioma-específico → **SIEMPRE 12 avatares**. A ~5s/hook = ~$9,60 (2/3 del budget) solo en avatares; a ~3s = ~$5,76. Es el término dominante y estructuralmente indeduplicable. Sumado a b-roll+CTA+voz, la UI proyecta $24–34.
+- **Precios verificados contra fal real** (`model_profile`, 2026-07-15): veo3.1 i2v 20¢/s, omnihuman 16¢/s, flux-2 1,2¢/MP, elevenlabs eleven-v3 10¢/1k, ace-step 0,02¢/s. El modelo NO es especulación.
+- **CAUSA RAÍZ del conflicto**: el bound <$15 de 22.1 se escribió para el tier BARATO (PRD §296/§607: VEED avatar + Kokoro TTS, ~mitad del coste basis). En premium (el ÚNICO generation-ready hoy, porque test/standard dejan broll como etiqueta → §13.1/§607) con facturación por segundo sobre vídeo de 15-30s, el lote 2×3×es+en no cabe. Es el conflicto PRD-vs-realidad ya anticipado como «parada de alcance mayor».
+- **PARADA: decisión de producto del usuario** (no la resuelve el bucle). Opciones llevadas al usuario: (1) reducir la matriz de la verificación de coste (menos hooks/ángulos o 1 idioma para el run, manteniendo captions/C2PA/tiempo); (2) recalibrar el bound de 22.1 a premium (~$25-35 real); (3) financiar generación en tier test (grande, deuda §13.1/§607). $0 gastado; decisión pendiente.
+- **PATRÓN DE INFRA**: 5 stalls «Response stalled mid-stream» consecutivos en subagentes que levantan el stack real / hacen trabajo largo. Cada uno entregó su dato clave a $0, pero NINGUNO completó. Es el candidato «política de stalls de API en dev-loop» que la auditoría del journal dejó en prosa. Para el trabajo real de T5.9 (fase B, si el usuario decide), habrá que trocear aún más el subagente o considerar que el arnés de subagentes largos es inestable hoy.
+
+## 2026-07-24 · T5.9 · Usuario RECALIBRA bound a <$40 (premium) + autoriza gasto ≤$40
+- **Decisión de producto del usuario**: bound de coste de 22.1 recalibrado de <$15 (tier barato, no cableado) a **<$40** (premium real; holgura sobre el estimado UI $24-34,64, no un filo). PASS evaluado contra coste REAL observado. Editado en PRD §22.1 + planning (regla 6).
+- **Gasto autorizado**: hasta **techo duro $40** de fal real para T5.9(a)+(b) (>2× la autorización previa ≤$15; confirmado explícitamente). Log incremental; PARAR si se alcanza $40 o si hay stalls repetidos DESPUÉS de aprobar CP3 (nunca relanzar a ciegas quemando dinero).
+- **Plan desacoplado (aísla el dinero de la ventana de stalls, verificado)**: `script-checkpoint.ts:230` — CP3-approve llama `createRun` que INSERTA el pipeline_run + ENCOLA jobs pg-boss; la generación fal la ejecuta el WORKER (proceso separado). ⇒ conducir→CP3 [$0, stall=$0 perdido] → aprobar UNA vez (instantáneo) → poll [stall aquí = worker sigue generando, reanudar re-adjunta] → CP4 → leer costes. Idempotencia en reanudación: NUNCA re-aprobar CP3 a ciegas — comprobar estado del lote primero (¿ya generando? → skip approve → polling).
+
+## 2026-07-24 · T5.9 · Run real ejecutado → FAIL de (a) por bug REAL de N8 · coste $5,78 (contenido, techo $40 intacto)
+- **Coste real: $5,78** (578¢, 19 cost_entry con fal_request_id reales del run `01KYA3ZFF5QQ5BQVRWW3Y93QQ0`). Calibración de 6 variantes barrera (es+en), NO las 12 (se contuvo al ver el FAIL — no se gasta hacia $40 para confirmar un FAIL ya visible). N7d dedup HIT visible: costCents:0 en clips compartidos por ángulo+idioma (solo 2 sets de body pagados = 240¢). 6º stall de API mató al verifier, pero entregó el veredicto.
+- **VEREDICTO: FAIL de (a)**. 0/6 variantes barrera compusieron máster. Tres hallazgos, decompuestos (verificados a $0 por el coordinador):
+  1. **es (3): N7b 422 = ARTEFACTO DE FIXTURE, no bug de producto.** El `voice_map` de la persona seed mezcla formatos: `en→"Rachel"` (nombre, funcionó) vs `es→"EXAVITQu4vr4xnSDxMaL"` (hash de ID de Sarah, da 422 en el proxy elevenlabs de fal). Seed mal configurado. Se retira como el cache-MISS de T5.8. FIX: corregir el voiceId es del seed al formato que fal acepta (nombre).
+  2. **objetivo hook_test (12s) = CONFIG del run, no contradicción del criterio.** El criterio 22.1 pide 15-30s = objetivo `conversion` (30s) o `story` (45s), NO `hook_test` (12s, presets.ts:16). 2 áng × 3 hooks NO fuerza hook_test — se combina con conversion. El run eligió el objetivo equivocado → proyección de duración corta (solo 3/12 ≥15s). NO es defecto del pipeline ni del criterio.
+  3. **N8 clip < narración = BUG REAL, el bloqueador de fase.** `fitSegmentFile` falla: el clip b-roll (6s en hook_test) es más CORTO que la narración del body (8.68s en EN) y N8 se niega a componer ("no se rellena con hold"). CAUSA RAÍZ (scene-planner.ts:104-105, comentario explícito): «⚠ ASUNCIÓN DOWNSTREAM: N8 (recorte a narración) no existe aún (F5). Hasta entonces el clip puede durar MÁS que su escena». T5.3 construyó N8 para RECORTAR clips LARGOS, NUNCA para manejar clips CORTOS. El clip se dimensiona desde `quantizeDurationToEnum(planned.seconds)` (estimación `secondsForText`=words/2.5) que SUBESTIMA el TTS inglés real (8.68s) → vídeo más corto que audio → N8 hard-fail. **OBJECTIVE-INDEPENDENT**: a conversion/30s el gap recurre (peor, 2 clips de body) → N8 falla igual. Por eso un re-run de salvage (solo arreglar el voiceId) es erróneo: gastaría más para llegar al mismo FAIL. Deuda PRE-EXISTENTE de T5.3 destapada por el E2E de fase, NO defecto de T5.9.
+- **ACOPLAMIENTO duración↔coste (recálculo $0 a conversion/30s)**: satisfacer 15-30s fuerza `conversion` (30s: hook 10 + body 16 + cta 4). Estimado recalculado ≈ **$35,70** (avatar 12×10s×16¢=$19,20 DISPARADO por el hook de 10s + body 4 sets×2 clips×8s×20¢=$12,80 + cta $3,20 + $0,50) — bajo $40 pero AJUSTADO. El avatar a 10s domina.
+- **ENRUTADO (P3)**: el bug N8 es tarea NUEVA de implementer (2 sitios candidatos: (i) N7d dimensiona el clip desde el audio REAL de N7b en vez de la estimación, o (ii) N8 rellena con hold/loop cuando clip<narración). NO lo arregla el bucle ni el verifier. Bloquea el cierre de F5. Coordinador NO toca compose-master.ts.
+- **PARADA: 2 decisiones del usuario** (ver mensaje): (1) el bug N8 = tarea nueva antes de poder cerrar T5.9; (2) el objetivo conversion recalcula el coste a ~$35,70, ajustado al techo $40.
+
+## 2026-07-24 · T5.8c PARADA (scope-check): el fix N8 no es acotado — CAMBIO DE ALCANCE MAYOR
+- **Coste: $0** (implementer paró sin escribir código, scope-check pre-autorizado por el brief). Diagnóstico verificado.
+- **El fix simple NO funciona (matemática del clamp)**: dimensionar el clip desde el audio real NO basta. El endpoint veo3.1 tiene clip MÁXIMO 8s (`durations:[4,6,8]`), pero una escena de body tiene narración real de 8.68s → `quantizeDurationToEnum(8.68,[4,6,8])`=8 (clampa) → déficit 0.68s ≥0.5 → **`FitError` persiste**. Ningún dimensionado-desde-real cubre >8s con un clip de 8s.
+- **Vía a medio cablear (bug más profundo + fuga de dinero)**: §7.5 prevé partir escenas largas en varios clips; `planScene` los parte, N7d/N7f los GENERAN Y PAGAN todos, pero la composición NUNCA los concatena — `pickClip` (`assemble-composition-spec.ts:249`) usa solo clipIndex 0, descarta el resto. Es **fuga de dinero viva** (paga N clips, usa 1) Y la razón de que el `FitError` reaparezca aun con troceo (2 clips de 4.34s→cuantizan a 6s, se usa 1 → mismo déficit 2.68s pagando doble).
+- **Caso B es ESTRUCTURAL, no borde** (verificado en presets+scripting): `budgetViolation` (`script-writer.ts:413`) acota `estSeconds` contra el TECHO TOTAL del anuncio (`maxSeconds`, ~30s conversion), NO la duración de cada escena de body. NO hay tope por-escena a ≤8s. Y `estSeconds`=words/2.5 SUBESTIMA el TTS real. Conversion: body 16s/`maxBodyScenes:2`=8s/escena presupuestados, pero el TTS real desborda (como los 6s→8.68s de hook_test, +45%) → escena real >8s → supera el clip máximo → `FitError`. Con anuncios de 15-30s (conversion), esto es lo normal, no un borde.
+- **NO HAY FIX ACOTADO. Cambio de alcance mayor (regla: parar y preguntar al usuario).** Dos caminos, ambos cruzan intención de producto:
+  - **A) Concatenar los clips multi-clip por escena** en composición (honra §7.5, ~4 ficheros: dep N7d→N7b + planificar desde duración real + concat en `compose-variant.ts`/`assemble-composition-spec.ts`). Usa los clips que ya se pagan → arregla la fuga de dinero USÁNDOLOS.
+  - **B) Topar cada escena de body ≤ maxClip (8s) en scripting/F2** (CONTRADICE §7.5, que soporta multi-clip; mata la vía troceo + su fuga; necesita enforcement nuevo de tamaño desconocido — el «cap es más barato» del implementer NO está verificado y puede ser peor).
+  - La fuga de dinero (clips pagados sin usar) NO es deuda aparte: su fix lo DETERMINA la elección A/B (A los usa, B elimina la vía).
+- **T5.8c queda REDEFINIDA/PARADA** pendiente de la decisión A/B del usuario. T5.9 sigue bloqueada por esto. $0 gastado. Nada commiteado.
+
+## 2026-07-24 · T5.8c · Usuario elige CAMINO A: concatenar multi-clip (§7.5 completo)
+- **Decisión de producto del usuario**: ante el cambio de alcance mayor del fix N8, elige **camino A** (concatenar los clips multi-clip de una escena en la composición) sobre B (topar escena ≤8s en scripting). Razón: honra §7.5 (que soporta escenas largas), usa los clips que YA se pagan → arregla la fuga de dinero de paso, sin contradecir el diseño ni añadir enforcement nuevo a F2.
+- **T5.8c REDEFINIDA** (planning): de «dimensionar clip desde audio real» (insuficiente por el clamp a 8s) a «componer escenas multi-clip: concatenar antes de recortar». ~4 ficheros: `assemble-composition-spec.ts` (`pickClip`/`buildSegment` recogen TODOS los clips por escena, no solo clipIndex 0), `scene-planner.ts`/planificador (dimensionar desde duración real de N7b, dep N7d→N7b si hace falta), `compose-variant.ts` (concat en el grafo ffmpeg antes de `fitSegmentFile`). Conserva el throw de `FitError` intacto.
+- **Tamaño**: tarea grande que cruza core/services/composición → merece diseño previo antes de implementar. $0 fal (tests con `REQUIRE_MEDIA=1` + media fake). T5.9 depende de ella.
+- **Secuencia hacia el cierre de F5**: T5.8c (concat multi-clip) → luego re-verificar T5.9 con objetivo conversion (30s), reproyectando el coste a CP3 sobre el pipeline ARREGLADO (el fix ENCARECE el b-roll: clips más largos = más segundos a 20¢/s → el ~$33 pre-fix subirá; si ≥$40 reabrir la decisión de techo/matriz con el usuario).
+
+## 2026-07-24 · PARADA — circuit breaker (stalls de API en subagentes largos) + T5.8c specced
+
+- **Circuit breaker disparado**: 7/7 subagentes agénticos largos murieron por «Response stalled
+  mid-stream» esta sesión (verifiers 1/2/4, subagente Fase A, implementer T5.8c, code-architect, +1).
+  El loop principal (reads/edits inline) NO stalea. Señal agregada: el entorno no sostiene subagentes
+  largos ahora → el camino a cerrar T5.9 (implementer ~4 ficheros + re-verify fal real ~40min) pasa
+  justo por el workload que falla. Lanzar más es moler, no progresar (regla de parada dev-loop §8).
+- **T5.8c diseñado y specced** ($0): `docs/verifications/T5.8c/BLUEPRINT.md`. Hallazgo clave
+  verificado contra código real: `CompositionSegment.videoAsset` es UN ULID (composition-spec.ts:43)
+  y `pickClip` (assemble-composition-spec.ts:249) hace `reduce`→clipIndex 0, descartando los clips
+  ≥1 que §7.5 YA generó y PAGÓ. El concat intra-escena entra en compose-variant.ts:192 (executor N8,
+  worker) ANTES del fit — PERO el contrato + assemble también cambian (dejan de descartar). ~4
+  ficheros: composition-spec.ts (videoAsset→lista), assemble-composition-spec.ts (todos los clips),
+  compose-variant.ts (concat antes del fit), generation-dag.ts (N7d→N7b si hace falta). FitError y
+  dedup NO se tocan.
+- **Estado T5.9**: FAIL de (a) con causa raíz documentada (docs/verifications/T5.9/report.md), $5.78
+  gastado de $40 autorizado. El bloqueador de fase es el bug N8 clip<narración = T5.8c.
+- **Reanudar en sesión estable**: implementer fresco consume BLUEPRINT.md → gate → review →
+  verifier fresco → close. Luego re-verify T5.9 (objetivo conversion 30s, bound <$40, re-proyectar a
+  CP3 sobre el pipeline ARREGLADO — subirá el coste; si ≥$40 reabrir con usuario). Arreglar también
+  el voiceId es del seed (formato nombre, no hash). (b) vía decisión CP1, (c) juicio humano voces.
+- Coste sesión: $0 en esta parada (diseño inline). Total T5.9 acumulado: $5.78.
+- Deuda anotada: candidata «política de stalls de API» del audit del journal — deja de ser footnote.
+
+## 2026-07-24 · ⏳ T5.8c iniciada (implementer fresco, tras la parada del circuit breaker)
+- Consume `docs/verifications/T5.8c/BLUEPRINT.md` (diseño ya verificado contra código real, $0).
+
+## 2026-07-24 · T5.8c — REVIEW (code-review inline + simplify 4 ángulos)
+
+- **Hallazgo BLOQUEANTE (regla 5a), arreglado dentro de la tarea**: `pickSceneClips`
+  (`assemble-composition-spec.ts`) aceptaba en silencio un set de clips con HUECOS o DUPLICADOS
+  (`clipIndex` 0 y 2 por carrera de dedup / retry parcial) → el concat produce una escena sin su tramo
+  central y el fitter, que solo mira duración TOTAL, la recorta → **máster visualmente corrupto que pasa
+  QA**. Misma clase de defecto que T5.8c cierra, un nivel más abajo. Fix: aserción de contigüidad
+  `0..n-1` sin duplicados + control negativo. NO se propaga `clipCount` por el contrato (es interno de
+  `scene-planner.ts:30`, no llega a `N7dOutput` ni a `FilteredClip` — plumbing invasivo descartado).
+  Límite declarado: no caza una cola truncada (parece densa); no es el riesgo vivo (un clip que falla
+  hace fallar su step).
+- **DEUDA FANTASMA REFUTADA** (que nadie la «arregle» luego con un caso especial real): el implementer
+  reportó un hueco en REGEN (si el nodo regenerado es N7f, N7b no estaría en el sub-DAG → dimensionado
+  degradado). **NO EXISTE.** `regen-checkpoint.ts:10-16`: la regeneración parcial NO recorta el DAG,
+  construye el sub-DAG COMPLETO vía `buildVariantGenerationPlan`; la economía es EMERGENTE de la dedup
+  de T4.10. `n7bConfig` se emite siempre que el recipe tenga voz. Y `retryStep` resuelve `ctx.deps` del
+  `step.dependsOn` PERSISTIDO → sobrevive al retry. Tracé yo + confirmado por separado por el ángulo de
+  altitud.
+- **Latencia, cifra corregida**: la arista N7d/N7f→N7b NO pone N7b entero en la ruta crítica — N7a corre
+  en paralelo con N7b, así que el delta real es `max(0, dur(N7b) − dur(N7a))` (~0 si TTS+ASR acaba antes
+  que los keyframes).
+- **Deuda caracterizada, RECHAZADA a propósito en esta tarea**:
+  (1) *fusionar concat+fit en una sola invocación de ffmpeg* — ahorraría un encode por escena TROCEADA
+  (solo esas), pero exige mover la decisión de `planFit` y reestructurar la rama hold/trim: un pase de
+  «calidad» operando sobre `fitSegmentFile`, el mecanismo anti-T1.8 cuyo `FitError` es el invariante que
+  esta tarea debe preservar. No se toca en un pase de simplify.
+  (2) unificar el preámbulo de dimensionado de `generate-broll.ts`/`generate-cta.ts`; (3) la duplicación
+  body/cta del ensamblador; (4) PRE-EXISTENTES: bucle exterior serial sobre `segments` y la doble
+  descarga de `measureSegmentVideoDurations`.
+- **Altitud AVALADA** (no es deuda): contrato lista + aserción de runtime es correcto — `CompositionSpec`
+  es un contrato Zod PERSISTIDO y el riesgo real es una fila jsonb vieja con 2 assets, que solo caza una
+  aserción de runtime, no el compilador. Dos tipos (`Raw`/`Rendered`) sería PEOR (dos esquemas, consumidores
+  duplicados). El dimensionado en los executors (no en `planScene`) también es la altitud correcta.
+- **5c `ds-reviewer` OMITIDO con causa**: T5.8c no toca `apps/web/**` de producto (el spec f5 bajo
+  `apps/web/e2e/` es fichero de test de T5.9, sin superficie DS).
+
+## 2026-07-24 · T5.8c cerrada — PASS
+- Coste: **$0** (estimado $0) · Ciclos verifier: 1 · Gate: exit 0, 2426 tests + 4 e2e de fase
+- **Qué arregla**: el bloqueador de cierre de F5. §7.5 ya troceaba las escenas largas en varios clips y
+  N7d/N7f los generaban Y PAGABAN todos, pero la composición usaba solo `clipIndex 0` → (a) `FitError`
+  (clip 6s < narración 8.68s en el run real de T5.9), (b) fuga de dinero. Ahora la composición concatena
+  TODOS los clips de la escena (`concat-scene-clips.ts`, en el executor N8 ANTES del fitter) y el troceo
+  se dimensiona desde la narración MEDIDA de N7b (nuevas aristas condicionales N7d→N7b / N7f→N7b).
+  Contrato `CompositionSegment.videoAsset` → `videoAssets: array.min(1)`.
+- **Verifier escéptico de verdad**: reintrodujo ÉL los 4 bugs en un worktree desechable (los 4 rojos,
+  incluido el `expected 6 to be greater than or equal to 11.85` exacto de T5.9), escribió su propia sonda
+  de píxeles (prueba que los píxeles de AMBOS clips están en el output, no solo que la duración cuadra) y
+  forzó `REQUIRE_MEDIA=1` para probar que la suite media EJECUTÓ y no hizo skip. Árbol byte-idéntico
+  después (shasums).
+- **Rareza accionable (deuda)**: `concat-scene-clips.test.ts`, el test «3 clips: preserva el ORDEN
+  temporal» NO verifica el orden (crea clips rojo/verde/azul y solo asserta duración) → seguiría verde si
+  el concat invirtiera o descartara clips. El producto HOY es correcto (sonda del verifier), pero el test
+  no muerde. Fix: muestrear color por tercio.
+- **Consecuencia operativa NUEVA**: un hueco de `clipIndex` por carrera de dedup en N7d hace que N8 falle
+  con `PermanentStepError` (guard de contigüidad) en vez de componer un máster corrupto que pasaría el QA.
+  Los `output_refs` de N7d están persistidos → **la recuperación es re-ejecutar N7d, NO reintentar N8**.
+- **Rechazo argumentado del implementer ACEPTADO** (cleanup 7): quitar la 2ª llamada a
+  `requireSingleVideoAsset` en `measureSegmentVideoDurations` obligaría a un `continue` que desincroniza
+  `durations` de `spec.segments` y desplaza los offsets de TODAS las captions siguientes — justo la clase
+  de defecto silencioso que T5.8c cierra. Se mantienen las dos llamadas (la de `composeMaster` es LA
+  frontera; la otra es red de un estado imposible).
+- **OJO para T5.9** (los tres efectos empujan el coste AL ALZA): (a) dimensionar por audio medido POR
+  IDIOMA hace divergir es/en → la colisión de bucket de duración de la que depende el dedup cross-idioma
+  del b-roll se vuelve MÁS RARA → más MISS; (b) más clips por escena = más segundos a 20¢/s; (c) el
+  estimado de CP2/CP3 queda SISTEMÁTICAMENTE BAJO (se calcula desde `scene.seconds` mientras el executor
+  genera contra la narración medida). **Re-proyectar a CP3 antes de gastar; si el lote proyecta ≥$40,
+  reabrir techo/matriz con el usuario.**

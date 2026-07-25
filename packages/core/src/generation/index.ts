@@ -75,6 +75,7 @@ export {
   findN7bDep,
   deriveHookAudioAssetId,
   deriveKeyframeAssetIds,
+  deriveMeasuredNarrationByScene,
   type ResolvedDep,
 } from './cross-node-deps';
 // Resolución PURA recipe×voice_map → endpoints/triple de voz (T4.11 pass 2b-ii): la mitad de core del

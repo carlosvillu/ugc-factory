@@ -33,7 +33,7 @@ import { join } from 'node:path';
 
 import type { CompositionSpec, QaReport, QaChecks, QaMetrics } from '@ugc/core/contracts';
 
-import { composeMaster, type ComposeMasterDeps } from './compose-master';
+import { composeMaster, requireSingleVideoAsset, type ComposeMasterDeps } from './compose-master';
 import {
   defaultFfmpegRunner,
   defaultFfprobeRunner,
@@ -136,7 +136,9 @@ export class ComposeVariantError extends Error {
 export function collectSpecParentAssetIds(spec: CompositionSpec): string[] {
   const ids: string[] = [];
   for (const segment of spec.segments) {
-    ids.push(segment.videoAsset, segment.voAudio);
+    // `videoAssets` es la lista de clips de la escena (T5.8c): en el spec CRUDO puede ser >1 (escena
+    // troceada por §7.5) y TODOS entran en el linaje — ninguno pagado queda sin rastro.
+    ids.push(...segment.videoAssets, segment.voAudio);
   }
   if (spec.music?.asset != null) {
     ids.push(spec.music.asset);
@@ -579,7 +581,11 @@ async function runFfmpeg(
 }
 
 /** Mide la duración de VÍDEO de cada segmento (para offsetear los word timestamps). Materializa cada clip a
- *  temp y lo sondea con ffprobe. Reusa la resolución `assetId → storageKey` inyectada. */
+ *  temp y lo sondea con ffprobe. Reusa la resolución `assetId → storageKey` inyectada.
+ *
+ *  El invariante «1 vídeo por segmento en el spec FINAL» (T5.8c) ya lo aseveró `composeMaster` sobre ESTE
+ *  MISMO spec (`composeVariant` lo llama ANTES que a esta función), así que un spec multi-clip nunca llega
+ *  aquí: la aserción de abajo es la red de un estado imposible, no una segunda frontera. */
 async function measureSegmentVideoDurations(
   deps: ComposeVariantDeps,
   ffprobe: FfprobeRunner,
@@ -589,7 +595,11 @@ async function measureSegmentVideoDurations(
   const tmp = await mkdtemp(join(tmpdir(), 'ugc-seg-dur-'));
   try {
     for (const [i, segment] of spec.segments.entries()) {
-      const key = await deps.resolveAssetKey(segment.videoAsset);
+      // El `[0]` es seguro por la aserción de `composeMaster` (ver el docblock). Si el array fuese vacío se
+      // LANZA en vez de saltar el segmento: un `continue` desincronizaría `durations` de `spec.segments` y
+      // desplazaría los offsets de TODAS las captions siguientes (un defecto silencioso, justo lo que T5.8c
+      // existe para no volver a producir).
+      const key = await deps.resolveAssetKey(requireSingleVideoAsset(segment, i, 'composeVariant'));
       const bytes = await materializeToBytes(deps.storage, key);
       const localPath = join(tmp, `seg-${String(i)}.mp4`);
       await writeFile(localPath, bytes);

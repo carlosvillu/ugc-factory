@@ -15,6 +15,13 @@ export {
   type GenerationPlan,
 } from './scene-planner';
 
+// T5.8c: el troceo §7.5 se dimensiona contra la narración MEDIDA (N7b), no contra la estimada del guion.
+export {
+  sizeScenesToNarration,
+  segmentSceneIndices,
+  type MeasuredNarrationByScene,
+} from './narration-sizing';
+
 export type {
   AdapterInput,
   AdapterAssets,

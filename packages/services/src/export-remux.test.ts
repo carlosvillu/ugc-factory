@@ -42,7 +42,7 @@ function makeSpec(segments = 2): CompositionSpec {
   return {
     segments: Array.from({ length: segments }, (_, i) => ({
       type: (['hook', 'body', 'cta'] as const)[i] ?? 'body',
-      videoAsset: newUlid(),
+      videoAssets: [newUlid()],
       voAudio: newUlid(),
     })),
     music: { asset: newUlid(), volume: 0.25, ducking: true, fadeOutS: 1 },

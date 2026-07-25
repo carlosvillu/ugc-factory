@@ -149,7 +149,7 @@ describe.skipIf(!mediaToolsAvailable)('pase final: encode+burn-in → C2PA → Q
       const a = await makeTestAudio({ out: p(`vo-${String(i)}.m4a`), seconds: secs, freq: 300 });
       const videoAsset = await seedAsset(storage, keyToId, v, `seg/${String(i)}.mp4`);
       const voAudio = await seedAsset(storage, keyToId, a, `vo/${String(i)}.m4a`);
-      segments.push({ type, videoAsset, voAudio, voWords: realWords });
+      segments.push({ type, videoAssets: [videoAsset], voAudio, voWords: realWords });
     }
 
     const spec: CompositionSpec = {
@@ -186,7 +186,7 @@ describe.skipIf(!mediaToolsAvailable)('pase final: encode+burn-in → C2PA → Q
 
     // El LINAJE del máster: los 6 assets origen (3 clips + 3 voces), en orden — lo que la persistencia
     // pondrá en `parent_asset_ids` (T5.7 lo recorre). Se deriva del spec, no se deja al caller.
-    const expectedLineage = segments.flatMap((s) => [s.videoAsset, s.voAudio]);
+    const expectedLineage = segments.flatMap((s) => [...s.videoAssets, s.voAudio]);
     expect(result.parentAssetIds).toEqual(expectedLineage);
 
     // 2) El máster firmado cumple el perfil de export (1080×1920/30fps/H.264/yuv420p) — el burn-in RE-ENCODÓ
@@ -231,7 +231,7 @@ describe.skipIf(!mediaToolsAvailable)('pase final: encode+burn-in → C2PA → Q
     const videoAsset = await seedAsset(storage, keyToId, v, 'nc/v.mp4');
     const voAudio = await seedAsset(storage, keyToId, a, 'nc/a.m4a');
     const spec: CompositionSpec = {
-      segments: [{ type: 'hook', videoAsset, voAudio }],
+      segments: [{ type: 'hook', videoAssets: [videoAsset], voAudio }],
       music: null,
       output: { width: 1080, height: 1920, fps: 30, maxDurationS: 30 },
       captions: null,

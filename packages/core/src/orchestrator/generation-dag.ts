@@ -37,7 +37,9 @@
 //   N7b ← [N6]          voiceover (TTS→ASR), independiente de las imágenes.
 //   N7c ← [N6, N7b]     clip de avatar: CONSUME el audio del hook de N7b (§7.2 N7c). La arista N7b→N7c
 //                       es load-bearing: sin ella N7c podría dispararse antes de que exista el audio.
-//   N7d ← [N6, N7a]     b-roll i2v: CONSUME los keyframes de N7a (§7.5 «b-roll desde keyframes»).
+//   N7d ← [N6, N7a, N7b] b-roll i2v: CONSUME los keyframes de N7a (§7.5 «b-roll desde keyframes») y las
+//                       duraciones MEDIDAS de las voces de N7b para dimensionar el troceo §7.5 (T5.8c).
+//   N7f ← [N6, N7a, N7b] clip de CTA i2v: mismas dos fuentes que N7d (product shot animado, §7.5).
 //   N7e ← [N6]          bed musical, independiente (uno cubre la variante).
 // Los N7 opcionales (según receta/ruta) los OMITE el caller no incluyéndolos en `nodes` de la variante;
 // el builder no fuerza los cinco. La única regla dura es la topología de los que SÍ están.
@@ -179,17 +181,25 @@ function variantNodes(plan: VariantGenerationPlan): RunNodeInput[] {
     const audioDep = plan.n7bConfig !== undefined ? [localKey(k.n7b, variantId)] : [];
     nodes.push(n7Node(k.n7c, plan.n7cConfig, audioDep));
   }
-  // N7d · B-ROLL ← [N6, N7a]: consume los keyframes de N7a (i2v). Misma regla que N7c respecto a N7a.
+  // N7d · B-ROLL ← [N6, N7a, N7b]: consume los keyframes de N7a (i2v) Y —desde T5.8c— las duraciones
+  // MEDIDAS de las voces de N7b para dimensionar el troceo §7.5. Sin la arista N7b, N7d trocea contra la
+  // duración ESTIMADA del guion (`countWords/2.5`), que el TTS real desborda (~+45% en el run de T5.9):
+  // una escena de body real >8s planificaba UN clip topado a 8s → `fitSegmentFile` lanzaba `FitError` y N8
+  // no componía. Misma regla condicional que N7c respecto a N7b: la arista solo se añade si N7b está
+  // presente (sin ella el executor degrada a la estimación, que es la costura stepless del smoke).
   if (plan.n7dConfig !== undefined) {
     const keyframeDep = plan.n7aConfig !== undefined ? [localKey(k.n7a, variantId)] : [];
-    nodes.push(n7Node(k.n7d, plan.n7dConfig, keyframeDep));
+    const narrationDep = plan.n7bConfig !== undefined ? [localKey(k.n7b, variantId)] : [];
+    nodes.push(n7Node(k.n7d, plan.n7dConfig, [...keyframeDep, ...narrationDep]));
   }
-  // N7f · CLIP DE CTA ← [N6, N7a]: anima el keyframe de product shot de N7a por i2v (§7.5 «la CTA es
+  // N7f · CLIP DE CTA ← [N6, N7a, N7b]: anima el keyframe de product shot de N7a por i2v (§7.5 «la CTA es
   // product shot animado»), MISMA regla de dep que N7d respecto a N7a (si N7a está, es su fuente de
-  // keyframe; si no, el executor cae a la costura stepless).
+  // keyframe; si no, el executor cae a la costura stepless) — y MISMA arista N7b de T5.8c: la escena de
+  // CTA se trocea contra la narración medida, no la estimada.
   if (plan.n7fConfig !== undefined) {
     const keyframeDep = plan.n7aConfig !== undefined ? [localKey(k.n7a, variantId)] : [];
-    nodes.push(n7Node(k.n7f, plan.n7fConfig, keyframeDep));
+    const narrationDep = plan.n7bConfig !== undefined ? [localKey(k.n7b, variantId)] : [];
+    nodes.push(n7Node(k.n7f, plan.n7fConfig, [...keyframeDep, ...narrationDep]));
   }
   // N7e · BED MUSICAL ← [N6]. Independiente.
   if (plan.n7eConfig !== undefined) {

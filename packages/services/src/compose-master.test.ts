@@ -21,6 +21,7 @@ import {
   composeMaster,
   DUCKING_PARAMS,
   LOUDNORM_TARGET_I,
+  requireSingleVideoAsset,
 } from './compose-master';
 import type { FfmpegRunner } from './extract-audio-track';
 
@@ -233,12 +234,39 @@ describe('composeMaster — clase de error PROPIA (anti-T1.8)', () => {
     const failingRunner: FfmpegRunner = () =>
       Promise.resolve({ code: 1, stderr: 'boom: bad input' });
     const spec: CompositionSpec = {
-      segments: [{ type: 'hook', videoAsset: newUlid(), voAudio: newUlid() }],
+      segments: [{ type: 'hook', videoAssets: [newUlid()], voAudio: newUlid() }],
       music: null,
       output: { width: 1080, height: 1920, fps: 30, maxDurationS: 9 },
     };
     await expect(
       composeMaster({ storage, resolveAssetKey: (id) => id, runner: failingRunner }, spec),
     ).rejects.toBeInstanceOf(ComposeError);
+  });
+});
+
+// ── T5.8c · EL INVARIANTE DEL SPEC FINAL ──────────────────────────────────────────────────────────────
+// `videoAssets` es una LISTA porque el spec CRUDO transporta los N clips de una escena troceada (§7.5).
+// Al llegar al renderer YA están concatenados+fitteados+normalizados en UNO. Tomar `[0]` en silencio
+// recrearía el bug de T5.8c (pagar N clips y componer 1) en forma type-legal → se ASEVERA.
+describe('requireSingleVideoAsset (invariante del spec FINAL, T5.8c)', () => {
+  const seg = (videoAssets: string[]): CompositionSpec['segments'][number] => ({
+    type: 'body',
+    videoAssets,
+    voAudio: newUlid(),
+  });
+
+  test('devuelve el único clip cuando el segmento trae exactamente 1', () => {
+    const only = newUlid();
+    expect(requireSingleVideoAsset(seg([only]), 0, 'test')).toBe(only);
+  });
+
+  test('LANZA ComposeError si el segmento trae >1 (no toma el primero en silencio)', () => {
+    expect(() => requireSingleVideoAsset(seg([newUlid(), newUlid()]), 2, 'composeMaster')).toThrow(
+      ComposeError,
+    );
+    // El mensaje NOMBRA el segmento y el caller (diagnóstico, no un throw anónimo).
+    expect(() => requireSingleVideoAsset(seg([newUlid(), newUlid()]), 2, 'composeMaster')).toThrow(
+      /segmento 2 \(body\) trae 2/,
+    );
   });
 });

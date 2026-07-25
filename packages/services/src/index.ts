@@ -183,6 +183,17 @@ export {
   type FitSegmentOptions,
   type FitSegmentResult,
 } from './fit-segment';
+// CONCAT INTRA-ESCENA (T5.8c, §7.5): une los clips de una escena TROCEADA en un único vídeo de escena
+// ANTES de que el fitter lo recorte a la narración. Cierra la fuga de dinero (se pagaban N clips y se usaba
+// 1) y el `FitError` que ese único clip corto provocaba. Concat FILTER con re-encode (los clips crudos de
+// N7 no son uniformes), `-an` (solo los clips SILENCIOSOS de N7d/N7f se trocean).
+export {
+  concatSceneClipsFile,
+  buildSceneConcatArgs,
+  SceneConcatError,
+  type ConcatSceneClipsDeps,
+  type ConcatSceneClipsOptions,
+} from './concat-scene-clips';
 // PASE FINAL, EXPORT MASTER + QA + C2PA (T5.5, §9.7 N8/N9 / Apéndice C): el módulo que toma el máster
 // INTERMEDIO de T5.3 y produce el PUBLICABLE — re-encode con burn-in de subtítulos al `EXPORT_MASTER_PRESET`
 // (`-c:a copy` si el audio no cambió, seam de T5.8), thumbnail, firma C2PA (`trainedAlgorithmicMedia`) y QA

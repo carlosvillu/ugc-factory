@@ -96,3 +96,21 @@ export function deriveKeyframeAssetIds(deps: readonly ResolvedDep[]): string[] |
   }
   return n7a.shots.map((s) => s.assetId);
 }
+
+/**
+ * Deriva las duraciones MEDIDAS de las voces (T5.8c) de la dep N7b, indexadas por el `sceneIndex`
+ * ABSOLUTO del guion — el input de `sizeScenesToNarration` (@ugc/core/gallery), con el que N7d/N7f
+ * dimensionan el troceo §7.5 contra la narración REAL en vez de la estimada (`countWords/2.5`, que el TTS
+ * desborda ~+45% → 1 clip corto → `FitError` en N8, el bug que destapó el run de T5.9).
+ *
+ * Devuelve un mapa VACÍO si no hay dep N7b (path stepless/smoke): el llamante degrada a la estimación del
+ * guion, que es el comportamiento anterior a T5.8c — NO lanza. La arista N7d→N7b/N7f→N7b es CONDICIONAL en
+ * el DAG (mismo patrón que N7c→N7b), así que su ausencia es un modo legítimo, no un cableado roto.
+ */
+export function deriveMeasuredNarrationByScene(
+  deps: readonly ResolvedDep[],
+): ReadonlyMap<number, number> {
+  const n7b = findN7bDep(deps);
+  if (n7b === undefined) return new Map();
+  return new Map(n7b.clips.map((c) => [c.sceneIndex, c.durationSeconds]));
+}

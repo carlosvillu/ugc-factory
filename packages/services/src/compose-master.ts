@@ -55,6 +55,30 @@ export class ComposeError extends Error {
   }
 }
 
+/**
+ * EL ÚNICO clip de vídeo de un segmento del spec FINAL (T5.8c). El contrato lleva `videoAssets` como LISTA
+ * porque el spec CRUDO transporta los N clips de una escena troceada (§7.5); pero al llegar al renderer los
+ * clips YA se concatenaron+fittearon+normalizaron en UNO. Esta aserción hace del invariante un ERROR
+ * RUIDOSO: tomar `[0]` en silencio recrearía exactamente el bug de T5.8c (pagar N clips y componer 1) en
+ * forma type-legal. LANZA `ComposeError` si el segmento trae ≠1.
+ */
+export function requireSingleVideoAsset(
+  segment: CompositionSpec['segments'][number],
+  segmentIndex: number,
+  caller: string,
+): string {
+  const [only] = segment.videoAssets;
+  if (segment.videoAssets.length !== 1 || only === undefined) {
+    throw new ComposeError(
+      `${caller}: el segmento ${String(segmentIndex)} (${segment.type}) trae ${String(segment.videoAssets.length)} ` +
+        'clips de vídeo; el spec FINAL debe traer exactamente 1 por segmento (el concat intra-escena de ' +
+        'T5.8c ocurre ANTES, en el executor N8) — no se toma el primero en silencio',
+      { exitCode: null, stderr: '' },
+    );
+  }
+  return only;
+}
+
 // ── PARÁMETROS DE MEZCLA (constantes de producción, la ÚNICA verdad; el test las hereda vía los builders) ──
 
 /**
@@ -318,7 +342,9 @@ export async function composeMaster(
     const videoPaths: string[] = [];
     const voicePaths: string[] = [];
     for (const [i, segment] of spec.segments.entries()) {
-      const videoKey = await deps.resolveAssetKey(segment.videoAsset);
+      const videoKey = await deps.resolveAssetKey(
+        requireSingleVideoAsset(segment, i, 'composeMaster'),
+      );
       const voiceKey = await deps.resolveAssetKey(segment.voAudio);
       const videoPath = join(dir, `seg-${String(i)}.mp4`);
       const voicePath = join(dir, `seg-${String(i)}.m4a`);

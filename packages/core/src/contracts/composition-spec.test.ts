@@ -17,7 +17,7 @@ const ulid = (): string => newUlid();
 
 const validSegment = () => ({
   type: 'hook' as const,
-  videoAsset: ulid(),
+  videoAssets: [ulid()],
   voAudio: ulid(),
 });
 
@@ -61,9 +61,25 @@ describe('CompositionSpecSchema (T5.3)', () => {
     expect(CompositionSpecSchema.safeParse(bad).success).toBe(false);
   });
 
-  test('rechaza videoAsset que no es un ULID', () => {
-    const bad = { ...validSpec(), segments: [{ ...validSegment(), videoAsset: 'not-a-ulid' }] };
+  test('rechaza un videoAssets con un elemento que no es un ULID', () => {
+    const bad = { ...validSpec(), segments: [{ ...validSegment(), videoAssets: ['not-a-ulid'] }] };
     expect(CompositionSpecSchema.safeParse(bad).success).toBe(false);
+  });
+
+  // T5.8c: `videoAssets` es la LISTA ordenada de clips de la escena (§7.5). Vacía es incoherente (un
+  // segmento sin vídeo no es un segmento); varios es el caso legítimo de una escena troceada.
+  test('rechaza un videoAssets VACÍO (un segmento sin clip de vídeo no es un segmento)', () => {
+    const bad = { ...validSpec(), segments: [{ ...validSegment(), videoAssets: [] }] };
+    expect(CompositionSpecSchema.safeParse(bad).success).toBe(false);
+  });
+
+  test('acepta VARIOS videoAssets (escena troceada por §7.5, concatenada intra-escena por T5.8c)', () => {
+    const clips = [ulid(), ulid(), ulid()];
+    const ok = { ...validSpec(), segments: [{ ...validSegment(), videoAssets: clips }] };
+    const parsed = CompositionSpecSchema.safeParse(ok);
+    expect(parsed.success).toBe(true);
+    // El ORDEN se preserva: es el orden temporal del concat (= orden de `clipIndex`).
+    expect(parsed.success && parsed.data.segments[0]?.videoAssets).toEqual(clips);
   });
 
   test('voWords transporta un WordTimestamps válido (T5.4 estrechó el shape) + overlayText', () => {

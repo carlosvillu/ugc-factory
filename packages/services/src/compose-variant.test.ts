@@ -277,7 +277,7 @@ describe('evaluateQa — control negativo por check (cada uno MUERDE)', () => {
 
 describe('collectSpecParentAssetIds', () => {
   function seg(videoAsset: string, voAudio: string): CompositionSpec['segments'][number] {
-    return { type: 'hook', videoAsset, voAudio };
+    return { type: 'hook', videoAssets: [videoAsset], voAudio };
   }
 
   test('recoge clips + voces de todos los segmentos + el bed, en orden', () => {

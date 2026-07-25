@@ -63,8 +63,8 @@ describe('generateVariantAss', () => {
     const seg1Words = makeWordTimestamps({ onsets: [0, 0.4], texts: ['segundo', 'cta'] });
     return {
       segments: [
-        { type: 'hook', videoAsset: newUlid(), voAudio: newUlid(), voWords: seg0Words },
-        { type: 'cta', videoAsset: newUlid(), voAudio: newUlid(), voWords: seg1Words },
+        { type: 'hook', videoAssets: [newUlid()], voAudio: newUlid(), voWords: seg0Words },
+        { type: 'cta', videoAssets: [newUlid()], voAudio: newUlid(), voWords: seg1Words },
       ],
       music: null,
       output: { width: 1080, height: 1920, fps: 30, maxDurationS: 30 },

@@ -146,25 +146,34 @@ export async function assembleCompositionSpec(
           `assembleCompositionSpec: la escena ${String(sceneIndex)} es un hook pero la variante ${variantId} no tiene dep N7c (avatar) que lo cubra`,
         );
       }
-      segments.push(await buildSegment(db, 'hook', n7c.assetId, sceneIndex, n7b));
+      segments.push(await buildSegment(db, 'hook', [n7c.assetId], sceneIndex, n7b));
     } else if (scene.segment === 'body') {
       // El clip de vídeo del body lo produjo N7d. Se localiza por el índice de body ACTUAL (`bodyOrdinal`),
       // NO por `sceneIndex` — N7d indexa en el subconjunto filtrado (constraint 2). Si la escena se troceó,
-      // N7d emitió varios clips con el mismo `bodySceneIndex`: se usa el PRIMERO (`clipIndex` 0) como clip
-      // del segmento (el troceo intra-escena lo resuelve el render; el spec es 1 segmento por escena).
+      // N7d emitió VARIOS clips con el mismo `bodySceneIndex`, distinguidos por `clipIndex`: se recogen
+      // TODOS ordenados por `clipIndex` (T5.8c) — el render los concatena intra-escena ANTES de recortar a
+      // la narración. Antes de T5.8c se usaba solo el `clipIndex 0` y el resto se pagaba y se TIRABA.
       if (n7d === undefined) {
         throw new PermanentStepError(
           `assembleCompositionSpec: la escena ${String(sceneIndex)} es body pero la variante ${variantId} no tiene dep N7d (b-roll) que la cubra`,
         );
       }
-      const bodyClip = pickClip(n7d.clips, (c) => c.bodySceneIndex, bodyOrdinal, {
+      const bodyClips = pickSceneClips(n7d.clips, (c) => c.bodySceneIndex, bodyOrdinal, {
         variantId,
         sceneIndex,
         dep: 'N7d',
         segment: 'body',
         indexField: 'bodySceneIndex',
       });
-      segments.push(await buildSegment(db, 'body', bodyClip.assetId, sceneIndex, n7b));
+      segments.push(
+        await buildSegment(
+          db,
+          'body',
+          bodyClips.map((c) => c.assetId),
+          sceneIndex,
+          n7b,
+        ),
+      );
       bodyOrdinal++;
     } else {
       // CTA: el clip de vídeo lo produjo N7f (§7.5 «la CTA es product shot animado»). Se localiza por el
@@ -176,14 +185,22 @@ export async function assembleCompositionSpec(
           `assembleCompositionSpec: la escena ${String(sceneIndex)} es una CTA pero la variante ${variantId} no tiene dep N7f (clip de CTA) que la cubra`,
         );
       }
-      const ctaClip = pickClip(n7f.clips, (c) => c.ctaSceneIndex, ctaOrdinal, {
+      const ctaClips = pickSceneClips(n7f.clips, (c) => c.ctaSceneIndex, ctaOrdinal, {
         variantId,
         sceneIndex,
         dep: 'N7f',
         segment: 'cta',
         indexField: 'ctaSceneIndex',
       });
-      segments.push(await buildSegment(db, 'cta', ctaClip.assetId, sceneIndex, n7b));
+      segments.push(
+        await buildSegment(
+          db,
+          'cta',
+          ctaClips.map((c) => c.assetId),
+          sceneIndex,
+          n7b,
+        ),
+      );
       ctaOrdinal++;
     }
   }
@@ -225,19 +242,37 @@ interface FilteredClip {
   assetId: string;
 }
 
-/** Localiza el clip de la N-ésima escena de su segmento (`ordinal`) en los clips de una dep de vídeo
- *  por-escena (N7d/N7f). Esas deps indexan por su ÍNDICE FILTRADO (`bodySceneIndex`/`ctaSceneIndex`,
- *  extraído por `getIndex`), NO por el `sceneIndex` absoluto (en hook·body·cta·body la cta está en absoluto
- *  2 pero su clip es el filtrado 0). Prefiere el clip `clipIndex === 0` (si la escena se troceó, es el
- *  primero; el troceo intra-escena lo resuelve el render). Lanza `PermanentStepError` si no hay clip para
- *  ese índice (cableado roto: el guion tiene más escenas del segmento que clips generó la dep), NOMBRANDO la
- *  dep y el campo concretos para no degradar el diagnóstico. */
-function pickClip<T extends FilteredClip>(
+/** Localiza TODOS los clips de la N-ésima escena de su segmento (`ordinal`) en los clips de una dep de
+ *  vídeo por-escena (N7d/N7f), ORDENADOS por `clipIndex` ascendente (= orden temporal del troceo §7.5).
+ *  Esas deps indexan por su ÍNDICE FILTRADO (`bodySceneIndex`/`ctaSceneIndex`, extraído por `getIndex`), NO
+ *  por el `sceneIndex` absoluto (en hook·body·cta·body la cta está en absoluto 2 pero su clip es el filtrado
+ *  0).
+ *
+ *  T5.8c: ANTES devolvía SOLO el clip de `clipIndex` mínimo (`reduce`) y los demás clips de una escena
+ *  troceada se pagaban y se tiraban — fuga de dinero y, peor, un único clip topado a `maxDuration` que no
+ *  cubría la narración → `FitError` en el fitter. Ahora se devuelven todos y el render los concatena.
+ *
+ *  DOS THROWS, dos fallos distintos:
+ *   1. NINGÚN clip para ese índice (cableado roto: el guion tiene más escenas del segmento que clips generó
+ *      la dep), NOMBRANDO la dep y el campo concretos para no degradar el diagnóstico.
+ *   2. El set de `clipIndex` recogido NO es contiguo `0..n-1` sin duplicados. Un HUECO (p.ej. clipIndex 0 y
+ *      2, que puede producir una carrera de dedup o un retry parcial de N7d/N7f) haría que el concat
+ *      intra-escena produjese una escena a la que le FALTA el tramo central — y el fitter, que solo mira la
+ *      duración TOTAL, la recortaría tan tranquilo: un máster visualmente CORRUPTO que pasa el QA e
+ *      indistinguible de uno correcto. Es la misma clase de defecto que T5.8c cierra (clips pagados que no
+ *      aterrizan en el output), un nivel más abajo, así que se ABORTA ruidoso en vez de componer basura.
+ *
+ *  ⚠ LÍMITE CONOCIDO Y DELIBERADO: esta comprobación NO caza una COLA TRUNCADA (el planner planificó 3
+ *  clips y solo existen el 0 y el 1: el set `[0,1]` es denso y pasa). Cazarlo exigiría propagar el
+ *  `clipCount` de `planScene` por `N7dOutput`/`N7fOutput` (plumbing invasivo del contrato cross-node) y NO
+ *  cubre un riesgo vivo: un clip que falla hace fallar SU step, luego la truncación no llega a N8. El riesgo
+ *  real —y el que sí se caza— es el hueco por carrera de dedup. */
+function pickSceneClips<T extends FilteredClip>(
   clips: readonly T[],
   getIndex: (clip: T) => number,
   ordinal: number,
   labels: PickClipLabels,
-): T {
+): T[] {
   const forScene = clips.filter((c) => getIndex(c) === ordinal);
   if (forScene.length === 0) {
     throw new PermanentStepError(
@@ -246,11 +281,27 @@ function pickClip<T extends FilteredClip>(
         `(sus clips cubren ${labels.indexField}=[${[...new Set(clips.map(getIndex))].join(', ')}])`,
     );
   }
-  return forScene.reduce((a, b) => (a.clipIndex <= b.clipIndex ? a : b));
+
+  const ordered = [...forScene].sort((a, b) => a.clipIndex - b.clipIndex);
+  // Contiguidad `0..n-1` sin duplicados: el i-ésimo clip del orden DEBE tener `clipIndex === i`. Un hueco y
+  // un duplicado fallan ambos por esta misma comparación (con 0 y 2 el índice 1 vale 2; con 0,0,1 el índice
+  // 1 vale 0).
+  const broken = ordered.findIndex((clip, i) => clip.clipIndex !== i);
+  if (broken !== -1) {
+    throw new PermanentStepError(
+      `assembleCompositionSpec: los clips de la escena de ${labels.segment} ${String(labels.sceneIndex)} ` +
+        `(índice de ${labels.segment} ${String(ordinal)}) de la variante ${labels.variantId} en la dep ${labels.dep} ` +
+        `NO forman un troceo §7.5 contiguo: clipIndex=[${ordered.map((c) => c.clipIndex).join(', ')}] ` +
+        `(se esperaba 0..${String(ordered.length - 1)} sin huecos ni duplicados). Concatenar este set ` +
+        'produciría una escena con un tramo FALTANTE que el fitter recortaría en silencio (máster corrupto ' +
+        'que pasa el QA) — se aborta la composición.',
+    );
+  }
+  return ordered;
 }
 
 /**
- * Construye UN segmento del spec: su clip de vídeo (`videoAsset`) + su voz de N7b (`voAudio` por
+ * Construye UN segmento del spec: sus clips de vídeo (`videoAssets`, en orden de `clipIndex`) + su voz de N7b (`voAudio` por
  * `sceneIndex` absoluto) + los `voWords` (word timestamps del asset de la voz, NO del output N7b —
  * constraint 3). La `narrationDurationS` autoritativa (lo que el fitter consume por-clip) es
  * `N7bClipRef.durationSeconds` — el executor la lee de este mismo clip N7b al fittear.
@@ -262,7 +313,7 @@ function pickClip<T extends FilteredClip>(
 async function buildSegment(
   db: DbClient,
   type: 'hook' | 'body' | 'cta',
-  videoAssetId: string,
+  videoAssetIds: readonly string[],
   sceneIndex: number,
   n7b: N7bOutput,
 ): Promise<CompositionSegment> {
@@ -286,7 +337,7 @@ async function buildSegment(
 
   const segment: CompositionSegment = {
     type,
-    videoAsset: videoAssetId,
+    videoAssets: [...videoAssetIds],
     voAudio: voiceClip.assetId,
     ...(wordsParsed?.success === true ? { voWords: wordsParsed.data } : {}),
   };

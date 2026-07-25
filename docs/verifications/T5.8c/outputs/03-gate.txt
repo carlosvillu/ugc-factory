@@ -1,0 +1,346 @@
+
+> ugc-factory@0.0.0 gate /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads
+> pnpm lint && pnpm typecheck && pnpm format:check && pnpm knip && pnpm readme:status:check && pnpm check:contrast && pnpm e2e:wired:check && pnpm test && pnpm test:e2e:phases
+
+
+> ugc-factory@0.0.0 lint /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads
+> eslint .
+
+
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/web/e2e/partial-regeneration.spec.ts
+  433:7  warning  Avoid having conditionals in tests    playwright/no-conditional-in-test
+  434:9  warning  Avoid calling `expect` conditionally  playwright/no-conditional-expect
+
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/web/e2e/runs-canvas.spec.ts
+   52:3  warning  Test has no assertions  playwright/expect-expect
+   69:3  warning  Test has no assertions  playwright/expect-expect
+   79:3  warning  Test has no assertions  playwright/expect-expect
+  126:3  warning  Test has no assertions  playwright/expect-expect
+  254:3  warning  Test has no assertions  playwright/expect-expect
+
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/web/e2e/voice-preview.spec.ts
+  232:7  warning  Avoid having conditionals in tests  playwright/no-conditional-in-test
+
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/web/src/components/checkpoints/brief-editor.tsx
+  325:23  warning  Compilation Skipped: Use of incompatible library
+
+This API returns functions which cannot be memoized without leading to stale UI. To prevent this, by default React Compiler will skip memoizing this component/hook. However, you may see issues if values from this API are passed to other components/hooks that are memoized.
+
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/web/src/components/checkpoints/brief-editor.tsx:325:23
+  323 |   }
+  324 |
+> 325 |   const productName = watch('product.name');
+      |                       ^^^^^ React Hook Form's `useForm()` API returns a `watch()` function which cannot be memoized safely.
+  326 |
+  327 |   return (
+  328 |     <form  react-hooks/incompatible-library
+
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/web/src/components/design-system/overlay-specimens.tsx
+  399:11  warning  Image elements must have an alt prop, either with meaningful text, or an empty string for decorative images  jsx-a11y/alt-text
+  413:11  warning  Image elements must have an alt prop, either with meaningful text, or an empty string for decorative images  jsx-a11y/alt-text
+  417:11  warning  Image elements must have an alt prop, either with meaningful text, or an empty string for decorative images  jsx-a11y/alt-text
+
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/web/src/components/gallery/new-template-form.tsx
+  43:16  warning  Compilation Skipped: Use of incompatible library
+
+This API returns functions which cannot be memoized without leading to stale UI. To prevent this, by default React Compiler will skip memoizing this component/hook. However, you may see issues if values from this API are passed to other components/hooks that are memoized.
+
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/web/src/components/gallery/new-template-form.tsx:43:16
+  41 |   const { errors, isSubmitting } = formState;
+  42 |
+> 43 |   const body = watch('body');
+     |                ^^^^^ React Hook Form's `useForm()` API returns a `watch()` function which cannot be memoized safely.
+  44 |   const invalid = invalidBodySlots(body);
+  45 |   const hasInvalid = invalid.length > 0;
+  46 |  react-hooks/incompatible-library
+
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/web/src/components/intake/intake-form.tsx
+  72:39  warning  Compilation Skipped: Use of incompatible library
+
+This API returns functions which cannot be memoized without leading to stale UI. To prevent this, by default React Compiler will skip memoizing this component/hook. However, you may see issues if values from this API are passed to other components/hooks that are memoized.
+
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/web/src/components/intake/intake-form.tsx:72:39
+  70 |   const { errors, isSubmitting } = formState;
+  71 |
+> 72 |   const imageRefs: IntakeImageRef[] = watch('imageRefs') ?? [];
+     |                                       ^^^^^ React Hook Form's `useForm()` API returns a `watch()` function which cannot be memoized safely.
+  73 |   const [uploadError, setUploadError] = useState<string | null>(null);
+  74 |   const [uploading, setUploading] = useState(false);
+  75 |   // Idioma del ANÁLISIS (config de N3). No es parte de `ManualIntakeConfigSchema` —  react-hooks/incompatible-library
+
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/web/src/components/ui/image.test.tsx
+  129:12  warning  Image elements must have an alt prop, either with meaningful text, or an empty string for decorative images  jsx-a11y/alt-text
+
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/worker/scripts/probe-seedream-edit.ts
+  19:8  warning  Using exported name 'sharp' as identifier for default export  import-x/no-named-as-default
+
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/core/src/analyze/rescale.test.ts
+  5:8  warning  Using exported name 'sharp' as identifier for default export  import-x/no-named-as-default
+
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/core/src/analyze/rescale.ts
+  9:8  warning  Using exported name 'sharp' as identifier for default export  import-x/no-named-as-default
+
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/core/src/analyze/visual-analyzer.test.ts
+  6:8  warning  Using exported name 'sharp' as identifier for default export  import-x/no-named-as-default
+
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/core/src/contracts/product-brief.json-schema.test.ts
+  7:8  warning  Using exported name 'Ajv2020' as identifier for default export  import-x/no-named-as-default
+
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/core/src/persona/contracts.ts
+   42:6  warning  'VoiceRef' is defined but never used. Allowed unused vars must match /^_/u          unused-imports/no-unused-vars
+   59:6  warning  'VoiceMap' is defined but never used. Allowed unused vars must match /^_/u          unused-imports/no-unused-vars
+  167:6  warning  'PersonaCandidate' is defined but never used. Allowed unused vars must match /^_/u  unused-imports/no-unused-vars
+
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/core/src/persona/reference-image.ts
+  17:8  warning  Using exported name 'sharp' as identifier for default export  import-x/no-named-as-default
+
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/services/test/integration/visual-analyze.test.ts
+  13:8  warning  Using exported name 'sharp' as identifier for default export  import-x/no-named-as-default
+
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/test-utils/src/image-fixtures.ts
+  14:8  warning  Using exported name 'sharp' as identifier for default export  import-x/no-named-as-default
+
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/scripts/readme-status.mjs
+  115:23  warning  Caution: `prettier` also has a named export `resolveConfig`. Check if you meant to write `import {resolveConfig} from 'prettier'` instead  import-x/no-named-as-default-member
+  116:20  warning  Caution: `prettier` also has a named export `format`. Check if you meant to write `import {format} from 'prettier'` instead                import-x/no-named-as-default-member
+
+✖ 28 problems (0 errors, 28 warnings)
+
+
+> ugc-factory@0.0.0 typecheck /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads
+> tsc --noEmit && pnpm -r --parallel typecheck
+
+Scope: 6 of 7 workspace projects
+apps/web typecheck$ tsc --noEmit
+apps/worker typecheck$ tsc --noEmit
+packages/core typecheck$ tsc --noEmit
+packages/db typecheck$ tsc --noEmit
+packages/services typecheck$ tsc --noEmit
+packages/test-utils typecheck$ tsc --noEmit
+apps/web typecheck: Done
+packages/test-utils typecheck: Done
+packages/db typecheck: Done
+packages/services typecheck: Done
+packages/core typecheck: Done
+apps/worker typecheck: Done
+
+> ugc-factory@0.0.0 format:check /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads
+> prettier --check .
+
+Checking formatting...
+All matched files use Prettier code style!
+
+> ugc-factory@0.0.0 knip /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads
+> knip
+
+Configuration hints (3)
+src/golden.ts  packages/test-utils  knip.json  Remove from ignore            
+sharp          apps/worker          knip.json  Remove from ignoreDependencies
+ffprobe        apps/worker          knip.json  Remove from ignoreBinaries    
+
+> ugc-factory@0.0.0 readme:status:check /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads
+> node scripts/readme-status.mjs --check
+
+readme:status — la tabla del README coincide con planning.md ✓
+
+> ugc-factory@0.0.0 check:contrast /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads
+> node scripts/check-contrast.mjs
+
+  [ok ] dark  --text sobre --surface: 16.74:1
+  [ok ] dark  --text-2 sobre --surface: 7.18:1
+  [ok ] dark  --text-on-accent sobre --accent: 5.42:1
+  [ok ] dark  --success sobre --surface: 8.07:1
+  [ok ] dark  --warning sobre --surface: 8.57:1
+  [ok ] dark  --danger sobre --surface: 4.89:1
+  [ok ] dark  --info sobre --surface: 5.00:1
+  [ok ] dark  --success-on sobre --success: 6.54:1
+  [ok ] dark  --warning sobre --warning-soft: 7.28:1
+  [ok ] dark  --success sobre --success-soft: 6.94:1
+  [ok ] dark  --violet sobre --violet-soft: 5.86:1
+  [ok ] light --text sobre --surface: 17.72:1
+  [ok ] light --text-2 sobre --surface: 7.73:1
+  [ok ] light --text-on-accent sobre --accent: 5.42:1
+  [ok ] light --success sobre --surface: 6.10:1
+  [ok ] light --warning sobre --surface: 6.10:1
+  [ok ] light --danger sobre --surface: 6.32:1
+  [ok ] light --info sobre --surface: 6.18:1
+  [ok ] light --success-on sobre --success: 6.10:1
+  [ok ] light --danger sobre --danger-soft: 5.28:1
+  [ok ] light --info sobre --info-soft: 5.29:1
+  [ok ] light --warning sobre --warning-soft: 5.27:1
+  [ok ] light --success sobre --success-soft: 5.26:1
+  [ok ] light --violet sobre --violet-soft: 5.28:1
+
+  ⚠ 4 pares en cuarentena (decisión de recalibración DIFERIDA, memoria ds-contrast-slots-galeria): --danger sobre --danger-soft, --info sobre --info-soft, --accent sobre --accent-soft
+
+check:contrast OK — todos los pares ≥ 4.5:1 (los diferidos en cuarentena)
+
+> ugc-factory@0.0.0 e2e:wired:check /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads
+> node scripts/check-e2e-wired.mjs
+
+check-e2e-wired OK — 24 specs, todos cableados al runner.
+
+> ugc-factory@0.0.0 test /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads
+> vitest run --project '*:unit' --project '*:integration'
+
+
+ RUN  v4.1.10 /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads
+
+(node:35913) DeprecationWarning: Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:35923) DeprecationWarning: Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+
+ Test Files  232 passed (232)
+      Tests  2426 passed (2426)
+   Start at  13:01:50
+   Duration  73.89s (transform 40.92s, setup 4.73s, import 188.63s, tests 157.98s, environment 24.06s)
+
+
+> ugc-factory@0.0.0 test:e2e:phases /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads
+> pnpm --filter @ugc/web exec playwright test e2e/phases/f1-brief.spec.ts e2e/phases/f2-scripts.spec.ts e2e/phases/f4-generation.spec.ts
+
+[WebServer] seed: persona «Lucía (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYCF30YR8YC48XA52ZZK5S81/01KYCF30Z93BY8294JCS30NS7M.png)
+[WebServer] seed: persona «Lucía (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYCF30YR8YC48XA52ZZK5S81/01KYCF30ZVP7093W47N4K8D4T5.png)
+[WebServer] seed: persona «Marcus (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYCF30ZZF9Y19G9KJ132WZED/01KYCF310EB084YHTJF89Q7BW1.png)
+[WebServer] seed: persona «Marcus (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYCF30ZZF9Y19G9KJ132WZED/01KYCF3113KB1DGXP84XT5MKZR.png)
+[WebServer] seed: persona «Nerea (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYCF31166V598PP4DBQSDWVE/01KYCF311N8ZAG7GN8G9DZTZ5P.png)
+[WebServer] seed: persona «Nerea (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYCF31166V598PP4DBQSDWVE/01KYCF3126F7NBF3YZ8ZY861ZN.png)
+[WebServer] seed: persona «Carmen (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYCF312AA51GH01J1HM9TT48/01KYCF312SNQP2ZXNGF3EGS9HK.png)
+[WebServer] seed: persona «Carmen (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYCF312AA51GH01J1HM9TT48/01KYCF3139NDZ6ZW39E3HJKD30.png)
+[WebServer] seed: persona «Alex (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYCF313EZ0Z53MQ0Y3P9DPZD/01KYCF313XC88257YV8TM7B7DK.png)
+[WebServer] seed: persona «Alex (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYCF313EZ0Z53MQ0Y3P9DPZD/01KYCF314FSEC6R418CF37YZC4.png)
+[WebServer] seed: persona «Rosa (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYCF314JNE5EHTJ1Z5RR0TWV/01KYCF315106P23KQA8EDEEECV.png)
+[WebServer] seed: persona «Rosa (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYCF314JNE5EHTJ1Z5RR0TWV/01KYCF315HXCE8RMPCHTRSET55.png)
+[WebServer] seed: persona «Priya (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYCF315MWS4TMJWWS9V3QXS7/01KYCF3163VSTFDR50HKM45P0T.png)
+[WebServer] seed: persona «Priya (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYCF315MWS4TMJWWS9V3QXS7/01KYCF316NX10J7TP5211KS8KF.png)
+[WebServer] seed: persona «David (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYCF316RM9RVENJ0HW5QECVT/01KYCF3177BG4HV9D8MMVHC0GX.png)
+[WebServer] seed: persona «David (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYCF316RM9RVENJ0HW5QECVT/01KYCF317QQPB7TH96H80B8EAD.png)
+[WebServer] seed: persona «Chloe (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYCF317T1G9T6YECGJD324TW/01KYCF3189SRB6VTN2S3R78AH4.png)
+[WebServer] seed: persona «Chloe (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYCF317T1G9T6YECGJD324TW/01KYCF318SY3CWG369T19BCMJK.png)
+[WebServer] seed: persona «Kenji (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYCF318WEPQ0EYFNN4NGQ74E/01KYCF319AMXVC1PDV4YXA2RV3.png)
+[WebServer] seed: persona «Kenji (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYCF318WEPQ0EYFNN4NGQ74E/01KYCF319W61MCQBN7RHKSHTAQ.png)
+[WebServer] ▲ Next.js 16.2.10 (Turbopack)
+[WebServer] - Local:         http://localhost:3100
+[WebServer] - Network:       http://192.168.1.132:3100
+[WebServer] ✓ Ready in 313ms
+[WebServer] {"level":30,"time":1784977393923,"pid":36399,"hostname":"MBP-de-Carlos","name":"worker","intervalMs":5000,"generationReconcile":true,"msg":"sweeper arrancado"}
+[WebServer] {"level":30,"time":1784977393923,"pid":36399,"hostname":"MBP-de-Carlos","name":"worker","queue":"demo.noop","msg":"pg-boss arrancado: colas y consumers listos"}
+[WebServer] {"level":30,"time":1784977393923,"pid":36399,"hostname":"MBP-de-Carlos","name":"worker","health":{"ok":true,"db":true},"msg":"worker ready"}
+
+Running 4 tests using 3 workers
+
+[WebServer] {"level":30,"time":1784977395106,"pid":36400,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","msg":"running startup migrations"}
+[WebServer] {"level":30,"time":1784977395178,"pid":36400,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","msg":"startup migrations applied"}
+[WebServer] {"level":30,"time":1784977395246,"pid":36400,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","seeded":true,"msg":"auth.password_hash sembrado (first boot)"}
+[WebServer] {"level":30,"time":1784977395288,"pid":36400,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","provider":"fal","seeded":false,"msg":"secret.fal ya existía en BD (env ignorada; la BD es la fuente)"}
+[WebServer] {"level":30,"time":1784977395301,"pid":36400,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","provider":"firecrawl","seeded":false,"msg":"secret.firecrawl ya existía en BD (env ignorada; la BD es la fuente)"}
+[WebServer] {"level":30,"time":1784977395301,"pid":36400,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","provider":"anthropic","seeded":false,"msg":"secret.anthropic ya existía en BD (env ignorada; la BD es la fuente)"}
+[WebServer] {"level":30,"time":1784977395357,"pid":36400,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","msg":"sembrando datos de referencia (T3.9)"}
+[WebServer] {"level":30,"time":1784977395398,"pid":36400,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","hookLines":80,"ctaLines":30,"recipes":3,"msg":"librería sembrada o ya presente (insert-only)"}
+[WebServer] {"level":30,"time":1784977395480,"pid":36400,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","templates":56,"guardPacks":10,"modelProfiles":18,"msg":"galería sembrada o ya presente (insert-only)"}
+[WebServer] {"level":30,"time":1784977395546,"pid":36400,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","personas":10,"imagesCreated":0,"imagesFailed":0,"msg":"personas sembradas o ya presentes"}
+[WebServer] {"level":30,"time":1784977395546,"pid":36400,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","msg":"datos de referencia sembrados (T3.9)"}
+[WebServer] 
+[WebServer]  GET /login 200 in 234ms (next.js: 100ms, application-code: 134ms)
+[WebServer]  POST /api/login 200 in 255ms (next.js: 159ms, application-code: 97ms)
+[WebServer]  GET / 200 in 128ms (next.js: 12ms, proxy.ts: 35ms, application-code: 81ms)
+  ✓  1 [setup] › e2e/auth.setup.ts:10:1 › login y persistir sesión (1.4s)
+[WebServer]  GET /analyses/new 200 in 932ms (next.js: 95ms, proxy.ts: 15ms, application-code: 821ms)
+[WebServer]  GET /analyses/new 200 in 179ms (next.js: 3ms, proxy.ts: 14ms, application-code: 162ms)
+seed: persona «Nora F4 Premium» ← imagen sintética 1638×2048 px (personas/01KYCF37JT2ACB58P20F26V48S/01KYCF37NTFYDJ22M75315GE1P.png)
+[WebServer] {"level":30,"time":1784977400078,"pid":36400,"hostname":"MBP-de-Carlos","name":"web","request_id":"78d360ca-2fca-4ed5-9828-6c46d2317a18","run_id":"01KYCF387CS7GATQ2RHHSGXA1B","steps":4,"msg":"run creado"}
+[WebServer]  POST /api/runs 201 in 105ms (next.js: 7ms, application-code: 98ms)
+[WebServer]  POST /api/runs 201 in 206ms (next.js: 73ms, application-code: 133ms)
+[WebServer] {"level":30,"time":1784977400081,"pid":36400,"hostname":"MBP-de-Carlos","name":"web","request_id":"853f0dd9-9109-40a5-93da-fe9e6f189d24","run_id":"01KYCF38753QZYWZCC8SDY7E47","steps":4,"msg":"run creado"}
+[WebServer]  GET /analyses/new 200 in 188ms (next.js: 3ms, proxy.ts: 3ms, application-code: 183ms)
+[WebServer] {"level":30,"time":1784977400679,"pid":36400,"hostname":"MBP-de-Carlos","name":"web","request_id":"a01c11bf-92bd-47e9-926c-6952095d4e8d","run_id":"01KYCF38TVWT6SRW9T1NA3SPV4","steps":4,"msg":"run creado"}
+[WebServer]  POST /api/runs 201 in 25ms (next.js: 3ms, application-code: 22ms)
+[WebServer]  GET /api/runs/01KYCF38753QZYWZCC8SDY7E47 200 in 2.1s (next.js: 2.0s, application-code: 28ms)
+[WebServer]  GET /runs/01KYCF38753QZYWZCC8SDY7E47 200 in 4.0s (next.js: 1150ms, proxy.ts: 15ms, application-code: 2.9s)
+[WebServer]  GET /api/runs/01KYCF38TVWT6SRW9T1NA3SPV4 200 in 2.1s (next.js: 2.0s, application-code: 74ms)
+[WebServer]  GET /api/runs/01KYCF387CS7GATQ2RHHSGXA1B 200 in 1707ms (next.js: 1632ms, application-code: 75ms)
+[WebServer]  GET /runs/01KYCF38TVWT6SRW9T1NA3SPV4 200 in 3.5s (next.js: 582ms, proxy.ts: 5ms, application-code: 2.9s)
+[WebServer]  GET /runs/01KYCF387CS7GATQ2RHHSGXA1B 200 in 4.1s (next.js: 1154ms, proxy.ts: 17ms, application-code: 2.9s)
+[WebServer]  GET /api/steps/01KYCF38TRWM363MPX8Q3M2TSJ 200 in 782ms (next.js: 765ms, application-code: 17ms)
+[WebServer]  GET /api/steps/01KYCF3873H9BMVEXC2QKZ4R2Y 200 in 783ms (next.js: 764ms, application-code: 19ms)
+[WebServer]  GET /api/steps/01KYCF38TRWM363MPX8Q3M2TSJ 200 in 783ms (next.js: 762ms, application-code: 20ms)
+[WebServer]  GET /api/steps/01KYCF3873H9BMVEXC2QKZ4R2Y 200 in 785ms (next.js: 761ms, application-code: 23ms)
+[WebServer]  GET /api/steps/01KYCF3873H9BMVEXC2QKZ4R2Y 200 in 790ms (next.js: 764ms, application-code: 26ms)
+[WebServer]  GET /api/steps/01KYCF38TRWM363MPX8Q3M2TSJ 200 in 794ms (next.js: 763ms, application-code: 31ms)
+[WebServer]  GET /api/steps/01KYCF387909H66XP7SXNVNEAJ 200 in 760ms (next.js: 698ms, application-code: 62ms)
+[WebServer]  GET /api/steps/01KYCF387909H66XP7SXNVNEAJ 200 in 764ms (next.js: 698ms, application-code: 67ms)
+[WebServer]  GET /api/steps/01KYCF387909H66XP7SXNVNEAJ 200 in 768ms (next.js: 697ms, application-code: 71ms)
+[WebServer]  GET /api/briefs/01KYCF3ADX2P8H77JSBNFNG3MN 200 in 942ms (next.js: 932ms, application-code: 10ms)
+[WebServer] {"level":30,"time":1784977408242,"pid":36400,"hostname":"MBP-de-Carlos","name":"web","request_id":"1e85c4d9-efff-40f8-b6b9-d147805818c0","step_id":"01KYCF38TRWM363MPX8Q3M2TSJ","msg":"checkpoint aprobado"}
+[WebServer]  POST /api/steps/01KYCF38TRWM363MPX8Q3M2TSJ/approve 200 in 1300ms (next.js: 1232ms, application-code: 68ms)
+[WebServer]  POST /api/steps/01KYCF387909H66XP7SXNVNEAJ/approve 200 in 1548ms (next.js: 1476ms, application-code: 72ms)
+[WebServer] {"level":30,"time":1784977408245,"pid":36400,"hostname":"MBP-de-Carlos","name":"web","request_id":"2393901a-d06c-4c42-b57e-f96e88481b45","step_id":"01KYCF387909H66XP7SXNVNEAJ","msg":"checkpoint aprobado"}
+[WebServer]  GET /api/steps/01KYCF387BW5FQZY1BD0DGTSH8 200 in 12ms (next.js: 5ms, application-code: 6ms)
+[WebServer]  GET /api/steps/01KYCF387BW5FQZY1BD0DGTSH8 200 in 12ms (next.js: 7ms, application-code: 5ms)
+[WebServer]  GET /api/steps/01KYCF387BW5FQZY1BD0DGTSH8 200 in 9ms (next.js: 4ms, application-code: 5ms)
+[WebServer]  GET /api/personas/candidates?avatar_hint=Creadora%2030%20a%C3%B1os%2C%20estilo%20natural%2C%20ba%C3%B1o%20luminoso 200 in 144ms (next.js: 123ms, application-code: 20ms)
+[WebServer]  GET /api/personas/candidates?avatar_hint=Creadora%2030%20a%C3%B1os%2C%20estilo%20natural%2C%20ba%C3%B1o%20luminoso 200 in 151ms (next.js: 132ms, application-code: 19ms)
+[WebServer]  POST /api/batches/estimate 200 in 167ms (next.js: 79ms, application-code: 89ms)
+[WebServer]  POST /api/batches/estimate 200 in 184ms (next.js: 83ms, application-code: 101ms)
+[WebServer]  GET /api/steps/01KYCF38TTECSKT0F9SB6GYK5S 200 in 18ms (next.js: 3ms, application-code: 15ms)
+[WebServer]  GET /api/steps/01KYCF38TTECSKT0F9SB6GYK5S 200 in 19ms (next.js: 6ms, application-code: 13ms)
+[WebServer]  GET /api/steps/01KYCF38TTECSKT0F9SB6GYK5S 200 in 20ms (next.js: 8ms, application-code: 12ms)
+[WebServer]  GET /api/personas/candidates?avatar_hint=Mujer%20farmac%C3%A9utica%20cosm%C3%A9tica%20en%20laboratorio%20dermatol%C3%B3gico%20con%20bata%20blanca 200 in 27ms (next.js: 11ms, application-code: 16ms)
+[WebServer]  GET /api/personas/candidates?avatar_hint=Mujer%20farmac%C3%A9utica%20cosm%C3%A9tica%20en%20laboratorio%20dermatol%C3%B3gico%20con%20bata%20blanca 200 in 30ms (next.js: 12ms, application-code: 18ms)
+[WebServer]  POST /api/batches/estimate 200 in 42ms (next.js: 15ms, application-code: 27ms)
+[WebServer]  POST /api/batches/estimate 200 in 37ms (next.js: 13ms, application-code: 23ms)
+[WebServer]  POST /api/batches/estimate 200 in 38ms (next.js: 21ms, application-code: 17ms)
+[WebServer] (node:36400) DeprecationWarning: Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead.
+[WebServer] (Use `node --trace-deprecation ...` to show where the warning was created)
+[WebServer] {"level":30,"time":1784977408985,"pid":36400,"hostname":"MBP-de-Carlos","name":"web","request_id":"017bfb7e-eae6-4a31-9fae-69cb0623e25a","step_id":"01KYCF387BW5FQZY1BD0DGTSH8","decision_kind":"matrix","next_run_id":"01KYCF3GY0AJMJS19K7X6HC84X","msg":"checkpoint aprobado"}
+[WebServer]  POST /api/steps/01KYCF387BW5FQZY1BD0DGTSH8/approve 200 in 210ms (next.js: 18ms, application-code: 192ms)
+[WebServer]  GET /api/runs/01KYCF3GY0AJMJS19K7X6HC84X 200 in 44ms (next.js: 8ms, application-code: 35ms)
+[WebServer]  GET /runs/01KYCF3GY0AJMJS19K7X6HC84X 200 in 304ms (next.js: 57ms, proxy.ts: 13ms, application-code: 234ms)
+[WebServer]  GET /api/runs/01KYCF387CS7GATQ2RHHSGXA1B/events 200 in 4.4s (next.js: 646ms, application-code: 3.8s)
+[WebServer] {"level":30,"time":1784977409362,"pid":36400,"hostname":"MBP-de-Carlos","name":"web","request_id":"d3415e1c-7f94-4b70-adda-f8f5fe8e5d17","step_id":"01KYCF38TTECSKT0F9SB6GYK5S","decision_kind":"matrix","next_run_id":"01KYCF3H7RTAQKEZE3K5SZY6EQ","msg":"checkpoint aprobado"}
+[WebServer]  POST /api/steps/01KYCF38TTECSKT0F9SB6GYK5S/approve 200 in 353ms (next.js: 6ms, application-code: 347ms)
+[WebServer]  GET /api/runs/01KYCF3H7RTAQKEZE3K5SZY6EQ 200 in 19ms (next.js: 12ms, application-code: 8ms)
+[WebServer]  GET /runs/01KYCF3H7RTAQKEZE3K5SZY6EQ 200 in 196ms (next.js: 10ms, proxy.ts: 7ms, application-code: 179ms)
+[WebServer]  GET /api/runs/01KYCF38TVWT6SRW9T1NA3SPV4/events 200 in 4.7s (next.js: 650ms, application-code: 4.0s)
+[WebServer]  GET /api/steps/01KYCF3GXYH905CDB6EY3XRCT3 200 in 63ms (next.js: 25ms, application-code: 38ms)
+[WebServer]  GET /api/steps/01KYCF3GXYH905CDB6EY3XRCT3 200 in 63ms (next.js: 41ms, application-code: 22ms)
+[WebServer]  GET /api/steps/01KYCF3GXYH905CDB6EY3XRCT3 200 in 68ms (next.js: 52ms, application-code: 16ms)
+[WebServer]  GET /api/steps/01KYCF3H7P4A6CQ2D1J36QD3WP 200 in 39ms (next.js: 24ms, application-code: 15ms)
+[WebServer]  GET /api/steps/01KYCF3H7P4A6CQ2D1J36QD3WP 200 in 40ms (next.js: 25ms, application-code: 15ms)
+[WebServer]  GET /api/steps/01KYCF3H7P4A6CQ2D1J36QD3WP 200 in 31ms (next.js: 20ms, application-code: 11ms)
+[WebServer] {"level":30,"time":1784977410216,"pid":36400,"hostname":"MBP-de-Carlos","name":"web","request_id":"b807b323-3c6c-48b0-8134-d2ba4237e664","step_id":"01KYCF3873H9BMVEXC2QKZ4R2Y","msg":"checkpoint editado + sub-grafo invalidado"}
+[WebServer]  POST /api/steps/01KYCF3873H9BMVEXC2QKZ4R2Y/edit 200 in 1907ms (next.js: 1462ms, application-code: 445ms)
+[WebServer]  GET /api/briefs/01KYCF3ADX2P8H77JSBNFNG3MN 200 in 11ms (next.js: 6ms, application-code: 6ms)
+[WebServer]  GET /api/steps/01KYCF3873H9BMVEXC2QKZ4R2Y 200 in 5ms (next.js: 1115µs, application-code: 4ms)
+[WebServer]  GET /api/briefs/01KYCF3HT5YNMCMB3446C8002R 200 in 6ms (next.js: 1657µs, application-code: 5ms)
+[WebServer]  GET /api/runs/01KYCF38753QZYWZCC8SDY7E47/events 200 in 6.1s (next.js: 892ms, application-code: 5.2s)
+  ✓  2 [chromium] › e2e/phases/f1-brief.spec.ts:29:3 › F1 · journey de análisis: URL → N1/N2/N3 → CP1 → aprobar y avanzar › un usuario pega una URL, edita el brief en CP1 y lo aprueba: el brief se versiona y el run avanza @f1 @phase (12.7s)
+[WebServer]  GET /api/batches/01KYCF3GWTHXPD71M1RZ6QAX5R/scripts 200 in 1000ms (next.js: 978ms, application-code: 22ms)
+[WebServer]  GET /api/batches/01KYCF3H5QR64TQW2AGT6THA1F/scripts 200 in 834ms (next.js: 810ms, application-code: 25ms)
+[WebServer]  GET /api/batches/01KYCF3GWTHXPD71M1RZ6QAX5R/scripts 200 in 1005ms (next.js: 978ms, application-code: 26ms)
+[WebServer]  GET /api/batches/01KYCF3H5QR64TQW2AGT6THA1F/scripts 200 in 838ms (next.js: 810ms, application-code: 28ms)
+[WebServer] {"level":30,"time":1784977411204,"pid":36400,"hostname":"MBP-de-Carlos","name":"web","request_id":"e88ad8ca-588d-4a47-81ec-05ca70aa3c30","step_id":"01KYCF3GXYH905CDB6EY3XRCT3","decision_kind":"scripts","msg":"checkpoint aprobado"}
+[WebServer]  POST /api/steps/01KYCF3GXYH905CDB6EY3XRCT3/approve 200 in 43ms (next.js: 3ms, application-code: 40ms)
+  ✓  3 [chromium] › e2e/phases/f2-scripts.spec.ts:52:3 › F2 · journey de guiones: URL → CP1 → CP2 → CP3 → variantes scripted › un usuario aprueba la matriz, N5 guioniza el lote y CP3 deja todas las variantes scripted @f2 @phase (12.8s)
+[WebServer]  GET /api/runs/01KYCF3GY0AJMJS19K7X6HC84X/events 200 in 2.1s (next.js: 3ms, application-code: 2.1s)
+[WebServer] {"level":30,"time":1784977411502,"pid":36400,"hostname":"MBP-de-Carlos","name":"web","request_id":"454d189c-0adc-46cd-a216-0c0086f4da5a","step_id":"01KYCF3H7P4A6CQ2D1J36QD3WP","decision_kind":"scripts","next_run_id":"01KYCF3KCR5H812AE09GJRWRP2","msg":"checkpoint aprobado"}
+[WebServer]  POST /api/steps/01KYCF3H7P4A6CQ2D1J36QD3WP/approve 200 in 166ms (next.js: 1269µs, application-code: 165ms)
+[WebServer] {"level":50,"time":1784977411712,"pid":36399,"hostname":"MBP-de-Carlos","name":"worker","queue":"step.execute","job_id":"1d000226-5429-49a7-9360-4963395023dd","run_id":"01KYCF3KCR5H812AE09GJRWRP2","step_id":"01KYCF3KCB5V2MBAT74A7NDEHJ","node_key":"N7a","err":{"type":"PermanentStepError","message":"finalizeGeneration: el output de la generación 01KYCF3KK7R0J4VP2FCXDK4P2J no trae images[]: {}","stack":"PermanentStepError: finalizeGeneration: el output de la generación 01KYCF3KK7R0J4VP2FCXDK4P2J no trae images[]: {}\n    at runGenerationStep (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/worker/src/executors/_shared.ts:75:13)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async runShotLoop (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/worker/src/executors/generation.ts:225:17)\n    at async runAiPackshotRoute (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/worker/src/executors/generation.ts:273:17)\n    at async <anonymous> (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/worker/src/executors/generation.ts:175:11)\n    at async <anonymous> (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/worker/src/consumers/step-execute.ts:176:9)\n    at async resolveWithinSeconds (file:///Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/pg-boss@12.25.1/node_modules/pg-boss/dist/tools.js:38:18)\n    at async #processJobs (file:///Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/pg-boss@12.25.1/node_modules/pg-boss/dist/manager.js:421:28)\n    at async Worker.onFetch (file:///Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/pg-boss@12.25.1/node_modules/pg-boss/dist/manager.js:577:21)\n    at async Worker.run (file:///Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/pg-boss@12.25.1/node_modules/pg-boss/dist/worker.js:60:21)","name":"PermanentStepError"},"msg":"step.execute: fallo PERMANENTE del executor; failed terminal SIN retry"}
+[WebServer] {"level":40,"time":1784977412166,"pid":36399,"hostname":"MBP-de-Carlos","name":"worker","queue":"step.execute","job_id":"931d34dc-f81e-450e-9718-dfca9aee79f3","run_id":"01KYCF3KCR5H812AE09GJRWRP2","step_id":"01KYCF3KBXFHA449VMT3ZHHSZ3","node_key":"N7a","err":{"type":"LoserRaceError","message":"runGenerate: una generación idéntico se está produciendo en otra petición concurrente; reintenta","stack":"LoserRaceError: runGenerate: una generación idéntico se está produciendo en otra petición concurrente; reintenta\n    at resolveProductionDedup (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/services/src/generation-dedup.ts:114:9)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async runGenerate (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/services/src/generate.ts:173:17)\n    at async runGenerationStep (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/worker/src/executors/_shared.ts:70:12)\n    at async runShotLoop (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/worker/src/executors/generation.ts:225:17)\n    at async runAiPackshotRoute (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/worker/src/executors/generation.ts:273:17)\n    at async <anonymous> (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/worker/src/executors/generation.ts:175:11)\n    at async <anonymous> (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/worker/src/consumers/step-execute.ts:176:9)\n    at async resolveWithinSeconds (file:///Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/pg-boss@12.25.1/node_modules/pg-boss/dist/tools.js:38:18)\n    at async #processJobs (file:///Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/pg-boss@12.25.1/node_modules/pg-boss/dist/manager.js:421:28)","name":"LoserRaceError"},"msg":"step.execute: executor falló; evaluando retry"}
+[WebServer] {"level":40,"time":1784977412181,"pid":36399,"hostname":"MBP-de-Carlos","name":"worker","queue":"step.execute","job_id":"7cf2b1b6-d5d2-4f5c-b43a-2baf608e25f3","run_id":"01KYCF3KCR5H812AE09GJRWRP2","step_id":"01KYCF3KAMD67X6XWT7TXN434H","node_key":"N7a","err":{"type":"LoserRaceError","message":"runGenerate: una generación idéntico se está produciendo en otra petición concurrente; reintenta","stack":"LoserRaceError: runGenerate: una generación idéntico se está produciendo en otra petición concurrente; reintenta\n    at resolveProductionDedup (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/services/src/generation-dedup.ts:114:9)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async runGenerate (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/services/src/generate.ts:173:17)\n    at async runGenerationStep (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/worker/src/executors/_shared.ts:70:12)\n    at async runShotLoop (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/worker/src/executors/generation.ts:225:17)\n    at async runAiPackshotRoute (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/worker/src/executors/generation.ts:273:17)\n    at async <anonymous> (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/worker/src/executors/generation.ts:175:11)\n    at async <anonymous> (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/worker/src/consumers/step-execute.ts:176:9)\n    at async resolveWithinSeconds (file:///Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/pg-boss@12.25.1/node_modules/pg-boss/dist/tools.js:38:18)\n    at async #processJobs (file:///Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/pg-boss@12.25.1/node_modules/pg-boss/dist/manager.js:421:28)","name":"LoserRaceError"},"msg":"step.execute: executor falló; evaluando retry"}
+[WebServer] {"level":30,"time":1784977412186,"pid":36399,"hostname":"MBP-de-Carlos","name":"worker","queue":"step.execute","job_id":"931d34dc-f81e-450e-9718-dfca9aee79f3","run_id":"01KYCF3KCR5H812AE09GJRWRP2","step_id":"01KYCF3KBXFHA449VMT3ZHHSZ3","node_key":"N7a","outcome":"retried","msg":"step.execute: reencolado para reintento"}
+[WebServer] {"level":30,"time":1784977412197,"pid":36399,"hostname":"MBP-de-Carlos","name":"worker","queue":"step.execute","job_id":"7cf2b1b6-d5d2-4f5c-b43a-2baf608e25f3","run_id":"01KYCF3KCR5H812AE09GJRWRP2","step_id":"01KYCF3KAMD67X6XWT7TXN434H","node_key":"N7a","outcome":"retried","msg":"step.execute: reencolado para reintento"}
+[WebServer] {"level":30,"time":1784977413224,"pid":36400,"hostname":"MBP-de-Carlos","name":"web","request_id":"ff40f80c-d48a-48be-8e7f-76adc72fdefd","step_id":"01KYCF3KCB5V2MBAT74A7NDEHJ","msg":"step reintentado manualmente"}
+[WebServer]  POST /api/steps/01KYCF3KCB5V2MBAT74A7NDEHJ/retry 200 in 625ms (next.js: 610ms, application-code: 15ms)
+[WebServer]  GET /api/runs/01KYCF3KCR5H812AE09GJRWRP2 200 in 14ms (next.js: 3ms, application-code: 11ms)
+[WebServer]  GET /api/runs/01KYCF3H7RTAQKEZE3K5SZY6EQ/events 200 in 6.1s (next.js: 54ms, application-code: 6.1s)
+[WebServer]  GET /runs/01KYCF3KCR5H812AE09GJRWRP2 200 in 1516ms (next.js: 11ms, proxy.ts: 8ms, application-code: 1497ms)
+[WebServer]  GET /api/steps/01KYCF3KAK61Z25V90VBCTYTVD 200 in 17ms (next.js: 9ms, application-code: 8ms)
+[WebServer]  GET /api/steps/01KYCF3KAK61Z25V90VBCTYTVD 200 in 19ms (next.js: 13ms, application-code: 6ms)
+[WebServer]  GET /api/steps/01KYCF3KBDWKC28K9AN4SGH4WF 200 in 6ms (next.js: 2ms, application-code: 4ms)
+[WebServer]  GET /api/assets/01KYCF3MY4D8K69E3SRSK6MZX4/download 200 in 126ms
+[WebServer]  GET /api/runs/01KYCF3KCR5H812AE09GJRWRP2/events 200 in 521ms (next.js: 9ms, application-code: 512ms)
+  ✓  4 [chromium] › e2e/phases/f4-generation.spec.ts:94:3 › F4 · journey de generación: CP3 aprobado → sub-DAG N6→N7a-e por variante en el canvas › el canvas expande N7 por variante, expone resolvedPrompt/coste/previews y recupera un sub-step con retry granular @f4 @phase (16.7s)
+
+  4 passed (30.1s)

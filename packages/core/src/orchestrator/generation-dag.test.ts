@@ -131,16 +131,19 @@ describe('generationRunDefinition', () => {
     expect(n7c?.dependsOn).toEqual([`${K.n6}__v1`, `${K.n7b}__v1`]);
   });
 
-  it('N7d depende de N6 Y N7a (consume los keyframes)', () => {
+  // T5.8c CAMBIÓ ESTA TOPOLOGÍA A PROPÓSITO: N7d/N7f añaden la arista N7b para dimensionar el troceo §7.5
+  // contra la duración MEDIDA de la voz (no la estimada del guion, que el TTS desborda ~+45% → 1 clip corto
+  // → `FitError` en N8, el fallo del run real de T5.9). No es un test relajado: es la nueva verdad del grafo.
+  it('N7d depende de N6, N7a (keyframes) Y N7b (duración medida de la voz, T5.8c)', () => {
     const def = generationRunDefinition('p', [fullVariant('v1')]);
     const n7d = byKey(def.nodes, `${K.n7d}__v1`);
-    expect(n7d?.dependsOn).toEqual([`${K.n6}__v1`, `${K.n7a}__v1`]);
+    expect(n7d?.dependsOn).toEqual([`${K.n6}__v1`, `${K.n7a}__v1`, `${K.n7b}__v1`]);
   });
 
-  it('N7f (clip de CTA) depende de N6 Y N7a (anima el keyframe de product shot, como N7d)', () => {
+  it('N7f (clip de CTA) depende de N6, N7a Y N7b (mismas dos fuentes que N7d)', () => {
     const def = generationRunDefinition('p', [fullVariant('v1')]);
     const n7f = byKey(def.nodes, `${K.n7f}__v1`);
-    expect(n7f?.dependsOn).toEqual([`${K.n6}__v1`, `${K.n7a}__v1`]);
+    expect(n7f?.dependsOn).toEqual([`${K.n6}__v1`, `${K.n7a}__v1`, `${K.n7b}__v1`]);
     // node_key LIMPIO 'N7f' (el registro de executors resuelve por él).
     expect(n7f?.nodeKey).toBe('N7f');
   });
@@ -154,6 +157,21 @@ describe('generationRunDefinition', () => {
       },
     ]);
     expect(byKey(def.nodes, `${K.n7f}__v1`)?.dependsOn).toEqual([`${K.n6}__v1`]);
+    expect(validateDag(def)).toBeNull();
+  });
+
+  // La arista N7b de T5.8c es CONDICIONAL (mismo patrón que N7c←N7b): sin N7b en el plan no se añade, y el
+  // executor degrada a la duración ESTIMADA del guion (costura stepless del smoke), no rompe.
+  it('N7d sin N7b presente NO lleva la arista de narración (degrada a la estimación del guion)', () => {
+    const def = generationRunDefinition('p', [
+      {
+        variantId: 'v1',
+        n6Config: { variantId: 'v1' },
+        n7aConfig: { scriptId: 's1', shotEndpoint: 'x' },
+        n7dConfig: { scriptId: 's1', brollEndpoint: 'x' },
+      },
+    ]);
+    expect(byKey(def.nodes, `${K.n7d}__v1`)?.dependsOn).toEqual([`${K.n6}__v1`, `${K.n7a}__v1`]);
     expect(validateDag(def)).toBeNull();
   });
 

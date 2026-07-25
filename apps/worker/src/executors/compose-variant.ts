@@ -2,7 +2,9 @@
 //   1. ENSAMBLA el `CompositionSpec` desde los outputs de sus deps N7 (`assembleCompositionSpec`, servicio
 //      — el gemelo INVERSO de `buildVariantGenerationPlan`). El spec apunta a los clips CRUDOS de N7.
 //   2. Encadena la cadena de render (§9.7 l.288), en este orden EXACTO:
-//        fitter (T5.5b, por-clip: cuadra cada clip a la duración MEDIDA de SU voz — `N7bClipRef.durationSeconds`)
+//        concat INTRA-ESCENA (T5.8c: si §7.5 troceó la escena, sus clips se unen ANTES del fitter para que
+//          Σ(clips) ≥ narración — sin esto un único clip topado a `maxDuration` disparaba `FitError`)
+//        → fitter (T5.5b, por-clip: cuadra cada clip a la duración MEDIDA de SU voz — `N7bClipRef.durationSeconds`)
 //        → normalize-once (T5.2, perfil canónico + caché)
 //        → concat+mix + pase final + C2PA + QA (T5.5 `composeVariant`, que internamente hace `composeMaster`)
 //        → persistencia (`finalizeVariantMaster` @ugc/db: filas final_video + thumbnail + update de ad_variant).
@@ -52,6 +54,7 @@ import {
 import {
   assembleCompositionSpec,
   composeVariant,
+  concatSceneClipsFile,
   createNormalizer,
   fitSegmentFile,
   materializeToBytes,
@@ -197,15 +200,76 @@ export function makeN8Executor(deps: ComposeVariantExecutorDeps): StepExecutor {
           );
         }
 
-        // Materializar el clip CRUDO de N7 a temp, FITTEAR a la duración de su voz (T5.5b).
-        const rawVideoAsset = await getAsset(deps.db, segment.videoAsset);
-        if (rawVideoAsset === undefined) {
+        // El PRIMER clip de la escena se desestructura ANTES de tocar storage: es el que define el `kind`
+        // del asset fitteado (todos los clips de una escena salen del mismo endpoint) y, si la escena no se
+        // troceó, es el único. Falla RÁPIDO (antes de materializar nada) si el contrato `.min(1)` se
+        // violara. Leer un array de N y quedarse con `[0]` es justo la forma que `requireSingleVideoAsset`
+        // proscribe aguas abajo — aquí el `[0]` es LEGÍTIMO porque solo se usa para el `kind`, no para
+        // elegir qué clip se compone (se componen TODOS, ver el `Promise.all` de abajo).
+        const [firstVideoAssetId] = segment.videoAssets;
+        if (firstVideoAssetId === undefined) {
+          // Imposible por contrato (`videoAssets` es `.min(1)`), pero el tipo no lo sabe.
           throw new PermanentStepError(
-            `N8: el clip de vídeo ${segment.videoAsset} del segmento ${String(i)} no existe`,
+            `N8: el segmento ${String(i)} (${segment.type}) no tiene ningún clip de vídeo`,
           );
         }
-        const rawPath = join(dir, `raw-${String(i)}.mp4`);
-        await writeFile(rawPath, await materializeToBytes(deps.storage, rawVideoAsset.storageKey));
+        const firstAsset = await getAsset(deps.db, firstVideoAssetId);
+        if (firstAsset === undefined) {
+          throw new PermanentStepError(
+            `N8: el clip de vídeo ${firstVideoAssetId} (clip 0) del segmento ${String(i)} no existe`,
+          );
+        }
+        const firstKind: NormalizeSourceAsset['normalizedKind'] = firstAsset.kind;
+
+        // Materializar los clips CRUDOS de N7 de ESTA escena a temp. Casi siempre uno; si §7.5 troceó la
+        // escena (narración > maxDuration del modelo) son VARIOS, ya ordenados por `clipIndex` por el
+        // ensamblador. Se materializan TODOS (ninguno pagado queda sin usar — T5.8c cierra esa fuga). El
+        // I/O (BD + storage) va en PARALELO —son descargas independientes, mismo criterio que el
+        // `Promise.all` de normalize+voz de abajo—; las ETAPAS DE FFMPEG siguen siendo secuenciales (cada
+        // una consume el output de la anterior).
+        const materialize = async (
+          videoAssetId: string,
+          c: number,
+          known?: Awaited<ReturnType<typeof getAsset>>,
+        ): Promise<string> => {
+          const rawVideoAsset = known ?? (await getAsset(deps.db, videoAssetId));
+          if (rawVideoAsset === undefined) {
+            throw new PermanentStepError(
+              `N8: el clip de vídeo ${videoAssetId} (clip ${String(c)}) del segmento ${String(i)} no existe`,
+            );
+          }
+          const rawPath = join(dir, `raw-${String(i)}-${String(c)}.mp4`);
+          await writeFile(
+            rawPath,
+            await materializeToBytes(deps.storage, rawVideoAsset.storageKey),
+          );
+          return rawPath;
+        };
+        const [firstRawPath, ...restRawPaths] = await Promise.all([
+          materialize(firstVideoAssetId, 0, firstAsset),
+          ...segment.videoAssets.slice(1).map((id, k) => materialize(id, k + 1)),
+        ]);
+        const rawPaths = [firstRawPath, ...restRawPaths];
+
+        // CONCAT INTRA-ESCENA (T5.8c) ANTES del fitter: si la escena se troceó, sus clips se unen en UN
+        // vídeo de escena para que Σ(clips) ≥ narración y el fitter RECORTE (rama `trim`) en vez de lanzar
+        // `FitError`. Un segmento de UN solo clip NO pasa por el concat: su camino queda byte-idéntico al
+        // anterior a T5.8c (importa para el clip de avatar de N7c, que lleva la voz EMBEBIDA).
+        let fitInputPath = firstRawPath;
+        if (rawPaths.length > 1) {
+          const concatPath = join(dir, `scene-${String(i)}.mp4`);
+          await concatSceneClipsFile(
+            {
+              ...(runner !== undefined ? { runner } : {}),
+              ...(log !== undefined ? { logger: log } : {}),
+            },
+            { inPaths: rawPaths, outPath: concatPath },
+          );
+          fitInputPath = concatPath;
+        }
+
+        // FITTEAR a la duración de su voz (T5.5b). El umbral de 0,5 s NO se relaja: si Σ(clips) sigue sin
+        // cubrir la narración, `FitError` sigue mordiendo (anti-T1.8).
         const fittedPath = join(dir, `fitted-${String(i)}.mp4`);
         await fitSegmentFile(
           {
@@ -213,7 +277,7 @@ export function makeN8Executor(deps: ComposeVariantExecutorDeps): StepExecutor {
             ...(ffprobe !== undefined ? { ffprobe } : {}),
             ...(log !== undefined ? { logger: log } : {}),
           },
-          { inPath: rawPath, outPath: fittedPath, narrationDurationS },
+          { inPath: fitInputPath, outPath: fittedPath, narrationDurationS },
         );
 
         // Subir el clip fitteado como asset (para que el normalizador lo lea de storage por su checksum).
@@ -221,25 +285,30 @@ export function makeN8Executor(deps: ComposeVariantExecutorDeps): StepExecutor {
         const fittedKey = `fitted/${variantId}/${String(i)}.mp4`;
         const fittedPut = await deps.storage.put(fittedKey, fittedBytes, { mime: 'video/mp4' });
         const fittedAsset = await createAsset(deps.db, {
-          kind: rawVideoAsset.kind,
+          kind: firstKind,
           storageKey: fittedKey,
           mime: 'video/mp4',
           bytes: fittedPut.bytes,
           checksum: fittedPut.checksum,
-          parentAssetIds: [segment.videoAsset],
+          // LINAJE §12 (y la PRUEBA de que la fuga está cerrada, T5.8c): el fitteado deriva de TODOS los
+          // clips de la escena, no solo del `clipIndex 0`. Ningún clip pagado queda fuera del linaje.
+          parentAssetIds: [...segment.videoAssets],
         });
 
         // NORMALIZE-ONCE (T5.2): vídeo → perfil canónico; voz → audio canónico. Independientes.
         const [normVideo, normVoice] = await Promise.all([
           normalizer.normalize(
-            sourceOf(fittedAsset.id, fittedKey, fittedPut.checksum, rawVideoAsset.kind, 'video'),
+            sourceOf(fittedAsset.id, fittedKey, fittedPut.checksum, firstKind, 'video'),
           ),
           normalizeVoice(normalizer, deps.db, segment.voAudio),
         ]);
 
+        // El spec FINAL tiene SIEMPRE exactamente UN vídeo por segmento: el multi-clip vive solo en el spec
+        // CRUDO; aquí ya está concatenado+fitteado+normalizado en un único asset (invariante que los
+        // consumidores del spec final aseveran, ver `compose-master`/`measureSegmentVideoDurations`).
         rendered.push({
           type: segment.type,
-          videoAsset: normVideo.id,
+          videoAssets: [normVideo.id],
           voAudio: normVoice.id,
           ...(segment.voWords !== undefined ? { voWords: segment.voWords } : {}),
         });

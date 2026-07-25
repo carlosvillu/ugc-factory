@@ -40,6 +40,7 @@ import {
   server,
   type TestDatabase,
 } from '@ugc/test-utils';
+import { newUlid } from '@ugc/core/contracts';
 import type { AdScene } from '@ugc/core/contracts';
 import type { StorageAdapter } from '@ugc/core';
 
@@ -285,6 +286,86 @@ describe('N7d executor (T4.8): b-roll por escena de body', () => {
       };
       expect(out.clips.map((c) => c.bodySceneIndex)).toEqual([0, 0]);
       expect(out.clips.map((c) => c.clipIndex)).toEqual([0, 1]);
+    } finally {
+      await pool.end();
+    }
+  });
+
+  // ── T5.8c · EL TROCEO SE DIMENSIONA CONTRA LA NARRACIÓN MEDIDA (dep N7d←N7b) ─────────────────────────
+  // EL CASO REAL DEL RUN DE T5.9: el guion ESTIMA la escena de body en 6 s (`countWords/2.5`), pero el TTS
+  // real la mide en 8,68 s. Con maxDuration 8, dimensionar por la ESTIMACIÓN da UN clip de 6 s que NUNCA
+  // cubre la narración → `FitError` en N8 y 0 másters. Dimensionar por la MEDIDA da 2 clips.
+  it('DIMENSIONADO POR LA VOZ MEDIDA: escena estimada en 6s pero narrada en 8,68s → 2 clips (no 1)', async () => {
+    const { db, pool } = createDbPool(tdb.connectionString);
+    try {
+      happyBroll(I2V_ENDPOINT);
+      const scriptId = await seedScript([
+        s({ t: 0, seconds: 6, segment: 'body', narration: 'body scene that the TTS overflows' }),
+      ]);
+      const keyframe = await makeImageAsset('keyframe');
+
+      const outputs: unknown[] = [];
+      await makeExecutor(db)({
+        config: { scriptId, brollEndpoint: I2V_ENDPOINT, imageAssetIds: [keyframe] },
+        collectOutput: (refs: unknown) => outputs.push(refs),
+        deps: [
+          {
+            stepId: newUlid(),
+            nodeKey: 'N7b',
+            status: 'succeeded' as const,
+            outputRefs: {
+              scriptId,
+              language: 'es',
+              clips: [
+                {
+                  sceneIndex: 0,
+                  generationId: 'g0',
+                  assetId: newUlid(),
+                  durationSeconds: 8.68, // la MEDIDA, la que manda
+                  wordCount: 20,
+                  ttsCostCents: 1,
+                  asrCostCents: 1,
+                },
+              ],
+            },
+          },
+        ],
+      });
+
+      const out = outputs[0] as { clips: { bodySceneIndex: number; clipIndex: number }[] };
+      // 8,68 / 8 → ceil = 2 clips de 4,34 s → cuantizados a 6 s cada uno = 12 s ≥ 8,68 s de narración.
+      expect(out.clips).toHaveLength(2);
+      expect(out.clips.map((c) => c.bodySceneIndex)).toEqual([0, 0]);
+      expect(out.clips.map((c) => c.clipIndex)).toEqual([0, 1]);
+
+      // Σ de las duraciones REALES de los clips ≥ la narración (la cláusula de T5.8c medida en la BD).
+      const { rows: clips } = await tdb.pool.query<{ duration_s: number }>(
+        "SELECT duration_s FROM asset WHERE kind = 'broll_clip'",
+      );
+      const total = clips.reduce((acc, c) => acc + c.duration_s, 0);
+      expect(total).toBeGreaterThanOrEqual(8.68);
+    } finally {
+      await pool.end();
+    }
+  });
+
+  it('SIN dep N7b (stepless/smoke): degrada a la duración ESTIMADA del guion (1 clip), no rompe', async () => {
+    // La arista N7d←N7b es CONDICIONAL en el DAG. Sin ella el executor usa `scene.seconds` — exactamente el
+    // comportamiento anterior a T5.8c. Es el control del degradado: el fix no exige N7b para funcionar.
+    const { db, pool } = createDbPool(tdb.connectionString);
+    try {
+      happyBroll(I2V_ENDPOINT);
+      const scriptId = await seedScript([s({ t: 0, seconds: 6, segment: 'body', narration: 'x' })]);
+      const keyframe = await makeImageAsset('keyframe');
+
+      const outputs: unknown[] = [];
+      await makeExecutor(db)({
+        config: { scriptId, brollEndpoint: I2V_ENDPOINT, imageAssetIds: [keyframe] },
+        collectOutput: (refs: unknown) => outputs.push(refs),
+        deps: [],
+      });
+
+      expect((outputs[0] as { clips: unknown[] }).clips).toHaveLength(1);
     } finally {
       await pool.end();
     }

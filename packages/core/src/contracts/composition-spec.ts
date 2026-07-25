@@ -39,8 +39,17 @@ export const CompositionSegmentSchema = z.object({
    *  estimador y el script-writer) — un segundo enum del mismo triple podría divergir. El orden del
    *  array es el orden temporal del concat. */
   type: AdSegmentSchema,
-  /** El asset del CLIP DE VÍDEO normalizado de este segmento (ULID). Se concatena con `-c copy`. */
-  videoAsset: UlidSchema,
+  /** Los assets de los CLIPS DE VÍDEO de este segmento (ULIDs), EN ORDEN TEMPORAL (= orden ascendente de
+   *  `clipIndex` de §7.5). Casi siempre UNO; son VARIOS cuando la escena se troceó en varios clips porque
+   *  su narración excede el `maxDuration` del modelo (T5.8c). El renderer los CONCATENA intra-escena ANTES
+   *  de recortar el resultado a la narración — antes de T5.8c solo se usaba el `clipIndex 0` y el resto se
+   *  pagaba y se tiraba (fuga de dinero + `FitError` por clip corto).
+   *
+   *  ⚠ El spec FINAL que llega a `composeMaster` (tras fit+normalize) tiene SIEMPRE exactamente uno por
+   *  segmento: el multi-clip vive solo en el spec CRUDO que ensambla `assembleCompositionSpec`. Los
+   *  consumidores del spec final lo ASEVERAN (no toman `[0]` en silencio — eso recrearía el bug de T5.8c
+   *  en forma type-legal). */
+  videoAssets: z.array(UlidSchema).min(1),
   /** El asset del VOICEOVER de este segmento (ULID). Se mezcla como pista de voz. */
   voAudio: UlidSchema,
   /** Word timestamps del voiceover (T4.5) — los consume T5.4 (generador ASS karaoke). ESTRECHADO a

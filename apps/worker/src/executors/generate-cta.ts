@@ -16,8 +16,14 @@
 // un i2v de CTA sin frame inicial se ABORTA con `PermanentStepError` ANTES de gastar.
 import { N7fConfigSchema, PermanentStepError } from '@ugc/core/orchestrator';
 import type { StepExecutor } from '@ugc/core/orchestrator';
-import { isBrollModelKind, planGeneration, quantizeDurationToEnum } from '@ugc/core/gallery';
-import { deriveKeyframeAssetIds } from '@ugc/core/generation';
+import {
+  isBrollModelKind,
+  planGeneration,
+  quantizeDurationToEnum,
+  segmentSceneIndices,
+  sizeScenesToNarration,
+} from '@ugc/core/gallery';
+import { deriveKeyframeAssetIds, deriveMeasuredNarrationByScene } from '@ugc/core/generation';
 import { AdScriptSchema, type N7fOutput } from '@ugc/core/contracts';
 import { getModelProfileByEndpoint, getScriptById } from '@ugc/db';
 import { runGenerateBroll } from '@ugc/services';
@@ -109,9 +115,19 @@ export function makeN7fExecutor(deps: GenerationExecutorDeps): StepExecutor {
       );
     }
 
+    // DIMENSIONADO CONTRA LA NARRACIÓN MEDIDA (T5.8c, dep N7f←N7b) — espejo EXACTO de N7d: el troceo se
+    // calcula sobre la duración REAL de la voz de la escena (N7b, medida por ASR), no sobre la estimada
+    // del guion. Sin dep N7b (stepless/smoke) el mapa viene vacío → se degrada a la estimación.
+    const measuredNarration = deriveMeasuredNarrationByScene(ctx.deps ?? []);
+    const sizedCtaScenes = sizeScenesToNarration(
+      ctaScenes,
+      segmentSceneIndices(script.scenes, 'cta'),
+      measuredNarration,
+    );
+
     // Troceo/cuantización igual que N7d (`planGeneration`, función pura testeada de T3.6): una escena cta
     // > maxDuration se parte; cada clip cuantiza su duración al enum del modelo (redondeo-arriba).
-    const plan = planGeneration(ctaScenes, maxDuration);
+    const plan = planGeneration(sizedCtaScenes, maxDuration);
 
     // Resuelve la fal-key UNA vez por step (de `app_setting`) ANTES del primer submit — sin key/no
     // descifra → falla PERMANENTE con mensaje accionable (Ajustes → fal), no retry storm.

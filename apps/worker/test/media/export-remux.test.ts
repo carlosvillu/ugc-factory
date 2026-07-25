@@ -143,7 +143,7 @@ describe.skipIf(!mediaToolsAvailable)(
         });
         const videoAsset = await seedAsset(storage, keyToId, v, `seg/${String(i)}.mp4`);
         const voAudio = await seedAsset(storage, keyToId, a, `vo/${String(i)}.m4a`);
-        segments.push({ type, videoAsset, voAudio });
+        segments.push({ type, videoAssets: [videoAsset], voAudio });
       }
       const bedLocal = await makeTestAudio({ out: p('bed.m4a'), seconds: 5, freq: 110 });
       const bedAsset = await seedAsset(storage, keyToId, bedLocal, 'bed/bed.m4a');

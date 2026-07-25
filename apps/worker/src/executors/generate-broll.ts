@@ -18,8 +18,14 @@
 //     vía de imagen del sweeper explotaría — marcadores en output-download.ts + reconcile.ts).
 import { N7dConfigSchema, PermanentStepError } from '@ugc/core/orchestrator';
 import type { StepExecutor } from '@ugc/core/orchestrator';
-import { isBrollModelKind, planGeneration, quantizeDurationToEnum } from '@ugc/core/gallery';
-import { deriveKeyframeAssetIds } from '@ugc/core/generation';
+import {
+  isBrollModelKind,
+  planGeneration,
+  quantizeDurationToEnum,
+  segmentSceneIndices,
+  sizeScenesToNarration,
+} from '@ugc/core/gallery';
+import { deriveKeyframeAssetIds, deriveMeasuredNarrationByScene } from '@ugc/core/generation';
 import { AdScriptSchema, type N7dOutput } from '@ugc/core/contracts';
 import { getModelProfileByEndpoint, getScriptById } from '@ugc/db';
 import { runGenerateBroll } from '@ugc/services';
@@ -111,10 +117,24 @@ export function makeN7dExecutor(deps: GenerationExecutorDeps): StepExecutor {
       );
     }
 
+    // DIMENSIONADO CONTRA LA NARRACIÓN MEDIDA (T5.8c, dep N7d←N7b): el troceo §7.5 se calcula sobre la
+    // duración REAL de la voz de cada escena (`N7bClipRef.durationSeconds`, medida por ASR), no sobre la
+    // ESTIMADA del guion (`countWords/2.5`). El TTS real desborda la estimación (~+45% en el run de T5.9:
+    // 6s estimados vs 8.68s medidos) y, con el clip topado a `maxDuration` (veo3.1: 8s), una escena
+    // planificada como UN clip NUNCA cubría su narración → `fitSegmentFile` lanzaba `FitError` y N8 no
+    // componía. Sin dep N7b (path stepless/smoke) el mapa viene vacío y se degrada a la estimación (el
+    // comportamiento anterior a T5.8c). NUNCA encoge una escena (`max(estimada, medida)`).
+    const measuredNarration = deriveMeasuredNarrationByScene(ctx.deps ?? []);
+    const sizedBodyScenes = sizeScenesToNarration(
+      bodyScenes,
+      segmentSceneIndices(script.scenes, 'body'),
+      measuredNarration,
+    );
+
     // Troceo §7.5: cada escena de body > maxDuration se parte en clips ≤ maxDuration (`planGeneration`
     // de core, función pura y testeada de T3.6). El plan es la lista EXACTA de clips a generar — la
     // cláusula «se generan exactamente los clips del presupuesto §7.5» sale de aquí.
-    const plan = planGeneration(bodyScenes, maxDuration);
+    const plan = planGeneration(sizedBodyScenes, maxDuration);
 
     // Un clip POR ENTRADA del plan. Se itera ESCENA→CLIP (no el `plan.clips` aplanado) para que
     // `bodySceneIndex` sea el índice REAL de la escena de body (si una escena se troceó, sus 2 clips

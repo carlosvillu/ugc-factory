@@ -64,6 +64,34 @@ export class FitError extends Error {
  */
 export const MAX_HOLD_DEFICIT_S = 0.5;
 
+/**
+ * EL PERFIL DE ENCODE DE LOS INTERMEDIOS de la cadena de render (T5.8c). Lo comparten las etapas que
+ * producen un fichero que T5.2 (normalize) vuelve a encodar al perfil canónico: el fitter (`buildFitArgs`) y
+ * el concat intra-escena (`buildSceneConcatArgs`). Hermano de `CANONICAL_VIDEO_PROFILE`/
+ * `EXPORT_MASTER_PRESET`, pero para lo que NO es un entregable.
+ *
+ *   · `-preset veryfast`: el output es un INTERMEDIO, así que la eficiencia de bitrate que compraría un
+ *     preset lento se descarta — se elige velocidad (medium sería 5–8× más lento por clip×variante sin
+ *     ganancia final).
+ *   · `-crf 18` (casi-lossless) SÍ importa: da a T5.2 una fuente limpia y evita compresión compuesta
+ *     CRF-sobre-CRF en una cadena que ya encadena dos (o tres, con el concat) encodes.
+ *   · `yuv420p`: compatible con el concat `-c copy` de T5.3 y con lo que T5.2 normalizará después.
+ *
+ * NO fija resolución/fps/SAR: eso es de T5.2 (normalize), que corre DESPUÉS. Una CONSTANTE COMPARTIDA (y no
+ * dos tuplas escritas a mano) es lo que hace VERDAD el «mismo perfil que el fitter» que documenta el concat:
+ * si divergieran, la cadena metería un cambio de perfil silencioso entre etapas.
+ */
+export const INTERMEDIATE_ENCODE_ARGS: readonly string[] = [
+  '-c:v',
+  'libx264',
+  '-preset',
+  'veryfast',
+  '-crf',
+  '18',
+  '-pix_fmt',
+  'yuv420p',
+];
+
 /** El PLAN de fitting decidido a partir de las duraciones — el resultado PURO de `planFit`, que la capa de
  *  ffmpeg (o el test) traduce a args. Un discriminated union: `trim` (clip ≥ narración → recorta al final),
  *  `hold` (clip < narración, déficit <0,5 s → holdea el último frame), `error` (déficit ≥0,5 s → grosero). */
@@ -105,12 +133,8 @@ export function planFit(args: { clipDurationS: number; narrationDurationS: numbe
  *     frame para rellenar el déficit. `tpad` es un filtro → re-encode obligado. El `-t <target>` acota la
  *     salida EXACTA a la narración (tpad por sí solo puede sobre-extender por redondeo del framerate).
  *
- * Perfil de re-encode: H.264 yuv420p (compatible con el concat de T5.3 y con lo que T5.2 normalizará
- * después). NO se fija resolución/fps/SAR aquí — eso es de T5.2 (normalize), que corre DESPUÉS; este paso
- * solo debe la DURACIÓN. `-preset veryfast`: el output es un INTERMEDIO que T5.2 vuelve a encodar al perfil
- * canónico, así que la eficiencia de bitrate que compraría un preset lento se descarta — se elige velocidad
- * (medium sería 5–8× más lento por clip×variante sin ganancia final). `-crf 18` (casi-lossless) sí importa:
- * da a T5.2 una fuente limpia (evita compresión compuesta CRF-sobre-CRF en la cadena de dos encodes).
+ * Perfil de re-encode: `INTERMEDIATE_ENCODE_ARGS` (la constante COMPARTIDA con el concat intra-escena de
+ * T5.8c — ver su docblock para el porqué de cada flag). Este paso solo debe la DURACIÓN.
  *
  * El param `plan` se estrecha a `trim`/`hold` (excluye `error`): el estado inválido lo prohíbe el TIPO, no
  * una rama-throw en runtime. El caller (`fitSegmentFile`) intercepta `error` ANTES de llegar aquí.
@@ -126,20 +150,7 @@ export function buildFitArgs(opts: {
     plan.kind === 'hold'
       ? ['-vf', `tpad=stop_mode=clone:stop_duration=${plan.deficitS.toFixed(3)}`]
       : [];
-  const encode = [
-    '-t',
-    plan.targetS.toFixed(3),
-    '-c:v',
-    'libx264',
-    '-preset',
-    'veryfast',
-    '-crf',
-    '18',
-    '-pix_fmt',
-    'yuv420p',
-    '-y',
-    outPath,
-  ];
+  const encode = ['-t', plan.targetS.toFixed(3), ...INTERMEDIATE_ENCODE_ARGS, '-y', outPath];
   return [...head, ...filter, ...encode];
 }
 

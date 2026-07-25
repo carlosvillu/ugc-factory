@@ -92,7 +92,7 @@ describe.skipIf(!mediaToolsAvailable)('concat + mezcla de audio → máster inte
       });
       const videoAsset = await seedAsset(storage, keyToId, v, `seg/${String(i)}.mp4`);
       const voAudio = await seedAsset(storage, keyToId, a, `vo/${String(i)}.m4a`);
-      segments.push({ type, videoAsset, voAudio });
+      segments.push({ type, videoAssets: [videoAsset], voAudio });
     }
 
     const spec: CompositionSpec = {
@@ -130,7 +130,7 @@ describe.skipIf(!mediaToolsAvailable)('concat + mezcla de audio → máster inte
     const videoAsset = await seedAsset(storage, keyToId, v, 'one/v.mp4');
     const voAudio = await seedAsset(storage, keyToId, a, 'one/a.m4a');
     const spec: CompositionSpec = {
-      segments: [{ type: 'hook', videoAsset, voAudio }],
+      segments: [{ type: 'hook', videoAssets: [videoAsset], voAudio }],
       music: null,
       output: { width: 1080, height: 1920, fps: 30, maxDurationS: 30 },
     };
@@ -161,7 +161,7 @@ describe.skipIf(!mediaToolsAvailable)('concat + mezcla de audio → máster inte
       const a = await makeTestAudio({ out: p(`la-${String(i)}.m4a`), seconds: 3, freq: 440 });
       const videoAsset = await seedAsset(storage, keyToId, v, `lv/${String(i)}.mp4`);
       const voAudio = await seedAsset(storage, keyToId, a, `la/${String(i)}.m4a`);
-      segments.push({ type, videoAsset, voAudio });
+      segments.push({ type, videoAssets: [videoAsset], voAudio });
     }
     // Un bed musical (tono grave largo) como stand-in del bed IA.
     const bed = await makeTestAudio({ out: p('l-bed.m4a'), seconds: 9, freq: 110 });
@@ -235,7 +235,7 @@ describe.skipIf(!mediaToolsAvailable)('concat + mezcla de audio → máster inte
       const a = await makeTestAudio({ out: p(`fa-${String(i)}.m4a`), seconds: voSecs, freq: 440 });
       const videoAsset = await seedAsset(storage, keyToId, v, `fv/${String(i)}.mp4`);
       const voAudio = await seedAsset(storage, keyToId, a, `fa/${String(i)}.m4a`);
-      segments.push({ type, videoAsset, voAudio });
+      segments.push({ type, videoAssets: [videoAsset], voAudio });
     }
     const bed = await makeTestAudio({ out: p('f-bed.m4a'), seconds: 12, freq: 220 });
     const bedAsset = await seedAsset(storage, keyToId, bed, 'f/bed.m4a');
@@ -273,7 +273,7 @@ describe.skipIf(!mediaToolsAvailable)('concat + mezcla de audio → máster inte
       const a = await makeTestAudio({ out: p(`na-${String(i)}.m4a`), seconds: 3, freq: 440 });
       const videoAsset = await seedAsset(storage, keyToId, v, `nv/${String(i)}.mp4`);
       const voAudio = await seedAsset(storage, keyToId, a, `na/${String(i)}.m4a`);
-      segments.push({ type, videoAsset, voAudio });
+      segments.push({ type, videoAssets: [videoAsset], voAudio });
     }
     const spec: CompositionSpec = {
       segments,
@@ -294,7 +294,7 @@ describe.skipIf(!mediaToolsAvailable)('concat + mezcla de audio → máster inte
   test('composeMaster lanza ComposeError si un input no existe en storage', async () => {
     const storage = makeMediaTestStorage(workDir);
     const spec: CompositionSpec = {
-      segments: [{ type: 'hook', videoAsset: newUlid(), voAudio: newUlid() }],
+      segments: [{ type: 'hook', videoAssets: [newUlid()], voAudio: newUlid() }],
       music: null,
       output: { width: 1080, height: 1920, fps: 30, maxDurationS: 9 },
     };
@@ -407,7 +407,7 @@ describe.skipIf(!mediaToolsAvailable)('ducking con bed channel_layout=unknown (T
       const a = await makeTestAudio({ out: p(`t58a-ma-${String(i)}.m4a`), seconds: 3, freq: 440 });
       const videoAsset = await seedAsset(storage, keyToId, v, `t58a-mv/${String(i)}.mp4`);
       const voAudio = await seedAsset(storage, keyToId, a, `t58a-ma/${String(i)}.m4a`);
-      segments.push({ type, videoAsset, voAudio });
+      segments.push({ type, videoAssets: [videoAsset], voAudio });
     }
     // El BED REAL de T4.9 (unknown) como música, con DUCKING activo — el disparador exacto del bug.
     const bedAsset = await seedAsset(storage, keyToId, REAL_BED_T49, 't58a/bed.wav');

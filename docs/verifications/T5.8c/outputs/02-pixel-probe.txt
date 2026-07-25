@@ -1,0 +1,15 @@
+== duraciones de los clips de entrada ==
+c0: 4.000000
+c1: 4.000000
+c2: 4.000000
+== concat intra-escena (3 clips) ==
+scene.mp4 duracion: 12.000000
+== color medio (R G B) por tercio de scene.mp4 ==
+t=2s  (esperado ROJO  ~ 237 28 36 ): 254 0 0 
+t=6s  (esperado VERDE ~ 0 177 64  ): 1 128 1 
+t=10s (esperado AZUL  ~ 0 0 255   ): 0 0 254 
+== fit a narracion 10.5s (trim) ==
+fitted.mp4 duracion: 10.500000
+t=2s  (ROJO,  clip0): 254 0 0 
+t=6s  (VERDE, clip1): 1 128 1 
+t=10s (AZUL,  clip2): 0 0 254 

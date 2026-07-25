@@ -1,0 +1,5 @@
+5f45ff83d7ac7d8ed9a7eadf1b027ab04889baa83aaa6e01a7ab4a2caa4d55d3  packages/services/src/concat-scene-clips.ts
+746b058ab457b63a8f2093d2da81beb262f16d70110bb9f6bd124d6410463274  packages/services/src/assemble-composition-spec.ts
+a3778747f068a4be0957b2997c98f242d5da818ec7d3bcb214eed0da5f49f3a9  packages/services/src/fit-segment.ts
+6aca63024be1d21736cecd51519216ca34619824d3a215b6abbcd6cb070b4e8e  apps/worker/src/executors/generate-broll.ts
+4e796167f940512191900b8ce9cc839d98b45b21b2d2f99f296ab7944ca632a9  apps/worker/src/executors/compose-variant.ts

@@ -135,6 +135,7 @@ const ULID: Record<string, string> = {
   'vo-3': '01JBBBBBBBBBBBBBBBBBBBBBB3',
   'broll-A': '01JCCCCCCCCCCCCCCCCCCCCCCA',
   'broll-B': '01JCCCCCCCCCCCCCCCCCCCCCCB',
+  'broll-C': '01JCCCCCCCCCCCCCCCCCCCCCCC',
   'cta-A': '01JEEEEEEEEEEEEEEEEEEEEEEA',
   'bed-1': '01JDDDDDDDDDDDDDDDDDDDDDD1',
 };
@@ -191,7 +192,7 @@ describe('assembleCompositionSpec (T5.5d)', () => {
     // El HOOK usa el clip de avatar (N7c) con SU voz absoluta.
     expect(spec.segments[0]).toMatchObject({
       type: 'hook',
-      videoAsset: u('vid-avatar'),
+      videoAssets: [u('vid-avatar')],
       voAudio: u('vo-0'),
     });
     // ── EL ASSERT QUE MUERDE (cta) ── el segmento cta usa el clip de N7f (`n7f.clips[0]` = cta-A por
@@ -199,7 +200,7 @@ describe('assembleCompositionSpec (T5.5d)', () => {
     // el bug primo de índice (leer n7f.clips[2] = undefined) fallarían aquí.
     expect(spec.segments[2]).toMatchObject({
       type: 'cta',
-      videoAsset: u('cta-A'),
+      videoAssets: [u('cta-A')],
       voAudio: u('vo-2'),
     });
 
@@ -207,14 +208,168 @@ describe('assembleCompositionSpec (T5.5d)', () => {
     // (escena absoluta 3) lleva broll-B + vo-3. Un mapeo por sceneIndex crudo cruzaría las voces.
     expect(spec.segments[1]).toMatchObject({
       type: 'body',
-      videoAsset: u('broll-A'),
+      videoAssets: [u('broll-A')],
       voAudio: u('vo-1'),
     });
     expect(spec.segments[3]).toMatchObject({
       type: 'body',
-      videoAsset: u('broll-B'),
+      videoAssets: [u('broll-B')],
       voAudio: u('vo-3'),
     });
+  });
+
+  // ── T5.8c · ESCENA TROCEADA (§7.5): TODOS los clips, ninguno pagado-sin-usar ────────────────────────
+  it('escena de body TROCEADA → el segmento lleva TODOS sus clips ordenados por clipIndex (fuga cerrada)', async () => {
+    // La escena de body se troceó en 2 clips (narración > maxDuration del modelo). ANTES de T5.8c
+    // `pickClip` devolvía SOLO el `clipIndex 0` y `broll-B` se pagaba y se TIRABA (fuga de dinero) — y ese
+    // único clip, topado a maxDuration, no cubría la narración → `FitError` en el fitter.
+    getScriptById.mockResolvedValue({
+      id: 'script-1',
+      scenes: [scene('hook', 'hook line'), scene('body', 'a very long body line')],
+    });
+    getAsset.mockResolvedValue({ wordTimestamps: null });
+
+    const spec = await assembleCompositionSpec(
+      { db: fakeDb },
+      {
+        variantId: 'v1',
+        variantMaxDurationS: 30,
+        deps: [
+          n7cOutput('vid-avatar'),
+          n7bOutput([
+            { sceneIndex: 0, assetId: 'vo-0', durationSeconds: 2.1 },
+            // La narración MEDIDA de la escena de body (8,68 s: el caso real del run de T5.9).
+            { sceneIndex: 1, assetId: 'vo-1', durationSeconds: 8.68 },
+          ]),
+          // DESORDENADOS a propósito: el ensamblador debe ordenarlos por `clipIndex`, no por el orden de
+          // llegada (el orden del array ES el orden temporal del concat intra-escena).
+          n7dOutput([
+            { bodySceneIndex: 0, clipIndex: 1, assetId: 'broll-B' },
+            { bodySceneIndex: 0, clipIndex: 0, assetId: 'broll-A' },
+          ]),
+        ],
+      },
+    );
+
+    // UN segmento por ESCENA (no uno por clip) con los DOS clips dentro, en orden de clipIndex.
+    expect(spec.segments.map((s) => s.type)).toEqual(['hook', 'body']);
+    expect(spec.segments[1]).toMatchObject({
+      type: 'body',
+      videoAssets: [u('broll-A'), u('broll-B')],
+      voAudio: u('vo-1'),
+    });
+  });
+
+  it('escena de CTA TROCEADA → mismo trato que el body (todos los clips de N7f, ordenados)', async () => {
+    getScriptById.mockResolvedValue({
+      id: 'script-1',
+      scenes: [scene('hook', 'hook line'), scene('cta', 'a very long cta line')],
+    });
+    getAsset.mockResolvedValue({ wordTimestamps: null });
+
+    const spec = await assembleCompositionSpec(
+      { db: fakeDb },
+      {
+        variantId: 'v1',
+        variantMaxDurationS: 30,
+        deps: [
+          n7cOutput('vid-avatar'),
+          n7bOutput([
+            { sceneIndex: 0, assetId: 'vo-0', durationSeconds: 2.1 },
+            { sceneIndex: 1, assetId: 'vo-1', durationSeconds: 9.5 },
+          ]),
+          n7fOutput([
+            { ctaSceneIndex: 0, clipIndex: 1, assetId: 'broll-B' },
+            { ctaSceneIndex: 0, clipIndex: 0, assetId: 'cta-A' },
+          ]),
+        ],
+      },
+    );
+
+    expect(spec.segments[1]).toMatchObject({
+      type: 'cta',
+      videoAssets: [u('cta-A'), u('broll-B')],
+    });
+  });
+
+  // ── T5.8c · TROCEO NO CONTIGUO → ABORTA (no compone un máster corrupto que pasa el QA) ───────────────
+  it('clipIndex con HUECO (0 y 2) → PermanentStepError: el concat produciría una escena con un tramo faltante', async () => {
+    // Un hueco lo puede producir una carrera de dedup o un retry parcial de N7d. Concatenar [0, 2] daría una
+    // escena a la que le falta el tramo central; el fitter solo mira la duración TOTAL y la recortaría tan
+    // tranquilo → máster visualmente corrupto INDISTINGUIBLE de uno bueno. Se aborta ruidoso.
+    getScriptById.mockResolvedValue({
+      id: 'script-1',
+      scenes: [scene('body', 'a very long body line')],
+    });
+    getAsset.mockResolvedValue({ wordTimestamps: null });
+
+    await expect(
+      assembleCompositionSpec(
+        { db: fakeDb },
+        {
+          variantId: 'v1',
+          variantMaxDurationS: 30,
+          deps: [
+            n7bOutput([{ sceneIndex: 0, assetId: 'vo-0', durationSeconds: 8.68 }]),
+            n7dOutput([
+              { bodySceneIndex: 0, clipIndex: 0, assetId: 'broll-A' },
+              { bodySceneIndex: 0, clipIndex: 2, assetId: 'broll-C' }, // ← falta el 1
+            ]),
+          ],
+        },
+      ),
+    ).rejects.toThrow(/NO forman un troceo §7\.5 contiguo: clipIndex=\[0, 2\]/);
+  });
+
+  it('clipIndex DUPLICADO (0 y 0) → PermanentStepError (el mismo tramo dos veces tampoco es el troceo)', async () => {
+    getScriptById.mockResolvedValue({
+      id: 'script-1',
+      scenes: [scene('cta', 'a very long cta line')],
+    });
+    getAsset.mockResolvedValue({ wordTimestamps: null });
+
+    await expect(
+      assembleCompositionSpec(
+        { db: fakeDb },
+        {
+          variantId: 'v1',
+          variantMaxDurationS: 30,
+          deps: [
+            n7bOutput([{ sceneIndex: 0, assetId: 'vo-0', durationSeconds: 9.5 }]),
+            n7fOutput([
+              { ctaSceneIndex: 0, clipIndex: 0, assetId: 'cta-A' },
+              { ctaSceneIndex: 0, clipIndex: 0, assetId: 'broll-B' },
+            ]),
+          ],
+        },
+      ),
+    ).rejects.toThrow(/NO forman un troceo §7\.5 contiguo/);
+  });
+
+  it('CONTROL POSITIVO: un set contiguo 0..n-1 (aunque llegue desordenado) NO lanza', async () => {
+    // El guard NO muerde el caso legítimo: es el mismo set del test de escena troceada, desordenado.
+    getScriptById.mockResolvedValue({
+      id: 'script-1',
+      scenes: [scene('body', 'a very long body line')],
+    });
+    getAsset.mockResolvedValue({ wordTimestamps: null });
+
+    const spec = await assembleCompositionSpec(
+      { db: fakeDb },
+      {
+        variantId: 'v1',
+        variantMaxDurationS: 30,
+        deps: [
+          n7bOutput([{ sceneIndex: 0, assetId: 'vo-0', durationSeconds: 8.68 }]),
+          n7dOutput([
+            { bodySceneIndex: 0, clipIndex: 2, assetId: 'broll-C' },
+            { bodySceneIndex: 0, clipIndex: 0, assetId: 'broll-A' },
+            { bodySceneIndex: 0, clipIndex: 1, assetId: 'broll-B' },
+          ]),
+        ],
+      },
+    );
+    expect(spec.segments[0]?.videoAssets).toEqual([u('broll-A'), u('broll-B'), u('broll-C')]);
   });
 
   it('escena cta SIN dep N7f → PermanentStepError (NUNCA reusa el clip del avatar — simetría del throw)', async () => {
@@ -405,7 +560,7 @@ describe('assembleCompositionSpec (T5.5d)', () => {
         ],
       },
     );
-    expect(spec.segments[0]?.videoAsset).toBe(u('vid-avatar')); // el avatar es el vídeo
+    expect(spec.segments[0]?.videoAssets).toEqual([u('vid-avatar')]); // el avatar es el vídeo (1 clip)
     expect(spec.music?.asset).toBe(u('bed-1')); // el bed es la música
   });
 

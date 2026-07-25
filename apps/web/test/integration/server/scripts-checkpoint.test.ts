@@ -616,4 +616,40 @@ describe('CP3 · approveScriptsForStep (T2.6): veredictos, v2 solo si edita, blo
     expect(await variantStatus(variantIds[0]!)).not.toBe('scripted');
     expect(await pipelineRunCount()).toBe(0);
   });
+
+  // ── T5.11 · UN LOTE TRUNCADO NO SE APRUEBA NI POR POST DIRECTO ──────────────────────────────────
+  // El defecto del run de T5.9: N5 murió a mitad (saldo Anthropic) con 5 de 12 guiones y CP3 dejaba
+  // aprobar ⇒ generación de PAGO sobre un lote incompleto. El executor ya impide que ese step llegue a
+  // `waiting_approval`, pero esta es la cerradura del SERVIDOR sobre el estado REAL de la BD: alcanza a
+  // un step pausado ANTES del fix y a cualquier cliente hecho a mano. Mismo criterio que el bloqueo
+  // server-side de los flags: el `approved` del cliente es su INTENCIÓN, la decisión la DERIVA el
+  // servidor. El invariante que protege es DINERO: cero `pipeline_run` de generación.
+  it('T5.11 MONEY-SAFETY: un lote con menos guiones que variantes se RECHAZA y no arranca ningún run', async () => {
+    // Tier premium (generation-ready: sin el guard, ESTE es el camino que SÍ gastaría) con 2 variantes,
+    // y se BORRA el guion de una — el estado exacto que deja un `api_error` a mitad de N5 (las filas
+    // escritas se conservan; las que faltan, faltan). Dato en reposo por SQL, no por clicks.
+    // La persona vive en `beforeAll` (NO se trunca): el test de ATOMICIDAD de arriba le VACÍA la
+    // imagen de referencia. Sin restaurarla, el camino de generación reventaría por OTRA causa y el
+    // CONTROL NEGATIVO de este test sería mentira (rojo por el motivo equivocado: quitar el guard
+    // seguiría lanzando, ahora desde `buildVariantGenerationPlan`). Restaurarla garantiza que, sin el
+    // guard, la aprobación llega DE VERDAD a `createRun` — que es el gasto que hay que impedir.
+    await tdb.pool.query(
+      `UPDATE persona SET reference_image_ids = ARRAY[(SELECT id FROM asset WHERE kind = 'reference_image' LIMIT 1)]`,
+    );
+    const { output, variantIds } = await seedScriptedBatch(tdb.db, 2, [[], []], 'premium');
+    await tdb.pool.query('DELETE FROM ad_script WHERE variant_id = $1', [variantIds[1]]);
+
+    await expect(
+      approveInTx(output, {
+        kind: 'scripts',
+        // El cliente pide aprobar SOLO la que tiene guion: es justo el POST que la UI truncada
+        // enviaba. Aun así se rechaza — el lote, no el veredicto, es lo que está incompleto.
+        verdicts: [{ variantId: variantIds[0]!, approved: true }],
+      }),
+    ).rejects.toThrow(/INCOMPLETO: 1\/2 guiones escritos/);
+
+    // Ni transición ni gasto: la variante NO queda `scripted` y no hay run de generación.
+    expect(await variantStatus(variantIds[0]!)).not.toBe('scripted');
+    expect(await pipelineRunCount()).toBe(0);
+  });
 });

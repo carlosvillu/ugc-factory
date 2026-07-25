@@ -47,5 +47,11 @@ export type BatchScript = z.infer<typeof BatchScriptSchema>;
 export const BatchScriptsSchema = z.object({
   batchId: z.string().min(1),
   scripts: z.array(BatchScriptSchema),
+  /** Cuántos guiones DEBERÍA haber: una variante del lote = un guion (T5.11). Es la cuenta ESPERADA
+   *  (de la matriz), no la observada — `scripts.length` es la observada. Cuando difieren, el lote
+   *  está TRUNCADO (N5 murió a mitad: saldo/401/429) y CP3 no puede aprobarse: aprobar dispararía
+   *  generación de PAGO sobre las variantes que sí tienen guion. Sin este campo el panel solo podía
+   *  decir «5/5» —comparaba las filas consigo mismas— y presentaba el truncamiento como éxito. */
+  expectedCount: z.number().int().nonnegative(),
 });
 export type BatchScripts = z.infer<typeof BatchScriptsSchema>;

@@ -94,9 +94,12 @@ const BLOCKED: BatchScript = {
   guardrailFlags: [BLOCKING_FLAG],
 };
 
-function scriptsHandler(scripts: BatchScript[]) {
+/** El handler de `GET /api/batches/:id/scripts`. `expectedCount` (T5.11) es cuántos guiones DEBERÍA
+ *  traer el lote: por defecto, los que trae (lote completo). Pasarlo MAYOR simula el lote TRUNCADO
+ *  que deja un `api_error` a mitad de N5 — el estado que la UI presentaba como éxito. */
+function scriptsHandler(scripts: BatchScript[], expectedCount = scripts.length) {
   return http.get('*/api/batches/*/scripts', () =>
-    HttpResponse.json({ batchId: BATCH_ID, scripts }),
+    HttpResponse.json({ batchId: BATCH_ID, scripts, expectedCount }),
   );
 }
 
@@ -201,5 +204,37 @@ describe('ScriptsPanel (CP3)', () => {
     expect(byId.get(BLOCKED.variantId)?.approved).toBe(true);
     expect(byId.get(CLEAN.variantId)?.editedScript).toBeUndefined();
     expect(byId.get(CLEAN.variantId)?.approved).toBe(true);
+  });
+
+  // ── T5.11 · LOTE TRUNCADO ────────────────────────────────────────────────────────────────────────
+  // El defecto REAL (run de T5.9): con 5 de 12 guiones, el panel afirmaba «N5 escribió un guion por
+  // variante» y dejaba «Confirmar guiones» HABILITADO ⇒ aprobar disparaba generación de PAGO sobre un
+  // lote truncado. Ahora el recuento REAL es visible y no existe camino de UI para aprobarlo.
+  test('T5.11: un lote truncado muestra el recuento REAL y NO deja aprobar', async () => {
+    // 1 guion de 2 esperados: exactamente lo que deja un `api_error` a mitad de N5.
+    server.use(scriptsHandler([CLEAN], 2));
+    render(<ScriptsPanel stepId={STEP_ID} batchId={BATCH_ID} />);
+
+    await screen.findByRole('region', { name: /acme-hook01-es-12s/ });
+
+    // El recuento REAL (1/2), no «1/1»: sin la cuenta ESPERADA del servidor, el panel comparaba las
+    // filas consigo mismas y el truncamiento era invisible.
+    const partial = document.querySelector('[data-slot="scripts-partial"]');
+    expect(partial).not.toBeNull();
+    expect(partial?.textContent).toContain('1/2');
+    // Y la afirmación falsa ya no está.
+    expect(screen.queryByText(/N5 escribió un guion por variante/)).not.toBeInTheDocument();
+
+    // LO QUE CUIDA EL DINERO: ningún camino de la UI dispara la aprobación.
+    expect(screen.getByRole('button', { name: 'Confirmar guiones' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Aprobar todas las aptas' })).toBeDisabled();
+  });
+
+  test('T5.11: el lote COMPLETO sigue aprobándose (el guard no encierra el camino feliz)', async () => {
+    render(<ScriptsPanel stepId={STEP_ID} batchId={BATCH_ID} />);
+
+    await screen.findByRole('region', { name: /acme-hook01-es-12s/ });
+    expect(document.querySelector('[data-slot="scripts-partial"]')).toBeNull();
+    expect(screen.getByRole('button', { name: 'Confirmar guiones' })).not.toBeDisabled();
   });
 });

@@ -47,6 +47,7 @@ import {
   getBatch,
   getBrief,
   getLatestScriptsByBatch,
+  listBatchVariants,
   type DecidedVerdict,
   type Db,
 } from '@ugc/db';
@@ -139,6 +140,23 @@ async function applyDecidedVerdicts(
   // Los guiones VIGENTES del lote, indexados por variante (con su filename_code y flags actuales).
   const latest = await getLatestScriptsByBatch(db, batchId);
   const currentByVariant = new Map(latest.map((l) => [l.variantId, l]));
+
+  // ── GUARD DE LOTE COMPLETO (T5.11, invariante #1 llevado al LOTE) ────────────────────────────────
+  // Aprobar CP3 arranca generación de PAGO (fal). Un lote TRUNCADO —N5 murió a mitad por saldo/401/429
+  // y dejó k<n guiones— no se aprueba NUNCA, ni desde la UI ni con un POST directo: es el mismo
+  // criterio que el bloqueo server-side de los flags (el cliente manda su INTENCIÓN; el servidor
+  // DERIVA de la BD si procede). El executor de N5 ya impide que ese step llegue a `waiting_approval`
+  // (va a `failed` con la causa tipada); esto es la segunda cerradura, sobre el estado REAL de la BD,
+  // para que ningún camino —un step viejo pausado antes del fix, un cliente hecho a mano— pueda
+  // disparar gasto sobre un lote incompleto.
+  const batchVariants = await listBatchVariants(db, batchId);
+  if (latest.length < batchVariants.length) {
+    throw new AppError(
+      'validation_error',
+      `el lote ${batchId} está INCOMPLETO: ${String(latest.length)}/${String(batchVariants.length)} guiones escritos. ` +
+        'Reintenta la guionización antes de aprobar: aprobar ahora dispararía generación de pago sobre un lote truncado.',
+    );
+  }
 
   const decided: DecidedVerdict[] = decision.verdicts.map((verdict) => {
     const current = currentByVariant.get(verdict.variantId);

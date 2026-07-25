@@ -196,4 +196,61 @@ test.describe('CP3 · editor de guiones: el arco bloqueante (T2.6)', () => {
       expect(edited[0]?.full_text).not.toContain(BANNED_CLAIM);
     },
   );
+
+  // ── T5.11 · UN LOTE TRUNCADO NO SE PUEDE APROBAR ────────────────────────────────────────────────
+  // EL DEFECTO REAL (run de T5.9, 2026-07-25): el saldo de Anthropic se agotó a mitad de N5 ⇒ 5 de 12
+  // guiones escritos, pero el step quedó `waiting_approval` con `error = NULL`, la UI AFIRMABA «N5
+  // escribió un guion por variante» y «Confirmar guiones» seguía HABILITADO. Aprobar ahí dispara
+  // generación REAL de fal sobre un lote incompleto: dinero perdido presentado como flujo normal.
+  //
+  // MISMO PATRÓN HÍBRIDO que el arco bloqueante de arriba: se conduce el sistema REAL hasta un CP3 de
+  // verdad y se INYECTA el truncamiento como dato en reposo (borrar la fila `ad_script` de una
+  // variante = exactamente lo que deja un `api_error` a mitad: las escritas se conservan, las que
+  // faltan faltan). Provocar el 429 real de Anthropic desde el navegador no es posible sin tocar el
+  // fake global del stack, que comparten los specs en paralelo.
+  test(
+    'T5.11: con guiones de menos, CP3 muestra el recuento REAL y NO deja aprobar',
+    { tag: ['@f2', '@checkpoint'] },
+    async ({ page }) => {
+      const { batchId, variantCount } = await driveToCp3(page);
+
+      // TRUNCA el lote: borra el guion de UNA variante (la de filename_code más alto, para no chocar
+      // con el helper del otro test). Quedan `variantCount - 1` de `variantCount`.
+      await queryStack(
+        `DELETE FROM ad_script
+          WHERE id IN (SELECT s.id FROM ad_script s JOIN ad_variant v ON v.id = s.variant_id
+                        WHERE v.batch_id = $1 ORDER BY v.filename_code DESC LIMIT 1)`,
+        [batchId],
+      );
+      await page.reload();
+      await expect(cp3(page)).toBeVisible({ timeout: 30_000 });
+      await expect(cp3(page).locator('[data-slot="variant-card"]').first()).toBeVisible({
+        timeout: 30_000,
+      });
+
+      // 1. EL RECUENTO REAL es visible (k/n, con n = las variantes del lote), no un «todo bien».
+      const partial = cp3(page).locator('[data-slot="scripts-partial"]');
+      await expect(partial).toBeVisible();
+      await expect(cp3(page).locator('[data-slot="scripts-partial-count"]')).toHaveText(
+        `${String(variantCount - 1)}/${String(variantCount)}`,
+      );
+      // Y la afirmación FALSA («un guion por variante») desapareció.
+      await expect(cp3(page).getByText(/N5 escribió un guion por variante/)).toHaveCount(0);
+
+      // 2. NINGÚN CAMINO DE LA UI DISPARA GASTO: el botón de confirmar (y el de aprobar en masa)
+      //    están inertes mientras el lote esté incompleto. Este es EL assert del control negativo:
+      //    revertir el fix lo vuelve a habilitar.
+      await expect(cp3(page).getByRole('button', { name: /confirmar guiones/i })).toBeDisabled();
+      await expect(
+        cp3(page).getByRole('button', { name: /aprobar todas las aptas/i }),
+      ).toBeDisabled();
+
+      // 3. Y la BD no se movió: ninguna variante pasó a `scripted` (nada que generar ⇒ nada que pagar).
+      const variants = await queryStack<{ status: string }>(
+        `SELECT status FROM ad_variant WHERE batch_id = $1`,
+        [batchId],
+      );
+      expect(variants.every((v) => v.status !== 'scripted')).toBe(true);
+    },
+  );
 });

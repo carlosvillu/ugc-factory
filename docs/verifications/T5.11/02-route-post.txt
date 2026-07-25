@@ -1,0 +1,14 @@
+=== pipeline_run BEFORE ===
+31
+=== variant status BEFORE ===
+planned
+=== ROUTE POST ===
+LOGIN status: 200
+APPROVE status: 400
+APPROVE body: {"code":"validation_error","message":"el lote 01KYCP8RAJ07GFVKXAMVYEZ7ZV está INCOMPLETO: 5/12 guiones escritos. Reintenta la guionización antes de aprobar: aprobar ahora dispararía generación de pago sobre un lote truncado.","request_id":"cd2ba06f-9911-4068-8e3b-943efba7a7a9"}
+=== pipeline_run AFTER ===
+31
+=== variant status AFTER (must be planned, not scripted) ===
+planned
+=== any scripted variant in this batch? (must be 0) ===
+0

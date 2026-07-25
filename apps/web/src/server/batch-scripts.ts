@@ -68,5 +68,8 @@ export async function readBatchScripts(db: Db, batchId: string): Promise<BatchSc
     });
   }
 
-  return { batchId, scripts };
+  // La cuenta ESPERADA sale de la MATRIZ del lote (una variante = un guion), no de las filas leídas:
+  // es justo la referencia que falta para detectar un lote TRUNCADO (T5.11). Comparar `scripts`
+  // consigo mismo siempre daría «completo».
+  return { batchId, scripts, expectedCount: plan.variants.length };
 }

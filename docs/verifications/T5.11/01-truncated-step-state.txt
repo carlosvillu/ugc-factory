@@ -1,0 +1,5 @@
+          step_id           |           run_id           |      status      | error_is_null | n5_status | script_refs | variants | scripts 
+----------------------------+----------------------------+------------------+---------------+-----------+-------------+----------+---------
+ 01KYCP8RB3VX13R9Z4V9X8Y6K7 | 01KYCP8RB4XTTDKJXC6HGKQPSE | waiting_approval | t             | api_error |           5 |       12 |       5
+(1 row)
+

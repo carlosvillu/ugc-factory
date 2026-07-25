@@ -63,6 +63,9 @@ export function ScriptsPanel({ stepId, batchId }: ScriptsPanelProps) {
   // El estado por variante. `null` = aún cargando (o falló la carga: el panel pide los guiones al
   // montar, como matrix-panel pide las personas). No se escribe estado síncrono al entrar.
   const [variants, setVariants] = useState<VariantState[] | null>(null);
+  // Cuántos guiones DEBERÍA traer el lote (de la matriz, servidor). Con `variants.length` menor, el
+  // lote está TRUNCADO (T5.11) y aprobar dispararía gasto sobre un lote incompleto.
+  const [expectedCount, setExpectedCount] = useState(0);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -73,6 +76,7 @@ export function ScriptsPanel({ stepId, batchId }: ScriptsPanelProps) {
       .getScripts(batchId)
       .then((res) => {
         if (cancelled) return;
+        setExpectedCount(res.expectedCount);
         setVariants(
           res.scripts.map((s) => ({ meta: s, script: s.script, approved: false, edited: false })),
         );
@@ -128,8 +132,11 @@ export function ScriptsPanel({ stepId, batchId }: ScriptsPanelProps) {
   /** Envía los veredictos: `editedScript` SOLO para las variantes tocadas (el servidor no-opea sobre
    *  un guion idéntico igualmente, pero mandarlo solo cuando cambió es más honesto). El estado nuevo
    *  del step llega por SSE ⇒ este panel se desmonta solo (sin optimistic update, canvas.md §5). */
-  async function onSubmit() {
+  async function onSubmit(isPartial: boolean) {
     if (variants === null) return;
+    // Cinturón: ni un submit programático (Enter en un form, un click sintético) cuela un lote
+    // truncado. La cerradura REAL es el servidor; esta es la del cliente (T5.11).
+    if (isPartial) return;
     setSubmitting(true);
     setSubmitError(null);
     try {
@@ -175,6 +182,13 @@ export function ScriptsPanel({ stepId, batchId }: ScriptsPanelProps) {
   }
 
   const approvedCount = variants.filter((v) => v.approved).length;
+  // ── LOTE TRUNCADO (T5.11) ────────────────────────────────────────────────────────────────────────
+  // N5 puede acabar con k<n guiones (el proveedor murió a mitad: saldo agotado, 401, 429). Antes el
+  // panel afirmaba «N5 escribió un guion por variante» y dejaba «Confirmar guiones» HABILITADO: el
+  // usuario aprobaba creyendo el lote completo y disparaba generación REAL de fal sobre 5 de 12
+  // variantes. Ahora el recuento REAL es visible y la aprobación queda cerrada hasta completarlo (el
+  // servidor la rechaza igual — esto es la capa que lo hace ENTENDIBLE, no el guard).
+  const partial = variants.length < expectedCount;
 
   return (
     <div
@@ -192,10 +206,29 @@ export function ScriptsPanel({ stepId, batchId }: ScriptsPanelProps) {
           Revisa los guiones del lote
         </h2>
         <p className="max-w-2xl text-mono text-text-3">
-          N5 escribió un guion por variante. Edita la narración escena a escena, resuelve los avisos
-          de compliance y aprueba. El timing y el texto completo se recalculan solos al editar.
+          {partial
+            ? `N5 escribió ${String(variants.length)} de ${String(expectedCount)} guiones: el lote está incompleto.`
+            : 'N5 escribió un guion por variante. Edita la narración escena a escena, resuelve los avisos de compliance y aprueba. El timing y el texto completo se recalculan solos al editar.'}
         </p>
       </div>
+
+      {/* LOTE TRUNCADO: el aviso que sustituye a la afirmación falsa. Dice el recuento REAL y por qué
+          no se puede aprobar — aprobar dispararía generación de PAGO sobre las variantes escritas. */}
+      {partial ? (
+        <div className="px-6 pt-6">
+          <Alert tone="danger" data-slot="scripts-partial">
+            <span>
+              <strong className="font-semibold">Lote incompleto.</strong> Hay{' '}
+              <span data-slot="scripts-partial-count" className="font-mono">
+                {variants.length}/{expectedCount}
+              </span>{' '}
+              guiones escritos: la guionización falló a mitad (saldo del proveedor, 401/429 o
+              timeout). No se puede aprobar — aprobar ahora lanzaría generación de pago sobre un
+              lote truncado. Reintenta el step de guionización para completarlo.
+            </span>
+          </Alert>
+        </div>
+      ) : null}
 
       <div className="flex flex-col gap-4 p-6" data-slot="scripts-list">
         {variants.map((v) => (
@@ -221,6 +254,7 @@ export function ScriptsPanel({ stepId, batchId }: ScriptsPanelProps) {
             size="sm"
             variant="secondary"
             data-slot="approve-all"
+            disabled={partial}
             onClick={approveAll}
           >
             Aprobar todas las aptas
@@ -239,8 +273,10 @@ export function ScriptsPanel({ stepId, batchId }: ScriptsPanelProps) {
           <Button
             type="button"
             data-slot="confirm-scripts"
-            disabled={submitting}
-            onClick={() => void onSubmit()}
+            // T5.11: con el lote truncado el botón queda INERTE (el motivo está en el aviso de
+            // arriba). El servidor lo rechazaría igual; esto evita que el usuario llegue a pedirlo.
+            disabled={submitting || partial}
+            onClick={() => void onSubmit(partial)}
             variant="primary"
             className="border-success bg-success text-success-on hover:border-success hover:bg-success focus-visible:border-success"
           >

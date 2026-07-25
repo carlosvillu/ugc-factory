@@ -1,0 +1,29 @@
+[info] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[log] [HMR] connected
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 238ms
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 106ms
+[log] [HMR] connected
+[info] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[log] [HMR] connected
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 185ms
+[info] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[log] [HMR] connected
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 1941ms
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 222ms
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 183ms
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 728ms
+[info] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[log] [HMR] connected
+[info] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[log] [HMR] connected
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 294ms
+[log] [Fast Refresh] rebuilding
+[log] [Fast Refresh] done in 180ms

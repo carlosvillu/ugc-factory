@@ -2715,3 +2715,38 @@ T5.8 es el primer código que conduce un N8 vivo hasta el mux del máster (su op
 - **Gotcha del `next dev` huérfano, 3ª vez**: el gate salió rojo por `sse-contract.test.ts` con DOS
   procesos vivos en :3000 que dejó el stack del verifier. `lsof -ti:3000 | xargs kill -9` + `rm -rf
   apps/web/.next` → verde. **El reflejo de cierre debe incluir ambas limpiezas.**
+
+## 2026-07-25 · ⏳ T5.11 iniciada (N5 parcial se presenta como éxito)
+- Elegible sin dependencias y sin saldo externo ($0). Severidad ALTA: hoy se puede aprobar un lote truncado y disparar gasto real de fal.
+
+## 2026-07-25 · T5.11 cerrada — PASS
+- Coste: **$0** · Ciclos verifier: 1 · Commit: (abajo) · Gate: exit 0, **2433 tests** + 4 e2e de fase
+- **Qué cierra**: N5 ya no puede presentar un lote parcial como éxito. TRES cerraduras: (1) el executor
+  lanza `PermanentStepError` con causa TIPADA y recuento real si el proveedor falló (`api_error`) o falta
+  algún guion ⇒ el step va a `failed`, no a `waiting_approval` con `error=NULL`; (2) **guard del servidor**
+  en `approveScriptsForStep` que DERIVA de la BD (no del cliente) ⇒ ni la UI ni un POST hecho a mano pueden
+  aprobar un lote truncado; (3) panel CP3 con recuento real y botones `disabled`.
+- **La pieza de diseño que evita quemar dinero arreglando un bug de dinero**: el retry manual conserva el
+  `step_run.id` y entra por la rama de reuso, que ya NO cortocircuita: si el lote está truncado hace
+  **TOP-UP** (re-guioniza SOLO las variantes sin guion, plan filtrado por `filenameCode`). Los guiones ya
+  pagados **no se pierden ni se re-pagan** — verificado: el retry hace 1 llamada, no 2.
+- **Regresión EVITADA por criterio del implementer**: gatear por `status === 'scripted'` habría roto
+  `over_budget`, que devuelve el lote COMPLETO y está DISEÑADO para llegar a CP3 (el usuario lo recorta).
+  El gate correcto es «cuenta completa **Y** no es fallo del proveedor». Tiene su propio test.
+- **Verifier**: probó el **POST directo con auth real** y contó `pipeline_run` por SQL (31→31); verificó el
+  panel contra el **artefacto REAL del bug de T5.9** (step `01KYCP8RB3…`, 5/12, `api_error`); y en su
+  control negativo del guard **llegó a crear un `pipeline_run` real** — prueba directa de que la cerradura
+  impide un gasto que sin ella ocurre. Restauró el diff byte a byte (MD5 idéntico).
+- **Cabo suelto CERRADO por el coordinador (regla 10)**: el verifier no pudo ver pasar el E2E permanente
+  (`script-editor.spec.ts`) porque el stack de :3100 no arrancó, y ese spec NO está en `test:e2e:phases`
+  ⇒ la certificación del gate no lo cubría. **Lo ejecuté yo: 3 passed (20,5s)**. De paso caractericé los 2
+  fallos de la suite e2e COMPLETA (`f4-generation`, `brief-editor`): **ambos pasan AISLADOS**
+  (`brief-editor` 8/8) ⇒ timeouts por carga paralela, NO regresiones.
+- **Deuda anotada**: (1) **DS** — en un lote truncado con flags el usuario ve dos `Alert danger` IDÉNTICAS
+  que significan «esta frase infringe una regla» y «aprobar quema dinero real»; `danger` es el tono más
+  fuerte que existe, así que la elección fue correcta y la carencia es del DS (candidato a tono/primitiva
+  de mayor severidad vía Claude Design + DesignSync). (2) Acoplamiento de orden en
+  `scripts-checkpoint.test.ts` (el test de atomicidad vacía `persona.reference_image_ids` de una persona de
+  `beforeAll` que no se trunca). (3) Los 2 e2e que se caen bajo carga paralela.
+- **Rareza operativa**: el verifier borró+reseedeó `auth.password_hash` (drift del bootstrap). La password
+  de login de DEV es ahora `ugc-factory-dev` (`.env`).

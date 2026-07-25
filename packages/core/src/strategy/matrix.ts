@@ -59,6 +59,22 @@ export interface ComposeMatrixInput {
   /** Las personas disponibles (filas de `@ugc/db`, que traen `id`). Vacío = variantes sin persona
    *  fijada («el usuario puede fijar o dejar que rote», §11). */
   personas?: PlannablePersona[];
+  /**
+   * EL POOL YA ES LA DECISIÓN DEL USUARIO — no lo vuelvas a filtrar por `avatar_hint` (T5.13).
+   *
+   * Por defecto (`false`, el caso `rotate`), `personas` es la LIBRERÍA y el compositor se queda
+   * con las que `matchPersonas` considera compatibles: ahí el matching es la recomendación que
+   * el usuario no ha contradicho.
+   *
+   * Con `true`, `personas` NO es una librería que filtrar: es la persona que el usuario FIJÓ a
+   * mano en CP2 (`personaMode: 'fixed'`). Volver a pasarla por `matchPersonas` la descartaba
+   * cuando no casaba con el hint, y el lote salía `no_match` con variantes SIN CARA — o sea, el
+   * producto ignoraba en silencio una elección explícita. Es el bug de T5.13: el usuario podía
+   * tener una persona con voz válida y no llegar a usarla. Una elección explícita GANA a la
+   * recomendación; la regla `matchPersonas` no se toca (sigue gobernando `rotate` y el endpoint
+   * de candidatas).
+   */
+  personaExplicitlyFixed?: boolean;
   languages: string[];
   objective: AdObjective;
   tier: RecipeTier;
@@ -298,7 +314,10 @@ export function composeMatrix(input: ComposeMatrixInput): BatchPlan {
   }
 
   // Las candidatas: UNA vez para todo el lote (son propiedad del brief, no de la variante).
-  const candidates = matchingPersonas(brief, personas);
+  // Salvo que el usuario haya FIJADO la persona a mano (T5.13): entonces `personas` ya es su
+  // elección y filtrarla por el hint sería descartar lo que acaba de pedir.
+  const candidates =
+    input.personaExplicitlyFixed === true ? personas : matchingPersonas(brief, personas);
 
   const variants: PlannedVariant[] = [];
   const productSlug = slugify(brief.product.name, 16);
@@ -381,6 +400,10 @@ export function composeMatrix(input: ComposeMatrixInput): BatchPlan {
   // Se deriva de los datos que YA tenemos (personas de entrada + candidatas), no escaneando las
   // variantes: el hecho «¿había personas? ¿casó alguna?» es del BRIEF, y recorrer la salida para
   // redescubrirlo era calcular por tercera vez lo mismo.
+  // Con `personaExplicitlyFixed` (T5.13) `candidates` ES el pool fijado, así que esto sale
+  // `matched`: y es la verdad — el lote SÍ lleva cara, la que el usuario eligió. Decir `no_match`
+  // porque la recomendación no la habría propuesto sería describir el lote por lo que el sistema
+  // sugirió en vez de por lo que el usuario decidió.
   const personaSelection: BatchPlan['personaSelection'] =
     personas.length === 0 ? 'no_personas' : candidates.length === 0 ? 'no_match' : 'matched';
 

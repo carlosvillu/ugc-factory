@@ -74,10 +74,13 @@ export interface PlannedBatch {
  * dejar `sharedScope` —la clave de dedup, o sea LA DE DINERO— apuntando a una cara que ya no
  * está): se le da al compositor el pool CORRECTO y él compone coherente.
  *
- *  · `fixed`  → un pool de UNA persona. Ojo: si esa persona NO casa con el `avatar_hint`,
- *    `matchPersonas` la descarta y el plan sale con `personaSelection: 'no_match'` y variantes
- *    sin cara. Es HONESTO (el compositor no recomienda a quien su propia regla descarta), y CP2
- *    solo ofrece fijar entre las CANDIDATAS, así que el caso no se alcanza desde la UI.
+ *  · `fixed`  → un pool de UNA persona, que el compositor usa TAL CUAL
+ *    (`personaExplicitlyFixed`): una elección explícita del usuario no se vuelve a pasar por
+ *    `matchPersonas`. HASTA T5.13 sí se re-filtraba, y una persona que no casaba con el
+ *    `avatar_hint` acababa descartada → `personaSelection: 'no_match'` y variantes SIN CARA. Se
+ *    justificaba con «CP2 solo ofrece fijar entre las CANDIDATAS, así que el caso no se alcanza
+ *    desde la UI»; en cuanto CP2 dejó elegir de la librería ENTERA (T5.13) esa premisa dejó de
+ *    ser cierta y el bug quedó al alcance de un click. El matching sigue gobernando `rotate`.
  *  · `rotate` → todas: `matchPersonas` se queda con las compatibles y las reparte.
  *  · `none`   → ninguna: variantes sin persona (lo único honesto con la librería vacía).
  */
@@ -106,6 +109,8 @@ export function planBatch(input: PlanBatchInput): PlannedBatch {
     hooksPerAngle: config.hooksPerAngle,
     libraryHooks,
     personas: personaPool(config, personas),
+    // La elección explícita del usuario no se re-filtra por el `avatar_hint` (T5.13).
+    personaExplicitlyFixed: config.personaMode === 'fixed',
     languages: config.languages,
     objective: config.objective,
     tier: config.tier,

@@ -136,6 +136,25 @@ describe('planBatch', () => {
       expect(p.variants.every((v) => v.personaName === null)).toBe(true);
     });
 
+    it('`fixed` con una persona que NO casa con el `avatar_hint` la RESPETA (T5.13)', () => {
+      // EL BUG DE T5.13, en la capa donde vive de verdad. Mateo es incompatible con el hint del
+      // brief (hombre, urbano): en `rotate` la regla lo descarta —y debe seguir haciéndolo, es el
+      // test de arriba—, pero si el usuario lo FIJA a mano en CP2 su elección MANDA. Antes de
+      // T5.13 el compositor lo re-pasaba por `matchPersonas`, lo tiraba, y el lote salía
+      // `no_match` con variantes sin cara: el usuario elegía una persona y el producto la
+      // ignoraba en silencio. Sin este assert, «se puede fijar cualquier persona» se cumpliría
+      // con un selector que deja clicar y un lote que no la lleva.
+      const { plan: p } = plan({ personaMode: 'fixed', personaId: 'per_mateo' }, [
+        LUCIA,
+        ANA,
+        MATEO,
+      ]);
+      expect(p.personaSelection).toBe('matched');
+      expect(new Set(p.variants.map((v) => v.personaName))).toEqual(new Set(['Mateo']));
+      // Y ni una variante se queda sin cara (que es como se manifestaba el bug).
+      expect(p.variants.every((v) => v.personaId === 'per_mateo')).toBe(true);
+    });
+
     it('con la librería llena pero NINGUNA compatible, el plan dice `no_match`', () => {
       const { plan: p } = plan({}, [MATEO]);
       expect(p.personaSelection).toBe('no_match');

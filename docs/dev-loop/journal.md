@@ -2782,3 +2782,87 @@ T5.8 es el primer código que conduce un N8 vivo hasta el mux del máster (su op
   saldo agotado. Se anota el estado en `planning.md` y el report. Coste acumulado T5.12: **$0,00**.
 - **Nota de proceso del verifier**: dos «fallos» de gate que vio al arrancar eran artefactos SUYOS (puerto
   3000 ocupado + un `noclobber` en su propia redirección), no del código. El gate real: exit 0.
+
+## 2026-07-25 · ⏳ T5.13 iniciada (persona con voz usable inalcanzable en CP2)
+- $0, sin dependencias, sin saldo externo. `GET /api/personas` YA lista la librería completa (verificado): el fix es de cliente+UI, sin backend nuevo.
+- **T5.13 · CORRECCIÓN DE MI DIAGNÓSTICO (el implementer tenía razón, verificado por mí en `HEAD`)**: mi
+  brief decía «solo UI, el backend ya existe». **Incompleto**. En el original `matrix.ts:301` era
+  `const candidates = matchingPersonas(brief, personas)` **sin excepción para el pool fijado**, y `:385` lo
+  volvía `'no_match'` ⇒ una persona que no casa con el `avatar_hint` se descartaba IGUAL y las variantes
+  salían sin cara. Con solo el «ver todas», el producto habría dejado clicar una persona que el compositor
+  tiraba **en silencio**: el bug seguiría vivo y más escondido. El fix correcto añade
+  `personaExplicitlyFixed` en core (la elección EXPLÍCITA del usuario manda sobre la recomendación;
+  `matchPersonas` sigue gobernando `rotate` y `/api/personas/candidates`).
+- **`ds-reviewer` T5.13 · 1 hallazgo mecánico** (el tipo de cosa que un linter NO da): el badge
+  «sin voz para este idioma» usaba `<Badge tone="warning" dashed>`, y **`dashed` ANULA el `tone`** — sus
+  clases van después en el `cva` y `twMerge` las colapsa; la salida real es
+  `border-dashed border-border-strong bg-transparent text-text-3`, **sin un solo token `warning`**. Además
+  `Badge.prompt.md` dice que `dashed` significa «provisional/estimado», NO «desactivado». Importa por
+  PRODUCTO: ese badge existe para prevenir gasto inútil (el fallo de fondo de T5.9 fue descubrir la falta
+  de voz al generar), y pintado gris apagado se lee como decoración. Fix: quitar `dashed`.
+- **Deuda de DS anotada**: (1) no existe primitiva `Disclosure`/`Collapsible` — el toggle de T5.13 sería su
+  segundo consumidor (candidata para Claude Design + DesignSync); (2) PRE-EXISTENTE fuera del diff,
+  `matrix-panel.tsx:443-449` pinta las pills de `hook_examples` a mano con clases que coinciden 1:1 con
+  `<Badge tone="neutral">`.
+- **T5.13 · ciclo 1 del verifier: FAIL** — **la cláusula literal PASA íntegra** (persona creada DESDE EL
+  FORMULARIO, alcanzada con «Ver toda la librería», fijada, **cero `INSERT`**; `persona_id` en 6/6
+  variantes, `personaSelection: matched`, `rotate` sin regresión 69/69, E2E 2 passed, control negativo de
+  core reproducido verbatim, regla 5 limpia). El FAIL lo causa **superficie NUEVA del propio diff**:
+  **los badges de voz MIENTEN**. `matrix-panel.tsx:828` filtra por PRESENCIA DE CLAVE
+  (`voiceMap[lang] !== undefined`) y **las 10 personas del seed tienen `voice_map` poblado con
+  `placeholder-*` que fal rechaza con 422** (verificado por el coordinador contra la BD: `count = 10`)
+  ⇒ se pintan **verdes** justo las que van a reventar, y ninguna muestra «sin voz».
+- **Por qué es grave y no cosmético**: el badge se justificaba como «PREVENIR GASTO INÚTIL — el fallo de
+  fondo de T5.9 fue descubrir la falta de voz al generar». Sobre los datos reales hace lo CONTRARIO: es el
+  modo de fallo de T5.9 **con un check verde encima**. Un badge que no puede decir la verdad es peor que no
+  tenerlo (la opción «retirarlo hasta §11» se ofreció como salida legítima).
+- **Corrección al brief del coordinador (mía)**: asumí que los `placeholder-*` se marcarían «sin voz». Con
+  esa lógica es IMPOSIBLE. Fallo de planteamiento mío, detectado por el verifier.
+- **Dos hallazgos menores del mismo ciclo**: (1) el control negativo del toggle estaba MAL DESCRITO por el
+  implementer (muerde por `Unable to find role "radio" name /mateo/i`, no por no encontrar el botón: el
+  botón se renderiza bajo `others.length>0 && candidates.length>0`, independiente de `showLibrary`);
+  (2) `personaActions.list()` **traga fallos en silencio** (`.catch(() => {})`) ⇒ si el endpoint falla y no
+  hay candidatas, la copy nueva apunta a una rejilla vacía sin toggle ni error: **el callejón sin salida
+  con otro disfraz**, justo el bug que la tarea cierra.
+- **T5.13 · fix del bloqueante: se ELIGIÓ RETIRAR el badge verde (salida 3)**, y el argumento es mejor que
+  las heurísticas que yo ofrecía: **la versión honesta de ese badge YA EXISTE** — `VoicePreviewButton`
+  (T4.6) se pinta cuando hay `voiceMap[lang]` y al pulsarlo **suena o falla**: eso es una COMPROBACIÓN DE
+  COMPORTAMIENTO, mientras que el badge era un proxy más barato de lo mismo que además lo decía al revés.
+  Retirarlo no pierde affordance: pierde una promesa que el cliente no puede sostener.
+  **El criterio que separa lo afirmable de lo que no**: «no hay voz CONFIGURADA» lo controla el cliente
+  (ausencia de clave) ⇒ se puede decir sin mentir, se queda; «tiene voz UTILIZABLE» solo lo sabe fal (422)
+  ⇒ se va. Las salidas (1) y (2) (detectar `placeholder-` por prefijo o por el nombre) se descartaron por
+  ser heurísticas de string sobre el SEED DE DESARROLLO: en cuanto §11 asigne voces reales, o el usuario
+  teclee un `voiceId` real pero inválido, **vuelven a mentir**.
+- **Rama «sin voz» ahora ALCANZABLE**: se siembra `Silvia E2E Sin-voz` (`voiceMap: {}`) en el spec. Con las
+  10 del seed pobladas, esa rama vivía **verde-por-no-existir** (hallazgo del verifier).
+- **`.catch(() => {})` cerrado**: estado `libraryFailed` + `<p role="alert" data-slot="library-error">`, con
+  el toggle renderizándose CON INDEPENDENCIA del error. Se usó el patrón `matrix-error` ya presente y
+  **NO** `Alert tone="danger"` a propósito: `--danger`/`--danger-soft` es uno de los 4 pares en cuarentena
+  de contraste y no se le añaden consumidores.
+- **Copy corregida**: «llevará su cara **y su voz**» → «llevará su cara» — prometía justo lo que se acaba
+  de dejar de poder prometer.
+
+## 2026-07-25 · T5.13 cerrada — PASS
+- Coste: **$0** · Ciclos verifier: 2 (FAIL → PASS) · Gate: exit 0, **2455 tests** + 4 e2e de fase
+- **Qué cierra**: en CP2 el usuario puede fijar CUALQUIER persona de su librería, no solo las sugeridas por
+  el `avatar_hint`. En el run de T5.9 el verifier tuvo que hacer un `INSERT` manual para continuar; ahora la
+  persona nace en el formulario de `/personas` y se alcanza con «Ver toda la librería» — **cero `INSERT`**,
+  verificado conduciendo la UI real.
+- **El diff toca core, y NO era scope creep**: mi brief decía «solo UI, el backend ya existe» y estaba
+  **incompleto**. `matrix.ts:301` re-filtraba el pool fijado por `matchPersonas` ⇒ `'no_match'` y variantes
+  SIN CARA. Con solo el «ver todas», el producto habría dejado clicar una persona que el compositor tiraba
+  en silencio. `personaExplicitlyFixed` es el mínimo necesario; `matchPersonas` sigue gobernando `rotate`.
+- **Auditoría de la regla 5 (3 asserts cambiados): COBERTURA NETA MAYOR, no debilitamiento.** El unit es
+  puramente aditivo; el fixture `MATEO` pasó de un voiceId ficticio a **`placeholder-es-mateo`** (el dato
+  REAL que provocó el FAIL) ⇒ el test guardián es más fuerte; la inversión del assert del badge viene con un
+  positivo nuevo de que el ▶ sigue visible (si no, retirar el badge podría haberse llevado el affordance en
+  silencio); y `/sin voz configurada/i` + `not.toHaveTextContent(/sin voz/i)` sobre Mateo prohíbe mentir
+  **por los dos lados**.
+- **Rareza cosmética anotada**: en el peor caso (endpoint 500 + cero candidatas), el `Alert` de cabecera
+  sigue diciendo «Elige cualquiera de tu librería aquí abajo» junto a la rejilla vacía, mientras la alerta
+  de error explica que no cargó. Ya no es el callejón mudo del ciclo 1, pero las dos frases se contradicen
+  a la vista: la copy de cabecera podría ceder ante `libraryFailed`.
+- **Deuda anotada**: (1) no existe primitiva `Disclosure`/`Collapsible` en el DS (2º consumidor potencial);
+  (2) PRE-EXISTENTE, `matrix-panel.tsx:443-449` duplica a mano `<Badge tone="neutral">` para las pills de
+  `hook_examples`; (3) ligada de §11: sustituir los `voiceId` placeholder del seed por voces reales.

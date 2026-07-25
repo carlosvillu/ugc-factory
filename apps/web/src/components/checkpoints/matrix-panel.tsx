@@ -140,6 +140,19 @@ export function MatrixPanel({ stepId, brief, config: initialConfig }: MatrixPane
    *  propio y no se deriva de nada. Se limpia al reintentar. */
   const [confirmError, setConfirmError] = useState<string | null>(null);
   const [candidates, setCandidates] = useState<Persona[]>([]);
+  /** LA LIBRERÍA ENTERA (T5.13). Es la salida del callejón sin salida: las sugeridas siguen siendo
+   *  el default destacado, pero la persona que el `avatar_hint` no propone tiene que poder
+   *  ALCANZARSE — si no, existe en la BD y el producto no deja usarla. */
+  const [library, setLibrary] = useState<Persona[]>([]);
+  /** ¿Está desplegado el listado completo? Colapsado por defecto para no tapar la recomendación;
+   *  se AUTO-DESPLIEGA cuando no hay candidatas (abajo), que es justo el caso en el que el usuario
+   *  se quedaba encallado y un toggle cerrado seguiría siendo un punto muerto. */
+  const [libraryOpen, setLibraryOpen] = useState(false);
+  /** ¿Falló la carga de la librería? NO se traga en silencio (lo hacía, y el verifier lo cazó):
+   *  si el endpoint falla y encima no hay candidatas, la copy nueva apuntaría a una rejilla VACÍA
+   *  sin toggle ni explicación — el mismo callejón sin salida que T5.13 cierra, con otro disfraz.
+   *  Un fallo de carga tiene que VERSE. */
+  const [libraryFailed, setLibraryFailed] = useState(false);
 
   const fresh = result !== null && result.config === config;
   const estimate = fresh ? result.estimate : null;
@@ -166,6 +179,29 @@ export function MatrixPanel({ stepId, brief, config: initialConfig }: MatrixPane
       cancelled = true;
     };
   }, [avatarHint]);
+
+  // LA LIBRERÍA ENTERA (T5.13), en paralelo a las candidatas y SIN depender del hint — nótese que
+  // el effect de arriba ni siquiera pide nada con `avatarHint === ''`, así que sin esto el panel
+  // podía quedarse sin UNA sola persona que ofrecer. Se pide al montar y no al desplegar: es
+  // mono-usuario y la librería son ~11 filas (`seed-data.ts`), así que el round-trip extra compra
+  // el CONTADOR del toggle («ver toda la librería (N)») y quita un estado de carga al desplegar.
+  useEffect(() => {
+    let cancelled = false;
+    personaActions
+      .list()
+      .then((res) => {
+        if (!cancelled) setLibrary(res.personas);
+      })
+      .catch(() => {
+        // Degradar SIN TAPAR: el panel sigue usable con las sugeridas, pero el fallo se PINTA.
+        // Tragárselo dejaba al usuario sin librería y sin saber por qué — y si además no había
+        // candidatas, delante de una rejilla vacía cuya copy le decía «elige de tu librería».
+        if (!cancelled) setLibraryFailed(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // EL COSTE, AL VUELO, DESDE EL SERVIDOR. Es una sincronización con un sistema externo (el
   // precio vive en la tabla `recipe`, no en el cliente), que es el caso 2 de `components.md` §4 —
@@ -264,6 +300,18 @@ export function MatrixPanel({ stepId, brief, config: initialConfig }: MatrixPane
       setConfirming(false);
     }
   }
+
+  // ── EL RESTO DE LA LIBRERÍA (T5.13) ──────────────────────────────────────────────────────
+  // Las NO sugeridas. Se DESCUENTAN las candidatas en vez de listar la librería entera debajo:
+  // pintar a la misma persona dos veces duplicaría su `data-slot` (los E2E de T4.6 la localizan
+  // así y un doble match los rompe) y, sobre todo, obligaría al usuario a decidir si las dos
+  // tarjetas son la misma persona.
+  const candidateIds = new Set(candidates.map((p) => p.id));
+  const others = library.filter((p) => !candidateIds.has(p.id));
+  // Sin candidatas, el listado completo NO puede estar detrás de un click: es el caso encallado
+  // (el `avatar_hint` no casó con nadie) y esconder ahí la única salida es el punto muerto que
+  // T5.13 viene a matar. Con candidatas, colapsado: la recomendación es lo primero que se ve.
+  const showLibrary = libraryOpen || candidates.length === 0;
 
   const plan = estimate?.plan ?? null;
   const total = estimate?.estimate.total ?? null;
@@ -414,12 +462,15 @@ export function MatrixPanel({ stepId, brief, config: initialConfig }: MatrixPane
             </div>
           </Section>
 
-          {/* PERSONA — sugeridas por `avatar_hint` (T2.0). */}
+          {/* PERSONA — sugeridas por `avatar_hint` (T2.0) + TODA la librería (T5.13). */}
           <Section title="Persona · sugerida por avatar_hint">
+            {/* LA COPY YA NO DECLARA UN CALLEJÓN SIN SALIDA (T5.13). Decía «El lote se compondrá
+                sin persona fijada» como si fuera lo normal: era el producto dándose por vencido
+                delante del usuario, que además TENÍA la persona que quería usar en su librería. */}
             <Alert tone={candidates.length > 0 ? 'success' : 'info'} className="mb-3">
               {candidates.length > 0
                 ? `${String(candidates.length)} persona(s) compatible(s) con el segmento «${avatarHint}».`
-                : `Ninguna persona de la librería casa con el segmento «${avatarHint}». El lote se compondrá sin persona fijada.`}
+                : `Ninguna persona de la librería casa con el segmento «${avatarHint}». Elige cualquiera de tu librería aquí abajo: fijarla a mano manda sobre la sugerencia.`}
             </Alert>
             <div
               className="grid grid-cols-2 gap-2.5"
@@ -443,48 +494,69 @@ export function MatrixPanel({ stepId, brief, config: initialConfig }: MatrixPane
                 </span>
               </button>
               {candidates.map((p) => (
-                <div key={p.id} className="flex flex-col gap-1.5">
-                  <button
-                    type="button"
-                    role="radio"
-                    aria-checked={config.personaMode === 'fixed' && config.personaId === p.id}
-                    data-slot={`persona-${p.id}`}
-                    onClick={() => {
-                      selectPersona(p.id);
-                    }}
-                    className={cardButtonClass(
-                      config.personaMode === 'fixed' && config.personaId === p.id,
-                    )}
-                  >
-                    <span className="text-mono font-semibold">{p.name}</span>
-                    <span className="mt-1 block text-micro text-text-3">
-                      {p.ageRange} · {p.gender} · {p.ethnicity} · {p.style}
-                    </span>
-                  </button>
-                  {/* PREVIEW DE VOZ (T4.6, §8.3): un ▶ por idioma del lote para escuchar la voz de esta
-                      persona ANTES de gastar render. Solo los idiomas para los que la persona tiene
-                      voz asignada (voice_map) — el resto no reproduciría nada. */}
-                  <div
-                    className="flex flex-wrap items-center gap-1.5"
-                    data-slot={`persona-voice-previews-${p.id}`}
-                  >
-                    {config.languages.map((lang) => {
-                      if (p.voiceMap[lang] === undefined) return null;
-                      const langLabel = LANGUAGES.find((l) => l.code === lang)?.label ?? lang;
-                      return (
-                        <VoicePreviewButton
-                          key={lang}
-                          personaId={p.id}
-                          language={lang}
-                          languageLabel={langLabel}
-                          personaName={p.name}
-                        />
-                      );
-                    })}
-                  </div>
-                </div>
+                <PersonaChoice
+                  key={p.id}
+                  persona={p}
+                  languages={config.languages}
+                  selected={config.personaMode === 'fixed' && config.personaId === p.id}
+                  onSelect={selectPersona}
+                />
               ))}
+              {/* EL RESTO DE LA LIBRERÍA (T5.13) — dentro del MISMO radiogroup, porque es la misma
+                  elección: fijar la persona del lote. Un segundo radiogroup partiría el estado
+                  seleccionado en dos grupos que se contradicen para un lector de pantalla. */}
+              {showLibrary
+                ? others.map((p) => (
+                    <PersonaChoice
+                      key={p.id}
+                      persona={p}
+                      languages={config.languages}
+                      selected={config.personaMode === 'fixed' && config.personaId === p.id}
+                      onSelect={selectPersona}
+                      suggested={false}
+                    />
+                  ))
+                : null}
             </div>
+
+            {/* LA SALIDA, VISIBLE (T5.13). Colapsado por defecto para no tapar la recomendación;
+                cuando NO hay candidatas el listado ya está desplegado y el toggle no se pinta —
+                ahí no hay nada que desplegar, es lo único que se ofrece. */}
+            {others.length > 0 && candidates.length > 0 ? (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                data-slot="toggle-library"
+                aria-expanded={libraryOpen}
+                onClick={() => {
+                  setLibraryOpen((open) => !open);
+                }}
+                className="mt-2.5"
+              >
+                {libraryOpen
+                  ? '▼ Ocultar el resto de la librería'
+                  : `▸ Ver toda la librería (${String(others.length)} más)`}
+              </Button>
+            ) : null}
+            {showLibrary && others.length > 0 ? (
+              <p className="mt-2 text-micro text-text-4">
+                Fijar a mano una persona que el <code className="font-mono">avatar_hint</code> no
+                sugiere es legítimo: tu elección manda sobre la recomendación y el lote entero
+                llevará su cara.
+              </p>
+            ) : null}
+
+            {/* EL FALLO DE CARGA, VISIBLE. Mismo patrón que el error del rail de coste
+                (`matrix-error`) y no `Alert tone="danger"`: `--danger` sobre `--danger-soft` es uno
+                de los pares en cuarentena de contraste, y no se le añade un consumidor nuevo. */}
+            {libraryFailed ? (
+              <p role="alert" data-slot="library-error" className="mt-3 text-mono text-danger">
+                No se pudo cargar tu librería de personas, así que aquí solo están las sugeridas por
+                el <code className="font-mono">avatar_hint</code>. Recarga la página para volver a
+                intentarlo.
+              </p>
+            ) : null}
           </Section>
 
           {/* TIER + IDIOMAS */}
@@ -742,6 +814,109 @@ function cardButtonClass(selected: boolean): string {
       ? 'border-accent-border bg-accent-soft text-accent'
       : 'border-border bg-surface text-text hover:border-border-strong',
   ].join(' ');
+}
+
+/**
+ * UNA PERSONA ELEGIBLE del radiogroup — la sugerida por el `avatar_hint` y la del listado completo
+ * son LA MISMA tarjeta (T5.13). Se extrajo al añadir el «ver toda la librería»: dos copias del
+ * mismo bloque (card + previews de voz) habrían divergido a la primera que alguien retocara una, y
+ * el `data-slot="persona-<id>"` —el contrato de testabilidad que usan los E2E de T4.6— tiene que
+ * ser EL MISMO viniera de donde viniera la persona.
+ *
+ * `suggested` NO cambia si se puede elegir (esa es justamente la barrera que T5.13 derriba): solo
+ * ANOTA de dónde sale la tarjeta, para que el usuario sepa que esa no la propuso el análisis.
+ */
+function PersonaChoice({
+  persona,
+  languages,
+  selected,
+  onSelect,
+  suggested = true,
+}: {
+  persona: Persona;
+  languages: string[];
+  selected: boolean;
+  onSelect: (id: string) => void;
+  suggested?: boolean;
+}) {
+  // LOS IDIOMAS DEL LOTE CON VOZ **CONFIGURADA** (clave presente en `voice_map`). Ojo con lo que
+  // este dato SÍ y NO dice, porque confundirlo ya costó un FAIL:
+  //
+  //   · SÍ dice: «hay (o no hay) una voz declarada para este idioma». La AUSENCIA de clave es
+  //     inequívoca y el cliente la puede afirmar sin mentir.
+  //   · NO dice: «esa voz FUNCIONA». Las 10 personas del seed traen `voiceId` `placeholder-*`
+  //     que fal RECHAZA con 422 (declarados a propósito; §11 «asignación de voz con preview» es
+  //     quien los sustituye). Sobre esos datos, cualquier badge verde de «tiene voz» marcaría
+  //     como cubiertas justo a las 10 personas cuya voz va a reventar — el modo de fallo del run
+  //     de T5.9 con un check verde encima, o sea PEOR que no tener el badge.
+  //
+  // Por eso aquí NO se afirma cobertura de voz. Quien lo dice honestamente es el ▶ de abajo
+  // (`VoicePreviewButton`, T4.6): reproducir es una COMPROBACIÓN de comportamiento —suena o
+  // falla—, no una promesa del cliente. Lo único que se pinta es la ausencia, que sí es cierta.
+  const withVoice = languages.filter((lang) => persona.voiceMap[lang] !== undefined);
+
+  return (
+    <div className="flex flex-col gap-1.5">
+      <button
+        type="button"
+        role="radio"
+        aria-checked={selected}
+        data-slot={`persona-${persona.id}`}
+        data-suggested={suggested}
+        onClick={() => {
+          onSelect(persona.id);
+        }}
+        className={cardButtonClass(selected)}
+      >
+        <span className="flex items-center justify-between gap-2">
+          <span className="text-mono font-semibold">{persona.name}</span>
+          {suggested ? null : (
+            <Badge tone="neutral" className="shrink-0">
+              librería
+            </Badge>
+          )}
+        </span>
+        <span className="mt-1 block text-micro text-text-3">
+          {persona.ageRange} · {persona.gender} · {persona.ethnicity} · {persona.style}
+        </span>
+        {/* SOLO LA AUSENCIA DE VOZ, nunca su presencia (ver arriba). No hay badge «tiene voz»:
+            afirmarlo desde el cliente es imposible sin mentir mientras existan los `voiceId`
+            placeholder, y quien lo comprueba de verdad es el ▶ de abajo.
+
+            `warning` sin `dashed`: en el DS `dashed` significa «provisional/estimado»
+            (`Badge.prompt.md`) y esto es un hecho DETERMINADO; además `dashed` COLAPSA el `tone`
+            (sus clases van después en el `cva` y `twMerge` las gana), así que con él el badge se
+            pintaba gris apagado y ni un token `warning` sobrevivía. */}
+        {withVoice.length === 0 ? (
+          <span
+            className="mt-1.5 flex flex-wrap items-center gap-1"
+            data-slot={`persona-voice-langs-${persona.id}`}
+          >
+            <Badge tone="warning">
+              sin voz configurada para {languages.length > 1 ? 'estos idiomas' : 'este idioma'}
+            </Badge>
+          </span>
+        ) : null}
+      </button>
+      {/* PREVIEW DE VOZ (T4.6, §8.3): un ▶ por idioma del lote para escuchar la voz de esta
+          persona ANTES de gastar render. Solo los idiomas para los que la persona tiene voz
+          asignada (voice_map) — el resto no reproduciría nada. */}
+      <div
+        className="flex flex-wrap items-center gap-1.5"
+        data-slot={`persona-voice-previews-${persona.id}`}
+      >
+        {withVoice.map((lang) => (
+          <VoicePreviewButton
+            key={lang}
+            personaId={persona.id}
+            language={lang}
+            languageLabel={LANGUAGES.find((l) => l.code === lang)?.label ?? lang}
+            personaName={persona.name}
+          />
+        ))}
+      </div>
+    </div>
+  );
 }
 
 function Section({

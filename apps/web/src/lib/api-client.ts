@@ -21,6 +21,7 @@ import {
 import {
   GeneratePersonaImagesResponseSchema,
   PersonaCandidateListSchema,
+  PersonaListSchema,
   PersonaSchema,
   VoicePreviewResponseSchema,
   type PersonaBody,
@@ -268,6 +269,12 @@ export const personaActions = {
       `/api/personas/candidates?avatar_hint=${encodeURIComponent(avatarHint)}`,
       PersonaCandidateListSchema,
     ),
+  /** LA LIBRERÍA ENTERA, sin filtrar por `avatar_hint` (T5.13). Convive con `candidates` y no lo
+   *  sustituye: la recomendación sigue siendo lo que CP2 destaca. Esto es la SALIDA del callejón
+   *  —«ver toda la librería»— para cuando el hint del análisis no casa con la persona que el
+   *  usuario quiere usar (p. ej. la única con una voz real asignada). Sin este listado, esa
+   *  persona existía en la BD y era INALCANZABLE desde el producto. */
+  list: () => api.get('/api/personas', PersonaListSchema),
   create: (body: PersonaBody) => api.post('/api/personas', PersonaSchema, body),
   update: (id: string, patch: PersonaPatch) =>
     api.patch(`/api/personas/${id}`, PersonaSchema, patch),

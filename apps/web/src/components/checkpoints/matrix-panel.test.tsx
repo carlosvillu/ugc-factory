@@ -63,6 +63,10 @@ const INITIAL_CONFIG: BatchConfig = {
   personaMode: 'rotate',
 };
 
+/** La ÚLTIMA config que el panel mandó a estimar. Es lo que prueba que una elección de la UI
+ *  LLEGÓ al servidor (y no solo que la card se pintó marcada) — T5.13. */
+let lastEstimatedConfig: BatchConfig | null = null;
+
 /** El endpoint de estimación, ejecutando el ESTIMADOR REAL sobre las RECETAS REALES. */
 function estimateHandler() {
   return http.post('*/api/batches/estimate', async ({ request }) => {
@@ -73,6 +77,7 @@ function estimateHandler() {
     expect(body).toMatchObject({ stepId: STEP_ID });
     expect(body).not.toHaveProperty('briefId');
     const config = BatchConfigSchema.parse(body.config);
+    lastEstimatedConfig = config;
     const recipe = RECIPE_SEEDS.find((r) => r.tier === config.tier);
     if (!recipe) throw new Error(`sin receta de ${config.tier}`);
     return HttpResponse.json(
@@ -93,11 +98,42 @@ function candidatesHandler() {
   );
 }
 
+/** LA PERSONA QUE EL `avatar_hint` NO SUGIERE (T5.13) — y que hasta T5.13 era INALCANZABLE desde
+ *  CP2: está en la librería del usuario y el selector no la ofrecía porque `matchPersonas` no la
+ *  propone para este segmento. Es exactamente el caso que destapó el run de T5.9.
+ *
+ *  Su `voiceId` es un PLACEHOLDER a propósito: replica lo que hay de verdad en la BD (las 10
+ *  personas del seed traen `placeholder-*`, que fal rechaza con 422). Así el test de «no afirmes
+ *  que tiene voz» se ejecuta sobre el dato REAL que provocó el FAIL, y no sobre uno de juguete
+ *  con una voz creíble que nunca existió. */
+const MATEO = {
+  ...LUCIA,
+  id: '01J0000000000000000MATEO0',
+  name: 'Mateo',
+  gender: 'male' as const,
+  style: 'urban',
+  descriptor: 'hombre de 40 años, estilo urbano',
+  voiceMap: {
+    es: {
+      provider: 'elevenlabs' as const,
+      voiceId: 'placeholder-es-mateo',
+      label: 'Placeholder ES',
+    },
+  },
+};
+
+/** `GET /api/personas`: LA LIBRERÍA ENTERA (sin filtrar por hint). Devuelve a la candidata Y a la
+ *  no-candidata: el panel tiene que descontar la primera (no duplicarla) y ofrecer la segunda. */
+function libraryHandler() {
+  return http.get('*/api/personas', () => HttpResponse.json({ personas: [LUCIA, MATEO] }));
+}
+
 // eslint-disable-next-line react-hooks/rules-of-hooks
-useHttpMocks(estimateHandler(), candidatesHandler());
+useHttpMocks(estimateHandler(), candidatesHandler(), libraryHandler());
 
 afterEach(() => {
   cleanup();
+  lastEstimatedConfig = null;
 });
 
 function renderPanel() {
@@ -191,6 +227,86 @@ describe('CP2 · matriz y confirmación de gasto', () => {
     expect(within(personas).getByRole('radio', { name: /lucía/i })).toBeInTheDocument();
     // Y la rotación (§11) es la opción por defecto: `personaMode: 'rotate'`.
     expect(within(personas).getByRole('radio', { name: /rote/i })).toBeChecked();
+  });
+
+  // ── T5.13 · CUALQUIER persona de la librería es alcanzable ────────────────────────────────
+  test('la persona que el `avatar_hint` NO sugiere no se ofrece de entrada, pero «ver toda la librería» la alcanza', async () => {
+    const user = userEvent.setup();
+    renderPanel();
+
+    const personas = await screen.findByRole('radiogroup', { name: /persona del lote/i });
+    // DE ENTRADA, la recomendación manda: Mateo NO está (es la mitad negativa de `matchPersonas`,
+    // y lo que hace que el resto del test no pase por el camino fácil de «salían todas»).
+    await within(personas).findByRole('radio', { name: /lucía/i });
+    expect(within(personas).queryByRole('radio', { name: /mateo/i })).not.toBeInTheDocument();
+
+    // LA SALIDA (T5.13): el toggle dice cuántas hay detrás y las despliega.
+    await user.click(await screen.findByRole('button', { name: /ver toda la librería/i }));
+
+    expect(within(personas).getByRole('radio', { name: /mateo/i })).toBeInTheDocument();
+    // Y la candidata NO se duplica al desplegar (se descuenta del resto de la librería): dos
+    // tarjetas de la misma persona serían dos `data-slot` iguales y una elección ambigua.
+    expect(within(personas).getAllByRole('radio', { name: /lucía/i })).toHaveLength(1);
+  });
+
+  test('fijar la persona NO sugerida la manda al servidor como `fixed` (y el lote la lleva)', async () => {
+    const user = userEvent.setup();
+    renderPanel();
+    await totalCost();
+
+    await user.click(await screen.findByRole('button', { name: /ver toda la librería/i }));
+    await user.click(screen.getByRole('radio', { name: /mateo/i }));
+
+    // LO QUE IMPORTA no es que la card se pinte seleccionada, sino que el SERVIDOR reciba la
+    // decisión: `personaMode: 'fixed'` con su id. Es lo que viaja al estimar y al confirmar.
+    await waitFor(() => {
+      expect(lastEstimatedConfig?.personaMode).toBe('fixed');
+    });
+    expect(lastEstimatedConfig?.personaId).toBe(MATEO.id);
+  });
+
+  test('avisa cuando una persona NO tiene voz configurada para el idioma del lote', async () => {
+    const user = userEvent.setup();
+    renderPanel();
+    await user.click(await screen.findByRole('button', { name: /ver toda la librería/i }));
+
+    // La AUSENCIA de voz sí se puede afirmar sin mentir (no hay clave en `voice_map`), y es
+    // información que evita gasto: Lucía no tiene ninguna y la card lo DICE.
+    expect(screen.getByRole('radio', { name: /lucía/i })).toHaveTextContent(/sin voz configurada/i);
+  });
+
+  test('NO afirma que una persona tenga voz utilizable (los `voiceId` placeholder mentirían)', async () => {
+    const user = userEvent.setup();
+    renderPanel();
+    await user.click(await screen.findByRole('button', { name: /ver toda la librería/i }));
+
+    // EL GUARDIÁN DEL FAIL DE T5.13. Mateo tiene `voice_map.es` poblado… con un `voiceId`
+    // placeholder, de los que fal RECHAZA con 422 — como las 10 personas del seed. Un badge
+    // «voz es» las marcaría a todas como cubiertas justo cuando su voz va a reventar: el modo de
+    // fallo del run de T5.9 con un check verde encima. El cliente NO puede saber si una voz
+    // funciona, así que no lo afirma; quien lo comprueba es el ▶ (reproducir suena o falla).
+    const mateo = screen.getByRole('radio', { name: /mateo/i });
+    expect(mateo).not.toHaveTextContent(/voz es/i);
+    expect(mateo).not.toHaveTextContent(/sin voz/i); // tampoco miente por el otro lado
+
+    // Y el ▶ —la comprobación honesta— SIGUE ahí: no se pierde el affordance, se pierde la
+    // promesa que el cliente no podía sostener.
+    expect(
+      document.querySelector(`[data-slot="persona-voice-previews-${MATEO.id}"] button`),
+    ).not.toBeNull();
+  });
+
+  test('un fallo al cargar la librería se PINTA (no se traga en silencio)', async () => {
+    // Sin esto, un 500 dejaba al usuario con la copy «elige de tu librería» delante de una
+    // rejilla vacía, sin toggle y sin explicación: el mismo callejón sin salida que T5.13 cierra.
+    server.use(
+      http.get('*/api/personas', () => HttpResponse.json({ error: 'boom' }, { status: 500 })),
+    );
+    renderPanel();
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(/no se pudo cargar tu librería/i);
+    // Y el panel sigue siendo usable con las sugeridas (degradar, no bloquear).
+    expect(await screen.findByRole('radio', { name: /lucía/i })).toBeInTheDocument();
   });
 
   test('fijar una persona la pone en TODAS las variantes de la matriz', async () => {

@@ -779,7 +779,8 @@ Cada fase entrega software funcionando end-to-end sobre lo anterior (baby steps)
 
 ## 22. Criterios de éxito
 
-1. **E2E core**: dada una URL real de una landing propia, obtener ≥6 variantes aprobadas de 15–30 s (2 ángulos × 3 hooks), con subtítulos karaoke correctos, C2PA firmado y coste total del lote < $15 (tier Test) — en < 45 min de reloj con checkpoints atendidos.
+1. **E2E core**: dada una URL real de una landing propia, obtener ≥6 variantes aprobadas de 15–30 s (2 ángulos × 3 hooks), con subtítulos karaoke correctos, C2PA firmado y coste total del lote **< $40** (tier **Premium**) — en < 45 min de reloj con checkpoints atendidos.
+   - **Recalibración del bound de coste (decisión de producto del usuario, 2026-07-24, al verificar T5.9)**: el bound original «< $15» se escribió para el tier **barato** (§296/§607: VEED avatar + Kokoro TTS, ~mitad del coste basis). Pero test/standard NO son generation-ready hoy (dejan `broll` como etiqueta no resoluble §13.1) → el flujo real corre en **premium**, que factura por segundo sobre vídeo de 15–30 s. El estimado propio del sistema (UI en CP2/CP3) para las 12 variantes (2 áng × 3 hooks × es+en) es **$24–34,64**, dominado por el avatar N7c (16¢/s) que NO deduplica (audio idioma-específico → 12 avatares). El bound se recalibra a **< $40** (holgura real sobre el estimado máximo, no un filo). El PASS de coste se evalúa contra el coste REAL observado del lote, no contra un umbral al milímetro.
 2. **Texto libre**: dado solo un párrafo de descripción + ≥1 imagen subida, el mismo flujo funciona sin scraping; con 0 imágenes, CP1 ofrece la decisión packshot-IA y el flujo completa igualmente.
 3. **Pipeline visual**: cualquier lote es inspeccionable en el canvas; un fallo de fal se ve, se reintenta y se recupera sin tocar la BD a mano.
 4. **Regeneración parcial**: cambiar el CTA de una variante aprobada produce un nuevo master en < 2 min y < $0,50.

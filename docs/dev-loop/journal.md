@@ -2635,3 +2635,9 @@ T5.8 es el primer código que conduce un N8 vivo hasta el mux del máster (su op
   estimado de CP2/CP3 queda SISTEMÁTICAMENTE BAJO (se calcula desde `scene.seconds` mientras el executor
   genera contra la narración medida). **Re-proyectar a CP3 antes de gastar; si el lote proyecta ≥$40,
   reabrir techo/matriz con el usuario.**
+- **Gate POST-commit ROJO por artefacto, no por código** (el paso 7.6 hizo su trabajo): `pnpm gate` salió
+  exit 2 tras commitear, con ~40 errores TS en `apps/web/.next/dev/types/routes.d.ts` (fichero GENERADO,
+  gitignored, NO commiteado) que quedó TRUNCADO de la corrida de e2e anterior. `rm -rf apps/web/.next` →
+  gate exit 0. Segunda vez que muerde el gotcha del `next dev` huérfano (ya journaleado): añadir la
+  limpieza del artefacto al reflejo, no solo matar el proceso del puerto 3000.
+- Commit: `0c8a8e4`

@@ -1,0 +1,37 @@
+# T5.9 · CAUSA RAIZ del 422 de las 3 variantes `es` del run anterior — $0 (evidencia de BD + probe)
+
+## Lo que decia el report anterior (hallazgo 1)
+"ARTEFACTO DE FIXTURE: el voice_map de Nora mezcla formatos: en->'Rachel' (nombre, OK)
+ vs es->'EXAVITQu4vr4xnSDxMaL' (hash de Sarah -> 422). FIX: corregir el voiceId es del seed."
+
+## Lo que dicen los hechos (MISDIAGNOSIS)
+1) PROBE contra fal REAL en el endpoint que USA el run (tts/eleven-v3, de step_run.config):
+     EXAVITQu4vr4xnSDxMaL -> 200 OK      Rachel -> 200 OK
+   El voice_map de Nora es FUNCIONAL en ambos idiomas. El formato hash NO es el problema.
+2) La config REAL de los step_run N7b que fallaron (run 01KYA3ZFF5QQ5BQVRWW3Y93QQ0):
+     FAILED  (es): {"voice":"placeholder-es-chloe","language":"es",
+                    "ttsEndpoint":"fal-ai/elevenlabs/tts/eleven-v3"}
+     SUCCESS (en): {"voice":"Rachel","language":"en", ...}
+   Las variantes que fallaron NO usaban a Nora: usaban *Chloe (placeholder)*.
+3) PROBE de ese literal en el mismo endpoint:
+     placeholder-es-chloe -> 422 {"msg":"Invalid voice ID provided.",
+                                  "type":"feature_not_supported"}
+   => El 422 lo causa un voiceId PLACEHOLDER, no un formato de ID.
+
+## Por que se colo otra persona (mecanismo, no especulacion)
+`plan-batch.ts:46` -> `personaMode` por DEFECTO = **'rotate'**. En rotate, `personaPool` devuelve
+TODAS las personas y `pickPersona` (matrix.ts:167-175) las REPARTE por `rotationIndex % candidates.length`
+entre las variantes. El run anterior creyo fijar a Nora, pero el lote roto en rotate y repartio.
+
+## El defecto de producto que esto destapa (para el implementer; NO lo arreglo yo)
+De 11 personas sembradas, **10 llevan voiceIds `placeholder-*` que fal RECHAZA** (seed-data.ts:237 y ss.):
+  Alex, Carmen, Chloe, David, Kenji, Lucia, Marcus, Nerea, Priya, Rosa -> placeholder-{es,en}-*
+  Solo `Nora Verify T58b Premium` tiene voces reales.
+Consecuencia: un lote que rote a cualquiera de esas 10 PAGA N7a/N7d/N7e/N7f y REVIENTA despues en N7b
+con un `fal respondio 422` OPACO (sin voiceId ni remedio en el mensaje), a diferencia del camino de la
+fal-key, que si lanza PermanentStepError accionable. **Nada valida el voiceId ANTES de gastar.**
+
+## Consecuencia para ESTA verificacion
+NO se muta el voice_map de Nora (estaria "arreglando" un fixture que no esta roto y laundering un PASS).
+Se FIJA la persona a Nora en CP2 (personaMode='fixed') y se VERIFICA en los 6 configs N7b
+que ninguna variante lleva `placeholder-*` ANTES de aprobar CP3.

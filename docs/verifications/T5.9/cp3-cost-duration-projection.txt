@@ -1,0 +1,33 @@
+combo                                    lang hook_s body_clips(q)      cta_q MASTER_s inrange
+avalada-por-derm-hook01                  en   2.8    [4]                [4]   10.8     no
+avalada-por-derm-hook01                  es   3.6    [6]                [4]   13.6     no
+avalada-por-derm-hook02                  en   2.8    [4]                [4]   10.8     no
+avalada-por-derm-hook02                  es   3.2    [6]                [4]   13.2     no
+avalada-por-derm-hook03                  en   3.6    [4]                [4]   11.6     no
+avalada-por-derm-hook03                  es   3.6    [6]                [4]   13.6     no
+la-barrera-danad-hook01                  es   4      [6]                [4]   14.0     no
+la-barrera-danad-hook01                  en   4      [6, 6]             [4]   20.0     YES
+la-barrera-danad-hook02                  es   4      [6]                [4]   14.0     no
+la-barrera-danad-hook02                  en   3.2    [6, 6]             [4]   19.2     YES
+la-barrera-danad-hook03                  es   3.6    [6]                [4]   13.6     no
+la-barrera-danad-hook03                  en   4      [6, 6]             [4]   20.0     YES
+
+>=15s masters: 3 / 12  (clause needs >=6)
+
+--- COST PROJECTION (hook_test shared body/cta per angle+lang) ---
+avatar (12 variants, per-hook): 6.78 USD  (sum avatar_s=42.4s x 16c)
+body b-roll (4 shared sets angle x lang): 5.60 USD
+cta i2v (4 shared sets): 3.20 USD
+keyframes flux-2 (~2c x ~6 dedup): ~0.12 USD ; music ace-step ~0 ; voice tts ~0.10 USD
+PROJECTED FAL TOTAL ~= 15.80 USD  (cap 40)
+
+body_sets detail:
+   ('avalada-por-derm', 'en') -> (4,) = 4 s
+   ('avalada-por-derm', 'es') -> (6,) = 6 s
+   ('la-barrera-danad', 'es') -> (6,) = 6 s
+   ('la-barrera-danad', 'en') -> (6, 6) = 12 s
+cta_sets detail:
+   ('avalada-por-derm', 'en') -> (4,)
+   ('avalada-por-derm', 'es') -> (4,)
+   ('la-barrera-danad', 'es') -> (4,)
+   ('la-barrera-danad', 'en') -> (4,)

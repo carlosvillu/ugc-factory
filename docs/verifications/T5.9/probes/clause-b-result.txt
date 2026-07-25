@@ -1,0 +1,35 @@
+# T5.9 · CLAUSULA (b) — RESULTADO MEDIDO (2026-07-25)
+# "texto libre con 0 imagenes: parrafo -> decision packshot-IA en CP1 -> al menos 1 variante
+#  aprobada con synthetic_product=true"
+
+INTAKE: pestana "Texto libre", 516 chars escritos por el verifier (serum facial Lumibloom),
+        boton "Anadir imagenes" INTACTO => 0 imagenes. analysis run 01KYCMMW3Q3N4XARHG71PZ4ZC2
+N2 (analisis visual) = `skipped` con reason "no_analyzable_visuals"  <- confirma 0 imagenes
+CP1: el panel bloquea la aprobacion ("Necesitamos una imagen principal del producto") y ofrece
+     DOS botones. Se pulsa "Generar packshot con IA" -> aria-pressed=true (b-07).
+     (Se EDITO ademas product.category "Cosmética facial" -> "beauty"; ver n6-vertical-mismatch.txt.
+      Declarado abiertamente: sin esa edicion N6 muere. Es el editor de brief del propio producto.)
+CP2: 1 variante, objetivo conversion, tier premium, persona Nora FIJADA. batch 01KYCMTTKTG18XAG0SY1YRQ091
+CP3: Sum(scene.seconds) = 18.8s (4.4 hook + 5.6 + 4.8 body + 4.0 cta) -> DENTRO de 15-30
+CP4: QA score 100, passed=true, 0 captionViolations -> "Aprobar" pulsado
+
+RESULTADO:
+  ad_variant 01KYCMTTKYA5JMF3DZ29ETF0XX  status = **approved**
+  generation N7a x2  synthetic_product = **t (true)**   <- los packshots de IA
+  master master.mp4 compuesto por N8 y verificado con MI PROPIO ffprobe:
+     duration=16.636s  1080x1920  h264/aac  15.346.212 bytes  30fps
+  QA (N8 qaReport): fps/codec/duration/filesize/loudness/resolution/av_duration_diff/
+     captions_safe_zone = TODOS pass ; loudnessLufs=-14.4 ; captionViolations=0
+=> CLAUSULA (b): **CUMPLIDA**
+
+COSTE REAL DE ESTA VARIANTE (cost_entry, por nodo):
+  N7d b-roll  2 entries  240c   <- 2 CLIPS: la escena de body se troceo (T5.8c en accion)
+  N7f cta     1 entry     80c
+  N7c avatar  1 entry     59c
+  N7b voz     8 entries    4c
+  N7a keyfr.  2 entries    2c
+  N7e musica  1 entry      1c
+  TOTAL = 386c = $3.86 por variante COMPLETA (conversion/premium)
+CALIBRACION DEL ESTIMADOR: la UI de CP2 estimaba $9.00-$13.00 para esta MISMA variante.
+  Real = $3.86 = 43% del extremo BAJO del estimado. El estimador va ALTO, no bajo.
+  (Por eso NO se declaro (a) inejecutable desde el estimador: habria sido un FAIL falso.)

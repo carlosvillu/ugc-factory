@@ -1,0 +1,38 @@
+# T5.9 · PARADA EXTERNA + HALLAZGO: N5 entrega un lote TRUNCADO y CP3 lo presenta como aprobable
+# Detectado 2026-07-25 en la clausula (a). Coste fal de esto: $0 (no se llego a aprobar CP3).
+
+## LA PARADA (prerequisito externo, NO es un bug del codigo)
+El saldo de la API de Anthropic esta AGOTADO. 7 de los 12 guiones fallaron con:
+  script_writer_api_error_400: 400 {"type":"invalid_request_error",
+    "message":"Your credit balance is too low to access the Anthropic API.
+               Please go to Plans & Billing to upgrade or purchase credits."}
+=> Sin saldo de Anthropic NO se pueden escribir los 12 guiones, y por tanto NO se puede
+   ejecutar la clausula (a) (>=6 variantes 2 angulos x 3 hooks en es+en) hasta que el
+   usuario recargue. Es una PARADA DEL BUCLE por prerequisito externo, no un FAIL de codigo.
+
+Desglose de los 14 warnings de N5 (output_refs.warnings):
+  script_writer_api_error_400   x7   <- saldo agotado
+  script_writer_retry_budget    x6   <- reescrituras por presupuesto de palabras (normal)
+  script_over_budget            x1
+
+## EL HALLAZGO DE PRODUCTO (esto SI es un defecto, independiente del saldo)
+El step N5 termina con output_refs.status = **"api_error"** y solo 5 scriptRefs para
+12 ad_variant... y aun asi:
+  - step_run.status = **waiting_approval**  (no `failed`)
+  - step_run.error  = **NULL**
+  - la UI de CP3 dice literalmente "N5 escribio **un guion por variante**" (falso: 5 de 12)
+  - se renderizan 5 botones "Aprobar esta variante" y el boton **"Confirmar guiones"
+    esta HABILITADO** (disabled=false).
+=> Un usuario puede APROBAR CP3 sobre un lote SILENCIOSAMENTE TRUNCADO y lanzar la
+   generacion (que SI cuesta dinero de fal) de 5 variantes creyendo que paga 12, sin que
+   nada en la pantalla le diga que 7 guiones no existen ni por que.
+   El `status:"api_error"` que el propio nodo escribio en su output NO se propaga ni al
+   estado del step, ni al campo error, ni a la UI.
+SEVERIDAD: alta (silencioso + antesala de gasto real).
+ARREGLO SUGERIDO (para el implementer, NO lo hago yo): si N5 acaba en `api_error` o con
+   scriptRefs < variantes, el step debe quedar `failed` (o CP3 debe mostrar un aviso
+   bloqueante y deshabilitar "Confirmar guiones") en vez de ofrecer una aprobacion normal.
+
+## DECISION DEL VERIFIER
+NO se aprueba este CP3: aprobarlo gastaria fal real sobre un lote que NO cumple la matriz
+de la clausula (2 angulos x 3 hooks x es+en) y ademas normalizaria el defecto. Coste $0.

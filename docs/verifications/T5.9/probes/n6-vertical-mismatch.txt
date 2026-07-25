@@ -1,0 +1,79 @@
+# T5.9 · HALLAZGO: N6 falla PERMANENTE por vertical libre vs taxonomia cerrada de templates
+# Detectado 2026-07-25 en el run de la clausula (b). Coste fal de este fallo: $0 (N6 es $0,
+# compila prompts; el fallo ocurre ANTES de N7 => no hubo gasto huerfano. El fail-fast funciona.)
+
+## Sintoma (error REAL de step_run, no parafraseado)
+run 01KYCKRP17XNW99TK57WMN6FVZ, node N6, status=failed, permanent=true, retry_count=0
+  "N6: no se pudo resolver el CompileInput de la variante 01KYCKNKKFCGXHRVKY61DHEJZ9:
+   No hay ningun template de galeria que case con las facetas
+   [kind=video, hookAngle=pain_point, vertical=Cuidado bucal, platform=tiktok]."
+Consecuencia: N7a..N9 quedan `awaiting_deps` PARA SIEMPRE. El lote no avanza y la UI
+no ofrece remedio (no hay "elige template" ni "reintenta con otro vertical").
+
+## Causa raiz
+- `product.category` del brief es TEXTO LIBRE (PRD §12; guard-lookup.ts:18 lo dice explicito).
+  N3 sintetizo, desde texto libre en espanol, la categoria "Cuidado bucal".
+- Los templates de galeria usan una taxonomia CERRADA de 9 verticales, en INGLES:
+    beauty(25) education(22) fashion(21) finance(19) fitness(24) food(21) home(22) pets(22) saas(24)
+  (SELECT unnest(verticals) FROM prompt_template WHERE kind='video')
+- El match es EXACTO normalizado (minusculas+trim), "sin sinonimos ni mapa" (guard-lookup.ts:25-26).
+  => "Cuidado bucal" no casa con nada y N6 revienta.
+
+## Asimetria que lo delata como defecto (no como dato mal metido)
+Para los GUARD PACKS el mismo desajuste degrada con elegancia:
+  "Si un brief trae una category sin pack, no se incluye vertical (NO FALLA)" (guard-lookup.ts:28).
+Para los TEMPLATES el mismo desajuste es un PermanentStepError que mata el lote.
+Dos consumidores de la MISMA faceta libre, dos politicas opuestas. Una de las dos esta mal.
+
+## Por que importa para F5 / T5.9
+Cualquier producto cuyo brief no aterrice en una de las 9 etiquetas inglesas es INGENERABLE
+end-to-end, y solo se descubre DESPUES de CP1+CP2+CP3 (tres aprobaciones humanas) y despues de
+haber pagado N1-N5 (Anthropic). Es exactamente el camino de la clausula (b) (texto libre), que
+es donde mas probable es que la categoria salga en espanol/no-canonica.
+
+## Lo que NO es
+No es el bug de T5.8c (clip<narracion): no se llego a N8. No es el 422 de voz: no se llego a N7b.
+Es un tercer defecto, independiente, en la frontera brief->galeria.
+
+## AMPLIACION (checks a $0 tras el fallo)
+1) EL RUN QUE SI FUNCIONO produjo el slug INGLES exacto:
+   analysis 01KYA2MXM9MTBPHZ86X97FNWSB (URL CeraVe) -> product.category = "beauty"
+   ...y su meta.language era "es" IGUAL que el mio. => El idioma del analisis NO determina
+   el idioma de la categoria: N3 a veces emite el slug ingles canonico ("beauty") y a veces
+   una etiqueta libre en espanol ("Cuidado bucal"). Es NO DETERMINISTA entre productos.
+   Nada en el contrato obliga a N3 a elegir de las 9 etiquetas: no hay z.enum de verticales.
+2) LA CATEGORIA SI ES EDITABLE EN CP1:
+   brief-editor.tsx:470-477 registra `product.category` como input de texto libre.
+   => EXISTE remedio dentro del producto, PERO exige que el usuario adivine que el valor
+   debe ser uno de 9 slugs en INGLES que la UI no muestra en ninguna parte (no hay select,
+   ni datalist, ni ayuda). El input no valida contra la taxonomia: acepta cualquier texto
+   y el lote muere 3 aprobaciones mas tarde, en N6.
+=> SEVERIDAD: media-alta. No es "irrecuperable", pero el remedio es invisible y el fallo
+   llega tarde y caro (tras CP1+CP2+CP3 y tras pagar N1-N5 de Anthropic).
+=> ARREGLO SUGERIDO (para el implementer, NO lo hago yo): o bien N6 degrada como los guard
+   packs (fallback a template generico) o bien `product.category` se valida/normaliza contra
+   la taxonomia en CP1 (select con las 9 etiquetas), fallando BARATO y con remedio obvio.
+
+## SEGUNDA OBSERVACION (2o intento de la clausula b, producto DISTINTO)
+Texto libre en es describiendo un serum facial (skincare) -> N3 sintetizo
+   product.category = "Cosmética facial"   (otra vez etiqueta libre en espanol, NO "beauty")
+=> DOS de dos intentos de INTAKE POR TEXTO LIBRE en espanol produjeron una categoria que
+   NO casa con la taxonomia (Cuidado bucal, Cosmética facial), mientras que el intake por
+   URL (CeraVe, landing en ingles) SI produjo "beauty". El defecto es SISTEMATICO en el
+   camino de texto libre, que es justamente el que exige la clausula (b).
+=> Para poder verificar (b) end-to-end uso el REMEDIO DEL PRODUCTO (editar product.category
+   en CP1, brief-editor.tsx:475), y lo declaro abiertamente: "beauty" escrito a mano en CP1.
+   La clausula (b) NO pide que N3 acierte el vertical; pide texto libre -> decision packshot-IA
+   en CP1 -> variante con synthetic_product=true. La edicion del brief en CP1 es una accion
+   de usuario PREVISTA por el producto, no un atajo por API ni una mutacion de BD.
+
+## TERCERA OBSERVACION — TAMBIEN PASA POR URL (no solo por texto libre)
+Clausula (a), MISMA URL que el run del 2026-07-24 (CeraVe Moisturizing Cream):
+  2026-07-24 -> product.category = "beauty"            (caso al vertical, N6 OK)
+  2026-07-25 -> product.category = "Cuidado de la piel" (NO casa -> N6 moriria)
+MISMA URL, MISMO idioma de analisis, RESULTADO DISTINTO en dias distintos.
+=> Confirma que la categoria es una SALIDA NO DETERMINISTA del LLM en N3 sin ningun
+   constraint a la taxonomia. No es un problema del intake por texto libre: es de N3.
+   La probabilidad de que un lote muera en N6 es una loteria por cada analisis.
+   (3 de 4 analisis observados por mi produjeron una categoria no-canonica.)
+Remedio aplicado, declarado: editar product.category -> "beauty" en CP1 tambien aqui.

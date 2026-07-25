@@ -1,0 +1,24 @@
+# T5.9 · ESTIMADO DE CP2 leido en la UI ANTES de confirmar gasto — 2026-07-25
+# (la mitad "antes" de la calibracion estimado-vs-real; sin valor si se anota despues)
+
+CONFIG: objetivo=conversion, tier=premium, persona=FIJADA a Nora, idioma=es, 1 variante
+UI "COSTE ESTIMADO DEL LOTE": $9.00 - $13.00   (1 variantes · tier premium)
+  Hook 1 generacion(es):  $3.00 - $4.33
+  Body 1 generacion(es):  $4.80 - $6.94
+  CTA  1 generacion(es):  $1.20 - $1.73
+UI "Variante aislada": $9.00 - $13.00
+Fila de matriz: DUR. = 30s ; filename_code = aurasonic-pro-el-miedo-a-hacer-hook01-01ky820m3ynn-es-30s
+
+# HALLAZGO CONFIRMADO EN CODIGO (matrix.ts:277)
+sharedBodyAndCta = (objective === 'hook_test')
+=> En `conversion` NO hay dedup de body/CTA: CADA variante paga su propio body y su propio CTA.
+   (En hook_test si se comparten por angulo+idioma: matrix.ts:258,343-344.)
+CONSECUENCIA: la proyeccion de ~$26 aprobada por el usuario para 6 variantes asumia
+   "4 sets de body / 4 de cta" (o 2+2) por dedup. Ese supuesto NO se cumple en conversion.
+   Extrapolando el estimado de la UI: 6 var x $9-13 = $54 - $78 (muy por encima del techo $40).
+
+# PERO: el estimador NO esta calibrado y hay evidencia de que va ALTO
+   Run anterior (planning + report): UI estimo $24-34.64 para 12 variantes (~$2-2.89/var)
+   y el gasto REAL fue $5.78 por 6 variantes (~$0.96/var) => real ~= 35-45% del bajo del estimado.
+   => NO se declara (a) inejecutable desde el estimador. Se MIDE 1 variante real (clausula b,
+      que hay que correr igualmente) y se decide (a) con centimos medidos, no con el estimador.

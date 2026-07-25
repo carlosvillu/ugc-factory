@@ -1,0 +1,19 @@
+ node_key | status | language |                               filename_code                               |                                                                               err                                                                                
+----------+--------+----------+---------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ N8       | failed | en       | cerave-moisturiz-la-barrera-danad-hook01-01ky820m3ynn-en-12s-01kya37z3rav | fitSegmentFile: el clip /var/folders/qc/t8rlm6jd03v2j58mynvkgrz00000gn/T/ugc-n8-hm7U1c/raw-1.mp4 (6.000s) es más corto que su narración (8.680s) por 2.680s ≥ 0.
+ N8       | failed | en       | cerave-moisturiz-la-barrera-danad-hook03-01ky820m3ynn-en-12s-01kya37z3rav | fitSegmentFile: el clip /var/folders/qc/t8rlm6jd03v2j58mynvkgrz00000gn/T/ugc-n8-33QBp6/raw-1.mp4 (6.000s) es más corto que su narración (8.680s) por 2.680s ≥ 0.
+ N8       | failed | en       | cerave-moisturiz-la-barrera-danad-hook02-01ky820m3ynn-en-12s-01kya37z3rav | fitSegmentFile: el clip /var/folders/qc/t8rlm6jd03v2j58mynvkgrz00000gn/T/ugc-n8-hMLx0H/raw-1.mp4 (6.000s) es más corto que su narración (8.680s) por 2.680s ≥ 0.
+ N7b      | failed | es       | cerave-moisturiz-la-barrera-danad-hook03-01kxx79bx5ym-es-12s-01kya37z3rav | fal respondió 422 en https://queue.fal.run/fal-ai/elevenlabs/requests/019f9441-acf1-7ae2-b6dd-434b721b81ad
+ N7b      | failed | es       | cerave-moisturiz-la-barrera-danad-hook01-01kxx79bx5ym-es-12s-01kya37z3rav | fal respondió 422 en https://queue.fal.run/fal-ai/elevenlabs/requests/019f9441-a8e3-7b81-87df-feae83465da8
+ N7b      | failed | es       | cerave-moisturiz-la-barrera-danad-hook02-01kxx79bx5ym-es-12s-01kya37z3rav | fal respondió 422 en https://queue.fal.run/fal-ai/elevenlabs/requests/019f9441-a18d-71f2-96d5-fae17f212b3f
+(6 rows)
+
+ node_key | provider | n  | cents 
+----------+----------+----+-------
+ N7a      | fal      |  2 |     2
+ N7b      | fal      | 10 |     4
+ N7c      | fal      |  3 |   172
+ N7d      | fal      |  2 |   240
+ N7f      | fal      |  2 |   160
+(5 rows)
+

@@ -1,0 +1,34 @@
+# T5.9 · INTERVENCIONES DEL VERIFIER SOBRE EL ESCENARIO — declaradas, no ocultas
+# Regla: preparar el escenario esta permitido; hacerlo en silencio NO. Todo lo que sigue
+# es un DESVIO del flujo normal que el usuario debe conocer al leer el veredicto.
+
+## 1) EDICION DE product.category EN CP1  (via la UI, editor de brief del producto)
+   "Cuidado bucal"     -> "beauty"   (1er intento clausula b, cepillo)
+   "Cosmética facial"  -> "beauty"   (2o intento clausula b, serum)   [el que cuenta]
+   "Cuidado de la piel"-> "beauty"   (clausula a, CeraVe)
+   MOTIVO: sin esto N6 lanza PermanentStepError y el lote muere (n6-vertical-mismatch.txt).
+   NATURALEZA: accion de usuario PREVISTA (input editable en CP1). No toca BD ni codigo.
+
+## 2) INSERT DE UNA PERSONA EN BD  (docker exec psql)  <- LA MAS INVASIVA, leer con atencion
+   INSERT INTO persona (...) VALUES ('01KYCVERIFYT59PERSONA00001', 'Vera Verify T5.9',
+     '25-34','female','mediterránea','cercano', ..., voice_map =
+     {"es":{"provider":"elevenlabs","voiceId":"EXAVITQu4vr4xnSDxMaL"},
+      "en":{"provider":"elevenlabs","voiceId":"Rachel"}})
+   MOTIVO: el brief de CeraVe genero avatar_hint = "Persona de unos 30 años, tono cercano
+     y cansado de probar cosas, en su baño mostrando la piel tirante tras la ducha".
+     `matchPersonas` (candidates.ts:219-227, score>0) SOLO ofrecio en CP2 a
+     **Alex (placeholder)** y **Nerea (placeholder)** — las DOS con voiceIds `placeholder-*`
+     que fal RECHAZA con 422 (probado). `Nora Verify T58b Premium` (la unica persona con
+     voces reales) NO puntua contra ese hint y NO aparece como candidata.
+     Y `avatar_hint` NO es editable en el editor de brief de CP1 (no existe en brief-editor.tsx)
+     => NO HAY NINGUN CAMINO DENTRO DEL PRODUCTO para llegar a una persona con voz funcional.
+   QUE NO HICE (a proposito):
+     - NO mute el voice_map de Nora (es evidencia viva de la clausula b).
+     - NO "arregle" los voiceIds placeholder-* de las 10 personas del seed: eso seria tapar
+       justo el defecto que estoy reportando.
+     - NO toque packages/core/src/persona/seed-data.ts (codigo de producto).
+   PRECEDENTE: el propio proyecto ya creo 'Nora Verify T58b Premium' como persona de
+     verificacion en BD (T5.8b). Esta es la misma figura, para otro avatar_hint.
+   CONSECUENCIA PARA EL VEREDICTO: el lote de la clausula (a) SOLO puede correr gracias a
+     este INSERT. Un lote lanzado por un usuario real, hoy, con esta URL, NO puede terminar.
+     Por eso (a) NO se declara PASS aunque sus numeros salgan bien.

@@ -1,0 +1,16 @@
+# T5.9 · gate previo (2026-07-25)
+Comando: DOCKER_HOST=unix://$HOME/.docker/run/docker.sock pnpm gate
+EXIT=1 — Test Files 1 failed | 231 passed (232) ; Tests 2424 passed | 2 skipped (2426)
+
+UNICO fallo: apps/web/test/integration/server/sse-contract.test.ts
+  "Error: next dev murió durante el arranque (code 1): ... ⨯ Another next dev server
+   is already running. - Local: http://localhost:3000 - PID: 67169"
+  (fallo secundario en teardown: server.stop() sobre undefined)
+
+DIAGNOSTICO: ARTEFACTO DE ENTORNO, no defecto de codigo. El PID 67169 es MI PROPIO
+`pnpm dev` (necesario para conducir la UI de esta verificacion): el test arranca su
+propio `next dev` en :3440 y Next aborta si ya hay otro dev server. Es la gotcha
+"next-dev orphan gate" ya registrada en el journal (commit aeed0f2).
+0 tests de logica fallaron (2424 passed). El coordinador certifico `pnpm gate` VERDE
+en este mismo HEAD (883ae66) con el stack APAGADO.
+=> No bloquea. No se rebaja ninguna vara: el fallo es la colision de puertos, no F5.

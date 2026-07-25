@@ -1,0 +1,141 @@
+# T5.9 run-context — para reanudar tras un stall SIN re-gastar fal
+# (rellenado incrementalmente conforme arranca el trabajo)
+
+FECHA_INICIO: 2026-07-23 (reanudado 2026-07-24 tras desbloqueo)
+DESBLOQUEO: commit d5c0e7e commiteó el trabajo adyacente; árbol = solo diff T5.9; gate VERDE
+CAP_GASTO: $40 fal real HARD (recalibrado por el usuario 2026-07-24, PRD §22.1). Ya NO <$15.
+PARADAS: (a) coste acumulado ≥$40, (b) ≥2 stalls DESPUÉS de aprobar CP3 (no relanzar a ciegas).
+ESTRUCTURA: money en el WORKER (proceso separado). Stall en MI sesión tras CP3-approve NO para
+  la generación. Al reanudar: comprobar estado del lote ANTES de tocar; NUNCA re-aprobar CP3 a ciegas.
+HEAD_SHA: aeed0f27e53653ae41035650655fa1d61cf32b31
+BRANCH: main
+GIT_STATUS: uncommitted (planning.md, PRD.md, playwright.config.ts modificados; f5-export.spec.ts untracked) = diff de T5.9
+
+# DECISIONES DE ARRANQUE
+TIER: premium (reconciliación regla 6, planning.md:784)
+DB: docker-compose.dev Postgres PERSISTENTE (NO testcontainer efímero — un stall re-usaría el mismo DB → dedup reclama fal ya gastado)
+INTAKE: URL real (scrape real N1-N5) — el literal dice «URL real»
+
+# A RELLENAR CUANDO ARRANQUE EL LOTE:
+BATCH_ID:            (pendiente — se rellena al crear el lote)
+GENERATION_RUN_ID:   (pendiente — nextRunId de CP3-approve)
+DB_CONN:             postgres://ugc:ugc@localhost:55432/ugc (docker-compose.dev, healthy)
+STACK_PORT:          3000 (pnpm dev VIVO 2026-07-24 14:37; web next dev pid ~80765, worker pid ~80772)
+STACK_LOG:           scratchpad/dev-stack.log (bg task b0mlg20ou)
+FAL_KEY_SOURCE:      app_setting secret.fal (cifrado, deriveSecretsKey de APP_MASTER_KEY) — RESUELTO OK
+KEYS_APP_SETTING:    secret.fal, secret.anthropic, secret.firecrawl, auth.password_hash (4 rows) — todas presentes
+SEED_STATE:          model_profile=18, persona=11, hook_line=80, cta_line=30, recipe=3, guard_pack=10, prompt_template=56
+LOGIN:               AUTH_BOOTSTRAP_PASSWORD (de .env)
+HEALTH:              {"ok":true,"db":true} confirmado
+COST_MODEL (model_profile):
+  b-roll i2v veo3.1/image-to-video = 20c/s, durations [4,6,8]
+  CTA i2v = mismo veo3.1 i2v = 20c/s [4,6,8]
+  avatar omnihuman/v1.5 = 16c/s (duración = la del audio)
+  keyframes flux-2 = 1.2c/megapixel
+  voz elevenlabs tts turbo = 5c/1k chars ; music ace-step = 0.02c/s
+
+# COSTE ACUMULADO (actualizar conforme genera):
+# PERSONA (c): Nora Verify T58b Premium (01KY820M3YNNN3V2B9GDTBWEZD) voice_map ACTUALIZADO a
+#   es→EXAVITQu4vr4xnSDxMaL (Sarah), en→Rachel — distintos, fal-aceptados (Rachel probado en T5.8b).
+#   Ambos English-origin multiling → el clip es puede leer con acento (limitación seed dev, para juicio humano).
+#   Se FIJARÁ manualmente en CP2 (matrix-panel selectPersona → personaMode='fixed') — sin depender del matching.
+# VERTICALES sembradas con template: beauty, education, fashion, finance, fitness, food, home, pets, saas.
+#   GATE a CP1 ($0): confirmar que el brief real sintetiza vertical con template+guard_pack antes de CP2/CP3.
+# URL real: producto skincare/beauty (para que el avatar_hint case beauty y Nora gane / se fije).
+
+COSTE_FAL_CENTS: 0   (CERO — aún no se ha llamado a fal)
+COSTE_ANTHROPIC_CENTS: 0
+COSTE_FIRECRAWL_CENTS: 0
+
+# ============================================================================
+# BLOQUEO DE ESTADO DEL ÁRBOL (detectado 2026-07-23 ~22:57, ANTES de gastar $0)
+# ============================================================================
+# El working tree está siendo MUTADO por una sesión/agente CONCURRENTE mientras
+# intentaba establecer el gate verde previo. Ficheros con mtime en movimiento
+# durante mi sesión (yo solo creé docs/verifications/T5.9/):
+#   - scripts/check-contrast.mjs         (untracked) mtime 22:53:12
+#   - scripts/check-e2e-wired.mjs        (untracked) mtime 22:54:24  ← apareció DESPUÉS de mi 1er check
+#   - apps/web/src/app/globals.css       (modificado) mtime reciente ← PRODUCT SOURCE
+#   - apps/web/playwright.config.ts      (modificado→revertido durante la sesión)
+#   - .claude/hooks/guard-planning.sh    (modificado) mtime 22:46:50 ← HOOK del arnés
+# Todos citan «auditoría del journal, 2026-07-23 / determinismo-primero» → NO son
+# el diff de T5.9; son de una tarea ADYACENTE en curso.
+#
+# CONSECUENCIA: el gate previo (pnpm gate) está ROJO por esta contaminación
+# (format:check y knip fallan SOLO por check-contrast.mjs/check-e2e-wired.mjs,
+# ficheros ajenos a T5.9). NO puedo establecer un baseline verde ni atribuible.
+#
+# DECISIÓN: NO arranco el run real de fal ($15, ~45 min, ESTATEFUL) contra un
+# árbol que otra sesión está editando (globals.css / config / hook). Riesgo:
+# medir un objetivo móvil, gate no atribuible, y posible rotura a mitad de run.
+# Esto NO es un FAIL de T5.9 (su código no rompió nada) — es un BLOQUEO DE ESTADO
+# DEL ÁRBOL. Coste $0.
+#
+# PARA REANUDAR: cuando la sesión concurrente termine y su trabajo esté
+# commiteado/stasheado por separado, el árbol vuelve a `git status` = solo el diff
+# de T5.9 (planning.md, PRD.md, f5-export.spec.ts). Con `pnpm gate` verde,
+# reanudar el plan de este VERIFY: intake URL real → CP1/CP2/CP3 (premium, 12
+# variantes es+en) → PROYECTAR coste a CP3 antes de aprobar → si <$15 generar y
+# medir HITs/MISSes b-roll cross-idioma → CP4 aprobar → bundle/C2PA/captions.
+URL=https://www.cerave.com/skincare/moisturizers/moisturizing-cream
+ANALYSIS_RUN_ID=01KYA2MXM9MTBPHZ86X97FNWSB
+ANALYSIS_COST_SO_FAR=$0.22 (N1-N3: Firecrawl+Anthropic, $0 fal)
+BATCH_ID=01KYA37Z3RAVK6DZ3DTG2VQV65
+
+# ============================================================================
+# PROYECCIÓN A CP3 ($0 fal) — 2026-07-24
+# ============================================================================
+N5_SCRIPTS_RUN_ID: 01KYA37Z4F8Q2WDVSJHQGAR3VY (CP3 waiting_approval)
+DURACIÓN: N8 compone máster VIDEO-LED (compose-master.ts:233,356-361: masterDurationS=ffprobe(concat
+  de vídeo), -t <dur>, NO -shortest, clips SIN recortar a narración). Máster = Σ clips concatenados.
+PROYECCIÓN MÁSTER (avatar hook + body b-roll quantize-up [4,6,8] + cta): SOLO 3/12 ≥15s
+  (los 3 barrera-EN: body 8.4s→2×6s=12s → máster ~20s). barrera-ES máster ~14.0s (knife-edge <15).
+  avalada (6): 10.8-13.6s. Clause pide ≥6 variantes 15-30s → PROYECTADO FAIL de duración a $0.
+  CAUSA: objetivo hook_test (UI «8-15s») no llega a 15-30s. Contradicción en 22.1 (2x3 hooks Y 15-30s).
+COSTE PROYECTADO lote completo ~$15.80 (<$40): avatar $6.78 + body $5.60 + cta $3.20 + kf/voz ~$0.22.
+DEDUP b-roll: body COMPARTIDO por ángulo+idioma (hook_test), NO entre idiomas (matrix.test.ts:167).
+  → 4 sets de body (2 áng × 2 lang), 4 sets de cta. Avatares por-variante (12, sin dedup).
+PLAN: calibrar SOLO barrera es+en (6 variantes, ~$9) → medir máster real (ffprobe) + coste real
+  por endpoint + HIT/MISS dedup. Si barrera-es <15s → FAIL decisivo. Si ≥15s → re-proyectar avalada.
+COST_BASELINE_PRE_CP3: 192 entries / 1744c (2026-07-24). New fal = entries created after this.
+SPEND_START=2026-07-24 15:10:25
+GENERATION_RUN_ID=01KYA3ZFF5QQ5BQVRWW3Y93QQ0 (kind=full; 6 barrera variants; worker generating)
+RECOVERY: si stall, NO re-aprobar CP3. Comprobar step_run de este run + cost_entry, re-adjuntar polling.
+COST_CHECKPOINT: 578c=$5.78 at N7 phase (2026-07-24). N7d 6/6, N7f 6/6 OK.
+
+# ============================================================================
+# RUN 2026-07-25 (verifier, post-T5.8c 0c8a8e4 / HEAD 883ae66)
+# ============================================================================
+COST_BASELINE_2026_07_25: 211 entries / 2322c  @ 2026-07-25T12:12:39Z
+  (todo gasto NUEVO = entries por encima de este baseline)
+PROBE_VOZ: ~1c gastado en probes de TTS/ASR (probes/voice-probe.txt)
+PERSONA: Nora Verify T58b Premium 01KY820M3YNNN3V2B9GDTBWEZD (UNICA con voces reales)
+  -> personaMode DEBE ser 'fixed'. El default es 'rotate' (plan-batch.ts:46) y las otras
+     10 personas tienen voiceIds placeholder-* que fal RECHAZA con 422.
+OBJETIVO: conversion (30s) — NO hook_test. La clausula pide 15-30s.
+GATES A CP3 (los 3, ANTES de aprobar): (1) los 6 configs N7b sin placeholder-*,
+  (2) Sum(scene.seconds) por variante dentro de 15-30s, (3) gastado+proyectado < $40.
+CLAUSULA_B_ANALYSIS_RUN_ID=01KYCK88EQDTGXWF18DN2717TF (texto libre, 0 imagenes, es)
+  producto inventado por el verifier: cepillo sonico "AuraSonic Pro" (652 chars, 0 imageRefs)
+CLAUSULA_B_BATCH_ID=01KYCKNKK3149XPN4V326DP1E4 (conversion/premium, 1 variante es, persona Nora FIJADA)
+CLAUSULA_B_SCRIPTS_RUN_ID=01KYCKNKKQFK89XJ3V6GBJHFWT
+SPEND_START_B=2026-07-25T12:23:13Z
+CP2_ESTIMADO_UI: $9.00-$13.00 para 1 variante (hook 3.00-4.33 / body 4.80-6.94 / cta 1.20-1.73)
+HALLAZGO: sharedBodyAndCta = (objective==='hook_test') -> en conversion NO hay dedup body/CTA.
+CLAUSULA_B_GENERATION_RUN_ID=01KYCKRP17XNW99TK57WMN6FVZ  (CP3 aprobado 2026-07-25T12:24:56Z)
+  GATE CP3 (b) superado a $0: Sum(scene.seconds)=18.8s (DENTRO de 15-30), persona=Nora (voces 200 OK).
+  RECOVERY: si stall, NO re-aprobar CP3. Comprobar step_run de 01KYCKRP17XNW99TK57WMN6FVZ + cost_entry.
+CLAUSULA_B_RETRY: analysis 01KYCMMW3Q3N4XARHG71PZ4ZC2 (serum facial, texto libre, 0 img)
+  category N3 = "Cosmética facial" -> EDITADA A MANO EN CP1 a "beauty" (remedio del producto)
+  BATCH=01KYCMTTKTG18XAG0SY1YRQ091 (conversion/premium, 1 var es, Nora fijada)
+  SCRIPTS_RUN=01KYCMTTM1G5DSHQ4QGMMRH35K
+CLAUSULA_B_GENERATION_RUN_2=01KYCMWJZY40SVAANDRN89CP5J (CP3 aprobado 2026-07-25T12:44:32Z)
+  Gate CP3: Sum(scene.seconds)=18.8s DENTRO de 15-30; persona=Nora. RECOVERY: no re-aprobar.
+CLAUSE_A_START=2026-07-25T12:56:26Z
+CLAUSULA_A: analysis 01KYCNJCCDMGVJ9HYB4A5VCTSW (URL CeraVe real, N1+N2 reales)
+  category N3 = "Cuidado de la piel" -> EDITADA en CP1 a "beauty"
+  persona = Vera Verify T5.9 (01KYCVERIFYT59PERSONA00001, INSERT del verifier) FIJADA
+  BATCH=01KYCP8RAJ07GFVKXAMVYEZ7ZV (conversion/premium, 12 var = 2 ang x 3 hooks x es+en)
+  SCRIPTS_RUN=01KYCP8RB4XTTDKJXC6HGKQPSE
+  CP2 estimado UI: $108-156 (12 var). Calibracion medida: real ~= 43% del bajo -> ~$46 sin dedup.
+  GATE PENDIENTE a CP3: si sin dedup cross-idioma -> >$40 -> NO aprobar 12; recortar a 6.

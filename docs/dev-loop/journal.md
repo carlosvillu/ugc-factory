@@ -2641,3 +2641,62 @@ T5.8 es el primer código que conduce un N8 vivo hasta el mux del máster (su op
   gate exit 0. Segunda vez que muerde el gotcha del `next dev` huérfano (ya journaleado): añadir la
   limpieza del artefacto al reflejo, no solo matar el proceso del puerto 3000.
 - Commit: `0c8a8e4`
+
+## 2026-07-24 · ⏳ T5.9 reanudada — Fase $0 (proyectar a CP3 sobre el pipeline ARREGLADO)
+- T5.8c cerrada (0c8a8e4) desbloquea T5.9. Objetivo `conversion` (30s), bound <$40.
+- Esta fase NO gasta: intake+CP1/CP2/CP3 con LLM/scrape (céntimos, ya pre-autorizado) y CERO fal.
+- PARADA DURA antes de aprobar CP3: si el lote proyecta ≥$40, se devuelve al usuario.
+
+## 2026-07-24 · T5.9 · PARADA DE GASTO — la re-proyección POST-T5.8c da $52,14 > techo $40
+- **$0 gastado.** Aritmética del coordinador (regla T1.8), evidencia en
+  `docs/verifications/T5.9/post-t58c-projection/projection.md`.
+- Desglose: avatar $27,84 (12 var × 14,5s × 16¢/s, NO deduplica) + b-roll $19,20 (4 sets × 24s, cada
+  escena de body = 2 clips tras el fix) + cta $4,80 + kf/voz/bed $0,30.
+- **Sube respecto al ~$33 pre-fix porque T5.8c hace lo correcto**: antes se pagaban N clips y se usaba 1;
+  ahora se pagan y SE USAN todos, dimensionados contra la narración MEDIDA (11,6s/escena → 2 clips).
+- **El techo no se salva bajando el objetivo**: `hook_test` (12s) cabría pero INCUMPLE la cláusula (a)
+  (15-30s). Duración y coste están acoplados.
+- Verificado en código (no supuesto): el avatar N7c anima SOLO el hook (`generate-avatar.ts:43`), los
+  presets de `conversion` (`presets.ts:76-80`), y el desbordamiento TTS +45% del run real.
+- **Opciones al usuario**: (1) subir techo a ~$55; (2) **recortar la matriz a 6 variantes** (la cláusula
+  pide «≥6») → ~$26, cabe en el techo ya autorizado [RECOMENDADA]; (3) endpoint de avatar más barato.
+- **DECISIÓN DEL USUARIO (2026-07-24)**: recortar la matriz de verificación a **6 variantes** (~$26,
+  dentro del techo $40 YA autorizado). La cláusula (a) pide «≥6 variantes», así que 6 la satisfacen
+  LITERALMENTE — no se rebaja la Verificación. Se anota como desviación de alcance (regla 6): la matriz
+  del PRODUCTO sigue siendo 12 (2 áng × 3 hooks × es+en); lo que se recorta es la matriz del RUN DE
+  VERIFICACIÓN. Objetivo `conversion` (30s), tier premium, es+en.
+
+## 2026-07-24 · T5.9 · FAIL de fase + PARADA POR PREREQUISITO EXTERNO (saldo Anthropic agotado)
+- **Coste real $4,62** (fal $3,86 · Anthropic $0,76) de $40 autorizados. Techo intacto.
+- **(b) PASS**: texto libre 0 img → packshot-IA en CP1 → variante `01KYCMTTKYA5JMF3DZ29ETF0XX` approved con
+  `synthetic_product=t`. **(a) NO EJECUTADA** (N5 escribió 5/12 guiones, saldo agotado; NO se aprobó CP3
+  ⇒ $0 de fal en esa rama). **(c) PENDIENTE-JUICIO-HUMANO** (solo existe el clip es; el en no se generó).
+- **✅ T5.8c VALIDADO EN EL FLUJO REAL**: N8 compuso máster SIN `FitError`, con N7d = 2 entries (escena
+  troceada y CONCATENADA). ffprobe del verifier: `duration=16.636 1080x1920 h264/aac`, QA 100,
+  `captionViolations=0`. Duraciones 16,0–22,0s: dentro de 15–30. El fix de hoy funciona en producción.
+- **TRES DEFECTOS DE PRODUCTO que bloquean el cierre de fase** (un usuario real no puede terminar un lote):
+  1. N6 `PermanentStepError` por `product.category` NO canónica — la MISMA URL de CeraVe dio `beauty` el
+     día 24 y `Cuidado de la piel` el 25 (lotería por análisis). Los guard packs degradan, los templates
+     revientan.
+  2. **10 de 11 personas del seed tienen voiceIds que fal RECHAZA** (`placeholder-*` → 422).
+  3. `avatar_hint` no es editable en `brief-editor.tsx` ⇒ no hay camino DENTRO del producto hasta una
+     persona con voz usable.
+- **DEFECTO SILENCIOSO, severidad alta**: N5 acabó con `output_refs.status="api_error"` y 5/12 guiones,
+  pero `step_run.status=waiting_approval`, `error=NULL`, la UI afirma «N5 escribió un guion por variante»
+  (FALSO) y deja **«Confirmar guiones» HABILITADO** → se puede aprobar un lote truncado y disparar gasto
+  real. Candidata a tarea propia.
+- **TRES CORRECCIONES AL COORDINADOR (yo), anotadas para no repetirlas**:
+  a) **Mi instrucción del bound iba al REVÉS**: dije que el estimador de CP2/CP3 queda BAJO y que lo
+     subiera ~45%. Es al contrario — UI $9–13 vs **$3,86 reales**. Seguir mi instrucción habría producido
+     un **FAIL falso por coste**. El verifier no obedeció a ciegas: correcto.
+  b) **El «hallazgo 1» del report anterior era MISDIAGNOSIS** (mía): el `voice_map` de Nora es funcional
+     (200 OK probado); las variantes es fallaron por correr con *Chloe (placeholder)*.
+  c) **El techo $40 se fijó sobre un supuesto FALSO**: `sharedBodyAndCta = (objective==='hook_test')`
+     (`matrix.ts:277`) ⇒ en `conversion` **NO hay dedup** de body/CTA. La matriz literal (12) cuesta
+     **~$46 MEDIDOS** (no los $52,14 que proyecté). Mi proyección erró en la dirección conservadora.
+- **Intervenciones DECLARADAS del verifier** (sin ellas no hay verde, y por eso (b) no basta para PASS de
+  fase): editar `product.category`→`beauty` en CP1 (×3), e `INSERT` de la persona `Vera Verify T5.9` con
+  voiceIds probados. NO mutó a Nora, NO «arregló» los `placeholder-*` (sería tapar el defecto), NO tocó
+  `seed-data.ts`.
+- **Reserva sobre (c)**: ambas voces del seed son English-origin multilingües (Sarah/Rachel); 22.8 pide
+  voces NATIVAS → puede fallar por naturalidad haga lo que haga el verifier.

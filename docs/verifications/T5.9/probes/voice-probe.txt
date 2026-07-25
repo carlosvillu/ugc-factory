@@ -1,0 +1,25 @@
+# T5.9 · PROBE de voces contra fal REAL (2026-07-25) — coste ~$0.01
+# Objetivo: falsar/confirmar el "hallazgo 1" del run anterior
+# ("voice_map de Nora mezcla formatos: el hash es -> 422").
+
+## Endpoint fal-ai/elevenlabs/tts/turbo-v2.5
+voice="EXAVITQu4vr4xnSDxMaL" status=200 OK
+voice="Sarah"                status=200 OK
+
+## Endpoint fal-ai/elevenlabs/tts/eleven-v3  (EL QUE USA EL RUN: step_run.config.ttsEndpoint)
+voice="placeholder-es-chloe"  status=422 {"detail":[{"loc":["body","voice"],
+    "msg":"Invalid voice ID provided.","type":"feature_not_supported",
+    "input":"placeholder-es-chloe"}]}
+voice="EXAVITQu4vr4xnSDxMaL"  status=200 OK
+voice="Rachel"                status=200 OK
+
+## ASR fal-ai/elevenlabs/speech-to-text (sobre audio es real)
+language_code=spa 200 OK | es 200 OK | eng 200 OK | (sin language_code) 200 OK
+
+## CONCLUSION
+El voice_map de Nora (01KY820M3YNNN3V2B9GDTBWEZD) es FUNCIONAL en ambos idiomas.
+El 422 del run anterior NO lo causo el formato hash-vs-nombre: lo causo que esas
+3 variantes es corrieron con la persona *Chloe (placeholder)*, cuyo voice_map.es
+es el literal 'placeholder-es-chloe' (packages/core/src/persona/seed-data.ts:237).
+=> "hallazgo 1" del report anterior = MISDIAGNOSIS. Causa real = asignacion de
+   persona, no formato de voiceId. NO se debe mutar el voice_map de Nora.

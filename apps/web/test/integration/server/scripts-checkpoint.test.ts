@@ -631,7 +631,9 @@ describe('CP3 · approveScriptsForStep (T2.6): veredictos, v2 solo si edita, blo
         kind: 'scripts',
         verdicts: [{ variantId: variantIds[0]!, approved: true }],
       }),
-    ).rejects.toThrow(/no tiene imagen de referencia/);
+      // T5.15: el error es TIPADO y accionable — nombra la persona, el nodo que no puede generar
+      // (N7c/avatar) y qué hacer (subir una imagen en /personas), en vez del genérico anterior.
+    ).rejects.toThrow(/no tiene imágenes de referencia: N7c\/avatar no puede generar/);
 
     // El rollback deshizo el veredicto: la variante sigue sin `scripted`, y CERO runs.
     expect(await variantStatus(variantIds[0]!)).not.toBe('scripted');

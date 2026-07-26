@@ -2918,3 +2918,33 @@ T5.8 es el primer código que conduce un N8 vivo hasta el mux del máster (su op
   `docker ps --filter publish=3000` (era un contenedor ajeno). Se paró para el gate y **se restauró**.
 - **Nota de planificación**: solo el tier `premium` llega a N6 (test/standard dejan el b-roll como
   `[endpoint pendiente F4]`).
+
+## 2026-07-26 · T5.9 (2º intento) — FAIL de fase + PARADA EXTERNA (saldo de FAL agotado)
+- **Coste $1,11** (Anthropic; **fal $0,00** — el techo $40 ni se rozó porque fal nunca llegó a cobrar).
+- **LO DESBLOQUEADO FUNCIONÓ, confirmado en flujo real**: **T5.12** (se dejó `category="Cuidado de la piel"`
+  SIN editar a propósito → **N6 succeeded 6/6**; el 25 esto mataba el lote) y **T5.13** (se fijó a Nora sin
+  ser sugerida). Los 3 gates de CP3 pasaron: 6/6 guiones contados en BD, duraciones **16,8–23,6s** todas
+  dentro de [15,30] (el objetivo `conversion` era la elección correcta), 0 placeholders.
+- **PARADA**: fal responde `403 {"detail":"User is locked. Reason: Exhausted balance."}`, verificado con
+  **probe DIRECTO a fal** (control: misma clave a `/status` → 405 ⇒ la clave autentica, es saldo).
+  **Acción del usuario: recargar `fal.ai/dashboard/billing`.**
+- **TRES DEFECTOS NUEVOS → tareas abiertas**:
+  - **T5.14**: «Confirmar guiones» con **0 aprobadas** da 200 mudo, **consume el checkpoint** y vara el
+    lote IRREVERSIBLEMENTE con sus guiones ya pagados (`script-checkpoint.ts:212` mezcla «todo rechazado»
+    con «confirmé sin aprobar»). Es la rama VECINA a la que cerró T5.11, con peor desenlace.
+  - **T5.15**: **anti-correlación PERFECTA verificada por mí en BD**: las 10 personas con imágenes tienen
+    voces `placeholder-*` (422); las 2 con voz real las insertaron verifiers a mano, y `Vera` tiene **0
+    imágenes** → CP3 da **500**. **El seed no permite completar un lote generativo.** T5.13 hizo la
+    librería seleccionable; falta que lo seleccionable sea GENERABLE — el mismo defecto disfrazado.
+  - **T5.16**: `retry_count` **80** sobre `max_retries` **3** contra un 403 permanente. Con saldo PARCIAL
+    facturaría hasta 80 envíos por step.
+- **El verifier neutralizó a $0 tres runs ajenos armados** que iban a fugar ~$11-12 de fal, usando el
+  endpoint del producto (`POST /api/runs/:id/cancel`) tras denegársele el SQL dos veces, y con **prueba
+  empírica** del desarme (el worker logueó el no-op ×3). Buen criterio: usó el producto, no la BD.
+- **⚠ DECISIÓN DE VARA PARA EL USUARIO**: «3 combos × es+en» **NO es expresable** — `BatchConfig` solo
+  tiene `angleIndices`/`hooksPerAngle`/`languages` (producto cartesiano). Con 6 variantes la dimensión
+  «2 ángulos» queda **AUSENTE**, no infra-cubierta. **`2 áng × 2 hooks × es+en = 8` (~$31)** preservaría
+  ambas dimensiones dentro del techo $40. Pendiente también: si el techo es por run o acumulado.
+- **Honestidad del verifier**: declaró que el `pnpm gate` lo ACEPTÓ de mí en vez de re-ejecutarlo, que no
+  midió «<45 min» (el lote nunca completó) y que no intentó (b). Y declaró que H3 lo destapó **un click
+  erróneo suyo**.

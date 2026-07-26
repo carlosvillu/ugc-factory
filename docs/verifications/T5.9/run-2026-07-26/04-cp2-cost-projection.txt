@@ -1,0 +1,50 @@
+=== T5.9 run 2026-07-26 — GATE DE COSTE EN CP2, DECIDIDO A $0 ANTES DE CREAR EL LOTE ===
+Timestamp: 2026-07-26T07:1xZ (antes de "Confirmar y crear 6 variantes")
+
+CONFIGURACION FIJADA EN LA UI (verificada leyendo el DOM, no supuesta):
+  variant-count : "6 variantes · tier premium"
+  languages     : es=true, en=true          <- ambos idiomas (imprescindible para clausula c)
+  angles        : exactamente 1 seleccionado (data-selected = true,false,false,false,false)
+  hooksPerAngle : 3
+  objective     : Conversion (21-34 s)      <- NO hook_test; la clausula pide 15-30s
+  persona       : Vera Verify T5.9 FIJADA (persona-rotate = false)
+  => 1 angulo x 3 hooks x 2 idiomas = 6 variantes
+
+ESTIMADO DE LA UI PARA EL LOTE:
+  $54.00 - $78.00   (hook $18.00-25.98 / body $28.80-41.64 / cta $7.20-10.38)
+  + aviso "Gasto elevado".
+  Por variante: $9.00 - $13.00
+
+POR QUE NO ACEPTO ESE NUMERO COMO PROYECCION (y por que no es "rebajar la vara"):
+  El estimador de esta UI esta MEDIDO como ALTO en este mismo pipeline. El run del
+  2026-07-25 estimo $9.00-$13.00 para UNA variante conversion/premium y el coste REAL
+  medido en cost_entry fue 386c = $3.86 (29-43% del rango estimado).
+  Anclaje empirico (variante 01KYCMTTKYA5JMF3DZ29ETF0XX, conversion/premium, script 18.8s,
+  master 16.6s, N7d troceado en 2 clips = el MISMO shape que produce este lote):
+      N7d b-roll   2 entries   240c
+      N7f cta      1 entry      80c
+      N7c avatar   1 entry      59c
+      N7b voz      8 entries     4c
+      N7a keyframe 2 entries     2c
+      N7e musica   1 entry       1c
+      TOTAL                    386c = $3.86 / variante
+
+PROYECCION DEL VERIFIER (desde coste REAL medido, no desde el estimador):
+  6 variantes x $3.86 = ~$23.2 de fal
+  + analisis ya gastado hoy: $0.20 (firecrawl+anthropic, 0 de fal)
+  + N5 guiones (anthropic, ~$0.2-0.5)
+  => TOTAL PROYECTADO ~$23.5-24    vs TECHO $40  => CABE, con ~$16 de margen.
+
+  Sin dedup cross-idioma: `sharedBodyAndCta = (objective === 'hook_test')` (matrix.ts:277)
+  => en `conversion` cada variante paga su body y su CTA. La proyeccion NO asume dedup
+  (es la leccion del run anterior: el techo $40 se habia fijado sobre un dedup inexistente).
+
+DECISION: PROCEDO. La proyeccion desde coste medido (~$23) esta holgadamente bajo $40.
+  NO inflo el estimador (el brief lo advierte explicitamente: va ALTO, no bajo; seguirlo
+  a ciegas produciria un FAIL falso por coste).
+  RIESGO ASUMIDO Y DECLARADO: si el estimador resultara acertado ESTA vez ($54-78), el
+  techo se rompe. MITIGACION: mido cost_entry por run_id conforme genera y PARO en cuanto
+  el acumulado real se acerque a $40. El dinero se gasta nodo a nodo, no de golpe, asi que
+  la parada es efectiva.
+
+CONTROL: fal gastado hoy ANTES de confirmar = 0 filas / 0 cents.

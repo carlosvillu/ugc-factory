@@ -1,0 +1,42 @@
+=== AUDITORIA ESTATICA DE PRECONDICIONES A $0, ANTES DEL 3er INTENTO ===
+2026-07-26 · Motivo: llevo DOS bloqueos en serie que eran comprobables estaticamente.
+En vez de descubrir el tercero pagando, enumero TODOS los throws de
+buildVariantGenerationPlan y los verifico uno a uno contra la persona elegida.
+
+FUENTE: packages/services/src/build-variant-generation-plan.ts (throws en 65,69,79,85,112,133,139,231)
+        + packages/core/src/generation/resolve-variant-recipe.ts (77,83 + resolveVoiceStep)
+
+PRECONDICION                                   | COMPROBACION                              | ESTADO
+-----------------------------------------------+-------------------------------------------+--------
+:65  la variante existe                        | se crean en CP2                           | OK
+:69  el lote existe                            | idem                                      | OK
+:79  hay recipe sembrado para el tier          | recipe id='premium' existe                | OK
+:85  la variante tiene guion (scripted)        | 6 ad_script, aprobadas 6/6 en CP3         | OK
+:112 necesita voz pero no tiene Persona        | persona FIJADA en las 6 variantes         | OK
+:133 necesita avatar pero no tiene Persona     | idem                                      | OK
+:139 la Persona no tiene imagen de referencia  | Nora: reference_image_ids = 1 imagen      | OK  <-- el que reventó con Vera (0 imgs)
+:231 endpoint no resoluble a model_profile     | los 4 de premium resuelven (ver abajo)    | OK
+r-v-r:77  el recipe no tiene componente 'voice'| premium tiene voice                       | OK
+r-v-r:83  la Persona no tiene voz en el idioma | Nora tiene es Y en                        | OK
+resolveVoiceStep: provider<->endpoint coherente| provider 'elevenlabs' vs endpoint
+                                               | 'fal-ai/elevenlabs/tts/eleven-v3'         | OK
+
+PERSONA ELEGIDA: Nora Verify T58b Premium (01KY820M3YNNN3V2B9GDTBWEZD)
+  voice_map es -> EXAVITQu4vr4xnSDxMaL (elevenlabs)   [probado 200 OK contra fal en run previo]
+  voice_map en -> Rachel               (elevenlabs)   [probado 200 OK contra fal en run previo]
+  reference_image_ids  -> 1 asset: 01KY820M53768N6QP9W734N6K0
+      kind=reference_image, image/png, 84.345 bytes, fal_url NOT NULL (ya subida a fal)
+  Precedente: es la persona con la que T5.8b compuso un master real.
+  => Es la UNICA persona de las 12 que satisface {voz aceptada por fal} Y {tiene avatar}.
+
+RECIPE premium — los 4 endpoints resuelven a model_profile (query real):
+  avatar | fal-ai/bytedance/omnihuman/v1.5 | 1
+  broll  | fal-ai/veo3.1/image-to-video    | 1
+  voice  | fal-ai/elevenlabs/tts/eleven-v3 | 1
+  shots  | fal-ai/nano-banana-pro/edit     | 1
+  (En tier `test` el broll es "Grok Imagine / Wan 2.6 Flash [endpoint pendiente F4]" —
+   NO resoluble: confirma la reconciliacion de tier del planning, premium es el unico
+   generation-ready.)
+
+CONCLUSION: no queda ninguna precondicion conocida sin satisfacer. Procedo al 3er intento
+con Nora fijada en CP2. Coste de esta auditoria: $0.00

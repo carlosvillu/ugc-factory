@@ -1,0 +1,64 @@
+=== DEFECTO DE PRODUCTO: LA UNICA PERSONA SELECCIONABLE CON VOZ USABLE NO TIENE AVATAR ===
+=== => CP3 DEVUELVE 500 Y NINGUN LOTE PUEDE GENERARSE                                  ===
+Batch 01KYEMKAFX0CNS81MC9JXY3KS9 · step N5 01KYEMKAGCRCED1PJYAS69S6FJ
+2026-07-26T07:20:00Z · COSTE DE FAL: $0.00
+
+EL FALLO (log del servidor, textual):
+  POST /api/steps/01KYEMKAGCRCED1PJYAS69S6FJ/approve  ->  500
+  {"err":{"type":"PermanentStepError",
+    "message":"buildVariantGenerationPlan: la Persona de la variante
+               01KYEMKAG468JQ68RETZ5QYN6W no tiene imagen de referencia (avatar)"},
+   "msg":"unhandled_route_error"}
+  En la UI: [data-slot="scripts-error"] = "error interno"
+
+LA CAUSA RAIZ — ANTI-CORRELACION PERFECTA EN EL SEED (medido en BD):
+
+  persona                    | n_imgs | voz es                | voz en
+  ---------------------------+--------+-----------------------+----------------------
+  Alex (placeholder)         |   3    | placeholder-es-alex   | placeholder-en-alex
+  Carmen (placeholder)       |   3    | placeholder-es-carmen | placeholder-en-carmen
+  Chloe (placeholder)        |   3    | placeholder-es-chloe  | placeholder-en-chloe
+  David (placeholder)        |   3    | placeholder-es-david  | placeholder-en-david
+  Kenji (placeholder)        |   3    | placeholder-es-kenji  | placeholder-en-kenji
+  Lucia (placeholder)        |   3    | placeholder-es        | placeholder-en
+  Marcus (placeholder)       |   3    | placeholder-es-m      | placeholder-en-m
+  Nerea (placeholder)        |   3    | placeholder-es-nerea  | placeholder-en-nerea
+  Priya (placeholder)        |   3    | placeholder-es-priya  | placeholder-en-priya
+  Rosa (placeholder)         |   3    | placeholder-es-rosa   | placeholder-en-rosa
+  Nora Verify T58b Premium   |   1    | EXAVITQu4vr4xnSDxMaL  | Rachel
+  Vera Verify T5.9           |   0    | EXAVITQu4vr4xnSDxMaL  | Rachel
+
+  Las 10 personas CON avatar tienen voces que fal RECHAZA con 422.
+  Las 2 personas con voces REALES son las creadas a mano por verifiers anteriores,
+  y de esas solo Nora tiene avatar (1 imagen, 84KB, ya subida a fal: fal_url NOT NULL).
+  `Vera Verify T5.9` (la que INSERTO el verifier del 2026-07-25 para sortear el defecto
+  de las voces) se creo SIN imagen de referencia => cambia un bloqueo por otro.
+
+  => Con el seed actual, la interseccion {voz que fal acepta} n {tiene avatar} = {Nora}.
+     Una sola persona en toda la libreria puede completar un lote generativo.
+
+POR QUE ES UN DEFECTO DE PRODUCTO Y NO SOLO UN SEED POBRE:
+  1. El fallo llega como HTTP 500 "error interno" en la UI. Es un estado PREVISIBLE y
+     VALIDABLE (¿tiene la persona avatar?) que deberia detectarse en CP2, cuando el
+     usuario ELIGE la persona, no en CP3 al confirmar los guiones. En CP2 el panel
+     ofrece a Vera sin ningun aviso de que su lote no podra generarse.
+  2. `buildVariantGenerationPlan` lanza `PermanentStepError` y el route no lo traduce a
+     un error de validacion accionable: el usuario lee "error interno" y no tiene forma
+     de saber que le falta un avatar a su persona ni donde arreglarlo.
+  3. Es el MISMO patron que T5.13 intento cerrar (llegar a una persona usable desde CP2):
+     T5.13 hizo SELECCIONABLE toda la libreria, pero no garantiza que la seleccionada sea
+     GENERABLE. El requisito "voz aceptada por fal" + "avatar presente" no esta validado
+     en ningun punto antes de gastar.
+
+LO BUENO (verificado con mis manos): LA TRANSACCION REVIRTIO LIMPIA.
+  step_run(N5).status = waiting_approval  (CP3 SIGUE ABIERTO, recuperable)
+  ad_variant.status   = planned x6        (ninguna a medias)
+  cost_entry fal      = 0 filas / 0 cents (no se cobro nada)
+  Es exactamente la atomicidad que documenta domain-effects.ts:113-121 ("el efecto y la
+  transicion commitean juntos o no commitea ninguno"). Contrasta con mi incidente previo
+  (06-...): alli el checkpoint SI se consumio porque la decision fue "valida pero vacia".
+
+CONSECUENCIA PARA LA CLAUSULA (a):
+  La persona esta FIJADA en las variantes desde CP2, y CP2 (N4) ya esta `succeeded`
+  => no puedo cambiar la persona de ESTE lote desde el producto. Reintento con un lote
+  nuevo fijando `Nora Verify T58b Premium` (la unica generable) en CP2.

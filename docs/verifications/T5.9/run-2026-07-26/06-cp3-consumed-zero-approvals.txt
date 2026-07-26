@@ -1,0 +1,59 @@
+=== INCIDENTE EN CP3: CHECKPOINT CONSUMIDO CON 0 VARIANTES APROBADAS ===
+Batch 01KYEM0SDNGDVRFME1WT2H8F8A · step N5 01KYEM0SE4S5RJJEACMXPG9HFD
+2026-07-26T07:10:34Z · COSTE DE FAL: $0.00 (la generacion NUNCA arranco)
+
+QUE HICE (mi error de procedimiento, declarado sin adornos):
+  Pulse "Confirmar guiones" SIN pulsar antes "Aprobar todas las aptas" ni las 6
+  "Aprobar esta variante". Asumi que "Confirmar guiones" era la accion de aprobar el
+  lote; en realidad es el COMMIT de los veredictos que ya hayas marcado.
+
+QUE PASO EN EL SISTEMA (leido en el log del servidor y en el codigo, no supuesto):
+  web log:  {"step_id":"01KYEM0SE4S5RJJEACMXPG9HFD","decision_kind":"scripts",
+             "msg":"checkpoint aprobado"}
+            POST /api/steps/01KYEM0SE4S5RJJEACMXPG9HFD/approve 200 in 85ms
+
+  script-checkpoint.ts:211-216
+      const scriptedVariantIds = decided.filter(d => d.approve).map(d => d.variantId);
+      if (scriptedVariantIds.length === 0) {
+        // CP3 no aprobo ninguna variante: no hay nada que generar. ... no se arranca ningun run.
+        return {};
+      }
+
+  => La decision llego con kind='scripts' pero con CERO veredictos `approve:true`.
+     Efecto: applyScriptVerdicts no paso NINGUNA variante a `scripted`, no se arranco
+     run de generacion, y AUN ASI la transicion del checkpoint COMMITEO.
+
+ESTADO RESULTANTE (medido):
+  step_run(N5).status      = succeeded   (checkpoint CONSUMIDO)
+  ad_batch.status          = planned
+  ad_variant.status        = planned x6  (ninguna `scripted`)
+  pipeline_run de generacion = NO EXISTE
+  panel de CP3 en la UI    = DESAPARECIDO (no hay boton que pulsar)
+  Un segundo POST /approve daria 409 (el step ya no esta en waiting_approval).
+  => El lote queda VARADO de forma IRREVERSIBLE desde la UI. Los 6 guiones (pagados,
+     $0.13 de anthropic) no se pueden generar nunca. Hay que crear un lote NUEVO.
+
+LO QUE ESTO REVELA DEL PRODUCTO (separado de mi error):
+  El boton "Confirmar guiones" estaba HABILITADO con `approvedCount = 0/6` y su
+  resultado fue un 200 silencioso que destruyo la unica oportunidad de generar el lote.
+  El propio panel ya muestra el contador "0 / 6 aprobadas" (scripts-panel.tsx:262-265),
+  asi que el sistema SABIA que no habia nada aprobado y aun asi:
+    - no deshabilito el boton (solo lo deshabilita si `partial`, el caso de T5.11),
+    - no pidio confirmacion,
+    - no devolvio aviso ni error,
+    - y consumio el checkpoint igualmente.
+  Es el MISMO patron que T5.11 corrigio para el lote truncado (fallo presentado como
+  exito en la antesala del gasto), en una rama vecina que T5.11 no cubrio: alli el
+  problema era "N5 escribio 5/12 y te deja aprobar"; aqui es "aprobaste 0/6 y te deja
+  confirmar, consumiendo el checkpoint". Severidad: destruye el lote sin recuperacion.
+  Coste real de MI incidente: $0.13 de anthropic (los guiones) + el tiempo del run.
+
+  NO lo reporto para excusar mi click: lo reporto porque un usuario real puede hacer
+  exactamente lo mismo (el boton primario, verde, abajo a la derecha, dice "Confirmar
+  guiones" y esta activo) y perder el lote.
+
+DECISION: NO re-apruebo nada a ciegas ni toco la BD para "resucitar" el lote (seria
+  fabricar estado que el producto no produce). Creo un lote NUEVO desde CP2 sobre el
+  MISMO analisis (el brief ya esta aprobado y pagado), esta vez aprobando las 6
+  variantes ANTES de confirmar. Coste adicional: solo N5 de nuevo (~$0.13 anthropic),
+  0 de fal. El techo de $40 sigue intacto.

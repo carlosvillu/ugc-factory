@@ -1,0 +1,51 @@
+=== PARADA POR PREREQUISITO EXTERNO: LA CUENTA DE FAL NO TIENE SALDO ===
+2026-07-26T07:32Z · generation run 01KYENAS0P7WE4AVCDP7S58MHH
+COSTE REAL DE FAL EN ESTE RUN: $0.00 (no se pudo gastar ni un centimo)
+
+SINTOMA EN EL PRODUCTO:
+  step_run N7b (voiceover) x6 -> status=failed, retry_count=80
+  error: {"message":"fal submit fallo con 403: Forbidden"}
+  config (correcta): {"voice":"Rachel","language":"en","provider":"elevenlabs",
+                      "ttsEndpoint":"fal-ai/elevenlabs/tts/eleven-v3"}
+  Cascada: N7c/N7d/N7f/N8/N9 quedan awaiting_deps para siempre; N7a queued.
+
+PRUEBA DIRECTA CONTRA FAL (no un log de nuestro propio codigo — fuente EXTERNA):
+  POST https://queue.fal.run/fal-ai/elevenlabs/tts/eleven-v3
+       Authorization: Key <FAL_KEY de .env>
+       {"text":"probe","voice":"Rachel"}
+  ->  HTTP 403
+      {"detail":"User is locked. Reason: Exhausted balance.
+                 Top up your balance at fal.ai/dashboard/billing."}
+
+  Control (misma clave, endpoint de status): HTTP 405 (method not allowed), NO 401/403
+  => la CLAVE AUTENTICA correctamente. No es credencial mala ni configuracion.
+     Es SALDO AGOTADO en la cuenta de fal.
+
+DESCARTADO EXPLICITAMENTE COMO CAUSA:
+  - No es el voiceId: el 403 llega con `Rachel`, que estaba probado 200 OK; y un voiceId
+    invalido da 422 ("Invalid voice ID provided"), no 403. Diagnostico DISTINTO por tipo.
+  - No es la persona: Nora tiene voz real Y avatar (auditoria 08-precondition-audit.txt).
+  - No es la config del lote: los 3 gates de CP3 pasaron y N6 dio succeeded 6/6.
+  - No es el worker: es MI worker (pid 8067), FAL_BASE_URL UNSET => apuntaba a fal REAL,
+    que es lo que este E2E requiere. El 403 viene de fal, no de un mock.
+
+CONSECUENCIA PARA LA CLAUSULA (a): NO EJECUTABLE HOY.
+  Sin saldo en fal no hay voz, ni avatar, ni b-roll, ni master, ni C2PA, ni bundle.
+  Es EXACTAMENTE el mismo tipo de parada que bloqueo el run del 2026-07-25 (alli fue el
+  saldo de Anthropic; hoy es el de fal). Prerequisito EXTERNO DEL USUARIO: recargar
+  https://fal.ai/dashboard/billing. No es algo que el implementer pueda arreglar con codigo.
+
+LO QUE SI QUEDO VERIFICADO ANTES DE LA PARADA (con mis manos, a $0 de fal):
+  - N6 succeeded 6/6 con product.category = "Cuidado de la piel" (NO canonica):
+    *** T5.12 CONFIRMADO EN EL FLUJO REAL ***. En el run del 2026-07-25 esta misma
+    categoria mataba el lote con PermanentStepError; hoy N6 pasa las 6.
+  - N7e (musica) succeeded 6/6.
+  - T5.13 CONFIRMADO: "Ver toda la libreria (10 mas)" expone las 12 personas en CP2 y
+    permite FIJAR a Nora, que no era sugerida por el avatar_hint.
+  - Los 3 gates de CP3 a $0: 6/6 guiones, duraciones 16.8-23.6s (todas en [15,30]),
+    0 voces placeholder, 0 personas sin avatar.
+
+RAREZA (la misma que anote en los jobs huerfanos): retry_count = 80 sobre max_retries = 3.
+  N7b reintento ~80 veces un 403 que es PERMANENTE por naturaleza (saldo agotado, no
+  transitorio). Merece mirada: un 403 de "cuenta bloqueada" no deberia reintentarse en
+  bucle, y el limite declarado no se esta respetando.

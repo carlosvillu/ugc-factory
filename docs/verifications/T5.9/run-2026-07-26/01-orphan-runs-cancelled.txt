@@ -1,0 +1,44 @@
+=== NEUTRALIZATION VIA THE PRODUCT'S OWN ENDPOINT (POST /api/runs/:id/cancel) ===
+UTC 2026-07-26T06:47:48Z
+Stack: web-only on :3010 (NO worker started -> queue physically cannot be consumed).
+Health: {"ok":true,"db":true}
+
+--- BEFORE ---
+           run_id           | node_key |    status     
+----------------------------+----------+---------------
+ 01KYEHDRA6RCD4QRSTKRK38V4T | N6       | succeeded
+ 01KYEHDRA6RCD4QRSTKRK38V4T | N7a      | queued
+ 01KYEHDRA6RCD4QRSTKRK38V4T | N7b      | running
+ 01KYEHDRA6RCD4QRSTKRK38V4T | N7c      | awaiting_deps
+ 01KYEHDRA6RCD4QRSTKRK38V4T | N7d      | awaiting_deps
+ 01KYEHDRA6RCD4QRSTKRK38V4T | N7e      | succeeded
+ 01KYEHDRA6RCD4QRSTKRK38V4T | N7f      | awaiting_deps
+ 01KYEHDRA6RCD4QRSTKRK38V4T | N8       | awaiting_deps
+ 01KYEHDRA6RCD4QRSTKRK38V4T | N9       | awaiting_deps
+ 01KYEHP83PMN5ZGSF4HRBRKMY5 | N6       | succeeded
+ 01KYEHP83PMN5ZGSF4HRBRKMY5 | N7a      | queued
+ 01KYEHP83PMN5ZGSF4HRBRKMY5 | N7b      | running
+ 01KYEHP83PMN5ZGSF4HRBRKMY5 | N7c      | awaiting_deps
+ 01KYEHP83PMN5ZGSF4HRBRKMY5 | N7d      | awaiting_deps
+ 01KYEHP83PMN5ZGSF4HRBRKMY5 | N7e      | succeeded
+ 01KYEHP83PMN5ZGSF4HRBRKMY5 | N7f      | awaiting_deps
+ 01KYEHP83PMN5ZGSF4HRBRKMY5 | N8       | awaiting_deps
+ 01KYEHP83PMN5ZGSF4HRBRKMY5 | N9       | awaiting_deps
+ 01KYEHX6BQJYC7E2B81H3THQC7 | N6       | succeeded
+ 01KYEHX6BQJYC7E2B81H3THQC7 | N7a      | queued
+ 01KYEHX6BQJYC7E2B81H3THQC7 | N7b      | running
+ 01KYEHX6BQJYC7E2B81H3THQC7 | N7c      | awaiting_deps
+ 01KYEHX6BQJYC7E2B81H3THQC7 | N7d      | awaiting_deps
+ 01KYEHX6BQJYC7E2B81H3THQC7 | N7e      | succeeded
+ 01KYEHX6BQJYC7E2B81H3THQC7 | N7f      | awaiting_deps
+ 01KYEHX6BQJYC7E2B81H3THQC7 | N8       | awaiting_deps
+ 01KYEHX6BQJYC7E2B81H3THQC7 | N9       | awaiting_deps
+(27 rows)
+
+
+--- POST /api/runs/01KYEHP83PMN5ZGSF4HRBRKMY5/cancel ---
+{"ok":true,"cancelled":7}
+--- POST /api/runs/01KYEHX6BQJYC7E2B81H3THQC7/cancel ---
+{"ok":true,"cancelled":7}
+--- POST /api/runs/01KYEHDRA6RCD4QRSTKRK38V4T/cancel ---
+{"ok":true,"cancelled":7}

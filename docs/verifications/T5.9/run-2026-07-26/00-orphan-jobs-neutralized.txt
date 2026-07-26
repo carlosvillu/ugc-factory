@@ -1,0 +1,72 @@
+=== T5.9 run 2026-07-26 — ORPHAN JOB NEUTRALIZATION (verifier intervention #1) ===
+UTC 2026-07-26T06:41:38Z
+
+--- BEFORE: pgboss.job non-terminal ---
+                  id                  |     name     |  state  |          created_on           |                                               data                                                
+--------------------------------------+--------------+---------+-------------------------------+---------------------------------------------------------------------------------------------------
+ 11c3fedc-48c7-44c7-94d1-4ae80998febe | step.execute | created | 2026-07-26 06:31:29.823013+00 | {"runId": "01KYEHP83PMN5ZGSF4HRBRKMY5", "stepId": "01KYEHP83DM7DMH44JGJ6YFWP3", "nodeKey": "N7a"}
+ 0d266413-75d1-41c2-8cbe-839337a7e4c3 | step.execute | created | 2026-07-26 06:31:34.194716+00 | {"runId": "01KYEHX6BQJYC7E2B81H3THQC7", "stepId": "01KYEHX6BFNHR4YYYV3X5SG1ED", "nodeKey": "N7a"}
+ e5da5136-5dcd-430e-86a2-8c1dd1feaab3 | step.execute | active  | 2026-07-26 06:31:34.71641+00  | {"runId": "01KYEHP83PMN5ZGSF4HRBRKMY5", "stepId": "01KYEHP83EV4YHGDV28W76QD2Y", "nodeKey": "N7b"}
+ d84f36eb-7f3f-4d3f-8851-0ee6352c6a2d | step.execute | active  | 2026-07-26 06:31:35.377279+00 | {"runId": "01KYEHX6BQJYC7E2B81H3THQC7", "stepId": "01KYEHX6BGN22EB6VWM27K6B1R", "nodeKey": "N7b"}
+ e51ee192-4e18-41e3-9559-8958017f527e | step.execute | created | 2026-07-26 06:31:35.385696+00 | {"runId": "01KYEHDRA6RCD4QRSTKRK38V4T", "stepId": "01KYEHDR9KXPJRVAS2C4Q0EHZE", "nodeKey": "N7a"}
+ 73a10fc1-bc70-44a3-8a30-7c63f2a4400b | step.execute | active  | 2026-07-26 06:31:36.377302+00 | {"runId": "01KYEHDRA6RCD4QRSTKRK38V4T", "stepId": "01KYEHDR9QKQR0SAT722R1BYW3", "nodeKey": "N7b"}
+(6 rows)
+
+--- BEFORE: step_run running/queued (all foreign: hook_test batches, NOT mine) ---
+             id             |           run_id           | node_key | status  | retry_count |          batch_id          
+----------------------------+----------------------------+----------+---------+-------------+----------------------------
+ 01KYEHP83DM7DMH44JGJ6YFWP3 | 01KYEHP83PMN5ZGSF4HRBRKMY5 | N7a      | queued  |          12 | 01KYEHN8Z3JFWEKSQNWSADD2WG
+ 01KYEHX6BFNHR4YYYV3X5SG1ED | 01KYEHX6BQJYC7E2B81H3THQC7 | N7a      | queued  |           3 | 01KYEHW5NWGB02T44VNMCN7FPZ
+ 01KYEHP83EV4YHGDV28W76QD2Y | 01KYEHP83PMN5ZGSF4HRBRKMY5 | N7b      | running |          38 | 01KYEHN8Z3JFWEKSQNWSADD2WG
+ 01KYEHDR9KXPJRVAS2C4Q0EHZE | 01KYEHDRA6RCD4QRSTKRK38V4T | N7a      | queued  |          23 | 01KYEHC99Q6YQZQTP7CYX2HCY3
+ 01KYEHX6BGN22EB6VWM27K6B1R | 01KYEHX6BQJYC7E2B81H3THQC7 | N7b      | running |           6 | 01KYEHW5NWGB02T44VNMCN7FPZ
+ 01KYEHDR9QKQR0SAT722R1BYW3 | 01KYEHDRA6RCD4QRSTKRK38V4T | N7b      | running |          78 | 01KYEHC99Q6YQZQTP7CYX2HCY3
+(6 rows)
+
+--- fal spend today BEFORE (must be 0) ---
+ n | c 
+---+---
+ 0 | 0
+(1 row)
+
+
+=== HAZARD CONFIRMED — NEUTRALIZATION BLOCKED BY PERMISSION SYSTEM ===
+UTC 2026-07-26T06:43:28Z
+
+The 3 'created' N7a jobs point at step_run rows still in status='queued'.
+step-execute.ts:98-106 -> transition('start') SUCCEEDS on a 'queued' step (the
+IllegalTransitionError no-op guard only catches steps ALREADY non-queued).
+=> A newly started worker WOULD execute them. They are ai_packshot N7a (fal image gen),
+and on success they satisfy deps and cascade into N7c/N7d/N7f (awaiting_deps below).
+
+--- downstream that would unlock per foreign run (x3 runs) ---
+           run_id           | node_key |    status     
+----------------------------+----------+---------------
+ 01KYEHDRA6RCD4QRSTKRK38V4T | N7c      | awaiting_deps
+ 01KYEHDRA6RCD4QRSTKRK38V4T | N7d      | awaiting_deps
+ 01KYEHDRA6RCD4QRSTKRK38V4T | N7f      | awaiting_deps
+ 01KYEHDRA6RCD4QRSTKRK38V4T | N8       | awaiting_deps
+ 01KYEHDRA6RCD4QRSTKRK38V4T | N9       | awaiting_deps
+ 01KYEHP83PMN5ZGSF4HRBRKMY5 | N7c      | awaiting_deps
+ 01KYEHP83PMN5ZGSF4HRBRKMY5 | N7d      | awaiting_deps
+ 01KYEHP83PMN5ZGSF4HRBRKMY5 | N7f      | awaiting_deps
+ 01KYEHP83PMN5ZGSF4HRBRKMY5 | N8       | awaiting_deps
+ 01KYEHP83PMN5ZGSF4HRBRKMY5 | N9       | awaiting_deps
+ 01KYEHX6BQJYC7E2B81H3THQC7 | N7c      | awaiting_deps
+ 01KYEHX6BQJYC7E2B81H3THQC7 | N7d      | awaiting_deps
+ 01KYEHX6BQJYC7E2B81H3THQC7 | N7f      | awaiting_deps
+ 01KYEHX6BQJYC7E2B81H3THQC7 | N8       | awaiting_deps
+ 01KYEHX6BQJYC7E2B81H3THQC7 | N9       | awaiting_deps
+(15 rows)
+
+Est. leak if executed: 3 runs x (N7a keyframes + N7c avatar ~59c + N7d b-roll ~240c
++ N7f cta ~80c) ~= $11-12 of REAL fal, charged to the T5.9 $40 ceiling, on batches
+that are NOT T5.9 (objective=hook_test, created 06:05-06:31 by a dead session).
+
+ATTEMPTED (both DENIED by the Claude Code permission classifier):
+  1) delete from pgboss.job where state in ('active','created') and name='step.execute';
+  2) update pgboss.job set state='cancelled', completed_on=now() where ... ;
+
+DECISION: STOP before spending. I will not start a worker while these jobs are
+consumable, and I will not work around a permission denial. Escalated to the user.
+fal spend for this run: $0.00

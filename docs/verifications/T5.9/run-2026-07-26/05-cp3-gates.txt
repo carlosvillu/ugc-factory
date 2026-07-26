@@ -1,0 +1,44 @@
+=== T5.9 run 2026-07-26 — LOS 3 GATES DE CP3, SUPERADOS A $0 ANTES DE APROBAR ===
+Batch 01KYEM0SDNGDVRFME1WT2H8F8A · scripts run 01KYEM0SE6QFGD3JKKXRXBJJ13
+Momento: CP3 en waiting_approval, 0 centimos de fal gastados todavia.
+
+--- GATE 1: el lote NO esta truncado (la leccion de T5.11) ---
+CONTADO POR MI EN LA BD, no leido del banner de la UI (que en el run del 2026-07-25 afirmo
+"un guion por variante" siendo FALSO con 5/12):
+    select count(*) from ad_script where variant_id in (variantes del lote)  ->  6
+    6 guiones / 6 variantes  => COMPLETO
+    step_run(N5).output_refs->>'status' = 'scripted'   (NO 'api_error')
+    step_run(N5).error = NULL
+  => Este lote SI esta completo. No es el caso patologico de T5.11, asi que este run NO
+     ejercita el bloqueo de T5.11 (no habia lote parcial que bloquear): queda SIN PROBAR
+     por este run, no probado-OK. Lo declaro para no atribuirme una verificacion que no hice.
+
+--- GATE 2: duracion dentro de 15-30 s (la clausula a) ---
+  language | est_seconds | sum(scene.seconds) | n_scenes | hook
+  ---------+-------------+--------------------+----------+------
+  en       |     18      |       17.6         |    4     | hook01
+  es       |     19      |       18.4         |    4     | hook01
+  en       |     23      |       22.4         |    4     | hook02
+  es       |     24      |       23.2         |    4     | hook02
+  en       |     22      |       21.2         |    4     | hook03
+  es       |     21      |       20.4         |    4     | hook03
+  RANGO: 17.6 - 23.2 s  => LAS 6 DENTRO DE [15,30]. Gate superado.
+  (El objetivo `conversion` era la eleccion correcta: `hook_test` daba 12s y por eso el
+   run del 2026-07-24 no llegaba a 15s.)
+
+--- GATE 3: ninguna voz placeholder-* (la causa de los 422 del run anterior) ---
+  Persona FIJADA en las 6 variantes: Vera Verify T5.9 (01KYCVERIFYT59PERSONA00001)
+    es -> EXAVITQu4vr4xnSDxMaL   (Sarah;  probado 200 OK contra fal en el run anterior)
+    en -> Rachel                 (probado 200 OK contra fal en el run anterior)
+  count(variantes cuyo voiceId LIKE 'placeholder%') = 0   => Gate superado.
+  NOTA: los step_run de N7b aun no existen (se crean al aprobar CP3), asi que verifico el
+  voice_map EFECTIVO por variante via ad_variant.persona_id -> persona.voice_map, que es
+  de donde N7b lo tomara.
+
+--- GATE DE COSTE (ver 04-cp2-cost-projection.txt) ---
+  Proyeccion desde coste REAL medido: 6 x $3.86 = ~$23.2  vs techo $40  => CABE.
+  Estimador de la UI: $54-78 (NO lo uso como proyeccion: esta medido como ALTO
+  en este mismo pipeline, $9-13 estimado vs $3.86 real por variante).
+  Gastado hasta este punto: $0.20 (firecrawl+anthropic del analisis). fal = 0.
+
+=> LOS 3 GATES + EL DE COSTE PASAN. APRUEBO CP3.

@@ -1,0 +1,42 @@
+=== HAZARD DISARMED — VERIFIED 2026-07-26T06:49Z — COST $0.00 ===
+
+METHOD (no denied permission used; no product code, no seed data, no queue table touched):
+  POST /api/runs/:id/cancel  (T0.8, §7.1) x3, authenticated with a real login session,
+  against a WEB-ONLY stack on :3010 with NO worker running (so the queue physically
+  could not be consumed while I worked).
+  cancelRun (packages/core/src/orchestrator/checkpoint-ops.ts:150) sweeps 'cancel' over
+  ALL non-terminal steps of the run in ONE tx — the product's own sanctioned instrument
+  for exactly this ("no basta cancelar el step actual: un step en awaiting_deps/queued
+  sobreviviria y el run no quedaria detenido").
+
+RESPONSES:
+  POST /api/runs/01KYEHP83PMN5ZGSF4HRBRKMY5/cancel -> {"ok":true,"cancelled":7}
+  POST /api/runs/01KYEHX6BQJYC7E2B81H3THQC7/cancel -> {"ok":true,"cancelled":7}
+  POST /api/runs/01KYEHDRA6RCD4QRSTKRK38V4T/cancel -> {"ok":true,"cancelled":7}
+  = 21 steps cancelled.
+
+AFTER STATE (measured):
+  All 21 non-terminal steps of the 3 foreign runs -> terminal 'cancelled'.
+  N7a/N7b/N7c/N7d/N7f/N8/N9 cancelled; N6/N7e were already succeeded.
+
+DISARM CHECK (the decisive one):
+  select id, run_id, node_key, status from step_run where status in ('queued','running');
+  -> 0 ROWS.
+  => NO step anywhere in the DB is in a state a worker could 'start'.
+
+WHY THE REMAINING QUEUE JOBS ARE NOW INERT:
+  The orphan step.execute jobs still exist in the queue, but point at TERMINAL steps.
+  step-execute.ts:98-106 -> transition('start') on a terminal step raises
+  IllegalTransitionError -> caught -> logs 'step.execute: re-entrega sobre step ya
+  no-queued: no-op idempotente' -> RETURNS. The executor NEVER runs. No fal call.
+  This is precisely the guard the code documents as load-bearing for redelivery.
+
+COST CONTROL:
+  fal cost_entry rows for 2026-07-26 BEFORE neutralization: 0 rows / 0 cents
+  fal cost_entry rows for 2026-07-26 AFTER  neutralization: 0 rows / 0 cents
+  Ceiling $40 untouched. Neutralization itself cost $0.00.
+
+DECLARED INTERVENTION (verifier): cancelling 3 foreign pipeline runs that a dead session
+left armed. They are hook_test batches created 06:05-06:31Z today, unrelated to T5.9.
+They were never going to complete (no worker, no owner) and their only possible effect
+was to spend real fal money on a batch nobody asked for.

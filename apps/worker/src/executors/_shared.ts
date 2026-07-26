@@ -15,8 +15,36 @@
 // honesta (mismo criterio del brief: no forzar una abstracción que fusione semánticas distintas).
 import { AppError } from '@ugc/core/contracts';
 import { PermanentStepError } from '@ugc/core/orchestrator';
-import { FalResponseError, LoserRaceError } from '@ugc/core/generation';
+import { FalProviderError, FalResponseError, LoserRaceError } from '@ugc/core/generation';
 import { ModelCapabilitiesSchema, type ModelCapabilities } from '@ugc/core/gallery';
+
+/**
+ * Status HTTP de `FalProviderError` que son PERMANENTES respecto al step (T5.16, MONEY POINT): un
+ * reintento re-submitea el MISMO payload (la `config` del step es INMUTABLE entre vueltas de pg-boss) y
+ * fal lo rechaza IGUAL → re-pago garantizado de un fallo determinista. Son fallos que NO se arreglan en la
+ * vuelta siguiente sino que exigen intervención HUMANA (recargar saldo, revisar la fal-key en Ajustes,
+ * corregir el input inválido):
+ *   · 401 — credencial revocada/ausente: la key no cambia reintentando.
+ *   · 403 — «User is locked. Reason: Exhausted balance.» (el bug real: N7b re-submiteó 80 veces un 403 de
+ *     saldo agotado, cada submit facturado). El saldo no se recarga solo reintentando.
+ *   · 422 — unprocessable entity (p.ej. voiceId inválido): la `config` es la misma en cada vuelta, así que
+ *     fal re-valida el MISMO payload y lo rechaza IGUAL. Es la MISMA lógica «VIOLACIÓN DE CONFIG
+ *     DETERMINISTA» que ya aplica `FalResponseError` a un output roto — decisión T5.16 (ver informe): el
+ *     contra-argumento «un 422 podría ser un hipo transitorio de validación upstream» es especulativo y no
+ *     es lo observado; reintentar un input inválido solo quema dinero para fallar igual.
+ *
+ * NO están aquí (siguen RETRYABLE a propósito):
+ *   · 429 — rate limit: transitorio; conserva su retry-once con `Retry-After` (fal-client.ts) y otra vuelta
+ *     tiene posibilidad REAL de pasar. Colapsarlo en permanente mataría un step que un reintento habría
+ *     completado.
+ *   · `status === undefined` (timeout/red) — transitorio de verdad: la request ni llegó.
+ *   · Cualquier OTRO status (5xx, 4xx no listado): fail-SAFE hacia retryable — un status desconocido se
+ *     trata como transitorio (peor caso: un reintento de más), NUNCA como permanente silencioso.
+ *
+ * Es la MISMA distinción por TIPO/estado que T5.11 aplicó a N5 y T4.11 a la taxonomía loser-race vs
+ * contract-violation: clasificar por la naturaleza del fallo (permanente vs transitorio), no por el nodo.
+ */
+const FAL_PERMANENT_STATUSES: ReadonlySet<number> = new Set([401, 403, 422]);
 
 /** El contexto mínimo que `requireOutputContext` inspecciona. Acepta campos extra (p.ej. `deps` de
  *  N7a) por estructura — solo lee `collectOutput`/`stepId`. */
@@ -59,8 +87,14 @@ export function requireOutputContext(
  *     completada o de un cableado fijo → DETERMINISTA → `PermanentStepError` (sin retry, sin RE-PAGO a
  *     fal del output malformado — el money-burn T1.10a). Antes subía como throw normal ⇒ `failStep` ⇒
  *     retry ⇒ re-submit ⇒ re-pago de una generación determinísticamente rota.
- *   · `FalProviderError` (429/timeout/red) y cualquier otro error: se DEJA SUBIR tal cual —
- *     transitorio, otra vuelta tiene posibilidad real de ir bien (retryable vía `failStep`).
+ *   · `FalProviderError` con status PERMANENTE (401/403/422, T5.16): `PermanentStepError`. Un 403 «saldo
+ *     agotado» o un 401 «clave revocada» NO se arregla reintentando — cada re-submit se FACTURA (fal cobra
+ *     el ENVÍO). El bug real: N7b re-submiteó 80 veces un 403 porque TODO `FalProviderError` subía
+ *     retryable, agrupando el saldo-agotado permanente con el timeout transitorio. Ahora se CLASIFICA por
+ *     status (`FAL_PERMANENT_STATUSES`) → el permanente va a `failed` terminal en 1 submit, sin re-pago.
+ *   · Cualquier OTRO `FalProviderError` (429 rate-limit, timeout/red sin status, 5xx, 4xx no listado) y
+ *     cualquier otro error: se DEJA SUBIR tal cual — transitorio, otra vuelta tiene posibilidad real de ir
+ *     bien (retryable vía `failStep`). Fail-SAFE: un status desconocido se queda retryable, NO permanente.
  *
  * `preserveMessage` conserva el mensaje original del servicio (los outputs malformados llevan el
  * `JSON.stringify` del payload — evidencia que el visor de logs necesita entera, lección T1.16).
@@ -73,6 +107,23 @@ export async function runGenerationStep<T>(fn: () => Promise<T>): Promise<T> {
     if (err instanceof LoserRaceError) throw err;
     if (err instanceof FalResponseError) {
       throw new PermanentStepError(err.message);
+    }
+    // T5.16 — CLASIFICACIÓN POR STATUS del fallo de proveedor. `FalProviderError` NO es subclase de
+    // `FalResponseError` (extiende `Error` directo), así que este check es independiente del anterior y su
+    // orden no importa. Un 403/401/422 es DETERMINISTA (saldo/credencial/input inválido: reintentar
+    // re-paga para fallar igual) → Permanent con mensaje ACCIONABLE (mismo estilo que `resolveFalKeyOrPermanent`,
+    // el humano resuelve en Ajustes → fal antes de re-disparar). El 429/timeout/red y todo lo demás sigue
+    // cayendo al `throw err` de abajo (retryable).
+    if (
+      err instanceof FalProviderError &&
+      err.status !== undefined &&
+      FAL_PERMANENT_STATUSES.has(err.status)
+    ) {
+      throw new PermanentStepError(
+        `Fallo PERMANENTE del proveedor (fal, HTTP ${String(err.status)}): ${err.message}. ` +
+          `No se reintenta (cada envío se factura). Resuélvelo en Ajustes → fal (recarga saldo si es "balance"/403, ` +
+          `revisa la fal-key si es credencial/401, corrige el input si es validación/422) y re-dispara el run.`,
+      );
     }
     throw err;
   }

@@ -1,0 +1,15 @@
+ ❯ |worker:integration| test/integration/n7-permanent-provider-error.test.ts (5 tests | 2 failed | 3 skipped) 60345ms
+     × CONTROL NEGATIVO — un FalProviderError '429 (rate limit)' SIGUE retryable: reintenta y triunfa (>1 submit, NO permanente) 30141ms
+     × CONTROL NEGATIVO — un FalProviderError 'timeout/red (status undefined)' SIGUE retryable: reintenta y triunfa (>1 submit, NO permanente) 30089ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  |worker:integration| test/integration/n7-permanent-provider-error.test.ts > fallo PERMANENTE de proveedor (403/401/422) a nivel de step: muere en 1 submit (T5.16) > CONTROL NEGATIVO — un FalProviderError '429 (rate limit)' SIGUE retryable: reintenta y triunfa (>1 submit, NO permanente)
+ FAIL  |worker:integration| test/integration/n7-permanent-provider-error.test.ts > fallo PERMANENTE de proveedor (403/401/422) a nivel de step: muere en 1 submit (T5.16) > CONTROL NEGATIVO — un FalProviderError 'timeout/red (status undefined)' SIGUE retryable: reintenta y triunfa (>1 submit, NO permanente)
+Error: timeout (30000ms) esperando: N7b succeeded tras reintentar un transitorio
+ ❯ waitFor test/helpers.ts:29:13
+     28|     if (Date.now() - started > timeoutMs) {
+     29|       throw new Error(`timeout (${String(timeoutMs)}ms) esperando: ${w…
+     31|     await new Promise((resolve) => setTimeout(resolve, pollIntervalMs)…
+ ❯ test/integration/n7-permanent-provider-error.test.ts:239:7
+ Test Files  1 failed (1)
+      Tests  2 failed | 3 skipped (5)
+   Duration  63.32s (transform 472ms, setup 7ms, import 1.13s, tests 60.35s, environment 0ms)

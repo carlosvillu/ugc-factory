@@ -36,15 +36,45 @@ describe('runGenerationStep: clasificación de errores de un servicio N7 (money 
     await expect(rejection).rejects.toThrow('no trae video');
   });
 
-  it('FalProviderError (429/timeout/red) → SUBE TAL CUAL (retryable-transitorio): NO se vuelve permanente', async () => {
-    // Un fallo de proveedor es transitorio: otra vuelta tiene posibilidad REAL de ir bien. Envolverlo en
-    // Permanent mataría un step que un simple reintento habría completado.
-    const err = new FalProviderError('fal respondió 429', { status: 429 });
-    await expect(runGenerationStep(() => Promise.reject(err))).rejects.toBe(err);
-    await expect(runGenerationStep(() => Promise.reject(err))).rejects.not.toBeInstanceOf(
-      PermanentStepError,
-    );
-  });
+  // ── T5.16: CLASIFICACIÓN POR STATUS de `FalProviderError` (money point) ──
+  // ANTES este caso era uno solo («FalProviderError 429/timeout/red → SUBE TAL CUAL»), que CEMENTABA que
+  // TODO `FalProviderError` fuera retryable. Eso agrupaba el 403 «saldo agotado» PERMANENTE con el timeout
+  // transitorio → el bug real (N7b re-submiteó 80 veces un 403, cada envío facturado). Ahora el invariante
+  // se hace MÁS FINO (no se relaja, regla 5): 401/403/422 → Permanent; 429/timeout/undefined → retryable.
+
+  it.each([403, 401, 422])(
+    'FalProviderError status %i (permanente: saldo/credencial/input inválido) → PermanentStepError (no re-paga)',
+    async (status) => {
+      // Reintentar re-submitea el MISMO payload (config inmutable) y fal lo rechaza IGUAL → re-pago de un
+      // fallo determinista. El humano debe recargar saldo / revisar la key / corregir el input antes de
+      // re-disparar; por eso va a `failed` terminal SIN retry.
+      const err = new FalProviderError(`fal submit falló con ${String(status)}: User is locked`, {
+        status,
+      });
+      const rejection = runGenerationStep(() => Promise.reject(err));
+      await expect(rejection).rejects.toBeInstanceOf(PermanentStepError);
+      // El mensaje es ACCIONABLE: nombra que es un fallo permanente de proveedor y apunta a Ajustes → fal.
+      await expect(rejection).rejects.toThrow(/Ajustes → fal/);
+    },
+  );
+
+  it.each([
+    { label: '429 (rate limit)', opts: { status: 429 } },
+    { label: 'timeout/red (status undefined)', opts: {} },
+    { label: '503 (5xx transitorio, status no listado)', opts: { status: 503 } },
+  ])(
+    'FalProviderError $label → SUBE TAL CUAL (retryable-transitorio): NO se vuelve permanente',
+    async ({ opts }) => {
+      // Un fallo de proveedor transitorio: otra vuelta tiene posibilidad REAL de ir bien. Envolverlo en
+      // Permanent mataría un step que un simple reintento habría completado. El status NO listado (503) es
+      // el borde fail-safe: lo desconocido se queda retryable, nunca permanente silencioso.
+      const err = new FalProviderError('fal respondió transitorio', opts);
+      await expect(runGenerationStep(() => Promise.reject(err))).rejects.toBe(err);
+      await expect(runGenerationStep(() => Promise.reject(err))).rejects.not.toBeInstanceOf(
+        PermanentStepError,
+      );
+    },
+  );
 
   it('un Error genérico (no de la taxonomía fal) → SUBE TAL CUAL (retryable por defecto)', async () => {
     const err = new Error('BD caída');
@@ -69,6 +99,19 @@ describe('runGenerationStep: clasificación de errores de un servicio N7 (money 
       // assert lo caza.
       const loser = new LoserRaceError('idéntico en producción concurrente; reintenta');
       await expect(runGenerationStep(() => Promise.reject(loser))).rejects.not.toBeInstanceOf(
+        PermanentStepError,
+      );
+    });
+
+    it('CONTROL NEGATIVO (T5.16, DEMASIADO ANCHO) — si TODO FalProviderError colapsara en Permanent, este 429 dejaría de ser retryable', async () => {
+      // El fix debe clasificar por STATUS, no colapsar todo `FalProviderError` en permanente. Si alguien
+      // "simplificara" a `err instanceof FalProviderError → Permanent` (ignorando el status), un 429
+      // transitorio se volvería terminal y mataría un step que un reintento habría completado. Este assert
+      // (429 sigue subiendo TAL CUAL, no Permanent) se pondría ROJO exactamente ante esa regresión — es el
+      // control que impide pasarse de ancho en la dirección opuesta al bug del 403.
+      const rateLimited = new FalProviderError('fal respondió 429', { status: 429 });
+      await expect(runGenerationStep(() => Promise.reject(rateLimited))).rejects.toBe(rateLimited);
+      await expect(runGenerationStep(() => Promise.reject(rateLimited))).rejects.not.toBeInstanceOf(
         PermanentStepError,
       );
     });

@@ -1,0 +1,9 @@
+ ❯ |worker:integration| test/integration/n7-permanent-provider-error.test.ts (5 tests | 1 failed | 4 skipped) 30232ms
+     × un 403 "saldo agotado" con maxRetries=N7_MAX_RETRIES → failed terminal en EXACTAMENTE 1 submit (no ~81) 30101ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  |worker:integration| test/integration/n7-permanent-provider-error.test.ts > fallo PERMANENTE de proveedor (403/401/422) a nivel de step: muere en 1 submit (T5.16) > un 403 "saldo agotado" con maxRetries=N7_MAX_RETRIES → failed terminal en EXACTAMENTE 1 submit (no ~81)
+Error: timeout (30000ms) esperando: N7b failed terminal por 403 permanente
+ ❯ waitFor test/helpers.ts:29:13
+ Test Files  1 failed (1)
+      Tests  1 failed | 4 skipped (5)
+   Duration  33.18s (transform 468ms, setup 8ms, import 1.12s, tests 30.23s, environment 0ms)

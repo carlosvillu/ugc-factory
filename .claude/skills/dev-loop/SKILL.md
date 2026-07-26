@@ -119,6 +119,23 @@ Corre solo al cerrar una fase, no en cada tarea. Lee el README raíz y el de cad
 
 Si hay cambios: van en su propio commit (`docs: <qué se actualizó> tras cerrar F<n>`), con el gate en verde, y se anotan en la entrada de journal de la fase.
 
+## Higiene antes de gastar (guard determinista)
+
+**Antes de CUALQUIER verificación que gaste dinero real, comprueba que no hay workers ajenos vivos**:
+
+```bash
+node scripts/check-orphan-workers.mjs --strict   # exit 1 si hay alguno
+```
+
+Por qué es una comprobación mecánica y no una nota: un `pnpm dev` mal cerrado deja vivo el worker de
+`apps/worker`, que **sigue comiendo de la cola de pg-boss**. Si arrancó sin `FAL_BASE_URL` apuntando a un
+fake, un job N7 que tome **pega a fal REAL y cobra**. Ha pasado dos veces (2026-07-25: 3 huérfanos;
+2026-07-26: 2 más). Ninguno llegó a gastar por suerte, no por diseño. Si no son tuyos:
+`pkill -f "src/main.ts"`.
+
+El modo sin `--strict` solo avisa (exit 0) — es el que puede correr alguien que tiene el stack levantado a
+propósito. **El `--strict` es el del verifier antes de un run de gasto.**
+
 ## Presupuesto por tarea
 
 Cap = coste estimado en el planning ×3 (mín. $1). Antes de una verificación con APIs de pago: estima; si supera el cap → parada de gasto. El coste real observado va SIEMPRE al report y al journal; si difiere >25 % del estimado, recalibra en la misma tarea (regla 5). La suite de tests jamás gasta (skill testing); solo verificaciones y `test:live` presupuestado.

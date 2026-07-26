@@ -10,7 +10,10 @@
       // es dependencia. En el workspace raíz no lo es (el monorepo no instala playwright
       // arriba), así que knip lo ve como binario sin declarar — se ignora explícito, mismo
       // criterio que ffprobe/ffmpeg (binarios resueltos fuera del grafo de deps de este ws).
-      "ignoreBinaries": ["playwright"]
+      // `pgrep`: check-orphan-workers.mjs (guard de higiene, 2026-07-26) lo usa para detectar
+      // workers vivos que podrían pegar a fal REAL. Utilidad POSIX del sistema, no una dependencia
+      // instalable — mismo criterio que playwright/ffprobe.
+      "ignoreBinaries": ["playwright", "pgrep"]
     },
     "apps/web": {
       // los plugins de knip detectan Next (app router) y Vitest solos. El plugin

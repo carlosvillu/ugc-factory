@@ -244,3 +244,17 @@
  POST /api/steps/01KYEN60Q5R9FGFJJVBTP4H8MR/approve 200 in 264ms (next.js: 10ms, application-code: 253ms)
 {"level":30,"time":1785051204495,"pid":5685,"hostname":"MBP-de-Carlos","name":"web","request_id":"54361fc6-0277-405c-8cb2-ba0a7fcb78e3","run_id":"01KYENAS0P7WE4AVCDP7S58MHH","cancelled":42,"msg":"run cancelado"}
  POST /api/runs/01KYENAS0P7WE4AVCDP7S58MHH/cancel 200 in 172ms (next.js: 8ms, application-code: 165ms)
+Persisting failed: Unable to write SST file 00000241.sst
+
+Caused by:
+    No such file or directory (os error 2)
+Compaction failed: Another write batch or compaction is already active (Only a single write operations is allowed at a time)
+Persisting failed: Another write batch or compaction is already active (Only a single write operations is allowed at a time)
+Compaction failed: Another write batch or compaction is already active (Only a single write operations is allowed at a time)
+Compaction failed: Another write batch or compaction is already active (Only a single write operations is allowed at a time)
+Persisting failed: Another write batch or compaction is already active (Only a single write operations is allowed at a time)
+Compaction failed: Another write batch or compaction is already active (Only a single write operations is allowed at a time)
+Persisting failed: Another write batch or compaction is already active (Only a single write operations is allowed at a time)
+Compaction failed: Another write batch or compaction is already active (Only a single write operations is allowed at a time)
+Persisting failed: Another write batch or compaction is already active (Only a single write operations is allowed at a time)
+Compaction failed: Another write batch or compaction is already active (Only a single write operations is allowed at a time)

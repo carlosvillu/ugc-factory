@@ -2948,3 +2948,13 @@ T5.8 es el primer código que conduce un N8 vivo hasta el mux del máster (su op
 - **Honestidad del verifier**: declaró que el `pnpm gate` lo ACEPTÓ de mí en vez de re-ejecutarlo, que no
   midió «<45 min» (el lote nunca completó) y que no intentó (b). Y declaró que H3 lo destapó **un click
   erróneo suyo**.
+- **arnés: guard determinista de workers huérfanos** (`scripts/check-orphan-workers.mjs` +
+  `pnpm check:orphan-workers`, documentado en la skill dev-loop). La regla «mata los huérfanos antes de
+  gastar» llevaba DOS incidentes escrita solo en prosa (25/07: 3 huérfanos; 26/07: 2 más, encontrados vivos
+  al recoger este ciclo — 0 jobs N7 pendientes, así que no gastaron **por suerte, no por diseño**). Modo
+  normal AVISA (exit 0: quien desarrolla tiene el stack levantado legítimamente); **`--strict` sale 1** y es
+  el que debe correr un verifier ANTES de un run de gasto. **NO se mete en `pnpm gate`** a propósito, para
+  no romperlo a quien está desarrollando. **Control negativo hecho y visto ROJO**: con un worker vivo,
+  `--strict` → exit 1; sin workers → exit 0. No lee el entorno del proceso (en macOS `ps -E` no lo expone
+  de forma fiable) ⇒ trata cualquier worker ajeno como NO contenido, que es la lectura segura con dinero
+  de por medio.

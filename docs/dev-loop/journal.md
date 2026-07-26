@@ -2958,3 +2958,27 @@ T5.8 es el primer código que conduce un N8 vivo hasta el mux del máster (su op
   `--strict` → exit 1; sin workers → exit 0. No lee el entorno del proceso (en macOS `ps -E` no lo expone
   de forma fiable) ⇒ trata cualquier worker ajeno como NO contenido, que es la lectura segura con dinero
   de por medio.
+
+## 2026-07-26 · ⏳ T5.14 iniciada (confirmar CP3 con 0 aprobadas vara el lote)
+- Elegible sin deps, sin saldo, $0. Es el bug que varó el primer lote del usuario en producción HOY.
+- Nota de campo (prod): con 0/6 aprobadas la decisión se registra `approved:false ×6`, el checkpoint N5 pasa a `succeeded` y el lote queda con variantes en `planned` sin salida.
+- **T5.14 · REVIEW de correctness hecho SIN Docker (bloqueo de infra)**: Docker Desktop se cayó a mitad de
+  sesión (socket presente, daemon no responde), así que el gate completo (Testcontainers) queda pendiente.
+  Verificado a mano lo que no necesita Docker: lint/typecheck/format/knip **todos 0**; y el punto CRÍTICO
+  del fix por lectura de código: el guard de decisión vacía (`script-checkpoint.ts:226`) corre ANTES de
+  `applyScriptVerdicts` **y** dentro del MISMO `withDomainTransaction` que `approveStep`
+  (`approve/route.ts:78-104`: approveStep→applyDomainEffect→persistCheckpointDecision, los tres en la tx),
+  así que el `throw` revierte la transición N5→succeeded ⇒ el checkpoint NO se consume. Correcto: reusa la
+  atomicidad existente, cero hallazgos de correctness.
+- **Auditoría regla 5 (2 tests T2.6 reformados)**: LEGÍTIMO, no debilitamiento. El invariante «el flag
+  bloqueante manda sobre el `approved` del cliente» sigue asertado sobre la variante bloqueada
+  (`variantIds[1]` no llega a `scripted`); el lote pasa de 1 a 2 variantes (limpia + bloqueada) para aislar
+  el foco del guard de T5.14, y se AÑADE que la limpia sí avanza. Cobertura neta mayor.
+- **PENDIENTE por Docker**: gate completo (integración) + `code-review`/`ds-reviewer` sobre la UI + verifier.
+- **T5.16 · diagnóstico avanzado SIN Docker** (aprovechando el bloqueo de infra): el gate automático de
+  retry es CORRECTO (`transition.ts:429` compara antes de reintentar; `fal-client.ts:269` maxRetries:0). La
+  vía a `retry_count=80` es el **RETRY MANUAL** (`retry.ts:85`, `resetRetryCount:true` deliberado). El
+  defecto de fondo: el reset NO distingue fallo transitorio de PERMANENTE (403 saldo/clave) — resetear el
+  presupuesto de algo que va a fallar igual = misma clase que T5.11/T5.12. **El 80 fue en el entorno LOCAL
+  del verifier, NO en prod** (0 steps con retry_count>max en prod) ⇒ bug real, no urgente. Anotado en la
+  entrada de T5.16 para que el implementer no re-derive.

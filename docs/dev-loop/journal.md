@@ -3012,3 +3012,17 @@ T5.8 es el primer código que conduce un N8 vivo hasta el mux del máster (su op
   - **PENDIENTE de Docker/fal** (otro ciclo): test de integración del 400 e2e (**solo se manifiesta en
     tier premium** — `isTierGenerationReady` retorna temprano en test/standard ⇒ un test sobre no-premium
     pasaría por la razón equivocada), Playwright permanente, y validación fresca con fal real de las voces.
+- **DIAGNÓSTICO DEFINITIVO de Docker (2026-07-26)**: el daemon de Docker Desktop **levanta lo justo para
+  responder pings y `docker run hello-world` (imagen cacheada), pero SE CAE bajo CARGA REAL** — un
+  `docker pull postgres:16` lo mata en seco. Por eso Testcontainers (que arranca Postgres:16) falla aunque
+  cada `test:integration` PASE AISLADO: el `pnpm test` combinado (`--project '*:unit' --project
+  '*:integration'`) arranca varios contenedores a la vez y el motor no aguanta. Intentado TODO desde la
+  terminal: `open -a Docker` ×3, quit total + reabrir (reinicio limpio), 3 monitores con criterio de
+  estabilidad (el último pilló 3/3 `run` OK con caché, pero era un espejismo — el `pull` siguiente lo
+  tumbó). **REQUIERE acción del usuario**: reparar/reinstalar Docker Desktop desde su GUI, o instalar un
+  runtime alternativo (`brew install colima && colima start` — pendiente de OK del usuario).
+- **HALLAZGO ÚTIL (config, ya aplicado): `~/.testcontainers.properties` con `docker.host=unix://<sock>`**
+  resuelve el «Could not find a working container runtime strategy» de vitest cuando el `env` no llega a
+  los workers (el `pnpm test` raíz forka por proyecto). Con Docker SANO, esto + el socket de Docker Desktop
+  hace que el gate encuentre el runtime. Documentarlo en la skill testing/stack-setup cuando cierre la
+  racha de Docker.

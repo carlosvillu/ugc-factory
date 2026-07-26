@@ -3026,3 +3026,15 @@ T5.8 es el primer código que conduce un N8 vivo hasta el mux del máster (su op
   los workers (el `pnpm test` raíz forka por proyecto). Con Docker SANO, esto + el socket de Docker Desktop
   hace que el gate encuentre el runtime. Documentarlo en la skill testing/stack-setup cuando cierre la
   racha de Docker.
+- **DESBLOQUEO (2026-07-26): colima instalado como runtime, gate VERDE.** Docker Desktop se caía bajo
+  carga (ver entrada previa); el coordinador instaló `colima` (`arch -arm64 brew install colima docker` —
+  el shell corre bajo Rosetta, hay que forzar ARM) + `colima start --cpu 4 --memory 6`. **Aguanta la carga
+  real** (pull de postgres:16 + varios Testcontainers en paralelo) que Docker Desktop no. Config para que
+  el gate lo use: `~/.testcontainers.properties` con `docker.host=unix://~/.colima/default/docker.sock`,
+  context docker = `colima`, y **`TESTCONTAINERS_RYUK_DISABLED=true`** (Ryuk monta el docker.sock del host
+  dentro del contenedor reaper → `operation not supported` en la VM de colima). Con eso: **gate EXIT=0,
+  234 ficheros / 2468 tests + 4 e2e de fase**. Documentar en testing/stack-setup.
+- **1 test reajustado (T5.15)**: `scripts-checkpoint.test.ts` (ATOMICIDAD persona-sin-imagen) asertaba el
+  mensaje viejo; ahora asserta el mensaje TIPADO de T5.15 (`/no tiene imágenes de referencia: N7c\/avatar
+  no puede generar/`). Comportamiento idéntico (lanza + rollback + 0 runs), assert MÁS específico, no
+  debilitado.

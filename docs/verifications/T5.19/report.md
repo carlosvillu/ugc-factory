@@ -42,8 +42,12 @@ Cada vez se dejó pasar porque **nada afirma que una reference sea una fotograf�
 
 ## Consecuencia (reescritura del planning, regla 6)
 
-- **T5.19** pasa a ser el gate DETERMINISTA a $0: un test permanente que afirma que las reference_image del seed superan un floor de entropía/colores únicos (una foto tiene miles de colores; el placeholder, un puñado). Control negativo trivial: apuntarlo a la reference actual de Maya → ROJO. Elegible, $0.
-- **T5.20** (NUEVO, spend-gated): regenerar las references como fotos IA one-time con la receta validada de T4.12 (FLUX.2 + Nano-Banana 2), commiteadas como fixtures (determinista, $0 en cada boot, sin likeness real en repo público AGPL). Requiere autorización de gasto fal.
+**T5.19 se reescribe como UNA tarea spend-gated** (fusión con lo que iba a ser T5.20). El gate de test y los fixtures fotográficos son inseparables:
+
+- Un gate que afirme «la reference es una foto» aterrizaría **ROJO hoy** — y `pnpm gate` corre `test`, luego no cerraría. El «control negativo» (apuntar a Maya) no sería tal: es el estado normal.
+- Un guard que RECHACE placeholders volvería el seed **unbootable**, porque `reference-image.ts:44-53` dibuja con sharp (rect+banda+circle) y **sharp es la única fuente de references del seed** — rompería la Verificación cerrada de T5.15.
+
+⇒ único estado verde alcanzable al CLOSE: **regenerar las references como fotos IA one-time** (receta T4.12: FLUX.2 + Nano-Banana 2, commiteadas como fixtures — determinista, $0 en boot, sin likeness real en repo AGPL) **+ el gate de entropía**, juntos. Control negativo GENUINO: revertir los fixtures a sharp → rojo. **⚠ GASTO** (~$0,30–0,90 one-time), requiere autorización del usuario.
 
 ## Coste
 

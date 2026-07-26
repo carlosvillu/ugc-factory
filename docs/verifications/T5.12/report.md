@@ -1,12 +1,9 @@
 # T5.12 · `product.category` no canónica revienta N6 — report
 
 - **Tarea**: T5.12 (`planning.md`, fase F5)
-- **Fecha**: 2026-07-25 (2 ciclos de verifier)
-- **Veredicto**: **BLOQUEADA POR PREREQUISITO EXTERNO** — NO es un FAIL del fix.
-  El trabajo de implementación está **completo y verificado a $0**; la cláusula literal
-  («3 análisis consecutivos de la URL real de CeraVe») **no es ejecutable**: el saldo de Anthropic está
-  agotado (HTTP 400, `req_011CdP33sFzuzmqf7DvdPdw4`, probado con la clave de la app).
-- **Coste real**: **$0,00** (estimado ≤$0,50). $0 de fal, $0 de Anthropic.
+- **Fecha**: 2026-07-25 → 2026-07-26 (3 ciclos de verifier)
+- **Veredicto**: **PASS** (cerrado en el ciclo 3, 2026-07-26, tras recargar el saldo de Anthropic).
+- **Coste real**: **$0,99** (estimado ≤$0,50; cap = estimado ×3 = $1,50). **$0 de fal** (0 entradas).
 - **Evidencia**: `VERIFY.md` + `anthropic-credit-probe.txt`, `oracle-no-regresion.ts.txt`,
   `oracle-runner.ts.txt`, `oracle-output.txt`, `n6-executor-output-refs.json`,
   `guard-packs-por-categoria.json`, `ciclo2-control-negativo.txt`, `ciclo2-gate.txt`
@@ -109,3 +106,73 @@ categoría ⇒ PASS. **No queda trabajo de implementación pendiente identificab
   producción ya la cubre `assemble-n6-sources.test.ts`. El verifier lo dio por correcto.
 - Los asserts **autorreferenciales** (`templateSlug: resolved.input.template.slug`, que pasa con cualquier
   ganador) se corrigieron en **los dos** sitios con pines de slug literales.
+
+---
+
+# CICLO 3 (2026-07-26) — cláusula literal EJECUTADA → **PASS**
+
+El usuario recargó el saldo de Anthropic (probe del coordinador con la clave de la app: **HTTP 200**,
+antes `400 credit balance too low`). Con el prerequisito externo levantado, el verifier ejecutó la
+cláusula literal.
+
+## Las 3 categorías que emitió el LLM (el dato de la lotería)
+
+| # | categoría emitida | ¿canónica? | `content_hash` | N6 |
+|---|---|---|---|---|
+| 1 | **`Skincare`** | ❌ NO | `5bc2e141ef3a` | ✅ succeeded |
+| 2 | **`Cuidado de la piel`** | ❌ NO | `cafa4d1dcb58` | ✅ succeeded |
+| 3 | **`Cuidado de la piel`** | ❌ NO | `ed1a85e4b184` | ✅ succeeded |
+
+**La lotería se manifestó DENTRO de la propia tanda** (misma URL, mismo día, mismo idioma → dos etiquetas
+distintas), y **las 3 fueron NO canónicas**: las tres habrían matado el lote antes del fix. Los
+`content_hash` distintos prueban que fueron 3 análisis genuinamente independientes, no una caché.
+
+## N6 pasó en los 3, con degradación OBSERVABLE
+
+`degradedFacet` persistido en `output_refs` **y** `logger.warn` real del worker (level 40) en los 3 —
+esto cierra **con evidencia de producción** el hallazgo del ciclo 1 (el warn era código muerto). No se
+reprodujo la firma pre-fix `No hay ningún template de galería que case…`.
+
+## Edición manual: NINGUNA
+
+Se pulsó «Aprobar y continuar», nunca «Guardar cambios y continuar». **Prueba negativa en BD**: los 3
+briefs quedaron `version=1, edited_by_user=false`. Contraste con el histórico pre-fix (`ciclo3-historico-loteria.txt`),
+donde para continuar hubo que crear una **v2 con `edited_by_user=t`** y categoría `beauty`.
+
+## Coste
+
+**$0,99** · **$0 de fal** (0 entradas). Cap = estimado ($0,50) ×3 = **$1,50**. Los 99¢ cubren **5**
+análisis: los 3 de la cláusula + 2 abortados por método del propio verifier (tier `test`, persona sin
+imagen), ambos ANTES de empezar la tanda. **Ningún run de la cláusula fue descartado — sin rerolls.**
+
+**Autocorrección del verifier**: llegó a redactar un FAIL «inejecutable por cap» tratando el ≤$0,50 del
+planning como si fuera el cap. Es el **estimado**; la regla de oro 6 fija cap = estimado ×3. Con $1,50 la
+cláusula era ejecutable, y la ejecutó.
+
+## Contención del gasto (y un hallazgo de higiene con riesgo de dinero REAL)
+
+El stack se levantó con `FAL_BASE_URL=http://127.0.0.1:9` (puerto muerto), honrado por los 6 executors N7
+⇒ era **imposible** tocar fal. Verificado en los procesos, no solo en la config.
+
+⚠ **Hallazgo ajeno a T5.12, con riesgo de dinero real**: había **3 workers HUÉRFANOS** de sesiones previas
+(pids 62639/62640/74864, del 2026-07-25 16:21 y 16:38) **SIN `FAL_BASE_URL`** — si hubieran tomado un job
+N7 habrían pegado a **fal REAL**. El verifier los mató antes de gastar nada.
+
+## Qué comprobó con sus manos en este ciclo
+
+Gate verde; probe de saldo; los 3 análisis end-to-end **por la UI**; las 3 categorías; `version`/
+`edited_by_user`; los 3 `content_hash`; N6 ×3; `degradedFacet` ×3; `logger.warn` ×3; coste por proveedor;
+y la contención de fal verificada en los procesos.
+
+**Arrastrado de los ciclos 1-2** (el diff no lo toca): determinismo a $0, oráculo de 12.636 contextos,
+`no_candidates` vivo, control negativo doble del logger.
+
+## Rarezas nuevas anotadas
+
+1. **Solo el tier `premium` llega a N6** (test/standard dejan el b-roll como `[endpoint pendiente F4]`).
+   Relevante al planificar verificaciones.
+2. Money-gate correcto: una persona sin imagen tumba CP3 con **rollback limpio**.
+3. Los selectores de persona de CP2 son `button[role=radio]` cuyo nodo accesible es un `<span>` interno:
+   no operables por ref de agente (hubo que pulsar por DOM). No afecta a la cláusula.
+4. **Gotcha AMPLIADO**: `sse-contract.test.ts` rojo con `lsof :3000` VACÍO ⇒ mirar
+   `docker ps --filter publish=3000` (era un contenedor ajeno). Se paró para el gate y **se restauró**.

@@ -1,0 +1,32 @@
+=== INCIDENCIA DE ESCENARIO (ajena a T5.12): persona sin imagen de referencia ===
+2026-07-26T06:17:36Z
+
+Al aprobar CP3 en tier premium, POST /approve devolvio 500:
+  PermanentStepError: buildVariantGenerationPlan: la Persona de la variante
+  01KYEGX8YHJZ0QZFDXK1EN0SR5 no tiene imagen de referencia (avatar)
+
+Causa: la rotacion automatica (personaMode=rotate) eligio 'Vera Verify T5.9',
+una persona creada por el verifier de T5.9 que tiene 0 reference_image_ids.
+NO es un defecto de T5.12 ni del fix: es un money-gate CORRECTO de T4.11 que
+impide arrancar generacion con una persona incompleta. El rollback fue LIMPIO
+(N5 vuelve a waiting_approval, la variante sigue 'planned').
+
+REMEDIO DE ESCENARIO (permitido: preparar el escenario, no el paso verificado):
+fijar en CP2 una persona CON imagenes de referencia (las 10 placeholder tienen 3).
+
+             id             |           name           | imgs 
+----------------------------+--------------------------+------
+ 01KXX79BRJX3PDJREV39E800CW | Alex (placeholder)       |    3
+ 01KXX79BQH3V9RYQ9HY3KRTD1Y | Carmen (placeholder)     |    3
+ 01KXX79BX5YMDPE31X6TEGMX38 | Chloe (placeholder)      |    3
+ 01KXX79BW1K97P1TMVH63G5K6E | David (placeholder)      |    3
+ 01KXX79BYC2CE42D2NPFJSHTEW | Kenji (placeholder)      |    3
+ 01KXGV0HS4BT8SJGV8HCMAKAV4 | Lucía (placeholder)      |    3
+ 01KXGV0HTBACCA3WNTDZCC0B31 | Marcus (placeholder)     |    3
+ 01KXX79BP8X87EYW1BJJ9RQCQB | Nerea (placeholder)      |    3
+ 01KXX79BTVWVWDQFBTK9F7KYWW | Priya (placeholder)      |    3
+ 01KXX79BSMJTZMBH8TRQZMP01Z | Rosa (placeholder)       |    3
+ 01KY820M3YNNN3V2B9GDTBWEZD | Nora Verify T58b Premium |    1
+ 01KYCVERIFYT59PERSONA00001 | Vera Verify T5.9         |    0
+(12 rows)
+

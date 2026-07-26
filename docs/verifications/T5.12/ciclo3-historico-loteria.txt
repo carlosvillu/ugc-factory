@@ -1,0 +1,11 @@
+=== HISTORICO: la LOTERIA y la EDICION MANUAL que T5.12 elimina (pre-fix, runs de T5.9) ===
+path del campo que consume N6: data->'product'->>'category'
+
+             id             | version | edited_by_user |      category      |          created_at           |                         url_normalized                          
+----------------------------+---------+----------------+--------------------+-------------------------------+-----------------------------------------------------------------
+ 01KYA2RJT36W4NVJY6921XF12D |       1 | f              | Skincare           | 2026-07-24 12:49:18.656414+00 | https://www.cerave.com/skincare/moisturizers/moisturizing-cream
+ 01KYA2YKCH1Y8SVP0ZYSTKQSM5 |       2 | t              | beauty             | 2026-07-24 12:52:35.846518+00 | https://www.cerave.com/skincare/moisturizers/moisturizing-cream
+ 01KYCNNZXARBGDG71BN34SYW8N |       1 | f              | Cuidado de la piel | 2026-07-25 12:58:25.575356+00 | https://www.cerave.com/skincare/moisturizers/moisturizing-cream
+ 01KYCNQK7KSB6QNPRR69DSH5H6 |       2 | t              | beauty             | 2026-07-25 12:59:18.122621+00 | https://www.cerave.com/skincare/moisturizers/moisturizing-cream
+(4 rows)
+

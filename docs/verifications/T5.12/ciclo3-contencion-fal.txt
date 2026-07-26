@@ -1,0 +1,16 @@
+=== CONTENCION DE FAL + higiene de workers (ciclo 3) ===
+2026-07-26T00:14:16Z
+
+Stack levantado con FAL_BASE_URL=http://127.0.0.1:9 (puerto muerto).
+Honrado por los 6 executors N7 (generation/avatar/broll/cta/voice/music).
+
+HALLAZGO DE HIGIENE (riesgo de dinero REAL, ajeno a T5.12):
+  habia 3 workers HUERFANOS de sesiones previas (pids 62639, 62640, 74864,
+  arrancados el 25/07 a las 16:21 y 16:38) SIN FAL_BASE_URL => habrian pegado
+  a fal REAL si tomaban un job N7. Los mate antes de gastar nada.
+
+Workers vivos tras la limpieza (los 2 mios, ambos contenidos):
+  pid 56291 FAL_BASE_URL=http://127.0.0.1:9
+  pid 56304 FAL_BASE_URL=http://127.0.0.1:9
+
+Web en :3001 (el :3000 lo ocupa el contenedor ajeno docker-api-1). /api/health => {ok:true,db:true}

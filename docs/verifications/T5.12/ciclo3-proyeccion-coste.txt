@@ -1,0 +1,34 @@
+=== PROYECCION DE COSTE ciclo 3 (hecha ANTES de gastar, $0) ===
+2026-07-25T23:58:14Z
+
+-- coste historico por nodo (anthropic/firecrawl) --
+ node_key | provider  | n  | cents | avg_cents 
+----------+-----------+----+-------+-----------
+ N3       | anthropic | 16 |   260 |      16.3
+ N5       | anthropic |  7 |    57 |       8.1
+ N2       | anthropic |  9 |     5 |       0.6
+ N1       | firecrawl |  9 |     0 |       0.0
+(4 rows)
+
+-- N3 (sintesis del brief) en los DOS runs REALES de la URL de CeraVe: 21c cada uno --
+ amount_cents | quantity |          occurred_at          
+--------------+----------+-------------------------------
+           21 |    33420 | 2026-07-25 12:58:25.570717+00
+           15 |    21841 | 2026-07-25 12:41:16.233121+00
+           14 |    21162 | 2026-07-25 12:16:50.797831+00
+           21 |    34171 | 2026-07-24 12:49:18.651816+00
+(4 rows)
+
+-- N5 con lote de 1 variante: ~3c --
+ amount_cents | quantity |          occurred_at          
+--------------+----------+-------------------------------
+           20 |    76216 | 2026-07-25 13:10:16.755604+00
+            3 |     6743 | 2026-07-25 12:43:45.48704+00
+            3 |     6593 | 2026-07-25 12:23:28.643282+00
+            9 |    27649 | 2026-07-24 12:58:24.845658+00
+(4 rows)
+
+
+PROYECCION POR ANALISIS (minimo, lote de 1 variante):
+  N1 firecrawl  0c + N2 ~0,5c + N3 ~21c (CeraVe, medido 21+21) + N5 ~3c = ~24,5c
+TOTAL 3 ANALISIS CONSECUTIVOS = ~73c = $0,73  >>  CAP $0,50

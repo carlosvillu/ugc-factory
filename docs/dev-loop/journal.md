@@ -2888,3 +2888,33 @@ T5.8 es el primer código que conduce un N8 vivo hasta el mux del máster (su op
   no ejecutado entero, y de que el deploy inicial a mano no dejó huella `.deployed`). **Funcionó sin
   incidencias** y ya deja huella: `verify.sh` puede comparar producción con HEAD.
 - Downtime observado: segundos (web healthy tras 5s).
+
+## 2026-07-26 · ⏳ Créditos de Anthropic AÑADIDOS por el usuario — se levanta el prerequisito externo
+- Desbloquea T5.12 (cláusula literal: 3 análisis consecutivos) y el reintento de T5.9 (E2E de fase F5).
+
+## 2026-07-26 · T5.12 cerrada — PASS (ciclo 3, cláusula literal ejecutada)
+- Coste: **$0,99** (estimado $0,50; cap = ×3 = $1,50) · **$0 de fal** · Ciclos verifier: 3
+- **Las 3 categorías emitidas fueron NO canónicas**: `Skincare`, `Cuidado de la piel`, `Cuidado de la
+  piel`. Las tres habrían matado el lote antes del fix, y **la lotería se manifestó DENTRO de la misma
+  tanda** (misma URL, mismo día, mismo idioma → dos etiquetas distintas). `content_hash` distintos ⇒ 3
+  análisis genuinamente independientes, no caché.
+- **N6 pasó en los 3 con degradación OBSERVABLE**: `degradedFacet` en `output_refs` **y** `logger.warn`
+  REAL del worker (level 40) — esto cierra **con evidencia de producción** el hallazgo del ciclo 1 (el warn
+  era código muerto por el cableado que faltaba en `boss.ts`).
+- **Sin edición manual**: los 3 briefs `version=1, edited_by_user=false`. Contraste con el histórico
+  pre-fix, donde para continuar hubo que crear una **v2 con `edited_by_user=t`** y categoría `beauty`
+  (evidencia en `ciclo3-historico-loteria.txt`, leída de la BD).
+- **Autocorrección del verifier**: llegó a redactar un FAIL «inejecutable por cap» tratando el ≤$0,50 del
+  planning como si fuera el cap. Es el **estimado**; la regla de oro 6 fija **cap = estimado ×3**. Con
+  $1,50 la cláusula era ejecutable y la ejecutó. Los 99¢ cubren 5 análisis (3 de la cláusula + 2 abortados
+  por método suyo ANTES de la tanda). **Ningún run de la cláusula descartado — sin rerolls.**
+- **⚠ HALLAZGO DE HIGIENE CON RIESGO DE DINERO REAL (ajeno a T5.12, pero importante)**: había **3 workers
+  HUÉRFANOS** de sesiones previas (pids 62639/62640/74864, del 2026-07-25 16:21 y 16:38) **SIN
+  `FAL_BASE_URL`** ⇒ si hubieran tomado un job N7 habrían pegado a **fal REAL**. El verifier los mató antes
+  de gastar. **Añadir al reflejo de arranque/cierre**: matar workers huérfanos, no solo el `next dev` del
+  puerto 3000. Su propio stack lo levantó con `FAL_BASE_URL=http://127.0.0.1:9` (puerto muerto), honrado
+  por los 6 executors N7 y verificado EN LOS PROCESOS ⇒ imposible gastar.
+- **Gotcha AMPLIADO**: `sse-contract.test.ts` rojo con `lsof :3000` **VACÍO** ⇒ mirar
+  `docker ps --filter publish=3000` (era un contenedor ajeno). Se paró para el gate y **se restauró**.
+- **Nota de planificación**: solo el tier `premium` llega a N6 (test/standard dejan el b-roll como
+  `[endpoint pendiente F4]`).

@@ -1,0 +1,22 @@
+=== RUN 1/3 de la CLAUSULA — PASS ===
+2026-07-26T06:23:01Z
+
+run analisis:   01KYEH5P7VE970PYDR1N26VNNC
+run generacion: 01KYEHDRA6RCD4QRSTKRK38V4T
+CATEGORIA EMITIDA POR EL LLM: 'Skincare'   <-- NO CANONICA
+brief 01KYEH8W20E0N29T0JJHAAEQ4A version=1 edited_by_user=FALSE (hash 5bc2e141ef3a)
+CP1 aprobado con 'Aprobar y continuar' => SIN EDICION MANUAL
+
+N6 = succeeded  (pre-fix habria sido: failed / PermanentStepError)
+
+ node_key |  status   |                    degraded                     
+----------+-----------+-------------------------------------------------
+ N6       | succeeded | {                                              +
+          |           |     "facet": "vertical",                       +
+          |           |     "value": "Skincare",                       +
+          |           |     "templateSlug": "lifestyle-broll-curiosity"+
+          |           | }
+(1 row)
+
+logger.warn REAL del worker (level 40):
+apps/worker dev: {"level":40,"time":1785046950342,"pid":56304,"hostname":"MBP-de-Carlos","name":"worker","variantId":"01KYEHC99V89RYJQ1PJ177GCWD","facet":"vertical","unmatchedValue":"Skincare","templateSlug":"lifestyle-broll-curiosity","msg":"N6: category no reconocida por el catálogo — selección DEGRADADA ignorando la vertical"}

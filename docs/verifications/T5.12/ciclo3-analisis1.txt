@@ -1,0 +1,29 @@
+=== ANALISIS 1 (ciclo 3) — medido ===
+2026-07-26T06:10:37Z
+
+run analisis: 01KYDWD4E3T189JDQ9HM5MK670
+url_analysis: 01KYDWE4RHQ5Z6H0MQGY5H11RD  hash=fa6eb09bd523 (NUEVO, distinto de los 2 previos)
+brief:        01KYDWGPE0EN1YTYH9N08W0V42  version=1  edited_by_user=FALSE
+CATEGORIA EMITIDA POR EL LLM: 'Cuidado de la piel'  <-- NO CANONICA
+
+CP1 aprobado con 'Aprobar y continuar' (NO 'Guardar cambios y continuar')
+=> sigue habiendo UNA sola fila de brief, version=1, edited_by_user=f  => SIN EDICION MANUAL
+
+COSTE MEDIDO analisis 1:
+ node_key | provider  | amount_cents 
+----------+-----------+--------------
+ N1       | firecrawl |            0
+ N2       | anthropic |            1
+ N3       | anthropic |           22
+ N5       | anthropic |            3
+(4 rows)
+
+TOTAL analisis 1 = 26c (proyeccion era ~24,5c: CLAVADA)
+
+INCIDENCIA DE METODO (mia, no del producto): elegi tier 'test' para abaratar.
+Pero solo el tier PREMIUM es generation-ready (test/standard dejan broll como
+'[endpoint pendiente F4]', isTierGenerationReady=false) => CP3 aprueba los guiones
+pero NO arranca el run de generacion, y por tanto N6 NUNCA CORRE en tier test.
+Es comportamiento DOCUMENTADO y deliberado de T4.11, no un defecto.
+=> los 3 analisis de la clausula deben ir en tier PREMIUM. fal sigue contenido
+   (FAL_BASE_URL a puerto muerto) => premium NO cuesta dinero de fal.

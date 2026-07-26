@@ -1,0 +1,15 @@
+=== BASELINE cost_entry ANTES del ciclo 3 (T5.12) ===
+2026-07-25T23:55:07Z
+
+ provider  | count | cents 
+-----------+-------+-------
+ fal       |   193 |  2462
+ anthropic |    32 |   322
+ firecrawl |     9 |     0
+(3 rows)
+
+  n  | total_cents |             last              
+-----+-------------+-------------------------------
+ 234 |        2784 | 2026-07-25 13:10:16.755604+00
+(1 row)
+

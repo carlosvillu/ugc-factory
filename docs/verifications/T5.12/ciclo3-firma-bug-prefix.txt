@@ -1,0 +1,17 @@
+=== FIRMA DEL BUG PRE-FIX (historico, run 01KYCKRP17XNW99TK57WMN6FVZ, 2026-07-25 12:24) ===
+Esto es lo que NO debe pasar en el ciclo 3:
+
+ node_key |    status     |                                                                                                            msg                                                                                                             
+----------+---------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ N6       | failed        | N6: no se pudo resolver el CompileInput de la variante 01KYCKNKKFCGXHRVKY61DHEJZ9: No hay ningún template de galería que case con las facetas [kind=video, hookAngle=pain_point, vertical=Cuidado bucal, platform=tiktok].
+ N7a      | awaiting_deps | 
+ N7b      | awaiting_deps | 
+ N7c      | awaiting_deps | 
+ N7d      | awaiting_deps | 
+ N7e      | awaiting_deps | 
+ N7f      | awaiting_deps | 
+ N8       | awaiting_deps | 
+ N9       | awaiting_deps | 
+(9 rows)
+
+=== ORDEN DE NODOS observado: N1,N2,N3,N4(CP1) | N5(CP3) | N6,N7a-f,N8,N9 ===

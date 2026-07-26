@@ -1,0 +1,16 @@
+=== GATE ciclo 3 (T5.12) — verifier, 2026-07-26, HEAD b593298 ===
+
+1er intento: ROJO en apps/web/test/integration/server/sse-contract.test.ts
+   causa RAIZ (no es defecto de codigo): 'Another next dev server is already running' en :3000
+   el gotcha documentado dice 'lsof -ti:3000 | xargs kill -9', pero lsof NO veia nada:
+   quien ocupaba el 3000 era un CONTENEDOR DOCKER AJENO al proyecto (docker-api-1),
+   que publica 0.0.0.0:3000->3000. lsof no lista bindings de docker-proxy de esa forma.
+
+2o intento tras 'docker stop docker-api-1': VERDE
+   lint -> typecheck -> format:check -> knip -> readme:status:check -> check:contrast
+   -> e2e:wired:check -> test -> test:e2e:phases
+   test:e2e:phases => '4 passed (32.7s)' (f0/f2/f4/f5), sin fallos
+
+docker-api-1 RESTAURADO a su estado original al terminar (docker start).
+AMPLIACION DEL GOTCHA para el journal: si sse-contract.test.ts va rojo y lsof:3000 sale vacio,
+mirar 'docker ps --filter publish=3000'.

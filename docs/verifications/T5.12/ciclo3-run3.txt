@@ -1,0 +1,17 @@
+=== RUN 3/3 de la CLAUSULA — PASS ===
+2026-07-26T06:31:41Z
+run analisis:   01KYEHQ6STR1Y8MRDK3GHS8XSZ
+run generacion: 01KYEHX6BQJYC7E2B81H3THQC7
+CATEGORIA EMITIDA: 'Cuidado de la piel'  <-- NO CANONICA
+brief 01KYEHTB561G2NVC21ZTJ63QQX version=1 edited_by_user=FALSE (hash ed1a85e4b184)
+N6 = succeeded
+
+ node_key |  status   |               degraded                
+----------+-----------+---------------------------------------
+ N6       | succeeded | {                                    +
+          |           |     "facet": "vertical",             +
+          |           |     "value": "Cuidado de la piel",   +
+          |           |     "templateSlug": "demo-pain-point"+
+          |           | }
+(1 row)
+

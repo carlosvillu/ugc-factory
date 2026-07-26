@@ -1,0 +1,18 @@
+=== RUN 2/3 de la CLAUSULA — PASS ===
+2026-07-26T06:27:28Z
+run analisis:   01KYEHFQV32M0E007E31S72VMA
+run generacion: 01KYEHP83PMN5ZGSF4HRBRKMY5
+CATEGORIA EMITIDA: 'Cuidado de la piel'  <-- NO CANONICA (y DISTINTA de la del run 1)
+brief 01KYEHJMR7FB7RDJ4J9G5RF04R version=1 edited_by_user=FALSE (hash cafa4d1dcb58)
+N6 = succeeded
+
+ node_key |  status   |               degraded                
+----------+-----------+---------------------------------------
+ N6       | succeeded | {                                    +
+          |           |     "facet": "vertical",             +
+          |           |     "value": "Cuidado de la piel",   +
+          |           |     "templateSlug": "demo-pain-point"+
+          |           | }
+(1 row)
+
+apps/worker dev: {"level":40,"time":1785047228655,"pid":56304,"hostname":"MBP-de-Carlos","name":"worker","variantId":"01KYEHN8Z80Z4QPPPYT5V067F4","facet":"vertical","unmatchedValue":"Cuidado de la piel","templateSlug":"demo-pain-point","msg":"N6: category no reconocida por el catálogo — selección DEGRADADA ignorando la vertical"}

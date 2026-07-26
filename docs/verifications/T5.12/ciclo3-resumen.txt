@@ -1,0 +1,27 @@
+=== RESUMEN DE LOS 3 RUNS + COSTE (ciclo 3) ===
+2026-07-26T06:31:42Z
+
+PRUEBA NEGATIVA — ningun brief editado a mano:
+             id             | version | edited_by_user |      category      |     hash     
+----------------------------+---------+----------------+--------------------+--------------
+ 01KYEH8W20E0N29T0JJHAAEQ4A |       1 | f              | Skincare           | 5bc2e141ef3a
+ 01KYEHJMR7FB7RDJ4J9G5RF04R |       1 | f              | Cuidado de la piel | cafa4d1dcb58
+ 01KYEHTB561G2NVC21ZTJ63QQX |       1 | f              | Cuidado de la piel | ed1a85e4b184
+(3 rows)
+
+N6 de los 3 runs de generacion:
+           run_id           |  status   |     categoria      |         template          
+----------------------------+-----------+--------------------+---------------------------
+ 01KYEHP83PMN5ZGSF4HRBRKMY5 | succeeded | Cuidado de la piel | demo-pain-point
+ 01KYEHDRA6RCD4QRSTKRK38V4T | succeeded | Skincare           | lifestyle-broll-curiosity
+ 01KYEHX6BQJYC7E2B81H3THQC7 | succeeded | Cuidado de la piel | demo-pain-point
+(3 rows)
+
+COSTE REAL:
+ provider  | count | cents 
+-----------+-------+-------
+ anthropic |    13 |    99
+ firecrawl |     4 |     0
+(2 rows)
+
+TOTAL 99c = $0,99  (cap = estimado $0,50 x3 = $1,50)  ·  fal = $0 (0 entradas)

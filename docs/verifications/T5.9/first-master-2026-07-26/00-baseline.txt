@@ -1,0 +1,28 @@
+# BASELINE (pre-flight, $0) — 2026-07-26T17:45:41Z
+
+## HEAD / tree
+95869b0a1d7a3b7155002b57883812bd64b07a8b
+docs/f5-cost-reprojection
+ M planning.md
+?? docs/verifications/T5.9/smoke-2026-07-26/retry-blocked/
+
+## cost_entry baseline (DELTA base for this run)
+301|20
+(/spend is CUMULATIVE; this run's cost = SUM(amount_cents) - 301)
+
+## hygiene: non-terminal step_run (want empty)
+## hygiene: active pgboss jobs (want empty)
+
+## 12 completed generations from smoke (dedup candidates: content_hash)
+0fffff4b77a07d64596b2b3bc2594d8443e18f0989fae01752e4f1b31d059610|0|019f9f05-7c3a-7e32-af8b-2bdd53b8d89a
+192002b9d0caef30b496fa91c30b28be1d459b4055d00b1ebbb2b933d2ed104c|1|019f9f00-ce56-7161-94a3-785ffb1e5ce4
+20f2086ac08cc7274b9d8e09bb9dd0d71648e2abc70b9d5601ffbddadbb0087f|1|019f9f00-ea27-7ef0-9361-26a9791c99f2
+37b407017d5188dd3774d7004f1788871431b9319109b06ba6bd83db78928a1e|1|019f9f00-b704-7ca2-a708-b94574c164f8
+42293f2a769b49ec06487c8d91c3bc2ca2ba6d8bdf7a0382eb61e9af9c5ea4d3|70|019f9f01-1f9f-7a10-92c7-d362f2790807
+4e740b57cea230d41fb4bba3205b1a7a39aded29b9e78cba62777f9c8ecb33eb|0|019f9f01-063f-70c0-a13e-4ea7d732d528
+a0574fd45aac648fb8019a5c824c79bd45cdf54dfa9451efda8234fd4299bfad|1|019f9f00-b706-7032-b421-e01005ab02d9
+b1f05fc8af7751a3c0b0b0dabcdb5a906e27697e0272dec22d2fcd5ef2060ff2|0|019f9ef1-6672-74b3-946f-20617fa13202
+b7e2e3d6eb51bc31f73def111ef8ecec390daf4b225df3b9b7840e7acc87e7ca|80|019f9f01-217c-7943-b3bc-9f939f064892
+e1434d54a0320fac99d4f192bf28cfeb7e38a22f4f60512e511f3f2f3ffeed2a|1|019f9f00-c673-7411-a3f0-1131277d9cda
+ee4e32519115da58317c1f3b94a9c4ce6dbacb462382c9775cc663679fc4db23|120|019f9f01-201a-7031-affe-e553fbda2900
+f78d6344051c9def82790c726e051b98f2f755c830420a42be35ea437a7407f3|1|019f9f00-b701-7682-b68b-7fbd53dccead

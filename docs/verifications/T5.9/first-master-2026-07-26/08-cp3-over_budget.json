@@ -1,0 +1,17 @@
+{
+    "status": "over_budget",
+    "batchId": "01KYFS0TCATMXXQ7CAZQ50HHDD",
+    "warnings": [
+        "script_writer_retry_budget: El guion anterior NO CABE: el hook tiene 16 palabras y el techo son 12. Reescríbelo MÁS CORTO respetando el presupuesto: hook ≤20 palabras (1 escena), body ≤32 palabras en 2 escena(s) COMO MUCHO, cta ≤8 palabras (1 escena). Corta ideas y escenas ENTERAS; no acortes recortando palabras sueltas de cada frase.",
+        "script_writer_retry_budget: El guion anterior NO CABE: el hook tiene 13 palabras y el techo son 12. Reescríbelo MÁS CORTO respetando el presupuesto: hook ≤20 palabras (1 escena), body ≤32 palabras en 2 escena(s) COMO MUCHO, cta ≤8 palabras (1 escena). Corta ideas y escenas ENTERAS; no acortes recortando palabras sueltas de cada frase.",
+        "script_over_budget: El guion anterior NO CABE: el hook tiene 14 palabras y el techo son 12. Reescríbelo MÁS CORTO respetando el presupuesto: hook ≤20 palabras (1 escena), body ≤32 palabras en 2 escena(s) COMO MUCHO, cta ≤8 palabras (1 escena). Corta ideas y escenas ENTERAS; no acortes recortando palabras sueltas de cada frase."
+    ],
+    "scriptRefs": [
+        {
+            "blocked": false,
+            "scriptId": "01KYFS1P43SQW091A3HF9Z2TAW",
+            "variantId": "01KYFS0TCGEDR6QZ68G35ZCFAR",
+            "filenameCode": "cerave-moisturiz-la-barrera-de-la-hook01-01kyfafqmd1d-es-30s-01kyfs0tcatm"
+        }
+    ]
+}

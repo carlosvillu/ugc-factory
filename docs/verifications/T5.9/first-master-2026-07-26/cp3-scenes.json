@@ -1,0 +1,42 @@
+                                                                          jsonb_pretty                                                                          
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ [                                                                                                                                                             +
+     {                                                                                                                                                         +
+         "t": 0,                                                                                                                                               +
+         "camera": "Plano medio, cámara en mano, ligero movimiento como selfie casual",                                                                        +
+         "visual": "Maya se toca la mejilla con gesto de fastidio, mirando directo a cámara, sin saludo previo, como interrumpiendo una conversación a medias",+
+         "emotion": "Fastidio contenido, cara de 'esto me pasa siempre'",                                                                                      +
+         "seconds": 5.6,                                                                                                                                       +
+         "segment": "hook",                                                                                                                                    +
+         "narration": "Te pones crema, y a la hora ya tienes la piel tirante otra vez."                                                                        +
+     },                                                                                                                                                        +
+     {                                                                                                                                                         +
+         "t": 5.6,                                                                                                                                             +
+         "camera": "Plano medio, cámara fija, corte limpio desde la escena anterior",                                                                          +
+         "visual": "Maya sostiene el bote de CeraVe, lo gira mostrando la etiqueta con calma, gesto explicativo",                                              +
+         "emotion": "Seria, tono de quien explica algo obvio que nadie te dijo",                                                                               +
+         "seconds": 6.4,                                                                                                                                       +
+         "segment": "body",                                                                                                                                    +
+         "narration": "El problema no es hidratar más. Es que tu barrera de piel está dañada por dentro."                                                      +
+     },                                                                                                                                                        +
+     {                                                                                                                                                         +
+         "t": 12,                                                                                                                                              +
+         "camera": "Primer plano de la mano, luego sube a su cara sonriendo levemente",                                                                        +
+         "visual": "Maya se aplica la crema en el dorso de la mano, la extiende y muestra la piel sin brillo graso",                                           +
+         "emotion": "Alivio, satisfacción tranquila",                                                                                                          +
+         "seconds": 5.2,                                                                                                                                       +
+         "segment": "body",                                                                                                                                    +
+         "narration": "Esta tiene ceramidas que la reparan, y se absorbe rápido, sin dejarte grasa."                                                           +
+     },                                                                                                                                                        +
+     {                                                                                                                                                         +
+         "t": 17.2,                                                                                                                                            +
+         "camera": "Plano medio fijo, mirada directa a cámara",                                                                                                +
+         "visual": "Maya sostiene el bote frente a cámara, señala con el dedo hacia el link",                                                                  +
+         "emotion": "Segura, cercana",                                                                                                                         +
+         "seconds": 3.2,                                                                                                                                       +
+         "segment": "cta",                                                                                                                                     +
+         "narration": "Pide tu muestra gratis y prueba tú misma."                                                                                              +
+     }                                                                                                                                                         +
+ ]
+(1 row)
+

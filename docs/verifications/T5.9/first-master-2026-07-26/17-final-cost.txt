@@ -1,0 +1,22 @@
+=== FINAL cost delta (total - 330 baseline) ===
+total=764  baseline=330  DELTA=434c
+
+=== per-endpoint cost for the generation run 01KYFTKY (cost_entry join generation join step_run) ===
+ node_key |    gst    |  c  |  unit   | qty | duration_s |      req      
+----------+-----------+-----+---------+-----+------------+---------------
+ N7a      | completed |   1 | images  |   1 |      5.792 | 019f9fa9-fd5c
+ N7a      | completed |   1 | images  |   1 |       3.57 | 019f9faa-12a6
+ N7b      | completed |   1 | chars   |  63 |      3.679 | 019f9fa9-fd54
+ N7b      | completed |   0 | seconds |   4 |      3.679 | 019f9fa9-fd54
+ N7b      | completed |   1 | chars   |  81 |      4.699 | 019f9faa-1a69
+ N7b      | completed |   0 | seconds |   5 |      4.699 | 019f9faa-1a69
+ N7b      | completed |   0 | seconds |   5 |      4.659 | 019f9faa-31fd
+ N7b      | completed |   1 | chars   |  76 |      4.659 | 019f9faa-31fd
+ N7b      | completed |   0 | chars   |  41 |      2.179 | 019f9faa-49f3
+ N7b      | completed |   0 | seconds |   2 |      2.179 | 019f9faa-49f3
+ N7c      | completed |  69 | seconds |   4 |   4.284063 | 019f9faa-6ea4
+ N7d      | completed | 160 | seconds |   8 |          8 | 019f9faa-6daf
+ N7d      | completed | 120 | seconds |   6 |          6 | 019f9fac-51cc
+ N7f      | completed |  80 | seconds |   4 |          4 | 019f9faa-6d63
+(14 rows)
+

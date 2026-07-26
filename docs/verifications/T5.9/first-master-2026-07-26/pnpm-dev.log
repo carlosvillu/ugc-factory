@@ -1,0 +1,75 @@
+
+> ugc-factory@0.0.0 dev /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads
+> pnpm --parallel --filter @ugc/web --filter @ugc/worker dev
+
+Scope: 2 of 7 workspace projects
+apps/web dev$ node scripts/dev.mjs
+apps/worker dev$ tsx watch --env-file-if-exists=../../.env src/main.ts
+apps/web dev: ▲ Next.js 16.2.10 (Turbopack)
+apps/web dev: - Local:         http://localhost:3000
+apps/web dev: - Network:       http://192.168.1.132:3000
+apps/web dev: ✓ Ready in 384ms
+apps/worker dev: {"level":30,"time":1785087959490,"pid":27009,"hostname":"MBP-de-Carlos","name":"worker","intervalMs":5000,"generationReconcile":true,"msg":"sweeper arrancado"}
+apps/worker dev: {"level":30,"time":1785087959490,"pid":27009,"hostname":"MBP-de-Carlos","name":"worker","queue":"demo.noop","msg":"pg-boss arrancado: colas y consumers listos"}
+apps/worker dev: {"level":30,"time":1785087959490,"pid":27009,"hostname":"MBP-de-Carlos","name":"worker","health":{"ok":true,"db":true},"msg":"worker ready"}
+apps/web dev: {"level":30,"time":1785087960430,"pid":27010,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","msg":"running startup migrations"}
+apps/web dev: {"level":30,"time":1785087960652,"pid":27010,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","msg":"startup migrations applied"}
+apps/web dev: {"level":30,"time":1785087960714,"pid":27010,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","seeded":false,"msg":"auth.password_hash ya existía"}
+apps/web dev: {"level":30,"time":1785087960749,"pid":27010,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","provider":"fal","seeded":false,"msg":"secret.fal ya existía en BD (env ignorada; la BD es la fuente)"}
+apps/web dev: {"level":30,"time":1785087960757,"pid":27010,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","provider":"firecrawl","seeded":false,"msg":"secret.firecrawl ya existía en BD (env ignorada; la BD es la fuente)"}
+apps/web dev: {"level":30,"time":1785087960757,"pid":27010,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","provider":"anthropic","seeded":false,"msg":"secret.anthropic ya existía en BD (env ignorada; la BD es la fuente)"}
+apps/web dev: {"level":30,"time":1785087960787,"pid":27010,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","msg":"sembrando datos de referencia (T3.9)"}
+apps/web dev: {"level":30,"time":1785087960811,"pid":27010,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","hookLines":80,"ctaLines":30,"recipes":3,"msg":"librería sembrada o ya presente (insert-only)"}
+apps/web dev: {"level":30,"time":1785087960848,"pid":27010,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","templates":56,"guardPacks":10,"modelProfiles":18,"msg":"galería sembrada o ya presente (insert-only)"}
+apps/web dev: {"level":30,"time":1785087960883,"pid":27010,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","personas":11,"imagesCreated":0,"imagesFailed":0,"msg":"personas sembradas o ya presentes"}
+apps/web dev: {"level":30,"time":1785087960883,"pid":27010,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","msg":"datos de referencia sembrados (T3.9)"}
+apps/web dev: {"level":30,"time":1785087968760,"pid":27010,"hostname":"MBP-de-Carlos","name":"web","request_id":"737303da-8765-4704-90e4-45ff81f20b1b","route":"/api/health","health":{"ok":true,"db":true},"msg":"health check"}
+apps/web dev:  GET /api/health 200 in 247ms (next.js: 218ms, application-code: 29ms)
+apps/web dev: {"level":30,"time":1785087968814,"pid":27010,"hostname":"MBP-de-Carlos","name":"web","request_id":"1dc6d4fc-1a52-474f-b084-4b759796d439","route":"/api/health","health":{"ok":true,"db":true},"msg":"health check"}
+apps/web dev:  GET /api/health 200 in 15ms (next.js: 2ms, application-code: 13ms)
+apps/web dev:  GET /login 200 in 338ms (next.js: 136ms, application-code: 202ms)
+apps/web dev:  POST /api/login 200 in 146ms (next.js: 43ms, application-code: 102ms)
+apps/web dev:  GET / 200 in 208ms (next.js: 21ms, proxy.ts: 47ms, application-code: 139ms)
+apps/web dev:  GET /analyses/new 200 in 298ms (next.js: 117ms, proxy.ts: 8ms, application-code: 174ms)
+apps/web dev: {"level":30,"time":1785088206587,"pid":27010,"hostname":"MBP-de-Carlos","name":"web","request_id":"c6317498-a2c9-47cd-b761-d9155678744c","run_id":"01KYFRRSNTAPCP99MKY9CB0JCK","steps":4,"msg":"run creado"}
+apps/web dev:  POST /api/runs 201 in 232ms (next.js: 80ms, application-code: 152ms)
+apps/web dev:  GET /api/runs/01KYFRRSNTAPCP99MKY9CB0JCK 200 in 701ms (next.js: 684ms, application-code: 17ms)
+apps/web dev:  GET /runs/01KYFRRSNTAPCP99MKY9CB0JCK 200 in 1218ms (next.js: 460ms, proxy.ts: 4ms, application-code: 753ms)
+apps/web dev:  GET /api/steps/01KYFRRSNRW2TYN3ZNG5KFHHZM 200 in 819ms (next.js: 805ms, application-code: 15ms)
+apps/web dev:  GET /api/steps/01KYFRRSNRW2TYN3ZNG5KFHHZM 200 in 830ms (next.js: 807ms, application-code: 23ms)
+apps/web dev:  GET /api/steps/01KYFRRSNRW2TYN3ZNG5KFHHZM 200 in 830ms (next.js: 806ms, application-code: 24ms)
+apps/web dev: {"level":30,"time":1785088406193,"pid":27010,"hostname":"MBP-de-Carlos","name":"web","request_id":"845fdd4b-4713-433b-bedd-a4b0215b9e6e","step_id":"01KYFRRSNRW2TYN3ZNG5KFHHZM","msg":"checkpoint aprobado"}
+apps/web dev:  POST /api/steps/01KYFRRSNRW2TYN3ZNG5KFHHZM/approve 200 in 1052ms (next.js: 994ms, application-code: 58ms)
+apps/web dev:  GET /api/steps/01KYFRRSNSRHNF90Q2ST5CSE1B 200 in 14ms (next.js: 4ms, application-code: 11ms)
+apps/web dev:  GET /api/steps/01KYFRRSNSRHNF90Q2ST5CSE1B 200 in 21ms (next.js: 5ms, application-code: 17ms)
+apps/web dev:  GET /api/steps/01KYFRRSNSRHNF90Q2ST5CSE1B 200 in 24ms (next.js: 1207µs, application-code: 23ms)
+apps/web dev:  GET /api/personas 200 in 130ms (next.js: 35ms, application-code: 94ms)
+apps/web dev:  GET /api/personas/candidates?avatar_hint=Mujer%20u%20hombre%20de%20unos%2030%20a%C3%B1os%2C%20tono%20cercano%20y%20relajado%2C%20grabando%20en%20su%20ba%C3%B1o%20o%20dormitorio%20en%20rutina%20real 200 in 133ms (next.js: 73ms, application-code: 60ms)
+apps/web dev:  GET /api/personas/candidates?avatar_hint=Mujer%20u%20hombre%20de%20unos%2030%20a%C3%B1os%2C%20tono%20cercano%20y%20relajado%2C%20grabando%20en%20su%20ba%C3%B1o%20o%20dormitorio%20en%20rutina%20real 200 in 137ms (next.js: 78ms, application-code: 59ms)
+apps/web dev:  GET /api/personas 200 in 154ms (next.js: 80ms, application-code: 74ms)
+apps/web dev:  POST /api/batches/estimate 200 in 165ms (next.js: 121ms, application-code: 44ms)
+apps/web dev:  POST /api/batches/estimate 200 in 29ms (next.js: 1300µs, application-code: 27ms)
+apps/web dev:  POST /api/batches/estimate 200 in 43ms (next.js: 5ms, application-code: 38ms)
+apps/web dev:  POST /api/batches/estimate 200 in 24ms (next.js: 2ms, application-code: 22ms)
+apps/web dev:  POST /api/batches/estimate 200 in 13ms (next.js: 1338µs, application-code: 11ms)
+apps/web dev:  POST /api/batches/estimate 200 in 11ms (next.js: 1539µs, application-code: 9ms)
+apps/web dev:  POST /api/batches/estimate 200 in 12ms (next.js: 1488µs, application-code: 10ms)
+apps/web dev:  POST /api/batches/estimate 200 in 11ms (next.js: 1409µs, application-code: 9ms)
+apps/web dev: (node:27010) DeprecationWarning: Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead.
+apps/web dev: (Use `node --trace-deprecation ...` to show where the warning was created)
+apps/web dev: {"level":30,"time":1785088469436,"pid":27010,"hostname":"MBP-de-Carlos","name":"web","request_id":"2c2c79f1-3daf-4a05-ad13-8e48492d6c85","step_id":"01KYFRRSNSRHNF90Q2ST5CSE1B","decision_kind":"matrix","next_run_id":"01KYFS0TCVNMZNXK9W4CPD5Y87","msg":"checkpoint aprobado"}
+apps/web dev:  POST /api/steps/01KYFRRSNSRHNF90Q2ST5CSE1B/approve 200 in 110ms (next.js: 8ms, application-code: 101ms)
+apps/web dev:  GET /api/runs/01KYFS0TCVNMZNXK9W4CPD5Y87 200 in 53ms (next.js: 4ms, application-code: 49ms)
+apps/web dev:  GET /runs/01KYFS0TCVNMZNXK9W4CPD5Y87 200 in 140ms (next.js: 10ms, proxy.ts: 8ms, application-code: 122ms)
+apps/web dev:  GET /api/runs/01KYFRRSNTAPCP99MKY9CB0JCK/events 200 in 4.4min (next.js: 630ms, application-code: 4.4min)
+apps/web dev:  GET /api/steps/01KYFS0TCT4Y9S0YRB19EVKWN2 200 in 23ms (next.js: 5ms, application-code: 19ms)
+apps/web dev:  GET /api/steps/01KYFS0TCT4Y9S0YRB19EVKWN2 200 in 32ms (next.js: 15ms, application-code: 17ms)
+apps/web dev:  GET /api/steps/01KYFS0TCT4Y9S0YRB19EVKWN2 200 in 33ms (next.js: 19ms, application-code: 14ms)
+apps/web dev:  GET /api/batches/01KYFS0TCATMXXQ7CAZQ50HHDD/scripts 200 in 719ms (next.js: 698ms, application-code: 21ms)
+apps/web dev:  GET /api/batches/01KYFS0TCATMXXQ7CAZQ50HHDD/scripts 200 in 720ms (next.js: 698ms, application-code: 22ms)
+apps/web dev:  GET /api/runs/01KYFS0TCVNMZNXK9W4CPD5Y87/events 200 in 5.6min (next.js: 5ms, application-code: 5.6min)
+apps/worker dev: {"level":30,"time":1785088955066,"pid":27009,"hostname":"MBP-de-Carlos","name":"worker","signal":"SIGTERM","msg":"worker shutting down"}
+apps/worker dev: {"level":30,"time":1785088955078,"pid":27009,"hostname":"MBP-de-Carlos","name":"worker","msg":"sweeper detenido"}
+apps/worker dev: Done
+apps/web dev: [?25h
+apps/web dev: Done

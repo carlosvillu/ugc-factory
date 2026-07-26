@@ -1,0 +1,19 @@
+# CP3 COST GATE (deterministic, $0, BEFORE approval)
+# variant 01KYFS0TCGEDR6QZ68G35ZCFAR (Maya, es, premium, conversion, 30s target)
+# script est_seconds=21, 4 scenes
+
+scene    sec node               billed  cents
+hook     5.6 N7c             5.6s x16c     90
+body     6.4 N7d          6.4->8s x20c    160
+body     5.2 N7d          5.2->6s x20c    120
+cta      3.2 N7f          3.2->4s x20c     80
+N7a/b/e     - sub    keyframes/voz/musica      6
+
+TOTAL PROJECTED = 456c = $4.56
+  (avatar projected on SCRIPT hook 5.6s = 90c; real ASR is usually SHORTER -> real avatar <= projected)
+
+vs AUTHORIZED ~$4.20 : OVER 4.20
+vs ABORT THRESHOLD $4.50 : ABORT (>=4.50)
+
+# SPLIT RISK: body scenes 6.4s & 5.2s are <=8s (i2v maxDuration) -> 1 clip each, no split.
+# A split needs a scene >8s; none here. ASR usually comes UNDER script, not over. Split risk ~nil.

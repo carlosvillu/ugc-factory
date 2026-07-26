@@ -1,0 +1,18 @@
+# PRE-FLIGHT DECISION — 2026-07-26T17:46:53Z
+
+## Worker runs T5.17 code: YES
+- pnpm dev via 'tsx watch' on working tree @ 95869b0 (not stale build)
+- toProviderError normalizeErrorBody + FalProviderError.detail present in packages/core/src/generation/fal-client.ts
+- step-execute.ts persists status/detail into step_run.error jsonb on failure
+- => a NEW fal 403/401/422 this run WILL carry 'detail' in step_run.error
+
+## fal balance pre-flight: UNVERIFIABLE
+- fal.ai exposes no public balance/account REST endpoint; product does not store balance (smoke Hallazgo B).
+- The smoke's 'balance probe' was a cents-scale TTS voice-preview (200) — a FALSE NEGATIVE for ~$4 of veo3.1 video.
+- Basis for go: the user's asserted >=$5 balance ONLY. No product/API signal confirms video-eligible balance pre-flight.
+- Real safety mechanism this run = live cost-DELTA watch with hard stop (below), not a probe.
+
+## Cost accounting
+- cost_entry baseline = 301c ($3.01) from smoke; /spend shows CUMULATIVE.
+- THIS run's cost = SUM(amount_cents) - 301.
+- Hard stop armed at delta 450c (total 751c). Authorized ~$4.20; CP3 abort threshold $4.50.

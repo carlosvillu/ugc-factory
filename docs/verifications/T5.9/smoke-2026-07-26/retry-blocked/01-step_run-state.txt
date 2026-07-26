@@ -1,0 +1,22 @@
+ node_key |  status   | retry_count |                                                           err                                                            
+----------+-----------+-------------+--------------------------------------------------------------------------------------------------------------------------
+ N6       | succeeded |           0 | 
+ N7a      | succeeded |           0 | 
+ N7b      | succeeded |           0 | 
+ N7c      | succeeded |           0 | 
+ N7d      | cancelled |           0 | {"message": "Fallo PERMANENTE del proveedor (fal, HTTP 403): fal submit falló con 403: Forbidden. No se reintenta (cada 
+ N7e      | succeeded |           0 | 
+ N7f      | succeeded |           0 | 
+ N8       | cancelled |           0 | 
+ N9       | cancelled |           0 | 
+(9 rows)
+
+=== N7d full error ===
+                                                                                                                                                     jsonb_pretty                                                                                                                                                      
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ {                                                                                                                                                                                                                                                                                                                    +
+     "message": "Fallo PERMANENTE del proveedor (fal, HTTP 403): fal submit falló con 403: Forbidden. No se reintenta (cada envío se factura). Resuélvelo en Ajustes → fal (recarga saldo si es \"balance\"/403, revisa la fal-key si es credencial/401, corrige el input si es validación/422) y re-dispara el run.",+
+     "permanent": true                                                                                                                                                                                                                                                                                                +
+ }
+(1 row)
+

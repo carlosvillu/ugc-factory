@@ -1,0 +1,2 @@
+N7a generation rows antes del retry: 1
+(si >1, hubo shots ya completados+pagados que el retry NO debe re-facturar)

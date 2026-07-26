@@ -13,6 +13,8 @@ import {
   rejectStep,
   skipStep,
   cancelRun,
+  retryStep,
+  transition,
   IllegalTransitionError,
 } from '@ugc/core/orchestrator';
 import { makeWithTransaction } from '../../src/index';
@@ -272,6 +274,121 @@ describe('cancel: barre TODOS los steps no-terminales del run (§7.1, anclaje B)
     expect(await cancelRun(makeDeps(), runId)).toBe(1);
     expect(await cancelRun(makeDeps(), runId)).toBe(0); // ya cancelled ⇒ nada que cancelar
     expect((await rowById(a))!.status).toBe('cancelled');
+  });
+});
+
+describe('cancel de un lote a medias: preserva el failed recuperable y su cadena al máster (T5.18)', () => {
+  // BUG DE PRODUCCIÓN (atrapa dinero gastado): en el smoke-test un clip de b-roll
+  // (N7d) falló con 403 y el resto de la variante quedó generado y PAGADO. Al
+  // cancelar el run, el cancel barría N7d/N8/N9 a `cancelled` (terminal, sin arista
+  // de `retry`) → el clip que ERA recuperable con un retry granular dejaba de serlo,
+  // y el máster (N8) quedaba INALCANZABLE. Fix (a): el cancel NO barre el `failed`
+  // recuperable NI su cierre transitivo aguas abajo (la cadena hacia N8).
+  //
+  // La Verificación de T5.18 dice «un usuario puede llegar a un MÁSTER COMPUESTO sin
+  // re-pagar». Este test asevera EL MÁSTER (N8 alcanza `succeeded` con un asset de
+  // máster), no el proxy "el retry es legal". El camino es el REAL: `cancelRun` core
+  // + retry granular (`retryStep`) + resolución de dependencias del orquestador.
+  //
+  // COSTE $0: el executor de fal/FFmpeg se SIMULA con `transition('succeed')` — la
+  // MISMA transición que el consumer del worker aplica tras ejecutar el nodo. Lo que
+  // está bajo test es la REACHABILITY de N8 (que la resolución de dependencias lo
+  // desbloquee), no la composición FFmpeg. Bajo el bug, N8 quedaría `cancelled` y
+  // `resolveDownstream` lo SALTA (`if (dep.status !== 'awaiting_deps') continue`),
+  // así que jamás se encolaría — el fix es exactamente lo que lo mantiene alcanzable.
+  const ids = {
+    // N7a/N7b/N7c/N7e/N7f: hermanos ya generados y PAGADOS (succeeded).
+    n7a: '00000000000000000000005000',
+    n7b: '00000000000000000000005001',
+    // N7d: el clip que falló con 403. RECUPERABLE por retry granular (failed→queued,
+    // mismo step_run.id → top-up). NO debe barrerse a `cancelled`.
+    n7d: '00000000000000000000005002',
+    // N8 (máster): depende de TODOS los N7*. Bloqueado en awaiting_deps esperando a N7d.
+    n8: '00000000000000000000005003',
+    // N9 (export/publicación): depende de N8.
+    n9: '00000000000000000000005004',
+    // Un step genuinamente VIVO de OTRA rama del run (queued, con job): el cancel SÍ
+    // debe detenerlo — el run tiene que quedar parado, no "todo lo no-terminal muere".
+    alive: '00000000000000000000005005',
+  } as const;
+
+  async function seedSmokeTestShape() {
+    return seed([
+      { id: ids.n7a, status: 'succeeded', nodeKey: 'N7a', outputRefs: { clip: 'a' } },
+      { id: ids.n7b, status: 'succeeded', nodeKey: 'N7b', outputRefs: { clip: 'b' } },
+      { id: ids.n7d, status: 'failed', nodeKey: 'N7d', config: { failRate: 1 } },
+      {
+        id: ids.n8,
+        status: 'awaiting_deps',
+        nodeKey: 'N8',
+        dependsOn: [ids.n7a, ids.n7b, ids.n7d],
+      },
+      { id: ids.n9, status: 'awaiting_deps', nodeKey: 'N9', dependsOn: [ids.n8] },
+      { id: ids.alive, status: 'queued', nodeKey: 'N7z' },
+    ]);
+  }
+
+  it('cancel NO barre N7d (failed) ni N8/N9 (su cadena); SÍ cancela el step vivo', async () => {
+    const { runId } = await seedSmokeTestShape();
+
+    const cancelled = await cancelRun(makeDeps(), runId);
+
+    // Solo el step VIVO se canceló (1). El failed y su downstream NO cuentan.
+    expect(cancelled).toBe(1);
+    expect((await rowById(ids.alive))!.status).toBe('cancelled');
+
+    // El clip recuperable SIGUE `failed` (no `cancelled`): el retry granular queda vivo.
+    expect((await rowById(ids.n7d))!.status).toBe('failed');
+    // La cadena al máster SOBREVIVE en `awaiting_deps` (no `cancelled`, terminal): es
+    // un run DETENIDO (sin job, no auto-avanza) pero NO atrapado.
+    expect((await rowById(ids.n8))!.status).toBe('awaiting_deps');
+    expect((await rowById(ids.n9))!.status).toBe('awaiting_deps');
+    // Los hermanos pagados intactos.
+    expect((await rowById(ids.n7a))!.status).toBe('succeeded');
+    expect((await rowById(ids.n7b))!.status).toBe('succeeded');
+
+    // Invariante T5.18 de "run detenido": ningún step VIVO (queued/running, con job)
+    // sobrevive. (NO es "todo lo no-terminal muere" — eso rompería el fix.)
+    const alive = (await rowsOfRun(runId)).filter((r) => ['queued', 'running'].includes(r.status));
+    expect(alive).toHaveLength(0);
+  });
+
+  it('tras el cancel, retry de N7d → N8 (máster) alcanza succeeded con su asset, SIN re-pagar', async () => {
+    const { runId } = await seedSmokeTestShape();
+    await cancelRun(makeDeps(), runId);
+
+    // 1) Retry granular del clip fallido por el camino REAL (`retryStep`): failed→queued,
+    //    reset de retry_count, mismo step_run.id (top-up). El fix (a) es lo que hace que
+    //    esto sea legal: sobre un N7d `cancelled` habría dado IllegalTransitionError.
+    await retryStep(makeDeps(), ids.n7d);
+    expect((await rowById(ids.n7d))!.status).toBe('queued');
+    expect(await countJobs(`${runId}:N7d`)).toBe(1);
+
+    // 2) Simular la EJECUCIÓN del clip (fal): el consumer del worker aplica start→succeed.
+    //    Es la MISMA transición del worker; aquí sin fal real (coste $0).
+    await transition(makeDeps(), ids.n7d, 'start');
+    await transition(makeDeps(), ids.n7d, 'succeed', { outputRefs: { clip: 'd-retried' } });
+    expect((await rowById(ids.n7d))!.status).toBe('succeeded');
+
+    // 3) LA ASERCIÓN QUE MUERDE: al resolverse la ÚLTIMA dep de N8, la resolución de
+    //    dependencias del orquestador lo desbloquea awaiting_deps→queued (+ job). Bajo
+    //    el bug, N8 estaría `cancelled` y NUNCA llegaría aquí (resolveDownstream lo salta).
+    expect((await rowById(ids.n8))!.status).toBe('queued');
+    expect(await countJobs(`${runId}:N8`)).toBe(1);
+
+    // 4) Simular la COMPOSICIÓN del máster (FFmpeg): start→succeed con el artefacto máster.
+    //    N8 alcanza `succeeded` y EXISTE un asset de máster en output_refs → el usuario
+    //    llegó a un MÁSTER COMPUESTO sin re-generar (ni re-pagar) los hermanos.
+    await transition(makeDeps(), ids.n8, 'start');
+    await transition(makeDeps(), ids.n8, 'succeed', {
+      outputRefs: { master: 'master-video-1.mp4' },
+    });
+    const n8Row = await rowById(ids.n8);
+    expect(n8Row!.status).toBe('succeeded');
+    expect(n8Row!.outputRefs).toEqual({ master: 'master-video-1.mp4' });
+
+    // Y N9 (export) queda desbloqueado por N8 succeeded: la cadena entera es viable.
+    expect((await rowById(ids.n9))!.status).toBe('queued');
   });
 });
 

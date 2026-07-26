@@ -1,0 +1,2 @@
+POST /api/steps/01KYG41HHEEQ943RE6HR3KXHBV/retry → HTTP 409: {"code":"invalid_transition","message":"el step no admite esta acción en su estado actual","request_id":"5e974e04-bb0d-40ac-af79-3c27cf85c3a6"}
+(CONTROL NEGATIVO: debe ser 409 invalid_transition — cancelled es terminal sin arista de retry)

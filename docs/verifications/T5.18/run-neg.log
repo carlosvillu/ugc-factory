@@ -1,0 +1,67 @@
+[WebServer] seed: persona «Maya» ← imagen sintética 1638×2048 px (personas/01KYG41B7KZ592YTPA1F0QYF5B/01KYG41B853GQRST6YM0WYVDBX.png)
+[WebServer] seed: persona «Maya» ← imagen sintética 1638×2048 px (personas/01KYG41B7KZ592YTPA1F0QYF5B/01KYG41B8RDBH9JY30DAEC5TXQ.png)
+[WebServer] seed: persona «Maya» ← imagen sintética 1638×2048 px (personas/01KYG41B7KZ592YTPA1F0QYF5B/01KYG41B9A3EHNA4MHAB0BNX2N.png)
+[WebServer] seed: persona «Lucía (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYG41B9FWCHVDSVR6171CZ42/01KYG41B9ZPAHCAT4HCN7BWVNV.png)
+[WebServer] seed: persona «Lucía (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYG41B9FWCHVDSVR6171CZ42/01KYG41BAJNY48C441P4RY2M52.png)
+[WebServer] seed: persona «Marcus (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYG41BARM7XSPHEN7EHQW9WQ/01KYG41BB8NMXRS1FBWZ8E698J.png)
+[WebServer] seed: persona «Marcus (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYG41BARM7XSPHEN7EHQW9WQ/01KYG41BBVCAXS3X5TFNM1FDGG.png)
+[WebServer] seed: persona «Nerea (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYG41BBZN9G1QRF65KDXETQQ/01KYG41BCF7ZGXS16AAT4EA70T.png)
+[WebServer] seed: persona «Nerea (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYG41BBZN9G1QRF65KDXETQQ/01KYG41BD149SFKQFQDHER5619.png)
+[WebServer] seed: persona «Carmen (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYG41BDAATBDX235C9AYVH7V/01KYG41BDTK3YCFTN1B8G5Z9Q0.png)
+[WebServer] seed: persona «Carmen (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYG41BDAATBDX235C9AYVH7V/01KYG41BECHH92R52FPSE23YDT.png)
+[WebServer] seed: persona «Alex (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYG41BENRBBSW9FC9BE5YJQB/01KYG41BF5DSGVYX1RWKX9SG51.png)
+[WebServer] seed: persona «Alex (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYG41BENRBBSW9FC9BE5YJQB/01KYG41BFT5V40C5WV0AH36G06.png)
+[WebServer] seed: persona «Rosa (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYG41BFZ0AH8DVJMCV20NMSE/01KYG41BGE4EJ41D7YX4XD0VY5.png)
+[WebServer] seed: persona «Rosa (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYG41BFZ0AH8DVJMCV20NMSE/01KYG41BGZP916Q2WKTRSCW63W.png)
+[WebServer] seed: persona «Priya (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYG41BH3CMN0HH717RYGFB1W/01KYG41BHH61BW0WTYYHFNV71F.png)
+[WebServer] seed: persona «Priya (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYG41BH3CMN0HH717RYGFB1W/01KYG41BJ3R2044S9FS191746T.png)
+[WebServer] seed: persona «David (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYG41BJ7A23TWA9DPBEC0A2X/01KYG41BJQDYDW15WYSJ2PQVHT.png)
+[WebServer] seed: persona «David (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYG41BJ7A23TWA9DPBEC0A2X/01KYG41BK9Q1G97EJ6PPCX87D0.png)
+[WebServer] seed: persona «Chloe (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYG41BKE4VBGFC2AEWG23VB8/01KYG41BKW69JXZKQ31QBKNJGH.png)
+[WebServer] seed: persona «Chloe (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYG41BKE4VBGFC2AEWG23VB8/01KYG41BMDY0S68ZPG2P3ZF8SG.png)
+[WebServer] seed: persona «Kenji (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYG41BMPH6W5M2J30D92WPDR/01KYG41BN67E7MA6QV8652468X.png)
+[WebServer] seed: persona «Kenji (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYG41BMPH6W5M2J30D92WPDR/01KYG41BNRSM8VSRSCTXP5GG04.png)
+[WebServer] ▲ Next.js 16.2.10 (Turbopack)
+[WebServer] - Local:         http://localhost:3100
+[WebServer] - Network:       http://192.168.1.132:3100
+[WebServer] ✓ Ready in 404ms
+
+Running 1 test using 1 worker
+
+[WebServer] {"level":30,"time":1785100022690,"pid":39906,"hostname":"MBP-de-Carlos","name":"worker","intervalMs":5000,"generationReconcile":true,"msg":"sweeper arrancado"}
+[WebServer] {"level":30,"time":1785100022690,"pid":39906,"hostname":"MBP-de-Carlos","name":"worker","queue":"demo.noop","msg":"pg-boss arrancado: colas y consumers listos"}
+[WebServer] {"level":30,"time":1785100022690,"pid":39906,"hostname":"MBP-de-Carlos","name":"worker","health":{"ok":true,"db":true},"msg":"worker ready"}
+[WebServer] {"level":30,"time":1785100023656,"pid":39907,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","msg":"running startup migrations"}
+[WebServer] {"level":30,"time":1785100023832,"pid":39907,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","msg":"startup migrations applied"}
+[WebServer] {"level":30,"time":1785100023902,"pid":39907,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","seeded":true,"msg":"auth.password_hash sembrado (first boot)"}
+[WebServer] {"level":30,"time":1785100023940,"pid":39907,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","provider":"fal","seeded":false,"msg":"secret.fal ya existía en BD (env ignorada; la BD es la fuente)"}
+[WebServer] {"level":30,"time":1785100023951,"pid":39907,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","provider":"firecrawl","seeded":false,"msg":"secret.firecrawl ya existía en BD (env ignorada; la BD es la fuente)"}
+[WebServer] {"level":30,"time":1785100023956,"pid":39907,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","provider":"anthropic","seeded":false,"msg":"secret.anthropic ya existía en BD (env ignorada; la BD es la fuente)"}
+[WebServer] {"level":30,"time":1785100023990,"pid":39907,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","msg":"sembrando datos de referencia (T3.9)"}
+[WebServer] {"level":30,"time":1785100024019,"pid":39907,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","hookLines":80,"ctaLines":30,"recipes":3,"msg":"librería sembrada o ya presente (insert-only)"}
+[WebServer] {"level":30,"time":1785100024074,"pid":39907,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","templates":56,"guardPacks":10,"modelProfiles":18,"msg":"galería sembrada o ya presente (insert-only)"}
+[WebServer] {"level":30,"time":1785100024143,"pid":39907,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","personas":11,"imagesCreated":0,"imagesFailed":0,"msg":"personas sembradas o ya presentes"}
+[WebServer] {"level":30,"time":1785100024143,"pid":39907,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","msg":"datos de referencia sembrados (T3.9)"}
+[WebServer] 
+seed: persona «Nora T518 NegCtrl» ← imagen sintética 1638×2048 px (personas/01KYG41F25AXAMV666FX0JBQRN/01KYG41F2XC7AV2QB62Q0G7J5P.png)
+[WebServer]  GET /login 200 in 243ms (next.js: 104ms, application-code: 139ms)
+[WebServer]  POST /api/login 200 in 283ms (next.js: 173ms, application-code: 110ms)
+[WebServer]  GET / 200 in 167ms (next.js: 15ms, proxy.ts: 42ms, application-code: 110ms)
+[WebServer] (node:39907) DeprecationWarning: Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead.
+[WebServer] (Use `node --trace-deprecation ...` to show where the warning was created)
+[WebServer] {"level":30,"time":1785100027461,"pid":39907,"hostname":"MBP-de-Carlos","name":"web","request_id":"70cf5cab-24e2-4a7c-8092-f7bd12e75934","step_id":"01KYG41GKYRWZ8Q5NG07YRP3JE","decision_kind":"scripts","next_run_id":"01KYG41HHPMJZYV15D1FMX78EK","msg":"checkpoint aprobado"}
+[WebServer]  POST /api/steps/01KYG41GKYRWZ8Q5NG07YRP3JE/approve 200 in 925ms (next.js: 774ms, application-code: 152ms)
+[WebServer] {"level":50,"time":1785100028257,"pid":39906,"hostname":"MBP-de-Carlos","name":"worker","queue":"step.execute","job_id":"96efbab5-37fb-44d7-8f1b-d8bdda85ac94","run_id":"01KYG41HHPMJZYV15D1FMX78EK","step_id":"01KYG41HHEEQ943RE6HR3KXHBV","node_key":"N7a","err":{"type":"PermanentStepError","message":"finalizeGeneration: el output de la generación 01KYG41JAB3GPJ8FGD5QK8XECG no trae images[]: {}","stack":"PermanentStepError: finalizeGeneration: el output de la generación 01KYG41JAB3GPJ8FGD5QK8XECG no trae images[]: {}\n    at runGenerationStep (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/worker/src/executors/_shared.ts:109:13)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async runShotLoop (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/worker/src/executors/generation.ts:225:17)\n    at async runAiPackshotRoute (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/worker/src/executors/generation.ts:273:17)\n    at async <anonymous> (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/worker/src/executors/generation.ts:175:11)\n    at async <anonymous> (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/worker/src/consumers/step-execute.ts:190:9)\n    at async resolveWithinSeconds (file:///Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/pg-boss@12.25.1/node_modules/pg-boss/dist/tools.js:38:18)\n    at async #processJobs (file:///Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/pg-boss@12.25.1/node_modules/pg-boss/dist/manager.js:421:28)\n    at async Worker.onFetch (file:///Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/pg-boss@12.25.1/node_modules/pg-boss/dist/manager.js:577:21)\n    at async Worker.run (file:///Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/pg-boss@12.25.1/node_modules/pg-boss/dist/worker.js:60:21)","name":"PermanentStepError"},"msg":"step.execute: fallo PERMANENTE del executor; failed terminal SIN retry"}
+[WebServer] {"level":30,"time":1785100028266,"pid":39906,"hostname":"MBP-de-Carlos","name":"worker","event":"fal_single_call_per_second_generation_finalized","generationId":"01KYG41J9PWXTR7JSE91T7EXN7","assetId":"01KYG41JB1MT86HSF5G8QQF9EB","assetKind":"music_bed","costCents":0,"durationSeconds":12,"alreadyFinalized":false,"msg":"asset single-call-per-second generado: descargado, coste por segundo registrado, completed"}
+[WebServer] {"level":30,"time":1785100028281,"pid":39906,"hostname":"MBP-de-Carlos","name":"worker","event":"fal_audio_generation_finalized","generationId":"01KYG41JAWPCS11KMFX9R96H5R","assetId":"01KYG41JBG11XMF2EXBFDJXSP3","ttsCostCents":0,"asrCostCents":0,"durationSeconds":1.8,"wordCount":4,"alreadyFinalized":false,"msg":"voiceover generado: TTS descargado, ASR sellado, cobertura 100%, completed"}
+[WebServer] {"level":30,"time":1785100028302,"pid":39906,"hostname":"MBP-de-Carlos","name":"worker","event":"fal_audio_generation_finalized","generationId":"01KYG41JBVV9XV754F48QBWHBE","assetId":"01KYG41JC9M31E2CZJSF1RDBCK","ttsCostCents":0,"asrCostCents":0,"durationSeconds":1.8,"wordCount":4,"alreadyFinalized":false,"msg":"voiceover generado: TTS descargado, ASR sellado, cobertura 100%, completed"}
+[WebServer] {"level":30,"time":1785100028318,"pid":39906,"hostname":"MBP-de-Carlos","name":"worker","event":"fal_audio_generation_finalized","generationId":"01KYG41JCGN3BEKDHEFHHHXDRN","assetId":"01KYG41JCV3NTBQWY7PPNKGTR5","ttsCostCents":0,"asrCostCents":0,"durationSeconds":1.8,"wordCount":4,"alreadyFinalized":false,"msg":"voiceover generado: TTS descargado, ASR sellado, cobertura 100%, completed"}
+[WebServer] {"level":30,"time":1785100028726,"pid":39906,"hostname":"MBP-de-Carlos","name":"worker","event":"fal_input_upload","assetId":"01KYG41JBG11XMF2EXBFDJXSP3","falUrl":"http://127.0.0.1:59509/fal-cdn/files/fake-input-9","bytes":3244,"msg":"fal storage upload: input subido por primera vez"}
+[WebServer] {"level":30,"time":1785100028729,"pid":39906,"hostname":"MBP-de-Carlos","name":"worker","event":"fal_input_upload","assetId":"01KYG41F2XC7AV2QB62Q0G7J5P","falUrl":"http://127.0.0.1:59509/fal-cdn/files/fake-input-10","bytes":83985,"msg":"fal storage upload: input subido por primera vez"}
+[WebServer] {"level":30,"time":1785100028770,"pid":39906,"hostname":"MBP-de-Carlos","name":"worker","event":"fal_single_call_per_second_generation_finalized","generationId":"01KYG41JSV77WPB6W5F09WPV8H","assetId":"01KYG41JTKS219T89A6N31QERJ","assetKind":"avatar_clip","costCents":80,"durationSeconds":5,"alreadyFinalized":false,"msg":"asset single-call-per-second generado: descargado, coste por segundo registrado, completed"}
+[WebServer] {"level":30,"time":1785100030271,"pid":39907,"hostname":"MBP-de-Carlos","name":"web","request_id":"b1d2fca2-da55-4237-a5b5-1d1958f79fa8","run_id":"01KYG41HHPMJZYV15D1FMX78EK","cancelled":5,"msg":"run cancelado"}
+[WebServer]  POST /api/runs/01KYG41HHPMJZYV15D1FMX78EK/cancel 200 in 762ms (next.js: 691ms, application-code: 71ms)
+[WebServer]  POST /api/steps/01KYG41HHEEQ943RE6HR3KXHBV/retry 409 in 632ms (next.js: 623ms, application-code: 10ms)
+  ✓  1 ../../docs/verifications/T5.18/t518-negative-control.spec.ts:69:3 › T5.18 · CONTROL NEGATIVO (fix desactivado) › cancel barre N8 a cancelled y el retry de N7a da 409 → sin camino al máster (5.7s)
+
+  1 passed (13.9s)

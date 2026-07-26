@@ -138,14 +138,90 @@ export async function skipStep(deps: CheckpointOpsDeps, stepId: string): Promise
 }
 
 /**
- * CANCELA un run en curso (§7.1): barrido de `cancel` sobre TODOS los steps
- * NO-terminales del run, en UNA tx. No basta cancelar "el step actual": un step en
- * `awaiting_deps`/`queued` sobreviviría y el run no quedaría detenido
- * (Verificación T0.8: "cancel detiene un run en curso"). Devuelve cuántos steps se
- * cancelaron.
+ * Ids de los steps que el cancel NO debe barrer (T5.18, BUG DE PRODUCCIÓN que
+ * atrapa dinero gastado). Recibe el conjunto de steps NO-terminales del run (lo que
+ * `findCancellableByRun` devuelve) y computa, de forma PURA e inspeccionable sin
+ * Postgres, el conjunto a PRESERVAR: cada step `failed` MÁS su cierre transitivo
+ * aguas abajo dentro de ese conjunto.
  *
- * Idempotente: los steps ya terminales (succeeded/failed/skipped/cancelled/…) no
- * admiten `cancel` (transición ilegal) y se saltan sin error.
+ * POR QUÉ (opción (a), decisión de producto). Un step `failed` es recuperable por el
+ * retry granular existente (`retryStep`: failed→queued, reset de retry_count, mismo
+ * step_run.id ⇒ top-up; el dedup hace que los hermanos ya generados reusen a 0¢).
+ * Barrerlo a `cancelled` (terminal, sin arista de `retry`) DESTRUYE esa
+ * recuperabilidad y atrapa los assets ya pagados. Y no basta con preservar el
+ * `failed`: la cadena que llega al MÁSTER (N8→N9) cuelga de él en `awaiting_deps`; si
+ * el cancel la barriera a `cancelled` (terminal, sin salida), reintentar el `failed`
+ * daría el clip pero el máster seguiría INALCANZABLE — el mismo estado atrapado por
+ * otra ruta. Por eso se preserva el cierre transitivo aguas abajo COMPLETO.
+ *
+ * NO se gatea por `retry_count < max_retries`: el retry MANUAL (`retryStep`) RESETEA
+ * el contador, así que TODO step `failed` es recuperable — un predicado "recuperable"
+ * sería un segundo bug (dejaría atrapado justo el caso que T5.18 existe para escapar).
+ *
+ * WALKING DENTRO DEL CONJUNTO CANCELABLE (suficiente y declarado): las aristas se
+ * derivan del `dependsOn` de los propios steps cancelables. Un dependiente aguas abajo
+ * de un `failed` NO puede estar `succeeded`/`queued`/`running` (su dep nunca se
+ * resolvió) — está en `awaiting_deps`, luego ES cancelable y ESTÁ en este conjunto.
+ * Los únicos nodos que el walk podría "no ver" son ya-terminales, que el barrido no
+ * toca de todos modos. Así que recorrer solo las aristas internas basta para preservar
+ * la cadena hacia el máster.
+ *
+ * DEUDA DECLARADA (T5.18): si un `failed` tiene ramas dependientes que NO conducen al
+ * máster (p. ej. otra escena independiente), este cierre las preserva TODAS (más simple
+ * y defendible: no discriminamos por destino). Quedan en `awaiting_deps` sin auto-avanzar
+ * hasta que el usuario resuelva el `failed`; si nunca lo reintenta, son inocuas (sin job,
+ * sin coste). No se recomponen automáticamente tras el retry de un dependiente cancelado.
+ */
+function idsToPreserveOnCancel(steps: StepRow[]): Set<string> {
+  // Índice inverso dep→dependientes, construido SOLO con las aristas internas al
+  // conjunto cancelable (los ids que no están aquí no importan: son terminales).
+  const idsInSet = new Set(steps.map((s) => s.id));
+  const dependentsOf = new Map<string, string[]>();
+  for (const step of steps) {
+    for (const dep of step.dependsOn) {
+      if (!idsInSet.has(dep)) continue; // arista hacia fuera del conjunto: irrelevante
+      const list = dependentsOf.get(dep);
+      if (list) list.push(step.id);
+      else dependentsOf.set(dep, [step.id]);
+    }
+  }
+  // Cierre transitivo aguas abajo desde cada `failed`, por PUNTO FIJO: se expande el
+  // conjunto `preserve` mientras un step preservado tenga un dependiente aún fuera. El
+  // grafo es un DAG finito, así que converge en ≤ |steps| pasadas. Evita el
+  // shift/index de una cola BFS (y con ello el non-null assertion vetado por lint).
+  const preserve = new Set<string>(steps.filter((s) => s.status === 'failed').map((s) => s.id));
+  let grew = true;
+  while (grew) {
+    grew = false;
+    for (const id of [...preserve]) {
+      for (const dependent of dependentsOf.get(id) ?? []) {
+        if (!preserve.has(dependent)) {
+          preserve.add(dependent);
+          grew = true;
+        }
+      }
+    }
+  }
+  return preserve;
+}
+
+/**
+ * CANCELA un run en curso (§7.1): barrido de `cancel` sobre los steps NO-terminales
+ * del run, en UNA tx. No basta cancelar "el step actual": un step en
+ * `awaiting_deps`/`queued` sobreviviría y el run no quedaría detenido (Verificación
+ * T0.8: "cancel detiene un run en curso"). Devuelve cuántos steps se cancelaron
+ * REALMENTE (excluidos los preservados).
+ *
+ * T5.18 — NO barre el `failed` recuperable NI su cierre transitivo aguas abajo (ver
+ * `idsToPreserveOnCancel`): esos sobreviven en su estado (failed / awaiting_deps) para
+ * que un retry granular del `failed` desemboque en el máster sin re-pagar. El invariante
+ * correcto de "run detenido" NO es "todo lo no-terminal muere" sino "ningún step VIVO
+ * (queued/running, con job) sobrevive": un `awaiting_deps` preservado no tiene job y no
+ * puede auto-avanzar (solo avanza si el `failed` del que depende se resuelve por un retry
+ * EXPLÍCITO del usuario).
+ *
+ * Idempotente: los steps ya terminales (succeeded/skipped/cancelled/…) no admiten
+ * `cancel` (transición ilegal) y ni siquiera entran en `findCancellableByRun`.
  */
 export async function cancelRun(deps: CheckpointOpsDeps, runId: string): Promise<number> {
   return deps.withTransaction(async (stores) => {
@@ -153,10 +229,15 @@ export async function cancelRun(deps: CheckpointOpsDeps, runId: string): Promise
     // deadlock 40P01 con transiciones concurrentes). `cancel` es legal desde
     // cualquier estado no terminal.
     const cancellable = await stores.steps.findCancellableByRun(runId);
+    // T5.18: excluir del barrido el `failed` recuperable y su downstream (cadena al máster).
+    const preserve = idsToPreserveOnCancel(cancellable);
+    let cancelled = 0;
     for (const step of cancellable) {
+      if (preserve.has(step.id)) continue; // preservado: sigue failed / awaiting_deps
       await applyTransition(stores, step.id, 'cancel');
+      cancelled++;
     }
-    return cancellable.length;
+    return cancelled;
   });
 }
 

@@ -154,6 +154,9 @@ Marca también las subtareas `[x]`. El formato mínimo obligatorio: `[x]` + fech
 | 1 | El nodo pasa a running en vivo sin reload | Cambio de color en <2 s vía SSE | 02-nodo-running.png | ✅ |
 | 2 | ... | ... | ... | ✅/❌ |
 
+## Control negativo
+<Prueba de que el/los test que respaldan el fix MUERDEN: reintroduce el bug y pega la salida ROJA/FAIL. O, si la tarea no añade tests, `N/A — <motivo auditable de ≥12 caracteres>`.>
+
 ## Coste real
 <n/a — sin APIs de pago> | <desglose: proveedor, llamadas, $ total; vs estimado; recalibración si >25 %>
 
@@ -161,6 +164,8 @@ Marca también las subtareas `[x]`. El formato mínimo obligatorio: `[x]` + fech
 **PASS** | **FAIL** — <una frase>. <Si FAIL: causa raíz, fix aplicado o pendiente.>
 <Notas: rarezas observadas aunque el veredicto sea PASS, deudas [verificar] cerradas, etc.>
 ```
+
+**HEADING LITERAL (lo exige el hook `guard-planning`, no es opcional):** la sección DEBE titularse EXACTAMENTE `## Control negativo` — el hook la busca con `^#{2,}\s*Control\s+negativo\s*$`, así que **cualquier sufijo en la línea del heading la rompe** (`## Control negativo (reproducido por…)` NO matchea → bloquea el cierre pese a tener evidencia válida). Las aclaraciones van en el CUERPO, no en el heading. El cuerpo debe contener evidencia roja (`FAIL`/`ROJO`/`AssertionError`/`toBe`/…) o el escape `N/A — <motivo>`. (Aprendido en T5.18, 2026-07-26.)
 
 ## Reglas de oro
 

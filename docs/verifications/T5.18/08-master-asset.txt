@@ -1,0 +1,3 @@
+master_asset_id=01KYG3WX9DZZEYHNH5VYXS5736
+storage_key=masters/01KYG3WK3T5NCXYQDJ06RC1EM4/master.mp4
+assetsDir=/var/folders/qc/t8rlm6jd03v2j58mynvkgrz00000gn/T/ugc-e2e-assets-bHse4f

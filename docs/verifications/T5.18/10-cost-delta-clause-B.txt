@@ -1,0 +1,9 @@
+CLÁUSULA (B) — delta cost_entry entre snapshot #2 (tras cancel) y #3 (tras componer):
+
+Filas NUEVAS en #3 respecto de #2 (4):
+  N7a  fal            1¢  gen=01KYG3WQV36M9NDBFJHJ3EB1M3
+  N7a  fal            1¢  gen=01KYG3WQW9QVZ24WD4JEGJP5CQ
+  N7d  fal           80¢  gen=01KYG3WRB8K69F1P7X4E1PHD8H
+  N7f  fal           80¢  gen=01KYG3WRAWH9JZ90D94MHTK6MP
+
+Total facturado en el retry+recomposición: 162¢

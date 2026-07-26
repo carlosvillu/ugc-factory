@@ -1,0 +1,14 @@
+cost_entry del run 01KYG3WM03HZ743JG3D9TSYJ4N (join step_run):
+  N7a  fal            1¢  gen=01KYG3WQV36M9NDBFJHJ3EB1M3
+  N7a  fal            1¢  gen=01KYG3WQW9QVZ24WD4JEGJP5CQ
+  N7b  fal            0¢  gen=01KYG3WMY3SSJFS7JS9KRQWJ27
+  N7b  fal            0¢  gen=01KYG3WMY3SSJFS7JS9KRQWJ27
+  N7b  fal            0¢  gen=01KYG3WMZ0T6MHXR8N96KEC7K8
+  N7b  fal            0¢  gen=01KYG3WMZ0T6MHXR8N96KEC7K8
+  N7b  fal            0¢  gen=01KYG3WN024CD6HGF85F1NDTMG
+  N7b  fal            0¢  gen=01KYG3WN024CD6HGF85F1NDTMG
+  N7c  fal           80¢  gen=01KYG3WND9GB1J0GYMTB3QGEN4
+  N7d  fal           80¢  gen=01KYG3WRB8K69F1P7X4E1PHD8H
+  N7e  fal            0¢  gen=01KYG3WMX78WFRM0XGS19KQ251
+  N7f  fal           80¢  gen=01KYG3WRAWH9JZ90D94MHTK6MP
+  TOTAL: 242¢

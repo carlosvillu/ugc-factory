@@ -1,0 +1,2 @@
+POST /api/steps/01KYG3WKZVR2TX9XT96E1Q6VE7/retry (body vacío) → HTTP 200: {"ok":true}
+(bajo el bug daría 409 invalid_transition; con el fix debe ser 200)

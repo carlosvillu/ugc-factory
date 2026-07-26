@@ -76,6 +76,12 @@ vídeo (correcta); el bed de música es un HIT adicional que no cambia la cifra.
   falló para el hook** (OmniHuman generó un sujeto ajeno a la persona). El b-roll y el CTA sí muestran el
   producto CeraVe correctamente (`15/16-frame-*.png`). Es un defecto de CALIDAD del avatar (candidato a
   investigación aparte), no un fallo de la composición N8 ni del objetivo "primer máster + C2PA".
+- **CORRECCIÓN post-investigación (2026-07-26, `docs/verifications/T5.19/`)**: el diagnóstico «identity-lock del
+  avatar falló» de arriba es INCORRECTO. Ground truth de BD: el `image_url` que N7c envió a OmniHuman ES la
+  reference_image de Maya (`fal_url` → `asset.kind=reference_image`), y esa reference es un **placeholder
+  abstracto** (círculo+banda de color, generado por el path de sharp de T5.15), NO una foto. OmniHuman animó
+  fielmente un input abstracto → chibi. El identity-lock NO está roto; la causa raíz es aguas arriba (seed sin
+  reference usable). Ver T5.19 (gate anti-placeholder, $0) y T5.20 (regenerar references con fotos, spend-gated).
 
 ## Evidencia de LEG 2 (añadida)
 - `10-cp3-approved-checkbox.png` — CP3 aprobado por la UI (checkbox + confirmar).

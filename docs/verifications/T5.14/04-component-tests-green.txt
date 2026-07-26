@@ -1,0 +1,10 @@
+ ✓ |web:unit| src/components/checkpoints/scripts-panel.test.tsx > ScriptsPanel (CP3) > carga los guiones del lote y pinta una tarjeta por variante 124ms
+ ✓ |web:unit| src/components/checkpoints/scripts-panel.test.tsx > ScriptsPanel (CP3) > el flag BLOQUEANTE se pinta y su aprobar está DESHABILITADO hasta editar 19ms
+ ✓ |web:unit| src/components/checkpoints/scripts-panel.test.tsx > ScriptsPanel (CP3) > EDITAR una variante bloqueada re-habilita su aprobar (el servidor es el guard) 135ms
+ ✓ |web:unit| src/components/checkpoints/scripts-panel.test.tsx > ScriptsPanel (CP3) > al confirmar, manda editedScript SOLO para las variantes editadas 154ms
+ ✓ |web:unit| src/components/checkpoints/scripts-panel.test.tsx > ScriptsPanel (CP3) > T5.11: un lote truncado muestra el recuento REAL y NO deja aprobar 12ms
+ ✓ |web:unit| src/components/checkpoints/scripts-panel.test.tsx > ScriptsPanel (CP3) > T5.11: el lote COMPLETO sigue aprobándose (el guard no encierra el camino feliz) 16ms
+ ✓ |web:unit| src/components/checkpoints/scripts-panel.test.tsx > ScriptsPanel (CP3) > T5.14: con 0 aprobadas el botón «Confirmar» está DESHABILITADO, con el motivo a la vista 15ms
+ ✓ |web:unit| src/components/checkpoints/scripts-panel.test.tsx > ScriptsPanel (CP3) > T5.14 control negativo: aprobar UNA variante re-habilita «Confirmar» y quita el aviso 27ms
+ Test Files  1 passed (1)
+      Tests  8 passed (8)

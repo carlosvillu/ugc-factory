@@ -1,0 +1,35 @@
+ ✓ |web:integration| test/integration/server/scripts-checkpoint.test.ts > CP2 → N5 · atomicidad (T2.6): aprobar CP2 crea el lote Y arranca el run de N5 en UNA tx > crea el ad_batch + sus variantes Y un pipeline_run NUEVO con el step N5 encolado 50ms
+ ✓ |web:integration| test/integration/server/scripts-checkpoint.test.ts > CP2 → N5 · atomicidad (T2.6): aprobar CP2 crea el lote Y arranca el run de N5 en UNA tx > si algo FALLA tras crear el lote+run, NADA persiste (rollback de la tx entera) 30ms
+ ✓ |web:integration| test/integration/server/scripts-checkpoint.test.ts > CP3 · approveScriptsForStep (T2.6): veredictos, v2 solo si edita, bloqueo server-side > edita UNA variante y aprueba TODAS: exactamente una v2 edited_by_user, todas scripted 66ms
+ ✓ |web:integration| test/integration/server/scripts-checkpoint.test.ts > CP3 · approveScriptsForStep (T2.6): veredictos, v2 solo si edita, bloqueo server-side > T5.8b · el run de generación del flujo NORMAL emite la cola de composición N8 (máster) + N9 (CP4) 49ms
+ ✓ |web:integration| test/integration/server/scripts-checkpoint.test.ts > CP3 · approveScriptsForStep (T2.6): veredictos, v2 solo si edita, bloqueo server-side > mandar `editedScript` IDÉNTICO al vigente NO crea v2 (aprobar no es editar) 43ms
+ ✓ |web:integration| test/integration/server/scripts-checkpoint.test.ts > CP3 · approveScriptsForStep (T2.6): veredictos, v2 solo si edita, bloqueo server-side > BLOQUEO SERVER-SIDE: `approved:true` sobre un guion con flag bloqueante NO lo pasa a scripted 46ms
+ ✓ |web:integration| test/integration/server/scripts-checkpoint.test.ts > CP3 · approveScriptsForStep (T2.6): veredictos, v2 solo si edita, bloqueo server-side > BLOQUEO SERVER-SIDE por RE-LINT: un `editedScript` que INTRODUCE un claim prohibido no se aprueba 42ms
+ ✓ |web:integration| test/integration/server/scripts-checkpoint.test.ts > CP3 · approveScriptsForStep (T2.6): veredictos, v2 solo si edita, bloqueo server-side > control POSITIVO: editar un guion RESOLVIENDO el flag lo deja pasar a scripted 44ms
+ ✓ |web:integration| test/integration/server/scripts-checkpoint.test.ts > CP3 · approveScriptsForStep (T2.6): veredictos, v2 solo si edita, bloqueo server-side > no-op si la decisión no es `scripts` (un artefacto N5 sin decisión de guiones) 22ms
+ ✓ |web:integration| test/integration/server/scripts-checkpoint.test.ts > CP3 · approveScriptsForStep (T2.6): veredictos, v2 solo si edita, bloqueo server-side > MONEY-SAFETY: un tier no generation-ready (b-roll etiqueta) aprueba los guiones SIN crear ningún run 28ms
+ ✓ |web:integration| test/integration/server/scripts-checkpoint.test.ts > CP3 · approveScriptsForStep (T2.6): veredictos, v2 solo si edita, bloqueo server-side > ATOMICIDAD en tier ready: un fallo REAL del plan (persona sin imagen) LANZA y hace rollback de los veredictos 33ms
+ ✓ |web:integration| test/integration/server/scripts-checkpoint.test.ts > CP3 · approveScriptsForStep (T2.6): veredictos, v2 solo si edita, bloqueo server-side > T5.11 MONEY-SAFETY: un lote con menos guiones que variantes se RECHAZA y no arranca ningún run 25ms
+ × |web:integration| test/integration/server/scripts-checkpoint.test.ts > CP3 · approveScriptsForStep (T2.6): veredictos, v2 solo si edita, bloqueo server-side > T5.14: confirmar con 0 aprobadas se RECHAZA (validation_error) sin consumir el checkpoint ni transicionar nada 27ms
+ × |web:integration| test/integration/server/scripts-checkpoint.test.ts > CP3 · approveScriptsForStep (T2.6): veredictos, v2 solo si edita, bloqueo server-side > T5.14: aprobar SOLO variantes con flag bloqueante (0 quedarían scripted) también se RECHAZA — mismo error irreversible 28ms
+ ✓ |web:integration| test/integration/server/scripts-checkpoint.test.ts > CP3 · approveScriptsForStep (T2.6): veredictos, v2 solo si edita, bloqueo server-side > T5.14 control POSITIVO: aprobar AL MENOS UNA sigue confirmando (el guard no encierra el camino feliz) 45ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  |web:integration| test/integration/server/scripts-checkpoint.test.ts > CP3 · approveScriptsForStep (T2.6): veredictos, v2 solo si edita, bloqueo server-side > T5.14: confirmar con 0 aprobadas se RECHAZA (validation_error) sin consumir el checkpoint ni transicionar nada
+ FAIL  |web:integration| test/integration/server/scripts-checkpoint.test.ts > CP3 · approveScriptsForStep (T2.6): veredictos, v2 solo si edita, bloqueo server-side > T5.14: aprobar SOLO variantes con flag bloqueante (0 quedarían scripted) también se RECHAZA — mismo error irreversible
+ Test Files  1 failed (1)
+      Tests  2 failed | 13 passed (15)
+AssertionError: promise resolved "{}" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
+--
+AssertionError: promise resolved "{}" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",

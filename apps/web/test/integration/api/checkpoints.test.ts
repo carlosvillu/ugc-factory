@@ -5,7 +5,7 @@
 // no solo el 200. NO es e2e/Playwright.
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { newUlid } from '@ugc/core/contracts';
-import type { N9Output } from '@ugc/core/contracts';
+import type { AdScript, GuardrailFlag, N5Output, N9Output } from '@ugc/core/contracts';
 import { stepExecuteJob } from '@ugc/core/jobs';
 import { planBatch } from '@ugc/core/strategy';
 import { SEED_LIBRARY, validateSeeds } from '@ugc/core/library';
@@ -20,6 +20,7 @@ import type { TestDatabase } from '@ugc/test-utils';
 import { PgBoss } from 'pg-boss';
 import {
   createBatchWithVariants,
+  createScriptsForBatch,
   ensureQueue,
   listBatchVariants,
   listPlanningInputs,
@@ -817,5 +818,259 @@ describe('CP4 · QA (T5.5c): las ops de checkpoint mutan step_run Y ad_variant a
     expect(res.status).toBe(409);
     // La variante sigue como estaba: el rollback deshizo cualquier escritura del efecto de dominio.
     expect(await variantStatusOf(variantId)).toBe('planned');
+  });
+});
+
+// ────────────────────────────────────────────────────────────────────────────────────────────
+// T5.14 — CP3 · CONFIRMAR CON 0 APROBADAS NO VARA EL LOTE, CONDUCIDO POR LA RUTA REAL.
+//
+// EL GAP QUE CIERRA (patrón T1.13: el arnés asertando en un SEAM más cómodo que la ruta). El fix de
+// T5.14 vive en `server/script-checkpoint.ts`: un guard que lanza `AppError('validation_error')` si 0
+// variantes quedarían `scripted`, ANTES de `applyScriptVerdicts`, DENTRO de `withDomainTransaction`. Su
+// MECANISMO —el que impide el varado irreversible— es que ese throw revierte la MISMA tx que envuelve
+// `approveStep`, de modo que la transición del step (N5 → succeeded) se DES-HACE y el checkpoint NO se
+// consume. Los 5 tests existentes de T5.14 assertan en el seam (`approveInTx` de
+// `server/scripts-checkpoint.test.ts`: variante `planned`, throw) o en componente UI; NINGUNO conduce
+// `POST /api/steps/:id/approve`. Eso deja sin proteger el eslabón real: que el guard corra DENTRO de la
+// tx del route handler y su throw des-consuma el checkpoint. Si alguien sacara el guard fuera de esa tx
+// (o partiera la transición del step en su propio commit), el seam-test seguiría VERDE y el bug de
+// producción (lote varado, guiones ya pagados, 2º POST 409) volvería. Estos tests conducen el HANDLER
+// REAL y afirman el desenlace observable por HTTP: 400 tipado + checkpoint intacto + 2º POST 400 (no 409).
+//
+// CONTROL NEGATIVO (verificado por el implementer, no vive en el árbol): revertir el guard —el throw
+// pasa a `return {}` como el bug original— pone ROJO el 2º test: `applyScriptVerdicts` corre, el
+// checkpoint se consume (N5 → succeeded) y el 2º POST devuelve 409 (`expected 409 to be 400`).
+describe('CP3 · confirmar con 0 aprobadas NO vara el lote — a nivel ROUTE (T5.14)', () => {
+  /** Un `AdScript` de contrato mínimo pero válido (mismo molde que el seam-test de T2.6): 3 escenas
+   *  hook/body/cta. Es lo que `createScriptsForBatch` persiste como v1 de cada variante del lote. */
+  function makeScriptContract(): AdScript {
+    const hook = 'Mira esto ya.';
+    return {
+      filenameCode: 'x-es-30s',
+      hook,
+      cta: 'Enlace abajo.',
+      scenes: [
+        {
+          t: 0,
+          seconds: 2,
+          segment: 'hook',
+          narration: hook,
+          visual: 'v',
+          camera: 'c',
+          emotion: 'e',
+        },
+        {
+          t: 2,
+          seconds: 5,
+          segment: 'body',
+          narration: 'Cuerpo.',
+          visual: 'v',
+          camera: 'c',
+          emotion: 'e',
+        },
+        {
+          t: 7,
+          seconds: 2,
+          segment: 'cta',
+          narration: 'Enlace abajo.',
+          visual: 'v',
+          camera: 'c',
+          emotion: 'e',
+        },
+      ],
+      subtitles: [{ start: 0, end: 2, text: hook }],
+      fullText: `${hook} Cuerpo. Enlace abajo.`,
+      wordCount: 6,
+      estSeconds: 9,
+      tone: 'directo',
+      language: 'es',
+      sharedBodyKey: 'body-key',
+    };
+  }
+
+  /**
+   * Siembra un CP3 REAL: un lote tier-TEST con `n` variantes + sus guiones v1 (sin flags bloqueantes) y un
+   * step N5 en `waiting_approval` (is_checkpoint) cuyo `output_refs` es el N5Output que apunta a TODAS ellas.
+   * Devuelve el `stepId` y los ids de variante — lo que el route lee para despachar `approveScriptsForStep`.
+   *
+   * Tier `test` a propósito (no `premium`): esta suite NO siembra persona ni galería, así que
+   * `isTierGenerationReady('test')` es false → aprobar guiones commitea los veredictos (variantes →
+   * `scripted`, step → `succeeded`) SIN intentar `buildVariantGenerationPlan` (que reventaría por falta de
+   * imagen de referencia). Así el control POSITIVO llega limpio a `scripted` y el 400 del caso negativo es
+   * inequívocamente el guard de T5.14, no un `PersonaWithoutReferenceImageError` disfrazado de validation_error.
+   *
+   * El `output_refs` referencia a TODAS las variantes del lote (guiones completos): si faltara alguno,
+   * saltaría ANTES el guard de lote truncado de T5.11 (otro `validation_error`) y el test mordería por el
+   * motivo equivocado.
+   */
+  async function seedScriptsCheckpoint(
+    n: number,
+  ): Promise<{ stepId: string; variantIds: string[] }> {
+    const [p] = await tdb.db.insert(projectTable).values(makeProject()).returning();
+    const [ua] = await tdb.db
+      .insert(urlAnalysis)
+      .values(makeUrlAnalysis({ projectId: p!.id }))
+      .returning();
+    const brief = makeBrief();
+    const [briefRow] = await tdb.db
+      .insert(productBrief)
+      .values(makeProductBrief({ urlAnalysisId: ua!.id, data: brief }))
+      .returning();
+
+    const { libraryHooks, personas, recipe } = await listPlanningInputs(tdb.db, 'test');
+    const config = {
+      angleIndices: Array.from({ length: n }, (_, i) => i),
+      hooksPerAngle: 1,
+      objective: 'hook_test' as const,
+      tier: 'test' as const,
+      languages: ['es'],
+      personaMode: 'rotate' as const,
+    };
+    const args = { brief, config, libraryHooks, personas, recipe: recipe! };
+    const preview = planBatch(args);
+    const created = await createBatchWithVariants(tdb.db, {
+      projectId: p!.id,
+      briefId: briefRow!.id,
+      tier: 'test',
+      objective: 'hook_test',
+      languages: ['es'],
+      costEstimatedCents: preview.estimate.total.maxCents,
+      composePlan: (batchId) => planBatch({ ...args, batchDiscriminator: batchId }).plan,
+    });
+    const variants = await listBatchVariants(tdb.db, created.batch.id);
+
+    // El step N5 se inserta ANTES que los guiones para pasar su id REAL como `origin_step_run_id` (idempotencia
+    // de N5). El seam-test usa un ULID huérfano; aquí el step existe de verdad, más fiel al camino de producción.
+    const runId = newUlid();
+    await tdb.pool.query(`INSERT INTO pipeline_run (id, project_id) VALUES ($1, $2)`, [
+      runId,
+      p!.id,
+    ]);
+    const stepId = newUlid();
+
+    const createdScripts = await createScriptsForBatch(tdb.db, {
+      stepRunId: stepId,
+      scripts: variants.map((v) => ({
+        variantId: v.id,
+        content: makeScriptContract(),
+        guardrailFlags: [] as GuardrailFlag[],
+      })),
+    });
+
+    // El N5Output que N5 dejó en su `output_refs`: una scriptRef por CADA variante (lote COMPLETO — sin esto
+    // saltaría el guard de T5.11 primero). Es lo que `approveScriptsForStep` valida por schema y lee.
+    const artifact: N5Output = {
+      batchId: created.batch.id,
+      scriptRefs: createdScripts.map((s, i) => ({
+        variantId: s.variantId,
+        scriptId: s.id,
+        filenameCode: variants[i]!.filenameCode,
+        blocked: false,
+      })),
+      status: 'scripted',
+      warnings: [],
+    };
+    await tdb.pool.query(
+      `INSERT INTO step_run (id, run_id, node_key, status, is_checkpoint, output_refs, depends_on)
+       VALUES ($1, $2, 'N5', 'waiting_approval', true, $3, '{}')`,
+      [stepId, runId, JSON.stringify(artifact)],
+    );
+    return { stepId, variantIds: variants.map((v) => v.id) };
+  }
+
+  /** La decisión `scripts` que el body de `/approve` lleva: un veredicto por variante con su `approved`. */
+  function scriptsDecision(verdicts: { variantId: string; approved: boolean }[]) {
+    return { decision: { kind: 'scripts' as const, verdicts } };
+  }
+
+  async function variantStatusOf(variantId: string): Promise<string> {
+    const { rows } = await tdb.pool.query<{ status: string }>(
+      `SELECT status FROM ad_variant WHERE id = $1`,
+      [variantId],
+    );
+    return rows[0]!.status;
+  }
+
+  it('POST con 0 aprobadas → 400 validation_error y el checkpoint NO se consume (step sigue waiting_approval)', async () => {
+    // El POST que la UI de «0/6 aprobadas» mandaba: lote completo, todas `approved:false`. El guard de
+    // T5.14 lanza DENTRO de `withDomainTransaction` → la tx entera (incluida la transición del step de
+    // `approveStep`) revierte. Se asserta el MENSAJE, no solo el 400: en este camino hay ≥3
+    // `validation_error` distintos (lote truncado T5.11, veredicto sin guion, y este) — el 400 pelado
+    // podría ir verde por el motivo equivocado y el control negativo sería teatro.
+    const { stepId, variantIds } = await seedScriptsCheckpoint(2);
+
+    const res = await call(
+      approvePost,
+      stepId,
+      `/api/steps/${stepId}/approve`,
+      scriptsDecision([
+        { variantId: variantIds[0]!, approved: false },
+        { variantId: variantIds[1]!, approved: false },
+      ]),
+    );
+
+    expect(res.status).toBe(400);
+    const body = (await res.json()) as { code: string; message: string };
+    expect(body.code).toBe('validation_error');
+    expect(body.message).toMatch(/no aprobaría NINGUNA variante/);
+    // EL INVARIANTE DEL FIX: el checkpoint sigue vivo (el throw des-consumió la transición). Si el guard
+    // corriera fuera de la tx del route, aquí el step estaría `succeeded` y el lote quedaría varado.
+    expect(await statusOf(stepId)).toBe('waiting_approval');
+    expect(await variantStatusOf(variantIds[0]!)).toBe('planned');
+    expect(await variantStatusOf(variantIds[1]!)).toBe('planned');
+  });
+
+  it('el lote sigue OPERABLE: un 2º POST idéntico vuelve a dar 400 (NO 409) — el checkpoint no se consumió', async () => {
+    // ESTE es el test que muerde el mecanismo T1.13: si el fix estuviera fuera de la tx (o el guard se
+    // quitara), el 1er POST habría consumido el checkpoint (N5 → succeeded) y el 2º daría 409
+    // invalid_transition (el step ya no está en `waiting_approval`). Que el 2º dé OTRA VEZ 400 prueba que
+    // el checkpoint sigue en `waiting_approval`, es decir que el throw revirtió la tx del route handler.
+    const { stepId, variantIds } = await seedScriptsCheckpoint(2);
+    const body = scriptsDecision([
+      { variantId: variantIds[0]!, approved: false },
+      { variantId: variantIds[1]!, approved: false },
+    ]);
+
+    // Los DOS POST se emiten ANTES de cualquier assert, y se asserta el 2º PRIMERO. El orden importa
+    // para el CONTROL NEGATIVO: sin el guard, el 1er POST devuelve 200 (consume el checkpoint) y el 2º
+    // da 409 — si se asertara `first` antes, el test abortaría en «expected 200 to be 400» sin llegar a
+    // exhibir el 409, que es LA evidencia que caracteriza este bug (checkpoint consumido). Asertando
+    // `second` primero, quitar el guard produce el literal `expected 409 to be 400`.
+    const first = await call(approvePost, stepId, `/api/steps/${stepId}/approve`, body);
+    const second = await call(approvePost, stepId, `/api/steps/${stepId}/approve`, body);
+
+    // EL ASSERT QUE MUERDE: el 2º POST vuelve a dar 400 (mismo guard), NO 409. Un 409 aquí significaría
+    // que el 1er POST consumió el checkpoint (N5 → succeeded) — exactamente el varado que T5.14 cierra.
+    expect(second.status).toBe(400);
+    expect(((await second.json()) as { code: string }).code).toBe('validation_error');
+    // El 1er POST también fue 400 (se conserva la cobertura): si hubiera sido 500, el 2º daría 400 igual
+    // y el test pasaría por el motivo equivocado — este assert descarta ese falso verde.
+    expect(first.status).toBe(400);
+    expect(await statusOf(stepId)).toBe('waiting_approval');
+  });
+
+  it('control POSITIVO: aprobar AL MENOS UNA variante limpia → 200 y el lote avanza (step succeeded, variante scripted)', async () => {
+    // El contraste que demuestra que el test no es «siempre 400»: con 1 aprobada el guard NO salta, la
+    // aprobación procede y el lote avanza. En tier-test no arranca run (no generation-ready) → sin
+    // `nextRunId`, que es el equivalente legítimo de «el lote avanza»: la transición del step Y la
+    // transición de la variante a `scripted` (el efecto de dominio CP3) SÍ commitean. Asertar `scripted`
+    // es lo que prueba que el despacho atravesó `approveScriptsForStep` por la ruta (no solo `approveStep`).
+    const { stepId, variantIds } = await seedScriptsCheckpoint(2);
+
+    const res = await call(
+      approvePost,
+      stepId,
+      `/api/steps/${stepId}/approve`,
+      scriptsDecision([
+        { variantId: variantIds[0]!, approved: true },
+        { variantId: variantIds[1]!, approved: false },
+      ]),
+    );
+
+    expect(res.status).toBe(200);
+    expect(await statusOf(stepId)).toBe('succeeded');
+    // La aprobada llegó a `scripted` (efecto de dominio CP3 atravesado por la ruta); la rechazada, no.
+    expect(await variantStatusOf(variantIds[0]!)).toBe('scripted');
+    expect(await variantStatusOf(variantIds[1]!)).not.toBe('scripted');
   });
 });

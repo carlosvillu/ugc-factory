@@ -1,0 +1,16 @@
+ × |web:integration| test/integration/api/checkpoints.test.ts > CP3 · confirmar con 0 aprobadas NO vara el lote — a nivel ROUTE (T5.14) > POST con 0 aprobadas → 400 validation_error y el checkpoint NO se consume (step sigue waiting_approval) 96ms
+   → expected 200 to be 400 // Object.is equality
+ × |web:integration| test/integration/api/checkpoints.test.ts > CP3 · confirmar con 0 aprobadas NO vara el lote — a nivel ROUTE (T5.14) > el lote sigue OPERABLE: un 2º POST idéntico vuelve a dar 400 (NO 409) — el checkpoint no se consumió 45ms
+   → expected 409 to be 400 // Object.is equality
+ ✓ |web:integration| test/integration/api/checkpoints.test.ts > CP3 · confirmar con 0 aprobadas NO vara el lote — a nivel ROUTE (T5.14) > control POSITIVO: aprobar AL MENOS UNA variante limpia → 200 y el lote avanza (step succeeded, variante scripted) 52ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  |web:integration| test/integration/api/checkpoints.test.ts > CP3 · confirmar con 0 aprobadas NO vara el lote — a nivel ROUTE (T5.14) > POST con 0 aprobadas → 400 validation_error y el checkpoint NO se consume (step sigue waiting_approval)
+AssertionError: expected 200 to be 400 // Object.is equality
+- Expected
+ FAIL  |web:integration| test/integration/api/checkpoints.test.ts > CP3 · confirmar con 0 aprobadas NO vara el lote — a nivel ROUTE (T5.14) > el lote sigue OPERABLE: un 2º POST idéntico vuelve a dar 400 (NO 409) — el checkpoint no se consumió
+AssertionError: expected 409 to be 400 // Object.is equality
+- Expected
+ Test Files  1 failed (1)
+      Tests  2 failed | 1 passed | 35 skipped (38)
+   Duration  3.47s (transform 678ms, setup 7ms, import 1.37s, tests 331ms, environment 0ms)
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run --config vitest.config.integration.ts test/integration/api/checkpoints.test.ts -t T5.14 --reporter=verbose

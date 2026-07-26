@@ -1,0 +1,17 @@
+===== POST #1 (0 approved) =====
+{"code":"validation_error","message":"confirmar CP3 del lote 01KYF3RG6CX5C8AAN5JW117KJ5 no aprobaría NINGUNA variante (0 quedarían `scripted`): sería un camino sin retorno —consumiría el checkpoint y dejaría el lote varado con sus guiones ya pagados. Aprueba al menos una variante (resuelve antes cualquier flag bloqueante) o reintenta la guionización.","request_id":"309e22f2-594f-44ea-9112-41d9bd148bfb"}
+HTTP_STATUS=400
+===== POST #2 (same 0-approved body) — must be 400 again, NOT 409 =====
+{"code":"validation_error","message":"confirmar CP3 del lote 01KYF3RG6CX5C8AAN5JW117KJ5 no aprobaría NINGUNA variante (0 quedarían `scripted`): sería un camino sin retorno —consumiría el checkpoint y dejaría el lote varado con sus guiones ya pagados. Aprueba al menos una variante (resuelve antes cualquier flag bloqueante) o reintenta la guionización.","request_id":"2aca6400-f566-4a12-a984-c1645e6cd112"}
+HTTP_STATUS=400
+
+===== DB verification (post-hoc, appended) =====
+-- N5 step status after BOTH 0-approved POSTs (still waiting_approval = checkpoint NOT consumed):
+[{"id":"01KYF3RG6SYH5XDCA7F2SR013J","status":"waiting_approval"}]
+-- variant statuses (all planned, none scripted = no forward transition, no spend):
+[{"status":"planned","n":"6"}]
+-- pipeline_run for generation of this batch (must be 0 = nothing paid):
+[{"gen_runs":"0"}]
+
+===== NOTA DEL VERIFIER =====
+La sección 'DB verification' de arriba es POST-HOC (se anadio tras los dos POST; el primer intento de tee entre POST#1 y POST#2 fallo por un cambio de cwd). El orden real verificado EN VIVO en la sesion fue: POST#1(400) -> lectura BD (N5=waiting_approval, 6 variantes=planned) -> POST#2(400, no 409). El estado de BD es identico en ambos momentos.

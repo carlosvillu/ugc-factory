@@ -261,13 +261,60 @@ const KENJI: PersonaSeed = {
   referenceImageCount: 2,
 };
 
+// ────────────────────────────────────────────────────────────────────────────────────────────────
+// LA PERSONA COMPLETA Y LISTA-PARA-GENERAR (T5.15: «el seed no contiene ninguna Persona capaz de
+// completar un lote generativo»).
+//
+// EL BUG DE PRODUCCIÓN QUE ARREGLA: N7c (avatar) exige `reference_image_ids` y N7b (voz) exige un
+// `voiceId` que fal ACEPTE. Las 10 placeholder de arriba tienen imágenes pero su `voiceId` es
+// `placeholder-*` (fal lo rechaza con 422): NINGUNA cumple las DOS a la vez, así que un usuario que
+// instala el proyecto no puede completar un lote generativo con el seed que trae. Esta persona SÍ
+// cumple ambas: imágenes sintéticas ≥2K (como las placeholder) Y un `voice_map` con `voiceId` REALES
+// de ElevenLabs que fal acepta.
+//
+// POR QUÉ NO LLEVA `(placeholder)` EN EL NOMBRE (deliberado): NO es un ejemplo sustituible — es la
+// persona que hace que el seed sea funcional de fábrica. Su personalidad NO abre con el aviso
+// administrativo del placeholder: no se pide al usuario que la borre. Es dato de catálogo real.
+//
+// ⚠ REPO PÚBLICO — LOS voiceId NO SON SECRETOS: `Rachel` (en) y `EXAVITQu4vr4xnSDxMaL` (Sarah, es) son
+// IDENTIFICADORES PÚBLICOS del catálogo de ElevenLabs, no credenciales — no dan acceso a nada sin una
+// API key aparte (esa vive solo en `.env`/`app_setting`, nunca en el árbol). Ambos ya están validados
+// contra fal REAL por verifiers anteriores (fal los acepta). El endpoint TTS del tier premium es
+// `fal-ai/elevenlabs/tts/eleven-v3` (library/seed-data.ts) → mismo proveedor `elevenlabs`, así que
+// `resolveVoiceTriple` acepta este voice_map y N7b resuelve para es y en.
+/** La persona COMPLETA del seed: NO-placeholder, con imágenes de referencia Y voces reales de fal. Es la
+ *  única del seed con la que un lote premium puede arrancar generación de fábrica (T5.15). */
+const MAYA: PersonaSeed = {
+  name: 'Maya',
+  ageRange: '25-34',
+  gender: 'female',
+  ethnicity: 'mixed',
+  style: 'natural',
+  descriptor: 'mujer de 30 años, rasgos mixtos, estética natural y cercana, sonrisa espontánea',
+  setting: 'salón luminoso con luz natural de ventana y una estantería sencilla detrás',
+  personality:
+    'Cercana y honesta, habla como una amiga que recomienda algo que de verdad le funcionó. ' +
+    'Nunca afirma ser clienta real: presenta el producto como demo estilo creator (§10.3, rol honesto).',
+  wardrobeNotes: 'Camiseta lisa de tono neutro y pelo suelto; mismo look en todos los CUTs.',
+  voiceMap: {
+    // voiceId REALES de ElevenLabs que fal acepta (validados contra fal real por verifiers anteriores):
+    // Sarah para es, Rachel para en. NO son placeholders → N7b resuelve sin 422.
+    es: { provider: 'elevenlabs', voiceId: 'EXAVITQu4vr4xnSDxMaL', label: 'ElevenLabs · Sarah' },
+    en: { provider: 'elevenlabs', voiceId: 'Rachel', label: 'ElevenLabs · Rachel' },
+  },
+  referenceImageCount: 3,
+};
+
 /**
- * Las personas que siembra `pnpm seed` — el CATÁLOGO de 10 (§17: el seed cubre es+en; T4.12 lo escala
- * de 2 a 10 con curación manual). Balance de locale por `descriptor`: 5 es (Lucía, Nerea, Carmen, Alex,
- * Rosa) · 5 en (Marcus, Priya, David, Chloe, Kenji). Diversidad de edad (18-24 → 55-64), género (incl.
- * `non_binary`) y etnia deliberada — un catálogo UGC creíble, no diez clones.
+ * Las personas que siembra `pnpm seed` — el CATÁLOGO: MAYA (T5.15: la única COMPLETA, imágenes + voces
+ * reales, con la que un lote premium arranca generación de fábrica) + las 10 placeholder de ejemplo (§17:
+ * el seed cubre es+en; T4.12 escaló de 2 a 10 con curación manual). Balance de locale por `descriptor`
+ * en las placeholder: 5 es (Lucía, Nerea, Carmen, Alex, Rosa) · 5 en (Marcus, Priya, David, Chloe, Kenji).
+ * Diversidad de edad (18-24 → 55-64), género (incl. `non_binary`) y etnia deliberada — un catálogo UGC
+ * creíble, no clones. MAYA va PRIMERA: es la que el usuario debe encontrar lista para usar.
  */
 export const PERSONA_SEEDS: readonly PersonaSeed[] = [
+  MAYA,
   LUCIA,
   MARCUS,
   NEREA,

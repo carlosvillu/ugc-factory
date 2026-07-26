@@ -51,6 +51,10 @@ export {
   // sin gastar reintentos — crítico en nodos de PAGO (un retry determinista = dinero
   // quemado para fallar igual).
   PermanentStepError,
+  // Subtipo de PermanentStepError (T5.15): la Persona no tiene imágenes de referencia (N7c/avatar).
+  // Fallo de DATOS accionable (le falta subir imágenes) — distinguido POR TIPO del resto de
+  // PermanentStepError para que CP3 lo mapee a `validation_error` (400) y no al 500 opaco.
+  PersonaWithoutReferenceImageError,
   // Backoff del retry + tope de reintentos de los N7 (T4.11, MONEY POINT deuda T4.10b): el
   // presupuesto de espera de la carrera-perdedora de dedup para que sobreviva la latencia peor-caso
   // del ganador (Veo, minutos) y deduplique en vez de fallar.

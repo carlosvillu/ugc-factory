@@ -2994,3 +2994,21 @@ T5.8 es el primer código que conduce un N8 vivo hasta el mux del máster (su op
   de correctness hecho, regla 5 auditada, lint/typecheck/format/knip verdes; falta gate de integración →
   ds-reviewer → verifier → cierre. T5.15/T5.16 sin empezar (T5.16 con causa raíz ya diagnosticada). Nada
   perdido, todo commiteado hasta 900b07d.
+- **T5.15 · parte CÓDIGO PURO implementada y verde SIN Docker** (avance durante el bloqueo de infra; NO
+  cerrada, falta gate de integración + verifier):
+  - **Persona MAYA** añadida al seed (`persona/seed-data.ts`): completa y no-placeholder,
+    `referenceImageCount:3` + `voice_map` con voiceId REALES de elevenlabs (`es→EXAVITQu4vr4xnSDxMaL`
+    Sarah, `en→Rachel`). Comentario en el árbol declara por qué NO son secretos (identificadores públicos
+    del catálogo, no credenciales — verificado, 0 secretos reales). Las 10 placeholder intactas.
+  - **500→400 accionable**: `PersonaWithoutReferenceImageError extends PermanentStepError`
+    (`orchestrator/executor.ts`), lanzado nombrando la persona en `build-variant-generation-plan.ts`,
+    mapeado a `AppError('validation_error')` en `checkpoint-errors.ts`. Discriminación por `instanceof`
+    (NO substring, anti-T1.8); el resto de `PermanentStepError` SIGUE cayendo al 500 (principio 9, no
+    colapsa tipos). Cubre también `/regenerate` (CP4) por compartir `toCheckpointError`.
+  - Controles negativos vistos ROJOS: (A) `referenceImageCount:0` a Maya → 3 tests del seed rojos; (B)
+    quitar la rama del error tipado en `toCheckpointError` → el test del 400 rojo + assert de passthrough
+    del genérico impide un futuro «mapea TODO a 400».
+  - Verde SIN Docker: lint/typecheck/format/knip + unit de core(1270)/web(282)/services(171).
+  - **PENDIENTE de Docker/fal** (otro ciclo): test de integración del 400 e2e (**solo se manifiesta en
+    tier premium** — `isTierGenerationReady` retorna temprano en test/standard ⇒ un test sobre no-premium
+    pasaría por la razón equivocada), Playwright permanente, y validación fresca con fal real de las voces.

@@ -19,7 +19,7 @@
 import { resolveComponentEndpoints, resolveVoiceTriple, type VoiceMap } from '@ugc/core/generation';
 import { AdScriptSchema } from '@ugc/core/contracts';
 import type { RecipeTier } from '@ugc/core/library';
-import { PermanentStepError } from '@ugc/core/orchestrator';
+import { PermanentStepError, PersonaWithoutReferenceImageError } from '@ugc/core/orchestrator';
 import type { VariantGenerationPlan } from '@ugc/core/orchestrator';
 import {
   getBatch,
@@ -136,8 +136,15 @@ export async function buildVariantGenerationPlan(
     }
     const imageAssetId = persona.referenceImageIds[0];
     if (imageAssetId === undefined) {
-      throw new PermanentStepError(
-        `buildVariantGenerationPlan: la Persona de la variante ${variantId} no tiene imagen de referencia (avatar)`,
+      // FALLO DE DATOS ACCIONABLE (T5.15, regla 5a): a la persona le faltan imágenes de referencia. Antes
+      // esto lanzaba un `PermanentStepError` genérico que en CP3 caía al 500 «error interno» — indistinguible
+      // de un fallo de cableado. El subtipo `PersonaWithoutReferenceImageError` (que SIGUE siendo
+      // `PermanentStepError` → el worker lo trata terminal, sin retry) permite que `toCheckpointError` lo
+      // mapee a `validation_error` (400) nombrando la persona, para que el usuario sepa QUÉ subir y dónde.
+      throw new PersonaWithoutReferenceImageError(
+        `la persona «${persona.name}» (${persona.id}) no tiene imágenes de referencia: ` +
+          'N7c/avatar no puede generar. Sube al menos una imagen de referencia a esta persona en /personas ' +
+          'antes de arrancar la generación.',
       );
     }
     await assertEndpointResolvable(db, endpoints.avatar, 'N7c (avatar)');

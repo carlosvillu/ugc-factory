@@ -42,6 +42,25 @@ export class PermanentStepError extends Error {
 }
 
 /**
+ * SUBTIPO de `PermanentStepError` para EL fallo de datos «la Persona no tiene imágenes de referencia»
+ * (T5.15, regla 5a). ES un `PermanentStepError` a propósito: reintentarlo no lo arregla (la persona
+ * seguirá sin imágenes) y el consumer del worker debe seguir llevándolo a `failed` TERMINAL — nunca
+ * reintentar y quemar recursos. Lo que aporta el subtipo es DISTINGUIRLO POR TIPO (principio 9) del resto
+ * de `PermanentStepError` (voz incoherente, endpoint-aún-etiqueta): esos son fallos de CABLEADO/config
+ * (500 opaco es correcto), mientras que este es un fallo de DATOS ACCIONABLE por el usuario —le falta subir
+ * imágenes a esa persona—. En la ruta de CP3 (`toCheckpointError`) se mapea a `validation_error` (400) con
+ * la persona nombrada, en vez de al 500 «error interno» genérico. NO string-matchea el mensaje: es el
+ * `instanceof` de una clase el que discrimina (evita la trampa T1.8 de reimplementar la detección por
+ * substring).
+ */
+export class PersonaWithoutReferenceImageError extends PermanentStepError {
+  constructor(message: string) {
+    super(message);
+    this.name = 'PersonaWithoutReferenceImageError';
+  }
+}
+
+/**
  * BACKOFF del re-encolado de un retry de CARRERA PERDEDORA de dedup (T4.11, MONEY POINT deuda T4.10b). El
  * consumer se lo pasa a `failStep` SOLO cuando el fallo del executor es un `LoserRaceError` (no en un
  * fallo transitorio normal, que reintenta inmediato como siempre); el `retry` (failed→queued) reencola el

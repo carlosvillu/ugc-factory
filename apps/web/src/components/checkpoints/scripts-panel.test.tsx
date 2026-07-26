@@ -235,6 +235,47 @@ describe('ScriptsPanel (CP3)', () => {
 
     await screen.findByRole('region', { name: /acme-hook01-es-12s/ });
     expect(document.querySelector('[data-slot="scripts-partial"]')).toBeNull();
-    expect(screen.getByRole('button', { name: 'Confirmar guiones' })).not.toBeDisabled();
+    // Nada aprobado aún ⇒ el botón arranca INERTE (T5.14). El "camino feliz" de T5.11 se prueba tras
+    // aprobar una variante (abajo, en el bloque de T5.14).
+    expect(screen.getByRole('button', { name: 'Confirmar guiones' })).toBeDisabled();
+  });
+
+  // ── T5.14 · CONFIRMAR CON 0 APROBADAS ────────────────────────────────────────────────────────────
+  // El BUG DE PRODUCCIÓN (la rama vecina a T5.11): confirmar sin aprobar ninguna variante consumía el
+  // checkpoint y dejaba el lote varado con sus guiones YA PAGADOS. El panel mostraba «0/N aprobadas» —el
+  // sistema lo sabía— pero el botón estaba HABILITADO. Ahora queda INERTE con 0 aprobadas (espejo del
+  // lote truncado), con el motivo a la vista. El servidor lo rechaza igual (validation_error).
+  test('T5.14: con 0 aprobadas el botón «Confirmar» está DESHABILITADO, con el motivo a la vista', async () => {
+    render(<ScriptsPanel stepId={STEP_ID} batchId={BATCH_ID} />);
+
+    await screen.findByRole('region', { name: /acme-hook01-es-12s/ });
+    // Lote completo, ninguna aprobada de entrada.
+    expect(document.querySelector('[data-slot="scripts-partial"]')).toBeNull();
+    expect(screen.getByRole('button', { name: 'Confirmar guiones' })).toBeDisabled();
+    // El MOTIVO está a la vista (el botón mudo era el misterio que dejaba varar el lote).
+    expect(screen.getByText(/Aprueba al menos una variante para confirmar/)).toBeInTheDocument();
+  });
+
+  test('T5.14 control negativo: aprobar UNA variante re-habilita «Confirmar» y quita el aviso', async () => {
+    const user = userEvent.setup();
+    render(<ScriptsPanel stepId={STEP_ID} batchId={BATCH_ID} />);
+
+    const cleanCard = await screen.findByRole('region', { name: /acme-hook01-es-12s/ });
+    const confirm = screen.getByRole('button', { name: 'Confirmar guiones' });
+    // Antes: inerte, con aviso.
+    expect(confirm).toBeDisabled();
+    expect(screen.getByText(/Aprueba al menos una variante para confirmar/)).toBeInTheDocument();
+
+    // Aprobar la variante limpia (sin flag bloqueante): 1/2 aprobadas.
+    await user.click(within(cleanCard).getByRole('checkbox', { name: 'Aprobar esta variante' }));
+
+    // Ahora hay una variante hacia delante: el botón se re-habilita y el aviso desaparece. (Si se
+    // revirtiera el guard, el botón habría estado habilitado desde el inicio con 0 aprobadas — el bug.)
+    await waitFor(() => {
+      expect(confirm).not.toBeDisabled();
+    });
+    expect(
+      screen.queryByText(/Aprueba al menos una variante para confirmar/),
+    ).not.toBeInTheDocument();
   });
 });

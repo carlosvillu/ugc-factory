@@ -458,18 +458,32 @@ describe('CP3 · approveScriptsForStep (T2.6): veredictos, v2 solo si edita, blo
   it('BLOQUEO SERVER-SIDE: `approved:true` sobre un guion con flag bloqueante NO lo pasa a scripted', async () => {
     // Un POST DIRECTO (saltándose la UI) que dice `approved:true` sobre una variante cuya v1 tiene un
     // flag bloqueante. El servidor NO se fía: relee los flags guardados y RECHAZA la transición.
-    const { output, variantIds } = await seedScriptedBatch(tdb.db, 1, [[BLOCKING_FLAG]]);
+    //
+    // El lote lleva DOS variantes —una limpia aprobada, una bloqueada— a propósito: así la limpia da al
+    // lote un camino hacia delante (1 `scripted`) y el foco de ESTE test —el bloqueo server-side de la
+    // otra— se aísla del guard de «0 aprobadas» de T5.14 (que, con la bloqueada SOLA, haría que 0
+    // quedaran `scripted` y el lote se rechazara entero — otro invariante, cubierto en su propio test).
+    // Premium: la limpia llega a `scripted` y arranca su run.
+    const { output, variantIds } = await seedScriptedBatch(
+      tdb.db,
+      2,
+      [[], [BLOCKING_FLAG]],
+      'premium',
+    );
 
     const result = await approveInTx(output, {
       kind: 'scripts',
-      verdicts: [{ variantId: variantIds[0]!, approved: true }],
+      verdicts: [
+        { variantId: variantIds[0]!, approved: true },
+        { variantId: variantIds[1]!, approved: true },
+      ],
     });
 
-    // La variante NO llega a `scripted`: el flag bloqueante manda sobre el `approved` del cliente.
-    expect(await variantStatus(variantIds[0]!)).not.toBe('scripted');
-    // T4.11: ninguna variante `scripted` ⇒ NO se arranca ningún run de generación (nada que generar).
-    expect(result.nextRunId).toBeUndefined();
-    expect(await pipelineRunCount()).toBe(0);
+    // La bloqueada NO llega a `scripted`: el flag bloqueante manda sobre el `approved` del cliente.
+    expect(await variantStatus(variantIds[1]!)).not.toBe('scripted');
+    // La limpia SÍ (el bloqueo es de la variante, no del lote) ⇒ hay una variante que generar.
+    expect(await variantStatus(variantIds[0]!)).toBe('scripted');
+    expect(result.nextRunId).toBeTruthy();
   });
 
   it('BLOQUEO SERVER-SIDE por RE-LINT: un `editedScript` que INTRODUCE un claim prohibido no se aprueba', async () => {
@@ -477,7 +491,11 @@ describe('CP3 · approveScriptsForStep (T2.6): veredictos, v2 solo si edita, blo
     // `approved:true` cuyo texto contiene un claim prohibido del brief. El servidor lo RE-LINTEA
     // (no se fía de que el cliente lo declare limpio) y rechaza la transición. El brief de makeBrief
     // trae banned=['cura el acné']; el guion lo dice.
-    const { output, variantIds } = await seedScriptedBatch(tdb.db, 1, [[]]);
+    //
+    // Dos variantes (premium): [0] limpia aprobada —el camino hacia delante del lote— y [1] la que se
+    // edita a un texto sucio. Así el foco (el RE-LINT bloquea a [1]) se aísla del guard de T5.14 (con [1]
+    // sola, 0 quedarían `scripted` y el lote se rechazaría entero).
+    const { output, variantIds } = await seedScriptedBatch(tdb.db, 2, [[], []], 'premium');
     const dirty = makeScriptContract({
       hook: 'Este sérum cura el acné.',
       fullText: 'Este sérum cura el acné. Cuerpo. Enlace abajo.',
@@ -514,20 +532,23 @@ describe('CP3 · approveScriptsForStep (T2.6): veredictos, v2 solo si edita, blo
 
     const result = await approveInTx(output, {
       kind: 'scripts',
-      verdicts: [{ variantId: variantIds[0]!, approved: true, editedScript: dirty }],
+      verdicts: [
+        { variantId: variantIds[0]!, approved: true },
+        { variantId: variantIds[1]!, approved: true, editedScript: dirty },
+      ],
     });
 
-    // La v2 se crea (el usuario editó), PERO la variante NO pasa a scripted: el re-lint server-side
-    // cazó el claim. Y la v2 guarda el flag bloqueante.
-    expect(await variantStatus(variantIds[0]!)).not.toBe('scripted');
+    // La v2 de la editada se crea (el usuario editó), PERO la variante NO pasa a scripted: el re-lint
+    // server-side cazó el claim. Y la v2 guarda el flag bloqueante.
+    expect(await variantStatus(variantIds[1]!)).not.toBe('scripted');
     const { rows } = await tdb.pool.query<{ guardrail_flags: GuardrailFlag[] }>(
       'SELECT guardrail_flags FROM ad_script WHERE variant_id = $1 AND version = 2',
-      [variantIds[0]],
+      [variantIds[1]],
     );
     expect(rows[0]?.guardrail_flags.some((f) => f.blocking)).toBe(true);
-    // T4.11: bloqueada ⇒ no arranca run.
-    expect(result.nextRunId).toBeUndefined();
-    expect(await pipelineRunCount()).toBe(0);
+    // La limpia SÍ pasa a scripted ⇒ el lote tiene camino hacia delante y arranca su run.
+    expect(await variantStatus(variantIds[0]!)).toBe('scripted');
+    expect(result.nextRunId).toBeTruthy();
   });
 
   it('control POSITIVO: editar un guion RESOLVIENDO el flag lo deja pasar a scripted', async () => {
@@ -651,5 +672,86 @@ describe('CP3 · approveScriptsForStep (T2.6): veredictos, v2 solo si edita, blo
     // Ni transición ni gasto: la variante NO queda `scripted` y no hay run de generación.
     expect(await variantStatus(variantIds[0]!)).not.toBe('scripted');
     expect(await pipelineRunCount()).toBe(0);
+  });
+
+  // ── T5.14 · CONFIRMAR CON 0 APROBADAS NO ES UN CAMINO SIN RETORNO ──────────────────────────────
+  // El BUG DE PRODUCCIÓN (lote 01KYEW7DE974AKZC6JMJDZE38D, la rama VECINA a T5.11 con peor desenlace):
+  // pulsar «Confirmar» sin aprobar ninguna variante devolvía 200 mudo, consumía el checkpoint
+  // (N5 → succeeded) y dejaba el lote VARADO —guiones ya pagados, 0 variantes hacia delante, 2º POST
+  // 409—. La causa: `scriptedVariantIds.length === 0` devolvía `{}` DESPUÉS de que `applyScriptVerdicts`
+  // ya había consumido el checkpoint, tratando «confirmé sin aprobar» (error irreversible) igual que
+  // «todo rechazado». Ahora es un `validation_error` TIPADO lanzado ANTES de `applyScriptVerdicts`.
+  //
+  // POR QUÉ EL THROW ES EL FIX (no un `{}`): al lanzar dentro de `withDomainTransaction`, la tx externa
+  // (que incluye la transición del step de `approveStep` en producción) revierte — el checkpoint NO se
+  // consume. A este nivel de SEAM se afirma el invariante equivalente: NADA transiciona, NADA se aplica,
+  // el error es tipado. El CONTROL NEGATIVO (revertir el fix → `applyScriptVerdicts` corre → el
+  // checkpoint se consumiría y el 2º POST daría 409) queda cubierto porque la asersión clave es que el
+  // throw ocurre ANTES de cualquier escritura: sin el guard, este test se pone ROJO (ya no lanza, y la
+  // variante quedaría o intacta pero con el checkpoint consumido — la irreversibilidad que se prohíbe).
+  it('T5.14: confirmar con 0 aprobadas se RECHAZA (validation_error) sin consumir el checkpoint ni transicionar nada', async () => {
+    // Lote COMPLETO (no truncado: esto NO es el caso de T5.11) con 2 variantes limpias, y el cliente
+    // confirma RECHAZANDO ambas (`approved:false`) — justo el POST que la UI de «0/6 aprobadas» mandaba.
+    const { output, variantIds } = await seedScriptedBatch(tdb.db, 2, [[], []], 'premium');
+
+    await expect(
+      approveInTx(output, {
+        kind: 'scripts',
+        verdicts: [
+          { variantId: variantIds[0]!, approved: false },
+          { variantId: variantIds[1]!, approved: false },
+        ],
+      }),
+    ).rejects.toThrow(/no aprobaría NINGUNA variante/);
+
+    // NADA transicionó (el checkpoint sigue vivo: en producción el step seguiría en `waiting_approval`
+    // y el 2º POST volvería a funcionar, no daría 409) y CERO gasto.
+    expect(await variantStatus(variantIds[0]!)).toBe('planned');
+    expect(await variantStatus(variantIds[1]!)).toBe('planned');
+    expect(await pipelineRunCount()).toBe(0);
+  });
+
+  it('T5.14: aprobar SOLO variantes con flag bloqueante (0 quedarían scripted) también se RECHAZA — mismo error irreversible', async () => {
+    // El caso gemelo: el cliente marca `approved:true` pero TODAS tienen flag bloqueante ⇒ el bloqueo
+    // server-side las deja fuera de `scripted`. El desenlace es idéntico al de «0 aprobadas» (0 hacia
+    // delante), así que comparte el guard: no puede consumir el checkpoint en silencio.
+    const { output, variantIds } = await seedScriptedBatch(
+      tdb.db,
+      2,
+      [[BLOCKING_FLAG], [BLOCKING_FLAG]],
+      'premium',
+    );
+
+    await expect(
+      approveInTx(output, {
+        kind: 'scripts',
+        verdicts: [
+          { variantId: variantIds[0]!, approved: true },
+          { variantId: variantIds[1]!, approved: true },
+        ],
+      }),
+    ).rejects.toThrow(/no aprobaría NINGUNA variante/);
+
+    expect(await variantStatus(variantIds[0]!)).toBe('planned');
+    expect(await variantStatus(variantIds[1]!)).toBe('planned');
+    expect(await pipelineRunCount()).toBe(0);
+  });
+
+  it('T5.14 control POSITIVO: aprobar AL MENOS UNA sigue confirmando (el guard no encierra el camino feliz)', async () => {
+    // El contraste que demuestra que el guard no es «nunca confirma»: aprobar 1 de 2 (la otra rechazada)
+    // SÍ pasa — hay una variante hacia delante, el lote no queda varado.
+    const { output, variantIds } = await seedScriptedBatch(tdb.db, 2, [[], []], 'premium');
+
+    const result = await approveInTx(output, {
+      kind: 'scripts',
+      verdicts: [
+        { variantId: variantIds[0]!, approved: true },
+        { variantId: variantIds[1]!, approved: false },
+      ],
+    });
+
+    expect(await variantStatus(variantIds[0]!)).toBe('scripted');
+    expect(await variantStatus(variantIds[1]!)).not.toBe('scripted');
+    expect(result.nextRunId).toBeTruthy();
   });
 });

@@ -203,17 +203,41 @@ async function applyDecidedVerdicts(
     };
   });
 
+  // ── GUARD DE DECISIÓN VACÍA (T5.14, invariante #1 llevado a «cero aprobadas») ─────────────────────
+  // Confirmar CP3 sin NINGUNA variante que quede `scripted` es un CAMINO SIN RETORNO si se deja pasar:
+  // `applyScriptVerdicts` (abajo) consumiría el checkpoint (N5 → succeeded), el panel desaparecería, un
+  // 2º POST daría 409 y el lote quedaría VARADO con sus guiones YA PAGADOS y cero variantes hacia
+  // delante. El bug de producción (lote 01KYEW7DE974AKZC6JMJDZE38D): el panel mostraba «0/6 aprobadas»
+  // —el sistema lo SABÍA— pero devolvía 200 mudo y consumía el checkpoint.
+  //
+  // POR QUÉ AQUÍ Y NO DESPUÉS: hay que RECHAZAR antes de `applyScriptVerdicts`, porque el throw revierte
+  // la tx externa (`withDomainTransaction`) —incluida la transición del step de `approveStep`— así que el
+  // checkpoint NO se consume y el 2º POST vuelve a funcionar. Espejo EXACTO del guard de lote truncado de
+  // T5.11 (arriba): el cliente manda su INTENCIÓN, el servidor DERIVA de los flags/estado y rechaza con un
+  // error TIPADO y accionable (regla 5a) — nunca un `{}` mudo.
+  //
+  // POR QUÉ «cero scripted» y no «cero approved»: `decided` ya aplicó el bloqueo server-side. «Confirmar
+  // con 0 aprobadas» y «confirmar aprobando SOLO variantes con flag bloqueante» acaban IGUAL —ninguna
+  // pasa a `scripted`, ningún camino hacia delante—: los dos son el mismo error irreversible y se
+  // rechazan igual. «Rechazar TODAS» NO es una acción legítima del producto: los guiones ya están
+  // pagados y la única salida del lote es generar; un lote con 0 `scripted` no tiene ninguna. Si algún
+  // día «descartar el lote» fuese una acción deseada, tendría su propio camino, nunca este.
+  const scriptedVariantIds = decided.filter((d) => d.approve).map((d) => d.variantId);
+  if (scriptedVariantIds.length === 0) {
+    throw new AppError(
+      'validation_error',
+      `confirmar CP3 del lote ${batchId} no aprobaría NINGUNA variante (0 quedarían \`scripted\`): ` +
+        'sería un camino sin retorno —consumiría el checkpoint y dejaría el lote varado con sus guiones ya pagados. ' +
+        'Aprueba al menos una variante (resuelve antes cualquier flag bloqueante) o reintenta la guionización.',
+    );
+  }
+
   await applyScriptVerdicts(db, { batchId, verdicts: decided });
 
   // ── EL ARRANQUE (BEST-EFFORT) DEL RUN DE GENERACIÓN N6→N7→N8→N9, EN ESTA MISMA TX ─────────────────
   // Las variantes que quedaron `scripted` (aprobadas + sin flag bloqueante) son EXACTAMENTE las que
   // `applyScriptVerdicts` transicionó — se derivan del `decided` (no se re-consulta la BD): `approve:true`.
-  const scriptedVariantIds = decided.filter((d) => d.approve).map((d) => d.variantId);
-  if (scriptedVariantIds.length === 0) {
-    // CP3 no aprobó ninguna variante (todo rechazado o bloqueado): no hay nada que generar. Como CP2
-    // sin decisión `matrix`, no se arranca ningún run.
-    return {};
-  }
+  // (Aquí `scriptedVariantIds.length > 0` garantizado por el guard de arriba.)
 
   // DESACOPLE DE ETAPAS (regla 6, 2026-07-23): aprobar guiones → `scripted` es un hecho sobre el TEXTO,
   // incondicional. Arrancar la generación es SEPARADO y solo tiene sentido si el tier es generation-ready.

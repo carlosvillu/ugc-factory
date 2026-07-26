@@ -132,11 +132,12 @@ export function ScriptsPanel({ stepId, batchId }: ScriptsPanelProps) {
   /** Envía los veredictos: `editedScript` SOLO para las variantes tocadas (el servidor no-opea sobre
    *  un guion idéntico igualmente, pero mandarlo solo cuando cambió es más honesto). El estado nuevo
    *  del step llega por SSE ⇒ este panel se desmonta solo (sin optimistic update, canvas.md §5). */
-  async function onSubmit(isPartial: boolean) {
+  async function onSubmit(blocked: boolean) {
     if (variants === null) return;
     // Cinturón: ni un submit programático (Enter en un form, un click sintético) cuela un lote
-    // truncado. La cerradura REAL es el servidor; esta es la del cliente (T5.11).
-    if (isPartial) return;
+    // truncado (T5.11) NI una confirmación sin aprobar ninguna (T5.14). La cerradura REAL es el
+    // servidor; esta es la del cliente.
+    if (blocked) return;
     setSubmitting(true);
     setSubmitError(null);
     try {
@@ -189,6 +190,15 @@ export function ScriptsPanel({ stepId, batchId }: ScriptsPanelProps) {
   // variantes. Ahora el recuento REAL es visible y la aprobación queda cerrada hasta completarlo (el
   // servidor la rechaza igual — esto es la capa que lo hace ENTENDIBLE, no el guard).
   const partial = variants.length < expectedCount;
+  // ── CERO APROBADAS (T5.14) ──────────────────────────────────────────────────────────────────────
+  // Confirmar sin aprobar NINGUNA variante era un camino SIN RETORNO: el servidor consumía el
+  // checkpoint (N5 → succeeded), el panel desaparecía y el lote quedaba varado con sus guiones YA
+  // PAGADOS y cero variantes hacia delante. El panel mostraba «0 / N aprobadas» — el sistema lo SABÍA.
+  // Ahora el botón queda INERTE con 0 aprobadas (espejo EXACTO del lote truncado de T5.11): el servidor
+  // lo rechaza igual con `validation_error`, esto evita que el usuario llegue a pedirlo. «Rechazar
+  // todas» no es una acción del producto: la única salida del lote es generar, y sin aprobar ninguna no
+  // hay ninguna. (No aplica si el lote está truncado: ahí manda el guard de T5.11.)
+  const noneApproved = !partial && approvedCount === 0;
 
   return (
     <div
@@ -263,6 +273,14 @@ export function ScriptsPanel({ stepId, batchId }: ScriptsPanelProps) {
             <span className="font-mono text-text-2">{approvedCount}</span> / {variants.length}{' '}
             aprobadas
           </span>
+          {/* T5.14: con 0 aprobadas, el MOTIVO de que «Confirmar» esté inerte está a la vista (el botón
+              mudo era el misterio que dejaba varar el lote). No se pinta si el lote está truncado
+              (ahí el aviso de T5.11 ya explica por qué). */}
+          {noneApproved ? (
+            <span className="text-micro text-danger" data-slot="none-approved">
+              Aprueba al menos una variante para confirmar.
+            </span>
+          ) : null}
         </div>
         <div className="flex items-center gap-3">
           {submitError !== null ? (
@@ -274,9 +292,11 @@ export function ScriptsPanel({ stepId, batchId }: ScriptsPanelProps) {
             type="button"
             data-slot="confirm-scripts"
             // T5.11: con el lote truncado el botón queda INERTE (el motivo está en el aviso de
-            // arriba). El servidor lo rechazaría igual; esto evita que el usuario llegue a pedirlo.
-            disabled={submitting || partial}
-            onClick={() => void onSubmit(partial)}
+            // arriba). T5.14: y con 0 aprobadas también (confirmar sin aprobar ninguna era un camino
+            // sin retorno). El servidor lo rechazaría igual en ambos casos; esto evita que el usuario
+            // llegue a pedirlo.
+            disabled={submitting || partial || noneApproved}
+            onClick={() => void onSubmit(partial || noneApproved)}
             variant="primary"
             className="border-success bg-success text-success-on hover:border-success hover:bg-success focus-visible:border-success"
           >

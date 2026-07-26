@@ -1,0 +1,86 @@
+
+ RUN  v4.1.10 /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads
+
+stdout | test/integration/persona-seed.test.ts > el seed REAL materializa una persona batch-ready con imágenes en BD (T5.15, Test A) > tras `seedPersonas` (el camino real) existe ≥1 persona con imágenes REALES en BD y voz que fal acepta
+seed: persona «Lucía (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYFAM1PGRR61QMC9RCERCAV7/01KYFAM1Q2MG4DZ7XCRKXNQS90.png)
+
+stdout | test/integration/persona-seed.test.ts > el seed REAL materializa una persona batch-ready con imágenes en BD (T5.15, Test A) > tras `seedPersonas` (el camino real) existe ≥1 persona con imágenes REALES en BD y voz que fal acepta
+seed: persona «Lucía (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYFAM1PGRR61QMC9RCERCAV7/01KYFAM1QJTBFV1C9E4TK71A2Z.png)
+
+stdout | test/integration/persona-seed.test.ts > el seed REAL materializa una persona batch-ready con imágenes en BD (T5.15, Test A) > tras `seedPersonas` (el camino real) existe ≥1 persona con imágenes REALES en BD y voz que fal acepta
+seed: persona «Marcus (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYFAM1QPT3YNP70ABBB14B56/01KYFAM1R5B9JMW365819670AC.png)
+
+stdout | test/integration/persona-seed.test.ts > el seed REAL materializa una persona batch-ready con imágenes en BD (T5.15, Test A) > tras `seedPersonas` (el camino real) existe ≥1 persona con imágenes REALES en BD y voz que fal acepta
+seed: persona «Marcus (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYFAM1QPT3YNP70ABBB14B56/01KYFAM1RPB49SDV2BKKY0N3ZQ.png)
+
+stdout | test/integration/persona-seed.test.ts > el seed REAL materializa una persona batch-ready con imágenes en BD (T5.15, Test A) > tras `seedPersonas` (el camino real) existe ≥1 persona con imágenes REALES en BD y voz que fal acepta
+seed: persona «Nerea (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYFAM1RTM735Q7TRSYG8QM8D/01KYFAM1S95KQ25NHV2KTBM468.png)
+
+stdout | test/integration/persona-seed.test.ts > el seed REAL materializa una persona batch-ready con imágenes en BD (T5.15, Test A) > tras `seedPersonas` (el camino real) existe ≥1 persona con imágenes REALES en BD y voz que fal acepta
+seed: persona «Nerea (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYFAM1RTM735Q7TRSYG8QM8D/01KYFAM1SRWX046E2ECZF8QQG3.png)
+
+stdout | test/integration/persona-seed.test.ts > el seed REAL materializa una persona batch-ready con imágenes en BD (T5.15, Test A) > tras `seedPersonas` (el camino real) existe ≥1 persona con imágenes REALES en BD y voz que fal acepta
+seed: persona «Carmen (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYFAM1SW9R8G7HHTC2WW9VH5/01KYFAM1TB4R55DVBWPFP1R0SX.png)
+
+stdout | test/integration/persona-seed.test.ts > el seed REAL materializa una persona batch-ready con imágenes en BD (T5.15, Test A) > tras `seedPersonas` (el camino real) existe ≥1 persona con imágenes REALES en BD y voz que fal acepta
+seed: persona «Carmen (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYFAM1SW9R8G7HHTC2WW9VH5/01KYFAM1TTX8N058GE4RZ34DRX.png)
+
+stdout | test/integration/persona-seed.test.ts > el seed REAL materializa una persona batch-ready con imágenes en BD (T5.15, Test A) > tras `seedPersonas` (el camino real) existe ≥1 persona con imágenes REALES en BD y voz que fal acepta
+seed: persona «Alex (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYFAM1TYP9EHTH8Q7RPYQPY8/01KYFAM1VC2ZYNCWVC18F2J9Q0.png)
+
+stdout | test/integration/persona-seed.test.ts > el seed REAL materializa una persona batch-ready con imágenes en BD (T5.15, Test A) > tras `seedPersonas` (el camino real) existe ≥1 persona con imágenes REALES en BD y voz que fal acepta
+seed: persona «Alex (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYFAM1TYP9EHTH8Q7RPYQPY8/01KYFAM1VWCC8BC2JPMRECX8ZH.png)
+
+stdout | test/integration/persona-seed.test.ts > el seed REAL materializa una persona batch-ready con imágenes en BD (T5.15, Test A) > tras `seedPersonas` (el camino real) existe ≥1 persona con imágenes REALES en BD y voz que fal acepta
+seed: persona «Rosa (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYFAM1W0J1P5028824ASJFFM/01KYFAM1WEHAJTT5K5DJN89PER.png)
+
+stdout | test/integration/persona-seed.test.ts > el seed REAL materializa una persona batch-ready con imágenes en BD (T5.15, Test A) > tras `seedPersonas` (el camino real) existe ≥1 persona con imágenes REALES en BD y voz que fal acepta
+seed: persona «Rosa (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYFAM1W0J1P5028824ASJFFM/01KYFAM1X1VNWK4ZS96WDC1MQX.png)
+
+stdout | test/integration/persona-seed.test.ts > el seed REAL materializa una persona batch-ready con imágenes en BD (T5.15, Test A) > tras `seedPersonas` (el camino real) existe ≥1 persona con imágenes REALES en BD y voz que fal acepta
+seed: persona «Priya (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYFAM1X7K5AKSTFYR4A9941E/01KYFAM1XNE4BHHEKF18HHY07B.png)
+
+stdout | test/integration/persona-seed.test.ts > el seed REAL materializa una persona batch-ready con imágenes en BD (T5.15, Test A) > tras `seedPersonas` (el camino real) existe ≥1 persona con imágenes REALES en BD y voz que fal acepta
+seed: persona «Priya (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYFAM1X7K5AKSTFYR4A9941E/01KYFAM1Y5ZYPA52CQQP5KBSZP.png)
+
+stdout | test/integration/persona-seed.test.ts > el seed REAL materializa una persona batch-ready con imágenes en BD (T5.15, Test A) > tras `seedPersonas` (el camino real) existe ≥1 persona con imágenes REALES en BD y voz que fal acepta
+seed: persona «David (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYFAM1Y85JZ326KE8198H5KC/01KYFAM1YPHTKT6QJTQTD34JYA.png)
+
+stdout | test/integration/persona-seed.test.ts > el seed REAL materializa una persona batch-ready con imágenes en BD (T5.15, Test A) > tras `seedPersonas` (el camino real) existe ≥1 persona con imágenes REALES en BD y voz que fal acepta
+seed: persona «David (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYFAM1Y85JZ326KE8198H5KC/01KYFAM1Z544TTSWB4RXB0T01B.png)
+
+stdout | test/integration/persona-seed.test.ts > el seed REAL materializa una persona batch-ready con imágenes en BD (T5.15, Test A) > tras `seedPersonas` (el camino real) existe ≥1 persona con imágenes REALES en BD y voz que fal acepta
+seed: persona «Chloe (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYFAM1Z9QY46Q4AJYZGM557Q/01KYFAM1ZRWA2ZE3W785BYPQKW.png)
+
+stdout | test/integration/persona-seed.test.ts > el seed REAL materializa una persona batch-ready con imágenes en BD (T5.15, Test A) > tras `seedPersonas` (el camino real) existe ≥1 persona con imágenes REALES en BD y voz que fal acepta
+seed: persona «Chloe (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYFAM1Z9QY46Q4AJYZGM557Q/01KYFAM2079RGTVKQEMRAKC38Z.png)
+
+stdout | test/integration/persona-seed.test.ts > el seed REAL materializa una persona batch-ready con imágenes en BD (T5.15, Test A) > tras `seedPersonas` (el camino real) existe ≥1 persona con imágenes REALES en BD y voz que fal acepta
+seed: persona «Kenji (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYFAM20B8QCTJQKW6TJDZPC3/01KYFAM20S5X9YZ4XZ07ZTP5BH.png)
+
+stdout | test/integration/persona-seed.test.ts > el seed REAL materializa una persona batch-ready con imágenes en BD (T5.15, Test A) > tras `seedPersonas` (el camino real) existe ≥1 persona con imágenes REALES en BD y voz que fal acepta
+seed: persona «Kenji (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYFAM20B8QCTJQKW6TJDZPC3/01KYFAM219VM7T20SFDV8TMAM2.png)
+
+ ❯ |db:integration| test/integration/persona-seed.test.ts (4 tests | 1 failed | 3 skipped) 423ms
+     × tras `seedPersonas` (el camino real) existe ≥1 persona con imágenes REALES en BD y voz que fal acepta 366ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |db:integration| test/integration/persona-seed.test.ts > el seed REAL materializa una persona batch-ready con imágenes en BD (T5.15, Test A) > tras `seedPersonas` (el camino real) existe ≥1 persona con imágenes REALES en BD y voz que fal acepta
+AssertionError: el seed REAL no dejó NINGUNA persona batch-ready en BD: un usuario recién instalado no puede completar un lote generativo: expected 0 to be greater than 0
+ ❯ test/integration/persona-seed.test.ts:172:7
+    170|       readyRows.length,
+    171|       'el seed REAL no dejó NINGUNA persona batch-ready en BD: un usua…
+    172|     ).toBeGreaterThan(0);
+       |       ^
+    173|
+    174|     // Y para CADA persona batch-ready, las imágenes que su `reference…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 3 skipped (4)
+   Start at  15:42:48
+   Duration  3.04s (transform 230ms, setup 7ms, import 799ms, tests 423ms, environment 0ms)
+

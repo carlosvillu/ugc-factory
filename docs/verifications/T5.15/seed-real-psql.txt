@@ -1,0 +1,36 @@
+=== 1. Maya: nombre (sin sufijo placeholder), voice_map, nº de reference_image_ids ===
+ name |                                                                                          voice_map                                                                                          | n_ref_ids 
+------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------
+ Maya | {"en": {"label": "ElevenLabs · Rachel", "voiceId": "Rachel", "provider": "elevenlabs"}, "es": {"label": "ElevenLabs · Sarah", "voiceId": "EXAVITQu4vr4xnSDxMaL", "provider": "elevenlabs"}} |         3
+(1 row)
+
+
+=== 2. Filas asset REALES que resuelven de Maya (kind=reference_image) — debe ser 3 ===
+
+=== 3. Dimensiones de las imágenes de Maya (guard >=2K en el path REAL) ===
+ERROR:  operator does not exist: text = text[]
+LINE 4:   AND id = ANY( (SELECT reference_image_ids FROM persona WHE...
+                 ^
+HINT:  No operator matches the given name and argument types. You might need to add explicit type casts.
+
+=== 4. PREDICADO BATCH-READY sobre TODAS las personas sembradas ===
+(>=1 reference_image_id materializado en asset AND ninguna voz placeholder-*)
+ERROR:  operator does not exist: text = text[]
+LINE 4:   AND a.id = ANY( (SELECT reference_image_ids FROM persona W...
+                   ^
+HINT:  No operator matches the given name and argument types. You might need to add explicit type casts.
+         name         | n_ids | materialized | no_placeholder_voice | batch_ready 
+----------------------+-------+--------------+----------------------+-------------
+ Maya                 |     3 |            3 | t                    | t
+ Alex (placeholder)   |     2 |            2 | f                    | f
+ Carmen (placeholder) |     2 |            2 | f                    | f
+ Chloe (placeholder)  |     2 |            2 | f                    | f
+ David (placeholder)  |     2 |            2 | f                    | f
+ Kenji (placeholder)  |     2 |            2 | f                    | f
+ Lucía (placeholder)  |     2 |            2 | f                    | f
+ Marcus (placeholder) |     2 |            2 | f                    | f
+ Nerea (placeholder)  |     2 |            2 | f                    | f
+ Priya (placeholder)  |     2 |            2 | f                    | f
+ Rosa (placeholder)   |     2 |            2 | f                    | f
+(11 rows)
+

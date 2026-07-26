@@ -1,0 +1,104 @@
+
+ RUN  v4.1.10 /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads
+
+(node:88399) DeprecationWarning: Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+stdout | test/integration/api/cp3-seed-persona.test.ts
+seed: persona «Maya» ← imagen sintética 1638×2048 px (personas/01KYFAK8V22TD2VQKFJNN4T1QB/01KYFAK8VKEY3VXF85ZTX52X0Z.png)
+
+stdout | test/integration/api/cp3-seed-persona.test.ts
+seed: persona «Maya» ← imagen sintética 1638×2048 px (personas/01KYFAK8V22TD2VQKFJNN4T1QB/01KYFAK8W6KJV53G8TKZHPG5Q0.png)
+
+stdout | test/integration/api/cp3-seed-persona.test.ts
+seed: persona «Maya» ← imagen sintética 1638×2048 px (personas/01KYFAK8V22TD2VQKFJNN4T1QB/01KYFAK8WQ95VHR3TAPS86ZMPE.png)
+
+stdout | test/integration/api/cp3-seed-persona.test.ts
+seed: persona «Lucía (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYFAK8WWDXKB6Q9HW6K39Y3A/01KYFAK8XASSXZ0JZHK4BBRHVJ.png)
+
+stdout | test/integration/api/cp3-seed-persona.test.ts
+seed: persona «Lucía (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYFAK8WWDXKB6Q9HW6K39Y3A/01KYFAK8XTREVWBBV4ZBVM37D3.png)
+
+stdout | test/integration/api/cp3-seed-persona.test.ts
+seed: persona «Marcus (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYFAK8XY6QYZBQ44DF9AKGW2/01KYFAK8YC996RV6BHM79CPKNA.png)
+
+stdout | test/integration/api/cp3-seed-persona.test.ts
+seed: persona «Marcus (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYFAK8XY6QYZBQ44DF9AKGW2/01KYFAK8YXCJD8H0PR0HYD7Z8D.png)
+
+stdout | test/integration/api/cp3-seed-persona.test.ts
+seed: persona «Nerea (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYFAK8Z1W28PFJ7906JY42D7/01KYFAK8ZF0HGGFDPJKY2BNQ7G.png)
+
+stdout | test/integration/api/cp3-seed-persona.test.ts
+seed: persona «Nerea (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYFAK8Z1W28PFJ7906JY42D7/01KYFAK8ZZZG5M5E8ZH5Z1KPH6.png)
+
+stdout | test/integration/api/cp3-seed-persona.test.ts
+seed: persona «Carmen (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYFAK9064X0KXXQT7VMSWEKH/01KYFAK90N9JMC8CCVJAYHNGEM.png)
+
+stdout | test/integration/api/cp3-seed-persona.test.ts
+seed: persona «Carmen (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYFAK9064X0KXXQT7VMSWEKH/01KYFAK917YKZBWHQ7H1ERVENY.png)
+
+stdout | test/integration/api/cp3-seed-persona.test.ts
+seed: persona «Alex (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYFAK91BDPWF3E12SPNK3V43/01KYFAK91TXHEFY6Z0070BWYQ2.png)
+
+stdout | test/integration/api/cp3-seed-persona.test.ts
+seed: persona «Alex (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYFAK91BDPWF3E12SPNK3V43/01KYFAK92AE2D8XXZAKZ66CAK6.png)
+
+stdout | test/integration/api/cp3-seed-persona.test.ts
+seed: persona «Rosa (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYFAK92D4E9PE2YWDVQ3R79W/01KYFAK92VBVEXVKN1MJB58QHF.png)
+
+stdout | test/integration/api/cp3-seed-persona.test.ts
+seed: persona «Rosa (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYFAK92D4E9PE2YWDVQ3R79W/01KYFAK93AT9T9XCYM9M9MAPMW.png)
+
+stdout | test/integration/api/cp3-seed-persona.test.ts
+seed: persona «Priya (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYFAK93D07BVY8WE528MGCPF/01KYFAK93VBVYFH8HT4X39G9Z1.png)
+
+stdout | test/integration/api/cp3-seed-persona.test.ts
+seed: persona «Priya (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYFAK93D07BVY8WE528MGCPF/01KYFAK94A6G38QDPQY1FSDAG3.png)
+
+stdout | test/integration/api/cp3-seed-persona.test.ts
+seed: persona «David (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYFAK94EDNWC78PR7DV3QCBR/01KYFAK94WDFDJ7C6HY982GXVA.png)
+
+stdout | test/integration/api/cp3-seed-persona.test.ts
+seed: persona «David (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYFAK94EDNWC78PR7DV3QCBR/01KYFAK95CJD6XK8GVWQQHRH43.png)
+
+stdout | test/integration/api/cp3-seed-persona.test.ts
+seed: persona «Chloe (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYFAK95GE7E71ZYFVSD98Z9B/01KYFAK95Z62F2C3YEWJ9HM5H4.png)
+
+stdout | test/integration/api/cp3-seed-persona.test.ts
+seed: persona «Chloe (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYFAK95GE7E71ZYFVSD98Z9B/01KYFAK96GGH7EW6ZH8X8F3RWR.png)
+
+stdout | test/integration/api/cp3-seed-persona.test.ts
+seed: persona «Kenji (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYFAK96ME58DF1BB7G3HR171/01KYFAK973DEM4PJZDTP0E0C1D.png)
+
+stdout | test/integration/api/cp3-seed-persona.test.ts
+seed: persona «Kenji (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYFAK96ME58DF1BB7G3HR171/01KYFAK97JEXR6RKRKHVWHSGEV.png)
+
+ ❯ |web:integration| test/integration/api/cp3-seed-persona.test.ts (2 tests | 1 failed | 1 skipped) 714ms
+     × POST /approve con una persona sin imágenes → 400 validation_error accionable (nombra la persona, dice qué subir) 125ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |web:integration| test/integration/api/cp3-seed-persona.test.ts > CP3 · una persona sin imagen produce un 400 accionable, no un 500 (T5.15, Test C) > POST /approve con una persona sin imágenes → 400 validation_error accionable (nombra la persona, dice qué subir)
+AssertionError: expected 500 to be 400 // Object.is equality
+
+- Expected
++ Received
+
+- 400
++ 500
+
+ ❯ test/integration/api/cp3-seed-persona.test.ts:411:24
+    409|
+    410|     // EL ESLABÓN DE RUTA (el que el unit del mapeo NO cubre): 400, no…
+    411|     expect(res.status).toBe(400);
+       |                        ^
+    412|     const bodyJson = (await res.json()) as { code: string; message: st…
+    413|     expect(bodyJson.code).toBe('validation_error');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 1 skipped (2)
+   Start at  15:42:21
+   Duration  4.00s (transform 697ms, setup 7ms, import 1.43s, tests 714ms, environment 0ms)
+

@@ -1,0 +1,86 @@
+
+ RUN  v4.1.10 /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads
+
+stdout | test/integration/api/cp3-seed-persona.test.ts
+seed: persona «Lucía (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYFAMM3YMZHAJNH2317VNQAS/01KYFAMM4F7BVMJGZK55BYW5JZ.png)
+
+stdout | test/integration/api/cp3-seed-persona.test.ts
+seed: persona «Lucía (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYFAMM3YMZHAJNH2317VNQAS/01KYFAMM53NT68Y5ATQ0AAY78A.png)
+
+stdout | test/integration/api/cp3-seed-persona.test.ts
+seed: persona «Marcus (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYFAMM5705G20391FG74GKGT/01KYFAMM5PP4NHT2XJ55ETC5A5.png)
+
+stdout | test/integration/api/cp3-seed-persona.test.ts
+seed: persona «Marcus (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYFAMM5705G20391FG74GKGT/01KYFAMM663E0PRCPYVB6SCQGQ.png)
+
+stdout | test/integration/api/cp3-seed-persona.test.ts
+seed: persona «Nerea (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYFAMM6A6A56FR7C7CG2BTD8/01KYFAMM6TF6XAHTRF3AG6HJKQ.png)
+
+stdout | test/integration/api/cp3-seed-persona.test.ts
+seed: persona «Nerea (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYFAMM6A6A56FR7C7CG2BTD8/01KYFAMM79K42YMX4AQPYHSHKP.png)
+
+stdout | test/integration/api/cp3-seed-persona.test.ts
+seed: persona «Carmen (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYFAMM7DXQQD4NKCNSHDE36N/01KYFAMM7VDSG06141KFXXZ2YM.png)
+
+stdout | test/integration/api/cp3-seed-persona.test.ts
+seed: persona «Carmen (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYFAMM7DXQQD4NKCNSHDE36N/01KYFAMM8APTDCR8TZRSH80ZT8.png)
+
+stdout | test/integration/api/cp3-seed-persona.test.ts
+seed: persona «Alex (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYFAMM8EXT5FCBRCZ3CG0SQ4/01KYFAMM8YY4R638K81Q9B86QC.png)
+
+stdout | test/integration/api/cp3-seed-persona.test.ts
+seed: persona «Alex (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYFAMM8EXT5FCBRCZ3CG0SQ4/01KYFAMM9FKZJ91E9KAF4FQ1AM.png)
+
+stdout | test/integration/api/cp3-seed-persona.test.ts
+seed: persona «Rosa (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYFAMM9M3EQB4EJ6SFXB7KV0/01KYFAMMA5C8S7YV2B6C5M0NM8.png)
+
+stdout | test/integration/api/cp3-seed-persona.test.ts
+seed: persona «Rosa (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYFAMM9M3EQB4EJ6SFXB7KV0/01KYFAMMANAT0RA8S71XYPFDEC.png)
+
+stdout | test/integration/api/cp3-seed-persona.test.ts
+seed: persona «Priya (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYFAMMAR1ENVVFBRG0NE5JYM/01KYFAMMB6B4GZ0FGD3T8012JA.png)
+
+stdout | test/integration/api/cp3-seed-persona.test.ts
+seed: persona «Priya (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYFAMMAR1ENVVFBRG0NE5JYM/01KYFAMMBPN5303Q5JWS7HTT4W.png)
+
+stdout | test/integration/api/cp3-seed-persona.test.ts
+seed: persona «David (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYFAMMBS1221X99K3PZ6C7ZA/01KYFAMMC7QMDXRSRFDBQY2ZT4.png)
+
+stdout | test/integration/api/cp3-seed-persona.test.ts
+seed: persona «David (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYFAMMBS1221X99K3PZ6C7ZA/01KYFAMMCRTXJM95AV4PNSJXAK.png)
+
+stdout | test/integration/api/cp3-seed-persona.test.ts
+seed: persona «Chloe (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYFAMMCZJ2TSZAPEDTVY7XCE/01KYFAMMDEJX4DDM2BSFBJR2Q3.png)
+
+stdout | test/integration/api/cp3-seed-persona.test.ts
+seed: persona «Chloe (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYFAMMCZJ2TSZAPEDTVY7XCE/01KYFAMMDYZX2GX4ZZBJ7ETFXZ.png)
+
+stdout | test/integration/api/cp3-seed-persona.test.ts
+seed: persona «Kenji (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYFAMME2TS9YC6C2DKFNCC29/01KYFAMMEGPM2FV6EFAYNSGGBH.png)
+
+stdout | test/integration/api/cp3-seed-persona.test.ts
+seed: persona «Kenji (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYFAMME2TS9YC6C2DKFNCC29/01KYFAMMF105D96J3XFSB9H11M.png)
+
+ ❯ |web:integration| test/integration/api/cp3-seed-persona.test.ts (2 tests | 1 failed | 1 skipped) 555ms
+     × desde el seed limpio: CP3 aprueba y ARRANCA el run de generación (200 + nextRunId + N6 encolado) 13ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |web:integration| test/integration/api/cp3-seed-persona.test.ts > CP3 · un lote premium arranca generación con la persona batch-ready del seed (T5.15, Test B) > desde el seed limpio: CP3 aprueba y ARRANCA el run de generación (200 + nextRunId + N6 encolado)
+AssertionError: el seed no dejó NINGUNA persona batch-ready: un usuario recién instalado no puede arrancar un lote: expected undefined to be defined
+ ❯ test/integration/api/cp3-seed-persona.test.ts:330:7
+    328|       readyRow,
+    329|       'el seed no dejó NINGUNA persona batch-ready: un usuario recién …
+    330|     ).toBeDefined();
+       |       ^
+    331|
+    332|     // Un lote premium (generation-ready) fijado a esa persona, hasta …
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 1 skipped (2)
+   Start at  15:43:06
+   Duration  3.85s (transform 711ms, setup 7ms, import 1.44s, tests 555ms, environment 0ms)
+

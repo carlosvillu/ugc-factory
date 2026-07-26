@@ -1,0 +1,15 @@
+=== Filas asset REALES de Maya (kind=reference_image) + dimensiones (guard >=2K path real) ===
+             id             | width | height | bytes |   mime    
+----------------------------+-------+--------+-------+-----------
+ 01KYFAFQMYWTFC0R7YFNN3291D |       |        | 84774 | image/png
+ 01KYFAFQNHMXB3JR5CMDW4HQ0Y |       |        | 84634 | image/png
+ 01KYFAFQP2ZPSSZED99SKG8EPJ |       |        | 84647 | image/png
+(3 rows)
+
+
+=== count materializado de Maya (debe ser 3, = array_length de reference_image_ids) ===
+ materialized | declared_ids 
+--------------+--------------
+            3 |            3
+(1 row)
+

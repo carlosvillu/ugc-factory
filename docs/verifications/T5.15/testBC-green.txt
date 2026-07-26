@@ -1,0 +1,11 @@
+
+ RUN  v4.1.10 /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads
+
+(node:88215) DeprecationWarning: Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+
+ Test Files  1 passed (1)
+      Tests  2 passed (2)
+   Start at  15:42:02
+   Duration  4.19s (transform 733ms, setup 8ms, import 1.49s, tests 869ms, environment 0ms)
+

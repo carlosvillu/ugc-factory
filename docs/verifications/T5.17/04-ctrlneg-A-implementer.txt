@@ -1,0 +1,42 @@
+
+ RUN  v4.1.10 /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/worker
+
+ ❯ |worker:integration| test/integration/n7-provider-error-detail.test.ts (2 tests | 2 failed) 15604ms
+     × RAMA PERMANENTE — un 403 «saldo agotado» → step_run.error CONTIENE el detail de causa, no solo "403: Forbidden" 610ms
+     × RAMA RETRYABLE — un 429 que AGOTA maxRetries → failed terminal con el detail persistido (misma clase de bug) 14875ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |worker:integration| test/integration/n7-provider-error-detail.test.ts > el `detail` del error de fal llega a step_run.error (T5.17, diagnóstico de causa) > RAMA PERMANENTE — un 403 «saldo agotado» → step_run.error CONTIENE el detail de causa, no solo "403: Forbidden"
+AssertionError: expected undefined to be defined
+ ❯ test/integration/n7-provider-error-detail.test.ts:181:25
+    179|     // message. El operador lee «Exhausted balance» de la evidencia qu…
+    180|     // externo. Sin el fix (revert de `toProviderError`), este campo e…
+    181|     expect(err?.detail).toBeDefined();
+       |                         ^
+    182|     expect(err?.detail).toContain('Exhausted balance');
+    183|     // El status HTTP también viaja separado (Entrega: junto a message…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  |worker:integration| test/integration/n7-provider-error-detail.test.ts > el `detail` del error de fal llega a step_run.error (T5.17, diagnóstico de causa) > RAMA RETRYABLE — un 429 que AGOTA maxRetries → failed terminal con el detail persistido (misma clase de bug)
+AssertionError: expected undefined to be defined
+ ❯ test/integration/n7-provider-error-detail.test.ts:225:25
+    223|     // T5.17 — el detail y el status del 429 llegan a `step_run.error`…
+    224|     expect(err?.status).toBe(429);
+    225|     expect(err?.detail).toBeDefined();
+       |                         ^
+    226|     expect(err?.detail).toContain('Rate limit exceeded');
+    227|     expect(err?.message).toMatch(/429/);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed (2)
+   Start at  18:41:56
+   Duration  18.73s (transform 537ms, setup 9ms, import 1.30s, tests 15.60s, environment 0ms)
+
+undefined
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/worker:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run --config vitest.config.integration.ts test/integration/n7-provider-error-detail.test.ts

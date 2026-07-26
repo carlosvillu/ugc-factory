@@ -1,0 +1,9 @@
+
+ RUN  v4.1.10 /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/worker
+
+
+ Test Files  1 passed (1)
+      Tests  2 passed (2)
+   Start at  18:40:12
+   Duration  16.83s (transform 507ms, setup 6ms, import 1.22s, tests 13.63s, environment 0ms)
+

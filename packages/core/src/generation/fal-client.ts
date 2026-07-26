@@ -83,15 +83,27 @@ export const DEFAULT_FAL_MAX_RETRIES = 1;
  * Fallo del PROVEEDOR: fal respondió con un status de error (4xx/5xx/401/429) o la request
  * no llegó (timeout/red). Lleva el `status` HTTP cuando lo hay (undefined en timeout/red).
  * Es la rama REINTENTABLE — el servicio la mapea a `generation.status='failed'` reintentable.
+ *
+ * `detail` (T5.17): el CUERPO del error que devuelve fal, NORMALIZADO a texto legible. El SDK lanza
+ * `ApiError { status, body }` donde `body` es el JSON de causa: `{"detail":"User is locked. Reason:
+ * Exhausted balance."}` (403 saldo), el detalle de credencial (401) o el array de validación (422). El
+ * `status` HTTP solo dice "permanente"; el `detail` dice POR QUÉ (saldo/credencial/input) — es la única
+ * pista que discrimina la acción del operador (recargar saldo vs revisar key vs corregir input). Antes se
+ * descartaba y la causa de un 403 real quedó indiagnosticable (el bug de regla 5a que esta clase cierra).
  */
 export class FalProviderError extends Error {
   readonly status: number | undefined;
   readonly retryAfterMs: number | undefined;
-  constructor(message: string, opts: { status?: number; retryAfterMs?: number } = {}) {
+  readonly detail: string | undefined;
+  constructor(
+    message: string,
+    opts: { status?: number; retryAfterMs?: number; detail?: string } = {},
+  ) {
     super(message);
     this.name = 'FalProviderError';
     this.status = opts.status;
     this.retryAfterMs = opts.retryAfterMs;
+    this.detail = opts.detail;
   }
 }
 
@@ -477,16 +489,53 @@ function readStatus(payload: unknown): string | null {
   return null;
 }
 
+/** Tope de tamaño del `detail` persistido (T5.17): el body de fal es un error corto, pero un provider
+ *  puede devolver un HTML/stack largo. Se recorta a ~2 KB — suficiente para leer la causa, acotado para no
+ *  inflar el jsonb de `step_run.error` (mismo criterio que `sanitizeCausedBy`, observability.md §6). */
+const FAL_ERROR_DETAIL_MAX_CHARS = 2000;
+
+/**
+ * Normaliza el `body` de un `ApiError` del SDK de fal a TEXTO legible para persistir en `step_run.error`
+ * (T5.17). El body varía por caso: OBJETO en 403/401 (`{"detail":"User is locked..."}`) y en 422
+ * (`ValidationError` con `{detail: ValidationErrorInfo[]}` — un ARRAY de objetos, no un string), STRING si
+ * el provider devolvió texto plano, y `undefined` cuando la respuesta de error no era JSON (el SDK no le
+ * pasa body al `ApiError`, response.js). Se serializa el body ENTERO (no se pluckea `body.detail`: en 422
+ * es un array y un pluck daría `[object Object]`), recortado al tope. Devuelve `undefined` si no hay body
+ * — nunca la cadena `"undefined"`. No hay secretos en el body de fal (es detalle de error del proveedor),
+ * pero por si un provider los reflejara, esto NO incluye headers/credenciales: solo el body de respuesta.
+ */
+function normalizeErrorBody(body: unknown): string | undefined {
+  // `JSON.stringify` de un objeto/array siempre devuelve string; el único caso vacío que sobrevive es un
+  // string literal '' (los casos que darían `undefined` —undefined, funciones, símbolos— no son body de fal).
+  if (body == null || body === '') return undefined;
+  const raw = typeof body === 'string' ? body : JSON.stringify(body);
+  // T5.17: redacta query-strings (signed URLs del input reflejado en 422) — step_run.error llega al browser.
+  // Deuda: sanitizeCausedBy completo (observability.md §6) es tarea propia [[t517-observability]].
+  const text = raw.replace(/(https?:\/\/[^\s"]+?)\?[^\s"]*/g, '$1?<redacted>');
+  return text.length > FAL_ERROR_DETAIL_MAX_CHARS
+    ? `${text.slice(0, FAL_ERROR_DETAIL_MAX_CHARS)}…`
+    : text;
+}
+
 /** Convierte un error del SDK de fal en `FalProviderError` con el status HTTP si lo trae. El
  *  SDK lanza `ApiError { status, body }` en fallos HTTP; se captura el status para la rama
- *  reintentable y el `Retry-After` si es un 429. */
+ *  reintentable, el `Retry-After` si es un 429, y el `body` normalizado como `detail` (T5.17): la
+ *  única pista que discrimina saldo/credencial/input. El `status` solo dice "permanente"; el `body`
+ *  dice por qué. Antes se leía SOLO `status` y se descartaba `body` → la causa quedaba indiagnosticable. */
 function toProviderError(err: unknown): FalProviderError {
   const message = err instanceof Error ? err.message : JSON.stringify(err);
+  const detail =
+    err !== null && typeof err === 'object' && 'body' in err
+      ? normalizeErrorBody(err.body)
+      : undefined;
   if (err !== null && typeof err === 'object' && 'status' in err) {
     const { status } = err;
     if (typeof status === 'number') {
-      return new FalProviderError(`fal submit falló con ${String(status)}: ${message}`, { status });
+      return new FalProviderError(`fal submit falló con ${String(status)}: ${message}`, {
+        status,
+        detail,
+      });
     }
   }
-  return new FalProviderError(`fal submit falló: ${message}`);
+  return new FalProviderError(`fal submit falló: ${message}`, { detail });
 }

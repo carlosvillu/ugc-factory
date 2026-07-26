@@ -1,0 +1,375 @@
+diff --git a/README.md b/README.md
+index 3ff6683..234db2c 100644
+--- a/README.md
++++ b/README.md
+@@ -170,7 +170,7 @@ El desarrollo va por fases, tarea a tarea, con verificación observable en cada
+ 
+ <!-- STATUS-TABLE:BEGIN — generado por `pnpm readme:status`, no editar a mano -->
+ 
+-**96 de 120 tareas cerradas (80 %).**
++**96 de 121 tareas cerradas (79 %).**
+ 
+ | Fase                                                  | Qué entrega                                                                         | Estado         |
+ | ----------------------------------------------------- | ----------------------------------------------------------------------------------- | -------------- |
+@@ -183,7 +183,7 @@ El desarrollo va por fases, tarea a tarea, con verificación observable en cada
+ | **F2b** · Deuda destapada por la verificación de T2.3 | Deuda destapada por la verificación de T2.3 (acordada con el usuario el 2026-07-14) | ✅ Completa    |
+ | **F3** · Galería de prompts y compilador              | Templates facetados → prompts auditables                                            | ✅ Completa    |
+ | **F4** · Generación fal.ai                            | Los assets de una variante, generados de verdad en fal.ai                           | ✅ Completa    |
+-| **F5** · Composición, QA y export                     | El anuncio 9:16 completo, con subtítulos, C2PA y QA                                 | 🔨 21/23       |
++| **F5** · Composición, QA y export                     | El anuncio 9:16 completo, con subtítulos, C2PA y QA                                 | 🔨 21/24       |
+ | **F6** · Publicación                                  | Publicar en TikTok/IG y crear el ad draft                                           | ⬜ No empezada |
+ | **F7** · Medición y flywheel                          | Métricas por variante + kill/scale + scoring                                        | ⬜ No empezada |
+ | **F8** · Operación y extensiones                      | Backups, retención, observabilidad, MCP                                             | ⬜ No empezada |
+diff --git a/apps/worker/src/consumers/step-execute.ts b/apps/worker/src/consumers/step-execute.ts
+index 5192752..6dae6d9 100644
+--- a/apps/worker/src/consumers/step-execute.ts
++++ b/apps/worker/src/consumers/step-execute.ts
+@@ -25,7 +25,7 @@ import {
+   shouldPause,
+   transition,
+ } from '@ugc/core/orchestrator';
+-import { LoserRaceError } from '@ugc/core/generation';
++import { FalProviderError, LoserRaceError } from '@ugc/core/generation';
+ import type { Logger } from '@ugc/core';
+ import { findRunAutopilot, findStep, findStepsByIds } from '@ugc/db';
+ import type { DbClient } from '@ugc/db';
+@@ -47,6 +47,20 @@ export interface StepConsumerDeps {
+   retryBackoffMs?: number;
+ }
+ 
++/**
++ * T5.17: extrae `status`/`detail` del proveedor de un error del executor, sea cual sea la rama por la que
++ * cae. `PermanentStepError` (403/401/422 reclasificado en `_shared.ts`) y `FalProviderError` (429/timeout
++ * retryable que llega crudo) transportan AMBOS estos campos tipados; este helper los lee por `instanceof`
++ * —NUNCA regex del mensaje (trampa T1.8)— para que las dos ramas de persistencia escriban lo mismo. Un
++ * error sin origen de proveedor (refusal de N3, BD caída) devuelve `{}` y la forma persistida no cambia.
++ */
++function extractProviderFields(err: unknown): { status?: number; detail?: string } {
++  if (err instanceof PermanentStepError || err instanceof FalProviderError) {
++    return { status: err.status, detail: err.detail };
++  }
++  return {};
++}
++
+ export async function registerStepConsumer({
+   boss,
+   db,
+@@ -210,8 +224,19 @@ export async function registerStepConsumer({
+             'step.execute: fallo PERMANENTE del executor; failed terminal SIN retry',
+           );
+           try {
++            // T5.17: persistir `status`/`detail` del proveedor JUNTO a `message`/`permanent` cuando el
++            // fallo permanente los trae (403/401/422 de fal → `PermanentStepError` con campos poblados por
++            // `_shared.ts`). El operador lee del `step_run.error` la CAUSA concreta (saldo/credencial/input),
++            // no solo "403". Un `PermanentStepError` no-proveedor (refusal de N3, contrato roto) los deja
++            // `undefined` y no se añaden — la forma del error persistido no cambia para esos casos.
++            const provider = extractProviderFields(err);
+             await transition(transitionDeps, stepId, 'fail', {
+-              error: { message: err.message, permanent: true },
++              error: {
++                message: err.message,
++                permanent: true,
++                ...(provider.status !== undefined ? { status: provider.status } : {}),
++                ...(provider.detail !== undefined ? { detail: provider.detail } : {}),
++              },
+             });
+           } catch (failErr) {
+             if (failErr instanceof IllegalTransitionError) {
+@@ -235,7 +260,16 @@ export async function registerStepConsumer({
+           // T0.11: persistir el mensaje del throw del executor en `step_run.error`
+           // para el visor de logs del panel del canvas. Solo el `message` (un jsonb
+           // pequeño); el stack no viaja por SSE.
+-          const errorInfo = { message: err instanceof Error ? err.message : String(err) };
++          // T5.17: un `FalProviderError` RETRYABLE (429/5xx/timeout no reclasificado) también trae
++          // `status`/`detail` del proveedor. Si agota `max_retries` y va a `failed` terminal por esta rama,
++          // la causa debe sobrevivir igual que en la rama permanente — misma clase de bug (observabilidad de
++          // dinero). `extractProviderFields` lee los campos TIPADOS (instanceof, no regex del mensaje).
++          const provider = extractProviderFields(err);
++          const errorInfo = {
++            message: err instanceof Error ? err.message : String(err),
++            ...(provider.status !== undefined ? { status: provider.status } : {}),
++            ...(provider.detail !== undefined ? { detail: provider.detail } : {}),
++          };
+           // `retryBackoffMs` (T4.11, MONEY POINT): el re-encolado del retry espera este backoff SOLO
+           // cuando el fallo es una CARRERA PERDEDORA de dedup (`LoserRaceError`). Ahí es load-bearing:
+           // sin él el loser agotaría `max_retries` en milisegundos mientras el ganador Veo sigue
+diff --git a/apps/worker/src/executors/_shared.ts b/apps/worker/src/executors/_shared.ts
+index 9b9fe01..7022b41 100644
+--- a/apps/worker/src/executors/_shared.ts
++++ b/apps/worker/src/executors/_shared.ts
+@@ -119,10 +119,18 @@ export async function runGenerationStep<T>(fn: () => Promise<T>): Promise<T> {
+       err.status !== undefined &&
+       FAL_PERMANENT_STATUSES.has(err.status)
+     ) {
++      // T5.17: propaga `status` y `detail` (el body de fal, ya normalizado) al `PermanentStepError` para que
++      // lleguen SEPARADOS a `step_run.error` (step-execute.ts). El mensaje accionable pide DISCRIMINAR
++      // saldo/credencial/input; el `detail` («User is locked. Reason: Exhausted balance.») es la pista que lo
++      // permite. Se leen los CAMPOS TIPADOS de `FalProviderError` (NO se regex-parsea el mensaje: la trampa
++      // T1.8 de reimplementar la detección por substring). El mensaje también incluye el detail para el visor
++      // de logs (T1.16), pero la persistencia estructurada es lo que el operador consulta.
+       throw new PermanentStepError(
+         `Fallo PERMANENTE del proveedor (fal, HTTP ${String(err.status)}): ${err.message}. ` +
++          (err.detail !== undefined ? `Causa (fal): ${err.detail}. ` : '') +
+           `No se reintenta (cada envío se factura). Resuélvelo en Ajustes → fal (recarga saldo si es "balance"/403, ` +
+           `revisa la fal-key si es credencial/401, corrige el input si es validación/422) y re-dispara el run.`,
++        { status: err.status, detail: err.detail },
+       );
+     }
+     throw err;
+diff --git a/packages/core/src/generation/fal-client.test.ts b/packages/core/src/generation/fal-client.test.ts
+index 4488e47..8e34713 100644
+--- a/packages/core/src/generation/fal-client.test.ts
++++ b/packages/core/src/generation/fal-client.test.ts
+@@ -216,6 +216,120 @@ describe('FalClient — errores tipados por CAUSA (principio 9)', () => {
+   });
+ });
+ 
++// T5.17 — el `detail` (body del ApiError de fal) sobrevive en `FalProviderError`. Estos tests recorren el
++// SDK REAL (`@fal-ai/client` → `ApiError { status, body }` → `toProviderError`): msw sirve la respuesta de
++// error con el content-type y el body EXACTOS que fal emite, para que el fixture no sea verde-decorativo.
++// CLAVE (control negativo): el `message` del ApiError es `body.message || statusText` (response.js del SDK)
++// → un body SIN `.message` produce `message = statusText` («Forbidden»); el detalle SOLO puede llegar por el
++// campo `detail`. Si el fixture metiera «Exhausted balance» en el message, revertir el fix seguiría verde.
++describe('FalClient.submit — el `detail` del error de fal se captura (T5.17, diagnóstico de causa)', () => {
++  /** Registra en msw una respuesta de error JSON al submit (el scaffold repetido de estos casos). El body
++   *  va por-test; `statusText` sin `.message` en el body → el SDK pone `message = statusText`, así que el
++   *  detalle SOLO puede llegar por `body`. */
++  function respondWith(status: number, statusText: string, body: unknown): void {
++    server.use(
++      http.post(
++        SUBMIT_URL,
++        () =>
++          new HttpResponse(JSON.stringify(body), {
++            status,
++            statusText,
++            headers: { 'content-type': 'application/json' },
++          }),
++      ),
++    );
++  }
++
++  it('403 «saldo agotado»: body objeto {"detail":...} → FalProviderError.detail lo contiene (no solo el status)', async () => {
++    // body SIN `.message` → el SDK pone message='Forbidden'; el detalle SOLO viaja por `body.detail`. Es
++    // EXACTAMENTE la forma del bug real (403 «User is locked»).
++    respondWith(403, 'Forbidden', { detail: 'User is locked. Reason: Exhausted balance.' });
++    const err = await client()
++      .submit(ENDPOINT, { prompt: 'x' })
++      .catch((e: unknown) => e);
++    expect(err).toBeInstanceOf(FalProviderError);
++    expect((err as FalProviderError).status).toBe(403);
++    // El detalle está presente y nombra la causa concreta — la pista que discrimina saldo vs credencial.
++    expect((err as FalProviderError).detail).toContain('Exhausted balance');
++    // Y NO llegó de contrabando por el message: el message es el statusText del SDK, sin la causa.
++    expect((err as FalProviderError).message).not.toContain('Exhausted balance');
++  });
++
++  it('422 validación: body {detail: [...]} (ARRAY de objetos) → detail serializa el array entero, no [object Object]', async () => {
++    respondWith(422, 'Unprocessable Entity', {
++      detail: [{ loc: ['body', 'voice_id'], msg: 'invalid voice id', type: 'value_error' }],
++    });
++    const err = await client()
++      .submit(ENDPOINT, { prompt: 'x' })
++      .catch((e: unknown) => e);
++    expect(err).toBeInstanceOf(FalProviderError);
++    expect((err as FalProviderError).status).toBe(422);
++    // El array de validación se serializa entero (JSON.stringify del body), legible por el operador —
++    // NO se pluckea `body.detail` (daría `[object Object]` en un array de objetos).
++    const detail = (err as FalProviderError).detail;
++    expect(detail).toContain('invalid voice id');
++    expect(detail).not.toContain('[object Object]');
++  });
++
++  it('422 con URL firmada reflejada del input → la query-string se REDACTA (step_run.error llega al browser)', async () => {
++    // El body de 422 de fal refleja el input, que incluye signed URLs (audio_url/image_url con query
++    // firmada). Como `step_run.error` viaja al navegador, el `sig` NO debe persistirse: se redacta la query.
++    respondWith(422, 'Unprocessable Entity', {
++      detail: [
++        {
++          loc: ['body', 'audio_url'],
++          msg: 'invalid audio at https://fal.media/files/x.mp3?sig=SECRET123&exp=999',
++          type: 'value_error',
++        },
++      ],
++    });
++    const err = await client()
++      .submit(ENDPOINT, { prompt: 'x' })
++      .catch((e: unknown) => e);
++    expect(err).toBeInstanceOf(FalProviderError);
++    const detail = (err as FalProviderError).detail;
++    // La causa sigue legible (el path del fichero), pero la firma NO está — se cambió por `?<redacted>`.
++    expect(detail).toContain('fal.media/files/x.mp3');
++    expect(detail).not.toContain('SECRET123');
++    expect(detail).toContain('?<redacted>');
++  });
++
++  it('respuesta de error NO-JSON (content-type text/plain): el SDK no pasa body → detail es undefined, NO "undefined"', async () => {
++    // 400 (no 5xx) para NO tocar el reintento del SDK: sin content-type JSON, `defaultResponseHandler`
++    // lanza `ApiError` SIN body (response.js) → `toProviderError` no encuentra `body` → detail undefined.
++    server.use(
++      http.post(
++        SUBMIT_URL,
++        () =>
++          new HttpResponse('Bad Request', {
++            status: 400,
++            statusText: 'Bad Request',
++            headers: { 'content-type': 'text/plain' },
++          }),
++      ),
++    );
++    const err = await client({ maxRetries: 0 })
++      .submit(ENDPOINT, { prompt: 'x' })
++      .catch((e: unknown) => e);
++    expect(err).toBeInstanceOf(FalProviderError);
++    expect((err as FalProviderError).status).toBe(400);
++    // Sin body JSON el SDK no adjunta `body` al ApiError → detail ausente. Nunca la cadena literal.
++    expect((err as FalProviderError).detail).toBeUndefined();
++  });
++
++  it('body enorme: el detail se recorta a un tamaño acotado (guarda de tamaño del jsonp de step_run.error)', async () => {
++    const huge = 'x'.repeat(5000);
++    respondWith(403, 'Forbidden', { detail: huge });
++    const err = await client()
++      .submit(ENDPOINT, { prompt: 'x' })
++      .catch((e: unknown) => e);
++    expect(err).toBeInstanceOf(FalProviderError);
++    // Recortado: mucho menor que el body original de ~5 KB (tope ~2 KB + el «…»).
++    expect(((err as FalProviderError).detail ?? '').length).toBeLessThan(2100);
++    expect((err as FalProviderError).detail).toContain('…');
++  });
++});
++
+ describe('FalClient — 429 + Retry-After (§4.4)', () => {
+   it('espera lo que dice Retry-After y reintenta UNA vez', async () => {
+     let calls = 0;
+diff --git a/packages/core/src/generation/fal-client.ts b/packages/core/src/generation/fal-client.ts
+index 3ee11e2..ea88266 100644
+--- a/packages/core/src/generation/fal-client.ts
++++ b/packages/core/src/generation/fal-client.ts
+@@ -83,15 +83,27 @@ export const DEFAULT_FAL_MAX_RETRIES = 1;
+  * Fallo del PROVEEDOR: fal respondió con un status de error (4xx/5xx/401/429) o la request
+  * no llegó (timeout/red). Lleva el `status` HTTP cuando lo hay (undefined en timeout/red).
+  * Es la rama REINTENTABLE — el servicio la mapea a `generation.status='failed'` reintentable.
++ *
++ * `detail` (T5.17): el CUERPO del error que devuelve fal, NORMALIZADO a texto legible. El SDK lanza
++ * `ApiError { status, body }` donde `body` es el JSON de causa: `{"detail":"User is locked. Reason:
++ * Exhausted balance."}` (403 saldo), el detalle de credencial (401) o el array de validación (422). El
++ * `status` HTTP solo dice "permanente"; el `detail` dice POR QUÉ (saldo/credencial/input) — es la única
++ * pista que discrimina la acción del operador (recargar saldo vs revisar key vs corregir input). Antes se
++ * descartaba y la causa de un 403 real quedó indiagnosticable (el bug de regla 5a que esta clase cierra).
+  */
+ export class FalProviderError extends Error {
+   readonly status: number | undefined;
+   readonly retryAfterMs: number | undefined;
+-  constructor(message: string, opts: { status?: number; retryAfterMs?: number } = {}) {
++  readonly detail: string | undefined;
++  constructor(
++    message: string,
++    opts: { status?: number; retryAfterMs?: number; detail?: string } = {},
++  ) {
+     super(message);
+     this.name = 'FalProviderError';
+     this.status = opts.status;
+     this.retryAfterMs = opts.retryAfterMs;
++    this.detail = opts.detail;
+   }
+ }
+ 
+@@ -477,16 +489,53 @@ function readStatus(payload: unknown): string | null {
+   return null;
+ }
+ 
++/** Tope de tamaño del `detail` persistido (T5.17): el body de fal es un error corto, pero un provider
++ *  puede devolver un HTML/stack largo. Se recorta a ~2 KB — suficiente para leer la causa, acotado para no
++ *  inflar el jsonb de `step_run.error` (mismo criterio que `sanitizeCausedBy`, observability.md §6). */
++const FAL_ERROR_DETAIL_MAX_CHARS = 2000;
++
++/**
++ * Normaliza el `body` de un `ApiError` del SDK de fal a TEXTO legible para persistir en `step_run.error`
++ * (T5.17). El body varía por caso: OBJETO en 403/401 (`{"detail":"User is locked..."}`) y en 422
++ * (`ValidationError` con `{detail: ValidationErrorInfo[]}` — un ARRAY de objetos, no un string), STRING si
++ * el provider devolvió texto plano, y `undefined` cuando la respuesta de error no era JSON (el SDK no le
++ * pasa body al `ApiError`, response.js). Se serializa el body ENTERO (no se pluckea `body.detail`: en 422
++ * es un array y un pluck daría `[object Object]`), recortado al tope. Devuelve `undefined` si no hay body
++ * — nunca la cadena `"undefined"`. No hay secretos en el body de fal (es detalle de error del proveedor),
++ * pero por si un provider los reflejara, esto NO incluye headers/credenciales: solo el body de respuesta.
++ */
++function normalizeErrorBody(body: unknown): string | undefined {
++  // `JSON.stringify` de un objeto/array siempre devuelve string; el único caso vacío que sobrevive es un
++  // string literal '' (los casos que darían `undefined` —undefined, funciones, símbolos— no son body de fal).
++  if (body == null || body === '') return undefined;
++  const raw = typeof body === 'string' ? body : JSON.stringify(body);
++  // T5.17: redacta query-strings (signed URLs del input reflejado en 422) — step_run.error llega al browser.
++  // Deuda: sanitizeCausedBy completo (observability.md §6) es tarea propia [[t517-observability]].
++  const text = raw.replace(/(https?:\/\/[^\s"]+?)\?[^\s"]*/g, '$1?<redacted>');
++  return text.length > FAL_ERROR_DETAIL_MAX_CHARS
++    ? `${text.slice(0, FAL_ERROR_DETAIL_MAX_CHARS)}…`
++    : text;
++}
++
+ /** Convierte un error del SDK de fal en `FalProviderError` con el status HTTP si lo trae. El
+  *  SDK lanza `ApiError { status, body }` en fallos HTTP; se captura el status para la rama
+- *  reintentable y el `Retry-After` si es un 429. */
++ *  reintentable, el `Retry-After` si es un 429, y el `body` normalizado como `detail` (T5.17): la
++ *  única pista que discrimina saldo/credencial/input. El `status` solo dice "permanente"; el `body`
++ *  dice por qué. Antes se leía SOLO `status` y se descartaba `body` → la causa quedaba indiagnosticable. */
+ function toProviderError(err: unknown): FalProviderError {
+   const message = err instanceof Error ? err.message : JSON.stringify(err);
++  const detail =
++    err !== null && typeof err === 'object' && 'body' in err
++      ? normalizeErrorBody(err.body)
++      : undefined;
+   if (err !== null && typeof err === 'object' && 'status' in err) {
+     const { status } = err;
+     if (typeof status === 'number') {
+-      return new FalProviderError(`fal submit falló con ${String(status)}: ${message}`, { status });
++      return new FalProviderError(`fal submit falló con ${String(status)}: ${message}`, {
++        status,
++        detail,
++      });
+     }
+   }
+-  return new FalProviderError(`fal submit falló: ${message}`);
++  return new FalProviderError(`fal submit falló: ${message}`, { detail });
+ }
+diff --git a/packages/core/src/orchestrator/executor.ts b/packages/core/src/orchestrator/executor.ts
+index 480b014..def60c8 100644
+--- a/packages/core/src/orchestrator/executor.ts
++++ b/packages/core/src/orchestrator/executor.ts
+@@ -35,9 +35,17 @@ import type { StepStatus } from './transitions';
+  *    otra vez para fallar igual.
+  */
+ export class PermanentStepError extends Error {
+-  constructor(message: string) {
++  /** Status HTTP del proveedor cuando el fallo permanente lo origina uno (T5.17: 403/401/422 de fal). */
++  readonly status: number | undefined;
++  /** Detalle de causa del proveedor, ya normalizado a texto (T5.17): el body del error de fal que
++   *  discrimina saldo/credencial/input. Viaja hasta `step_run.error` para que el operador lea la causa
++   *  concreta, no solo "403". `undefined` para los `PermanentStepError` que no vienen de un proveedor. */
++  readonly detail: string | undefined;
++  constructor(message: string, opts: { status?: number; detail?: string } = {}) {
+     super(message);
+     this.name = 'PermanentStepError';
++    this.status = opts.status;
++    this.detail = opts.detail;
+   }
+ }
+ 
+diff --git a/planning.md b/planning.md
+index ab0c3b5..e0fa553 100644
+--- a/planning.md
++++ b/planning.md
+@@ -843,6 +843,14 @@ Decisiones del usuario (2026-07-07): la fase se ejecuta tras T0.1 y **antes** de
+ - **Playwright/test permanente**: un step cuyo fake de fal devuelve 403 llega a `failed` TERMINAL tras **exactamente 1 submit** (no ~80), conduciendo el camino REAL del consumer (`step-execute.ts` → `failStep`), no un seam que fije el contador a mano. **Control negativo EN AMBAS DIRECCIONES**: (a) revertir la clasificación → el 403 vuelve a hacer muchos submits (test ROJO); (b) un fake que devuelva timeout/429 SIGUE siendo retryable (NO colapsar todo `FalProviderError` en permanente — si el fix es demasiado ancho, este test se pone ROJO).
+ - **Verificación**: con el fake de fal devolviendo **403**, el step N7 llega a `failed` terminal con **UN solo submit** (medido sobre el contador de llamadas del fake — la métrica que muerde, porque fal cobra por submit; `retry_count ≤ max_retries` es infalsificable con max=80). Y un fake que devuelva **timeout/red** conserva el reintento (la clasificación no se pasó de ancha).
+ 
++#### T5.17 · El error de fal descarta el `body` que diagnostica la causa (saldo/credencial/input)
++- **Depende de**: — *(defecto vivo; destapado por el smoke-test de generación real del 2026-07-26; hermano de T5.16)*
++- **Origen (BUG DE PRODUCCIÓN, degrada la observabilidad de un fallo de dinero — regla 5a)**: en el smoke-test, un clip de b-roll N7d falló con `403 Forbidden` en su submit; el step quedó `failed` con `error.message = "fal submit falló con 403: Forbidden"` y NADA MÁS. El SDK de fal lanza `ApiError { status, body }` donde `body` contiene `{"detail":"User is locked. Reason: Exhausted balance."}` (o el detalle de credencial/input según el caso). Pero `toProviderError` (`fal-client.ts:483-492`) lee SOLO `status`, **descarta `body`**, y `FalProviderError` (`fal-client.ts:87-93`) no tiene campo para transportarlo. Resultado: el mensaje que T5.16 emite al operador le pide **discriminar** («recarga saldo si es balance/403, revisa la fal-key si es 401, corrige el input si es 422») pero el producto **tira la única pista que lo permite**. En el smoke-test la causa del 403 quedó UNDETERMINED por esto — no por límite del verifier, sino porque el código no guardó el `body`. Es el antipatrón de regla 5a: un error que colapsa la causa en un estado genérico es el mecanismo que esconde el siguiente bug.
++- **Entrega**: `toProviderError` captura `err.body` (el detalle del `ApiError` del SDK) y lo propaga; `FalProviderError` lo transporta (nuevo campo opcional `detail`/`body`, serializable); se persiste en `step_run.error` junto a `message`/`permanent`/`status`. NO altera la clasificación de T5.16 (403 sigue permanente) — solo AÑADE la causa al diagnóstico. El `body` puede ser objeto o string según el SDK: normalizar a texto legible sin volcar secretos (el body de fal es detalle de error del proveedor, no credenciales — pero validar que no se loguee la fal-key si apareciera).
++- **Coste estimado**: $0 (se reproduce con un fake de fal que lanza `ApiError` con `body`; NUNCA fal real).
++- **Playwright/test permanente**: un fake de fal que devuelve 403 **con** `body={"detail":"User is locked..."}` → el `step_run.error` persistido CONTIENE ese detalle (no solo "403: Forbidden"). **Control negativo**: revertir el fix (volver a descartar `body`) → el detalle desaparece del error persistido (test ROJO). Conduce el camino REAL del consumer (`step-execute.ts` → persistencia de `step_run.error`), no un seam que fije el error a mano.
++- **Verificación**: con el fake de fal devolviendo 403 con un `body` de causa conocida, el `step_run.error` persistido incluye el `detail` del body (el operador puede leer «Exhausted balance» / «invalid api key» / el error de validación); sin el fix, ese detalle NO está. La causa del fallo es diagnosticable desde la evidencia que el producto guarda, no solo desde un probe externo.
++
+ #### T5.10 · Dashboard y vista de proyecto
+ - **Depende de**: T5.7, T2.3 *("lanzar un lote" exige CP2)*
+ - **Entrega**: `/` (dashboard: proyectos, lotes activos, gasto del mes, alertas) y `/projects/[id]` (briefs, lotes, variantes y métricas del proyecto) + CRUD mínimo de proyectos (§8.1).

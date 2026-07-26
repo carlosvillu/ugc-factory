@@ -1,0 +1,68 @@
+
+ RUN  v4.1.10 /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/core
+
+ ❯ |core:unit| src/generation/fal-client.test.ts (29 tests | 4 failed) 106ms
+     × 403 «saldo agotado»: body objeto {"detail":...} → FalProviderError.detail lo contiene (no solo el status) 1ms
+     × 422 validación: body {detail: [...]} (ARRAY de objetos) → detail serializa el array entero, no [object Object] 1ms
+     × 422 con URL firmada reflejada del input → la query-string se REDACTA (step_run.error llega al browser) 1ms
+     × body enorme: el detail se recorta a un tamaño acotado (guarda de tamaño del jsonp de step_run.error) 1ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |core:unit| src/generation/fal-client.test.ts > FalClient.submit — el `detail` del error de fal se captura (T5.17, diagnóstico de causa) > 403 «saldo agotado»: body objeto {"detail":...} → FalProviderError.detail lo contiene (no solo el status)
+AssertionError: the given combination of arguments (undefined and string) is invalid for this assertion. You can use an array, a map, an object, a set, a string, or a weakset instead of a string
+ ❯ src/generation/fal-client.test.ts:253:46
+    251|     expect((err as FalProviderError).status).toBe(403);
+    252|     // El detalle está presente y nombra la causa concreta — la pista …
+    253|     expect((err as FalProviderError).detail).toContain('Exhausted bala…
+       |                                              ^
+    254|     // Y NO llegó de contrabando por el message: el message es el stat…
+    255|     expect((err as FalProviderError).message).not.toContain('Exhausted…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  |core:unit| src/generation/fal-client.test.ts > FalClient.submit — el `detail` del error de fal se captura (T5.17, diagnóstico de causa) > 422 validación: body {detail: [...]} (ARRAY de objetos) → detail serializa el array entero, no [object Object]
+AssertionError: the given combination of arguments (undefined and string) is invalid for this assertion. You can use an array, a map, an object, a set, a string, or a weakset instead of a string
+ ❯ src/generation/fal-client.test.ts:270:20
+    268|     // NO se pluckea `body.detail` (daría `[object Object]` en un arra…
+    269|     const detail = (err as FalProviderError).detail;
+    270|     expect(detail).toContain('invalid voice id');
+       |                    ^
+    271|     expect(detail).not.toContain('[object Object]');
+    272|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  |core:unit| src/generation/fal-client.test.ts > FalClient.submit — el `detail` del error de fal se captura (T5.17, diagnóstico de causa) > 422 con URL firmada reflejada del input → la query-string se REDACTA (step_run.error llega al browser)
+AssertionError: the given combination of arguments (undefined and string) is invalid for this assertion. You can use an array, a map, an object, a set, a string, or a weakset instead of a string
+ ❯ src/generation/fal-client.test.ts:292:20
+    290|     const detail = (err as FalProviderError).detail;
+    291|     // La causa sigue legible (el path del fichero), pero la firma NO …
+    292|     expect(detail).toContain('fal.media/files/x.mp3');
+       |                    ^
+    293|     expect(detail).not.toContain('SECRET123');
+    294|     expect(detail).toContain('?<redacted>');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  |core:unit| src/generation/fal-client.test.ts > FalClient.submit — el `detail` del error de fal se captura (T5.17, diagnóstico de causa) > body enorme: el detail se recorta a un tamaño acotado (guarda de tamaño del jsonp de step_run.error)
+AssertionError: the given combination of arguments (undefined and string) is invalid for this assertion. You can use an array, a map, an object, a set, a string, or a weakset instead of a string
+ ❯ src/generation/fal-client.test.ts:329:46
+    327|     // Recortado: mucho menor que el body original de ~5 KB (tope ~2 K…
+    328|     expect(((err as FalProviderError).detail ?? '').length).toBeLessTh…
+    329|     expect((err as FalProviderError).detail).toContain('…');
+       |                                              ^
+    330|   });
+    331| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  4 failed | 25 passed (29)
+   Start at  18:42:31
+   Duration  1000ms (transform 229ms, setup 16ms, import 798ms, tests 106ms, environment 0ms)
+
+undefined
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/core:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/generation/fal-client.test.ts

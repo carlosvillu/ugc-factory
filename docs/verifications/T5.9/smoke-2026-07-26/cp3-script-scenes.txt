@@ -1,0 +1,42 @@
+ version | est_seconds |                                                                    jsonb_pretty                                                                    
+---------+-------------+----------------------------------------------------------------------------------------------------------------------------------------------------
+       1 |          19 | [                                                                                                                                                 +
+         |             |     {                                                                                                                                             +
+         |             |         "t": 0,                                                                                                                                   +
+         |             |         "camera": "Cámara en mano, plano medio corto, ligero movimiento como si se estuviera grabando a sí misma",                                +
+         |             |         "visual": "Maya se mira el dorso de la mano bajo luz de baño, frotándose la piel seca, con un tarro de crema genérica al lado del lavabo",+
+         |             |         "emotion": "hastío, frustración contenida",                                                                                               +
+         |             |         "seconds": 4.8,                                                                                                                           +
+         |             |         "segment": "hook",                                                                                                                        +
+         |             |         "narration": "Otra vez con la piel tirante, mirando el bote que prometía milagros."                                                       +
+         |             |     },                                                                                                                                            +
+         |             |     {                                                                                                                                             +
+         |             |         "t": 4.8,                                                                                                                                 +
+         |             |         "camera": "Primer plano de las manos y el producto, cámara fija",                                                                         +
+         |             |         "visual": "Maya coge el tarro de CeraVe Moisturizing Cream y lo abre, mostrando la textura densa con el dedo",                            +
+         |             |         "emotion": "explicativa, calmada",                                                                                                        +
+         |             |         "seconds": 5.2,                                                                                                                           +
+         |             |         "segment": "body",                                                                                                                        +
+         |             |         "narration": "El problema es la barrera de la piel, no falta de crema encima."                                                            +
+         |             |     },                                                                                                                                            +
+         |             |     {                                                                                                                                             +
+         |             |         "t": 10,                                                                                                                                  +
+         |             |         "camera": "Plano medio, ligero acercamiento a las manos al final",                                                                        +
+         |             |         "visual": "Se aplica la crema en el antebrazo, extendiéndola, y luego toca una tela o el móvil para mostrar que no queda residuo",        +
+         |             |         "emotion": "convencida, aliviada",                                                                                                        +
+         |             |         "seconds": 4.8,                                                                                                                           +
+         |             |         "segment": "body",                                                                                                                        +
+         |             |         "narration": "Tres ceramidas, hidratación todo el día, y se absorbe sin dejar grasa."                                                     +
+         |             |     },                                                                                                                                            +
+         |             |     {                                                                                                                                             +
+         |             |         "t": 14.8,                                                                                                                                +
+         |             |         "camera": "Plano medio fijo, cierre a producto en los últimos segundos",                                                                  +
+         |             |         "visual": "Maya sostiene el tarro frente a cámara con una leve sonrisa, fondo de baño desenfocado",                                       +
+         |             |         "emotion": "cercana, segura",                                                                                                             +
+         |             |         "seconds": 3.6,                                                                                                                           +
+         |             |         "segment": "cta",                                                                                                                         +
+         |             |         "narration": "Pruébala hoy y mira cómo amanece tu piel mañana."                                                                           +
+         |             |     }                                                                                                                                             +
+         |             | ]
+(1 row)
+

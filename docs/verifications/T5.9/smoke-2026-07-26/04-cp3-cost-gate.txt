@@ -1,0 +1,51 @@
+CP3 COST GATE — smoke-test 2026-07-26 (HEAD 62c1d85, post-T5.8c)
+Escrito ANTES de aprobar CP3. Gate del brief: si total proyectado > $5.00 -> ABORTAR.
+
+RUN de generación: 01KYFFHQ71W9KK4QD5KK7NMK0N
+BATCH: 01KYFFHQ6RQ879SZ0RYE5MQH5M   VARIANT: 01KYFFHQ6XCH0PCMQFZWQ986HA
+Persona: Maya (01KYFAFQMD1DHG792VGFWV2JHD) FIJADA en CP2. Tier: premium. Idioma: es. 1 variante.
+
+ESCENAS DEL GUION (ad_script v1, est_seconds=19):
+  hook  4.8s  "Otra vez con la piel tirante, mirando el bote que prometía milagros."
+  body  5.2s  "El problema es la barrera de la piel, no falta de crema encima."
+  body  4.8s  "Tres ceramidas, hidratación todo el día, y se absorbe sin dejar grasa."
+  cta   3.6s  "Pruébala hoy y mira cómo amanece tu piel mañana."
+full_text = 252 chars, 46 palabras.
+
+RECETA PREMIUM (recipe.steps):
+  avatar = fal-ai/bytedance/omnihuman/v1.5   -> 16 c/s (por duración de audio del hook)
+  broll  = fal-ai/veo3.1/image-to-video      -> 20 c/s, enum [4,6,8], maxDuration 8
+  voice  = fal-ai/elevenlabs/tts/eleven-v3   -> 10 c/1k chars
+  shots  = N7a HARDCODEA flux-2 (1.2 c/megapixel) — el recipe 'shots' NO se proyecta (generation.ts:9)
+  cta    = mismo endpoint que broll (i2v veo3.1) -> 20 c/s
+  music  = ace-step 0.02 c/s ; ASR = 3 c/min
+
+ALGORITMO EXACTO (scene-planner.ts planScene + quantizeDurationToEnum):
+  count = seconds<=8 ? 1 : ceil(seconds/8) ; clipSec = seconds/count ; billed = menor enum >= clipSec
+  Es PER-SCENE (generate-broll.ts:149 itera cada escena de body, quantiza cada clip por separado).
+  NOTA: broll/avatar facturan sobre la duración REAL de voz (ASR), no sobre los segundos del guion
+        (generate-broll.ts:121-123). En CP3 los segundos del guion son la mejor ESTIMACIÓN.
+
+PROYECCIÓN SCRIPT-BASED (segundos del guion):
+  Avatar N7c = 4.8s * 16c = 76.8c
+  B-roll N7d = body[5.2->1 clip q=6s] + body[4.8->1 clip q=6s] = 12s * 20c = 240c
+  CTA   N7f  = cta[3.6->1 clip q=4s] = 4s * 20c = 80c
+  Otros:
+    N7a keyframes flux-2 ~2MP * 1.2c * 3 shots  ≈ 7.2c
+    N7b voz 252ch * 10c/1k                       ≈ 2.5c
+    N7b ASR ~19s = 0.32min * 3c                  ≈ 1.0c
+    N7e música ~19s * 0.02c                       ≈ 0.4c
+  TOTAL PROYECTADO = 76.8 + 240 + 80 + 11.1 = 407.9c = $4.08   <= $5.00  => GATE PASA
+
+ANÁLISIS DE SENSIBILIDAD (no es el gate, es margen):
+  Worst-case A (ASR sube hook->6s y ambos body cruzan el bucket 6->8):
+    avatar 6s(96c) + body 8+8(320c) + cta 4s(80c) + otros 11c = $5.07  (< $6 hard cap)
+  Worst-case B (una escena body ASR > 8s -> se parte en 2 clips 2x6=12s):
+    +$1.20 por escena. Dos escenas partidas -> ~$6.48. SOLO detectable en vivo.
+
+DECISIÓN: APROBAR. La cifra del gate ($4.08) está bajo $5.00. Los worst-case son análisis
+propio, no el gate; el A queda bajo el hard cap $6. El riesgo residual real (B + re-facturación
+por retry transitorio, N7_MAX_RETRIES=80 executor.ts:105) se MITIGA con watch de coste en vivo
+y ABORTO DURO a 550c vía POST /api/runs/01KYFFHQ71W9KK4QD5KK7NMK0N/cancel.
+
+Post-N7b: recomputar con duraciones ASR reales y comparar con $4.08 (entregable primario).

@@ -119,10 +119,18 @@ export async function runGenerationStep<T>(fn: () => Promise<T>): Promise<T> {
       err.status !== undefined &&
       FAL_PERMANENT_STATUSES.has(err.status)
     ) {
+      // T5.17: propaga `status` y `detail` (el body de fal, ya normalizado) al `PermanentStepError` para que
+      // lleguen SEPARADOS a `step_run.error` (step-execute.ts). El mensaje accionable pide DISCRIMINAR
+      // saldo/credencial/input; el `detail` («User is locked. Reason: Exhausted balance.») es la pista que lo
+      // permite. Se leen los CAMPOS TIPADOS de `FalProviderError` (NO se regex-parsea el mensaje: la trampa
+      // T1.8 de reimplementar la detección por substring). El mensaje también incluye el detail para el visor
+      // de logs (T1.16), pero la persistencia estructurada es lo que el operador consulta.
       throw new PermanentStepError(
         `Fallo PERMANENTE del proveedor (fal, HTTP ${String(err.status)}): ${err.message}. ` +
+          (err.detail !== undefined ? `Causa (fal): ${err.detail}. ` : '') +
           `No se reintenta (cada envío se factura). Resuélvelo en Ajustes → fal (recarga saldo si es "balance"/403, ` +
           `revisa la fal-key si es credencial/401, corrige el input si es validación/422) y re-dispara el run.`,
+        { status: err.status, detail: err.detail },
       );
     }
     throw err;

@@ -25,7 +25,7 @@ import {
   shouldPause,
   transition,
 } from '@ugc/core/orchestrator';
-import { LoserRaceError } from '@ugc/core/generation';
+import { FalProviderError, LoserRaceError } from '@ugc/core/generation';
 import type { Logger } from '@ugc/core';
 import { findRunAutopilot, findStep, findStepsByIds } from '@ugc/db';
 import type { DbClient } from '@ugc/db';
@@ -45,6 +45,20 @@ export interface StepConsumerDeps {
    *  para no esperar minutos reales — pero recorre EXACTAMENTE el mismo camino (el `startAfter` de
    *  pg-boss), no uno simulado. NO afecta a los fallos NO-`LoserRaceError` (esos reintentan inmediato). */
   retryBackoffMs?: number;
+}
+
+/**
+ * T5.17: extrae `status`/`detail` del proveedor de un error del executor, sea cual sea la rama por la que
+ * cae. `PermanentStepError` (403/401/422 reclasificado en `_shared.ts`) y `FalProviderError` (429/timeout
+ * retryable que llega crudo) transportan AMBOS estos campos tipados; este helper los lee por `instanceof`
+ * —NUNCA regex del mensaje (trampa T1.8)— para que las dos ramas de persistencia escriban lo mismo. Un
+ * error sin origen de proveedor (refusal de N3, BD caída) devuelve `{}` y la forma persistida no cambia.
+ */
+function extractProviderFields(err: unknown): { status?: number; detail?: string } {
+  if (err instanceof PermanentStepError || err instanceof FalProviderError) {
+    return { status: err.status, detail: err.detail };
+  }
+  return {};
 }
 
 export async function registerStepConsumer({
@@ -210,8 +224,19 @@ export async function registerStepConsumer({
             'step.execute: fallo PERMANENTE del executor; failed terminal SIN retry',
           );
           try {
+            // T5.17: persistir `status`/`detail` del proveedor JUNTO a `message`/`permanent` cuando el
+            // fallo permanente los trae (403/401/422 de fal → `PermanentStepError` con campos poblados por
+            // `_shared.ts`). El operador lee del `step_run.error` la CAUSA concreta (saldo/credencial/input),
+            // no solo "403". Un `PermanentStepError` no-proveedor (refusal de N3, contrato roto) los deja
+            // `undefined` y no se añaden — la forma del error persistido no cambia para esos casos.
+            const provider = extractProviderFields(err);
             await transition(transitionDeps, stepId, 'fail', {
-              error: { message: err.message, permanent: true },
+              error: {
+                message: err.message,
+                permanent: true,
+                ...(provider.status !== undefined ? { status: provider.status } : {}),
+                ...(provider.detail !== undefined ? { detail: provider.detail } : {}),
+              },
             });
           } catch (failErr) {
             if (failErr instanceof IllegalTransitionError) {
@@ -235,7 +260,16 @@ export async function registerStepConsumer({
           // T0.11: persistir el mensaje del throw del executor en `step_run.error`
           // para el visor de logs del panel del canvas. Solo el `message` (un jsonb
           // pequeño); el stack no viaja por SSE.
-          const errorInfo = { message: err instanceof Error ? err.message : String(err) };
+          // T5.17: un `FalProviderError` RETRYABLE (429/5xx/timeout no reclasificado) también trae
+          // `status`/`detail` del proveedor. Si agota `max_retries` y va a `failed` terminal por esta rama,
+          // la causa debe sobrevivir igual que en la rama permanente — misma clase de bug (observabilidad de
+          // dinero). `extractProviderFields` lee los campos TIPADOS (instanceof, no regex del mensaje).
+          const provider = extractProviderFields(err);
+          const errorInfo = {
+            message: err instanceof Error ? err.message : String(err),
+            ...(provider.status !== undefined ? { status: provider.status } : {}),
+            ...(provider.detail !== undefined ? { detail: provider.detail } : {}),
+          };
           // `retryBackoffMs` (T4.11, MONEY POINT): el re-encolado del retry espera este backoff SOLO
           // cuando el fallo es una CARRERA PERDEDORA de dedup (`LoserRaceError`). Ahí es load-bearing:
           // sin él el loser agotaría `max_retries` en milisegundos mientras el ganador Veo sigue

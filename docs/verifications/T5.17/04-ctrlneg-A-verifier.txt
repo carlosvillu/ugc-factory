@@ -1,0 +1,59 @@
+
+ RUN  v4.1.10 /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/worker
+
+ ❯ |worker:integration| test/integration/zzz-t517-verifier.test.ts (3 tests | 3 failed) 1957ms
+     × 401 «invalid api key» (credencial) → step_run.error.detail contiene la causa; permanente en 1 submit 648ms
+     × 422 validación (array de objetos) → detail serializa el array entero, no [object Object] 602ms
+     × 422 con signed URL reflejada → el sig NO se persiste en el jsonb (redacción end-to-end) 586ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |worker:integration| test/integration/zzz-t517-verifier.test.ts > VERIFIER T5.17 — causas 401/422 end-to-end en step_run.error (jsonb crudo) > 401 «invalid api key» (credencial) → step_run.error.detail contiene la causa; permanente en 1 submit
+AssertionError: expected undefined to be defined
+ ❯ test/integration/zzz-t517-verifier.test.ts:112:24
+    110|     expect(err.permanent).toBe(true);
+    111|     expect(err.status).toBe(401);
+    112|     expect(err.detail).toBeDefined();
+       |                        ^
+    113|     expect(err.detail).toContain('Invalid API key');
+    114|     // El message NO contuvo la causa de contrabando (statusText = 'Un…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  |worker:integration| test/integration/zzz-t517-verifier.test.ts > VERIFIER T5.17 — causas 401/422 end-to-end en step_run.error (jsonb crudo) > 422 validación (array de objetos) → detail serializa el array entero, no [object Object]
+AssertionError: expected undefined to be defined
+ ❯ test/integration/zzz-t517-verifier.test.ts:133:24
+    131|     expect(err.permanent).toBe(true);
+    132|     expect(err.status).toBe(422);
+    133|     expect(err.detail).toBeDefined();
+       |                        ^
+    134|     expect(err.detail).toContain('invalid voice id');
+    135|     expect(err.detail).not.toContain('[object Object]');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  |worker:integration| test/integration/zzz-t517-verifier.test.ts > VERIFIER T5.17 — causas 401/422 end-to-end en step_run.error (jsonb crudo) > 422 con signed URL reflejada → el sig NO se persiste en el jsonb (redacción end-to-end)
+AssertionError: expected '{"status":422,"message":"Fallo PERMAN…' to contain 'fal.media/files/x.mp3'
+
+Expected: "fal.media/files/x.mp3"
+Received: "{"status":422,"message":"Fallo PERMANENTE del proveedor (fal, HTTP 422): fal submit falló con 422: Unprocessable Entity. No se reintenta (cada envío se factura). Resuélvelo en Ajustes → fal (recarga saldo si es \"balance\"/403, revisa la fal-key si es credencial/401, corrige el input si es validación/422) y re-dispara el run.","permanent":true}"
+
+ ❯ test/integration/zzz-t517-verifier.test.ts:157:17
+    155|     // El secreto NO aparece en NINGUNA parte del jsonb persistido (ni…
+    156|     expect(raw).not.toContain('SECRET123');
+    157|     expect(raw).toContain('fal.media/files/x.mp3');
+       |                 ^
+    158|     expect(raw).toContain('?<redacted>');
+    159|   }, 60_000);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed (3)
+   Start at  18:42:25
+   Duration  5.04s (transform 514ms, setup 7ms, import 1.26s, tests 1.96s, environment 0ms)
+
+undefined
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/worker:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run --config vitest.config.integration.ts test/integration/zzz-t517-verifier.test.ts

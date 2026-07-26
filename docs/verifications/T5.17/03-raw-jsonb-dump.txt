@@ -1,0 +1,19 @@
+
+=== 401 credencial ===
+status=failed
+error={
+  "status": 401,
+  "message": "Fallo PERMANENTE del proveedor (fal, HTTP 401): fal submit falló con 401: Unauthorized. No se reintenta (cada envío se factura). Resuélvelo en Ajustes → fal (recarga saldo si es \"balance\"/403, revisa la fal-key si es credencial/401, corrige el input si es validación/422) y re-dispara el run.",
+  "permanent": true
+}
+
+=== 422 validación ===
+status=failed
+error={
+  "status": 422,
+  "message": "Fallo PERMANENTE del proveedor (fal, HTTP 422): fal submit falló con 422: Unprocessable Entity. No se reintenta (cada envío se factura). Resuélvelo en Ajustes → fal (recarga saldo si es \"balance\"/403, revisa la fal-key si es credencial/401, corrige el input si es validación/422) y re-dispara el run.",
+  "permanent": true
+}
+
+=== 422 signed-url redaction ===
+rawJsonb={"status":422,"message":"Fallo PERMANENTE del proveedor (fal, HTTP 422): fal submit falló con 422: Unprocessable Entity. No se reintenta (cada envío se factura). Resuélvelo en Ajustes → fal (recarga saldo si es \"balance\"/403, revisa la fal-key si es credencial/401, corrige el input si es validación/422) y re-dispara el run.","permanent":true}

@@ -216,6 +216,120 @@ describe('FalClient — errores tipados por CAUSA (principio 9)', () => {
   });
 });
 
+// T5.17 — el `detail` (body del ApiError de fal) sobrevive en `FalProviderError`. Estos tests recorren el
+// SDK REAL (`@fal-ai/client` → `ApiError { status, body }` → `toProviderError`): msw sirve la respuesta de
+// error con el content-type y el body EXACTOS que fal emite, para que el fixture no sea verde-decorativo.
+// CLAVE (control negativo): el `message` del ApiError es `body.message || statusText` (response.js del SDK)
+// → un body SIN `.message` produce `message = statusText` («Forbidden»); el detalle SOLO puede llegar por el
+// campo `detail`. Si el fixture metiera «Exhausted balance» en el message, revertir el fix seguiría verde.
+describe('FalClient.submit — el `detail` del error de fal se captura (T5.17, diagnóstico de causa)', () => {
+  /** Registra en msw una respuesta de error JSON al submit (el scaffold repetido de estos casos). El body
+   *  va por-test; `statusText` sin `.message` en el body → el SDK pone `message = statusText`, así que el
+   *  detalle SOLO puede llegar por `body`. */
+  function respondWith(status: number, statusText: string, body: unknown): void {
+    server.use(
+      http.post(
+        SUBMIT_URL,
+        () =>
+          new HttpResponse(JSON.stringify(body), {
+            status,
+            statusText,
+            headers: { 'content-type': 'application/json' },
+          }),
+      ),
+    );
+  }
+
+  it('403 «saldo agotado»: body objeto {"detail":...} → FalProviderError.detail lo contiene (no solo el status)', async () => {
+    // body SIN `.message` → el SDK pone message='Forbidden'; el detalle SOLO viaja por `body.detail`. Es
+    // EXACTAMENTE la forma del bug real (403 «User is locked»).
+    respondWith(403, 'Forbidden', { detail: 'User is locked. Reason: Exhausted balance.' });
+    const err = await client()
+      .submit(ENDPOINT, { prompt: 'x' })
+      .catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(FalProviderError);
+    expect((err as FalProviderError).status).toBe(403);
+    // El detalle está presente y nombra la causa concreta — la pista que discrimina saldo vs credencial.
+    expect((err as FalProviderError).detail).toContain('Exhausted balance');
+    // Y NO llegó de contrabando por el message: el message es el statusText del SDK, sin la causa.
+    expect((err as FalProviderError).message).not.toContain('Exhausted balance');
+  });
+
+  it('422 validación: body {detail: [...]} (ARRAY de objetos) → detail serializa el array entero, no [object Object]', async () => {
+    respondWith(422, 'Unprocessable Entity', {
+      detail: [{ loc: ['body', 'voice_id'], msg: 'invalid voice id', type: 'value_error' }],
+    });
+    const err = await client()
+      .submit(ENDPOINT, { prompt: 'x' })
+      .catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(FalProviderError);
+    expect((err as FalProviderError).status).toBe(422);
+    // El array de validación se serializa entero (JSON.stringify del body), legible por el operador —
+    // NO se pluckea `body.detail` (daría `[object Object]` en un array de objetos).
+    const detail = (err as FalProviderError).detail;
+    expect(detail).toContain('invalid voice id');
+    expect(detail).not.toContain('[object Object]');
+  });
+
+  it('422 con URL firmada reflejada del input → la query-string se REDACTA (step_run.error llega al browser)', async () => {
+    // El body de 422 de fal refleja el input, que incluye signed URLs (audio_url/image_url con query
+    // firmada). Como `step_run.error` viaja al navegador, el `sig` NO debe persistirse: se redacta la query.
+    respondWith(422, 'Unprocessable Entity', {
+      detail: [
+        {
+          loc: ['body', 'audio_url'],
+          msg: 'invalid audio at https://fal.media/files/x.mp3?sig=SECRET123&exp=999',
+          type: 'value_error',
+        },
+      ],
+    });
+    const err = await client()
+      .submit(ENDPOINT, { prompt: 'x' })
+      .catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(FalProviderError);
+    const detail = (err as FalProviderError).detail;
+    // La causa sigue legible (el path del fichero), pero la firma NO está — se cambió por `?<redacted>`.
+    expect(detail).toContain('fal.media/files/x.mp3');
+    expect(detail).not.toContain('SECRET123');
+    expect(detail).toContain('?<redacted>');
+  });
+
+  it('respuesta de error NO-JSON (content-type text/plain): el SDK no pasa body → detail es undefined, NO "undefined"', async () => {
+    // 400 (no 5xx) para NO tocar el reintento del SDK: sin content-type JSON, `defaultResponseHandler`
+    // lanza `ApiError` SIN body (response.js) → `toProviderError` no encuentra `body` → detail undefined.
+    server.use(
+      http.post(
+        SUBMIT_URL,
+        () =>
+          new HttpResponse('Bad Request', {
+            status: 400,
+            statusText: 'Bad Request',
+            headers: { 'content-type': 'text/plain' },
+          }),
+      ),
+    );
+    const err = await client({ maxRetries: 0 })
+      .submit(ENDPOINT, { prompt: 'x' })
+      .catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(FalProviderError);
+    expect((err as FalProviderError).status).toBe(400);
+    // Sin body JSON el SDK no adjunta `body` al ApiError → detail ausente. Nunca la cadena literal.
+    expect((err as FalProviderError).detail).toBeUndefined();
+  });
+
+  it('body enorme: el detail se recorta a un tamaño acotado (guarda de tamaño del jsonp de step_run.error)', async () => {
+    const huge = 'x'.repeat(5000);
+    respondWith(403, 'Forbidden', { detail: huge });
+    const err = await client()
+      .submit(ENDPOINT, { prompt: 'x' })
+      .catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(FalProviderError);
+    // Recortado: mucho menor que el body original de ~5 KB (tope ~2 KB + el «…»).
+    expect(((err as FalProviderError).detail ?? '').length).toBeLessThan(2100);
+    expect((err as FalProviderError).detail).toContain('…');
+  });
+});
+
 describe('FalClient — 429 + Retry-After (§4.4)', () => {
   it('espera lo que dice Retry-After y reintenta UNA vez', async () => {
     let calls = 0;

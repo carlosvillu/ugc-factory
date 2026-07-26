@@ -35,9 +35,17 @@ import type { StepStatus } from './transitions';
  *    otra vez para fallar igual.
  */
 export class PermanentStepError extends Error {
-  constructor(message: string) {
+  /** Status HTTP del proveedor cuando el fallo permanente lo origina uno (T5.17: 403/401/422 de fal). */
+  readonly status: number | undefined;
+  /** Detalle de causa del proveedor, ya normalizado a texto (T5.17): el body del error de fal que
+   *  discrimina saldo/credencial/input. Viaja hasta `step_run.error` para que el operador lea la causa
+   *  concreta, no solo "403". `undefined` para los `PermanentStepError` que no vienen de un proveedor. */
+  readonly detail: string | undefined;
+  constructor(message: string, opts: { status?: number; detail?: string } = {}) {
     super(message);
     this.name = 'PermanentStepError';
+    this.status = opts.status;
+    this.detail = opts.detail;
   }
 }
 

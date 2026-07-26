@@ -1,0 +1,33 @@
+
+ RUN  v4.1.10 /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/core
+
+ ❯ |core:unit| src/generation/fal-client.test.ts (29 tests | 1 failed) 110ms
+     × 422 con URL firmada reflejada del input → la query-string se REDACTA (step_run.error llega al browser) 2ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |core:unit| src/generation/fal-client.test.ts > FalClient.submit — el `detail` del error de fal se captura (T5.17, diagnóstico de causa) > 422 con URL firmada reflejada del input → la query-string se REDACTA (step_run.error llega al browser)
+AssertionError: expected '{"detail":[{"loc":["body","audio_url"…' not to contain 'SECRET123'
+
+Expected: "SECRET123"
+Received: "{"detail":[{"loc":["body","audio_url"],"msg":"invalid audio at https://fal.media/files/x.mp3?sig=SECRET123&exp=999","type":"value_error"}]}"
+
+ ❯ src/generation/fal-client.test.ts:293:24
+    291|     // La causa sigue legible (el path del fichero), pero la firma NO …
+    292|     expect(detail).toContain('fal.media/files/x.mp3');
+    293|     expect(detail).not.toContain('SECRET123');
+       |                        ^
+    294|     expect(detail).toContain('?<redacted>');
+    295|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 28 passed (29)
+   Start at  18:43:08
+   Duration  988ms (transform 224ms, setup 14ms, import 783ms, tests 110ms, environment 0ms)
+
+undefined
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/core:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/generation/fal-client.test.ts

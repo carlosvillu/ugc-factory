@@ -1,0 +1,7 @@
+{"assetId":"01KYFF2W0NBF0G8DZ01T4A9ZR9","cached":false}
+HTTP 200
+ provider | amount_cents | quantity | unit  |       generation_id        | step_run_id 
+----------+--------------+----------+-------+----------------------------+-------------
+ fal      |            0 |       43 | chars | 01KYFF2S3JZTMTRNCPGQQT6REX | 
+(1 row)
+

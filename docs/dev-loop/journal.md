@@ -2982,3 +2982,15 @@ T5.8 es el primer código que conduce un N8 vivo hasta el mux del máster (su op
   presupuesto de algo que va a fallar igual = misma clase que T5.11/T5.12. **El 80 fue en el entorno LOCAL
   del verifier, NO en prod** (0 steps con retry_count>max en prod) ⇒ bug real, no urgente. Anotado en la
   entrada de T5.16 para que el implementer no re-derive.
+- **PARADA por infraestructura (2026-07-26): Docker Desktop no arranca de forma sana.** El daemon entra
+  en ciclo inestable — levanta el socket, responde a UN `docker run`, y se cae; `_ping` al socket devuelve
+  vacío y el backend (`com.docker.backend`) no mantiene proceso. Intentado desde la terminal: `open -a
+  Docker` ×2, esperas con reintentos, 2 monitores (uno pilló un instante de suerte, el 2º —que exigía 3/3
+  runs seguidos— expiró sin lograrlo). **Config de Testcontainers CONFIRMADA correcta**: con
+  `DOCKER_HOST` + `TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=~/.docker/run/docker.sock` +
+  `TESTCONTAINERS_HOST_OVERRIDE=127.0.0.1`, el `test:integration` de web PASA cuando el motor está vivo un
+  instante. El bloqueo es 100% el daemon, no el arnés. **Requiere acción del usuario en la GUI de Docker
+  Desktop** (Restart del motor / atender update o permiso). Estado de T5.14 al parar: implementada, REVIEW
+  de correctness hecho, regla 5 auditada, lint/typecheck/format/knip verdes; falta gate de integración →
+  ds-reviewer → verifier → cierre. T5.15/T5.16 sin empezar (T5.16 con causa raíz ya diagnosticada). Nada
+  perdido, todo commiteado hasta 900b07d.

@@ -1,0 +1,20 @@
+=== ORDER BY id DESC LIMIT 1 (exacto) ===
+NINGUNO
+
+=== todas ORDER BY DESC en e2e (revision de anclas equivalentes) ===
+apps/web/e2e/brief-editor.spec.ts:222:          ORDER BY version DESC LIMIT 1`,
+apps/web/e2e/partial-regeneration.spec.ts:220:    `SELECT node_key, status FROM step_run WHERE run_id = $1 ORDER BY node_key`,
+apps/web/e2e/partial-regeneration.spec.ts:523:    `SELECT node_key, status FROM step_run WHERE run_id = $1 ORDER BY node_key`,
+apps/web/e2e/normal-generation-composes.spec.ts:281:    `SELECT node_key, status FROM step_run WHERE run_id = $1 ORDER BY node_key`,
+apps/web/e2e/normal-generation-composes.spec.ts:328:    `SELECT node_key, status FROM step_run WHERE run_id = $1 ORDER BY node_key`,
+apps/web/e2e/batch-matrix.spec.ts:217:      // `ORDER BY id DESC LIMIT 1` (T5.21): bajo `fullyParallel` otro spec crea un `ad_batch` en la
+apps/web/e2e/batch-matrix.spec.ts:247:        `SELECT filename_code, status FROM ad_variant WHERE batch_id = $1 ORDER BY filename_code`,
+apps/web/e2e/runs-list.spec.ts:131:  //   · El listado ordena por la **PK** (`ORDER BY id DESC`), que es un ULID —monotónico con el
+apps/web/e2e/phases/f2-scripts.spec.ts:98:      // EL LOTE DE ESTE RUN, leído del panel (`data-batch-id`) — NO un `SELECT ... ORDER BY id DESC
+apps/web/e2e/persona-library-cp2.spec.ts:188:      // `ORDER BY id DESC LIMIT 1` (T5.21): bajo `fullyParallel` otro spec crea un `ad_batch` en la
+apps/web/e2e/script-editor.spec.ts:73:  // El batchId del lote de ESTE run, leído del panel — NO un `SELECT ... ORDER BY id DESC LIMIT 1`
+apps/web/e2e/script-editor.spec.ts:96:      ORDER BY v.filename_code ASC
+apps/web/e2e/script-editor.spec.ts:190:          ORDER BY s.version DESC
+apps/web/e2e/script-editor.spec.ts:222:                        WHERE v.batch_id = $1 ORDER BY v.filename_code DESC LIMIT 1)`,
+apps/web/e2e/phases/f5-export.spec.ts:469:    `SELECT node_key, status FROM step_run WHERE run_id = $1 ORDER BY node_key`,
+apps/web/e2e/phases/f5-export.spec.ts:515:    `SELECT node_key, status FROM step_run WHERE run_id = $1 ORDER BY node_key`,

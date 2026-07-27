@@ -1,0 +1,55 @@
+
+> ugc-factory@0.0.0 test:e2e:phases /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads
+> pnpm --filter @ugc/web exec playwright test e2e/phases/f1-brief.spec.ts e2e/phases/f2-scripts.spec.ts e2e/phases/f4-generation.spec.ts
+
+
+Running 4 tests using 3 workers
+
+  ✓  1 [setup] › e2e/auth.setup.ts:10:1 › login y persistir sesión (710ms)
+  ✓  2 [chromium] › e2e/phases/f1-brief.spec.ts:29:3 › F1 · journey de análisis: URL → N1/N2/N3 → CP1 → aprobar y avanzar › un usuario pega una URL, edita el brief en CP1 y lo aprueba: el brief se versiona y el run avanza @f1 @phase (2.4s)
+  ✓  3 [chromium] › e2e/phases/f2-scripts.spec.ts:52:3 › F2 · journey de guiones: URL → CP1 → CP2 → CP3 → variantes scripted › un usuario aprueba la matriz, N5 guioniza el lote y CP3 deja todas las variantes scripted @f2 @phase (3.4s)
+  ✘  4 [chromium] › e2e/phases/f4-generation.spec.ts:94:3 › F4 · journey de generación: CP3 aprobado → sub-DAG N6→N7a-e por variante en el canvas › el canvas expande N7 por variante, expone resolvedPrompt/coste/previews y recupera un sub-step con retry granular @f4 @phase (2.1m)
+
+
+  1) [chromium] › e2e/phases/f4-generation.spec.ts:94:3 › F4 · journey de generación: CP3 aprobado → sub-DAG N6→N7a-e por variante en el canvas › el canvas expande N7 por variante, expone resolvedPrompt/coste/previews y recupera un sub-step con retry granular @f4 @phase 
+
+    Error: un sub-step de generación debe fallar de forma determinista
+
+    expect(received).not.toBe(expected) // Object.is equality
+
+    Expected: not ""
+
+      197 |       // se DESCUBRE cuál falló (el fake designa el primer submit de imagen, del orden real del worker).
+      198 |       const failedStepId = await waitForFailedStep(generationRunId, 120_000);
+    > 199 |       expect(failedStepId, 'un sub-step de generación debe fallar de forma determinista').not.toBe(
+          |                                                                                               ^
+      200 |         '',
+      201 |       );
+      202 |
+        at /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/web/e2e/phases/f4-generation.spec.ts:199:95
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/phases-f4-generation-F4-·--b83db-sub-step-con-retry-granular-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/phases-f4-generation-F4-·--b83db-sub-step-con-retry-granular-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/phases-f4-generation-F4-·--b83db-sub-step-con-retry-granular-chromium/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/phases-f4-generation-F4-·--b83db-sub-step-con-retry-granular-chromium/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace test-results/phases-f4-generation-F4-·--b83db-sub-step-con-retry-granular-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  1 failed
+    [chromium] › e2e/phases/f4-generation.spec.ts:94:3 › F4 · journey de generación: CP3 aprobado → sub-DAG N6→N7a-e por variante en el canvas › el canvas expande N7 por variante, expone resolvedPrompt/coste/previews y recupera un sub-step con retry granular @f4 @phase 
+  3 passed (2.2m)
+undefined
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/web:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: playwright test e2e/phases/f1-brief.spec.ts e2e/phases/f2-scripts.spec.ts e2e/phases/f4-generation.spec.ts
+ ELIFECYCLE  Command failed with exit code 1.

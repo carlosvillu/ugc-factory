@@ -1,0 +1,178 @@
+[WebServer] seed: persona «Maya» ← imagen sintética 1638×2048 px (personas/01KYGY6JWW69ZM9W1KJ75843CV/01KYGY6JXDZ6B2JXC57XAR0EQE.png)
+[WebServer] seed: persona «Maya» ← imagen sintética 1638×2048 px (personas/01KYGY6JWW69ZM9W1KJ75843CV/01KYGY6JXZXJX40AG4J1Z6D1AM.png)
+[WebServer] seed: persona «Maya» ← imagen sintética 1638×2048 px (personas/01KYGY6JWW69ZM9W1KJ75843CV/01KYGY6JYH1RGBV2DTJJZ2309B.png)
+[WebServer] seed: persona «Lucía (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYGY6JYMRR1EFDJKKN17CAKX/01KYGY6JZ3KHXAJVZYB0EFBMDJ.png)
+[WebServer] seed: persona «Lucía (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYGY6JYMRR1EFDJKKN17CAKX/01KYGY6JZMWSAW7901EENFGD88.png)
+[WebServer] seed: persona «Marcus (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYGY6JZRP7SMXWS59QGRNX0E/01KYGY6K07SNWCXQKQEK7N28N2.png)
+[WebServer] seed: persona «Marcus (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYGY6JZRP7SMXWS59QGRNX0E/01KYGY6K0R3PNREQKVAA220B4T.png)
+[WebServer] seed: persona «Nerea (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYGY6K0VWQDN408DYN9PN469/01KYGY6K1BM9MDQ2KNZ3Z23XMX.png)
+[WebServer] seed: persona «Nerea (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYGY6K0VWQDN408DYN9PN469/01KYGY6K1VDRYQN2HPS64P18TM.png)
+[WebServer] seed: persona «Carmen (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYGY6K1ZK0QMP58W7KRGAJTE/01KYGY6K2EGQZRE2NFQWHKKWX4.png)
+[WebServer] seed: persona «Carmen (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYGY6K1ZK0QMP58W7KRGAJTE/01KYGY6K317JQ6WSC4SCT6WKDF.png)
+[WebServer] seed: persona «Alex (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYGY6K34046G7ZK4M6FV253J/01KYGY6K3J3NPTVY97N519NT5T.png)
+[WebServer] seed: persona «Alex (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYGY6K34046G7ZK4M6FV253J/01KYGY6K43494Y88ED7BVAP26W.png)
+[WebServer] seed: persona «Rosa (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYGY6K46V1W4KJ4D59S2Q93E/01KYGY6K4NC5EVK8M0S4R92XQ2.png)
+[WebServer] seed: persona «Rosa (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYGY6K46V1W4KJ4D59S2Q93E/01KYGY6K55XNDEK7ZMEZ0PKX7S.png)
+[WebServer] seed: persona «Priya (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYGY6K58BMGSG2Z0PV1C4R4K/01KYGY6K5Q454MV4DC5VF5RJ3F.png)
+[WebServer] seed: persona «Priya (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYGY6K58BMGSG2Z0PV1C4R4K/01KYGY6K675YEA8E713HY4JPDQ.png)
+[WebServer] seed: persona «David (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYGY6K6BYBW0ARE7P4FQB95C/01KYGY6K6S3995Y3X5PTJMA7RF.png)
+[WebServer] seed: persona «David (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYGY6K6BYBW0ARE7P4FQB95C/01KYGY6K7AGWQ7Y7XHPDJZT89W.png)
+[WebServer] seed: persona «Chloe (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYGY6K7EJJ1HMBPNZG4Z0WWQ/01KYGY6K7WRF1GFHECHT5716QP.png)
+[WebServer] seed: persona «Chloe (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYGY6K7EJJ1HMBPNZG4Z0WWQ/01KYGY6K8CRDB1ARW7463TW6W6.png)
+[WebServer] seed: persona «Kenji (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYGY6K8GS416E7Y2K6J8H7Q8/01KYGY6K8ZFQC12ER5K1KTYJA6.png)
+[WebServer] seed: persona «Kenji (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYGY6K8GS416E7Y2K6J8H7Q8/01KYGY6K9F1P7BX18Z1QMJHMXG.png)
+[WebServer] ▲ Next.js 16.2.10 (Turbopack)
+[WebServer] - Local:         http://localhost:3100
+[WebServer] - Network:       http://192.168.1.132:3100
+[WebServer] ✓ Ready in 299ms
+[WebServer] {"level":30,"time":1785127457000,"pid":47744,"hostname":"MBP-de-Carlos","name":"worker","intervalMs":5000,"generationReconcile":true,"msg":"sweeper arrancado"}
+[WebServer] {"level":30,"time":1785127457000,"pid":47744,"hostname":"MBP-de-Carlos","name":"worker","queue":"demo.noop","msg":"pg-boss arrancado: colas y consumers listos"}
+[WebServer] {"level":30,"time":1785127457001,"pid":47744,"hostname":"MBP-de-Carlos","name":"worker","health":{"ok":true,"db":true},"msg":"worker ready"}
+[WebServer] {"level":30,"time":1785127457382,"pid":47745,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","msg":"running startup migrations"}
+
+Running 6 tests using 5 workers
+
+[WebServer] {"level":30,"time":1785127457457,"pid":47745,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","msg":"startup migrations applied"}
+[WebServer] {"level":30,"time":1785127457636,"pid":47745,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","seeded":true,"msg":"auth.password_hash sembrado (first boot)"}
+[WebServer] {"level":30,"time":1785127457681,"pid":47745,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","provider":"fal","seeded":false,"msg":"secret.fal ya existía en BD (env ignorada; la BD es la fuente)"}
+[WebServer] {"level":30,"time":1785127457700,"pid":47745,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","provider":"firecrawl","seeded":false,"msg":"secret.firecrawl ya existía en BD (env ignorada; la BD es la fuente)"}
+[WebServer] {"level":30,"time":1785127457701,"pid":47745,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","provider":"anthropic","seeded":false,"msg":"secret.anthropic ya existía en BD (env ignorada; la BD es la fuente)"}
+[WebServer] {"level":30,"time":1785127457751,"pid":47745,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","msg":"sembrando datos de referencia (T3.9)"}
+[WebServer] {"level":30,"time":1785127457843,"pid":47745,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","hookLines":80,"ctaLines":30,"recipes":3,"msg":"librería sembrada o ya presente (insert-only)"}
+[WebServer] {"level":30,"time":1785127457919,"pid":47745,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","templates":56,"guardPacks":10,"modelProfiles":18,"msg":"galería sembrada o ya presente (insert-only)"}
+[WebServer] {"level":30,"time":1785127458024,"pid":47745,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","personas":11,"imagesCreated":0,"imagesFailed":0,"msg":"personas sembradas o ya presentes"}
+[WebServer] {"level":30,"time":1785127458026,"pid":47745,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","msg":"datos de referencia sembrados (T3.9)"}
+[WebServer] 
+[WebServer]  GET /login 200 in 234ms (next.js: 109ms, application-code: 125ms)
+[WebServer]  POST /api/login 200 in 244ms (next.js: 151ms, application-code: 92ms)
+[WebServer]  GET /api/dashboard 200 in 37ms (next.js: 18ms, application-code: 19ms)
+[WebServer]  GET / 200 in 1018ms (next.js: 37ms, proxy.ts: 32ms, application-code: 949ms)
+  ✓  1 [setup] › e2e/auth.setup.ts:10:1 › login y persistir sesión (2.2s)
+[WebServer]  GET /analyses/new 200 in 794ms (next.js: 78ms, proxy.ts: 11ms, application-code: 705ms)
+[WebServer]  GET /analyses/new 200 in 640ms (next.js: 6ms, proxy.ts: 4ms, application-code: 630ms)
+[WebServer]  GET /analyses/new 200 in 648ms (next.js: 23ms, proxy.ts: 4ms, application-code: 621ms)
+[WebServer]  GET /analyses/new 200 in 656ms (next.js: 43ms, proxy.ts: 6ms, application-code: 608ms)
+[WebServer]  GET /analyses/new 200 in 668ms (next.js: 43ms, proxy.ts: 21ms, application-code: 604ms)
+[WebServer] {"level":30,"time":1785127464777,"pid":47745,"hostname":"MBP-de-Carlos","name":"web","request_id":"4abcc8a1-9930-4562-82bc-4e544f6899b1","run_id":"01KYGY6VS06FFSQFW3CTG4GZFM","steps":4,"msg":"run creado"}
+[WebServer]  POST /api/runs 201 in 107ms (next.js: 3ms, application-code: 103ms)
+[WebServer]  POST /api/runs 201 in 153ms (next.js: 29ms, application-code: 124ms)
+[WebServer]  POST /api/runs 201 in 158ms (next.js: 21ms, application-code: 137ms)
+[WebServer]  POST /api/runs 201 in 158ms (next.js: 25ms, application-code: 133ms)
+[WebServer]  POST /api/runs 201 in 425ms (next.js: 154ms, application-code: 270ms)
+[WebServer] {"level":30,"time":1785127464779,"pid":47745,"hostname":"MBP-de-Carlos","name":"web","request_id":"71a7f3f4-7882-4f38-9432-1a238759fa86","run_id":"01KYGY6VRVWDNAGXN5QHJ2S93S","steps":4,"msg":"run creado"}
+[WebServer] {"level":30,"time":1785127464781,"pid":47745,"hostname":"MBP-de-Carlos","name":"web","request_id":"36bca63b-c0bb-4e93-9375-3803575c5d99","run_id":"01KYGY6VRGG56JB9DY3DY208HF","steps":4,"msg":"run creado"}
+[WebServer] {"level":30,"time":1785127464782,"pid":47745,"hostname":"MBP-de-Carlos","name":"web","request_id":"403fc7a7-36ab-4b4b-ae92-d73bed4ba8b4","run_id":"01KYGY6VRP6EXAA1YAMGV00AY6","steps":4,"msg":"run creado"}
+[WebServer] {"level":30,"time":1785127464783,"pid":47745,"hostname":"MBP-de-Carlos","name":"web","request_id":"1ff91bac-3f80-4764-8006-a798e03888b8","run_id":"01KYGY6VRBC401QPVFTN9P15KV","steps":4,"msg":"run creado"}
+[WebServer]  GET /api/runs/01KYGY6VRBC401QPVFTN9P15KV 200 in 1787ms (next.js: 1760ms, application-code: 26ms)
+[WebServer]  GET /api/runs/01KYGY6VRGG56JB9DY3DY208HF 200 in 1355ms (next.js: 1326ms, application-code: 29ms)
+[WebServer]  GET /runs/01KYGY6VRBC401QPVFTN9P15KV 200 in 3.8s (next.js: 464ms, proxy.ts: 22ms, application-code: 3.3s)
+[WebServer]  GET /runs/01KYGY6VRGG56JB9DY3DY208HF 200 in 3.8s (next.js: 465ms, proxy.ts: 22ms, application-code: 3.3s)
+[WebServer]  GET /api/runs/01KYGY6VRP6EXAA1YAMGV00AY6 200 in 1436ms (next.js: 1327ms, application-code: 109ms)
+[WebServer]  GET /api/runs/01KYGY6VS06FFSQFW3CTG4GZFM 200 in 1441ms (next.js: 1327ms, application-code: 115ms)
+[WebServer]  GET /api/runs/01KYGY6VRVWDNAGXN5QHJ2S93S 200 in 1469ms (next.js: 1349ms, application-code: 120ms)
+[WebServer]  GET /runs/01KYGY6VRP6EXAA1YAMGV00AY6 200 in 3.9s (next.js: 469ms, proxy.ts: 42ms, application-code: 3.4s)
+[WebServer]  GET /runs/01KYGY6VS06FFSQFW3CTG4GZFM 200 in 3.9s (next.js: 466ms, proxy.ts: 22ms, application-code: 3.4s)
+[WebServer]  GET /runs/01KYGY6VRVWDNAGXN5QHJ2S93S 200 in 4.0s (next.js: 471ms, proxy.ts: 43ms, application-code: 3.4s)
+[WebServer]  GET /api/steps/01KYGY6VRYGD1NM0D8GE9SWBQG 200 in 863ms (next.js: 836ms, application-code: 27ms)
+[WebServer]  GET /api/steps/01KYGY6VRSTCA401K3Z450G75D 200 in 863ms (next.js: 834ms, application-code: 29ms)
+[WebServer]  GET /api/steps/01KYGY6VRSTCA401K3Z450G75D 200 in 865ms (next.js: 834ms, application-code: 31ms)
+[WebServer]  GET /api/steps/01KYGY6VRMA679VSDPGBBHDPYS 200 in 863ms (next.js: 831ms, application-code: 32ms)
+[WebServer]  GET /api/steps/01KYGY6VR8A5M2230J0WXXRPY3 200 in 865ms (next.js: 830ms, application-code: 34ms)
+[WebServer]  GET /api/steps/01KYGY6VRYGD1NM0D8GE9SWBQG 200 in 874ms (next.js: 834ms, application-code: 40ms)
+[WebServer]  GET /api/steps/01KYGY6VRMA679VSDPGBBHDPYS 200 in 876ms (next.js: 834ms, application-code: 42ms)
+[WebServer]  GET /api/steps/01KYGY6VRYGD1NM0D8GE9SWBQG 200 in 879ms (next.js: 831ms, application-code: 48ms)
+[WebServer]  GET /api/steps/01KYGY6VRSTCA401K3Z450G75D 200 in 887ms (next.js: 835ms, application-code: 52ms)
+[WebServer]  GET /api/steps/01KYGY6VRMA679VSDPGBBHDPYS 200 in 884ms (next.js: 831ms, application-code: 53ms)
+[WebServer]  GET /api/steps/01KYGY6VRF9BVDX7MQ05XKF3NB 200 in 884ms (next.js: 830ms, application-code: 54ms)
+[WebServer]  GET /api/steps/01KYGY6VR8A5M2230J0WXXRPY3 200 in 884ms (next.js: 830ms, application-code: 54ms)
+[WebServer]  GET /api/steps/01KYGY6VR8A5M2230J0WXXRPY3 200 in 970ms (next.js: 830ms, application-code: 140ms)
+[WebServer]  GET /api/steps/01KYGY6VRF9BVDX7MQ05XKF3NB 200 in 970ms (next.js: 830ms, application-code: 140ms)
+[WebServer]  GET /api/steps/01KYGY6VRF9BVDX7MQ05XKF3NB 200 in 980ms (next.js: 828ms, application-code: 152ms)
+[WebServer] {"level":30,"time":1785127472569,"pid":47745,"hostname":"MBP-de-Carlos","name":"web","request_id":"21b0ade6-809a-46e2-ae28-2a71b67402b9","step_id":"01KYGY6VR8A5M2230J0WXXRPY3","msg":"checkpoint aprobado"}
+[WebServer]  POST /api/steps/01KYGY6VR8A5M2230J0WXXRPY3/approve 200 in 1389ms (next.js: 1194ms, application-code: 195ms)
+[WebServer]  POST /api/steps/01KYGY6VRSTCA401K3Z450G75D/approve 200 in 1075ms (next.js: 878ms, application-code: 196ms)
+[WebServer]  POST /api/steps/01KYGY6VRF9BVDX7MQ05XKF3NB/approve 200 in 1082ms (next.js: 884ms, application-code: 199ms)
+[WebServer]  POST /api/steps/01KYGY6VRYGD1NM0D8GE9SWBQG/approve 200 in 1089ms (next.js: 877ms, application-code: 212ms)
+[WebServer]  POST /api/steps/01KYGY6VRMA679VSDPGBBHDPYS/approve 200 in 1092ms (next.js: 877ms, application-code: 215ms)
+[WebServer] {"level":30,"time":1785127472572,"pid":47745,"hostname":"MBP-de-Carlos","name":"web","request_id":"21fb9fe6-c81a-4fe4-a797-4f4fc838334f","step_id":"01KYGY6VRSTCA401K3Z450G75D","msg":"checkpoint aprobado"}
+[WebServer] {"level":30,"time":1785127472572,"pid":47745,"hostname":"MBP-de-Carlos","name":"web","request_id":"eac8c043-a9a6-427b-817e-85e850525a63","step_id":"01KYGY6VRF9BVDX7MQ05XKF3NB","msg":"checkpoint aprobado"}
+[WebServer] {"level":30,"time":1785127472574,"pid":47745,"hostname":"MBP-de-Carlos","name":"web","request_id":"40cd50bf-588f-4412-b9c4-f6d861b96286","step_id":"01KYGY6VRYGD1NM0D8GE9SWBQG","msg":"checkpoint aprobado"}
+[WebServer] {"level":30,"time":1785127472588,"pid":47745,"hostname":"MBP-de-Carlos","name":"web","request_id":"5278ff48-6418-429d-9bf7-39ef14cfe19a","step_id":"01KYGY6VRMA679VSDPGBBHDPYS","msg":"checkpoint aprobado"}
+[WebServer]  GET /api/steps/01KYGY6VR9WYXRPWERHM9CVA01 200 in 28ms (next.js: 5ms, application-code: 23ms)
+[WebServer]  GET /api/steps/01KYGY6VR9WYXRPWERHM9CVA01 200 in 32ms (next.js: 14ms, application-code: 19ms)
+[WebServer]  GET /api/steps/01KYGY6VR9WYXRPWERHM9CVA01 200 in 63ms (next.js: 19ms, application-code: 43ms)
+[WebServer]  GET /api/personas/candidates?avatar_hint=Creadora%2030%20a%C3%B1os%2C%20estilo%20natural%2C%20ba%C3%B1o%20luminoso 200 in 374ms (next.js: 157ms, application-code: 217ms)
+[WebServer]  GET /api/personas 200 in 433ms (next.js: 277ms, application-code: 156ms)
+[WebServer]  GET /api/personas/candidates?avatar_hint=Creadora%2030%20a%C3%B1os%2C%20estilo%20natural%2C%20ba%C3%B1o%20luminoso 200 in 436ms (next.js: 275ms, application-code: 161ms)
+[WebServer]  GET /api/steps/01KYGY6VRT6SG82GQ48XQYJX01 200 in 75ms (next.js: 13ms, application-code: 62ms)
+[WebServer]  GET /api/steps/01KYGY6VRNS9BD1ZD1G6TQ09GW 200 in 133ms (next.js: 18ms, application-code: 115ms)
+[WebServer]  GET /api/steps/01KYGY6VRT6SG82GQ48XQYJX01 200 in 144ms (next.js: 4ms, application-code: 139ms)
+[WebServer]  GET /api/personas 200 in 635ms (next.js: 313ms, application-code: 322ms)
+[WebServer]  GET /api/steps/01KYGY6VRNS9BD1ZD1G6TQ09GW 200 in 239ms (next.js: 25ms, application-code: 214ms)
+[WebServer]  GET /api/steps/01KYGY6VRNS9BD1ZD1G6TQ09GW 200 in 264ms (next.js: 15ms, application-code: 249ms)
+[WebServer]  GET /api/steps/01KYGY6VRT6SG82GQ48XQYJX01 200 in 274ms (next.js: 22ms, application-code: 252ms)
+[WebServer]  POST /api/batches/estimate 200 in 704ms (next.js: 256ms, application-code: 448ms)
+[WebServer]  POST /api/batches/estimate 200 in 315ms (next.js: 15ms, application-code: 300ms)
+[WebServer]  GET /api/steps/01KYGY6VRZ32MF3MW38S6DZV79 200 in 230ms (next.js: 11ms, application-code: 219ms)
+[WebServer]  GET /api/steps/01KYGY6VRG9C98YEDVSA4ZGGKK 200 in 242ms (next.js: 6ms, application-code: 236ms)
+[WebServer]  GET /api/steps/01KYGY6VRZ32MF3MW38S6DZV79 200 in 251ms (next.js: 13ms, application-code: 238ms)
+[WebServer]  GET /api/steps/01KYGY6VRG9C98YEDVSA4ZGGKK 200 in 258ms (next.js: 9ms, application-code: 249ms)
+[WebServer]  GET /api/steps/01KYGY6VRZ32MF3MW38S6DZV79 200 in 253ms (next.js: 39ms, application-code: 214ms)
+[WebServer]  GET /api/steps/01KYGY6VRG9C98YEDVSA4ZGGKK 200 in 260ms (next.js: 40ms, application-code: 220ms)
+[WebServer]  GET /api/personas 200 in 254ms (next.js: 12ms, application-code: 242ms)
+[WebServer]  GET /api/personas/candidates?avatar_hint=Creadora%2030%20a%C3%B1os%2C%20estilo%20natural%2C%20ba%C3%B1o%20luminoso 200 in 193ms (next.js: 6ms, application-code: 188ms)
+[WebServer]  GET /api/personas 200 in 101ms (next.js: 3ms, application-code: 98ms)
+[WebServer]  GET /api/personas/candidates?avatar_hint=Creadora%2030%20a%C3%B1os%2C%20estilo%20natural%2C%20ba%C3%B1o%20luminoso 200 in 104ms (next.js: 21ms, application-code: 84ms)
+[WebServer]  GET /api/personas/candidates?avatar_hint=Creadora%2030%20a%C3%B1os%2C%20estilo%20natural%2C%20ba%C3%B1o%20luminoso 200 in 124ms (next.js: 12ms, application-code: 112ms)
+[WebServer]  GET /api/personas/candidates?avatar_hint=Creadora%2030%20a%C3%B1os%2C%20estilo%20natural%2C%20ba%C3%B1o%20luminoso 200 in 336ms (next.js: 8ms, application-code: 327ms)
+[WebServer]  GET /api/personas/candidates?avatar_hint=Creadora%2030%20a%C3%B1os%2C%20estilo%20natural%2C%20ba%C3%B1o%20luminoso 200 in 376ms (next.js: 16ms, application-code: 359ms)
+[WebServer]  GET /api/personas/candidates?avatar_hint=Creadora%2030%20a%C3%B1os%2C%20estilo%20natural%2C%20ba%C3%B1o%20luminoso 200 in 160ms (next.js: 4ms, application-code: 155ms)
+[WebServer]  GET /api/personas/candidates?avatar_hint=Creadora%2030%20a%C3%B1os%2C%20estilo%20natural%2C%20ba%C3%B1o%20luminoso 200 in 153ms (next.js: 9ms, application-code: 144ms)
+[WebServer]  GET /api/personas 200 in 417ms (next.js: 18ms, application-code: 399ms)
+[WebServer]  GET /api/personas 200 in 189ms (next.js: 20ms, application-code: 169ms)
+[WebServer]  GET /api/personas 200 in 175ms (next.js: 11ms, application-code: 165ms)
+[WebServer]  GET /api/personas/candidates?avatar_hint=Creadora%2030%20a%C3%B1os%2C%20estilo%20natural%2C%20ba%C3%B1o%20luminoso 200 in 172ms (next.js: 11ms, application-code: 161ms)
+[WebServer]  GET /api/personas 200 in 200ms (next.js: 9ms, application-code: 191ms)
+[WebServer]  GET /api/personas 200 in 210ms (next.js: 13ms, application-code: 197ms)
+[WebServer]  POST /api/batches/estimate 200 in 485ms (next.js: 8ms, application-code: 477ms)
+[WebServer]  POST /api/batches/estimate 200 in 465ms (next.js: 9ms, application-code: 456ms)
+[WebServer]  GET /api/personas 200 in 212ms (next.js: 25ms, application-code: 188ms)
+[WebServer]  POST /api/batches/estimate 200 in 305ms (next.js: 6ms, application-code: 299ms)
+[WebServer]  POST /api/batches/estimate 200 in 561ms (next.js: 13ms, application-code: 548ms)
+[WebServer]  POST /api/batches/estimate 200 in 258ms (next.js: 1842µs, application-code: 256ms)
+[WebServer]  POST /api/batches/estimate 200 in 210ms (next.js: 2ms, application-code: 207ms)
+[WebServer]  POST /api/batches/estimate 200 in 359ms (next.js: 9ms, application-code: 350ms)
+[WebServer]  POST /api/batches/estimate 200 in 209ms (next.js: 2ms, application-code: 207ms)
+[WebServer]  POST /api/batches/estimate 200 in 52ms (next.js: 3ms, application-code: 49ms)
+[WebServer]  GET /api/runs/01KYGY6VRBC401QPVFTN9P15KV/events 200 in 5.2s (next.js: 859ms, application-code: 4.3s)
+  ✓  3 [chromium] › e2e/batch-matrix.spec.ts:127:3 › CP2 · matriz y confirmación de gasto (T2.3) › el selector muestra las personas COMPATIBLES con el segmento del brief @f2 (12.5s)
+[WebServer]  POST /api/batches/estimate 200 in 70ms (next.js: 3ms, application-code: 67ms)
+[WebServer]  POST /api/batches/estimate 200 in 78ms (next.js: 14ms, application-code: 64ms)
+[WebServer]  POST /api/batches/estimate 200 in 108ms (next.js: 14ms, application-code: 93ms)
+[WebServer]  POST /api/batches/estimate 200 in 72ms (next.js: 2ms, application-code: 70ms)
+[WebServer]  GET /api/runs/01KYGY6VRGG56JB9DY3DY208HF/events 200 in 5.7s (next.js: 758ms, application-code: 4.9s)
+  ✓  2 [chromium] › e2e/batch-matrix.spec.ts:100:3 › CP2 · matriz y confirmación de gasto (T2.3) › cambiar el tier de Test a Standard actualiza el coste AL VUELO (sin recargar) @f2 @checkpoint (13.1s)
+[WebServer] (node:47745) DeprecationWarning: Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead.
+[WebServer] (Use `node --trace-deprecation ...` to show where the warning was created)
+[WebServer]  GET /api/runs/01KYGY6VRP6EXAA1YAMGV00AY6/events 200 in 5.5s (next.js: 575ms, application-code: 4.9s)
+  ✓  6 [chromium] › e2e/batch-matrix.spec.ts:159:3 › CP2 · matriz y confirmación de gasto (T2.3) › seleccionar ángulos e idiomas mueve el número de variantes de la matriz @f2 (13.1s)
+[WebServer] {"level":30,"time":1785127475064,"pid":47745,"hostname":"MBP-de-Carlos","name":"web","request_id":"52ea40bf-5207-4a5e-a017-7c78473bdb1c","step_id":"01KYGY6VRZ32MF3MW38S6DZV79","decision_kind":"matrix","next_run_id":"01KYGY75TRNA52PFHSQVDYDGTT","msg":"checkpoint aprobado"}
+[WebServer]  POST /api/steps/01KYGY6VRZ32MF3MW38S6DZV79/approve 200 in 309ms (next.js: 7ms, application-code: 302ms)
+[WebServer] {"level":30,"time":1785127475111,"pid":47745,"hostname":"MBP-de-Carlos","name":"web","request_id":"c3a79c00-604f-4838-9fae-32006524872a","step_id":"01KYGY6VRT6SG82GQ48XQYJX01","decision_kind":"matrix","next_run_id":"01KYGY75VFQKH12W40SY3VNK96","msg":"checkpoint aprobado"}
+[WebServer]  POST /api/steps/01KYGY6VRT6SG82GQ48XQYJX01/approve 200 in 232ms (next.js: 1737µs, application-code: 230ms)
+[WebServer]  GET /api/runs/01KYGY75TRNA52PFHSQVDYDGTT 200 in 16ms (next.js: 4ms, application-code: 12ms)
+[WebServer]  GET /runs/01KYGY75TRNA52PFHSQVDYDGTT 200 in 74ms (next.js: 14ms, proxy.ts: 3ms, application-code: 57ms)
+[WebServer]  GET /api/runs/01KYGY6VS06FFSQFW3CTG4GZFM/events 200 in 5.7s (next.js: 575ms, application-code: 5.1s)
+[WebServer]  GET /api/runs/01KYGY75VFQKH12W40SY3VNK96 200 in 8ms (next.js: 1376µs, application-code: 6ms)
+[WebServer]  GET /runs/01KYGY75VFQKH12W40SY3VNK96 200 in 58ms (next.js: 19ms, proxy.ts: 6ms, application-code: 33ms)
+[WebServer]  GET /api/runs/01KYGY6VRVWDNAGXN5QHJ2S93S/events 200 in 5.7s (next.js: 572ms, application-code: 5.2s)
+[WebServer]  GET /api/runs/01KYGY75TRNA52PFHSQVDYDGTT/events 200 in 128ms (next.js: 5ms, application-code: 124ms)
+  ✓  4 [chromium] › e2e/batch-matrix.spec.ts:182:3 › CP2 · matriz y confirmación de gasto (T2.3) › confirmar crea EXACTAMENTE las variantes de la matriz, con `filename_code` únicos @f2 @checkpoint (13.4s)
+[WebServer]  GET /api/steps/01KYGY75VEZHMT1EQCCR1E7824 200 in 14ms (next.js: 6ms, application-code: 8ms)
+  ✓  5 [chromium] › e2e/persona-library-cp2.spec.ts:112:3 › CP2 · toda la librería de personas es alcanzable (T5.13) › una persona que el `avatar_hint` NO sugiere se encuentra, se fija y el lote se crea con ella @f5 @checkpoint (13.5s)
+[WebServer]  GET /api/steps/01KYGY75VEZHMT1EQCCR1E7824 200 in 23ms (next.js: 8ms, application-code: 14ms)
+[WebServer]  GET /api/steps/01KYGY75VEZHMT1EQCCR1E7824 200 in 13ms (next.js: 4ms, application-code: 9ms)
+[WebServer]  GET /api/runs/01KYGY75VFQKH12W40SY3VNK96/events 200 in 158ms (next.js: 3ms, application-code: 155ms)
+
+  6 passed (22.5s)
+A_SPECS_EXIT=0

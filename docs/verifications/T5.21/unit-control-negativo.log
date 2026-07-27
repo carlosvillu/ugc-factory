@@ -1,0 +1,12 @@
+ ❯ |web:unit| src/components/intake/intake-form.test.tsx (5 tests | 1 failed) 1645ms
+     × un 500 re-habilita el botón y muestra el error (recuperable, no atascado) 1183ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  |web:unit| src/components/intake/intake-form.test.tsx > IntakeForm (intake manual) > un 500 re-habilita el botón y muestra el error (recuperable, no atascado)
+TestingLibraryElementError: Unable to find role="button" and name `/analizar/i`
+ ❯ Proxy.waitForWrapper ../../node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:163:27
+    119|     // instante intermedio. `waitFor` porque el re-enable puede quedar…
+    120|     expect(await screen.findByRole('alert')).toHaveTextContent(/boom/i…
+    121|     await waitFor(() => {
+    122|       expect(screen.getByRole('button', { name: /analizar/i })).toBeEn…
+ Test Files  1 failed (1)
+      Tests  1 failed | 4 passed (5)

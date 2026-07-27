@@ -28,10 +28,10 @@ export default defineConfig({
       name: 'chromium',
       use: { ...devices['Desktop Chrome'], storageState: 'e2e/.auth/user.json' },
       dependencies: ['setup'], // todos los specs (salvo los que sobreescriben storageState) arrancan logueados
-      // `spend.spec.ts`, `partial-regeneration.spec.ts` y `normal-generation-composes.spec.ts` NO corren
-      // aquí: tienen proyecto propio (ver abajo).
+      // `spend.spec.ts`, `partial-regeneration.spec.ts`, `normal-generation-composes.spec.ts` y
+      // `f5-export.spec.ts` NO corren aquí: tienen proyecto propio (ver abajo).
       testIgnore:
-        /spend\.spec\.ts|partial-regeneration\.spec\.ts|normal-generation-composes\.spec\.ts/,
+        /spend\.spec\.ts|partial-regeneration\.spec\.ts|normal-generation-composes\.spec\.ts|f5-export\.spec\.ts/,
     },
     // ── T1.19: el ledger de gasto es GLOBAL, así que su spec necesita EXCLUSIVIDAD ────────
     //
@@ -67,9 +67,11 @@ export default defineConfig({
     // dejando a F4 sin su fallo determinista (rojo en `f4-generation.spec.ts:190`). Mismo pecado
     // que `spend`: una premisa sostenida por suerte de ordenación.
     //
-    // FIX sin tocar F4 ni rebajar un assert (ni dooma por-run en el fake, que rompería `gallery`
-    // que NO tiene retry): proyecto PROPIO que DEPENDE de `chromium` ⇒ arranca cuando F4 ya
-    // reclamó y gastó el doom. Los submits del regen reciben request_ids frescos (no doomed) → su
+    // FIX sin tocar F4 ni rebajar un assert: proyecto PROPIO que DEPENDE de `chromium` ⇒ arranca
+    // cuando F4 ya reclamó y gastó el doom. (La objeción histórica de que un doom por-run rompería
+    // `gallery` —que NO tiene retry— está OBSOLETA desde T5.21: el discriminador `seed !== undefined`
+    // del fake ya excluye los submits SEEDLESS de galería, así que solo el pipeline seeded es
+    // doom-elegible.) Los submits del regen reciben request_ids frescos (no doomed) → su
     // callback de retry no llega a dispararse, y la dedup sigue mordiendo. Los demás specs
     // conservan su paralelismo; el coste es que 1 test corre al final (como `spend`).
     {
@@ -90,6 +92,23 @@ export default defineConfig({
     {
       name: 'normal-generation-composes',
       testMatch: /normal-generation-composes\.spec\.ts/,
+      use: { ...devices['Desktop Chrome'], storageState: 'e2e/.auth/user.json' },
+      dependencies: ['chromium'],
+    },
+    // ── T5.21: f5-export usa el camino seeded → compite por el «doom» global del fake, como los tres de arriba ──
+    //
+    // `f5-export.spec.ts` (ambos tests) recorre lote → generación → CP4 → biblioteca → bundle usando EL
+    // MISMO camino seeded (`seed !== undefined`) que `f4-generation.spec.ts`. En `pnpm test:e2e` COMPLETO,
+    // bajo `fullyParallel` y en el proyecto `chromium`, competía por el `doomedRequestId` one-shot del fake y
+    // a veces se lo ROBABA a f4 → f4 sin su fallo determinista (rojo en `f4-generation.spec.ts:190`). MISMO
+    // pecado y MISMO fix que `partial-regeneration`/`normal-generation-composes`: proyecto PROPIO que DEPENDE
+    // de `chromium` ⇒ arranca cuando f4 ya reclamó el doom, y sus submits reciben request_ids frescos (no
+    // doomed). El arming opt-in de B1 (T5.21) solo ESTRECHA la ventana arm→submit dentro del gate; este
+    // aislamiento CIERRA la carrera en la suite completa. `test:e2e:phases` (el gate) NO cambia: selecciona
+    // f1/f2/f4 por RUTA y f5-export no está en esa lista.
+    {
+      name: 'f5-export',
+      testMatch: /f5-export\.spec\.ts/,
       use: { ...devices['Desktop Chrome'], storageState: 'e2e/.auth/user.json' },
       dependencies: ['chromium'],
     },

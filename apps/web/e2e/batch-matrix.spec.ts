@@ -212,11 +212,31 @@ test.describe('CP2 · matriz y confirmación de gasto (T2.3)', () => {
       // ── LA CLÁUSULA, CONTRA LA BD ──────────────────────────────────────────────────────
       // El lote y sus variantes existen, en `planned`, y son EXACTAMENTE las de la matriz. Se
       // mira la BD y no un endpoint: la Verificación pide ver las filas.
+      //
+      // EL LOTE DE ESTE SPEC, anclado al run de N5 al que la app ACABA de navegar — NO
+      // `ORDER BY id DESC LIMIT 1` (T5.21): bajo `fullyParallel` otro spec crea un `ad_batch` en la
+      // ventana entre el commit y este SELECT (el propio f2-scripts.spec advierte del cruce) → «el
+      // último de la tabla» apuntaría al lote ajeno y el `toHaveLength(expectedCount)` descuadraría.
+      // El `project_id` TAMPOCO sirve: la app es mono-usuario y `ensureDefaultProject` mete TODOS los
+      // lotes de TODOS los specs en el proyecto por defecto. El ancla race-free es el run de N5
+      // (`scriptRunId`): confirmar crea el lote Y arranca N5 en la MISMA tx, y la URL solo cambia tras
+      // el commit (ver la navegación arriba), así que ese run es de ESTE `page`. El `batchId` va en el
+      // `config` del step N5 (`batchRunDefinition` → `AnalysisN5Config.batchId`), fijado al crear el
+      // run — NO en `pipeline_run.batch_id` (columna sin lector, no se puebla; ver
+      // `orchestrator/ports.ts:332`). Un solo step N5 por run → un solo lote (guardado por el
+      // `toHaveLength(1)`), sin orden global ni proyecto compartido.
+      const scriptRunId = new URL(page.url()).pathname.split('/runs/')[1] ?? '';
+      expect(scriptRunId, 'la navegación debe llevar al run de N5').not.toBe('');
       const batches = await queryStack<{
         id: string;
         status: string;
         cost_estimated_cents: number;
-      }>(`SELECT id, status, cost_estimated_cents FROM ad_batch ORDER BY id DESC LIMIT 1`);
+      }>(
+        `SELECT b.id, b.status, b.cost_estimated_cents FROM step_run sr
+           JOIN ad_batch b ON b.id = sr.config->>'batchId'
+          WHERE sr.run_id = $1 AND sr.node_key = 'N5'`,
+        [scriptRunId],
+      );
       expect(batches).toHaveLength(1);
       const batch = batches[0];
       expect(batch?.status).toBe('planned');

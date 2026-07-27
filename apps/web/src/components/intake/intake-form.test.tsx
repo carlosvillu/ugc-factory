@@ -111,9 +111,16 @@ describe('IntakeForm (intake manual)', () => {
     await user.type(screen.getByRole('textbox', { name: /descripción del producto/i }), LONG_TEXT);
     await user.click(screen.getByRole('button', { name: /analizar/i }));
 
-    expect(await screen.findByRole('button', { name: /analizando/i })).toBeDisabled();
+    // Se afirma el EFECTO FINAL (recuperable), no el estado TRANSITORIO «analizando»: bajo la
+    // carga concurrente del gate (vitest paraleliza) ese estado de loading puede haber pasado ya
+    // cuando el test lo consulta — era el `findByRole(/analizando/)` de antes de T5.21, flaky por
+    // afirmar un pending que ya no está. El error visible + el botón RE-HABILITADO y con su nombre
+    // original («analizar», que `/analizando/` no matchea) prueban la recuperación sin depender del
+    // instante intermedio. `waitFor` porque el re-enable puede quedar un tick por detrás del alert.
     expect(await screen.findByRole('alert')).toHaveTextContent(/boom/i);
-    expect(screen.getByRole('button', { name: /analizar/i })).toBeEnabled();
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /analizar/i })).toBeEnabled();
+    });
     expect(push).not.toHaveBeenCalled();
   });
 

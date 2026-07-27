@@ -1,0 +1,2 @@
+  [f5-export] › phases/f5-export.spec.ts:120:3 › F5 · journey de export: lote → generación → CP4 → biblioteca → bundle íntegro › un lote premium compone máster, se aprueba en CP4, aparece en /library y su bundle tiene el checksum del máster compuesto
+  [f5-export] › phases/f5-export.spec.ts:319:3 › F5 · journey de export: lote → generación → CP4 → biblioteca → bundle íntegro › (b1) texto libre sin imágenes → CP1 pide imágenes → «Generar packshot con IA» → la decisión persistida es ai_packshot

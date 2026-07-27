@@ -184,10 +184,25 @@ test.describe('CP2 · toda la librería de personas es alcanzable (T5.13)', () =
         timeout: 30_000,
       });
 
-      const batches = await queryStack<{ id: string }>(
-        `SELECT id FROM ad_batch ORDER BY id DESC LIMIT 1`,
+      // EL LOTE DE ESTE SPEC, anclado al run de N5 al que la app ACABA de navegar — NO
+      // `ORDER BY id DESC LIMIT 1` (T5.21): bajo `fullyParallel` otro spec crea un `ad_batch` en la
+      // ventana entre el commit y ese SELECT y «el último de la tabla» apuntaría al lote ajeno → el
+      // `toHaveLength` descuadraría. El `project_id` TAMPOCO sirve de ancla: la app es mono-usuario y
+      // `ensureDefaultProject` mete TODOS los lotes de TODOS los specs en el proyecto por defecto.
+      // El ancla race-free es el run de N5 (`scriptRunId`): confirmar CP2 crea el lote Y arranca el
+      // run de N5 en la MISMA tx, y la URL solo cambia tras el commit (el propio spec lo comenta),
+      // así que ese run es de ESTE `page`. El `batchId` va en el `config` del step N5
+      // (`batchRunDefinition` → `AnalysisN5Config.batchId`), fijado al crear el run — NO en
+      // `pipeline_run.batch_id` (columna sin lector, no se puebla; ver `orchestrator/ports.ts:332`).
+      // Un solo step N5 por run → un solo `batchId` (el `toHaveLength(1)` lo guarda).
+      const scriptRunId = new URL(page.url()).pathname.split('/runs/')[1] ?? '';
+      expect(scriptRunId, 'la navegación debe llevar al run de N5').not.toBe('');
+      const batches = await queryStack<{ id: string | null }>(
+        `SELECT config->>'batchId' AS id FROM step_run WHERE run_id = $1 AND node_key = 'N5'`,
+        [scriptRunId],
       );
-      const batchId = batches[0]?.id;
+      expect(batches).toHaveLength(1);
+      const batchId = batches[0]?.id ?? undefined;
       expect(batchId).toBeDefined();
 
       const variants = await queryStack<{ persona_id: string | null }>(

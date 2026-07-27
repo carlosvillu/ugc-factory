@@ -1,0 +1,20 @@
+{
+  "projectId": "01KYGJC53NHM0YWDZ9ZB2RJZ8Q",
+  "projectName": "REVERIF T5.10 x9go0o",
+  "brief": "01KYGJC54HMHG2DZDF3XD7RC1Y",
+  "b1": "01KYGJC54N28GQPXDBRYSAAX24",
+  "b2": "01KYGJC54W2SBY2QR79CMHWWR9",
+  "variants": {
+    "composing": "01KYGJC54PHKY8RBAC6G04MPTW",
+    "qa": "01KYGJC54QQCYZGB45TDAE2YWG",
+    "published": "01KYGJC54Q1FW1952SJHH9RFWP",
+    "planned": "01KYGJC54QE5TJFNZYQK9AR0KD",
+    "flip_generating": "01KYGJC54Q0SN1V3E9XM08XYNA",
+    "b2_approved": "01KYGJC5526S2V489KGTJVDKAF"
+  },
+  "charges": {
+    "b1_month": 555,
+    "b1_lastmonth": 999,
+    "b2_month": 333
+  }
+}

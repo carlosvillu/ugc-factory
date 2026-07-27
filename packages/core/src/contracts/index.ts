@@ -18,6 +18,40 @@ export {
   type DayTotal,
   type CostProvider,
 } from './spend';
+// Proyecto y dashboard (T5.10, §8.1): CRUD de proyectos + los agregados que pintan
+// el dashboard `/` y la vista de proyecto `/projects/[id]`. Céntimos enteros (project.ts).
+export {
+  ProjectStatusSchema,
+  ProjectSchema,
+  CreateProjectSchema,
+  UpdateProjectSchema,
+  ActiveBatchSchema,
+  AttentionItemSchema,
+  DashboardSummarySchema,
+  ProjectBriefSchema,
+  ProjectBatchSchema,
+  VariantStatusSchema,
+  ProjectVariantSchema,
+  ProjectMetricsSchema,
+  ProjectDetailSchema,
+  ProjectSummarySchema,
+  ProjectListSchema,
+  type ProjectStatus,
+  type Project,
+  type CreateProject,
+  type UpdateProject,
+  type ActiveBatch,
+  type AttentionItem,
+  type DashboardSummary,
+  type ProjectBrief,
+  type ProjectBatch,
+  type VariantStatus,
+  type ProjectVariant,
+  type ProjectMetrics,
+  type ProjectDetail,
+  type ProjectSummary,
+  type ProjectList,
+} from './project';
 // Contratos del análisis (F1, T1.1): la columna vertebral del pipeline
 // `IntakeConfig → RawContent → VisualAnalysis → ProductBrief` (§7.4). El ProductBrief
 // es el contrato central (Apéndice A) con las 3 divergencias del Apéndice A, y su

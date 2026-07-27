@@ -8,7 +8,10 @@ import { cn } from '@/lib/utils';
 // values map to tokens (accent / surface-3 / danger-soft / text-on-accent…);
 // #fff → text-text-on-accent; the focus ring is the DS single ring
 // (ring-3 ring-ring). No icon library — the icon mode holds a Unicode glyph.
-const buttonVariants = cva(
+// Exported so a Next `<Link>` can wear the exact DS button skin without hand-rolling
+// accent tokens (a link is not a <button>; the DS button is a <button>). Used by the
+// dashboard "+ Nuevo lote" CTA (T5.10), which navigates.
+export const buttonVariants = cva(
   'inline-flex shrink-0 items-center justify-center gap-2 font-sans whitespace-nowrap outline-none transition-colors focus-visible:ring-3 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-60 disabled:bg-surface-3 disabled:text-text-4 disabled:border-border cursor-pointer',
   {
     variants: {

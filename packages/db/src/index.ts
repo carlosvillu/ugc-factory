@@ -22,8 +22,21 @@ export type { DbClient } from './client';
 // fuera de una tx — que es justo la propiedad que hace atómico el efecto de dominio.
 export type { Db } from './client';
 export { runMigrations } from './migrate';
-export { createProject, getProject, ensureDefaultProject } from './repos/project.repo';
-export type { NewProject } from './schema/project';
+export {
+  createProject,
+  getProject,
+  listProjects,
+  updateProject,
+  ensureDefaultProject,
+} from './repos/project.repo';
+export type { NewProject, Project } from './schema/project';
+// Agregados del dashboard `/` y de la vista de proyecto `/projects/[id]` (T5.10): los
+// consumen los route handlers de `/api/projects` y `/api/dashboard` de apps/web.
+export {
+  getDashboardSummary,
+  batchCountsByProject,
+  getProjectDetail,
+} from './repos/dashboard.repo';
 // Tipos de fila de las tablas del análisis (T1.2): los consumen las factories
 // makeUrlAnalysis/makeProductBrief/makeBrandKit de @ugc/test-utils. Los repos de
 // caso de uso de estas tablas llegan con sus consumidores (T1.3+); aquí solo el

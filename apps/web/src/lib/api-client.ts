@@ -11,11 +11,15 @@ import {
   BatchScriptsSchema,
   ErrorEnvelopeSchema,
   LibraryListSchema,
+  ProjectListSchema,
+  ProjectSchema,
   VariantLineageSchema,
   type BatchConfig,
   type CheckpointDecision,
+  type CreateProject,
   type ErrorEnvelope,
   type LibraryVariantSummary,
+  type UpdateProject,
   type VariantLineageResponse,
 } from '@ugc/core/contracts';
 import {
@@ -310,6 +314,20 @@ export const personaActions = {
       GeneratePersonaImagesResponseSchema,
       {},
     ),
+};
+
+// ── Proyectos · CRUD mínimo (T5.10, §8.1) ────────────────────────────────────
+// La superficie de datos del dashboard `/` y de `/projects/[id]`. Toda mutación de
+// proyecto pasa por aquí (API REST) — nada de server actions ni de tocar la BD desde
+// componentes (architecture.md §3/§4).
+export const projectActions = {
+  list: () => api.get('/api/projects', ProjectListSchema),
+  create: (body: CreateProject) => api.post('/api/projects', ProjectSchema, body),
+  update: (id: string, patch: UpdateProject) =>
+    api.patch(`/api/projects/${id}`, ProjectSchema, patch),
+  /** Archivar es el "delete" de CRUD mínimo: retira el proyecto sin borrarlo (schema/project:
+   *  `archived`). Un DELETE físico cascadearía análisis/briefs/lotes/variantes reales. */
+  archive: (id: string) => api.patch(`/api/projects/${id}`, ProjectSchema, { status: 'archived' }),
 };
 
 // ── CP2 · matriz y coste del lote (T2.3) ─────────────────────────────────────

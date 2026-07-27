@@ -33,6 +33,13 @@ import { queryStack, stackDatabaseUrl, assetsDir } from './support/stack-db';
 const stackDb = createDb(stackDatabaseUrl);
 const storage = makeLocalStorageAdapter({ root: assetsDir });
 
+/** Sufijo único por ejecución. `persona.name` es UNIQUE y el stack e2e NO trunca entre
+ *  corridas: bajo `fullyParallel` (y en re-runs sobre el mismo stack) un nombre de persona
+ *  ESTÁTICO colisiona con el de otra corrida/worker. Los nombres de persona de este spec son
+ *  scaffolding incidental (verifica export DUAL/linaje, NO afirma el nombre), así que se les
+ *  cuelga este sufijo para hacerlos únicos sin tocar ninguna aserción. */
+const RUN = newUlid().slice(-8);
+
 /** El brief que da el `product.name`/`brand_name` del bundle (metadata.json). */
 const BRIEF = { product: { name: 'Serum Vitamina C', brand_name: 'Nuvela' } };
 
@@ -206,7 +213,7 @@ test.describe('biblioteca de vídeos /library (T5.7)', () => {
       hookText: 'La vitamina C que sí se nota',
       templateSlug: 'before-after-skincare',
       templateVersion: 3,
-      personaName: 'Lucía',
+      personaName: `Lucía ${RUN}`,
       withNoBed: true,
     });
 
@@ -269,7 +276,11 @@ test.describe('biblioteca de vídeos /library (T5.7)', () => {
       hookText: 'The vitamin C you can actually see',
       templateSlug: 'before-after-dual',
       templateVersion: 2,
-      personaName: 'Maya',
+      // Sufijo único por corrida (ver `RUN`): un literal estático colisiona con el mismo
+      // spec en otro worker/re-run porque el stack no trunca. Fix de-brittling drive-by en
+      // T5.10; el primer intento (renombrar a un literal) era insuficiente — el nombre debe
+      // ser único POR CORRIDA. El nombre de persona es scaffolding, no una aserción.
+      personaName: `Maya Dual ${RUN}`,
       withNoBed: true,
     });
 
@@ -322,7 +333,7 @@ test.describe('biblioteca de vídeos /library (T5.7)', () => {
       hookText: 'Hook en español',
       templateSlug: 'tpl-es',
       templateVersion: 1,
-      personaName: 'Lucía ES',
+      personaName: `Lucía ES ${RUN}`,
       withNoBed: false,
     });
     const en = await seedApprovedVariant({
@@ -332,7 +343,7 @@ test.describe('biblioteca de vídeos /library (T5.7)', () => {
       hookText: 'Hook in English',
       templateSlug: 'tpl-en',
       templateVersion: 1,
-      personaName: 'Maya EN',
+      personaName: `Maya EN ${RUN}`,
       withNoBed: false,
     });
 
@@ -366,7 +377,7 @@ test.describe('biblioteca de vídeos /library (T5.7)', () => {
       hookText: 'Sin fichero no-bed',
       templateSlug: 'tpl-nonobed',
       templateVersion: 1,
-      personaName: 'Sin NoBed',
+      personaName: `Sin NoBed ${RUN}`,
       withNoBed: false,
     });
     const res = await apiCall(
@@ -392,7 +403,7 @@ test.describe('biblioteca de vídeos /library (T5.7)', () => {
       hookText: 'Descarga que falla en la UI',
       templateSlug: 'tpl-ui409',
       templateVersion: 1,
-      personaName: 'UI 409',
+      personaName: `UI 409 ${RUN}`,
       withNoBed: false,
     });
 

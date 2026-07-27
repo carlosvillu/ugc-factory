@@ -3,7 +3,7 @@
 // de una tx. En T0.3 solo create/get (Entrega T0.3: "repos tipados mínimos");
 // list/update/archive llegan con sus consumidores. Nada de generic
 // repository/active record (db.md §4).
-import { asc, eq, sql } from 'drizzle-orm';
+import { asc, desc, eq, sql } from 'drizzle-orm';
 import type { Db, DbClient } from '../client';
 import { project, type NewProject, type Project } from '../schema/project';
 
@@ -25,6 +25,31 @@ export async function createProject(db: Db, values: NewProject): Promise<Project
 /** Lee un project por id; `undefined` si no existe. */
 export async function getProject(db: Db, id: string): Promise<Project | undefined> {
   const [row] = await db.select().from(project).where(eq(project.id, id));
+  return row;
+}
+
+/** Lista los projects ACTIVOS, más nuevos primero (id ULID DESC = orden de creación,
+ *  servido por el btree de la PK; mismo criterio que `listRuns`). El índice `/projects`
+ *  y la sección de proyectos del dashboard lo consumen: filtra a `active` en el SERVIDOR
+ *  (no traer los archivados y descartarlos en el cliente) para que el payload y la
+ *  agregación no crezcan sin techo con el archivo. Archivar retira de esta lista. */
+export async function listProjects(db: Db): Promise<Project[]> {
+  return db.select().from(project).where(eq(project.status, 'active')).orderBy(desc(project.id));
+}
+
+/** Aplica un PATCH parcial a un project y devuelve la fila actualizada, o `undefined`
+ *  si el id no existe. `updatedAt` lo refresca la BD (columns.helpers). Los campos
+ *  ausentes en `values` NO se tocan (Drizzle omite las claves `undefined`). */
+export async function updateProject(
+  db: Db,
+  id: string,
+  values: Partial<Pick<NewProject, 'name' | 'defaultLocale' | 'notes' | 'status'>>,
+): Promise<Project | undefined> {
+  const [row] = await db
+    .update(project)
+    .set({ ...values, updatedAt: new Date() })
+    .where(eq(project.id, id))
+    .returning();
   return row;
 }
 

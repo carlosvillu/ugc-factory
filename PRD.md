@@ -862,3 +862,9 @@ Todos los payloads son schemas Zod de `packages/core`; errores con formato `{cod
 | `/api/gallery/templates[...]` | CRUD | Templates, versiones, prueba de template |
 | `/api/personas[...]` | CRUD | Personas, generación de referencias, preview de voz |
 | `/api/spend`, `/api/settings` | GET/PATCH | Ledger/presupuestos; credenciales y presets |
+| `/api/projects` | GET/POST | Listar / crear proyectos (§8.1) — añadido T5.10 |
+| `/api/projects/:id` | GET/PATCH | Leer / editar proyecto (archivar = `PATCH status='archived'`) — añadido T5.10 |
+| `/api/dashboard` | GET | Agregados del dashboard `/` (KPIs del mes, lotes activos con gasto, alertas) — añadido T5.10 |
+
+<!-- Regla 6 (2026-07-26, T5.10): estas tres rutas + el campo `monthSpendCents` en `ActiveBatchSchema` son superficie de API que el Apéndice E v1 no listaba. Se añaden aquí y se anotan en planning al cerrar T5.10 (dashboard y vista de proyecto). El CRUD de proyectos es "mínimo": no hay DELETE físico, el archivado es un PATCH de estado. -->
+

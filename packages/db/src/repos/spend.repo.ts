@@ -213,8 +213,10 @@ async function totalsByDay(db: Db): Promise<DayTotal[]> {
 }
 
 /** Presupuesto `monthly` vigente (el más reciente por id ULID, que es ordenable por
- *  tiempo), o `undefined` si no hay ninguno. En T7.7 llega el scope `batch`. */
-async function findMonthlyBudget(db: Db): Promise<Budget | undefined> {
+ *  tiempo), o `undefined` si no hay ninguno. En T7.7 llega el scope `batch`. Exportada
+ *  para que el dashboard (`monthlyBudgetCents`) reuse esta misma lectura tipada en vez de
+ *  reimplementarla con SQL crudo. */
+export async function findMonthlyBudget(db: Db): Promise<Budget | undefined> {
   const [row] = await db
     .select()
     .from(budget)

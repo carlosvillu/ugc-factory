@@ -1,0 +1,33 @@
+project_month [{"c":888}]
+project_alltime [{"c":1887}]
+per_batch_month [{"batch_id":"01KYGJC54N28GQPXDBRYSAAX24","c":555},{"batch_id":"01KYGJC54W2SBY2QR79CMHWWR9","c":333}]
+variants_by_status [{"status":"planned","n":1},{"status":"generating","n":1},{"status":"composing","n":1},{"status":"qa","n":1},{"status":"approved","n":1},{"status":"published","n":1}]
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/pg-pool@3.14.0_pg@8.22.0/node_modules/pg-pool/index.js:45
+    Error.captureStackTrace(err)
+          ^
+
+error: could not determine data type of parameter $1
+    at /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/pg-pool@3.14.0_pg@8.22.0/node_modules/pg-pool/index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async q (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/docs/verifications/T5.10/probe.mjs:6:13)
+    at async <anonymous> (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/docs/verifications/T5.10/probe.mjs:25:1) {
+  length: 124,
+  severity: 'ERROR',
+  code: '42P18',
+  detail: undefined,
+  hint: undefined,
+  position: undefined,
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: 'postgres.c',
+  line: '742',
+  routine: 'pg_analyze_and_rewrite_varparams'
+}
+
+Node.js v22.18.0

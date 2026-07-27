@@ -1,0 +1,114 @@
+[WebServer] seed: persona «Maya» ← imagen sintética 1638×2048 px (personas/01KYGK32J44CDE6PYJY2E1WMAW/01KYGK32JNQ617J97QYGMA8SWH.png)
+[WebServer] seed: persona «Maya» ← imagen sintética 1638×2048 px (personas/01KYGK32J44CDE6PYJY2E1WMAW/01KYGK32K8K9BFX08GZ9Z46142.png)
+[WebServer] seed: persona «Maya» ← imagen sintética 1638×2048 px (personas/01KYGK32J44CDE6PYJY2E1WMAW/01KYGK32KVC2JNET2MP8X5Y4DB.png)
+[WebServer] seed: persona «Lucía (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYGK32M52DSK6Q8MA7DD7ZGV/01KYGK32MRX6MSCFD9CQ5MEB5A.png)
+[WebServer] seed: persona «Lucía (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYGK32M52DSK6Q8MA7DD7ZGV/01KYGK32NGQ4FGGB3GY1S9773G.png)
+[WebServer] seed: persona «Marcus (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYGK32NPAWNNFEQFQH51Y97M/01KYGK32P7NHASMB76MYCS892P.png)
+[WebServer] seed: persona «Marcus (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYGK32NPAWNNFEQFQH51Y97M/01KYGK32PZ0GZRPB2SBDS97T3D.png)
+[WebServer] seed: persona «Nerea (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYGK32QB4HSTQZHYQE11ZQD3/01KYGK32QTAKV1315PVXVER0PQ.png)
+[WebServer] seed: persona «Nerea (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYGK32QB4HSTQZHYQE11ZQD3/01KYGK32RCVAPHMR3AZN4XP8MB.png)
+[WebServer] seed: persona «Carmen (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYGK32RGG1YA2B74ZN321H3R/01KYGK32RZYKGVVSR9D8EVV71R.png)
+[WebServer] seed: persona «Carmen (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYGK32RGG1YA2B74ZN321H3R/01KYGK32SGZJYDC4TNQEZ1H5XT.png)
+[WebServer] seed: persona «Alex (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYGK32SNG72MD7C1N3NE5PC7/01KYGK32T7V2E2ZVP6D2G33VCM.png)
+[WebServer] seed: persona «Alex (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYGK32SNG72MD7C1N3NE5PC7/01KYGK32TREMCGZ3S3X9GPTBQ0.png)
+[WebServer] seed: persona «Rosa (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYGK32TW6YHXQSK8DPSWKW8Z/01KYGK32VBF4B321RZG8MQFT38.png)
+[WebServer] seed: persona «Rosa (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYGK32TW6YHXQSK8DPSWKW8Z/01KYGK32VWNCNSKWHSGQ349S7P.png)
+[WebServer] seed: persona «Priya (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYGK32W2HFRT0GK03EX8VHHD/01KYGK32WHJEYZ14B64T22PAQY.png)
+[WebServer] seed: persona «Priya (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYGK32W2HFRT0GK03EX8VHHD/01KYGK32X2G5HJ0FWVXMRSTDJH.png)
+[WebServer] seed: persona «David (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYGK32X6S6XSWZS7BHA7T5ZR/01KYGK32XP6S2Z61MW8T6G3J98.png)
+[WebServer] seed: persona «David (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYGK32X6S6XSWZS7BHA7T5ZR/01KYGK32YCMSM375NBQZ11RA3Q.png)
+[WebServer] seed: persona «Chloe (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYGK32YJ7N8Q4TRG8MSJ2KQ5/01KYGK32Z26MSHC1TVW7AQYVW9.png)
+[WebServer] seed: persona «Chloe (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYGK32YJ7N8Q4TRG8MSJ2KQ5/01KYGK32ZPJ4G52FMNMWVJYWRC.png)
+[WebServer] seed: persona «Kenji (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYGK32ZVW55AD5EQN06ZSJFQ/01KYGK330B5J4BHN4TNVNDMPF8.png)
+[WebServer] seed: persona «Kenji (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYGK32ZVW55AD5EQN06ZSJFQ/01KYGK330X7R52ZVZGM19SG572.png)
+[WebServer] ▲ Next.js 16.2.10 (Turbopack)
+[WebServer] - Local:         http://localhost:3100
+[WebServer] - Network:       http://192.168.1.132:3100
+[WebServer] ✓ Ready in 356ms
+[WebServer] {"level":30,"time":1785115807900,"pid":81838,"hostname":"MBP-de-Carlos","name":"worker","intervalMs":5000,"generationReconcile":true,"msg":"sweeper arrancado"}
+[WebServer] {"level":30,"time":1785115807900,"pid":81838,"hostname":"MBP-de-Carlos","name":"worker","queue":"demo.noop","msg":"pg-boss arrancado: colas y consumers listos"}
+[WebServer] {"level":30,"time":1785115807901,"pid":81838,"hostname":"MBP-de-Carlos","name":"worker","health":{"ok":true,"db":true},"msg":"worker ready"}
+[WebServer] {"level":30,"time":1785115808575,"pid":81839,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","msg":"running startup migrations"}
+[WebServer] {"level":30,"time":1785115808775,"pid":81839,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","msg":"startup migrations applied"}
+[WebServer] {"level":30,"time":1785115809130,"pid":81839,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","seeded":true,"msg":"auth.password_hash sembrado (first boot)"}
+[WebServer] {"level":30,"time":1785115809193,"pid":81839,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","provider":"fal","seeded":false,"msg":"secret.fal ya existía en BD (env ignorada; la BD es la fuente)"}
+[WebServer] {"level":30,"time":1785115809253,"pid":81839,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","provider":"firecrawl","seeded":false,"msg":"secret.firecrawl ya existía en BD (env ignorada; la BD es la fuente)"}
+[WebServer] {"level":30,"time":1785115809269,"pid":81839,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","provider":"anthropic","seeded":false,"msg":"secret.anthropic ya existía en BD (env ignorada; la BD es la fuente)"}
+[WebServer] {"level":30,"time":1785115809324,"pid":81839,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","msg":"sembrando datos de referencia (T3.9)"}
+[WebServer] {"level":30,"time":1785115809464,"pid":81839,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","hookLines":80,"ctaLines":30,"recipes":3,"msg":"librería sembrada o ya presente (insert-only)"}
+[WebServer] {"level":30,"time":1785115809559,"pid":81839,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","templates":56,"guardPacks":10,"modelProfiles":18,"msg":"galería sembrada o ya presente (insert-only)"}
+[WebServer] {"level":30,"time":1785115809740,"pid":81839,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","personas":11,"imagesCreated":0,"imagesFailed":0,"msg":"personas sembradas o ya presentes"}
+[WebServer] {"level":30,"time":1785115809740,"pid":81839,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","msg":"datos de referencia sembrados (T3.9)"}
+[WebServer] 
+
+Running 11 tests using 5 workers
+
+[WebServer]  GET /login 200 in 254ms (next.js: 114ms, application-code: 140ms)
+[WebServer]  POST /api/login 200 in 277ms (next.js: 169ms, application-code: 108ms)
+[WebServer]  GET /api/dashboard 200 in 51ms (next.js: 22ms, application-code: 30ms)
+[WebServer]  GET / 200 in 1125ms (next.js: 46ms, proxy.ts: 36ms, application-code: 1043ms)
+  ✓   1 [setup] › e2e/auth.setup.ts:10:1 › login y persistir sesión (2.4s)
+[WebServer]  GET /api/projects 200 in 125ms (next.js: 32ms, application-code: 93ms)
+[WebServer]  GET /api/projects 200 in 292ms (next.js: 39ms, application-code: 252ms)
+[WebServer]  GET /api/projects 200 in 291ms (next.js: 46ms, application-code: 245ms)
+[WebServer]  GET /projects 200 in 754ms (next.js: 132ms, proxy.ts: 19ms, application-code: 603ms)
+[WebServer]  GET /api/dashboard 200 in 76ms (next.js: 4ms, application-code: 73ms)
+[WebServer]  GET /projects 200 in 1052ms (next.js: 75ms, proxy.ts: 21ms, application-code: 956ms)
+[WebServer]  GET /projects 200 in 1055ms (next.js: 171ms, proxy.ts: 18ms, application-code: 867ms)
+[WebServer]  GET / 200 in 730ms (next.js: 10ms, proxy.ts: 24ms, application-code: 696ms)
+  ✓   3 [chromium] › e2e/dashboard.spec.ts:216:3 › dashboard y vista de proyecto (T5.10) › el dashboard muestra el lote activo del proyecto y KPIs reales (2.6s)
+[WebServer] {"level":30,"time":1785115818427,"pid":81839,"hostname":"MBP-de-Carlos","name":"web","request_id":"2a7d962e-f2ff-44a0-b197-f0ffe3bd5079","project_id":"01KYGK3E7RKJ992Q9T277REQ2Y","msg":"proyecto creado"}
+[WebServer]  POST /api/projects 201 in 253ms (next.js: 17ms, application-code: 237ms)
+[WebServer]  POST /api/projects 201 in 186ms (next.js: 5ms, application-code: 181ms)
+[WebServer] {"level":30,"time":1785115818452,"pid":81839,"hostname":"MBP-de-Carlos","name":"web","request_id":"4f7078ca-0ced-4329-8c12-118903063a12","project_id":"01KYGK3ECCK33WYKBSP6SK49CM","msg":"proyecto creado"}
+[WebServer] {"level":30,"time":1785115818550,"pid":81839,"hostname":"MBP-de-Carlos","name":"web","request_id":"e127ffdc-c9b6-4f88-85e1-dda00875e54c","project_id":"01KYGK3EF9FA82VKBHS57DRACB","msg":"proyecto creado"}
+[WebServer]  POST /api/projects 201 in 98ms (next.js: 5ms, application-code: 93ms)
+  ✓   6 [chromium] › e2e/dashboard.spec.ts:174:3 › dashboard y vista de proyecto (T5.10) › ARCHIVAR que FALLA: superficie el error en el diálogo y NO oculta el proyecto (regla 5a) (3.6s)
+[WebServer]  GET /api/library 200 in 47ms (next.js: 23ms, application-code: 24ms)
+[WebServer] {"level":30,"time":1785115819729,"pid":81839,"hostname":"MBP-de-Carlos","name":"web","request_id":"418f2a04-38ed-4f66-840d-be9debbd5ccb","project_id":"01KYGK3ECCK33WYKBSP6SK49CM","msg":"proyecto actualizado"}
+[WebServer]  PATCH /api/projects/01KYGK3ECCK33WYKBSP6SK49CM 200 in 796ms (next.js: 623ms, application-code: 173ms)
+[WebServer]  GET /api/projects/01KYGK3BV5M2DVJQTAT7YQTH79 200 in 1938ms (next.js: 1748ms, application-code: 190ms)
+[WebServer]  GET /library 200 in 1263ms (next.js: 67ms, proxy.ts: 9ms, application-code: 1187ms)
+[WebServer]  GET /projects/01KYGK3BV5M2DVJQTAT7YQTH79 200 in 4.2s (next.js: 1232ms, proxy.ts: 21ms, application-code: 3.0s)
+[WebServer]  GET /api/library 200 in 340ms (next.js: 12ms, application-code: 328ms)
+[WebServer]  GET /library 200 in 1349ms (next.js: 14ms, proxy.ts: 713ms, application-code: 623ms)
+[WebServer]  GET /api/projects/01KYGK3E7RKJ992Q9T277REQ2Y 200 in 2.9s (next.js: 796ms, application-code: 2.1s)
+[WebServer]  GET /projects/01KYGK3E7RKJ992Q9T277REQ2Y 200 in 3.1s (next.js: 39ms, proxy.ts: 11ms, application-code: 3.0s)
+[WebServer] {"level":30,"time":1785115821930,"pid":81839,"hostname":"MBP-de-Carlos","name":"web","request_id":"49b9e967-e991-4b9b-89b7-3400391d4824","project_id":"01KYGK3ECCK33WYKBSP6SK49CM","msg":"proyecto actualizado"}
+  ✓   5 [chromium] › e2e/dashboard.spec.ts:242:3 › dashboard y vista de proyecto (T5.10) › /projects/[id] lista briefs y variantes con estados correctos y gasto exacto (6.3s)
+[WebServer]  PATCH /api/projects/01KYGK3ECCK33WYKBSP6SK49CM 200 in 1380ms (next.js: 8ms, application-code: 1372ms)
+[WebServer]  GET /api/projects 200 in 130ms (next.js: 5ms, application-code: 125ms)
+[WebServer]  GET /projects 200 in 292ms (next.js: 7ms, proxy.ts: 9ms, application-code: 276ms)
+[WebServer]  GET /api/dashboard 200 in 361ms (next.js: 7ms, application-code: 353ms)
+[WebServer]  GET / 200 in 599ms (next.js: 3ms, proxy.ts: 16ms, application-code: 579ms)
+  ✓   4 [chromium] › e2e/dashboard.spec.ts:126:3 › dashboard y vista de proyecto (T5.10) › CRUD mínimo de proyecto desde la UI: crear → editar → archivar (7.1s)
+  ✓   2 [chromium] › e2e/dashboard.spec.ts:281:3 › dashboard y vista de proyecto (T5.10) › CONTROL NEGATIVO: un proyecto sin lotes muestra empty-state, no un lote falso (7.2s)
+[WebServer]  GET /api/assets/01KYGK3FHAFW80Z995639ET3S2/download 200 in 1699ms (next.js: 1666ms, application-code: 34ms)
+[WebServer]  GET /api/assets/01KYGK3EVDE5195HCWDH2HRJZB/download 200 in 2.2s (next.js: 2.1s, application-code: 35ms)
+[WebServer]  GET /api/variants/01KYGK3EX4KZRKA8K9TX2P6ZEA/lineage 200 in 2.0s (next.js: 1958ms, application-code: 54ms)
+[WebServer]  GET /api/variants/01KYGK3FHDCBGMRSAEJXCVEC1C/lineage 200 in 1650ms (next.js: 1583ms, application-code: 68ms)
+[WebServer]  GET /api/library 200 in 10ms (next.js: 5ms, application-code: 5ms)
+[WebServer]  GET /api/library 200 in 13ms (next.js: 3ms, application-code: 9ms)
+[WebServer]  GET /library 200 in 172ms (next.js: 6ms, proxy.ts: 4ms, application-code: 163ms)
+[WebServer]  GET /library 200 in 183ms (next.js: 33ms, proxy.ts: 5ms, application-code: 145ms)
+[WebServer]  GET /api/assets/01KYGK3KCZ25EY2M469N14TRVT/download 200 in 52ms (next.js: 11ms, application-code: 41ms)
+[WebServer]  GET /api/assets/01KYGK3KCZ25EY2M469N14TRVT/download 200 in 160ms (next.js: 8ms, application-code: 152ms)
+[WebServer]  GET /api/variants/01KYGK3KDAH6B51SP4V6AMYMDR/lineage 200 in 96ms (next.js: 10ms, application-code: 86ms)
+[WebServer]  GET /api/library?language=en 200 in 28ms (next.js: 8ms, application-code: 20ms)
+[WebServer]  GET /api/variants/01KYGK3KD82CWB9KK205C458P9/lineage 200 in 42ms (next.js: 2ms, application-code: 39ms)
+[WebServer]  GET /api/variants/01KYGK3KDAH6B51SP4V6AMYMDR/lineage 200 in 172ms (next.js: 27ms, application-code: 144ms)
+[WebServer]  GET /api/variants/01KYGK3KD82CWB9KK205C458P9/lineage 200 in 44ms (next.js: 17ms, application-code: 28ms)
+[WebServer]  GET /api/assets/01KYGK3KD3BTBKB7N8VMWX8ARQ/download 200 in 25ms (next.js: 2ms, application-code: 23ms)
+  ✓   9 [chromium] › e2e/library.spec.ts:327:3 › biblioteca de vídeos /library (T5.7) › los filtros re-consultan la lista (idioma) (2.5s)
+[WebServer]  GET /api/variants/01KYGK3KDAH6B51SP4V6AMYMDR/bundle?audio=no_bed 409 in 328ms (next.js: 312ms, application-code: 16ms)
+[WebServer]  GET /api/variants/01KYGK3KA9YQDY0AME3EXZDK1E/bundle?audio=no_bed 409 in 1157ms (next.js: 1129ms, application-code: 28ms)
+  ✓  10 [chromium] › e2e/library.spec.ts:371:3 › biblioteca de vídeos /library (T5.7) › la versión sin bed responde 409 cuando no está materializada (2.0s)
+[WebServer]  GET /api/variants/01KYGK3EX4KZRKA8K9TX2P6ZEA/bundle?audio=with_bed 200 in 1341ms (next.js: 1280ms, application-code: 61ms)
+[WebServer]  GET /api/variants/01KYGK3FHDCBGMRSAEJXCVEC1C/bundle?audio=with_bed 200 in 1611ms (next.js: 1430ms, application-code: 181ms)
+  ✓   7 [chromium] › e2e/library.spec.ts:204:3 › biblioteca de vídeos /library (T5.7) › lista, preview, linaje hasta hook/template, y descarga del bundle con checksum (6.6s)
+[WebServer]  GET /api/variants/01KYGK3FHDCBGMRSAEJXCVEC1C/bundle?audio=no_bed 200 in 50ms (next.js: 4ms, application-code: 46ms)
+  ✓   8 [chromium] › e2e/library.spec.ts:268:3 › biblioteca de vídeos /library (T5.7) › caso DUAL con/sin bed: dos versiones del MISMO máster, mismo stream de vídeo, audio_source distinto (5.7s)
+  ✓  11 [chromium] › e2e/library.spec.ts:391:3 › biblioteca de vídeos /library (T5.7) › CLICAR descargar cuando la ruta da 409 muestra el error en la UI y NO descarga un fichero (4.0s)
+
+  11 passed (25.3s)
+E2E_REAL_EXIT=0

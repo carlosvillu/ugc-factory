@@ -1,0 +1,147 @@
+
+> ugc-factory@0.0.0 test:e2e /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads
+> pnpm --filter @ugc/web test:e2e
+
+
+> @ugc/web@0.0.0 test:e2e /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/web
+> playwright test
+
+
+Running 89 tests using 5 workers
+
+  ✓   1 [setup] › e2e/auth.setup.ts:10:1 › login y persistir sesión (774ms)
+  ✓   3 [chromium] › e2e/auth.spec.ts:19:5 › auth single-user (T0.4) › sin sesión › acceder a / sin sesión redirige a /login @f0 (741ms)
+  ✓   5 [chromium] › e2e/auth.spec.ts:34:5 › auth single-user (T0.4) › rate limit › password incorrecto 3 veces muestra el aviso de rate limit @f0 (1.1s)
+  ✓   7 [chromium] › e2e/assets-download.spec.ts:78:5 › descarga proxificada de assets (T0.5) › sin sesión › devuelve 401 sin exponer la ruta de storage @f0 (474ms)
+  ✓   8 [chromium] › e2e/assets-download.spec.ts:54:3 › descarga proxificada de assets (T0.5) › con sesión: descarga el stream y el checksum coincide @f0 (345ms)
+  ✓   6 [chromium] › e2e/auth.spec.ts:68:5 › auth single-user (T0.4) › login correcto › password correcto entra a / y la sesión sobrevive a un reload @f0 (2.6s)
+  ✓   4 [chromium] › e2e/analysis-pipeline.spec.ts:70:3 › pipeline de análisis N1→N2→N3 (T1.10a) › texto libre SIN imágenes: N2 aparece `skipped` en el grafo y el run completa @f1 (4.7s)
+  ✓   2 [chromium] › e2e/analysis-pipeline.spec.ts:30:3 › pipeline de análisis N1→N2→N3 (T1.10a) › intake por URL: los nodos progresan en vivo y el brief aparece como output de N3 @f1 (5.3s)
+  ✓   9 [chromium] › e2e/batch-matrix.spec.ts:100:3 › CP2 · matriz y confirmación de gasto (T2.3) › cambiar el tier de Test a Standard actualiza el coste AL VUELO (sin recargar) @f2 @checkpoint (7.9s)
+  ✓  10 [chromium] › e2e/batch-matrix.spec.ts:127:3 › CP2 · matriz y confirmación de gasto (T2.3) › el selector muestra las personas COMPATIBLES con el segmento del brief @f2 (7.9s)
+  ✓  13 [chromium] › e2e/brief-editor.spec.ts:40:3 › CP1 · editor de brief (T1.10b) › los campos extraídos muestran su badge Y SU CITA; los inferidos, badge sin cita @f1 (6.8s)
+  ✓  12 [chromium] › e2e/batch-matrix.spec.ts:159:3 › CP2 · matriz y confirmación de gasto (T2.3) › seleccionar ángulos e idiomas mueve el número de variantes de la matriz @f2 (10.8s)
+  ✓  14 [chromium] › e2e/brief-editor.spec.ts:64:3 › CP1 · editor de brief (T1.10b) › el hook demasiado largo de la IA se AVISA en CP1 y NO bloquea la aprobación @f1 (6.9s)
+  ✓  11 [chromium] › e2e/batch-matrix.spec.ts:182:3 › CP2 · matriz y confirmación de gasto (T2.3) › confirmar crea EXACTAMENTE las variantes de la matriz, con `filename_code` únicos @f2 @checkpoint (12.8s)
+  ✓  15 [chromium] › e2e/brief-editor.spec.ts:80:3 › CP1 · editor de brief (T1.10b) › modo manual SIN imágenes: la petición BLOQUEANTE de imágenes con su derivación a packshot-IA @f1 (10.0s)
+  ✓  16 [chromium] › e2e/brief-editor.spec.ts:132:3 › CP1 · editor de brief (T1.10b) › T1.15 · URL de web de servicio SIN hero: el run NO muere, CP1 ofrece las 3 salidas y se promueve una imagen @f1 (11.1s)
+  ✓  17 [chromium] › e2e/brief-editor.spec.ts:302:3 › CP1 · editor de brief (T1.10b) › editar un beneficio y un hook, guardar → el brief se versiona (v2) y el run avanza @f1 (8.9s)
+  ✓  18 [chromium] › e2e/brief-editor.spec.ts:232:3 › CP1 · editor de brief (T1.10b) › T1.18 · una candidata que el SERVIDOR no puede descargar NO se ofrece (y la promovible sí funciona) @f1 (8.5s)
+  ✓  20 [chromium] › e2e/dashboard.spec.ts:126:3 › dashboard y vista de proyecto (T5.10) › CRUD mínimo de proyecto desde la UI: crear → editar → archivar (7.9s)
+  ✓  22 [chromium] › e2e/dashboard.spec.ts:174:3 › dashboard y vista de proyecto (T5.10) › ARCHIVAR que FALLA: superficie el error en el diálogo y NO oculta el proyecto (regla 5a) (2.1s)
+  ✓  21 [chromium] › e2e/dashboard.spec.ts:216:3 › dashboard y vista de proyecto (T5.10) › el dashboard muestra el lote activo del proyecto y KPIs reales (2.2s)
+  ✓  23 [chromium] › e2e/dashboard.spec.ts:242:3 › dashboard y vista de proyecto (T5.10) › /projects/[id] lista briefs y variantes con estados correctos y gasto exacto (5.9s)
+  ✓  19 [chromium] › e2e/brief-editor.spec.ts:337:3 › CP1 · versionado standalone del brief (Apéndice E) › PATCH /api/briefs/:id fuera del run crea una versión nueva (el v1 de la IA sigue intacto) @f1 (12.9s)
+  ✓  25 [chromium] › e2e/design-system.spec.ts:12:3 › design system (FD backfill) › /design-system abre y muestra los tres switchers @f0 (5.0s)
+  ✓  26 [chromium] › e2e/design-system.spec.ts:19:3 › design system (FD backfill) › el switcher de tema estampa data-theme=light y vuelve a dark @f0 (5.0s)
+  ✓  27 [chromium] › e2e/design-system.spec.ts:35:3 › design system (FD backfill) › el switcher de acento estampa data-accent y vuelve a indigo @f0 (2.7s)
+  ✓  28 [chromium] › e2e/design-system.spec.ts:50:3 › design system (FD backfill) › el switcher de densidad estampa data-density y vuelve a balanced @f0 (2.4s)
+  ✓  24 [chromium] › e2e/dashboard.spec.ts:281:3 › dashboard y vista de proyecto (T5.10) › CONTROL NEGATIVO: un proyecto sin lotes muestra empty-state, no un lote falso (8.3s)
+  ✓  33 [chromium] › e2e/gallery.spec.ts:99:3 › /gallery — galería de templates (T3.8) › ficha: slots resaltados, validación en vivo de slot inválido, y crear v2 con diff visible @f3 (3.7s)
+  ✓  29 [chromium] › e2e/gallery-generation.spec.ts:94:3 › Generación de galería (T4.12 pase A) — fal fake, $0 › thumbnail: un template sin thumbnail NO se publica; con thumbnail generado, sí @f4 @gallery (7.3s)
+  ✓  31 [chromium] › e2e/gallery-generation.spec.ts:227:3 › Generación de galería (T4.12 pase A) — fal fake, $0 › generar variación: el botón de la ficha genera reference-images IA con coste visible @f4 @gallery (6.4s)
+  ✓  34 [chromium] › e2e/intake-manual.spec.ts:73:3 › intake manual por texto libre (T1.6) › validación visible: un texto demasiado corto muestra error y no navega @f1 (2.0s)
+  ✓  30 [chromium] › e2e/gallery-generation.spec.ts:160:3 › Generación de galería (T4.12 pase A) — fal fake, $0 › probar template: el botón de la ficha genera una imagen de prueba con coste visible en /spend @f4 @gallery (9.1s)
+  ✓  35 [chromium] › e2e/intake-manual.spec.ts:88:3 › intake manual por texto libre (T1.6) › envío SÓLO texto (sin imágenes) crea el análisis manual en `done` y arranca su pipeline @f1 (2.9s)
+  ✓  36 [chromium] › e2e/intake-manual.spec.ts:115:3 › intake manual por texto libre (T1.6) › envío CON imágenes (fixtures locales) adjunta las referencias al análisis @f1 (5.5s)
+  ✓  37 [chromium] › e2e/intake-manual.spec.ts:143:3 › intake manual por texto libre (T1.6) › reutilización observable: reenviar el MISMO texto reutiliza el MISMO análisis (caché §7.4) @f1 (5.8s)
+  ✓  40 [chromium] › e2e/library.spec.ts:327:3 › biblioteca de vídeos /library (T5.7) › los filtros re-consultan la lista (idioma) (1.2s)
+  ✓  41 [chromium] › e2e/library.spec.ts:371:3 › biblioteca de vídeos /library (T5.7) › la versión sin bed responde 409 cuando no está materializada (771ms)
+  ✓  38 [chromium] › e2e/library.spec.ts:204:3 › biblioteca de vídeos /library (T5.7) › lista, preview, linaje hasta hook/template, y descarga del bundle con checksum (6.6s)
+  ✓  39 [chromium] › e2e/library.spec.ts:268:3 › biblioteca de vídeos /library (T5.7) › caso DUAL con/sin bed: dos versiones del MISMO máster, mismo stream de vídeo, audio_source distinto (5.5s)
+  ✓  43 [chromium] › e2e/navigation.spec.ts:36:5 › base URL del fetch de servidor y navegación global (T1.13) › /spend renderiza sirviendo en un puerto distinto del 3000 y sin INTERNAL_API_URL @f1 (1.4s)
+  ✓  44 [chromium] › e2e/navigation.spec.ts:36:5 › base URL del fetch de servidor y navegación global (T1.13) › /settings renderiza sirviendo en un puerto distinto del 3000 y sin INTERNAL_API_URL @f1 (1.6s)
+  ✓  46 [chromium] › e2e/navigation.spec.ts:84:3 › base URL del fetch de servidor y navegación global (T1.13) › la nav global muestra los 8 destinos; los de fases futuras, deshabilitados @f1 (2.2s)
+  ✓  47 [chromium] › e2e/navigation.spec.ts:153:3 › base URL del fetch de servidor y navegación global (T1.13) › dentro de un run se RESALTA «Runs» (su área) y NO se anuncia como página actual @f1 (2.2s)
+  ✓  48 [chromium] › e2e/navigation.spec.ts:189:3 › base URL del fetch de servidor y navegación global (T1.13) › /login NO lleva la nav global (aún no hay sesión que navegar) @f1 (598ms)
+  ✓  42 [chromium] › e2e/library.spec.ts:391:3 › biblioteca de vídeos /library (T5.7) › CLICAR descargar cuando la ruta da 409 muestra el error en la UI y NO descarga un fichero (4.7s)
+  ✘  32 [chromium] › e2e/gallery.spec.ts:44:3 › /gallery — galería de templates (T3.8) › filtros combinados (2 facetas) devuelven exactamente los templates que casan ambas @f3 (17.9s)
+  ✓  51 [chromium] › e2e/personas.spec.ts:141:3 › /personas — librería de personas (T2.0) › la acción de fase futura se VE pero está DESHABILITADA y dice por qué; «Generar variación» ya está VIVA (T4.12) @f2 (3.9s)
+  ✓  52 [chromium] › e2e/personas.spec.ts:263:3 › /personas — librería de personas (T2.0) › una imagen <2K es RECHAZADA con un mensaje VISIBLE y no se añade @f2 (5.0s)
+  ✓  50 [chromium] › e2e/personas.spec.ts:70:3 › /personas — librería de personas (T2.0) › CRUD completo: crear con voice map es/en, ver la ficha, editar y eliminar @f2 (9.7s)
+  ✓  53 [chromium] › e2e/personas.spec.ts:176:3 › /personas — librería de personas (T2.0) › upload de una imagen ≥2K: se acepta y aparece en la ficha @f2 (4.7s)
+  ✓  49 [chromium] › e2e/persona-library-cp2.spec.ts:112:3 › CP2 · toda la librería de personas es alcanzable (T5.13) › una persona que el `avatar_hint` NO sugiere se encuentra, se fija y el lote se crea con ella @f5 @checkpoint (14.2s)
+  ✓  45 [chromium] › e2e/navigation.spec.ts:47:3 › base URL del fetch de servidor y navegación global (T1.13) › desde la home se llega a las páginas existentes sin escribir ninguna URL @f1 (23.5s)
+  ✓  54 [chromium] › e2e/phases/f1-brief.spec.ts:29:3 › F1 · journey de análisis: URL → N1/N2/N3 → CP1 → aprobar y avanzar › un usuario pega una URL, edita el brief en CP1 y lo aprueba: el brief se versiona y el run avanza @f1 @phase (11.4s)
+  ✓  57 [chromium] › e2e/run-canvas-node-switch.spec.ts:43:3 › inspector: conmutar de nodo remonta el panel (T5.24) › un editor JSON a medias en un nodo NO se arrastra al panel de otro @f5 (6.9s)
+  ✓  58 [chromium] › e2e/runs-canvas.spec.ts:34:3 › canvas del run (T0.11) › los nodos cambian de estado en vivo por SSE (sin reload) @f0 (5.8s)
+  ✓  55 [chromium] › e2e/phases/f2-scripts.spec.ts:52:3 › F2 · journey de guiones: URL → CP1 → CP2 → CP3 → variantes scripted › un usuario aprueba la matriz, N5 guioniza el lote y CP3 deja todas las variantes scripted @f2 @phase (19.3s)
+  ✓  60 [chromium] › e2e/runs-canvas.spec.ts:69:3 › canvas del run (T0.11) › checkpoint: rechazar desde el panel @f0 (9.4s)
+  ✓  59 [chromium] › e2e/runs-canvas.spec.ts:52:3 › canvas del run (T0.11) › checkpoint: aprobar desde el panel avanza el run @f0 (9.9s)
+  ✓  61 [chromium] › e2e/runs-canvas.spec.ts:79:3 › canvas del run (T0.11) › checkpoint: editar el output JSON y aprobar @f0 (10.6s)
+  ✓  64 [chromium] › e2e/runs-canvas.spec.ts:145:3 › canvas del run (T0.11) › cancelar OTRO run en curso desde el botón del panel @f0 (7.8s)
+  ✓  63 [chromium] › e2e/runs-canvas.spec.ts:126:3 › canvas del run (T0.11) › skip: saltar un nodo skippable desde el panel @f0 (12.3s)
+  ✓  67 [chromium] › e2e/runs-canvas.spec.ts:280:3 › canvas: títulos, visor del artefacto y controles (T1.16) › los nodos muestran su título humano y la clave sigue siendo el accessible name @f1 (1.0s)
+  ✓  65 [chromium] › e2e/runs-canvas.spec.ts:213:3 › canvas del run (T0.11) › autopilot: el toggle de la cabecera PERSISTE en el run (no solo en el cliente) @f0 (9.1s)
+  ✓  66 [chromium] › e2e/runs-canvas.spec.ts:254:3 › canvas del run (T0.11) › autopilot: el checkpoint NORMAL no pausa, pero el candado alwaysPause gana igual @f0 (7.4s)
+  ✓  68 [chromium] › e2e/runs-canvas.spec.ts:301:3 › canvas: títulos, visor del artefacto y controles (T1.16) › con CP1 abierto el lienzo se comprime pero N2 sigue alcanzable (fit/zoom) @f1 (5.7s)
+  ✓  62 [chromium] › e2e/runs-canvas.spec.ts:98:3 › canvas del run (T0.11) › fallo: ver el error en el visor y reintentar con éxito @f0 (32.9s)
+  ✓  71 [chromium] › e2e/runs-list.spec.ts:217:3 › listado de runs /runs (T1.17) › lista los runs con ESTADOS DISTINTOS (aunque pipeline_run.status diga pending en los dos) @f1 (2.0s)
+  ✓  69 [chromium] › e2e/runs-canvas.spec.ts:334:3 › canvas: títulos, visor del artefacto y controles (T1.16) › la caja de output abre la modal con el artefacto COMPLETO (lo que el excerpt trunca) @f1 (21.1s)
+  ✓  73 [chromium] › e2e/runs-list.spec.ts:266:3 › listado de runs /runs (T1.17) › el click en una fila lleva al CANVAS de ESE run @f1 (1.3s)
+  ✓  75 [chromium] › e2e/runs-list.spec.ts:276:3 › listado de runs /runs (T1.17) › se llega al listado desde la nav global, sin escribir ninguna URL @f1 (1.3s)
+  ✓  70 [chromium] › e2e/runs-canvas.spec.ts:409:3 › canvas: títulos, visor del artefacto y controles (T1.16) › la caja de error abre la modal con el error COMPLETO (lo que el excerpt trunca) @f1 (23.9s)
+  ✓  76 [chromium] › e2e/settings.spec.ts:19:3 › /settings (T0.14) › guardar una API key la enmascara, limpia el input y persiste tras reload @f0 (1.4s)
+  ✓  78 [chromium] › e2e/settings.spec.ts:52:3 › /settings (T0.14) › editar la key la reemplaza (nuevo last4 tras guardar) @f0 (1.5s)
+  ✓  79 [chromium] › e2e/settings.spec.ts:66:3 › /settings (T0.14) › tema, acento y densidad se aplican en vivo y persisten tras reload @f0 (4.6s)
+  ✓  72 [chromium] › e2e/script-editor.spec.ts:125:3 › CP3 · editor de guiones: el arco bloqueante (T2.6) › una variante con claim prohibido no se aprueba hasta editar la escena; editada, queda scripted @f2 @checkpoint (14.1s)
+  ✓  77 [chromium] › e2e/variant-review.spec.ts:226:3 › CP4 · revisión de variantes (T5.6) › lista las 3 variantes pausadas, muestra player + overlays de safe zones + resultados de QA @f5 @checkpoint (8.5s)
+  ✓  74 [chromium] › e2e/script-editor.spec.ts:211:3 › CP3 · editor de guiones: el arco bloqueante (T2.6) › T5.11: con guiones de menos, CP3 muestra el recuento REAL y NO deja aprobar @f2 @checkpoint (12.1s)
+  ✓  80 [chromium] › e2e/variant-review.spec.ts:265:3 › CP4 · revisión de variantes (T5.6) › aprobar 2 variantes y rechazar 1 desde el navegador actualiza `ad_variant.status` (cada una por separado) @f5 @checkpoint (8.6s)
+  ✓  56 [chromium] › e2e/phases/f4-generation.spec.ts:95:3 › F4 · journey de generación: CP3 aprobado → sub-DAG N6→N7a-e por variante en el canvas › el canvas expande N7 por variante, expone resolvedPrompt/coste/previews y recupera un sub-step con retry granular @f4 @phase (1.2m)
+  ✓  81 [chromium] › e2e/voice-preview.spec.ts:151:3 › Preview de voz en CP2/CP3 (T4.6) › CP2: ▶ por persona/idioma reproduce la voz; 5 reproducciones no añaden coste; cambiar idioma es otra muestra @f4 @checkpoint (11.8s)
+  ✓  82 [chromium] › e2e/voice-preview.spec.ts:205:3 › Preview de voz en CP2/CP3 (T4.6) › CP3: ▶ en la tarjeta de variante reproduce la voz de su persona en su idioma; reutiliza sin coste @f4 @checkpoint (4.4s)
+
+
+  1) [chromium] › e2e/gallery.spec.ts:44:3 › /gallery — galería de templates (T3.8) › filtros combinados (2 facetas) devuelven exactamente los templates que casan ambas @f3 
+
+    Error: expect(locator).toHaveCount(expected) failed
+
+    Locator:  getByRole('button', { name: 'Abrir template E2E solo formato 1785274903938-88084' })
+    Expected: 0
+    Received: 1
+    Timeout:  15000ms
+
+    Call log:
+      - Expect "toHaveCount" with timeout 15000ms
+      - waiting for getByRole('button', { name: 'Abrir template E2E solo formato 1785274903938-88084' })
+        33 × locator resolved to 1 element
+           - unexpected value "1"
+
+
+      90 |       await expect(
+      91 |         page.getByRole('button', { name: `Abrir template E2E solo formato ${t}` }),
+    > 92 |       ).toHaveCount(0);
+         |         ^
+      93 |       await expect(
+      94 |         page.getByRole('button', { name: `Abrir template E2E solo vertical ${t}` }),
+      95 |       ).toHaveCount(0);
+        at /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/web/e2e/gallery.spec.ts:92:9
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/gallery--gallery-—-galería-37cd9-s-templates-que-casan-ambas-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/gallery--gallery-—-galería-37cd9-s-templates-que-casan-ambas-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/gallery--gallery-—-galería-37cd9-s-templates-que-casan-ambas-chromium/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/gallery--gallery-—-galería-37cd9-s-templates-que-casan-ambas-chromium/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace test-results/gallery--gallery-—-galería-37cd9-s-templates-que-casan-ambas-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  1 failed
+    [chromium] › e2e/gallery.spec.ts:44:3 › /gallery — galería de templates (T3.8) › filtros combinados (2 facetas) devuelven exactamente los templates que casan ambas @f3 
+  7 did not run
+  81 passed (2.5m)
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/web:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @ugc/web@0.0.0 test:e2e: `playwright test`
+Exit status 1
+ ELIFECYCLE  Command failed with exit code 1.
+FULL_E2E_EXIT=1

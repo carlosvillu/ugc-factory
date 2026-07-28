@@ -1,0 +1,7 @@
+
+Running 2 tests using 1 worker
+
+  ✓  1 [setup] › e2e/auth.setup.ts:10:1 › login y persistir sesión (736ms)
+  ✓  2 [chromium] › e2e/gallery.spec.ts:44:3 › /gallery — galería de templates (T3.8) › filtros combinados (2 facetas) devuelven exactamente los templates que casan ambas @f3 (868ms)
+
+  2 passed (3.6s)

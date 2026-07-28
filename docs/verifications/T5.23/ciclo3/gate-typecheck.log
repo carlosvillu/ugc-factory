@@ -1,0 +1,17 @@
+
+> ugc-factory@0.0.0 typecheck /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads
+> tsc --noEmit && pnpm -r --parallel typecheck
+
+Scope: 6 of 7 workspace projects
+apps/web typecheck$ tsc --noEmit
+packages/core typecheck$ tsc --noEmit
+apps/worker typecheck$ tsc --noEmit
+packages/db typecheck$ tsc --noEmit
+packages/services typecheck$ tsc --noEmit
+packages/test-utils typecheck$ tsc --noEmit
+apps/web typecheck: Done
+packages/db typecheck: Done
+packages/core typecheck: Done
+apps/worker typecheck: Done
+packages/test-utils typecheck: Done
+packages/services typecheck: Done

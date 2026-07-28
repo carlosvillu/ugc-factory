@@ -335,9 +335,70 @@ function isUrlNoHeroSynthesis(body: Record<string, unknown>): boolean {
   return synthesisMessageIncludes(body, FAKE_URL_NO_HERO);
 }
 
-/** ¿La síntesis es la del E2E de generación (F4, `FAKE_URL_BEAUTY`)? Mismo mecanismo explícito. */
+/** ¿La síntesis es la del E2E de generación (F4, `FAKE_URL_BEAUTY`)? Mismo mecanismo explícito.
+ *  OJO: casa por SUBSTRING, así que `FAKE_URL_BEAUTY + '?run=<nonce>'` (la URL run-única de
+ *  f4-generation, T5.23) también entra por aquí — es a propósito. */
 function isBeautySynthesis(body: Record<string, unknown>): boolean {
   return synthesisMessageIncludes(body, FAKE_URL_BEAUTY);
+}
+
+/**
+ * NONCE RUN-ÚNICO (T5.23) — el canal de inyección es la URL, por-request (sin estado compartido,
+ * seguro bajo `fullyParallel`). f4-generation navega `FAKE_URL_BEAUTY + '?run=<nonce>'`; esa URL
+ * viaja verbatim en el STRUCTURED DATA del user message de síntesis (`buildUserMessage` embebe
+ * `url: raw.url`, y el ingester copia el `rawUrl` de entrada SIN normalizar). Se extrae aquí el
+ * `<nonce>` de ese mensaje para diferenciar el `product.name` del brief beauty POR CORRIDA.
+ *
+ * POR QUÉ: sobre un stack REUSADO/warm (`reuseExistingServer:!CI`), un `product.name` fijo produce
+ * un `resolvedPrompt` fijo del packshot N7a → `content_hash` fijo → HIT de dedup cross-run → f4
+ * NUNCA submitea el packshot → no hay request que doomar → el fallo determinista que la spec exige
+ * desaparece y la corrida 2 vira a rojo. Con el nonce en `product.name` (que aterriza temprano en
+ * `buildPackshotPrompt`, sin pasar por `trimForPrompt`), cada corrida falla la caché legítimamente.
+ *
+ * Devuelve `undefined` si el mensaje no lleva `?run=` (cualquier otra síntesis/consumidor): así el
+ * brief beauty queda BYTE-IDÉNTICO al de hoy para todos los demás. */
+function synthesisRunNonce(body: Record<string, unknown>): string | undefined {
+  return runNonceFromText(synthesisMessageText(body));
+}
+
+/** El TEXTO concatenado de los user messages de una request de síntesis (donde vive el STRUCTURED
+ *  DATA con la URL). Espejo de `synthesisMessageIncludes`, pero devuelve el texto para parsearlo. */
+function synthesisMessageText(body: Record<string, unknown>): string {
+  const messages = Array.isArray(body.messages) ? body.messages : [];
+  return messages
+    .map((m: unknown) => {
+      if (typeof m !== 'object' || m === null || !('content' in m)) return '';
+      const { content } = m;
+      return typeof content === 'string' ? content : '';
+    })
+    .join('\n');
+}
+
+/** Extrae el `<nonce>` de un `?run=<nonce>` presente en un texto (la URL run-única de T5.23). El
+ *  nonce es alfanumérico (un `crypto.randomUUID().slice(...)` en el spec), así que se acota a
+ *  `[a-z0-9-]`; `undefined` si no hay `?run=`. Función pura, usada por la SÍNTESIS (donde viaja la URL). */
+function runNonceFromText(text: string): string | undefined {
+  const match = /[?&]run=([a-z0-9-]+)/i.exec(text);
+  return match?.[1];
+}
+
+// PAR ACOPLADO (T5.23): el marcador que se INYECTA en `product.name` (`runMarker`) y el regex que lo
+// PARSEA de vuelta del prompt del submit (`RUN_MARKER_RE`) tienen que casar EXACTAMENTE. Se derivan de
+// la misma fuente aquí, adyacentes, para que no puedan divergir: si alguien cambia el formato del
+// marcador y solo toca uno, el doom keyed caería silenciosamente al global one-shot y T5.23 reaparecería
+// (invisible en stack fresco, rojo solo en warm — justo el bug que esto arregla). NO los separes.
+function runMarker(nonce: string): string {
+  return `[run ${nonce}]`;
+}
+const RUN_MARKER_RE = /\[run ([a-z0-9-]+)\]/i;
+
+/** Extrae el `<nonce>` del marcador `[run <nonce>]` (`runMarker`) que `beautyBriefForSynthesis` inyecta
+ *  en `product.name` (T5.23). En el SUBMIT a fal el nonce ya NO viaja como `?run=` de la URL sino DENTRO
+ *  del `prompt` del packshot (el `product.name` aterriza en `buildPackshotPrompt`), con esta forma. Es
+ *  la que el doom keyed-por-corrida usa para identificar la corrida. `undefined` si no hay marcador. */
+function runNonceFromPrompt(prompt: string): string | undefined {
+  const match = RUN_MARKER_RE.exec(prompt);
+  return match?.[1];
 }
 
 /** El user message del sintetizador es un STRING con JSON dentro: se busca sobre su TEXTO. */
@@ -356,8 +417,26 @@ function synthesisMessageIncludes(body: Record<string, unknown>, needle: string)
 function briefForSynthesis(body: Record<string, unknown>, origin: string): ProductBrief {
   if (isManualSynthesis(body)) return FAKE_BRIEF_NO_IMAGES;
   if (isUrlNoHeroSynthesis(body)) return fakeBriefNoHero(origin);
-  if (isBeautySynthesis(body)) return FAKE_BRIEF_BEAUTY;
+  if (isBeautySynthesis(body)) return beautyBriefForSynthesis(body);
   return FAKE_BRIEF;
+}
+
+/** El brief beauty de F4, con el `product.name` diferenciado POR CORRIDA si la URL de síntesis lleva
+ *  `?run=<nonce>` (T5.23). CONDICIONAL DURA: sin nonce → `FAKE_BRIEF_BEAUTY` BYTE-IDÉNTICO a hoy (el
+ *  resto de consumidores no se mueve). El nonce va en `name` a propósito —aterriza temprano en
+ *  `buildPackshotPrompt` (`nameWithBrand`) sin `trimForPrompt`— y NUNCA en `one_liner`/`description`
+ *  (que sí se recortan → re-colisión silenciosa que parecería el mismo bug). `category`/`avatar_hint`
+ *  intactos: el matching de persona y el guard pack beauty dependen de ellos (assert del `beforeAll`). */
+function beautyBriefForSynthesis(body: Record<string, unknown>): ProductBrief {
+  const nonce = synthesisRunNonce(body);
+  if (nonce === undefined) return FAKE_BRIEF_BEAUTY;
+  return {
+    ...FAKE_BRIEF_BEAUTY,
+    product: {
+      ...FAKE_BRIEF_BEAUTY.product,
+      name: `${FAKE_BRIEF_BEAUTY.product.name} ${runMarker(nonce)}`,
+    },
+  };
 }
 
 /**
@@ -581,9 +660,20 @@ export async function startFakeExternalApis(): Promise<FakeExternalApis> {
   // hasta 80 veces). El step queda `failed` y el usuario lo REINTENTA: el retry re-submitea con un
   // request_id NUEVO (no doomed) → output correcto → succeeds, sin tocar a los hermanos sanos. Se elige
   // IMAGEN (no vídeo) a propósito: N7a liquida INLINE (`finalizeGeneration`), sin el salto asíncrono del
-  // sweeper del vídeo → la aserción de fallo es más ajustada y menos flaky. Un solo fallo por corrida
-  // (`doomedRequestId` se fija una vez y no se re-arma), así que el retry no vuelve a caer.
+  // sweeper del vídeo → la aserción de fallo es más ajustada y menos flaky.
+  //
+  // KEYED POR NONCE (T5.23): el doom se lleva por-corrida, no global. Sobre un stack REUSADO el proceso
+  // del fake sobrevive entre corridas; un `doomedRequestId` global one-shot se arma+consume en la corrida
+  // 1 y la corrida 2 ya no doома aunque submitee (→ falso rojo). Con un `Map<nonce, requestId>` cada
+  // corrida (identificada por el `?run=<nonce>` que viaja en el `prompt` del submit, extraíble de él)
+  // tiene SU propio doom. La clave es la PRESENCIA en el map, no «el primero visto»: el retry comparte
+  // prompt→nonce→ya presente→NO se re-dooma (re-submitea limpio y succeeds).
+  //
+  // RETROCOMPAT: un submit SIN nonce identificable (specs que no usan `?run=`, p. ej. gallery-generation)
+  // conserva EXACTAMENTE el comportamiento global one-shot de hoy (`doomedRequestId` se fija una vez y no
+  // se re-arma) — así ese spec sigue viendo su fallo determinista sin que f4-generation se lo robe.
   let doomedRequestId: string | undefined;
+  const doomedRequestIdByRun = new Map<string, string>();
 
   async function handle(
     req: import('node:http').IncomingMessage,
@@ -748,19 +838,31 @@ export async function startFakeExternalApis(): Promise<FakeExternalApis> {
       falSubmitCounter += 1;
       const requestId = `fake-${String(falSubmitCounter)}`;
       falEndpointByRequestId.set(requestId, endpoint);
-      // Designa el PRIMER submit de IMAGEN DEL PIPELINE como el fallo determinista (una vez por corrida).
+      // Designa el PRIMER submit de IMAGEN DEL PIPELINE como el fallo determinista.
       // El discriminador es `seed` en el payload: SOLO las generaciones del pipeline N7a (packshot) lo
       // llevan (`seed: i` por shot, generation.ts). Las imágenes de $0 de T4.12 (thumbnail de galería,
       // «probar template») son SEEDLESS → nunca doom-elegibles → coexisten con f4-generation.spec sin
       // robarle su fallo (si CUALQUIER submit de imagen fuese doom-elegible, gallery-generation.spec —
       // más rápido que el pipeline — ganaría la carrera y consumiría el doom, dejando a f4-generation
       // sin su fallo determinista: el falso rojo de acoplamiento cross-spec en BD/fake compartidos).
-      if (
-        doomedRequestId === undefined &&
-        IS_IMAGE.test(endpoint) &&
-        submitBody.seed !== undefined
-      ) {
-        doomedRequestId = requestId;
+      //
+      // KEYED POR NONCE (T5.23): el `prompt` del submit contiene el `product.name` con el `[run <nonce>]`
+      // que `beautyBriefForSynthesis` inyectó (viaja como `submitBody.prompt`, ver generate.ts). Si hay
+      // nonce, el doom se lleva en `doomedRequestIdByRun` (uno por corrida, keyed por presencia → el retry
+      // comparte prompt/nonce y NO se re-dooma). Sin nonce (specs sin `?run=`), se conserva el global
+      // one-shot de hoy — retrocompatible.
+      const submitPrompt = typeof submitBody.prompt === 'string' ? submitBody.prompt : '';
+      const submitRunNonce = runNonceFromPrompt(submitPrompt);
+      if (IS_IMAGE.test(endpoint) && submitBody.seed !== undefined) {
+        if (submitRunNonce !== undefined) {
+          if (!doomedRequestIdByRun.has(submitRunNonce)) {
+            doomedRequestIdByRun.set(submitRunNonce, requestId);
+          }
+        } else {
+          // Sin nonce: global one-shot de hoy (retrocompat, specs sin `?run=`). `??=` fija SOLO la
+          // primera vez y no re-arma (el retry re-submitea con id nuevo → no vuelve a caer).
+          doomedRequestId ??= requestId;
+        }
       }
       const responseUrl = `${origin}/${endpoint}/requests/${requestId}`;
       json({
@@ -793,8 +895,10 @@ export async function startFakeExternalApis(): Promise<FakeExternalApis> {
       const requestId = url.pathname.split('/requests/')[1]?.split('/')[0] ?? '';
       const endpoint = falEndpointByRequestId.get(requestId) ?? '';
       // FALLO DETERMINISTA: el submit doomed devuelve un output MALFORMADO (violación de contrato) →
-      // `FalResponseError` → `PermanentStepError` → step `failed`, reintentable por el usuario.
-      if (requestId === doomedRequestId) {
+      // `FalResponseError` → `PermanentStepError` → step `failed`, reintentable por el usuario. Doomed si
+      // es el global one-shot (specs sin nonce) O si figura como valor del map keyed-por-corrida (T5.23).
+      const isDoomedByRun = [...doomedRequestIdByRun.values()].includes(requestId);
+      if (requestId === doomedRequestId || isDoomedByRun) {
         json({});
         return;
       }

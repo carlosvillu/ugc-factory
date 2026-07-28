@@ -1,0 +1,21 @@
+Lazy loading nvm node npm ...
+=== prod @ http://localhost:3100/login ===
+requests captured: 14
+trace zip: /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/docs/verifications/T5.22/prod-trace.zip
+TRACE-ZIP token hits (files matched): {"webpack-hmr":0,"turbopack-hmr":0,"hot-reloader":0,"__nextjs":0,".next/dev":0}
+REQUEST-ARRAY token hits: (none)
+--- request URLs ---
+GET http://localhost:3100/login
+GET http://localhost:3100/_next/static/media/GeistMono_Variable.p.3ms9vq719j3f8.woff2
+GET http://localhost:3100/_next/static/media/Geist_Variable-s.p.0mrjj4bg00-he.woff2
+GET http://localhost:3100/_next/static/chunks/443bk4r-87o9u.css
+GET http://localhost:3100/_next/static/chunks/1k-rz66rbj0ah.js
+GET http://localhost:3100/_next/static/chunks/2lu-e2ff8b0pv.js
+GET http://localhost:3100/_next/static/chunks/3jax3-pp0qsbd.js
+GET http://localhost:3100/_next/static/chunks/1t94ik2c-1fqe.js
+GET http://localhost:3100/_next/static/chunks/2jgjyrtgxi6xm.js
+GET http://localhost:3100/_next/static/chunks/turbopack-2yi_fi4_ivpwf.js
+GET http://localhost:3100/_next/static/chunks/27p_9-f09rc5j.js
+GET http://localhost:3100/_next/static/chunks/2-plk-cp3itbm.js
+GET http://localhost:3100/_next/static/chunks/3dmw0shszha8j.js
+GET http://localhost:3100/_next/static/chunks/3_52frusa857v.js

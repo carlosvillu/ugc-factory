@@ -66,16 +66,31 @@ const env = {
 writeFileSync(new URL('../e2e/.runtime.json', import.meta.url),
   JSON.stringify({ databaseUrl: connectionString, fakesUrl: fakes.baseUrl }));
 
-spawn('pnpm', ['--filter', '@ugc/worker', 'start'], { env, stdio: 'inherit' });
-spawn('pnpm', ['--filter', '@ugc/web', 'start'], { env, stdio: 'inherit' });
-// En CI, `web start` sirve el build de producción (next build previo en el workflow):
-// el build de prod detecta errores que `next dev` tolera. En local, E2E_DEV=1 permite `next dev`.
+spawn(tsxBin, [workerEntry], { env, stdio: 'inherit' });
+// T5.22: web arranca en modo PRODUCCIÓN SIEMPRE (local incluido): el script hace `next build`
+// (con exit-code chequeado) y luego `next start`. `next dev`/HMR inducía mismatches de
+// hidratación bajo `fullyParallel` (el `Hydration failed` de /projects, origen de T5.10); sin
+// dev server ese mismatch es estructuralmente imposible, no solo improbable — y `next start` es
+// la verdad de producción. El landmine de `require.resolve` bajo el bundle (T0.13) se neutraliza
+// con UGC_DB_MIGRATIONS_DIR en el env del hijo (build Y start).
+const nextBin = fileURLToPath(new URL('../node_modules/.bin/next', import.meta.url));
+if (spawnSync(nextBin, ['build'], { env, stdio: 'inherit' }).status !== 0) process.exit(1);
+spawn(nextBin, ['start', '--port', '3100'], { env, stdio: 'inherit' });
 ```
+
+**FOOTGUN del build congelado (T5.22, principio 9)**: con `next dev`, reusar un server warm
+(`reuseExistingServer`) era auto-sanador (HMR recompila). Con `next build && next start`, un server
+reusado sirve un build CONGELADO → editas código y Playwright pasa VERDE sobre código que ya no
+existe. Lo cierra un `globalSetup` (`apps/web/e2e/global-setup.ts`) que compara el `builtAt` sellado
+en `.runtime.json` contra el mtime de las fuentes trackeadas y RECHAZA un stack reusado obsoleto.
+El guard corre en AMBOS caminos (stack gestionado por Playwright y stack reusado a mano); un chequeo
+dentro de `e2e-stack.ts` sería un no-op justo en el caso peligroso (Playwright no ejecuta
+`webServer.command` cuando :3100 ya responde).
 
 Reglas derivadas:
 
 - **El script es TypeScript y se lanza con `tsx`** (`pnpm exec tsx scripts/e2e-stack.ts`; `tsx` es devDependency de `apps/web`): `@ugc/test-utils` se consume como TS directo sin build — Vitest lo transpila al vuelo en las otras capas, pero el webServer es un proceso normal y con `node` plano el stack nunca arrancaría (timeout de 180 s sin pista de la causa).
-- **Puerto propio (3100)**: la suite nunca pelea con tu `pnpm dev` en 3000. Ojo con `reuseExistingServer`: Playwright **siempre apaga** los servidores que él mismo arrancó (web, worker y testcontainer incluidos) — la reutilización solo aplica si TÚ lanzaste el stack a mano (`pnpm e2e:stack` en otra terminal) y la URL ya responde.
+- **Puerto propio (3100)**: la suite nunca pelea con tu `pnpm dev` en 3000. Ojo con `reuseExistingServer`: Playwright **siempre apaga** los servidores que él mismo arrancó (web, worker y testcontainer incluidos) — la reutilización solo aplica si TÚ lanzaste el stack a mano (`pnpm exec tsx scripts/e2e-stack.ts` en otra terminal desde `apps/web`; NO existe un script `pnpm e2e:stack`) y la URL ya responde. Desde T5.22 ese stack manual arranca en modo producción como el gestionado; si reusas uno viejo tras editar código, el `globalSetup` te frena en vez de darte un verde sobre un build congelado.
 - **Un solo Postgres y una sola database para toda la suite**: el script la crea una vez clonando la template con `createTestDatabase({ serverUri, templateDb })` — sus overrides existen exactamente para scripts fuera de vitest como este — y la siembra con `seedFixtures(db)`. El aislamiento entre specs es **por datos únicos** (factories con ULIDs), no por database (ver §6).
 - Readiness: el `webServer` espera por `port: 3100`; como el script solo arranca web después de migrar y sembrar, cuando el puerto abre la BD está garantizada. `/api/health` (T0.2) queda como healthcheck manual del stack.
 
@@ -114,10 +129,11 @@ export default defineConfig({
     command: 'pnpm exec tsx scripts/e2e-stack.ts', // tsx obligatorio: @ugc/test-utils es TS sin build (§2)
     port: 3100,
     reuseExistingServer: !process.env.CI,
-    timeout: 180_000,               // pull de imagen pg16 + build en frío
+    timeout: 480_000,               // pull de imagen pg16 + `next build` de prod (T5.22) + arranque
     stdout: 'pipe',
     stderr: 'pipe',
   },
+  globalSetup: './e2e/global-setup.ts', // T5.22: guard de frescura del build (footgun del build congelado)
 });
 ```
 
@@ -291,7 +307,7 @@ El spec mockeado protege el flujo para siempre y a coste cero; la verificación 
 
 - **Corre en CI** (ver ci.md): toda la suite E2E mockeada, en el build de producción de Next, con `retries: 2`, trace/screenshot/video subidos como artifacts en fallo. El job es autosuficiente: NO levanta compose ni migra/siembra a nivel de job — `pnpm test:e2e` lo hace todo vía el stack script (§2). El workflow instala Chromium con `npx playwright install --with-deps chromium` y cachea el binario.
 - **NO corre en CI**: el gate CUA (`agent-browser`), `pnpm test:live`, y las verificaciones de fase con APIs reales. Son acciones humanas/agénticas de cierre de tarea con presupuesto, no jobs repetibles.
-- En local, para iterar en segundos: lanza el stack tú mismo en otra terminal (`pnpm e2e:stack`) y `reuseExistingServer: !process.env.CI` lo detectará y lo reutilizará sin tocarlo. Si el stack lo arranca Playwright, **lo apaga al terminar la suite** (con todo su árbol: web, worker y testcontainer) — no esperes que sobreviva entre ejecuciones.
+- En local, para iterar en segundos: lanza el stack tú mismo en otra terminal (`pnpm exec tsx scripts/e2e-stack.ts` desde `apps/web`; NO existe `pnpm e2e:stack`) y `reuseExistingServer: !process.env.CI` lo detectará y lo reutilizará sin tocarlo. Si el stack lo arranca Playwright, **lo apaga al terminar la suite** (con todo su árbol: web, worker y testcontainer) — no esperes que sobreviva entre ejecuciones. **T5.22**: el stack arranca en modo producción (`next build && next start`); si editas código y reusas un stack viejo, el `globalSetup` de frescura te frena — reconstrúyelo (mátalo y relánzalo) antes de re-correr.
 
 ## 12. Anti-flakiness
 

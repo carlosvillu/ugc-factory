@@ -1,0 +1,19 @@
+Error: [e2e frescura del build] El stack reusado sirve un build CONGELADO más viejo que el código.
+  build sellado en: 2026-07-28T23:26:47.507Z
+  fuente más nueva: packages/test-utils/src/fake-apis.ts (2026-07-28T23:29:57.634Z)
+Reconstruye el stack antes de correr la suite:
+  · si lo arrancaste a mano, mátalo y relanza `pnpm exec tsx scripts/e2e-stack.ts` (rehace `next build`);
+  · o deja que Playwright lo gestione (sin un stack manual en :3100).
+Correr Playwright contra un build viejo sería verde sobre código que ya no existe (principio 9).
+
+   at global-setup.ts:136
+
+  134 |     const built = new Date(stamp.builtAt).toISOString();
+  135 |     const changed = new Date(newest.mtimeMs).toISOString();
+> 136 |     throw new Error(
+      |           ^
+  137 |       `[e2e frescura del build] El stack reusado sirve un build CONGELADO más viejo que el código.\n` +
+  138 |         `  build sellado en: ${built}\n` +
+  139 |         `  fuente más nueva: ${newest.path} (${changed})\n` +
+    at globalSetup (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/web/e2e/global-setup.ts:136:11)
+

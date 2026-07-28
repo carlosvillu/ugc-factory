@@ -5,6 +5,13 @@ dist/
 coverage/
 *.tsbuildinfo
 
+# next-env.d.ts es un ARTEFACTO regenerado por Next: `next dev` lo apunta a
+# `.next/dev/types/routes.d.ts` y `next build` a `.next/types/routes.d.ts`. Con el stack
+# E2E en modo producción (T5.22) cada corrida hace `next build` y lo reescribiría, ensuciando
+# el árbol en cada gate. Es lo que `create-next-app` ya gitignora upstream; typecheck pasa sin
+# él (tsc lo regenera/no lo necesita), verificado en T5.22.
+apps/web/next-env.d.ts
+
 # entornos con secretos reales (los .env.test committeados llevan claves falsas)
 .env
 .env.local

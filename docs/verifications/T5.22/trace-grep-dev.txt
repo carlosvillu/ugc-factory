@@ -1,0 +1,29 @@
+Lazy loading nvm node npm ...
+=== dev @ http://localhost:3000/login ===
+requests captured: 22
+trace zip: /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/docs/verifications/T5.22/dev-trace.zip
+TRACE-ZIP token hits (files matched): {"webpack-hmr":1,"turbopack-hmr":0,"hot-reloader":0,"__nextjs":1,".next/dev":0}
+REQUEST-ARRAY token hits: (none)
+--- request URLs ---
+GET http://localhost:3000/login
+GET http://localhost:3000/_next/static/media/GeistMono_Variable.p.3ms9vq719j3f8.woff2
+GET http://localhost:3000/_next/static/media/Geist_Variable-s.p.0mrjj4bg00-he.woff2
+GET http://localhost:3000/_next/static/chunks/_0kzlgew._.css
+GET http://localhost:3000/_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_1ocolhk._.js
+GET http://localhost:3000/_next/static/chunks/011t_next_dist_compiled_next-devtools_index_1z8wequ.js
+GET http://localhost:3000/_next/static/chunks/011t_next_dist_compiled_react-dom_1nv72hb._.js
+GET http://localhost:3000/_next/static/chunks/011t_next_dist_compiled_react-server-dom-turbopack_0lybcrt._.js
+GET http://localhost:3000/_next/static/chunks/011t_next_dist_compiled_0m8ujt4._.js
+GET http://localhost:3000/_next/static/chunks/011t_next_dist_client_1xa99k4._.js
+GET http://localhost:3000/_next/static/chunks/011t_next_dist_0llv0y9._.js
+GET http://localhost:3000/_next/static/chunks/0vvp_%40swc_helpers_cjs_0vb02wp._.js
+GET http://localhost:3000/_next/static/chunks/apps_web_1anvha4._.js
+GET http://localhost:3000/_next/static/chunks/turbopack-apps_web_16vm1as._.js
+GET http://localhost:3000/_next/static/chunks/011t_next_dist_0ze1w21._.js
+GET http://localhost:3000/_next/static/chunks/apps_web_src_app_layout_tsx_0w1yxzk._.js
+GET http://localhost:3000/_next/static/chunks/node_modules__pnpm_0oimqj9._.js
+GET http://localhost:3000/_next/static/chunks/apps_web_src_08_q8tp._.js
+GET http://localhost:3000/_next/static/chunks/apps_web_src_app_login_page_tsx_03w5l0b._.js
+GET http://localhost:3000/_next/static/chunks/011t_next_dist_client_components_builtin_global-error_03w5l0b.js
+GET http://localhost:3000/_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_1mojsay._.js
+GET http://localhost:3000/_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_0_xk9jn._.js

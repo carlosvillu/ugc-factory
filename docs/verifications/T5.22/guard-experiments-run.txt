@@ -1,0 +1,27 @@
+=== builtAt of current manual stack ===
+mode built builtAt 2026-07-29 01:26:47.507000
+=== A: touch apps/worker/src/main.ts (spawned worker process, frozen under reuse) ===
+----- experiment: worker-main -----
+Error: [e2e frescura del build] El stack reusado sirve un build CONGELADO más viejo que el código.
+  fuente más nueva: apps/worker/src/main.ts (2026-07-28T23:29:56.893Z)
+> 136 |     throw new Error(
+  137 |       `[e2e frescura del build] El stack reusado sirve un build CONGELADO más viejo que el código.\n` +
+  139 |         `  fuente más nueva: ${newest.path} (${changed})\n` +
+(exit: 1)
+=== B: touch packages/test-utils/src/fake-apis.ts (in-process fake, frozen under reuse) ===
+----- experiment: fake-apis -----
+Error: [e2e frescura del build] El stack reusado sirve un build CONGELADO más viejo que el código.
+  fuente más nueva: packages/test-utils/src/fake-apis.ts (2026-07-28T23:29:57.634Z)
+> 136 |     throw new Error(
+  137 |       `[e2e frescura del build] El stack reusado sirve un build CONGELADO más viejo que el código.\n` +
+  139 |         `  fuente más nueva: ${newest.path} (${changed})\n` +
+(exit: 1)
+=== C: NEW untracked file in apps/worker/src (tests --others) ===
+----- experiment: untracked-new -----
+Error: [e2e frescura del build] El stack reusado sirve un build CONGELADO más viejo que el código.
+  fuente más nueva: apps/worker/src/__t522_probe_untracked.ts (2026-07-28T23:29:58.324Z)
+> 136 |     throw new Error(
+  137 |       `[e2e frescura del build] El stack reusado sirve un build CONGELADO más viejo que el código.\n` +
+  139 |         `  fuente más nueva: ${newest.path} (${changed})\n` +
+(exit: 1)
+=== cleaned untracked probe ===

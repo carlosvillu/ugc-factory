@@ -394,7 +394,7 @@ Raíz (`package.json`):
 }
 ```
 
-Por paquete: `"test": "vitest run"` (usa su config unit local) y, si aplica, `"test:integration": "vitest run -c vitest.config.integration.ts"` — útiles para iterar dentro de un paquete sin arrancar el workspace entero. En `apps/web`: `"test:e2e": "playwright test"` y `"e2e:stack": "tsx scripts/e2e-stack.ts"` — el mismo script que ejecuta el `webServer` de Playwright; lánzalo a mano en otra terminal si quieres que `reuseExistingServer` lo reutilice (Playwright siempre apaga los servidores que arrancó él mismo).
+Por paquete: `"test": "vitest run"` (usa su config unit local) y, si aplica, `"test:integration": "vitest run -c vitest.config.integration.ts"` — útiles para iterar dentro de un paquete sin arrancar el workspace entero. En `apps/web`: `"test:e2e": "playwright test"`. El stack manual (para que `reuseExistingServer` lo reutilice) se lanza con `pnpm exec tsx scripts/e2e-stack.ts` desde `apps/web` — el MISMO script que ejecuta el `webServer` de Playwright (no hay un alias `e2e:stack`). Playwright siempre apaga los servidores que arrancó él mismo. **T5.22**: ese script hace `next build && next start` (producción, no `next dev`) para eliminar los mismatches de hidratación inducidos por HMR; un `globalSetup` rechaza reusar un build congelado más viejo que el código.
 
 CI (`.github/workflows/ci.yml`, desde T0.1): jobs `lint+typecheck` → `unit` → `integration` (Testcontainers funciona en runners de GitHub: traen Docker) → `e2e` (Playwright). **CUA y `test:live` no corren jamás en CI** — el gate CUA requiere juicio y evidencia por tarea, y live gasta dinero con credenciales reales. Detalle en ci.md.
 

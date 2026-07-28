@@ -17,9 +17,17 @@
 // siguen usando los executors de demo, que no tocan la red.
 //
 // Si algo falla: exit != 0 y Playwright aborta mostrando el log (stdio 'inherit').
-import { spawn, type ChildProcess } from 'node:child_process';
+//
+// T5.22: web arranca en modo PRODUCCIÓN (`next build && next start`), NO `next dev`.
+// Motivo: `next dev` (HMR) inducía mismatches de hidratación bajo `fullyParallel` (el
+// `Hydration failed` de /projects, origen de T5.10); en `next start` no hay dev server
+// ⇒ ese mismatch es estructuralmente imposible, no solo improbable. Además `next start`
+// es la verdad de producción (T0.13). El landmine de `require.resolve` bajo el bundle
+// que hacía que prod nunca arrancara (T0.13) se neutraliza con UGC_DB_MIGRATIONS_DIR en
+// el env del hijo (abajo), igual que hace dev.mjs para `next dev`.
+import { spawn, spawnSync, type ChildProcess } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { mkdtempSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { startPostgresContainer, createTestDatabase, startFakeExternalApis } from '@ugc/test-utils';
@@ -49,9 +57,12 @@ const { connectionString } = await createTestDatabase({
 });
 
 // El env que hereda web. La ruta ABSOLUTA de migraciones (UGC_DB_MIGRATIONS_DIR)
-// es la que el wrapper dev.mjs inyecta para que el runner de migraciones bajo
-// Turbopack encuentre meta/_journal.json; aquí la ponemos directamente porque
-// arrancamos `next dev` sin pasar por dev.mjs.
+// es la que el wrapper dev.mjs inyecta para que el runner de migraciones bajo el
+// bundle de Turbopack encuentre meta/_journal.json; aquí la ponemos directamente
+// porque arrancamos next SIN pasar por dev.mjs. T5.22: ahora es `next build && next
+// start` (producción), y esta var es EXACTAMENTE lo que T0.13 validó como el fix para
+// que `next start` arranque (sin ella el boot crashea con ERR_INVALID_ARG_TYPE al
+// resolver las migraciones bajo el bundle). Aplica al build Y al start.
 const migrationsDir = fileURLToPath(new URL('../../../packages/db/drizzle', import.meta.url));
 const nextBin = fileURLToPath(new URL('../node_modules/.bin/next', import.meta.url));
 
@@ -160,13 +171,55 @@ const env: NodeJS.ProcessEnv = {
   // (una ventana de 2 s haría flaky el 3.er intento si el navegador va lento).
   LOGIN_MAX_ATTEMPTS: process.env.LOGIN_MAX_ATTEMPTS ?? '2',
   LOGIN_WINDOW_MS: process.env.LOGIN_WINDOW_MS ?? '60000',
-  NODE_ENV: 'development', // `next dev` (F0: sin build de prod; E2E_DEV implícito)
+  // T5.22: modo PRODUCCIÓN. `next build && next start` sirve el build congelado (no HMR).
+  // Consecuencia de segundo orden neutralizada a propósito: `next.config.ts` carga el `.env`
+  // raíz SOLO si NODE_ENV==='development'. En producción NO se carga ⇒ las API keys reales del
+  // `.env` (FAL_KEY/ANTHROPIC_API_KEY/FIRECRAWL_API_KEY) ya NO se filtran al stack — el fix es
+  // MÁS hermético. No hay regresión: el stack ya siembra esas keys CIFRADAS en la BD (arriba,
+  // líneas ~82-86) antes de arrancar web, y el bootstrap por env de `instrumentation.register`
+  // es opcional (`if (!env) return`) e idempotente ⇒ su ausencia es un no-op.
+  NODE_ENV: 'production',
 };
+
+// T5.22: BUILD DE PRODUCCIÓN antes de arrancar. `next build` con Turbopack (default en
+// Next 16) compila el server; `next start` sirve ese build congelado (sin HMR). El exit
+// code se COMPRUEBA: un build roto NO debe caer en `next start` sobre un `.next` viejo o
+// ausente (daría un fallo opaco de Playwright). El env es el mismo que hereda `next start`
+// (UGC_DB_MIGRATIONS_DIR incluido: el build también tocaría el bundle). stdio 'inherit'
+// para que el log del build sea visible si Playwright aborta.
+// Limpia SOLO `.next/dev` antes del build (no `.next` entero): en Next 16 los artefactos de
+// `next dev` viven en `.next/dev/` y los de `next build` en `.next/build|types/…`, separados.
+// Borrar `.next/dev` evita que un `next-env.d.ts` regenerado apunte a un `routes.d.ts` de dev
+// obsoleto (rojo fantasma conocido del gate; skill testing «Rojos FANTASMA»), pero PRESERVA
+// `.next/cache` ⇒ el segundo build en adelante es WARM (medido en el report). Un `rm -rf .next`
+// forzaría build en frío en cada corrida y volvería el impuesto de tiempo mucho peor.
+const dotNextDevDir = fileURLToPath(new URL('../.next/dev', import.meta.url));
+rmSync(dotNextDevDir, { recursive: true, force: true });
+
+console.log('[e2e-stack] next build (modo producción)…');
+const buildResult = spawnSync(nextBin, ['build'], { env, stdio: 'inherit' });
+if (buildResult.status !== 0) {
+  const reason =
+    buildResult.status === null
+      ? `señal ${String(buildResult.signal)}`
+      : `exit ${String(buildResult.status)}`;
+  console.error(`[e2e-stack] next build falló (${reason}); abortando`);
+  await fakeApis.close().catch(() => undefined);
+  await pg.stop().catch(() => undefined);
+  process.exit(1);
+}
+// Sello de frescura del build: `e2e/global-setup.ts` lo compara contra el mtime más reciente
+// de las fuentes trackeadas y RECHAZA un stack reusado (`reuseExistingServer`) cuyo build sea
+// más viejo que el código. Sin esto, reusar un server built = servir un build CONGELADO sobre
+// código ya editado → verde silencioso sobre código que no existe (principio 9 de testing:
+// el arnés más cómodo que la realidad). Con `next dev`/HMR esto era auto-sanador; con `next
+// start` deja de serlo, así que el guard es OBLIGATORIO. `builtAt` se sella DESPUÉS del build.
+const builtAt = Date.now();
 
 // Los specs corren en OTRO proceso: publica el runtime en un fichero conocido.
 writeFileSync(
   fileURLToPath(new URL('../e2e/.runtime.json', import.meta.url)),
-  JSON.stringify({ databaseUrl: connectionString, assetsDir }),
+  JSON.stringify({ databaseUrl: connectionString, assetsDir, mode: 'built', builtAt }),
 );
 
 // Worker (T0.11): procesa los jobs `step.execute` de pg-boss con los executors de
@@ -181,7 +234,7 @@ const worker: ChildProcess = spawn(tsxBin, [workerEntry], {
   stdio: 'inherit',
 });
 
-const web: ChildProcess = spawn(nextBin, ['dev', '--port', String(PORT)], {
+const web: ChildProcess = spawn(nextBin, ['start', '--port', String(PORT)], {
   env,
   stdio: 'inherit',
 });

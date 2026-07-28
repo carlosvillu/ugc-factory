@@ -8,6 +8,11 @@ const baseURL = process.env.E2E_BASE_URL ?? 'http://localhost:3100';
 
 export default defineConfig({
   testDir: './e2e',
+  // T5.22: guard de frescura del build. Corre en AMBOS caminos (stack arrancado por
+  // Playwright y stack REUSADO) y RECHAZA un build congelado más viejo que el código —
+  // el footgun que introduce servir un `next build` (sin HMR auto-sanador). Ver el
+  // fichero para el porqué. No corre bajo `--list` (globalSetup no se ejecuta al listar).
+  globalSetup: './e2e/global-setup.ts',
   timeout: 90_000, // arranque en frío del stack + navegación; el default de 30 s se queda corto
   expect: { timeout: 15_000 },
   fullyParallel: true,
@@ -117,7 +122,12 @@ export default defineConfig({
     command: 'pnpm exec tsx scripts/e2e-stack.ts', // tsx obligatorio: @ugc/test-utils es TS sin build (§2)
     port: 3100,
     reuseExistingServer: !process.env.CI,
-    timeout: 180_000, // pull de imagen pg16 + arranque en frío de next dev
+    // T5.22: presupuesto ampliado. Antes 180 s cubría «pull de imagen pg16 + arranque en
+    // frío de next dev». Ahora el mismo webServer hace además un `next build` completo
+    // (producción) ANTES de `next start`; un build en frío es el mayor sumando. 480 s deja
+    // margen para el build + pull + arranque sin que un fallo real se enmascare como timeout
+    // opaco de Playwright.
+    timeout: 480_000,
     stdout: 'pipe',
     stderr: 'pipe',
   },

@@ -1,0 +1,171 @@
+seed: persona «Maya» ← imagen sintética 1638×2048 px (personas/01KYNGT4B858QVGJ4E1TCFNK6V/01KYNGT4BSAKHMCZVTBG501R25.png)
+seed: persona «Maya» ← imagen sintética 1638×2048 px (personas/01KYNGT4B858QVGJ4E1TCFNK6V/01KYNGT4CE58GTF091FJV9P2SC.png)
+seed: persona «Maya» ← imagen sintética 1638×2048 px (personas/01KYNGT4B858QVGJ4E1TCFNK6V/01KYNGT4D1R6VMYNBEP3HMRANM.png)
+seed: persona «Lucía (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYNGT4D5J76XBJ3V58V36QN4/01KYNGT4DP66RMP7EN3WJF6RA2.png)
+seed: persona «Lucía (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYNGT4D5J76XBJ3V58V36QN4/01KYNGT4E9BJS9Y40MR8TTDYPJ.png)
+seed: persona «Marcus (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYNGT4EKVDEG7PMYCKWADN73/01KYNGT4F5VZEDKFQ47WQP4N16.png)
+seed: persona «Marcus (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYNGT4EKVDEG7PMYCKWADN73/01KYNGT4FT28MVHBNVYZNKAMBA.png)
+seed: persona «Nerea (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYNGT4GAEV2YZ7EW9Q9Q4V0E/01KYNGT4GTA9C0C844VQZZG39J.png)
+seed: persona «Nerea (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYNGT4GAEV2YZ7EW9Q9Q4V0E/01KYNGT4HHDK7Z8429166P0KH2.png)
+seed: persona «Carmen (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYNGT4JEHE4JQQGRVBZHV265/01KYNGT4JZFJPVAR02XYB9GN6W.png)
+seed: persona «Carmen (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYNGT4JEHE4JQQGRVBZHV265/01KYNGT4M7VV0ZFZBYP11CR2CJ.png)
+seed: persona «Alex (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYNGT4N5FG1DKE6Q5501V38M/01KYNGT4NTHZ0J9STCSNKZTDCT.png)
+seed: persona «Alex (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYNGT4N5FG1DKE6Q5501V38M/01KYNGT4PDR30EDCHKQSH6T6QW.png)
+seed: persona «Rosa (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYNGT4PVN2SEQN2WF1RHM7Y1/01KYNGT4QHBH3V1P571530S04G.png)
+seed: persona «Rosa (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYNGT4PVN2SEQN2WF1RHM7Y1/01KYNGT4R42930NDPKG98QY673.png)
+seed: persona «Priya (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYNGT4R91DC347FZ9H78NT5T/01KYNGT4RVFW3Z6DGC7RWR39FB.png)
+seed: persona «Priya (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYNGT4R91DC347FZ9H78NT5T/01KYNGT4SE7BBH3ARNAPWGF60J.png)
+seed: persona «David (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYNGT4SPT8H9096BXH932W9B/01KYNGT4T7GPGJMZCTQGZP9X35.png)
+seed: persona «David (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYNGT4SPT8H9096BXH932W9B/01KYNGT4TVVVYGJV1DGWYZ2RSH.png)
+seed: persona «Chloe (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYNGT4V0CZC4MS9JKTWYE0ZY/01KYNGT4VG98526YGBQFPDQE1D.png)
+seed: persona «Chloe (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYNGT4V0CZC4MS9JKTWYE0ZY/01KYNGT4W2C59FVZ2YH2XGV286.png)
+seed: persona «Kenji (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYNGT4WA7ZY0FA5X7RA56766/01KYNGT4WS3N8JQRTJ5X1SCKVK.png)
+seed: persona «Kenji (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYNGT4WA7ZY0FA5X7RA56766/01KYNGT4XF1NXA2RVG2H904CT8.png)
+[e2e-stack] next build (modo producción)…
+▲ Next.js 16.2.10 (Turbopack)
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 7.2s
+  Running TypeScript ...
+  Finished TypeScript in 9.4s ...
+  Collecting page data using 9 workers ...
+  Generating static pages using 9 workers (0/4) ...
+  Generating static pages using 9 workers (1/4) 
+  Generating static pages using 9 workers (2/4) 
+  Generating static pages using 9 workers (3/4) 
+✓ Generating static pages using 9 workers (4/4) in 107ms
+  Finalizing page optimization ...
+
+Route (app)
+┌ ƒ /
+├ ƒ /_not-found
+├ ƒ /analyses/[id]
+├ ƒ /analyses/new
+├ ƒ /api/analyses
+├ ƒ /api/assets
+├ ƒ /api/assets/[id]/download
+├ ƒ /api/batches/[id]/scripts
+├ ƒ /api/batches/estimate
+├ ƒ /api/briefs/[id]
+├ ƒ /api/dashboard
+├ ƒ /api/health
+├ ƒ /api/library
+├ ƒ /api/login
+├ ƒ /api/personas
+├ ƒ /api/personas/[id]
+├ ƒ /api/personas/[id]/reference-images
+├ ƒ /api/personas/[id]/reference-images/[assetId]
+├ ƒ /api/personas/[id]/reference-images/generate
+├ ƒ /api/personas/[id]/voice-preview
+├ ƒ /api/personas/candidates
+├ ƒ /api/projects
+├ ƒ /api/projects/[id]
+├ ƒ /api/runs
+├ ƒ /api/runs/[id]
+├ ƒ /api/runs/[id]/cancel
+├ ƒ /api/runs/[id]/events
+├ ƒ /api/settings
+├ ƒ /api/spend
+├ ƒ /api/steps/[id]
+├ ƒ /api/steps/[id]/approve
+├ ƒ /api/steps/[id]/edit
+├ ƒ /api/steps/[id]/regenerate
+├ ƒ /api/steps/[id]/reject
+├ ƒ /api/steps/[id]/retry
+├ ƒ /api/steps/[id]/skip
+├ ƒ /api/templates
+├ ƒ /api/templates/[id]
+├ ƒ /api/templates/[id]/status
+├ ƒ /api/templates/[id]/test
+├ ƒ /api/templates/[id]/thumbnail
+├ ƒ /api/thumbnails
+├ ƒ /api/variants/[id]
+├ ƒ /api/variants/[id]/bundle
+├ ƒ /api/variants/[id]/lineage
+├ ƒ /api/webhooks/fal
+├ ƒ /design-system
+├ ƒ /gallery
+├ ƒ /library
+├ ƒ /login
+├ ƒ /personas
+├ ƒ /projects
+├ ƒ /projects/[id]
+├ ƒ /runs
+├ ƒ /runs/[id]
+├ ƒ /settings
+└ ƒ /spend
+
+
+ƒ Proxy (Middleware)
+
+ƒ  (Dynamic)  server-rendered on demand
+
+▲ Next.js 16.2.10
+- Local:         http://localhost:3100
+- Network:       http://192.168.1.132:3100
+✓ Ready in 135ms
+{"level":30,"time":1785281208018,"pid":97761,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","msg":"running startup migrations"}
+{"level":30,"time":1785281208094,"pid":97761,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","msg":"startup migrations applied"}
+{"level":30,"time":1785281208155,"pid":97761,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","seeded":true,"msg":"auth.password_hash sembrado (first boot)"}
+{"level":30,"time":1785281208165,"pid":97761,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","msg":"sembrando datos de referencia (T3.9)"}
+{"level":30,"time":1785281208204,"pid":97761,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","hookLines":80,"ctaLines":30,"recipes":3,"msg":"librería sembrada o ya presente (insert-only)"}
+{"level":30,"time":1785281208385,"pid":97761,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","templates":56,"guardPacks":10,"modelProfiles":18,"msg":"galería sembrada o ya presente (insert-only)"}
+{"level":30,"time":1785281208470,"pid":97761,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","personas":11,"imagesCreated":0,"imagesFailed":0,"msg":"personas sembradas o ya presentes"}
+{"level":30,"time":1785281208684,"pid":97772,"hostname":"MBP-de-Carlos","name":"worker","intervalMs":5000,"generationReconcile":true,"msg":"sweeper arrancado"}
+{"level":30,"time":1785281208684,"pid":97772,"hostname":"MBP-de-Carlos","name":"worker","queue":"demo.noop","msg":"pg-boss arrancado: colas y consumers listos"}
+{"level":30,"time":1785281208685,"pid":97772,"hostname":"MBP-de-Carlos","name":"worker","health":{"ok":true,"db":true},"msg":"worker ready"}
+{"level":30,"time":1785281208470,"pid":97761,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","msg":"datos de referencia sembrados (T3.9)"}
+{"level":30,"time":1785281208952,"pid":97761,"hostname":"MBP-de-Carlos","name":"web","request_id":"cbe87795-d18f-43ba-9dc3-4a51e5d7daf8","route":"/api/health","health":{"ok":true,"db":true},"msg":"health check"}
+{"level":30,"time":1785281208980,"pid":97761,"hostname":"MBP-de-Carlos","name":"web","request_id":"f7923026-c819-436b-bb5c-ba64a900e642","route":"/api/health","health":{"ok":true,"db":true},"msg":"health check"}
+{"level":30,"time":1785281209047,"pid":97761,"hostname":"MBP-de-Carlos","name":"web","request_id":"012fe709-24c6-4819-89a7-192f33c51bec","route":"/api/health","health":{"ok":true,"db":true},"msg":"health check"}
+{"level":30,"time":1785281210913,"pid":97761,"hostname":"MBP-de-Carlos","name":"web","request_id":"9bba2414-835c-4656-a37a-c479b4e031bb","route":"/api/health","health":{"ok":true,"db":true},"msg":"health check"}
+{"level":30,"time":1785281233836,"pid":97761,"hostname":"MBP-de-Carlos","name":"web","request_id":"bb248822-bec7-495b-af81-b40c2fdba7fd","project_id":"01KYNGVGWW9SKCP574PXRVGVR2","msg":"proyecto creado"}
+{"level":30,"time":1785281234044,"pid":97761,"hostname":"MBP-de-Carlos","name":"web","request_id":"a8cc54d3-d4b2-4b5d-bf62-2b44ed5c276e","project_id":"01KYNGVGZTC7RCQADR8TZ3S4F9","msg":"proyecto creado"}
+{"level":30,"time":1785281234193,"pid":97761,"hostname":"MBP-de-Carlos","name":"web","request_id":"8d3a415c-b3fa-4fe1-a566-e1659c4f8368","project_id":"01KYNGVGZQ6VE3RN93NDME0HJJ","msg":"proyecto creado"}
+{"level":30,"time":1785281234560,"pid":97761,"hostname":"MBP-de-Carlos","name":"web","request_id":"56be7197-5829-4145-a21a-619ba615d591","project_id":"01KYNGVGZTC7RCQADR8TZ3S4F9","msg":"proyecto actualizado"}
+{"level":30,"time":1785281235014,"pid":97761,"hostname":"MBP-de-Carlos","name":"web","request_id":"a7a1be48-a0a5-4c68-acd8-c08b55735c9d","project_id":"01KYNGVGZTC7RCQADR8TZ3S4F9","msg":"proyecto actualizado"}
+{"level":30,"time":1785281388251,"pid":97761,"hostname":"MBP-de-Carlos","name":"web","request_id":"718c1258-fc37-41f5-85ad-36f291c69524","route":"/api/health","health":{"ok":true,"db":true},"msg":"health check"}
+{"level":30,"time":1785281419712,"pid":97772,"hostname":"MBP-de-Carlos","name":"worker","signal":"SIGTERM","msg":"worker shutting down"}
+node:events:496
+      throw er; // Unhandled 'error' event
+      ^
+
+error: terminating connection due to administrator command
+    at parseErrorMessage (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/pg-protocol@1.15.0/node_modules/pg-protocol/src/parser.ts:394:9)
+    at Parser.handlePacket (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/pg-protocol@1.15.0/node_modules/pg-protocol/src/parser.ts:212:19)
+    at Parser.parse (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/pg-protocol@1.15.0/node_modules/pg-protocol/src/parser.ts:105:30)
+    at Socket.<anonymous> (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/pg-protocol@1.15.0/node_modules/pg-protocol/src/index.ts:7:48)
+    at Socket.emit (node:events:518:28)
+    at addChunk (node:internal/streams/readable:561:12)
+    at readableAddChunkPushByteMode (node:internal/streams/readable:512:3)
+    at Readable.push (node:internal/streams/readable:392:5)
+    at TCP.onStreamRead (node:internal/stream_base_commons:189:23)
+Emitted 'error' event on Client instance at:
+    at Client._handleErrorEvent (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/pg@8.22.0/node_modules/pg/lib/client.js:417:10)
+    at Client._handleErrorMessage (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/pg@8.22.0/node_modules/pg/lib/client.js:428:12)
+    at Connection.emit (node:events:518:28)
+    at /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/pg@8.22.0/node_modules/pg/lib/connection.js:136:12
+    at Parser.parse (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/pg-protocol@1.15.0/node_modules/pg-protocol/src/parser.ts:106:9)
+    at Socket.<anonymous> (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/pg-protocol@1.15.0/node_modules/pg-protocol/src/index.ts:7:48)
+    [... lines matching original stack trace ...]
+    at Readable.push (node:internal/streams/readable:392:5) {
+  length: 116,
+  severity: 'FATAL',
+  code: '57P01',
+  detail: undefined,
+  hint: undefined,
+  position: undefined,
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: 'postgres.c',
+  line: '3286',
+  routine: 'ProcessInterrupts'
+}
+
+Node.js v22.18.0

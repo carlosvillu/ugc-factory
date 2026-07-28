@@ -1,0 +1,18 @@
+# T5.22 — grep de traces PROD (next start), corrida dashboard.spec.ts --trace on
+# 6 trazas retenidas (todas verdes) extraídas; incluyen los 3 escenarios /projects.
+
+## Clause (c): tokens HMR/.next-dev en frames de traza PROD (esperado 0)
+webpack-hmr|turbopack-hmr|hot-reloader|__nextjs|.next/dev -> files matched: 0
+
+## Clause (b): hydration/Minified React error en frames de traza PROD (esperado 0)
+hydrat|Minified React error|#418|#423|#425 -> files matched: 0
+
+## Sanidad (traza NO vacía): files mentioning /projects: 25
+
+## Trazas fuente:
+apps/web/test-results/dashboard-dashboard-y-vist-880c0--del-proyecto-y-KPIs-reales-chromium/trace.zip
+apps/web/test-results/dashboard-dashboard-y-vist-404e8-I-crear-→-editar-→-archivar-chromium/trace.zip
+apps/web/test-results/dashboard-dashboard-y-vist-d0250-mpty-state-no-un-lote-falso-chromium/trace.zip
+apps/web/test-results/auth.setup.ts-login-y-persistir-sesión-setup/trace.zip
+apps/web/test-results/dashboard-dashboard-y-vist-829fd-culta-el-proyecto-regla-5a--chromium/trace.zip
+apps/web/test-results/dashboard-dashboard-y-vist-dbb67-os-correctos-y-gasto-exacto-chromium/trace.zip

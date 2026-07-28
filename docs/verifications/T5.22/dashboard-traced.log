@@ -1,0 +1,11 @@
+
+Running 6 tests using 5 workers
+
+  ✓  1 [setup] › e2e/auth.setup.ts:10:1 › login y persistir sesión (1.0s)
+  ✓  2 [chromium] › e2e/dashboard.spec.ts:242:3 › dashboard y vista de proyecto (T5.10) › /projects/[id] lista briefs y variantes con estados correctos y gasto exacto (1.3s)
+  ✓  6 [chromium] › e2e/dashboard.spec.ts:174:3 › dashboard y vista de proyecto (T5.10) › ARCHIVAR que FALLA: superficie el error en el diálogo y NO oculta el proyecto (regla 5a) (1.7s)
+  ✓  5 [chromium] › e2e/dashboard.spec.ts:216:3 › dashboard y vista de proyecto (T5.10) › el dashboard muestra el lote activo del proyecto y KPIs reales (1.8s)
+  ✓  4 [chromium] › e2e/dashboard.spec.ts:281:3 › dashboard y vista de proyecto (T5.10) › CONTROL NEGATIVO: un proyecto sin lotes muestra empty-state, no un lote falso (2.0s)
+  ✓  3 [chromium] › e2e/dashboard.spec.ts:126:3 › dashboard y vista de proyecto (T5.10) › CRUD mínimo de proyecto desde la UI: crear → editar → archivar (2.4s)
+
+  6 passed (7.7s)

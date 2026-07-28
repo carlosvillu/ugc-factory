@@ -95,7 +95,7 @@ export function RunShell({ runId }: { runId: string }) {
         ) : cp4Steps.length > 0 ? (
           <QaPanel steps={cp4Steps} />
         ) : (
-          <StepPanel />
+          <SelectedStepPanel />
         )}
       </div>
       {/* estado de conexión SSE observable (accesible + para e2e) */}
@@ -104,6 +104,36 @@ export function RunShell({ runId }: { runId: string }) {
       </output>
     </div>
   );
+}
+
+// El inspector genérico, REMONTADO al cambiar de nodo seleccionado (T5.24).
+//
+// EL BUG QUE ARREGLA: `StepPanel` guarda estado LOCAL intrínseco al step que inspecciona
+// (`editing`/`editDraft` sembrado del `outputExcerpt`, `viewer` de la modal, `busy`/`error` de una
+// acción en vuelo). Sin remontar, al conmutar de nodo la MISMA instancia se reúsa y ese estado
+// SOBREVIVE: un editor JSON a medias del step viejo aparece sobre el step nuevo (el bloque
+// `{editing ? <section data-slot="output-editor">}` se pinta al margen de si el nuevo step es
+// checkpoint), y el panel del nuevo nodo no monta de forma fiable. TODO el estado local de
+// `StepPanel` es efímero y por-step —no hay retry en vuelo ni formulario que preservar entre
+// nodos—, así que la cura correcta es REMONTAR (key), no resetear campo a campo: una instancia
+// nueva por step arranca con todos sus `useState` en su valor inicial. Es el mismo patrón que ya
+// usa `VariantReview` en `qa-panel.tsx` (`key={selectedStepId}`).
+//
+// POR QUÉ UN WRAPPER Y NO EL `key` INLINE EN `RunShell`. El `key` necesita `selectedStepId`, que
+// `RunShell` no tiene en scope. Leerlo AHÍ suscribiría `RunShell` —el único sitio que monta el SSE
+// (`useRunEvents`) y la cascada de checkpoints— a cada click de nodo. Verificado que ESO es inocuo:
+// `RunShell` YA se re-renderiza en cada delta SSE hoy (los cuatro hooks de checkpoint leen `s.steps`
+// del store, vía `usePausedCheckpointId` en `use-paused-checkpoint.ts:30`), y el canvas NO se
+// desmonta por ello (invariante de `:80`, del que depende el re-encuadre de T1.16); y el SSE no se
+// re-suscribe en un re-render porque `useEventSource` cierra su effect sobre `[url, enabled]` con el
+// callback en un `useEffectEvent` (`use-event-source.ts:41,130`). O sea: el `key` inline TAMBIÉN
+// sería seguro. Se elige el wrapper de todas formas porque AÍSLA la suscripción a la selección en
+// una hoja: `RunShell` no gana una dependencia nueva, y el remonte queda localizado donde ocurre.
+// `?? 'empty'` para que la transición sin-selección → step tenga una key explícita (una key `null`
+// haría a React caer al índice y difuminaría el salto que este fix persigue).
+function SelectedStepPanel() {
+  const selectedStepId = useRunStore((s) => s.selectedStepId);
+  return <StepPanel key={selectedStepId ?? 'empty'} />;
 }
 
 /**

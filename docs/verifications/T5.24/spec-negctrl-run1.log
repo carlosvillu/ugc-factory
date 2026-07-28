@@ -1,0 +1,53 @@
+
+Running 2 tests using 1 worker
+
+  ✓  1 [setup] › e2e/auth.setup.ts:10:1 › login y persistir sesión (954ms)
+  ✘  2 [chromium] › e2e/run-canvas-node-switch.spec.ts:43:3 › inspector: conmutar de nodo remonta el panel (T5.24) › un editor JSON a medias en un nodo NO se arrastra al panel de otro @f5 (17.9s)
+
+
+  1) [chromium] › e2e/run-canvas-node-switch.spec.ts:43:3 › inspector: conmutar de nodo remonta el panel (T5.24) › un editor JSON a medias en un nodo NO se arrastra al panel de otro @f5 
+
+    Error: expect(locator).toBeHidden() failed
+
+    Locator:  getByRole('complementary', { name: /\bdemo.canvas.N0\b/ }).locator('[data-slot="output-editor"]')
+    Expected: hidden
+    Received: visible
+    Timeout:  15000ms
+
+    Call log:
+      - Expect "toBeHidden" with timeout 15000ms
+      - waiting for getByRole('complementary', { name: /\bdemo.canvas.N0\b/ }).locator('[data-slot="output-editor"]')
+        34 × locator resolved to <section data-slot="output-editor" aria-label="Editar output">…</section>
+           - unexpected value "visible"
+
+
+      76 |       // el draft vive en el `value` del `<textarea>`, que Playwright NO expone por `getByText`
+      77 |       // (matchea `textContent`, no `value`) — un `getByText` del sentinela sería un assert vacuo.
+    > 78 |       await expect(n0Panel.locator('[data-slot="output-editor"]')).toBeHidden();
+         |                                                                    ^
+      79 |       await expect(n0Panel.getByRole('textbox', { name: /editar output/i })).toHaveCount(0);
+      80 |       // N0 no es checkpoint: no ofrece el botón "Editar" (prueba positiva de que el panel es
+      81 |       // el suyo, con SUS acciones, no el de N1 reutilizado).
+        at /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/web/e2e/run-canvas-node-switch.spec.ts:78:68
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/run-canvas-node-switch-ins-d8c76-e-arrastra-al-panel-de-otro-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/run-canvas-node-switch-ins-d8c76-e-arrastra-al-panel-de-otro-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/run-canvas-node-switch-ins-d8c76-e-arrastra-al-panel-de-otro-chromium/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/run-canvas-node-switch-ins-d8c76-e-arrastra-al-panel-de-otro-chromium/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace test-results/run-canvas-node-switch-ins-d8c76-e-arrastra-al-panel-de-otro-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  1 failed
+    [chromium] › e2e/run-canvas-node-switch.spec.ts:43:3 › inspector: conmutar de nodo remonta el panel (T5.24) › un editor JSON a medias en un nodo NO se arrastra al panel de otro @f5 
+  1 passed (22.3s)

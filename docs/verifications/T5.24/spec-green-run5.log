@@ -1,0 +1,7 @@
+
+Running 2 tests using 1 worker
+
+  ✓  1 [setup] › e2e/auth.setup.ts:10:1 › login y persistir sesión (608ms)
+  ✓  2 [chromium] › e2e/run-canvas-node-switch.spec.ts:43:3 › inspector: conmutar de nodo remonta el panel (T5.24) › un editor JSON a medias en un nodo NO se arrastra al panel de otro @f5 (2.7s)
+
+  2 passed (6.1s)

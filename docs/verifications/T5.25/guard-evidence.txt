@@ -1,0 +1,41 @@
+=== CLAUSE 2: GUARD DE CONTENEDORES pg — evidencia de ejecución CLI (verifier, 2026-07-29) ===
+
+Docker aquí es COLIMA: unix://$HOME/.colima/default/docker.sock
+
+--- FACE CRÍTICA (footgun): solo ugc-postgres-dev vivo ---
+BEFORE: ae31bf42949f... StartedAt=2026-07-29T18:33:55.986620152Z Health=healthy
+$ node scripts/check-orphan-workers.mjs
+  → "0 contenedores postgres:16 huérfanos ✓" ; exit=0   (dev DB NO contada)
+$ node scripts/check-orphan-workers.mjs --clean-containers
+  → "0 contenedores postgres:16 huérfanos ✓" ; exit=0   (nada que limpiar)
+AFTER --clean-containers: StartedAt=2026-07-29T18:33:55.986620152Z Health=healthy  (IDÉNTICO — NO tocada)
+
+--- FACE (a): 2 testcontainers etiquetados (org.testcontainers=true, postgres:16) ---
+C1=1b46c89345f3...  C2=36db1c8d075d...
+$ node scripts/check-orphan-workers.mjs
+  → "2 contenedor(es) postgres:16 vivo(s)" ; exit=0 (tier AVISO)   (dev DB excluida, cuenta = 2)
+$ node scripts/check-orphan-workers.mjs --strict   (con 2 contenedores, SIN worker)
+  → "2 contenedor(es)..." + "sin workers vivos ✓" ; exit=0   (contenedores NO disparan strict)
+$ node scripts/check-orphan-workers.mjs --clean-containers
+  → "--clean-containers → 2/2 contenedor(es) eliminado(s)." ; exit=0
+$ node scripts/check-orphan-workers.mjs
+  → "0 contenedores postgres:16 huérfanos ✓" ; exit=0   (vuelve a 0)
+Los 2 contenedores: GONE (docker ps -a vacío para esos IDs).
+ugc-postgres-dev tras todo: StartedAt=2026-07-29T18:33:55.986620152Z Health=healthy  (INTACTA)
+
+--- FACE WORKER (--strict) via decoy cmdline-matching 'src/main.ts' (NO worker real, sin cola, sin fal) ---
+$ node <scratchpad>/src/main.ts &   (decoy: setTimeout 120s)
+$ node scripts/check-orphan-workers.mjs --strict
+  → "N worker(s) VIVO(s)" ; exit=1   (worker SÍ dispara strict)
+$ pkill decoy ; node scripts/check-orphan-workers.mjs --strict  → "sin workers vivos ✓" ; exit=0
+
+CONCLUSIÓN CLAUSE 2: guard discrimina testcontainers (label) de la BD dev; --clean-containers NUNCA
+toca ugc-postgres-dev (StartedAt invariante); --strict = SOLO workers (contenedores son tier aviso).
+
+=== APÉNDICE: verificación de row 3 (next build fresco + f4 spec ejecutado) ===
+next build FRESCO (no reuse): "Creating an optimized production build ... Compiled successfully in 5.4s"
+  (sin "Reusing existing server" en el output → webServer arrancó de cero, hizo el build de producción)
+f4-generation.spec.ts:95 EJECUTADO Y PASS (41.6s de trabajo real de generación N7 contra el fake):
+  "F4 · journey de generación: CP3 aprobado → sub-DAG N6→N7a-e por variante en el canvas"
+Playwright phases: 4 passed (1.1m) — f1-brief + f2-scripts + f4-generation, cero skipped.
+Fase test (unit+integration): 2540 passed (242 files), cero skipped/failed.

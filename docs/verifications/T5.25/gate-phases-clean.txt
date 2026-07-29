@@ -1,0 +1,516 @@
+Lazy loading nvm node npm ...
+gate:phases · higiene pre-flight: ⚠ 1 testcontainer(s) postgres:16 vivo(s) — pueden saturar y matar el gate. Si no hay una corrida de tests en curso:  pnpm check:orphan-workers --clean-containers  (opt-in).
+
+▶ fase lint  (env: none)
+
+> ugc-factory@0.0.0 lint /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads
+> eslint .
+
+
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/web/e2e/partial-regeneration.spec.ts
+  433:7  warning  Avoid having conditionals in tests    playwright/no-conditional-in-test
+  434:9  warning  Avoid calling `expect` conditionally  playwright/no-conditional-expect
+
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/web/e2e/runs-canvas.spec.ts
+   52:3  warning  Test has no assertions  playwright/expect-expect
+   69:3  warning  Test has no assertions  playwright/expect-expect
+   79:3  warning  Test has no assertions  playwright/expect-expect
+  126:3  warning  Test has no assertions  playwright/expect-expect
+  254:3  warning  Test has no assertions  playwright/expect-expect
+
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/web/e2e/voice-preview.spec.ts
+  232:7  warning  Avoid having conditionals in tests  playwright/no-conditional-in-test
+
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/web/src/components/checkpoints/brief-editor.tsx
+  325:23  warning  Compilation Skipped: Use of incompatible library
+
+This API returns functions which cannot be memoized without leading to stale UI. To prevent this, by default React Compiler will skip memoizing this component/hook. However, you may see issues if values from this API are passed to other components/hooks that are memoized.
+
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/web/src/components/checkpoints/brief-editor.tsx:325:23
+  323 |   }
+  324 |
+> 325 |   const productName = watch('product.name');
+      |                       ^^^^^ React Hook Form's `useForm()` API returns a `watch()` function which cannot be memoized safely.
+  326 |
+  327 |   return (
+  328 |     <form  react-hooks/incompatible-library
+
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/web/src/components/design-system/overlay-specimens.tsx
+  399:11  warning  Image elements must have an alt prop, either with meaningful text, or an empty string for decorative images  jsx-a11y/alt-text
+  413:11  warning  Image elements must have an alt prop, either with meaningful text, or an empty string for decorative images  jsx-a11y/alt-text
+  417:11  warning  Image elements must have an alt prop, either with meaningful text, or an empty string for decorative images  jsx-a11y/alt-text
+
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/web/src/components/gallery/new-template-form.tsx
+  43:16  warning  Compilation Skipped: Use of incompatible library
+
+This API returns functions which cannot be memoized without leading to stale UI. To prevent this, by default React Compiler will skip memoizing this component/hook. However, you may see issues if values from this API are passed to other components/hooks that are memoized.
+
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/web/src/components/gallery/new-template-form.tsx:43:16
+  41 |   const { errors, isSubmitting } = formState;
+  42 |
+> 43 |   const body = watch('body');
+     |                ^^^^^ React Hook Form's `useForm()` API returns a `watch()` function which cannot be memoized safely.
+  44 |   const invalid = invalidBodySlots(body);
+  45 |   const hasInvalid = invalid.length > 0;
+  46 |  react-hooks/incompatible-library
+
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/web/src/components/intake/intake-form.tsx
+  72:39  warning  Compilation Skipped: Use of incompatible library
+
+This API returns functions which cannot be memoized without leading to stale UI. To prevent this, by default React Compiler will skip memoizing this component/hook. However, you may see issues if values from this API are passed to other components/hooks that are memoized.
+
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/web/src/components/intake/intake-form.tsx:72:39
+  70 |   const { errors, isSubmitting } = formState;
+  71 |
+> 72 |   const imageRefs: IntakeImageRef[] = watch('imageRefs') ?? [];
+     |                                       ^^^^^ React Hook Form's `useForm()` API returns a `watch()` function which cannot be memoized safely.
+  73 |   const [uploadError, setUploadError] = useState<string | null>(null);
+  74 |   const [uploading, setUploading] = useState(false);
+  75 |   // Idioma del ANÁLISIS (config de N3). No es parte de `ManualIntakeConfigSchema` —  react-hooks/incompatible-library
+
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/web/src/components/ui/image.test.tsx
+  129:12  warning  Image elements must have an alt prop, either with meaningful text, or an empty string for decorative images  jsx-a11y/alt-text
+
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/worker/scripts/probe-seedream-edit.ts
+  19:8  warning  Using exported name 'sharp' as identifier for default export  import-x/no-named-as-default
+
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/core/src/analyze/rescale.test.ts
+  5:8  warning  Using exported name 'sharp' as identifier for default export  import-x/no-named-as-default
+
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/core/src/analyze/rescale.ts
+  9:8  warning  Using exported name 'sharp' as identifier for default export  import-x/no-named-as-default
+
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/core/src/analyze/visual-analyzer.test.ts
+  6:8  warning  Using exported name 'sharp' as identifier for default export  import-x/no-named-as-default
+
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/core/src/contracts/product-brief.json-schema.test.ts
+  7:8  warning  Using exported name 'Ajv2020' as identifier for default export  import-x/no-named-as-default
+
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/core/src/persona/contracts.ts
+   42:6  warning  'VoiceRef' is defined but never used. Allowed unused vars must match /^_/u          unused-imports/no-unused-vars
+   59:6  warning  'VoiceMap' is defined but never used. Allowed unused vars must match /^_/u          unused-imports/no-unused-vars
+  167:6  warning  'PersonaCandidate' is defined but never used. Allowed unused vars must match /^_/u  unused-imports/no-unused-vars
+
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/core/src/persona/reference-fixtures.test.ts
+  9:8  warning  Using exported name 'sharp' as identifier for default export  import-x/no-named-as-default
+
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/core/src/persona/reference-fixtures.ts
+  27:8  warning  Using exported name 'sharp' as identifier for default export  import-x/no-named-as-default
+
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/core/src/persona/reference-image.ts
+  17:8  warning  Using exported name 'sharp' as identifier for default export  import-x/no-named-as-default
+
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/services/test/integration/generate-persona-images.test.ts
+  17:8  warning  Using exported name 'sharp' as identifier for default export  import-x/no-named-as-default
+
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/services/test/integration/visual-analyze.test.ts
+  13:8  warning  Using exported name 'sharp' as identifier for default export  import-x/no-named-as-default
+
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/test-utils/src/image-fixtures.ts
+  14:8  warning  Using exported name 'sharp' as identifier for default export  import-x/no-named-as-default
+
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/scripts/readme-status.mjs
+  115:23  warning  Caution: `prettier` also has a named export `resolveConfig`. Check if you meant to write `import {resolveConfig} from 'prettier'` instead  import-x/no-named-as-default-member
+  116:20  warning  Caution: `prettier` also has a named export `format`. Check if you meant to write `import {format} from 'prettier'` instead                import-x/no-named-as-default-member
+
+✖ 31 problems (0 errors, 31 warnings)
+
+✓ fase lint PASS
+
+▶ fase typecheck  (env: none)
+
+> ugc-factory@0.0.0 typecheck /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads
+> tsc --noEmit && pnpm -r --parallel typecheck
+
+Scope: 6 of 7 workspace projects
+apps/worker typecheck$ tsc --noEmit
+apps/web typecheck$ tsc --noEmit
+packages/core typecheck$ tsc --noEmit
+packages/db typecheck$ tsc --noEmit
+packages/test-utils typecheck$ tsc --noEmit
+packages/services typecheck$ tsc --noEmit
+apps/web typecheck: Done
+packages/db typecheck: Done
+packages/services typecheck: Done
+apps/worker typecheck: Done
+packages/test-utils typecheck: Done
+packages/core typecheck: Done
+✓ fase typecheck PASS
+
+▶ fase format:check  (env: none)
+
+> ugc-factory@0.0.0 format:check /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads
+> prettier --check .
+
+Checking formatting...
+All matched files use Prettier code style!
+✓ fase format:check PASS
+
+▶ fase knip  (env: none)
+
+> ugc-factory@0.0.0 knip /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads
+> knip
+
+Configuration hints (3)
+src/golden.ts  packages/test-utils  knip.json  Remove from ignore            
+sharp          apps/worker          knip.json  Remove from ignoreDependencies
+ffprobe        apps/worker          knip.json  Remove from ignoreBinaries    
+✓ fase knip PASS
+
+▶ fase readme:status:check  (env: none)
+
+> ugc-factory@0.0.0 readme:status:check /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads
+> node scripts/readme-status.mjs --check
+
+readme:status — la tabla del README coincide con planning.md ✓
+✓ fase readme:status:check PASS
+
+▶ fase check:contrast  (env: none)
+
+> ugc-factory@0.0.0 check:contrast /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads
+> node scripts/check-contrast.mjs
+
+  [ok ] dark  --text sobre --surface: 16.74:1
+  [ok ] dark  --text-2 sobre --surface: 7.18:1
+  [ok ] dark  --text-on-accent sobre --accent: 5.42:1
+  [ok ] dark  --success sobre --surface: 8.07:1
+  [ok ] dark  --warning sobre --surface: 8.57:1
+  [ok ] dark  --danger sobre --surface: 4.89:1
+  [ok ] dark  --info sobre --surface: 5.00:1
+  [ok ] dark  --success-on sobre --success: 6.54:1
+  [ok ] dark  --warning sobre --warning-soft: 7.28:1
+  [ok ] dark  --success sobre --success-soft: 6.94:1
+  [ok ] dark  --violet sobre --violet-soft: 5.86:1
+  [ok ] light --text sobre --surface: 17.72:1
+  [ok ] light --text-2 sobre --surface: 7.73:1
+  [ok ] light --text-on-accent sobre --accent: 5.42:1
+  [ok ] light --success sobre --surface: 6.10:1
+  [ok ] light --warning sobre --surface: 6.10:1
+  [ok ] light --danger sobre --surface: 6.32:1
+  [ok ] light --info sobre --surface: 6.18:1
+  [ok ] light --success-on sobre --success: 6.10:1
+  [ok ] light --danger sobre --danger-soft: 5.28:1
+  [ok ] light --info sobre --info-soft: 5.29:1
+  [ok ] light --warning sobre --warning-soft: 5.27:1
+  [ok ] light --success sobre --success-soft: 5.26:1
+  [ok ] light --violet sobre --violet-soft: 5.28:1
+
+  ⚠ 4 pares en cuarentena (decisión de recalibración DIFERIDA, memoria ds-contrast-slots-galeria): --danger sobre --danger-soft, --info sobre --info-soft, --accent sobre --accent-soft
+
+check:contrast OK — todos los pares ≥ 4.5:1 (los diferidos en cuarentena)
+✓ fase check:contrast PASS
+
+▶ fase e2e:wired:check  (env: ryuk-only)
+
+> ugc-factory@0.0.0 e2e:wired:check /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads
+> node scripts/check-e2e-wired.mjs
+
+check-e2e-wired OK — 28 specs, todos cableados al runner.
+✓ fase e2e:wired:check PASS
+
+▶ fase test  (env: colima-export)
+
+> ugc-factory@0.0.0 test /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads
+> vitest run --project '*:unit' --project '*:integration'
+
+
+ RUN  v4.1.10 /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads
+
+(node:78720) DeprecationWarning: Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:78719) DeprecationWarning: Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:78718) DeprecationWarning: Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:78717) DeprecationWarning: Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+
+ Test Files  242 passed (242)
+      Tests  2540 passed (2540)
+   Start at  21:21:41
+   Duration  78.20s (transform 33.66s, setup 3.63s, import 179.91s, tests 235.51s, environment 21.81s)
+
+✓ fase test PASS
+
+▶ fase test:e2e:phases  (env: ryuk-only)
+
+> ugc-factory@0.0.0 test:e2e:phases /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads
+> pnpm --filter @ugc/web exec playwright test e2e/phases/f1-brief.spec.ts e2e/phases/f2-scripts.spec.ts e2e/phases/f4-generation.spec.ts
+
+[WebServer] seed: persona «Maya» ← foto IA «maya-frontal-headshot.jpg» 1536×2752 px (personas/01KYQN95K3JREQFX7ZTGSC3G6N/01KYQN95SM2T948J93HQSKE2YS.jpg)
+[WebServer] seed: persona «Maya» ← foto IA «maya-three-quarter-portrait.jpg» 1536×2752 px (personas/01KYQN95K3JREQFX7ZTGSC3G6N/01KYQN9605SW5ATSS2WSKC8F7V.jpg)
+[WebServer] seed: persona «Maya» ← foto IA «maya-full-body.jpg» 1536×2752 px (personas/01KYQN95K3JREQFX7ZTGSC3G6N/01KYQN965TX7MAN5Y3178N78HJ.jpg)
+[WebServer] seed: persona «Lucía (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQN965YV0BEE2E34SC3WYSH/01KYQN96951D5P7J2TWSGZHEF3.jpg)
+[WebServer] seed: persona «Lucía (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQN965YV0BEE2E34SC3WYSH/01KYQN96CGDG3TPK5WQV6TJ017.jpg)
+[WebServer] seed: persona «Marcus (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQN96CMKP15GCA82XGEN80C/01KYQN96FT88GVR56G6Q3PX4VZ.jpg)
+[WebServer] seed: persona «Marcus (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQN96CMKP15GCA82XGEN80C/01KYQN96K4GQZJVG3E1FS8Z7XZ.jpg)
+[WebServer] seed: persona «Nerea (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQN96K8XGFBZR2ZV7QPYF76/01KYQN96PE5D25K3PNKCWN8P5P.jpg)
+[WebServer] seed: persona «Nerea (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQN96K8XGFBZR2ZV7QPYF76/01KYQN96SNCK3AXVNNK8ZC6D30.jpg)
+[WebServer] seed: persona «Carmen (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQN96SVV1YM344MHAPAM29D/01KYQN96X3BG35RVQR3A2NA1A7.jpg)
+[WebServer] seed: persona «Carmen (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQN96SVV1YM344MHAPAM29D/01KYQN970B5WCXFQBYEMDNFZKG.jpg)
+[WebServer] seed: persona «Alex (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQN970GHZGNPN0WN238B0XM/01KYQN973PGTB857880EAF15F5.jpg)
+[WebServer] seed: persona «Alex (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQN970GHZGNPN0WN238B0XM/01KYQN976YR12HWBJ2FK883904.jpg)
+[WebServer] seed: persona «Rosa (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQN9773C3Q7XMYTESHJZ7QV/01KYQN97A821CMC8RH5NHDTMX4.jpg)
+[WebServer] seed: persona «Rosa (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQN9773C3Q7XMYTESHJZ7QV/01KYQN97DGMK0RK2RR8PKYCCAC.jpg)
+[WebServer] seed: persona «Priya (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQN97DNG6YDR029MFRJ82JB/01KYQN97GZE9HCW96DXXPP6Q4C.jpg)
+[WebServer] seed: persona «Priya (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQN97DNG6YDR029MFRJ82JB/01KYQN97M7CYXV3KXHNQKN9N1T.jpg)
+[WebServer] seed: persona «David (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQN97MBATBQBYS3GCSM8705/01KYQN97QHSX8A9JWMNEJYYDVC.jpg)
+[WebServer] seed: persona «David (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQN97MBATBQBYS3GCSM8705/01KYQN97TV9HT7CA1V8APXK5VC.jpg)
+[WebServer] seed: persona «Chloe (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQN97TY3VQ71AK6GN45600N/01KYQN97Y4RE5EQPV56CS4QKZ4.jpg)
+[WebServer] seed: persona «Chloe (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQN97TY3VQ71AK6GN45600N/01KYQN981C4XJZJW0F22PWMEAS.jpg)
+[WebServer] seed: persona «Kenji (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQN981H553K18WF7FCNJ5HM/01KYQN984T0J1VF65YYJ4QV14Z.jpg)
+[WebServer] seed: persona «Kenji (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQN981H553K18WF7FCNJ5HM/01KYQN9882ZWZ8PADB6AJH007W.jpg)
+[WebServer] [e2e-stack] next build (modo producción)…
+[WebServer] ▲ Next.js 16.2.10 (Turbopack)
+[WebServer] 
+[WebServer]   Creating an optimized production build ...
+[WebServer] ✓ Compiled successfully in 5.4s
+[WebServer]   Running TypeScript ...
+[WebServer]   Finished TypeScript in 8.1s ...
+[WebServer]   Collecting page data using 9 workers ...
+[WebServer]   Generating static pages using 9 workers (0/4) ...
+[WebServer]   Generating static pages using 9 workers (1/4) 
+[WebServer]   Generating static pages using 9 workers (2/4) 
+[WebServer]   Generating static pages using 9 workers (3/4) 
+[WebServer] ✓ Generating static pages using 9 workers (4/4) in 94ms
+[WebServer]   Finalizing page optimization ...
+[WebServer] 
+[WebServer] Route (app)
+[WebServer] ┌ ƒ /
+[WebServer] ├ ƒ /_not-found
+[WebServer] ├ ƒ /analyses/[id]
+[WebServer] ├ ƒ /analyses/new
+[WebServer] ├ ƒ /api/analyses
+[WebServer] ├ ƒ /api/assets
+[WebServer] ├ ƒ /api/assets/[id]/download
+[WebServer] ├ ƒ /api/batches/[id]/scripts
+[WebServer] ├ ƒ /api/batches/estimate
+[WebServer] ├ ƒ /api/briefs/[id]
+[WebServer] ├ ƒ /api/dashboard
+[WebServer] ├ ƒ /api/health
+[WebServer] ├ ƒ /api/library
+[WebServer] ├ ƒ /api/login
+[WebServer] ├ ƒ /api/personas
+[WebServer] ├ ƒ /api/personas/[id]
+[WebServer] ├ ƒ /api/personas/[id]/reference-images
+[WebServer] ├ ƒ /api/personas/[id]/reference-images/[assetId]
+[WebServer] ├ ƒ /api/personas/[id]/reference-images/generate
+[WebServer] ├ ƒ /api/personas/[id]/voice-preview
+[WebServer] ├ ƒ /api/personas/candidates
+[WebServer] ├ ƒ /api/projects
+[WebServer] ├ ƒ /api/projects/[id]
+[WebServer] ├ ƒ /api/runs
+[WebServer] ├ ƒ /api/runs/[id]
+[WebServer] ├ ƒ /api/runs/[id]/cancel
+[WebServer] ├ ƒ /api/runs/[id]/events
+[WebServer] ├ ƒ /api/settings
+[WebServer] ├ ƒ /api/spend
+[WebServer] ├ ƒ /api/steps/[id]
+[WebServer] ├ ƒ /api/steps/[id]/approve
+[WebServer] ├ ƒ /api/steps/[id]/edit
+[WebServer] ├ ƒ /api/steps/[id]/regenerate
+[WebServer] ├ ƒ /api/steps/[id]/reject
+[WebServer] ├ ƒ /api/steps/[id]/retry
+[WebServer] ├ ƒ /api/steps/[id]/skip
+[WebServer] ├ ƒ /api/templates
+[WebServer] ├ ƒ /api/templates/[id]
+[WebServer] ├ ƒ /api/templates/[id]/status
+[WebServer] ├ ƒ /api/templates/[id]/test
+[WebServer] ├ ƒ /api/templates/[id]/thumbnail
+[WebServer] ├ ƒ /api/thumbnails
+[WebServer] ├ ƒ /api/variants/[id]
+[WebServer] ├ ƒ /api/variants/[id]/bundle
+[WebServer] ├ ƒ /api/variants/[id]/lineage
+[WebServer] ├ ƒ /api/webhooks/fal
+[WebServer] ├ ƒ /design-system
+[WebServer] ├ ƒ /gallery
+[WebServer] ├ ƒ /library
+[WebServer] ├ ƒ /login
+[WebServer] ├ ƒ /personas
+[WebServer] ├ ƒ /projects
+[WebServer] ├ ƒ /projects/[id]
+[WebServer] ├ ƒ /runs
+[WebServer] ├ ƒ /runs/[id]
+[WebServer] ├ ƒ /settings
+[WebServer] └ ƒ /spend
+[WebServer] 
+[WebServer] 
+[WebServer] ƒ Proxy (Middleware)
+[WebServer] 
+[WebServer] ƒ  (Dynamic)  server-rendered on demand
+[WebServer] 
+[WebServer] ▲ Next.js 16.2.10
+[WebServer] - Local:         http://localhost:3100
+[WebServer] - Network:       http://192.168.1.132:3100
+[WebServer] ✓ Ready in 124ms
+[WebServer] {"level":30,"time":1785353002899,"pid":78999,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","msg":"running startup migrations"}
+[WebServer] {"level":30,"time":1785353002935,"pid":78999,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","msg":"startup migrations applied"}
+[WebServer] {"level":30,"time":1785353002981,"pid":78999,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","seeded":true,"msg":"auth.password_hash sembrado (first boot)"}
+[WebServer] {"level":30,"time":1785353002990,"pid":78999,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","msg":"sembrando datos de referencia (T3.9)"}
+[WebServer] {"level":30,"time":1785353003013,"pid":78999,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","hookLines":80,"ctaLines":30,"recipes":3,"msg":"librería sembrada o ya presente (insert-only)"}
+[WebServer] {"level":30,"time":1785353003048,"pid":78999,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","templates":56,"guardPacks":10,"modelProfiles":18,"msg":"galería sembrada o ya presente (insert-only)"}
+[WebServer] {"level":30,"time":1785353003076,"pid":78999,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","personas":11,"imagesCreated":0,"imagesFailed":0,"msg":"personas sembradas o ya presentes"}
+[WebServer] {"level":30,"time":1785353003464,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","intervalMs":5000,"generationReconcile":true,"msg":"sweeper arrancado"}
+[WebServer] {"level":30,"time":1785353003464,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","queue":"demo.noop","msg":"pg-boss arrancado: colas y consumers listos"}
+[WebServer] {"level":30,"time":1785353003464,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","health":{"ok":true,"db":true},"msg":"worker ready"}
+[WebServer] {"level":30,"time":1785353003077,"pid":78999,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","msg":"datos de referencia sembrados (T3.9)"}
+
+Running 4 tests using 3 workers
+
+  ✓  1 [setup] › e2e/auth.setup.ts:10:1 › login y persistir sesión (642ms)
+[WebServer] {"level":30,"time":1785353006803,"pid":78999,"hostname":"MBP-de-Carlos","name":"web","request_id":"7ad29d53-cfae-4c21-a356-c3eaf77bb936","run_id":"01KYQN9VP4NFMMWPN4VVPSCYMD","steps":4,"msg":"run creado"}
+[WebServer] {"level":30,"time":1785353007229,"pid":78999,"hostname":"MBP-de-Carlos","name":"web","request_id":"8778586e-304a-4777-8bd0-32fc4c38e524","run_id":"01KYQN9W3MTCQ0SQ9ZHKFH09HH","steps":4,"msg":"run creado"}
+seed: persona «Nora F4 Premium» ← imagen sintética 1638×2048 px (personas/01KYQN9W7H3PMCJZMVEJJFMZF8/01KYQN9WAY7C3T83BNAR6GRR1D.jpg)
+[WebServer] {"level":30,"time":1785353007811,"pid":78999,"hostname":"MBP-de-Carlos","name":"web","request_id":"9a266381-2c50-4100-bd93-3045bf312a30","run_id":"01KYQN9WNWFBNQ173QJCBZZ0MW","steps":4,"msg":"run creado"}
+[WebServer] {"level":30,"time":1785353008201,"pid":78999,"hostname":"MBP-de-Carlos","name":"web","request_id":"e53a81a4-87ee-4ffb-9f1a-7adf4849d729","step_id":"01KYQN9VP4FWZS41YE33VZM0PD","msg":"checkpoint editado + sub-grafo invalidado"}
+  ✓  2 [chromium] › e2e/phases/f1-brief.spec.ts:29:3 › F1 · journey de análisis: URL → N1/N2/N3 → CP1 → aprobar y avanzar › un usuario pega una URL, edita el brief en CP1 y lo aprueba: el brief se versiona y el run avanza @f1 @phase (1.9s)
+[WebServer] {"level":30,"time":1785353008665,"pid":78999,"hostname":"MBP-de-Carlos","name":"web","request_id":"69a3c492-8aec-4658-809d-911088b53861","step_id":"01KYQN9W3M6WGSZE9Q2M4XYVKR","msg":"checkpoint aprobado"}
+[WebServer] {"level":30,"time":1785353009243,"pid":78999,"hostname":"MBP-de-Carlos","name":"web","request_id":"7fb982bf-eaa5-4b27-b968-156678fa7bf5","step_id":"01KYQN9WNWYB2GJ7NFZW05W1A5","msg":"checkpoint aprobado"}
+[WebServer] (node:78999) DeprecationWarning: Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead.
+[WebServer] (Use `node --trace-deprecation ...` to show where the warning was created)
+[WebServer] {"level":30,"time":1785353009544,"pid":78999,"hostname":"MBP-de-Carlos","name":"web","request_id":"ead28df7-b876-42cf-a8e9-409dc4c8ef14","step_id":"01KYQN9W3MF7GAA6MV8KD1Q0ED","decision_kind":"matrix","next_run_id":"01KYQN9YBWB6YZ233XB7H7EB53","msg":"checkpoint aprobado"}
+[WebServer] {"level":30,"time":1785353009641,"pid":78999,"hostname":"MBP-de-Carlos","name":"web","request_id":"fd8da909-2d30-499d-9971-c61a87578542","step_id":"01KYQN9WNW6AE10866GMCZDGA5","decision_kind":"matrix","next_run_id":"01KYQN9YF1GBX8SR1DRTA3E7W3","msg":"checkpoint aprobado"}
+[WebServer] {"level":30,"time":1785353010465,"pid":78999,"hostname":"MBP-de-Carlos","name":"web","request_id":"9c2c0005-a234-4f2a-9786-91e2983d497f","step_id":"01KYQN9YBWDX0GJ5MBKMH9JZFY","decision_kind":"scripts","msg":"checkpoint aprobado"}
+  ✓  3 [chromium] › e2e/phases/f2-scripts.spec.ts:52:3 › F2 · journey de guiones: URL → CP1 → CP2 → CP3 → variantes scripted › un usuario aprueba la matriz, N5 guioniza el lote y CP3 deja todas las variantes scripted @f2 @phase (3.6s)
+[WebServer] {"level":30,"time":1785353010640,"pid":78999,"hostname":"MBP-de-Carlos","name":"web","request_id":"bdf0130c-241c-4b03-a876-ea9e28401494","step_id":"01KYQN9YF1XYSNAWGEV0VK8HT6","decision_kind":"scripts","next_run_id":"01KYQN9ZDAABD19JE76KFYJRPZ","msg":"checkpoint aprobado"}
+[WebServer] {"level":40,"time":1785353011503,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","queue":"step.execute","job_id":"e5fef441-65de-4bbe-94f5-ad4e476b84b3","run_id":"01KYQN9ZDAABD19JE76KFYJRPZ","step_id":"01KYQN9ZD9WDD46Q9K6RW6JWC9","node_key":"N7e","err":{"type":"LoserRaceError","message":"runGenerateMusic: un bed idéntico se está produciendo en otra petición concurrente; reintenta","stack":"LoserRaceError: runGenerateMusic: un bed idéntico se está produciendo en otra petición concurrente; reintenta\n    at resolveProductionDedup (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/services/src/generation-dedup.ts:114:9)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async runGenerateMusic (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/services/src/generate-music.ts:162:17)\n    at async runGenerationStep (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/worker/src/executors/_shared.ts:104:12)\n    at async <anonymous> (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/worker/src/executors/generate-music.ts:60:17)\n    at async <anonymous> (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/worker/src/consumers/step-execute.ts:190:9)\n    at async resolveWithinSeconds (file:///Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/pg-boss@12.25.1/node_modules/pg-boss/dist/tools.js:38:18)\n    at async #processJobs (file:///Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/pg-boss@12.25.1/node_modules/pg-boss/dist/manager.js:421:28)\n    at async Worker.onFetch (file:///Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/pg-boss@12.25.1/node_modules/pg-boss/dist/manager.js:577:21)\n    at async Worker.run (file:///Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/pg-boss@12.25.1/node_modules/pg-boss/dist/worker.js:60:21)","name":"LoserRaceError"},"msg":"step.execute: executor falló; evaluando retry"}
+[WebServer] {"level":40,"time":1785353011520,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","queue":"step.execute","job_id":"337c7b30-618e-442d-8761-3713fb96d5c0","run_id":"01KYQN9ZDAABD19JE76KFYJRPZ","step_id":"01KYQN9ZD8BYGWF4S2CSY9N1FK","node_key":"N7a","err":{"type":"LoserRaceError","message":"runGenerate: una generación idéntico se está produciendo en otra petición concurrente; reintenta","stack":"LoserRaceError: runGenerate: una generación idéntico se está produciendo en otra petición concurrente; reintenta\n    at resolveProductionDedup (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/services/src/generation-dedup.ts:114:9)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async runGenerate (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/services/src/generate.ts:173:17)\n    at async runGenerationStep (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/worker/src/executors/_shared.ts:104:12)\n    at async runShotLoop (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/worker/src/executors/generation.ts:225:17)\n    at async runAiPackshotRoute (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/worker/src/executors/generation.ts:273:17)\n    at async <anonymous> (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/worker/src/executors/generation.ts:175:11)\n    at async <anonymous> (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/worker/src/consumers/step-execute.ts:190:9)\n    at async resolveWithinSeconds (file:///Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/pg-boss@12.25.1/node_modules/pg-boss/dist/tools.js:38:18)\n    at async #processJobs (file:///Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/pg-boss@12.25.1/node_modules/pg-boss/dist/manager.js:421:28)","name":"LoserRaceError"},"msg":"step.execute: executor falló; evaluando retry"}
+[WebServer] {"level":40,"time":1785353011523,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","queue":"step.execute","job_id":"7c41964c-789b-4189-9764-13be39acdcc5","run_id":"01KYQN9ZDAABD19JE76KFYJRPZ","step_id":"01KYQN9ZD9AZH566X2HQA5N14S","node_key":"N7a","err":{"type":"LoserRaceError","message":"runGenerate: una generación idéntico se está produciendo en otra petición concurrente; reintenta","stack":"LoserRaceError: runGenerate: una generación idéntico se está produciendo en otra petición concurrente; reintenta\n    at resolveProductionDedup (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/services/src/generation-dedup.ts:114:9)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async runGenerate (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/services/src/generate.ts:173:17)\n    at async runGenerationStep (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/worker/src/executors/_shared.ts:104:12)\n    at async runShotLoop (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/worker/src/executors/generation.ts:225:17)\n    at async runAiPackshotRoute (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/worker/src/executors/generation.ts:273:17)\n    at async <anonymous> (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/worker/src/executors/generation.ts:175:11)\n    at async <anonymous> (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/worker/src/consumers/step-execute.ts:190:9)\n    at async resolveWithinSeconds (file:///Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/pg-boss@12.25.1/node_modules/pg-boss/dist/tools.js:38:18)\n    at async #processJobs (file:///Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/pg-boss@12.25.1/node_modules/pg-boss/dist/manager.js:421:28)","name":"LoserRaceError"},"msg":"step.execute: executor falló; evaluando retry"}
+[WebServer] {"level":40,"time":1785353011523,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","queue":"step.execute","job_id":"0422b780-8443-4cb8-a7f8-11990496912e","run_id":"01KYQN9ZDAABD19JE76KFYJRPZ","step_id":"01KYQN9ZD8HF8EHGNEKRV62R0R","node_key":"N7e","err":{"type":"LoserRaceError","message":"runGenerateMusic: un bed idéntico se está produciendo en otra petición concurrente; reintenta","stack":"LoserRaceError: runGenerateMusic: un bed idéntico se está produciendo en otra petición concurrente; reintenta\n    at resolveProductionDedup (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/services/src/generation-dedup.ts:114:9)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async runGenerateMusic (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/services/src/generate-music.ts:162:17)\n    at async runGenerationStep (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/worker/src/executors/_shared.ts:104:12)\n    at async <anonymous> (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/worker/src/executors/generate-music.ts:60:17)\n    at async <anonymous> (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/worker/src/consumers/step-execute.ts:190:9)\n    at async resolveWithinSeconds (file:///Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/pg-boss@12.25.1/node_modules/pg-boss/dist/tools.js:38:18)\n    at async #processJobs (file:///Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/pg-boss@12.25.1/node_modules/pg-boss/dist/manager.js:421:28)\n    at async Worker.onFetch (file:///Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/pg-boss@12.25.1/node_modules/pg-boss/dist/manager.js:577:21)\n    at async Worker.run (file:///Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/pg-boss@12.25.1/node_modules/pg-boss/dist/worker.js:60:21)","name":"LoserRaceError"},"msg":"step.execute: executor falló; evaluando retry"}
+[WebServer] {"level":50,"time":1785353011537,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","queue":"step.execute","job_id":"3c127b21-4910-4839-867e-5ac933b7e0a6","run_id":"01KYQN9ZDAABD19JE76KFYJRPZ","step_id":"01KYQN9ZD9VBJJZERDG2CMQXB8","node_key":"N7a","err":{"type":"PermanentStepError","message":"finalizeGeneration: el output de la generación 01KYQNA098SMY53EHN8M59FYYB no trae images[]: {}","stack":"PermanentStepError: finalizeGeneration: el output de la generación 01KYQNA098SMY53EHN8M59FYYB no trae images[]: {}\n    at runGenerationStep (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/worker/src/executors/_shared.ts:109:13)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async runShotLoop (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/worker/src/executors/generation.ts:225:17)\n    at async runAiPackshotRoute (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/worker/src/executors/generation.ts:273:17)\n    at async <anonymous> (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/worker/src/executors/generation.ts:175:11)\n    at async <anonymous> (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/worker/src/consumers/step-execute.ts:190:9)\n    at async resolveWithinSeconds (file:///Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/pg-boss@12.25.1/node_modules/pg-boss/dist/tools.js:38:18)\n    at async #processJobs (file:///Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/pg-boss@12.25.1/node_modules/pg-boss/dist/manager.js:421:28)\n    at async Worker.onFetch (file:///Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/pg-boss@12.25.1/node_modules/pg-boss/dist/manager.js:577:21)\n    at async Worker.run (file:///Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/pg-boss@12.25.1/node_modules/pg-boss/dist/worker.js:60:21)","name":"PermanentStepError"},"msg":"step.execute: fallo PERMANENTE del executor; failed terminal SIN retry"}
+[WebServer] {"level":30,"time":1785353011544,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","event":"fal_single_call_per_second_generation_finalized","generationId":"01KYQNA095W4PTSQ9FYMP1MHP3","assetId":"01KYQNA0AKVDSAJDGGB441F3V0","assetKind":"music_bed","costCents":0,"durationSeconds":12,"alreadyFinalized":false,"msg":"asset single-call-per-second generado: descargado, coste por segundo registrado, completed"}
+[WebServer] {"level":30,"time":1785353011545,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","queue":"step.execute","job_id":"e5fef441-65de-4bbe-94f5-ad4e476b84b3","run_id":"01KYQN9ZDAABD19JE76KFYJRPZ","step_id":"01KYQN9ZD9WDD46Q9K6RW6JWC9","node_key":"N7e","outcome":"retried","msg":"step.execute: reencolado para reintento"}
+[WebServer] {"level":30,"time":1785353011552,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","event":"fal_audio_generation_finalized","generationId":"01KYQNA096FF2EHWH5GX5SWV4J","assetId":"01KYQNA0ASW35QRVS36AJ5RT8A","ttsCostCents":0,"asrCostCents":0,"durationSeconds":1.8,"wordCount":4,"alreadyFinalized":false,"msg":"voiceover generado: TTS descargado, ASR sellado, cobertura 100%, completed"}
+[WebServer] {"level":30,"time":1785353011552,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","event":"fal_audio_generation_finalized","generationId":"01KYQNA0977VK8RHAWXPV6EZZY","assetId":"01KYQNA0AT91YTH767KKYQKYS6","ttsCostCents":0,"asrCostCents":0,"durationSeconds":1.8,"wordCount":4,"alreadyFinalized":false,"msg":"voiceover generado: TTS descargado, ASR sellado, cobertura 100%, completed"}
+[WebServer] {"level":30,"time":1785353011552,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","event":"fal_audio_generation_finalized","generationId":"01KYQNA098GYPNPXZB311JHSFM","assetId":"01KYQNA0ATRXYQDCRE5C6JAP2B","ttsCostCents":0,"asrCostCents":0,"durationSeconds":1.8,"wordCount":4,"alreadyFinalized":false,"msg":"voiceover generado: TTS descargado, ASR sellado, cobertura 100%, completed"}
+[WebServer] {"level":30,"time":1785353011552,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","event":"fal_audio_generation_finalized","generationId":"01KYQNA09KZ7R3GA1QNN69JDTG","assetId":"01KYQNA0AT1CPFCSH48KY5SF65","ttsCostCents":0,"asrCostCents":0,"durationSeconds":1.8,"wordCount":4,"alreadyFinalized":false,"msg":"voiceover generado: TTS descargado, ASR sellado, cobertura 100%, completed"}
+[WebServer] {"level":30,"time":1785353011554,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","queue":"step.execute","job_id":"7c41964c-789b-4189-9764-13be39acdcc5","run_id":"01KYQN9ZDAABD19JE76KFYJRPZ","step_id":"01KYQN9ZD9AZH566X2HQA5N14S","node_key":"N7a","outcome":"retried","msg":"step.execute: reencolado para reintento"}
+[WebServer] {"level":40,"time":1785353011558,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","queue":"step.execute","job_id":"904ec29f-63fc-4c2a-8d99-e3ca18fb39a1","run_id":"01KYQN9ZDAABD19JE76KFYJRPZ","step_id":"01KYQN9ZD9YXHECS23KRCEZPK3","node_key":"N7b","err":{"type":"LoserRaceError","message":"runGenerateAudio: un voiceover idéntico se está produciendo en otra petición concurrente; reintenta","stack":"LoserRaceError: runGenerateAudio: un voiceover idéntico se está produciendo en otra petición concurrente; reintenta\n    at resolveProductionDedup (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/services/src/generation-dedup.ts:114:9)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async runGenerateAudio (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/services/src/generate-audio.ts:534:17)\n    at async runGenerationStep (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/worker/src/executors/_shared.ts:104:12)\n    at async <anonymous> (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/worker/src/executors/generate-voice.ts:119:19)\n    at async <anonymous> (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/worker/src/consumers/step-execute.ts:190:9)\n    at async resolveWithinSeconds (file:///Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/pg-boss@12.25.1/node_modules/pg-boss/dist/tools.js:38:18)\n    at async #processJobs (file:///Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/pg-boss@12.25.1/node_modules/pg-boss/dist/manager.js:421:28)\n    at async Worker.onFetch (file:///Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/pg-boss@12.25.1/node_modules/pg-boss/dist/manager.js:577:21)\n    at async Worker.run (file:///Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/pg-boss@12.25.1/node_modules/pg-boss/dist/worker.js:60:21)","name":"LoserRaceError"},"msg":"step.execute: executor falló; evaluando retry"}
+[WebServer] {"level":40,"time":1785353011560,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","queue":"step.execute","job_id":"850e78ee-56d6-455a-a4a9-561ea6db2d0f","run_id":"01KYQN9ZDAABD19JE76KFYJRPZ","step_id":"01KYQN9ZD887TMWS49ADJ86K2F","node_key":"N7b","err":{"type":"LoserRaceError","message":"runGenerateAudio: un voiceover idéntico se está produciendo en otra petición concurrente; reintenta","stack":"LoserRaceError: runGenerateAudio: un voiceover idéntico se está produciendo en otra petición concurrente; reintenta\n    at resolveProductionDedup (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/services/src/generation-dedup.ts:114:9)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async runGenerateAudio (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/services/src/generate-audio.ts:534:17)\n    at async runGenerationStep (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/worker/src/executors/_shared.ts:104:12)\n    at async <anonymous> (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/worker/src/executors/generate-voice.ts:119:19)\n    at async <anonymous> (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/worker/src/consumers/step-execute.ts:190:9)\n    at async resolveWithinSeconds (file:///Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/pg-boss@12.25.1/node_modules/pg-boss/dist/tools.js:38:18)\n    at async #processJobs (file:///Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/pg-boss@12.25.1/node_modules/pg-boss/dist/manager.js:421:28)\n    at async Worker.onFetch (file:///Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/pg-boss@12.25.1/node_modules/pg-boss/dist/manager.js:577:21)\n    at async Worker.run (file:///Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/pg-boss@12.25.1/node_modules/pg-boss/dist/worker.js:60:21)","name":"LoserRaceError"},"msg":"step.execute: executor falló; evaluando retry"}
+[WebServer] {"level":30,"time":1785353011568,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","queue":"step.execute","job_id":"337c7b30-618e-442d-8761-3713fb96d5c0","run_id":"01KYQN9ZDAABD19JE76KFYJRPZ","step_id":"01KYQN9ZD8BYGWF4S2CSY9N1FK","node_key":"N7a","outcome":"retried","msg":"step.execute: reencolado para reintento"}
+[WebServer] {"level":30,"time":1785353011573,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","event":"fal_audio_generation_finalized","generationId":"01KYQNA0B2M92WYMP7F49EPFN8","assetId":"01KYQNA0BHNNHP0MRMQ4EB9PSJ","ttsCostCents":0,"asrCostCents":0,"durationSeconds":1.8,"wordCount":4,"alreadyFinalized":false,"msg":"voiceover generado: TTS descargado, ASR sellado, cobertura 100%, completed"}
+[WebServer] {"level":30,"time":1785353011574,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","event":"fal_audio_generation_finalized","generationId":"01KYQNA0B2EGKH5M4BWV3R6KWC","assetId":"01KYQNA0BHTM68F10BZF5RMD4P","ttsCostCents":0,"asrCostCents":0,"durationSeconds":1.8,"wordCount":4,"alreadyFinalized":false,"msg":"voiceover generado: TTS descargado, ASR sellado, cobertura 100%, completed"}
+[WebServer] {"level":30,"time":1785353011577,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","queue":"step.execute","job_id":"0422b780-8443-4cb8-a7f8-11990496912e","run_id":"01KYQN9ZDAABD19JE76KFYJRPZ","step_id":"01KYQN9ZD8HF8EHGNEKRV62R0R","node_key":"N7e","outcome":"retried","msg":"step.execute: reencolado para reintento"}
+[WebServer] {"level":30,"time":1785353011587,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","queue":"step.execute","job_id":"850e78ee-56d6-455a-a4a9-561ea6db2d0f","run_id":"01KYQN9ZDAABD19JE76KFYJRPZ","step_id":"01KYQN9ZD887TMWS49ADJ86K2F","node_key":"N7b","outcome":"retried","msg":"step.execute: reencolado para reintento"}
+[WebServer] {"level":30,"time":1785353011590,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","event":"fal_audio_generation_finalized","generationId":"01KYQNA0BR9CWDGZTPZYJF4ER4","assetId":"01KYQNA0C2HBZP3B61XAX754S2","ttsCostCents":0,"asrCostCents":0,"durationSeconds":1.8,"wordCount":4,"alreadyFinalized":false,"msg":"voiceover generado: TTS descargado, ASR sellado, cobertura 100%, completed"}
+[WebServer] {"level":30,"time":1785353011591,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","event":"fal_audio_generation_finalized","generationId":"01KYQNA0BQAKGJNHWZ260G197A","assetId":"01KYQNA0C2HQR6STEXBKMV2MQ2","ttsCostCents":0,"asrCostCents":0,"durationSeconds":1.8,"wordCount":4,"alreadyFinalized":false,"msg":"voiceover generado: TTS descargado, ASR sellado, cobertura 100%, completed"}
+[WebServer] {"level":30,"time":1785353011594,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","queue":"step.execute","job_id":"904ec29f-63fc-4c2a-8d99-e3ca18fb39a1","run_id":"01KYQN9ZDAABD19JE76KFYJRPZ","step_id":"01KYQN9ZD9YXHECS23KRCEZPK3","node_key":"N7b","outcome":"retried","msg":"step.execute: reencolado para reintento"}
+[WebServer] {"level":30,"time":1785353011993,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","event":"generation_dedup_hit","generationId":"01KYQNA095W4PTSQ9FYMP1MHP3","assetId":"01KYQNA0AKVDSAJDGGB441F3V0","msg":"generación reutilizada de una completed idéntica (0 coste)"}
+[WebServer] {"level":30,"time":1785353011994,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","event":"generation_dedup_hit","generationId":"01KYQNA095W4PTSQ9FYMP1MHP3","assetId":"01KYQNA0AKVDSAJDGGB441F3V0","msg":"generación reutilizada de una completed idéntica (0 coste)"}
+[WebServer] {"level":30,"time":1785353011999,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","event":"generation_dedup_hit","generationId":"01KYQNA095W4PTSQ9FYMP1MHP3","assetId":"01KYQNA0AKVDSAJDGGB441F3V0","msg":"generación reutilizada de una completed idéntica (0 coste)"}
+[WebServer] {"level":40,"time":1785353012001,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","queue":"step.execute","job_id":"d72aa560-9a85-483c-a6ac-1d1f7ecc6e80","run_id":"01KYQN9ZDAABD19JE76KFYJRPZ","step_id":"01KYQN9ZD9TVKRZ4MCPCT4GE4A","node_key":"N7a","err":{"type":"LoserRaceError","message":"runGenerate: una generación idéntico se está produciendo en otra petición concurrente; reintenta","stack":"LoserRaceError: runGenerate: una generación idéntico se está produciendo en otra petición concurrente; reintenta\n    at resolveProductionDedup (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/services/src/generation-dedup.ts:114:9)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async runGenerate (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/services/src/generate.ts:173:17)\n    at async runGenerationStep (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/worker/src/executors/_shared.ts:104:12)\n    at async runShotLoop (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/worker/src/executors/generation.ts:225:17)\n    at async runAiPackshotRoute (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/worker/src/executors/generation.ts:273:17)\n    at async <anonymous> (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/worker/src/executors/generation.ts:175:11)\n    at async <anonymous> (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/worker/src/consumers/step-execute.ts:190:9)\n    at async resolveWithinSeconds (file:///Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/pg-boss@12.25.1/node_modules/pg-boss/dist/tools.js:38:18)\n    at async #processJobs (file:///Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/pg-boss@12.25.1/node_modules/pg-boss/dist/manager.js:421:28)","name":"LoserRaceError"},"msg":"step.execute: executor falló; evaluando retry"}
+[WebServer] {"level":40,"time":1785353012002,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","queue":"step.execute","job_id":"71772f45-e104-4b87-93a2-f3f936f45739","run_id":"01KYQN9ZDAABD19JE76KFYJRPZ","step_id":"01KYQN9ZD98DAMMEJFFC5MYCAR","node_key":"N7a","err":{"type":"LoserRaceError","message":"runGenerate: una generación idéntico se está produciendo en otra petición concurrente; reintenta","stack":"LoserRaceError: runGenerate: una generación idéntico se está produciendo en otra petición concurrente; reintenta\n    at resolveProductionDedup (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/services/src/generation-dedup.ts:114:9)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async runGenerate (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/services/src/generate.ts:173:17)\n    at async runGenerationStep (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/worker/src/executors/_shared.ts:104:12)\n    at async runShotLoop (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/worker/src/executors/generation.ts:225:17)\n    at async runAiPackshotRoute (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/worker/src/executors/generation.ts:273:17)\n    at async <anonymous> (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/worker/src/executors/generation.ts:175:11)\n    at async <anonymous> (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/worker/src/consumers/step-execute.ts:190:9)\n    at async resolveWithinSeconds (file:///Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/pg-boss@12.25.1/node_modules/pg-boss/dist/tools.js:38:18)\n    at async #processJobs (file:///Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/pg-boss@12.25.1/node_modules/pg-boss/dist/manager.js:421:28)","name":"LoserRaceError"},"msg":"step.execute: executor falló; evaluando retry"}
+[WebServer] {"level":30,"time":1785353012014,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","event":"fal_input_upload","assetId":"01KYQN96PE5D25K3PNKCWN8P5P","falUrl":"http://127.0.0.1:53555/fal-cdn/files/fake-input-23","bytes":14890,"msg":"fal storage upload: input subido por primera vez"}
+[WebServer] {"level":30,"time":1785353012016,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","event":"fal_input_upload","assetId":"01KYQNA0ASW35QRVS36AJ5RT8A","falUrl":"http://127.0.0.1:53555/fal-cdn/files/fake-input-22","bytes":3244,"msg":"fal storage upload: input subido por primera vez"}
+[WebServer] {"level":30,"time":1785353012018,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","event":"fal_input_upload","assetId":"01KYQNA0AT91YTH767KKYQKYS6","falUrl":"http://127.0.0.1:53555/fal-cdn/files/fake-input-24","bytes":3244,"msg":"fal storage upload: input subido por primera vez"}
+[WebServer] {"level":30,"time":1785353012018,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","event":"fal_input_upload","assetId":"01KYQN9WAY7C3T83BNAR6GRR1D","falUrl":"http://127.0.0.1:53555/fal-cdn/files/fake-input-25","bytes":15165,"msg":"fal storage upload: input subido por primera vez"}
+[WebServer] {"level":30,"time":1785353012032,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","queue":"step.execute","job_id":"d72aa560-9a85-483c-a6ac-1d1f7ecc6e80","run_id":"01KYQN9ZDAABD19JE76KFYJRPZ","step_id":"01KYQN9ZD9TVKRZ4MCPCT4GE4A","node_key":"N7a","outcome":"retried","msg":"step.execute: reencolado para reintento"}
+[WebServer] {"level":30,"time":1785353012033,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","event":"fal_generation_finalized","generationId":"01KYQNA0RTDM7QNWJZ3RQTCMG3","assetId":"01KYQNA0SXF10JQ1N8GN291QS0","costCents":1,"msg":"generación finalizada: output descargado, coste registrado, completed"}
+[WebServer] {"level":30,"time":1785353012034,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","event":"fal_audio_generation_finalized","generationId":"01KYQNA0RSCVFDHP5FMSCNGY4R","assetId":"01KYQNA0SX7DD36HM7ASQ13HSG","ttsCostCents":0,"asrCostCents":0,"durationSeconds":1.8,"wordCount":4,"alreadyFinalized":false,"msg":"voiceover generado: TTS descargado, ASR sellado, cobertura 100%, completed"}
+[WebServer] {"level":30,"time":1785353012035,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","event":"fal_audio_generation_finalized","generationId":"01KYQNA0RV7Y4R2EMXQH1KGBXP","assetId":"01KYQNA0SYR0644JC23B6HGFAM","ttsCostCents":0,"asrCostCents":0,"durationSeconds":1.8,"wordCount":4,"alreadyFinalized":false,"msg":"voiceover generado: TTS descargado, ASR sellado, cobertura 100%, completed"}
+[WebServer] {"level":30,"time":1785353012039,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","event":"fal_single_call_per_second_generation_finalized","generationId":"01KYQNA0SKKAY81Y26A27N3MK9","assetId":"01KYQNA0T2A3JEM5BT8SR0RMHP","assetKind":"avatar_clip","costCents":80,"durationSeconds":5,"alreadyFinalized":false,"msg":"asset single-call-per-second generado: descargado, coste por segundo registrado, completed"}
+[WebServer] {"level":30,"time":1785353012041,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","event":"fal_single_call_per_second_generation_finalized","generationId":"01KYQNA0SQQGYHTPAZHE1PMXE4","assetId":"01KYQNA0T44Z2CFZAM3TKD5779","assetKind":"avatar_clip","costCents":80,"durationSeconds":5,"alreadyFinalized":false,"msg":"asset single-call-per-second generado: descargado, coste por segundo registrado, completed"}
+[WebServer] {"level":40,"time":1785353012042,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","queue":"step.execute","job_id":"8a272033-9d94-4ada-916d-ca73d481a9c1","run_id":"01KYQN9ZDAABD19JE76KFYJRPZ","step_id":"01KYQN9ZD974AKCVHC2C57024X","node_key":"N7b","err":{"type":"LoserRaceError","message":"runGenerateAudio: un voiceover idéntico se está produciendo en otra petición concurrente; reintenta","stack":"LoserRaceError: runGenerateAudio: un voiceover idéntico se está produciendo en otra petición concurrente; reintenta\n    at resolveProductionDedup (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/services/src/generation-dedup.ts:114:9)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async runGenerateAudio (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/services/src/generate-audio.ts:534:17)\n    at async runGenerationStep (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/worker/src/executors/_shared.ts:104:12)\n    at async <anonymous> (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/worker/src/executors/generate-voice.ts:119:19)\n    at async <anonymous> (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/worker/src/consumers/step-execute.ts:190:9)\n    at async resolveWithinSeconds (file:///Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/pg-boss@12.25.1/node_modules/pg-boss/dist/tools.js:38:18)\n    at async #processJobs (file:///Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/pg-boss@12.25.1/node_modules/pg-boss/dist/manager.js:421:28)\n    at async Worker.onFetch (file:///Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/pg-boss@12.25.1/node_modules/pg-boss/dist/manager.js:577:21)\n    at async Worker.run (file:///Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/pg-boss@12.25.1/node_modules/pg-boss/dist/worker.js:60:21)","name":"LoserRaceError"},"msg":"step.execute: executor falló; evaluando retry"}
+[WebServer] {"level":30,"time":1785353012043,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","queue":"step.execute","job_id":"71772f45-e104-4b87-93a2-f3f936f45739","run_id":"01KYQN9ZDAABD19JE76KFYJRPZ","step_id":"01KYQN9ZD98DAMMEJFFC5MYCAR","node_key":"N7a","outcome":"retried","msg":"step.execute: reencolado para reintento"}
+[WebServer] {"level":30,"time":1785353012051,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","event":"fal_generation_finalized","generationId":"01KYQNA0T3SG1BRBDA10CGJMKY","assetId":"01KYQNA0TF9WYP20YCMPATGR8A","costCents":1,"msg":"generación finalizada: output descargado, coste registrado, completed"}
+[WebServer] {"level":30,"time":1785353012053,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","event":"fal_audio_generation_finalized","generationId":"01KYQNA0T5XWFDPQKQS4D37H5N","assetId":"01KYQNA0TJHH7RB6HWMTTZE1RM","ttsCostCents":0,"asrCostCents":0,"durationSeconds":1.8,"wordCount":4,"alreadyFinalized":false,"msg":"voiceover generado: TTS descargado, ASR sellado, cobertura 100%, completed"}
+[WebServer] {"level":30,"time":1785353012054,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","queue":"step.execute","job_id":"8a272033-9d94-4ada-916d-ca73d481a9c1","run_id":"01KYQN9ZDAABD19JE76KFYJRPZ","step_id":"01KYQN9ZD974AKCVHC2C57024X","node_key":"N7b","outcome":"retried","msg":"step.execute: reencolado para reintento"}
+[WebServer] {"level":30,"time":1785353012070,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","event":"fal_audio_generation_finalized","generationId":"01KYQNA0TQ19B71CDA6NNE0DF7","assetId":"01KYQNA0V2F7513P65FTQT7M66","ttsCostCents":0,"asrCostCents":0,"durationSeconds":1.8,"wordCount":4,"alreadyFinalized":false,"msg":"voiceover generado: TTS descargado, ASR sellado, cobertura 100%, completed"}
+[WebServer] {"level":30,"time":1785353012488,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","event":"fal_input_upload","assetId":"01KYQNA0TF9WYP20YCMPATGR8A","falUrl":"http://127.0.0.1:53555/fal-cdn/files/fake-input-35","bytes":16460,"msg":"fal storage upload: input subido por primera vez"}
+[WebServer] {"level":30,"time":1785353012488,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","event":"fal_input_upload","assetId":"01KYQNA0SXF10JQ1N8GN291QS0","falUrl":"http://127.0.0.1:53555/fal-cdn/files/fake-input-36","bytes":16460,"msg":"fal storage upload: input subido por primera vez"}
+[WebServer] {"level":30,"time":1785353012489,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","event":"fal_input_upload","assetId":"01KYQNA0SXF10JQ1N8GN291QS0","falUrl":"http://127.0.0.1:53555/fal-cdn/files/fake-input-37","bytes":16460,"msg":"fal storage upload: input subido por primera vez"}
+[WebServer] {"level":30,"time":1785353012489,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","event":"fal_input_upload","assetId":"01KYQNA0TF9WYP20YCMPATGR8A","falUrl":"http://127.0.0.1:53555/fal-cdn/files/fake-input-38","bytes":16460,"msg":"fal storage upload: input subido por primera vez"}
+[WebServer] {"level":30,"time":1785353012492,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","event":"fal_input_upload","assetId":"01KYQNA0SX7DD36HM7ASQ13HSG","falUrl":"http://127.0.0.1:53555/fal-cdn/files/fake-input-39","bytes":3244,"msg":"fal storage upload: input subido por primera vez"}
+[WebServer] {"level":30,"time":1785353012493,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","event":"fal_input_upload","assetId":"01KYQN97A821CMC8RH5NHDTMX4","falUrl":"http://127.0.0.1:53555/fal-cdn/files/fake-input-40","bytes":14991,"msg":"fal storage upload: input subido por primera vez"}
+[WebServer] {"level":30,"time":1785353012501,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","event":"fal_single_call_per_second_generation_finalized","generationId":"01KYQNA18BAJ85DDZZ0HWTS5PN","assetId":"01KYQNA18JDR7PXAZDS5CQWGDA","assetKind":"broll_clip","costCents":80,"durationSeconds":4,"alreadyFinalized":false,"msg":"asset single-call-per-second generado: descargado, coste por segundo registrado, completed"}
+[WebServer] {"level":30,"time":1785353012501,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","event":"fal_single_call_per_second_generation_finalized","generationId":"01KYQNA18B8A6VK2CT885XTJ0X","assetId":"01KYQNA18J73N5SQKGMKMXVXJ7","assetKind":"cta_clip","costCents":80,"durationSeconds":4,"alreadyFinalized":false,"msg":"asset single-call-per-second generado: descargado, coste por segundo registrado, completed"}
+[WebServer] {"level":30,"time":1785353012504,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","event":"fal_single_call_per_second_generation_finalized","generationId":"01KYQNA18ECR9JAYXS5S5FCY0C","assetId":"01KYQNA18NDTWSK4HWCVK66HPX","assetKind":"avatar_clip","costCents":80,"durationSeconds":5,"alreadyFinalized":false,"msg":"asset single-call-per-second generado: descargado, coste por segundo registrado, completed"}
+[WebServer] {"level":30,"time":1785353012572,"pid":78999,"hostname":"MBP-de-Carlos","name":"web","request_id":"79912309-a7a9-4b31-bb08-fe9df23b5cc2","step_id":"01KYQN9ZD9VBJJZERDG2CMQXB8","msg":"step reintentado manualmente"}
+[WebServer] {"level":30,"time":1785353012993,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","event":"generation_dedup_hit","generationId":"01KYQNA0RTDM7QNWJZ3RQTCMG3","assetId":"01KYQNA0SXF10JQ1N8GN291QS0","msg":"generación reutilizada de una completed idéntica (0 coste)"}
+[WebServer] {"level":30,"time":1785353012999,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","event":"generation_dedup_hit","generationId":"01KYQNA0T3SG1BRBDA10CGJMKY","assetId":"01KYQNA0TF9WYP20YCMPATGR8A","msg":"generación reutilizada de una completed idéntica (0 coste)"}
+[WebServer] {"level":30,"time":1785353013484,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","event":"fal_input_cache_hit","assetId":"01KYQNA0SXF10JQ1N8GN291QS0","falUrl":"http://127.0.0.1:53555/fal-cdn/files/fake-input-37","msg":"fal storage cache-hit: input reutilizado sin re-subir"}
+[WebServer] {"level":30,"time":1785353013484,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","event":"fal_input_cache_hit","assetId":"01KYQNA0TF9WYP20YCMPATGR8A","falUrl":"http://127.0.0.1:53555/fal-cdn/files/fake-input-38","msg":"fal storage cache-hit: input reutilizado sin re-subir"}
+[WebServer] {"level":30,"time":1785353013484,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","event":"fal_input_cache_hit","assetId":"01KYQNA0SXF10JQ1N8GN291QS0","falUrl":"http://127.0.0.1:53555/fal-cdn/files/fake-input-37","msg":"fal storage cache-hit: input reutilizado sin re-subir"}
+[WebServer] {"level":30,"time":1785353013484,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","event":"fal_input_cache_hit","assetId":"01KYQNA0TF9WYP20YCMPATGR8A","falUrl":"http://127.0.0.1:53555/fal-cdn/files/fake-input-38","msg":"fal storage cache-hit: input reutilizado sin re-subir"}
+[WebServer] {"level":30,"time":1785353013486,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","event":"generation_dedup_hit","generationId":"01KYQNA18BAJ85DDZZ0HWTS5PN","assetId":"01KYQNA18JDR7PXAZDS5CQWGDA","msg":"generación reutilizada de una completed idéntica (0 coste)"}
+[WebServer] {"level":30,"time":1785353013495,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","event":"fal_single_call_per_second_generation_finalized","generationId":"01KYQNA27DR792R82RNSKSTG2Y","assetId":"01KYQNA27M7SGYYJB4DBNGJ9RP","assetKind":"cta_clip","costCents":80,"durationSeconds":4,"alreadyFinalized":false,"msg":"asset single-call-per-second generado: descargado, coste por segundo registrado, completed"}
+[WebServer] {"level":30,"time":1785353041452,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","event":"generation_dedup_hit","generationId":"01KYQNA095W4PTSQ9FYMP1MHP3","assetId":"01KYQNA0AKVDSAJDGGB441F3V0","msg":"generación reutilizada de una completed idéntica (0 coste)"}
+[WebServer] {"level":30,"time":1785353041536,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","event":"generation_dedup_hit","generationId":"01KYQNA0RTDM7QNWJZ3RQTCMG3","assetId":"01KYQNA0SXF10JQ1N8GN291QS0","msg":"generación reutilizada de una completed idéntica (0 coste)"}
+[WebServer] {"level":30,"time":1785353041540,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","event":"generation_dedup_hit","generationId":"01KYQNA0T3SG1BRBDA10CGJMKY","assetId":"01KYQNA0TF9WYP20YCMPATGR8A","msg":"generación reutilizada de una completed idéntica (0 coste)"}
+[WebServer] {"level":30,"time":1785353041547,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","event":"generation_dedup_hit","generationId":"01KYQNA095W4PTSQ9FYMP1MHP3","assetId":"01KYQNA0AKVDSAJDGGB441F3V0","msg":"generación reutilizada de una completed idéntica (0 coste)"}
+[WebServer] {"level":30,"time":1785353041548,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","event":"generation_dedup_hit","generationId":"01KYQNA0RTDM7QNWJZ3RQTCMG3","assetId":"01KYQNA0SXF10JQ1N8GN291QS0","msg":"generación reutilizada de una completed idéntica (0 coste)"}
+[WebServer] {"level":30,"time":1785353041552,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","event":"generation_dedup_hit","generationId":"01KYQNA0T3SG1BRBDA10CGJMKY","assetId":"01KYQNA0TF9WYP20YCMPATGR8A","msg":"generación reutilizada de una completed idéntica (0 coste)"}
+[WebServer] {"level":30,"time":1785353041556,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","event":"generation_dedup_hit","generationId":"01KYQNA098GYPNPXZB311JHSFM","assetId":"01KYQNA0ATRXYQDCRE5C6JAP2B","msg":"generación reutilizada de una completed idéntica (0 coste)"}
+[WebServer] {"level":30,"time":1785353041556,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","event":"generation_dedup_hit","generationId":"01KYQNA09KZ7R3GA1QNN69JDTG","assetId":"01KYQNA0AT1CPFCSH48KY5SF65","msg":"generación reutilizada de una completed idéntica (0 coste)"}
+[WebServer] {"level":30,"time":1785353041559,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","event":"generation_dedup_hit","generationId":"01KYQNA0B2EGKH5M4BWV3R6KWC","assetId":"01KYQNA0BHTM68F10BZF5RMD4P","msg":"generación reutilizada de una completed idéntica (0 coste)"}
+[WebServer] {"level":30,"time":1785353041559,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","event":"generation_dedup_hit","generationId":"01KYQNA0B2M92WYMP7F49EPFN8","assetId":"01KYQNA0BHNNHP0MRMQ4EB9PSJ","msg":"generación reutilizada de una completed idéntica (0 coste)"}
+[WebServer] {"level":30,"time":1785353041562,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","event":"generation_dedup_hit","generationId":"01KYQNA0BR9CWDGZTPZYJF4ER4","assetId":"01KYQNA0C2HBZP3B61XAX754S2","msg":"generación reutilizada de una completed idéntica (0 coste)"}
+[WebServer] {"level":30,"time":1785353041563,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","event":"generation_dedup_hit","generationId":"01KYQNA0BQAKGJNHWZ260G197A","assetId":"01KYQNA0C2HQR6STEXBKMV2MQ2","msg":"generación reutilizada de una completed idéntica (0 coste)"}
+[WebServer] {"level":30,"time":1785353041656,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","event":"fal_input_cache_hit","assetId":"01KYQNA0SXF10JQ1N8GN291QS0","falUrl":"http://127.0.0.1:53555/fal-cdn/files/fake-input-37","msg":"fal storage cache-hit: input reutilizado sin re-subir"}
+[WebServer] {"level":30,"time":1785353041656,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","event":"fal_input_cache_hit","assetId":"01KYQNA0TF9WYP20YCMPATGR8A","falUrl":"http://127.0.0.1:53555/fal-cdn/files/fake-input-38","msg":"fal storage cache-hit: input reutilizado sin re-subir"}
+[WebServer] {"level":30,"time":1785353041658,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","event":"generation_dedup_hit","generationId":"01KYQNA27DR792R82RNSKSTG2Y","assetId":"01KYQNA27M7SGYYJB4DBNGJ9RP","msg":"generación reutilizada de una completed idéntica (0 coste)"}
+[WebServer] {"level":30,"time":1785353041953,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","event":"generation_dedup_hit","generationId":"01KYQNA0RTDM7QNWJZ3RQTCMG3","assetId":"01KYQNA0SXF10JQ1N8GN291QS0","msg":"generación reutilizada de una completed idéntica (0 coste)"}
+[WebServer] {"level":30,"time":1785353041955,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","event":"generation_dedup_hit","generationId":"01KYQNA0T3SG1BRBDA10CGJMKY","assetId":"01KYQNA0TF9WYP20YCMPATGR8A","msg":"generación reutilizada de una completed idéntica (0 coste)"}
+[WebServer] {"level":30,"time":1785353042032,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","event":"fal_input_cache_hit","assetId":"01KYQNA0SXF10JQ1N8GN291QS0","falUrl":"http://127.0.0.1:53555/fal-cdn/files/fake-input-37","msg":"fal storage cache-hit: input reutilizado sin re-subir"}
+[WebServer] {"level":30,"time":1785353042032,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","event":"fal_input_cache_hit","assetId":"01KYQNA0TF9WYP20YCMPATGR8A","falUrl":"http://127.0.0.1:53555/fal-cdn/files/fake-input-38","msg":"fal storage cache-hit: input reutilizado sin re-subir"}
+[WebServer] {"level":30,"time":1785353042033,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","event":"fal_input_cache_hit","assetId":"01KYQN96PE5D25K3PNKCWN8P5P","falUrl":"http://127.0.0.1:53555/fal-cdn/files/fake-input-23","msg":"fal storage cache-hit: input reutilizado sin re-subir"}
+[WebServer] {"level":30,"time":1785353042033,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","event":"fal_input_cache_hit","assetId":"01KYQN9WAY7C3T83BNAR6GRR1D","falUrl":"http://127.0.0.1:53555/fal-cdn/files/fake-input-25","msg":"fal storage cache-hit: input reutilizado sin re-subir"}
+[WebServer] {"level":30,"time":1785353042033,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","event":"fal_input_cache_hit","assetId":"01KYQNA0SXF10JQ1N8GN291QS0","falUrl":"http://127.0.0.1:53555/fal-cdn/files/fake-input-37","msg":"fal storage cache-hit: input reutilizado sin re-subir"}
+[WebServer] {"level":30,"time":1785353042033,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","event":"fal_input_cache_hit","assetId":"01KYQNA0TF9WYP20YCMPATGR8A","falUrl":"http://127.0.0.1:53555/fal-cdn/files/fake-input-38","msg":"fal storage cache-hit: input reutilizado sin re-subir"}
+[WebServer] {"level":30,"time":1785353042036,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","event":"generation_dedup_hit","generationId":"01KYQNA18BAJ85DDZZ0HWTS5PN","assetId":"01KYQNA18JDR7PXAZDS5CQWGDA","msg":"generación reutilizada de una completed idéntica (0 coste)"}
+[WebServer] {"level":30,"time":1785353042037,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","event":"generation_dedup_hit","generationId":"01KYQNA27DR792R82RNSKSTG2Y","assetId":"01KYQNA27M7SGYYJB4DBNGJ9RP","msg":"generación reutilizada de una completed idéntica (0 coste)"}
+[WebServer] {"level":30,"time":1785353042039,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","event":"fal_input_upload","assetId":"01KYQNA0ATRXYQDCRE5C6JAP2B","falUrl":"http://127.0.0.1:53555/fal-cdn/files/fake-input-45","bytes":3244,"msg":"fal storage upload: input subido por primera vez"}
+[WebServer] {"level":30,"time":1785353042039,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","event":"fal_input_upload","assetId":"01KYQNA0AT1CPFCSH48KY5SF65","falUrl":"http://127.0.0.1:53555/fal-cdn/files/fake-input-46","bytes":3244,"msg":"fal storage upload: input subido por primera vez"}
+[WebServer] {"level":30,"time":1785353042042,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","event":"fal_input_cache_hit","assetId":"01KYQNA0SXF10JQ1N8GN291QS0","falUrl":"http://127.0.0.1:53555/fal-cdn/files/fake-input-37","msg":"fal storage cache-hit: input reutilizado sin re-subir"}
+[WebServer] {"level":30,"time":1785353042042,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","event":"fal_input_cache_hit","assetId":"01KYQNA0TF9WYP20YCMPATGR8A","falUrl":"http://127.0.0.1:53555/fal-cdn/files/fake-input-38","msg":"fal storage cache-hit: input reutilizado sin re-subir"}
+[WebServer] {"level":30,"time":1785353042044,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","event":"generation_dedup_hit","generationId":"01KYQNA18BAJ85DDZZ0HWTS5PN","assetId":"01KYQNA18JDR7PXAZDS5CQWGDA","msg":"generación reutilizada de una completed idéntica (0 coste)"}
+[WebServer] {"level":30,"time":1785353042052,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","event":"fal_single_call_per_second_generation_finalized","generationId":"01KYQNAY3R0AH555800QFAD3R7","assetId":"01KYQNAY40S6WJ7271MACNJKYX","assetKind":"avatar_clip","costCents":80,"durationSeconds":5,"alreadyFinalized":false,"msg":"asset single-call-per-second generado: descargado, coste por segundo registrado, completed"}
+[WebServer] {"level":30,"time":1785353042052,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","event":"fal_single_call_per_second_generation_finalized","generationId":"01KYQNAY3R9N18M0FBPKQKVMYM","assetId":"01KYQNAY41VXAF7QXZX60P0C56","assetKind":"avatar_clip","costCents":80,"durationSeconds":5,"alreadyFinalized":false,"msg":"asset single-call-per-second generado: descargado, coste por segundo registrado, completed"}
+[WebServer] {"level":30,"time":1785353042159,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","event":"generation_dedup_hit","generationId":"01KYQNA0RTDM7QNWJZ3RQTCMG3","assetId":"01KYQNA0SXF10JQ1N8GN291QS0","msg":"generación reutilizada de una completed idéntica (0 coste)"}
+[WebServer] {"level":30,"time":1785353042161,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","event":"generation_dedup_hit","generationId":"01KYQNA0T3SG1BRBDA10CGJMKY","assetId":"01KYQNA0TF9WYP20YCMPATGR8A","msg":"generación reutilizada de una completed idéntica (0 coste)"}
+[WebServer] {"level":30,"time":1785353042454,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","event":"generation_dedup_hit","generationId":"01KYQNA0RV7Y4R2EMXQH1KGBXP","assetId":"01KYQNA0SYR0644JC23B6HGFAM","msg":"generación reutilizada de una completed idéntica (0 coste)"}
+[WebServer] {"level":30,"time":1785353042456,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","event":"generation_dedup_hit","generationId":"01KYQNA0T5XWFDPQKQS4D37H5N","assetId":"01KYQNA0TJHH7RB6HWMTTZE1RM","msg":"generación reutilizada de una completed idéntica (0 coste)"}
+[WebServer] {"level":30,"time":1785353042458,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","event":"generation_dedup_hit","generationId":"01KYQNA0TQ19B71CDA6NNE0DF7","assetId":"01KYQNA0V2F7513P65FTQT7M66","msg":"generación reutilizada de una completed idéntica (0 coste)"}
+[WebServer] {"level":30,"time":1785353042536,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","event":"fal_input_cache_hit","assetId":"01KYQNA0SXF10JQ1N8GN291QS0","falUrl":"http://127.0.0.1:53555/fal-cdn/files/fake-input-37","msg":"fal storage cache-hit: input reutilizado sin re-subir"}
+[WebServer] {"level":30,"time":1785353042537,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","event":"fal_input_cache_hit","assetId":"01KYQNA0TF9WYP20YCMPATGR8A","falUrl":"http://127.0.0.1:53555/fal-cdn/files/fake-input-38","msg":"fal storage cache-hit: input reutilizado sin re-subir"}
+[WebServer] {"level":30,"time":1785353042537,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","event":"fal_input_cache_hit","assetId":"01KYQNA0SXF10JQ1N8GN291QS0","falUrl":"http://127.0.0.1:53555/fal-cdn/files/fake-input-37","msg":"fal storage cache-hit: input reutilizado sin re-subir"}
+[WebServer] {"level":30,"time":1785353042537,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","event":"fal_input_cache_hit","assetId":"01KYQNA0TF9WYP20YCMPATGR8A","falUrl":"http://127.0.0.1:53555/fal-cdn/files/fake-input-38","msg":"fal storage cache-hit: input reutilizado sin re-subir"}
+[WebServer] {"level":30,"time":1785353042537,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","event":"fal_input_cache_hit","assetId":"01KYQNA0SXF10JQ1N8GN291QS0","falUrl":"http://127.0.0.1:53555/fal-cdn/files/fake-input-37","msg":"fal storage cache-hit: input reutilizado sin re-subir"}
+[WebServer] {"level":30,"time":1785353042537,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","event":"fal_input_cache_hit","assetId":"01KYQNA0TF9WYP20YCMPATGR8A","falUrl":"http://127.0.0.1:53555/fal-cdn/files/fake-input-38","msg":"fal storage cache-hit: input reutilizado sin re-subir"}
+[WebServer] {"level":30,"time":1785353042538,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","event":"fal_input_cache_hit","assetId":"01KYQNA0SXF10JQ1N8GN291QS0","falUrl":"http://127.0.0.1:53555/fal-cdn/files/fake-input-37","msg":"fal storage cache-hit: input reutilizado sin re-subir"}
+[WebServer] {"level":30,"time":1785353042538,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","event":"fal_input_cache_hit","assetId":"01KYQNA0TF9WYP20YCMPATGR8A","falUrl":"http://127.0.0.1:53555/fal-cdn/files/fake-input-38","msg":"fal storage cache-hit: input reutilizado sin re-subir"}
+[WebServer] {"level":30,"time":1785353042539,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","event":"fal_input_cache_hit","assetId":"01KYQN97A821CMC8RH5NHDTMX4","falUrl":"http://127.0.0.1:53555/fal-cdn/files/fake-input-40","msg":"fal storage cache-hit: input reutilizado sin re-subir"}
+[WebServer] {"level":30,"time":1785353042540,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","event":"generation_dedup_hit","generationId":"01KYQNA27DR792R82RNSKSTG2Y","assetId":"01KYQNA27M7SGYYJB4DBNGJ9RP","msg":"generación reutilizada de una completed idéntica (0 coste)"}
+[WebServer] {"level":30,"time":1785353042540,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","event":"generation_dedup_hit","generationId":"01KYQNA27DR792R82RNSKSTG2Y","assetId":"01KYQNA27M7SGYYJB4DBNGJ9RP","msg":"generación reutilizada de una completed idéntica (0 coste)"}
+[WebServer] {"level":30,"time":1785353042540,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","event":"generation_dedup_hit","generationId":"01KYQNA18BAJ85DDZZ0HWTS5PN","assetId":"01KYQNA18JDR7PXAZDS5CQWGDA","msg":"generación reutilizada de una completed idéntica (0 coste)"}
+[WebServer] {"level":30,"time":1785353042540,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","event":"generation_dedup_hit","generationId":"01KYQNA18BAJ85DDZZ0HWTS5PN","assetId":"01KYQNA18JDR7PXAZDS5CQWGDA","msg":"generación reutilizada de una completed idéntica (0 coste)"}
+[WebServer] {"level":30,"time":1785353042544,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","event":"fal_input_upload","assetId":"01KYQNA0SYR0644JC23B6HGFAM","falUrl":"http://127.0.0.1:53555/fal-cdn/files/fake-input-49","bytes":3244,"msg":"fal storage upload: input subido por primera vez"}
+[WebServer] {"level":30,"time":1785353042560,"pid":79010,"hostname":"MBP-de-Carlos","name":"worker","event":"fal_single_call_per_second_generation_finalized","generationId":"01KYQNAYKPVAMM381DPF218P12","assetId":"01KYQNAYKXH3J4GWZZ4C22PDD4","assetKind":"avatar_clip","costCents":80,"durationSeconds":5,"alreadyFinalized":false,"msg":"asset single-call-per-second generado: descargado, coste por segundo registrado, completed"}
+[WebServer] {"level":30,"time":1785353048226,"pid":78999,"hostname":"MBP-de-Carlos","name":"web","request_id":"84e85c42-71c8-4a3b-8902-0e0322139151","step_id":"01KYQN9ZD8B4EFMT8C5G2DKVD5","msg":"checkpoint aprobado"}
+[WebServer] {"level":30,"time":1785353048246,"pid":78999,"hostname":"MBP-de-Carlos","name":"web","request_id":"67b38ebd-96c0-4fb7-b91b-d69541aee733","step_id":"01KYQN9ZD9SHSJ3CKTZD1XBRPC","msg":"checkpoint aprobado"}
+[WebServer] {"level":30,"time":1785353048263,"pid":78999,"hostname":"MBP-de-Carlos","name":"web","request_id":"dbe24af8-c1ba-40de-b1c9-b31b39e9162f","step_id":"01KYQN9ZD97N5ED9BDF167SSC6","msg":"checkpoint aprobado"}
+[WebServer] {"level":30,"time":1785353048280,"pid":78999,"hostname":"MBP-de-Carlos","name":"web","request_id":"255879f8-bb76-4664-8312-3a5625f4223b","step_id":"01KYQN9ZDA9MZZ86KSA807H9NZ","msg":"checkpoint aprobado"}
+[WebServer] {"level":30,"time":1785353048298,"pid":78999,"hostname":"MBP-de-Carlos","name":"web","request_id":"bcc2b01f-15a6-4e6a-9811-032c1c096c75","step_id":"01KYQN9ZD9YGSXKFKM9JKAPG3J","msg":"checkpoint aprobado"}
+[WebServer] {"level":30,"time":1785353048314,"pid":78999,"hostname":"MBP-de-Carlos","name":"web","request_id":"58044053-0f00-437c-9462-64fc5853ee6b","step_id":"01KYQN9ZD9XCW6AJFKQZ60MP5J","msg":"checkpoint aprobado"}
+  ✓  4 [chromium] › e2e/phases/f4-generation.spec.ts:95:3 › F4 · journey de generación: CP3 aprobado → sub-DAG N6→N7a-e por variante en el canvas › el canvas expande N7 por variante, expone resolvedPrompt/coste/previews y recupera un sub-step con retry granular @f4 @phase (41.6s)
+
+  4 passed (1.1m)
+✓ fase test:e2e:phases PASS
+
+─── gate:phases · veredicto agregado ───────────────────────────
+  árbol actual: 823ab48202a3 (hash edb8200a)
+  higiene: ⚠ 1 testcontainer(s) postgres:16 vivo(s) — pueden saturar y matar el gate. Si no hay una corrida de tests en curso:  pnpm check:orphan-workers --clean-containers  (opt-in).
+
+  ✓ PASS     lint
+  ✓ PASS     typecheck
+  ✓ PASS     format:check
+  ✓ PASS     knip
+  ✓ PASS     readme:status:check
+  ✓ PASS     check:contrast
+  ✓ PASS     e2e:wired:check
+  ✓ PASS     test
+  ✓ PASS     test:e2e:phases
+
+  RESULTADO: PASS — las 9 fases verdes sobre el árbol actual ✓
+────────────────────────────────────────────────────────────────
+CLEAN_GATE_EXIT=0

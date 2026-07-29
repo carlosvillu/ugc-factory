@@ -1,0 +1,18 @@
+Lazy loading nvm node npm ...
+
+─── gate:phases · veredicto agregado ───────────────────────────
+  árbol actual: 823ab48202a3 (hash edb8200a)
+  higiene: ⚠ 2 testcontainer(s) postgres:16 vivo(s) — pueden saturar y matar el gate. Si no hay una corrida de tests en curso:  pnpm check:orphan-workers --clean-containers  (opt-in).
+
+  ✓ PASS     lint
+  ✓ PASS     typecheck
+  ✓ PASS     format:check
+  ✓ PASS     knip
+  ✓ PASS     readme:status:check
+  ✓ PASS     check:contrast
+  ✓ PASS     e2e:wired:check
+  ✗ FAIL     test
+  ✓ PASS     test:e2e:phases
+
+  RESULTADO: FAIL — hay fases no verdes (ver arriba). El agregado NO se salta ninguna.
+────────────────────────────────────────────────────────────────

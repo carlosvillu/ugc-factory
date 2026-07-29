@@ -13,6 +13,8 @@
       // `pgrep`: check-orphan-workers.mjs (guard de higiene, 2026-07-26) lo usa para detectar
       // workers vivos que podrían pegar a fal REAL. Utilidad POSIX del sistema, no una dependencia
       // instalable — mismo criterio que playwright/ffprobe.
+      // (`docker`, usado por check-orphan-workers.mjs + gate-phases.mjs de T5.25, NO va aquí: knip lo
+      //  resuelve como binario del sistema por sí solo — añadirlo dispara un hint de "quítalo".)
       "ignoreBinaries": ["playwright", "pgrep"]
     },
     "apps/web": {

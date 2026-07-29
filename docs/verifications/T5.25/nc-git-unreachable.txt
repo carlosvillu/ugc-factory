@@ -1,0 +1,18 @@
+Lazy loading nvm node npm ...
+fatal: no es un repositorio git: '/nonexistent/nogit'
+file:///Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/scripts/gate-phases.mjs:147
+    throw new Error(
+          ^
+
+Error: gate:phases requiere git para el anclaje de frescura del árbol (no puede leer HEAD/diff/untracked). Sin git NO se puede garantizar que las fases corrieran sobre el mismo árbol → se aborta antes que fingir un verde no verificado. Causa: Command failed: git rev-parse HEAD
+fatal: no es un repositorio git: '/nonexistent/nogit'
+
+    at treeState (file:///Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/scripts/gate-phases.mjs:147:11)
+    at printReport (file:///Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/scripts/gate-phases.mjs:293:18)
+    at runCli (file:///Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/scripts/gate-phases.mjs:300:12)
+    at file:///Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/scripts/gate-phases.mjs:346:16
+    at ModuleJob.run (node:internal/modules/esm/module_job:343:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:647:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)
+
+Node.js v22.18.0

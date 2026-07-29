@@ -35,6 +35,9 @@ apps/web/e2e/.runtime.json
 # artefactos locales de claude code
 .claude/scheduled_tasks.lock
 
+# estado resumible del runner gate:phases (scripts/gate-phases.mjs) — por máquina, no del proyecto
+.gate-phases-state.json
+
 # artefactos de otros arneses de agentes (espejos locales de máquina, no del proyecto)
 .agents/
 .codex/

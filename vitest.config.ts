@@ -11,6 +11,17 @@ export default defineConfig({
       '{packages,apps}/*/vitest.config.ts',
       '{packages,apps}/*/vitest.config.integration.ts',
       {
+        // Scripts de arnés del repo raíz (scripts/*.mjs). No viven en un paquete, así que no los
+        // recoge el glob `{packages,apps}/*`. El sufijo `:unit` los mete en `pnpm test` (que corre
+        // `--project '*:unit'`). T5.25: gate-phases + guard de contenedores pg.
+        test: {
+          name: 'scripts:unit',
+          include: ['scripts/**/*.test.mjs'],
+          exclude: ['**/node_modules/**'],
+          environment: 'node',
+        },
+      },
+      {
         test: {
           name: 'live',
           include: process.env.RUN_LIVE ? ['**/*.live.test.ts'] : [],

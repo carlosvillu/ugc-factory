@@ -34,7 +34,8 @@
     "test:media": "RUN_MEDIA=1 vitest run --project 'worker:media'",
     "test:watch": "vitest --project '*:unit'",
     "check:orphan-workers": "node scripts/check-orphan-workers.mjs",
-    "gate": "pnpm lint && pnpm typecheck && pnpm format:check && pnpm knip && pnpm readme:status:check && pnpm check:contrast && pnpm e2e:wired:check && pnpm test && pnpm test:e2e:phases"
+    "gate": "pnpm lint && pnpm typecheck && pnpm format:check && pnpm knip && pnpm readme:status:check && pnpm check:contrast && pnpm e2e:wired:check && pnpm test && pnpm test:e2e:phases",
+    "gate:phases": "node scripts/gate-phases.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.0",

@@ -1,0 +1,40 @@
+=== SEED FROM ZERO into ugc_t519 ===
+
+> ugc-factory@0.0.0 seed /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads
+> pnpm --filter @ugc/db db:seed
+
+
+> @ugc/db@0.0.0 db:seed /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/db
+> tsx --env-file-if-exists=../../.env scripts/seed.ts
+
+seed: persona «Maya» ← foto IA «maya-frontal-headshot.png» 1536×2752 px (personas/01KYQ8J1G50ZJK5M6XX52HRRCM/01KYQ8J1GD2NDMG5EJ2YFKWK11.png)
+seed: persona «Maya» ← foto IA «maya-three-quarter-portrait.png» 1536×2752 px (personas/01KYQ8J1G50ZJK5M6XX52HRRCM/01KYQ8J1H5DSZC5WJ85WFRTAYP.png)
+seed: persona «Maya» ← foto IA «maya-full-body.png» 1536×2752 px (personas/01KYQ8J1G50ZJK5M6XX52HRRCM/01KYQ8J1HRT1116F4PJCD2CZ9Y.png)
+seed: persona «Lucía (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQ8J1J4J0C14D5X6262GV9S/01KYQ8J1K1R74WVYWW7BHAFBZE.png)
+seed: persona «Lucía (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQ8J1J4J0C14D5X6262GV9S/01KYQ8J1KH6TS86KGY87G9WC1B.png)
+seed: persona «Marcus (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQ8J1KNBJRNHVYW0B1A5Z3Y/01KYQ8J1M3839SB072TTWJG7YX.png)
+seed: persona «Marcus (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQ8J1KNBJRNHVYW0B1A5Z3Y/01KYQ8J1MJSF5HK61XT5Q0HKV4.png)
+seed: persona «Nerea (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQ8J1MP4YC797BGVHGE90EP/01KYQ8J1N3KX0YSF7MNH0018BE.png)
+seed: persona «Nerea (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQ8J1MP4YC797BGVHGE90EP/01KYQ8J1NKEWR9D5FDWDS3XEHX.png)
+seed: persona «Carmen (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQ8J1NQCY4P40C0CTDZQDKG/01KYQ8J1P52X31XDTNEB90Q9M6.png)
+seed: persona «Carmen (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQ8J1NQCY4P40C0CTDZQDKG/01KYQ8J1PNVMAFS77HAW0WHY37.png)
+seed: persona «Alex (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQ8J1PSYXKP58RVQCD38Z38/01KYQ8J1Q6YMH4FXHWZYYYZN2Y.png)
+seed: persona «Alex (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQ8J1PSYXKP58RVQCD38Z38/01KYQ8J1QP43AGVTXYZE3TBV6F.png)
+seed: persona «Rosa (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQ8J1QTRX9Z41MXXGKTXV9H/01KYQ8J1R71SQZSC0J54T0BNTR.png)
+seed: persona «Rosa (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQ8J1QTRX9Z41MXXGKTXV9H/01KYQ8J1RS6TAWTES4BGH15GJX.png)
+seed: persona «Priya (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQ8J1RY8WBKPV3ESQZJQ690/01KYQ8J1SCEK9MSHJ2YFPNEHKX.png)
+seed: persona «Priya (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQ8J1RY8WBKPV3ESQZJQ690/01KYQ8J1SW0S98MKBBHGWE2Q7A.png)
+seed: persona «David (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQ8J1T0JH5KFXRQT69GVGEE/01KYQ8J1TE731G7R33SWRNTBAA.png)
+seed: persona «David (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQ8J1T0JH5KFXRQT69GVGEE/01KYQ8J1TYVXBHKK6AFZZ16ABR.png)
+seed: persona «Chloe (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQ8J1V2VGM7YEEANXJ45XPX/01KYQ8J1VG75N7GTS1JKTT1QJE.png)
+seed: persona «Chloe (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQ8J1V2VGM7YEEANXJ45XPX/01KYQ8J1W0X9JGZ2R4J6VYYFXF.png)
+seed: persona «Kenji (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQ8J1W44RNNYFYPWQRMB6C6/01KYQ8J1WJ8654DGVMJ42DD818.png)
+seed: persona «Kenji (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQ8J1W44RNNYFYPWQRMB6C6/01KYQ8J1X21V49P5D535BY9Z58.png)
+seed: OK — hook_line=80 cta_line=30 recipe=3 persona=11 (imágenes de referencia nuevas: 23)
+┌─────────┬────────────┬────────────────┬───────────┬───────────┐
+│ (index) │ tier       │ cogs_30s       │ min_cents │ max_cents │
+├─────────┼────────────┼────────────────┼───────────┼───────────┤
+│ 0       │ 'test'     │ '$0.30–$1.70'  │ 30        │ 170       │
+│ 1       │ 'standard' │ '$1.80–$5.00'  │ 180       │ 500       │
+│ 2       │ 'premium'  │ '$9.00–$13.00' │ 900       │ 1300      │
+└─────────┴────────────┴────────────────┴───────────┴───────────┘

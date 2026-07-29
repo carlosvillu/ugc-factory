@@ -12,11 +12,16 @@
 //      regla: pregunta al código de producción (principio 9 de la skill testing).
 //   3. CANDIDATAS: un `avatar_hint` compatible devuelve la persona correcta; uno incompatible,
 //      NINGUNA.
-import { mkdtemp, rm } from 'node:fs/promises';
+import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { createTestDatabase, makeTestPng, type TestDatabase } from '@ugc/test-utils';
+import {
+  createTestDatabase,
+  makeOrientedTestJpeg,
+  makeTestPng,
+  type TestDatabase,
+} from '@ugc/test-utils';
 import { getAsset, getPersona, makeLocalStorageAdapter } from '@ugc/db';
 import { MIN_REFERENCE_LONG_EDGE_PX, type Persona } from '@ugc/core/persona';
 import { setDbForTests } from '@/server/db';
@@ -276,6 +281,34 @@ describe('upload de imágenes de referencia: EL GUARD ≥2K (§11 identity lock)
     const row = await getAsset(tdb.db, body.image.id);
     expect(row!.kind).toBe('reference_image');
     expect(row!.storageKey).toContain(`personas/${created.id}/`);
+    // NORMALIZADO a JPEG (T5.19, fix del FAIL de VERIFY): la subida manda `image/png`, pero se
+    // recodifica a JPEG para que N7c pueda DESCARGARLA (los PNG grandes daban file_download_error).
+    // Se prueba sobre los BYTES REALMENTE ALMACENADOS (no la columna `mime`, que es un literal): si
+    // alguien quita `normalizeReferenceImage`, el fichero seguiría siendo PNG y este assert lo caza.
+    expect(row!.mime).toBe('image/jpeg');
+    expect(row!.storageKey.endsWith('.jpg')).toBe(true);
+    const storedBytes = await readFile(path.join(storageRoot, row!.storageKey));
+    // JPEG empieza por FF D8 FF; PNG por 89 50 4E 47. Un check de magic bytes, sin depender de sharp.
+    expect([storedBytes[0], storedBytes[1], storedBytes[2]]).toEqual([0xff, 0xd8, 0xff]);
+  });
+
+  it('una foto en retrato (EXIF Orientation=6) se guarda ORIENTADA: la respuesta devuelve dims transpuestas', async () => {
+    // HALLAZGO 2 (code-review T5.19): una foto de móvil en retrato llega con los píxeles en LANDSCAPE
+    // (2752×2048) y el tag EXIF `Orientation=6` («rotar 90° al mostrar»). El endpoint DEBE aplicar la
+    // orientación al normalizar; si no, la reference sale rotada 90° en el navegador y en lo que N7c anima.
+    // Tras `.autoOrient()` la imagen es PORTRAIT (2048×2752): las dims se TRANSPONEN — y la respuesta debe
+    // reportar ESAS (leídas del fichero NORMALIZADO), no las del crudo. Control negativo: si el handler
+    // volviera a devolver las dims de `validateReferenceImage(rawBytes)`, aquí saldría 2752×2048.
+    const created = await createPersona();
+    const oriented = await makeOrientedTestJpeg(2752, 2048, 6);
+
+    const res = await uploadReference(created.id, oriented, 'image/jpeg');
+
+    expect(res.status).toBe(201);
+    const body = (await res.json()) as { image: { width: number; height: number } };
+    // W/H INTERCAMBIADOS respecto al crudo: la orientación EXIF se aplicó de verdad.
+    expect(body.image.width).toBe(2048);
+    expect(body.image.height).toBe(2752);
   });
 
   it('una imagen <2K es RECHAZADA con un mensaje claro, y NO deja ni fila ni fichero', async () => {

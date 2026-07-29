@@ -1,0 +1,5 @@
+HTTP 422
+{"detail":[{"loc":["body","image_url"],"msg":"Failed to download the file. Please check if the URL is accessible and try again.","type":"file_download_error","url":"https://docs.fal.ai/errors#file_download_error","input":"https://v3b.fal.media/files/b/0aa436a9/ZX1PgHNYQYAQKScXpzqyV_1785340570629.png"}]}
+NEW UPLOAD URL: https://v3b.fal.media/files/b/0aa436a9/ZX1PgHNYQYAQKScXpzqyV_1785340570629.png
+external accessibility: HTTP 200 len 5927313
+cached fal_url: https://v3b.fal.media/files/b/0aa436a9/ZX1PgHNYQYAQKScXpzqyV_1785340570629.png

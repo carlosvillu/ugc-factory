@@ -1,0 +1,75 @@
+fal key loaded (len 69 )
+Maya ref#1 asset: 01KYQ8J1GD2NDMG5EJ2YFKWK11
+tts profile: 01KYQ91F08N3VZMT22KFGG73NJ | asr profile: 01KYQ91F08KHZYF137M3W5KPQC | avatar profile: 01KYQ91F08H6D29SC2SGKWBWB2 { unit: 'second', amountCents: 16 }
+
+=== N7b TTS+ASR (short hook) ===
+N7b done: audio asset 01KYQ97CHX2N0EZQJECN1T074B | dur 3.039 s | ttsCost 1 c | asrCost 0 c | reused false
+
+=== N7c PRE-SPEND GATE ===
+projected N7c = 3.039s * 16c/s = 48.6c
+GATE OK: 48.6c < 100c => submitting N7c
+
+=== N7c OmniHuman avatar (Maya photo + hook audio) ===
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/core/src/generation/fal-client.ts:320
+        throw new FalProviderError(`fal respondió ${String(res.status)} en ${url}`, {
+              ^
+
+
+FalProviderError: fal respondió 422 en https://queue.fal.run/fal-ai/bytedance/requests/019fae93-bc92-7f21-ac04-e07e7584ae89
+    at authedFetch (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/core/src/generation/fal-client.ts:320:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async ConcurrencyLimiter.run (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/core/src/generation/fal-client.ts:234:14)
+    at async checkStatus (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/core/src/generation/fal-client.ts:419:22)
+    at async Object.poll (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/core/src/generation/fal-client.ts:444:21)
+    at async runGenerateAvatar (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/services/src/generate-avatar.ts:258:20)
+    at async <anonymous> (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/services/_t519-n7c.ts:68:14) {
+  status: 422,
+  retryAfterMs: undefined,
+  detail: undefined
+}
+
+Node.js v22.18.0
+reusing audio asset 01KYQ97CHX2N0EZQJECN1T074B dur 3.039 s
+projected N7c = 3.039s * 16c/s = 48.6c
+=== N7c OmniHuman RETRY ===
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/core/src/generation/fal-client.ts:320
+        throw new FalProviderError(`fal respondió ${String(res.status)} en ${url}`, {
+              ^
+
+
+FalProviderError: fal respondió 422 en https://queue.fal.run/fal-ai/bytedance/requests/019fae96-7059-7b61-b771-c2aeae6e92c3
+    at authedFetch (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/core/src/generation/fal-client.ts:320:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async ConcurrencyLimiter.run (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/core/src/generation/fal-client.ts:234:14)
+    at async checkStatus (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/core/src/generation/fal-client.ts:419:22)
+    at async Object.poll (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/core/src/generation/fal-client.ts:444:21)
+    at async runGenerateAvatar (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/services/src/generate-avatar.ts:258:20)
+    at async <anonymous> (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/services/_t519-n7c-retry.ts:37:14) {
+  status: 422,
+  retryAfterMs: undefined,
+  detail: undefined
+}
+
+Node.js v22.18.0
+reusing audio asset 01KYQ97CHX2N0EZQJECN1T074B dur 3.039 s
+projected N7c = 3.039s * 16c/s = 48.6c
+=== N7c OmniHuman RETRY ===
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/core/src/generation/fal-client.ts:320
+        throw new FalProviderError(`fal respondió ${String(res.status)} en ${url}`, {
+              ^
+
+
+FalProviderError: fal respondió 422 en https://queue.fal.run/fal-ai/bytedance/requests/019fae97-36d4-78f0-87fa-1918b7bba3af
+    at authedFetch (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/core/src/generation/fal-client.ts:320:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async ConcurrencyLimiter.run (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/core/src/generation/fal-client.ts:234:14)
+    at async checkStatus (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/core/src/generation/fal-client.ts:419:22)
+    at async Object.poll (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/core/src/generation/fal-client.ts:444:21)
+    at async runGenerateAvatar (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/services/src/generate-avatar.ts:258:20)
+    at async <anonymous> (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/services/_t519-n7c-retry.ts:37:14) {
+  status: 422,
+  retryAfterMs: undefined,
+  detail: undefined
+}
+
+Node.js v22.18.0

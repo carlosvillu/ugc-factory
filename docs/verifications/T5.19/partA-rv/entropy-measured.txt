@@ -1,0 +1,10 @@
+FLOOR=5  MAX_BYTES=1048576(1MiB)
+personas/01KYQFG24TAX9PWYK5PC2KKB85/01KYQFG2BB3YWKB24F4FK8W2Y9.jpg
+  fmt=jpeg 1536x2752 longEdge=2752 bytes=305541 entropy=7.101
+  >=floor5? true | <=1MiB? true | >=2K? true
+personas/01KYQFG24TAX9PWYK5PC2KKB85/01KYQFG2HXHZEPYQMYSPEC7E0H.jpg
+  fmt=jpeg 1536x2752 longEdge=2752 bytes=290262 entropy=6.897
+  >=floor5? true | <=1MiB? true | >=2K? true
+personas/01KYQFG24TAX9PWYK5PC2KKB85/01KYQFG2QJP1Y4DF3P98KH12KE.jpg
+  fmt=jpeg 1536x2752 longEdge=2752 bytes=193634 entropy=6.399
+  >=floor5? true | <=1MiB? true | >=2K? true

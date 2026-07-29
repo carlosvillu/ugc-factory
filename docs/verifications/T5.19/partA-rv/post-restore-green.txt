@@ -1,0 +1,18 @@
+
+ RUN  v4.1.10 /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/core
+
+
+ Test Files  1 passed (1)
+      Tests  10 passed (10)
+   Start at  19:46:25
+   Duration  11.29s (transform 45ms, setup 15ms, import 96ms, tests 11.10s, environment 0ms)
+
+
+ RUN  v4.1.10 /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/db
+
+
+ Test Files  1 passed (1)
+      Tests  5 passed (5)
+   Start at  19:46:37
+   Duration  12.50s (transform 245ms, setup 8ms, import 835ms, tests 9.80s, environment 0ms)
+

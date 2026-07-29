@@ -1,0 +1,9 @@
+orig ref size 5927313 bytes
+recompressed size 826274 bytes (807 KB)
+recompressed dims 1143 x 2048 longEdge 2048
+wrote smaller ref into scratch storage + cleared fal_url
+=== N7c OmniHuman with SMALLER ref ===
+SUCCESS: gen 01KYQ9K7EKZD1PRK25T9TP5J45 fal_req 019fae99-9f96-79b2-ada5-b71e82c4f632
+  clip asset 01KYQ9P50B21V3JPH6FVZMH2VA dur 3.082438 s cost 49 c reused false
+CLIP storage_key: generations/01KYQ9K7EKZD1PRK25T9TP5J45/01KYQ9P4AC7GAFAW3B7ZS6ABHS.mp4 bytes 1130359
+CONCLUSION: SIZE was the cause => T5.19 fixture is too large for OmniHuman fetcher (DEFECT).

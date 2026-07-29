@@ -1,0 +1,2 @@
+HTTP 422
+{"detail":[{"loc":["body","image_url"],"msg":"Failed to download the file. Please check if the URL is accessible and try again.","type":"file_download_error","url":"https://docs.fal.ai/errors#file_download_error","input":"https://v3b.fal.media/files/b/0aa43692/G7CteeeEo7T-V76Zg2kIe_1785340342870.png"}]}

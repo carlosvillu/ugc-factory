@@ -11,13 +11,15 @@
 //
 // Molde: `generate-avatar.test.ts` (uploadHandlers + submit/poll/download msw). El PNG del encuadre es
 // REAL y ≥2048 (`makeTestPng(1536, 2752)`): `validateReferenceImage` lee dimensiones DEL FICHERO.
-import { mkdtempSync, rmSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
+import sharp from 'sharp';
 import { http, HttpResponse } from 'msw';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import {
   createPersona,
+  getAsset,
   getPersona,
   getSpendSummary,
   listGenerationsByStatus,
@@ -202,6 +204,18 @@ describe('runGeneratePersonaImages — reference-images IA del mismo sujeto (Ver
     // Las referencias quedaron EN la persona (addReferenceImage), en orden.
     const updated = await getPersona(tdb.db, persona.id);
     expect(updated?.referenceImageIds).toEqual(res.images.map((i) => i.assetId));
+
+    // NORMALIZADO a JPEG (T5.19, fix del FAIL de VERIFY): NB2 devuelve `image/png`, pero la reference
+    // se recodifica a JPEG para que N7c pueda DESCARGARLA (los PNG grandes daban file_download_error).
+    // Se prueba sobre los BYTES REALMENTE ALMACENADOS (no la columna `mime`, un literal): si alguien
+    // quita `normalizeReferenceImage`, el fichero seguiría siendo PNG y este assert lo caza.
+    for (const img of res.images) {
+      const asset = await getAsset(tdb.db, img.assetId);
+      expect(asset?.mime).toBe('image/jpeg');
+      expect(asset?.storageKey.endsWith('.jpg')).toBe(true);
+      const storedBytes = readFileSync(path.join(assetsDir, asset!.storageKey));
+      expect((await sharp(storedBytes).metadata()).format).toBe('jpeg');
+    }
 
     // Un cost_entry de fal por generación (base + 2 encuadres = 3).
     expect(await falEntryCount()).toBe(before + 3);

@@ -18,7 +18,11 @@ import { z } from 'zod';
 import { AppError, newUlid, UlidSchema } from '@ugc/core/contracts';
 // De `persona/server` (NO del barrel `persona`): usa sharp, y el barrel lo importa el
 // navegador — meter sharp ahí rompe el build del cliente (lo cazó el E2E). Ver `persona/server.ts`.
-import { validateReferenceImage } from '@ugc/core/persona/server';
+import {
+  NORMALIZED_REFERENCE_MIME,
+  normalizeReferenceImage,
+  validateReferenceImage,
+} from '@ugc/core/persona/server';
 import { addReferenceImage, createAsset, getPersona } from '@ugc/db';
 import { getDb, toErrorResponse } from '@/server';
 import { getStorage } from '@/server/storage';
@@ -124,24 +128,35 @@ export const POST = withAuth(
         );
       }
 
-      const bytes = new Uint8Array(await file.arrayBuffer());
+      const rawBytes = new Uint8Array(await file.arrayBuffer());
 
-      // ── EL GUARD ≥2K (§11 identity lock) ────────────────────────────────────
-      // Lee las dimensiones DEL FICHERO (sharp) y lanza `validation_error` con un mensaje que
-      // dice cuánto mide y cuánto hace falta. Va ANTES de tocar el almacén: una imagen
-      // rechazada no deja ni un byte en disco ni una fila en la BD.
-      const dims = await validateReferenceImage(bytes);
+      // ── EL GUARD ≥2K (§11 identity lock) — SOBRE LOS BYTES CRUDOS ────────────
+      // Va PRIMERO: lee el LADO LARGO DEL FICHERO (sharp) y lanza `validation_error` (400) con un mensaje
+      // que dice cuánto mide y cuánto hace falta. También convierte «bytes que no son una imagen» en un 400
+      // limpio (no un 500). El guard mira el LADO LARGO (max(w,h)), que es invariante a que la normalización
+      // luego transponga W/H por orientación EXIF — así validar el crudo sigue siendo válido para el guard.
+      await validateReferenceImage(rawBytes);
+
+      // ── NORMALIZAR para que N7c pueda DESCARGARLA (T5.19, fix del FAIL de VERIFY) ────────────
+      // Un usuario que sube su foto de 6 MB chocaría con el MISMO `file_download_error` (422) que los
+      // fixtures PNG grandes daban en fal/OmniHuman. `normalizeReferenceImage` aplica la orientación EXIF,
+      // recodifica a JPEG y — si hiciera falta — reduce hacia 2K para caer bajo el techo (o rechaza con 400
+      // si es imposible). Devuelve las dims REALES de salida (autoOrient/shrink pueden cambiarlas): son ESAS
+      // las que se persisten y se devuelven, no las del crudo (que describirían la imagen pre-normalización).
+      const normalized = await normalizeReferenceImage(rawBytes);
 
       const assetId = newUlid();
-      const storageKey = `personas/${personaId}/${assetId}.${MIME_TO_EXT[file.type]}`;
-      const put = await getStorage().put(storageKey, bytes, { mime: file.type });
+      const storageKey = `personas/${personaId}/${assetId}.jpg`;
+      const put = await getStorage().put(storageKey, normalized.bytes, {
+        mime: NORMALIZED_REFERENCE_MIME,
+      });
 
       const db = getDb();
       await createAsset(db, {
         id: assetId,
         kind: 'reference_image',
         storageKey,
-        mime: file.type,
+        mime: NORMALIZED_REFERENCE_MIME,
         bytes: put.bytes,
         checksum: put.checksum,
       });
@@ -156,8 +171,8 @@ export const POST = withAuth(
           image: {
             id: assetId,
             url: `/api/assets/${assetId}/download`, // el download proxificado de T0.5, sin cambios
-            width: dims.width,
-            height: dims.height,
+            width: normalized.width,
+            height: normalized.height,
           },
         },
         { status: 201 },

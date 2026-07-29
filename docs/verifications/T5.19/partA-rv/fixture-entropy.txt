@@ -1,0 +1,10 @@
+FLOOR=5  MAX_BYTES=1048576(1MiB)
+maya-frontal-headshot.jpg
+  fmt=jpeg 1536x2752 longEdge=2752 bytes=306129 entropy=7.101
+  >=floor5? true | <=1MiB? true | >=2K? true
+maya-three-quarter-portrait.jpg
+  fmt=jpeg 1536x2752 longEdge=2752 bytes=290880 entropy=6.897
+  >=floor5? true | <=1MiB? true | >=2K? true
+maya-full-body.jpg
+  fmt=jpeg 1536x2752 longEdge=2752 bytes=195043 entropy=6.399
+  >=floor5? true | <=1MiB? true | >=2K? true

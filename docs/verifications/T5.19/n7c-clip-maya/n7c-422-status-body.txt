@@ -1,0 +1,2 @@
+{"detail":"Authentication is required"}
+HTTP 401

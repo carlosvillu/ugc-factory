@@ -9,7 +9,12 @@
 //      (El control negativo del METADATO editado por el usuario vive en `persona.test.ts` — aquí se
 //      fija la idempotencia de conteo del camino de arranque completo, `seedPersonas`.)
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { PERSONA_SEEDS } from '@ugc/core/persona/server';
+import {
+  PERSONA_SEEDS,
+  referenceImageEntropy,
+  REFERENCE_PHOTO_ENTROPY_FLOOR,
+  REFERENCE_MAX_BYTES,
+} from '@ugc/core/persona/server';
 import type { StorageAdapter } from '@ugc/core';
 import { createTestDatabase, type TestDatabase } from '@ugc/test-utils';
 import { seedPersonas } from '../../src/repos/persona-seed';
@@ -34,17 +39,32 @@ const failingStorage: StorageAdapter = {
   delete: () => Promise.resolve(),
 };
 
-/** Un StorageAdapter en memoria: `put` calcula bytes/checksum sin tocar el FS (el camino feliz no
- *  necesita disco). */
-function makeMemoryStorage(): StorageAdapter {
+/** Un StorageAdapter en memoria que RETIENE los bytes por `storageKey` (`put` los guarda en un Map): el
+ *  camino feliz no necesita disco, pero el gate de entropía de T5.19 sí necesita LEER los bytes que el seed
+ *  materializó (no solo su tamaño) para medir que son fotos. `get` devuelve los bytes retenidos. */
+function makeMemoryStorage(): StorageAdapter & {
+  bytesFor: (key: string) => Uint8Array | undefined;
+} {
+  const store = new Map<string, Uint8Array>();
   return {
-    put: (_key, data) => {
-      const bytes = data instanceof Uint8Array ? data.byteLength : 0;
-      return Promise.resolve({ bytes, checksum: `sha256:${String(bytes)}` });
+    put: (key, data) => {
+      const copy = data instanceof Uint8Array ? data.slice() : new Uint8Array(0);
+      store.set(key, copy);
+      return Promise.resolve({
+        bytes: copy.byteLength,
+        checksum: `sha256:${String(copy.byteLength)}`,
+      });
     },
-    get: () => Promise.reject(new Error('no usado')),
+    get: (key) => {
+      const b = store.get(key);
+      if (b === undefined) return Promise.reject(new Error(`no hay bytes para ${key}`));
+      // `new Uint8Array(b)` normaliza `Uint8Array<ArrayBufferLike>` a un `BlobPart` aceptable
+      // (los tipos DOM recientes rechazan el ArrayBufferLike genérico) y copia por seguridad.
+      return Promise.resolve(new Blob([new Uint8Array(b)]).stream());
+    },
     stat: () => Promise.resolve(null),
     delete: () => Promise.resolve(),
+    bytesFor: (key) => store.get(key),
   };
 }
 
@@ -183,6 +203,95 @@ describe('el seed REAL materializa una persona batch-ready con imágenes en BD (
         materialized,
         `«${p.name}» es batch-ready pero sus ${String(p.referenceImageIds.length)} reference_image_ids no resuelven a filas asset`,
       ).toBe(p.referenceImageIds.length);
+    }
+  });
+});
+
+// ── TEST B de T5.19 · EL SEED REAL MATERIALIZA FOTOS (NO PLACEHOLDERS ABSTRACTOS) PARA LA BATCH-CAPABLE ──
+//
+// EL BUG DE PRODUCCIÓN QUE CIERRA (destapado en el primer máster real, 2026-07-26): la persona batch-capable
+// del seed (Maya) llega a N7c (avatar/OmniHuman), que ANIMA su reference_image. Cuando esa reference era el
+// placeholder ABSTRACTO de sharp (rect+banda+circle), OmniHuman lo animó fielmente → sujeto alucinado. Este
+// test es el gate permanente: sobre las FILAS REALES de BD que el seed sembró, exige que cada reference de
+// una persona batch-capable (DERIVADA de su `voice_map`, no una allowlist) sea una FOTO — supere el floor de
+// entropía que un placeholder abstracto de sharp NO supera.
+//
+// POR QUÉ MUERDE SOBRE BYTES DE BD Y NO SOBRE EL ARRAY DEL CÓDIGO: igual que el Test A de T5.15, el defecto
+// no es del array `PERSONA_SEEDS` — es de lo que el SEED PATH REAL materializa. Un test unit que lea el
+// fixture (`reference-fixtures.test.ts`) prueba que el fichero es una foto; ESTE prueba que el seed la
+// ENTREGA como reference_image de la persona en la BD. Mide la entropía de los bytes que el storage retuvo.
+//
+// EL PREDICADO batch-capable ES DERIVADO (T5.19): «voz que fal acepta» (ningún `voiceId` placeholder). No es
+// «todas las references del seed son fotos» — las 10 placeholder siguen con sharp abstracto (coherente con
+// ser sustituibles) y quedarían FUERA del predicado. NUNCA `['Maya']` hardcodeado: cubre cualquier persona
+// real que el usuario añada por CRUD.
+describe('el seed REAL materializa FOTOS para la persona batch-capable (T5.19, Test B)', () => {
+  /** ¿La fila de persona (jsonb opaco) es batch-capable? — tiene ≥1 voz que fal acepta (ningún
+   *  `voiceId` `placeholder-*`). DERIVADO del `voice_map` de la BD, no de una allowlist. */
+  function isBatchCapableRow(voiceMap: unknown): boolean {
+    if (voiceMap === null || typeof voiceMap !== 'object') return false;
+    const voices = Object.values(voiceMap as Record<string, unknown>).map((v) =>
+      v !== null &&
+      typeof v === 'object' &&
+      typeof (v as { voiceId?: unknown }).voiceId === 'string'
+        ? (v as { voiceId: string }).voiceId
+        : '',
+    );
+    return (
+      voices.length > 0 && voices.every((id) => id.length > 0 && !id.startsWith('placeholder'))
+    );
+  }
+
+  it('cada reference_image de una persona batch-capable es una FOTO (supera el floor de entropía)', async () => {
+    await tdb.pool.query('DELETE FROM persona');
+    await tdb.pool.query(`DELETE FROM asset WHERE kind = 'reference_image'`);
+
+    // EL SEED PATH REAL con un storage que RETIENE bytes (para poder medirlos).
+    const storage = makeMemoryStorage();
+    const result = await seedPersonas(tdb.db, storage, PERSONA_SEEDS);
+    expect(result.personas).toBe(PERSONA_SEEDS.length);
+
+    const rows = await listPersonas(tdb.db);
+    const capableRows = rows.filter((p) => isBatchCapableRow(p.voiceMap));
+
+    // El predicado selecciona ≥1 persona (hoy Maya): si el seed pierde su única batch-capable, el gate de
+    // T5.15 ya lo caza; aquí basta con que exista para que el assert de foto no sea vacuo.
+    expect(
+      capableRows.length,
+      'el seed no dejó NINGUNA persona batch-capable en BD (no hay a quién exigirle fotos)',
+    ).toBeGreaterThan(0);
+
+    for (const p of capableRows) {
+      // Los storageKeys de sus reference_image (para leer los bytes que el seed materializó).
+      const { rows: assetRows } = await tdb.pool.query<{ storage_key: string }>(
+        `SELECT storage_key FROM asset WHERE id = ANY($1) AND kind = 'reference_image' ORDER BY id`,
+        [p.referenceImageIds],
+      );
+      expect(
+        assetRows.length,
+        `«${p.name}» batch-capable sin reference_image materializada`,
+      ).toBeGreaterThan(0);
+
+      for (const { storage_key } of assetRows) {
+        const bytes = storage.bytesFor(storage_key);
+        expect(bytes, `bytes ausentes para ${storage_key}`).toBeDefined();
+        if (bytes === undefined) continue;
+        const entropy = await referenceImageEntropy(bytes);
+        // ASSERT 1 (foto vs placeholder): la reference que N7c animará es una FOTO, no un placeholder abstracto
+        // de sharp. Si esta persona sembrara sus references con sharp (bug), la entropía caería (~1.4) y rojo.
+        expect(
+          entropy,
+          `«${p.name}» batch-capable pero su reference «${storage_key}» tiene entropía ${entropy.toFixed(3)} < floor ${String(REFERENCE_PHOTO_ENTROPY_FLOOR)}: es un placeholder abstracto, N7c la animaría como sujeto alucinado`,
+        ).toBeGreaterThan(REFERENCE_PHOTO_ENTROPY_FLOOR);
+        // ASSERT 2 (descargable por N7c, T5.19 fix del FAIL de VERIFY): la reference DEBE estar bajo el techo
+        // de tamaño. La 1ª entrega materializó fixtures de 5,9 MB que fal no podía descargar (file_download_error).
+        // El seed ahora normaliza a JPEG → cada reference queda muy por debajo; si se saltara esa normalización,
+        // este assert se pondría rojo antes de que se gaste un solo céntimo en N7c.
+        expect(
+          bytes.byteLength,
+          `«${p.name}» reference «${storage_key}» pesa ${(bytes.byteLength / 1e6).toFixed(2)} MB ≥ techo ${String(REFERENCE_MAX_BYTES)} B: N7c daría file_download_error`,
+        ).toBeLessThan(REFERENCE_MAX_BYTES);
+      }
     }
   });
 });

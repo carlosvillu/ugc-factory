@@ -1,0 +1,40 @@
+⨯ Another next dev server is already running.
+
+- Local:        http://localhost:3000
+- PID:          71404
+- Dir:          /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/web
+- Log:          .next/dev/logs/next-development.log
+
+Run kill 71404 to stop it.
+[?25h
+
+ ❯ startWebServer test/helpers/server.ts:81:13
+     79|   for (;;) {
+     80|     if (proc.exitCode !== null) {
+     81|       throw new Error(
+       |             ^
+     82|         `next dev murió durante el arranque (code ${String(proc.exitCo…
+     83|       );
+ ❯ test/integration/server/sse-contract.test.ts:71:12
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  |web:integration| test/integration/server/sse-contract.test.ts [ apps/web/test/integration/server/sse-contract.test.ts ]
+TypeError: Cannot read properties of undefined (reading 'stop')
+ ❯ test/integration/server/sse-contract.test.ts:81:16
+     79|   // LISTEN) ANTES de parar boss / dropear la BD, o el DROP DATABASE s…
+     80|   // por la conexión viva del subproceso.
+     81|   await server.stop();
+       |                ^
+     82|   const stopped = new Promise<void>((resolve) => {
+     83|     boss.once('stopped', () => {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed | 239 passed (240)
+      Tests  2507 passed | 2 skipped (2509)
+   Start at  18:03:03
+   Duration  67.79s (transform 32.25s, setup 4.03s, import 172.03s, tests 189.30s, environment 19.15s)
+
+ ELIFECYCLE  Test failed. See above for more details.

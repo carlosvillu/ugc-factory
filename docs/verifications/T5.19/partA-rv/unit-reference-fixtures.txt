@@ -1,0 +1,19 @@
+
+ RUN  v4.1.10 /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/core
+
+ ✓ |core:unit| src/persona/reference-fixtures.test.ts > la métrica de foto vs placeholder abstracto (T5.19) > el floor separa las dos clases: la foto lo pasa, el placeholder de sharp lo falla 315ms
+ ✓ |core:unit| src/persona/reference-fixtures.test.ts > la métrica de foto vs placeholder abstracto (T5.19) > los fixtures de foto son JPEG ≥2K DESCARGABLES (dims ≥2K + tamaño bajo el techo de N7c) 2ms
+ ✓ |core:unit| src/persona/reference-fixtures.test.ts > la métrica de foto vs placeholder abstracto (T5.19) > cada persona batch-capable declara EXACTAMENTE `referenceImageCount` fixtures (no faltan encuadres) 0ms
+ ✓ |core:unit| src/persona/reference-fixtures.test.ts > normalizeReferenceImage: hace una reference DESCARGABLE por N7c (T5.19 fix del FAIL de VERIFY) > recodifica una foto PNG grande a un JPEG bajo el techo, preservando dimensiones y entropía 365ms
+ ✓ |core:unit| src/persona/reference-fixtures.test.ts > normalizeReferenceImage: hace una reference DESCARGABLE por N7c (T5.19 fix del FAIL de VERIFY) > rama «shrink logra caer bajo el techo»: una foto enorme se reduce a JPEG <techo, aún ≥2K 3815ms
+ ✓ |core:unit| src/persona/reference-fixtures.test.ts > normalizeReferenceImage: hace una reference DESCARGABLE por N7c (T5.19 fix del FAIL de VERIFY) > rama «imposible»: ruido incompresible ≥2K que no cabe ni en el floor → RECHAZA (validation_error) 5553ms
+ ✓ |core:unit| src/persona/reference-fixtures.test.ts > normalizeReferenceImage: hace una reference DESCARGABLE por N7c (T5.19 fix del FAIL de VERIFY) > aplica la orientación EXIF: una foto Orientation=6 sale con W/H transpuestos (no rotada 90°) 546ms
+ ✓ |core:unit| src/persona/reference-fixtures.test.ts > normalizeReferenceImage: hace una reference DESCARGABLE por N7c (T5.19 fix del FAIL de VERIFY) > es idempotente sobre un JPEG ya normalizado: 2ª pasada = mismas dims, misma entropía, sin encoger 507ms
+ ✓ |core:unit| src/persona/reference-fixtures.test.ts > el predicado `isSeedBatchCapable` (T5.19: DERIVA quién debe tener fotos, sin allowlist) > selecciona a las personas con voz real y a NINGUNA placeholder 1ms
+ ✓ |core:unit| src/persona/reference-fixtures.test.ts > el predicado `isSeedBatchCapable` (T5.19: DERIVA quién debe tener fotos, sin allowlist) > una voz `placeholder-*` vuelve a la persona NO batch-capable (control negativo del predicado) 0ms
+
+ Test Files  1 passed (1)
+      Tests  10 passed (10)
+   Start at  19:44:05
+   Duration  11.29s (transform 49ms, setup 18ms, import 91ms, tests 11.11s, environment 0ms)
+

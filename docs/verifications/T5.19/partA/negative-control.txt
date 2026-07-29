@@ -1,0 +1,23 @@
+=== NEGATIVE CONTROL: UNIT reference-fixtures.test.ts (expect RED) ===
+ ❯ |core:unit| src/persona/reference-fixtures.test.ts (5 tests | 1 failed) 65ms
+     × el floor separa las dos clases: la foto lo pasa, el placeholder de sharp lo falla 62ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  |core:unit| src/persona/reference-fixtures.test.ts > la métrica de foto vs placeholder abstracto (T5.19) > el floor separa las dos clases: la foto lo pasa, el placeholder de sharp lo falla
+AssertionError: el fixture «maya-frontal-headshot.png» tiene entropía 1.408 < floor 5: ¿volvió a ser un placeholder abstracto?: expected 1.4084184658058803 to be greater than 5
+     35|         `el fixture «${name}» tiene entropía ${entropy.toFixed(3)} < f…
+     36|       ).toBeGreaterThan(REFERENCE_PHOTO_ENTROPY_FLOOR);
+ Test Files  1 failed (1)
+      Tests  1 failed | 4 passed (5)
+   Duration  240ms (transform 38ms, setup 14ms, import 85ms, tests 65ms, environment 0ms)
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run reference-fixtures
+
+=== NEGATIVE CONTROL: INTEGRATION Test B persona-seed.test.ts (expect RED) ===
+ ❯ |db:integration| test/integration/persona-seed.test.ts (5 tests | 1 failed) 1362ms
+     × cada reference_image de una persona batch-capable es una FOTO (supera el floor de entropía) 403ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  |db:integration| test/integration/persona-seed.test.ts > el seed REAL materializa FOTOS para la persona batch-capable (T5.19, Test B) > cada reference_image de una persona batch-capable es una FOTO (supera el floor de entropía)
+AssertionError: «Maya» batch-capable pero su reference «personas/01KYQ8RP10SDFBTZ7XQZ022VYP/01KYQ8RP11GHS4M2J0KZFQ6BZK.png» tiene entropía 1.408 < floor 5: es un placeholder abstracto, N7c la animaría como sujeto alucinado: expected 1.4084184658058803 to be greater than 5
+ Test Files  1 failed (1)
+      Tests  1 failed | 4 passed (5)
+   Duration  3.85s (transform 223ms, setup 8ms, import 776ms, tests 1.36s, environment 0ms)
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run --config vitest.config.integration.ts persona-seed

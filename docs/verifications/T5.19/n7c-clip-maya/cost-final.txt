@@ -1,0 +1,26 @@
+=== FINAL cost_entry (scratch DB ugc_t519, isolated => exact) ===
+ provider | amount_cents | quantity |  unit   |          fal_endpoint           |  status   
+----------+--------------+----------+---------+---------------------------------+-----------
+ fal      |            0 |        3 | seconds | fal-ai/elevenlabs/tts/eleven-v3 | completed
+ fal      |            1 |       50 | chars   | fal-ai/elevenlabs/tts/eleven-v3 | completed
+ fal      |           49 |        3 | seconds | fal-ai/bytedance/omnihuman/v1.5 | completed
+(3 rows)
+
+=== TOTAL ===
+ total_cents 
+-------------
+          50
+(1 row)
+
+=== failed avatar generations (3x 422 file_download_error) ===
+ERROR:  column reference "status" is ambiguous
+LINE 1: SELECT fal_request_id, status FROM generation g JOIN model_p...
+                               ^
+            fal_request_id            |  status   
+--------------------------------------+-----------
+ 019fae93-bc92-7f21-ac04-e07e7584ae89 | failed
+ 019fae96-7059-7b61-b771-c2aeae6e92c3 | failed
+ 019fae97-36d4-78f0-87fa-1918b7bba3af | failed
+ 019fae99-9f96-79b2-ada5-b71e82c4f632 | completed
+(4 rows)
+

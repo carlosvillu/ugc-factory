@@ -1,0 +1,123 @@
+ ✓ |db:integration| test/integration/persona-seed.test.ts > seedPersonas: el paso de imagen es FAIL-FAST por defecto, NO-FATAL en el arranque (T3.9) > sin `onImageError` (pnpm seed): un fallo de imagen REVIENTA (el guard no tiene puerta trasera) 27ms
+ ✓ |db:integration| test/integration/persona-seed.test.ts > seedPersonas: el paso de imagen es FAIL-FAST por defecto, NO-FATAL en el arranque (T3.9) > con `onImageError` (arranque): DEGRADA — la fila de persona existe, la imagen no, y NO se lanza 178ms
+stdout | test/integration/persona-seed.test.ts > seedPersonas: idempotente e insert-only en el arranque (T3.9) > `onConflict:"nothing"` corre dos veces sin duplicar personas
+seed: persona «Maya» ← foto IA «maya-frontal-headshot.png» 1536×2752 px (personas/01KYQ8PE81DJ0YXYWN6VRFGTFM/01KYQ8PE851PQF2BCEGYQFNY1F.png)
+stdout | test/integration/persona-seed.test.ts > seedPersonas: idempotente e insert-only en el arranque (T3.9) > `onConflict:"nothing"` corre dos veces sin duplicar personas
+seed: persona «Maya» ← foto IA «maya-three-quarter-portrait.png» 1536×2752 px (personas/01KYQ8PE81DJ0YXYWN6VRFGTFM/01KYQ8PE8F7ZBJAS5NR0T8A2XZ.png)
+stdout | test/integration/persona-seed.test.ts > seedPersonas: idempotente e insert-only en el arranque (T3.9) > `onConflict:"nothing"` corre dos veces sin duplicar personas
+seed: persona «Maya» ← foto IA «maya-full-body.png» 1536×2752 px (personas/01KYQ8PE81DJ0YXYWN6VRFGTFM/01KYQ8PE8RX5W612650P1Y471S.png)
+stdout | test/integration/persona-seed.test.ts > seedPersonas: idempotente e insert-only en el arranque (T3.9) > `onConflict:"nothing"` corre dos veces sin duplicar personas
+seed: persona «Lucía (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQ8PE8W4QTMV61DSEKK33ZK/01KYQ8PE9AHN8R0NWNH38WV24H.png)
+stdout | test/integration/persona-seed.test.ts > seedPersonas: idempotente e insert-only en el arranque (T3.9) > `onConflict:"nothing"` corre dos veces sin duplicar personas
+seed: persona «Lucía (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQ8PE8W4QTMV61DSEKK33ZK/01KYQ8PE9SFM4PHQ9SCEHSEYSX.png)
+stdout | test/integration/persona-seed.test.ts > seedPersonas: idempotente e insert-only en el arranque (T3.9) > `onConflict:"nothing"` corre dos veces sin duplicar personas
+seed: persona «Marcus (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQ8PE9WZKFSX6PAS8K1TM2K/01KYQ8PEAANYWNKMAC0ADJ48FS.png)
+stdout | test/integration/persona-seed.test.ts > seedPersonas: idempotente e insert-only en el arranque (T3.9) > `onConflict:"nothing"` corre dos veces sin duplicar personas
+seed: persona «Marcus (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQ8PE9WZKFSX6PAS8K1TM2K/01KYQ8PEASTMZ5BXYQH5C7D9WM.png)
+stdout | test/integration/persona-seed.test.ts > seedPersonas: idempotente e insert-only en el arranque (T3.9) > `onConflict:"nothing"` corre dos veces sin duplicar personas
+seed: persona «Nerea (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQ8PEAX6THWXAJGQ6K81YHM/01KYQ8PEBBNGHBBBYEAGMQ1F6R.png)
+stdout | test/integration/persona-seed.test.ts > seedPersonas: idempotente e insert-only en el arranque (T3.9) > `onConflict:"nothing"` corre dos veces sin duplicar personas
+seed: persona «Nerea (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQ8PEAX6THWXAJGQ6K81YHM/01KYQ8PEBTE7AJNKG5RKD33ASS.png)
+stdout | test/integration/persona-seed.test.ts > seedPersonas: idempotente e insert-only en el arranque (T3.9) > `onConflict:"nothing"` corre dos veces sin duplicar personas
+seed: persona «Carmen (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQ8PEBYAHZYVZEH71H1H8PS/01KYQ8PECC3WCHCYJ9CWYWWWCA.png)
+stdout | test/integration/persona-seed.test.ts > seedPersonas: idempotente e insert-only en el arranque (T3.9) > `onConflict:"nothing"` corre dos veces sin duplicar personas
+seed: persona «Carmen (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQ8PEBYAHZYVZEH71H1H8PS/01KYQ8PECWQYCJ9YC6GZ86F7GV.png)
+stdout | test/integration/persona-seed.test.ts > seedPersonas: idempotente e insert-only en el arranque (T3.9) > `onConflict:"nothing"` corre dos veces sin duplicar personas
+seed: persona «Alex (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQ8PECZ1BPR7SPCGSB8FDKV/01KYQ8PEDCREKKGM6921PGDHZS.png)
+stdout | test/integration/persona-seed.test.ts > seedPersonas: idempotente e insert-only en el arranque (T3.9) > `onConflict:"nothing"` corre dos veces sin duplicar personas
+seed: persona «Alex (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQ8PECZ1BPR7SPCGSB8FDKV/01KYQ8PEDVDNAJNJKVBZN4S1H9.png)
+stdout | test/integration/persona-seed.test.ts > seedPersonas: idempotente e insert-only en el arranque (T3.9) > `onConflict:"nothing"` corre dos veces sin duplicar personas
+seed: persona «Rosa (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQ8PEDZD6B3109YPM3Z4S1N/01KYQ8PEED3S0YT2KJRJCGRZ4W.png)
+stdout | test/integration/persona-seed.test.ts > seedPersonas: idempotente e insert-only en el arranque (T3.9) > `onConflict:"nothing"` corre dos veces sin duplicar personas
+seed: persona «Rosa (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQ8PEDZD6B3109YPM3Z4S1N/01KYQ8PEEW6CRKAYGSHH7KFSMZ.png)
+stdout | test/integration/persona-seed.test.ts > seedPersonas: idempotente e insert-only en el arranque (T3.9) > `onConflict:"nothing"` corre dos veces sin duplicar personas
+seed: persona «Priya (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQ8PEF0CD538WPHNXRVHR2N/01KYQ8PEFEDHHNAKP9MDE20M9G.png)
+stdout | test/integration/persona-seed.test.ts > seedPersonas: idempotente e insert-only en el arranque (T3.9) > `onConflict:"nothing"` corre dos veces sin duplicar personas
+seed: persona «Priya (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQ8PEF0CD538WPHNXRVHR2N/01KYQ8PEFXK9VK3D08QSFW3WYH.png)
+stdout | test/integration/persona-seed.test.ts > seedPersonas: idempotente e insert-only en el arranque (T3.9) > `onConflict:"nothing"` corre dos veces sin duplicar personas
+seed: persona «David (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQ8PEG1A6D96Y2H4HK184N4/01KYQ8PEGF3MZ8RYCAZN00V9MV.png)
+stdout | test/integration/persona-seed.test.ts > seedPersonas: idempotente e insert-only en el arranque (T3.9) > `onConflict:"nothing"` corre dos veces sin duplicar personas
+seed: persona «David (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQ8PEG1A6D96Y2H4HK184N4/01KYQ8PEGYYVKZ7GA941R01SVJ.png)
+stdout | test/integration/persona-seed.test.ts > seedPersonas: idempotente e insert-only en el arranque (T3.9) > `onConflict:"nothing"` corre dos veces sin duplicar personas
+seed: persona «Chloe (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQ8PEH1692DR2M7RFY974Q1/01KYQ8PEHFCQTSN81Q8KC5EBP4.png)
+stdout | test/integration/persona-seed.test.ts > seedPersonas: idempotente e insert-only en el arranque (T3.9) > `onConflict:"nothing"` corre dos veces sin duplicar personas
+seed: persona «Chloe (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQ8PEH1692DR2M7RFY974Q1/01KYQ8PEHYQKDB4A8D7DPAMGV8.png)
+stdout | test/integration/persona-seed.test.ts > seedPersonas: idempotente e insert-only en el arranque (T3.9) > `onConflict:"nothing"` corre dos veces sin duplicar personas
+seed: persona «Kenji (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQ8PEJ1D1KVPHMG1ATKXWPF/01KYQ8PEJFCKGX847RA4H5KH4M.png)
+stdout | test/integration/persona-seed.test.ts > seedPersonas: idempotente e insert-only en el arranque (T3.9) > `onConflict:"nothing"` corre dos veces sin duplicar personas
+seed: persona «Kenji (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQ8PEJ1D1KVPHMG1ATKXWPF/01KYQ8PEJYQWXYK5YFYE49RHD1.png)
+ ✓ |db:integration| test/integration/persona-seed.test.ts > seedPersonas: idempotente e insert-only en el arranque (T3.9) > `onConflict:"nothing"` corre dos veces sin duplicar personas 380ms
+seed: persona «Maya» ← foto IA «maya-frontal-headshot.png» 1536×2752 px (personas/01KYQ8PEKYT1PT746GW6Q9K9R4/01KYQ8PEM2F22EA6N9XB2R37K4.png)
+seed: persona «Maya» ← foto IA «maya-three-quarter-portrait.png» 1536×2752 px (personas/01KYQ8PEKYT1PT746GW6Q9K9R4/01KYQ8PEM8D1R3EBCJE095E10X.png)
+seed: persona «Maya» ← foto IA «maya-full-body.png» 1536×2752 px (personas/01KYQ8PEKYT1PT746GW6Q9K9R4/01KYQ8PEMFRP090HSC506ZZFZB.png)
+seed: persona «Lucía (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQ8PEMR3DC8GQ86Q24BQBE5/01KYQ8PEN876D74QB9M7G3KMDB.png)
+seed: persona «Lucía (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQ8PEMR3DC8GQ86Q24BQBE5/01KYQ8PENQBSESBDYW2CAGMXVF.png)
+seed: persona «Marcus (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQ8PENV1WJJC5EMQ9HTGVM7/01KYQ8PEP9GAVQ3VNBMK5HSP1P.png)
+seed: persona «Marcus (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQ8PENV1WJJC5EMQ9HTGVM7/01KYQ8PEPS4Q6ZTB5N90KV3SWA.png)
+seed: persona «Nerea (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQ8PEPWYFNV58T1FMBGYHEM/01KYQ8PEQAKBFHJKY339J3ZCEG.png)
+seed: persona «Nerea (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQ8PEPWYFNV58T1FMBGYHEM/01KYQ8PEQSBB4JZTNAPH3A8BAZ.png)
+seed: persona «Carmen (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQ8PEQXH163RCSP4Q2W1H28/01KYQ8PERB08NEZFZVKJ164QP5.png)
+seed: persona «Carmen (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQ8PEQXH163RCSP4Q2W1H28/01KYQ8PERTA3B3FJ853YY37NR9.png)
+seed: persona «Alex (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQ8PERX6GF9KVCDFY16TZ99/01KYQ8PESCNS8WD3CBQWXXRXX3.png)
+seed: persona «Alex (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQ8PERX6GF9KVCDFY16TZ99/01KYQ8PESVT6WVYP0FVEH56PP9.png)
+seed: persona «Rosa (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQ8PESZ7MRKRQN23VJ3308A/01KYQ8PETDQ6D5S3C9PAAXN6JD.png)
+seed: persona «Rosa (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQ8PESZ7MRKRQN23VJ3308A/01KYQ8PETX7WG90GAQWYAA1TZS.png)
+seed: persona «Priya (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQ8PEV1GZ54AR4K8RXW9FNP/01KYQ8PEVFSM8QD32EQYKTFBP9.png)
+seed: persona «Priya (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQ8PEV1GZ54AR4K8RXW9FNP/01KYQ8PEVYZK0MJGJE8R245HZZ.png)
+seed: persona «David (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQ8PEW24KEA4VQV12NS2735/01KYQ8PEWGE37ECY71240GWZJF.png)
+seed: persona «David (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQ8PEW24KEA4VQV12NS2735/01KYQ8PEWZPWRRH7EQE8VNGP8A.png)
+seed: persona «Chloe (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQ8PEX36F5NAE4VPZBMRP1Z/01KYQ8PEXGSZ95ZXTGDTR1A7VV.png)
+seed: persona «Chloe (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQ8PEX36F5NAE4VPZBMRP1Z/01KYQ8PEXZDC6J7XD4MG15PNPA.png)
+seed: persona «Kenji (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQ8PEY2FXCZGBTCFB5S0XW9/01KYQ8PEYG14D9SSARQ9SRVBFG.png)
+seed: persona «Kenji (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQ8PEY2FXCZGBTCFB5S0XW9/01KYQ8PEYZHRDCMEQGJVEVYE1P.png)
+ ✓ |db:integration| test/integration/persona-seed.test.ts > el seed REAL materializa una persona batch-ready con imágenes en BD (T5.15, Test A) > tras `seedPersonas` (el camino real) existe ≥1 persona con imágenes REALES en BD y voz que fal acepta 362ms
+stdout | test/integration/persona-seed.test.ts > el seed REAL materializa FOTOS para la persona batch-capable (T5.19, Test B) > cada reference_image de una persona batch-capable es una FOTO (supera el floor de entropía)
+seed: persona «Maya» ← foto IA «maya-frontal-headshot.png» 1536×2752 px (personas/01KYQ8PEZ8G1VRJFGKST3CXYWT/01KYQ8PEZCYN3Y6V29R98ZZAJ3.png)
+stdout | test/integration/persona-seed.test.ts > el seed REAL materializa FOTOS para la persona batch-capable (T5.19, Test B) > cada reference_image de una persona batch-capable es una FOTO (supera el floor de entropía)
+seed: persona «Maya» ← foto IA «maya-three-quarter-portrait.png» 1536×2752 px (personas/01KYQ8PEZ8G1VRJFGKST3CXYWT/01KYQ8PEZK26EZ598YE7HCCS6S.png)
+stdout | test/integration/persona-seed.test.ts > el seed REAL materializa FOTOS para la persona batch-capable (T5.19, Test B) > cada reference_image de una persona batch-capable es una FOTO (supera el floor de entropía)
+seed: persona «Maya» ← foto IA «maya-full-body.png» 1536×2752 px (personas/01KYQ8PEZ8G1VRJFGKST3CXYWT/01KYQ8PEZW046TGSV55B5EXKCM.png)
+stdout | test/integration/persona-seed.test.ts > el seed REAL materializa FOTOS para la persona batch-capable (T5.19, Test B) > cada reference_image de una persona batch-capable es una FOTO (supera el floor de entropía)
+seed: persona «Lucía (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQ8PF01PD8SAKTAVYSHDADW/01KYQ8PF0FGP27ME09TM14WZQX.png)
+stdout | test/integration/persona-seed.test.ts > el seed REAL materializa FOTOS para la persona batch-capable (T5.19, Test B) > cada reference_image de una persona batch-capable es una FOTO (supera el floor de entropía)
+seed: persona «Lucía (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQ8PF01PD8SAKTAVYSHDADW/01KYQ8PF0ZXXF2JVZXTCD3NKTC.png)
+stdout | test/integration/persona-seed.test.ts > el seed REAL materializa FOTOS para la persona batch-capable (T5.19, Test B) > cada reference_image de una persona batch-capable es una FOTO (supera el floor de entropía)
+seed: persona «Marcus (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQ8PF12Q0APD2J76W6YWDBY/01KYQ8PF1GCS339JPTTJ6JH76E.png)
+stdout | test/integration/persona-seed.test.ts > el seed REAL materializa FOTOS para la persona batch-capable (T5.19, Test B) > cada reference_image de una persona batch-capable es una FOTO (supera el floor de entropía)
+seed: persona «Marcus (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQ8PF12Q0APD2J76W6YWDBY/01KYQ8PF1ZHZMA5V5DYQ6X56GK.png)
+stdout | test/integration/persona-seed.test.ts > el seed REAL materializa FOTOS para la persona batch-capable (T5.19, Test B) > cada reference_image de una persona batch-capable es una FOTO (supera el floor de entropía)
+seed: persona «Nerea (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQ8PF22VFT0FQ1WNW3AE808/01KYQ8PF2H0FVWC1S532FBBRE4.png)
+stdout | test/integration/persona-seed.test.ts > el seed REAL materializa FOTOS para la persona batch-capable (T5.19, Test B) > cada reference_image de una persona batch-capable es una FOTO (supera el floor de entropía)
+seed: persona «Nerea (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQ8PF22VFT0FQ1WNW3AE808/01KYQ8PF31XKSTSVT1TVF4WDTC.png)
+stdout | test/integration/persona-seed.test.ts > el seed REAL materializa FOTOS para la persona batch-capable (T5.19, Test B) > cada reference_image de una persona batch-capable es una FOTO (supera el floor de entropía)
+seed: persona «Carmen (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQ8PF34KN2SPP00GSM2BJD8/01KYQ8PF3M6T3ZMC33RXCFXQJP.png)
+stdout | test/integration/persona-seed.test.ts > el seed REAL materializa FOTOS para la persona batch-capable (T5.19, Test B) > cada reference_image de una persona batch-capable es una FOTO (supera el floor de entropía)
+seed: persona «Carmen (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQ8PF34KN2SPP00GSM2BJD8/01KYQ8PF44454X2ZM8ACXK5N34.png)
+stdout | test/integration/persona-seed.test.ts > el seed REAL materializa FOTOS para la persona batch-capable (T5.19, Test B) > cada reference_image de una persona batch-capable es una FOTO (supera el floor de entropía)
+seed: persona «Alex (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQ8PF47RAJTZCCK993XBPK2/01KYQ8PF4NA89GH0SCTSBY5DT3.png)
+stdout | test/integration/persona-seed.test.ts > el seed REAL materializa FOTOS para la persona batch-capable (T5.19, Test B) > cada reference_image de una persona batch-capable es una FOTO (supera el floor de entropía)
+seed: persona «Alex (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQ8PF47RAJTZCCK993XBPK2/01KYQ8PF55HKTP84T7MJV346R3.png)
+stdout | test/integration/persona-seed.test.ts > el seed REAL materializa FOTOS para la persona batch-capable (T5.19, Test B) > cada reference_image de una persona batch-capable es una FOTO (supera el floor de entropía)
+seed: persona «Rosa (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQ8PF58EC5JHC3XXAQE6FD5/01KYQ8PF5PZ0MZP6VAAFB94NW0.png)
+stdout | test/integration/persona-seed.test.ts > el seed REAL materializa FOTOS para la persona batch-capable (T5.19, Test B) > cada reference_image de una persona batch-capable es una FOTO (supera el floor de entropía)
+seed: persona «Rosa (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQ8PF58EC5JHC3XXAQE6FD5/01KYQ8PF65559CXNM76Q3RA94Q.png)
+stdout | test/integration/persona-seed.test.ts > el seed REAL materializa FOTOS para la persona batch-capable (T5.19, Test B) > cada reference_image de una persona batch-capable es una FOTO (supera el floor de entropía)
+seed: persona «Priya (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQ8PF699NTJRYGYJM6EV7ZV/01KYQ8PF6QA62AQR630V4YQNR7.png)
+stdout | test/integration/persona-seed.test.ts > el seed REAL materializa FOTOS para la persona batch-capable (T5.19, Test B) > cada reference_image de una persona batch-capable es una FOTO (supera el floor de entropía)
+seed: persona «Priya (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQ8PF699NTJRYGYJM6EV7ZV/01KYQ8PF773MEPM9T14XPDKD5X.png)
+stdout | test/integration/persona-seed.test.ts > el seed REAL materializa FOTOS para la persona batch-capable (T5.19, Test B) > cada reference_image de una persona batch-capable es una FOTO (supera el floor de entropía)
+seed: persona «David (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQ8PF7BBNPSZBATBWNV1CJD/01KYQ8PF7SMHK0XZXB38RGKXSN.png)
+stdout | test/integration/persona-seed.test.ts > el seed REAL materializa FOTOS para la persona batch-capable (T5.19, Test B) > cada reference_image de una persona batch-capable es una FOTO (supera el floor de entropía)
+seed: persona «David (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQ8PF7BBNPSZBATBWNV1CJD/01KYQ8PF88GAVHAWFYJX2A0XYW.png)
+stdout | test/integration/persona-seed.test.ts > el seed REAL materializa FOTOS para la persona batch-capable (T5.19, Test B) > cada reference_image de una persona batch-capable es una FOTO (supera el floor de entropía)
+seed: persona «Chloe (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQ8PF8CGJSFMB6RW39QP7T6/01KYQ8PF8SG5JKJWWKR1HRY5G6.png)
+stdout | test/integration/persona-seed.test.ts > el seed REAL materializa FOTOS para la persona batch-capable (T5.19, Test B) > cada reference_image de una persona batch-capable es una FOTO (supera el floor de entropía)
+seed: persona «Chloe (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQ8PF8CGJSFMB6RW39QP7T6/01KYQ8PF99XW1X32YHME2HDPG4.png)
+stdout | test/integration/persona-seed.test.ts > el seed REAL materializa FOTOS para la persona batch-capable (T5.19, Test B) > cada reference_image de una persona batch-capable es una FOTO (supera el floor de entropía)
+seed: persona «Kenji (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQ8PF9CRVXR5TYFSZWSBEYJ/01KYQ8PF9W5R5X67XGYNQDN4XY.png)
+stdout | test/integration/persona-seed.test.ts > el seed REAL materializa FOTOS para la persona batch-capable (T5.19, Test B) > cada reference_image de una persona batch-capable es una FOTO (supera el floor de entropía)
+seed: persona «Kenji (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQ8PF9CRVXR5TYFSZWSBEYJ/01KYQ8PFAD2J4YMRQ5VP02YPG7.png)
+ ✓ |db:integration| test/integration/persona-seed.test.ts > el seed REAL materializa FOTOS para la persona batch-capable (T5.19, Test B) > cada reference_image de una persona batch-capable es una FOTO (supera el floor de entropía) 596ms
+ Test Files  1 passed (1)
+      Tests  5 passed (5)
+   Duration  4.38s (transform 242ms, setup 7ms, import 867ms, tests 1.61s, environment 0ms)

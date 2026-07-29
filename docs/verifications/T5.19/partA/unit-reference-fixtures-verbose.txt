@@ -1,0 +1,8 @@
+ ✓ |core:unit| src/persona/reference-fixtures.test.ts > la métrica de foto vs placeholder abstracto (T5.19) > el floor separa las dos clases: la foto lo pasa, el placeholder de sharp lo falla 403ms
+ ✓ |core:unit| src/persona/reference-fixtures.test.ts > la métrica de foto vs placeholder abstracto (T5.19) > los fixtures de foto son PNG ≥2K de verdad (mismo umbral que el guard de upload) 8ms
+ ✓ |core:unit| src/persona/reference-fixtures.test.ts > la métrica de foto vs placeholder abstracto (T5.19) > cada persona batch-capable declara EXACTAMENTE `referenceImageCount` fixtures (no faltan encuadres) 0ms
+ ✓ |core:unit| src/persona/reference-fixtures.test.ts > el predicado `isSeedBatchCapable` (T5.19: DERIVA quién debe tener fotos, sin allowlist) > selecciona a las personas con voz real y a NINGUNA placeholder 0ms
+ ✓ |core:unit| src/persona/reference-fixtures.test.ts > el predicado `isSeedBatchCapable` (T5.19: DERIVA quién debe tener fotos, sin allowlist) > una voz `placeholder-*` vuelve a la persona NO batch-capable (control negativo del predicado) 0ms
+ Test Files  1 passed (1)
+      Tests  5 passed (5)
+   Duration  586ms (transform 40ms, setup 16ms, import 84ms, tests 413ms, environment 0ms)

@@ -1,0 +1,10 @@
+codec_name=h264
+codec_type=video
+width=1088
+height=1920
+pix_fmt=yuv420p
+codec_name=aac
+codec_type=audio
+sample_rate=24000
+duration=2.280000
+size=1959841

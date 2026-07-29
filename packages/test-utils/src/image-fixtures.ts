@@ -44,6 +44,25 @@ export async function makeTestAvif(width: number, height: number): Promise<Uint8
   return new Uint8Array(buf);
 }
 
+/** Un JPEG REAL de `width`×`height` px CON el tag EXIF `Orientation` puesto a `orientation` (1–8).
+ *  Lo consume el test del guard de referencias (T5.19): una foto de móvil en retrato llega con
+ *  `Orientation=6` y los píxeles en landscape; el endpoint DEBE aplicar la orientación al normalizar
+ *  (`.autoOrient()`) o la reference sale rotada 90°. Con BYTES que llevan el tag de verdad (no un mime
+ *  fabricado) el test prueba que la rotación ocurre (principio 9). */
+export async function makeOrientedTestJpeg(
+  width: number,
+  height: number,
+  orientation: number,
+): Promise<Uint8Array> {
+  const buf = await sharp({
+    create: { width, height, channels: 3, background: { r: 180, g: 140, b: 100 } },
+  })
+    .withMetadata({ orientation })
+    .jpeg({ quality: 85, mozjpeg: true })
+    .toBuffer();
+  return new Uint8Array(buf);
+}
+
 /** Escribe un PNG real de `width`×`height` en `filePath` y devuelve la ruta. Lo usa el spec de
  *  Playwright, que necesita un FICHERO en disco para `setInputFiles` (no puede subir bytes). */
 export async function writeTestPng(

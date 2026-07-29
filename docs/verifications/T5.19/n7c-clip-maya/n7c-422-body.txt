@@ -1,0 +1,4 @@
+=== GET /status -> HTTP 200 ===
+{"status":"COMPLETED","request_id":"019fae93-bc92-7f21-ac04-e07e7584ae89","response_url":"https://queue.fal.run/fal-ai/bytedance/requests/019fae93-bc92-7f21-ac04-e07e7584ae89","status_url":"https://queue.fal.run/fal-ai/bytedance/requests/019fae93-bc92-7f21-ac04-e07e7584ae89/status","cancel_url":"https://queue.fal.run/fal-ai/bytedance/requests/019fae93-bc92-7f21-ac04-e07e7584ae89/cancel","logs":null,"metrics":{"inference_time":0.900543212890625}}
+=== GET (result) -> HTTP 422 ===
+{"detail":[{"loc":["body","image_url"],"msg":"Failed to download the file. Please check if the URL is accessible and try again.","type":"file_download_error","url":"https://docs.fal.ai/errors#file_download_error","input":"https://v3b.fal.media/files/b/0aa43692/G7CteeeEo7T-V76Zg2kIe_1785340342870.png"}]}

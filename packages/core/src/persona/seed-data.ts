@@ -7,9 +7,18 @@
 //
 //   · el nombre lleva el sufijo «(placeholder)» y la personalidad lo dice en la primera línea:
 //     el usuario tiene que RECONOCERLAS de un vistazo en la lista y saber que las sustituye;
-//   · sus imágenes de referencia las GENERA el seed (PNGs sintéticos ≥2K, `reference-images.ts`)
-//     y pasan la MISMA validación de dimensiones que un upload real — no se saltan nada;
-//   · NADA de generación IA (fal.ai): eso es F4. Coste de esta tarea: $0.
+//   · sus imágenes de referencia las GENERA el seed (PNGs sintéticos ≥2K con `sharp`,
+//     `reference-image.ts`) y pasan la MISMA validación de dimensiones que un upload real — no se
+//     saltan nada. Que sean placeholders ABSTRACTOS es coherente con ser sustituibles;
+//   · NADA de generación IA (fal.ai): eso es F4. Coste de sembrarlas: $0.
+//
+// ⚠ T5.19 — LA PERSONA BATCH-CAPABLE (MAYA) ES DISTINTA: sus reference_image NO son abstractas, son
+// FOTOS IA REALES commiteadas como fixtures PNG (`reference-fixtures/`, generadas UNA vez con la receta
+// de identity-lock de T4.12). El bug de producción de T5.19: OmniHuman (N7c) animó FIELMENTE el
+// placeholder abstracto de sharp → sujeto alucinado. Solo Maya puede llegar a N7c (las 10 placeholder
+// tienen `voiceId: placeholder-*` que fal rechaza con 422 → nunca completan un lote), así que solo Maya
+// necesita fotos. El gate de entropía (`persona-seed.test.ts`) exige que TODA persona batch-capable
+// (predicado `isSeedBatchCapable`, DERIVADO del `voiceId`) tenga references fotográficas, no abstractas.
 //
 // La `voice_map` sí es real en forma (`{locale: {provider, voiceId}}`, §12) pero sus `voiceId`
 // son placeholders declarados: la asignación de voz CON PREVIEW llega en F4 (§11 «asignación de
@@ -33,9 +42,38 @@ const PLACEHOLDER_PERSONALITY_PREFIX =
  * `library.repo.ts`); la BD, de la historia.
  */
 export interface PersonaSeed extends PersonaBody {
-  /** Nº de imágenes de referencia sintéticas ≥2K que el seed genera y sube por esta persona.
-   *  ≥ `REFERENCE_IMAGES_MIN` (§11: «mismo sujeto en 2–3 encuadres»). */
+  /** Nº de imágenes de referencia ≥2K que el seed materializa por esta persona.
+   *  ≥ `REFERENCE_IMAGES_MIN` (§11: «mismo sujeto en 2–3 encuadres»). Para una persona placeholder son
+   *  PNGs sintéticos (sharp); para una batch-capable, las de `referenceFixtures` (fotos IA, T5.19). */
   referenceImageCount: number;
+  /**
+   * Fixtures PNG de FOTO IA (nombres de fichero dentro de `reference-fixtures/`, T5.19) que el seed
+   * carga como reference_image de esta persona EN VEZ del dibujo abstracto de sharp. Solo lo lleva una
+   * persona BATCH-CAPABLE (Maya): sus references llegan a N7c (avatar) y DEBEN ser fotos, no placeholders
+   * abstractos (que OmniHuman animaría como un sujeto alucinado). Debe tener `referenceImageCount`
+   * entradas. Ausente en las placeholder (sharp abstracto, coherente con ser sustituibles).
+   */
+  referenceFixtures?: readonly string[];
+}
+
+/** El sufijo de un `voiceId` que fal RECHAZA con 422 (`placeholder-*`): una persona con SOLO voces así
+ *  no puede completar N7b, luego nunca llega a N7c (avatar). Es la marca de una persona de EJEMPLO. */
+const PLACEHOLDER_VOICE_PREFIX = 'placeholder';
+
+/**
+ * ¿Es esta persona del seed CAPAZ DE COMPLETAR UN LOTE generativo? — tiene ≥1 voz que fal acepta (ningún
+ * `voiceId` `placeholder-*`). Es EL predicado del que T5.19 deriva quién DEBE tener references fotográficas:
+ * solo una persona batch-capable llega a N7c (avatar), donde un placeholder abstracto produce el sujeto
+ * alucinado. DERIVADO del dato (`voiceId`), NUNCA una allowlist `['Maya']` (una allowlist se pudre al
+ * cambiar el seed; este predicado cubre también cualquier persona real que el usuario añada por CRUD).
+ *
+ * Hoy selecciona EXACTAMENTE a Maya (las 10 placeholder llevan `voiceId: placeholder-*`). Coincide con
+ * `isBatchReady` de `seed-data.test.ts` en la mitad de VOZ; la mitad de IMÁGENES la garantiza el seed
+ * materializando `referenceImageCount` references (y el gate de entropía exige que sean fotos).
+ */
+export function isSeedBatchCapable(seed: PersonaBody): boolean {
+  const voices = Object.values(seed.voiceMap);
+  return voices.length > 0 && voices.every((v) => !v.voiceId.startsWith(PLACEHOLDER_VOICE_PREFIX));
 }
 
 /** La persona del mercado ES. */
@@ -303,6 +341,16 @@ const MAYA: PersonaSeed = {
     en: { provider: 'elevenlabs', voiceId: 'Rachel', label: 'ElevenLabs · Rachel' },
   },
   referenceImageCount: 3,
+  // T5.19: FOTOS IA REALES (no el sharp abstracto). Generadas UNA vez con la receta de identity-lock de
+  // T4.12 (FLUX.2 base → NB2 edit ×3, mismo sujeto, 1536×2752 ≥2K), commiteadas como fixtures JPEG q85 (que
+  // N7c PUEDE descargar — el PNG de ~6 MB daba `file_download_error` en fal). Maya es la única batch-capable
+  // → la única que llega a N7c → la única que necesita fotos. Mismo sujeto (mujer ~30, rasgos mixtos,
+  // camiseta neutra) en los 3 encuadres de `REFERENCE_FRAMINGS`, en el mismo orden.
+  referenceFixtures: [
+    'maya-frontal-headshot.jpg',
+    'maya-three-quarter-portrait.jpg',
+    'maya-full-body.jpg',
+  ],
 };
 
 /**

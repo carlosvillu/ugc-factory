@@ -1,0 +1,178 @@
+
+ RUN  v4.1.10 /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/core
+
+ ❯ |core:unit| src/persona/reference-fixtures.test.ts (10 tests | 5 failed) 6971ms
+     × el floor separa las dos clases: la foto lo pasa, el placeholder de sharp lo falla 61ms
+     × los fixtures de foto son JPEG ≥2K DESCARGABLES (dims ≥2K + tamaño bajo el techo de N7c) 3ms
+     × recodifica una foto PNG grande a un JPEG bajo el techo, preservando dimensiones y entropía 13ms
+     × rama «shrink logra caer bajo el techo»: una foto enorme se reduce a JPEG <techo, aún ≥2K 598ms
+     × es idempotente sobre un JPEG ya normalizado: 2ª pasada = mismas dims, misma entropía, sin encoger 401ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |core:unit| src/persona/reference-fixtures.test.ts > la métrica de foto vs placeholder abstracto (T5.19) > el floor separa las dos clases: la foto lo pasa, el placeholder de sharp lo falla
+AssertionError: el fixture «maya-frontal-headshot.jpg» tiene entropía 1.408 < floor 5: ¿volvió a ser un placeholder abstracto?: expected 1.4084184658058803 to be greater than 5
+ ❯ src/persona/reference-fixtures.test.ts:37:9
+     35|         entropy,
+     36|         `el fixture «${name}» tiene entropía ${entropy.toFixed(3)} < f…
+     37|       ).toBeGreaterThan(REFERENCE_PHOTO_ENTROPY_FLOOR);
+       |         ^
+     38|     }
+     39|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/5]⎯
+
+ FAIL  |core:unit| src/persona/reference-fixtures.test.ts > la métrica de foto vs placeholder abstracto (T5.19) > los fixtures de foto son JPEG ≥2K DESCARGABLES (dims ≥2K + tamaño bajo el techo de N7c)
+AssertionError: expected 'png' to be 'jpeg' // Object.is equality
+
+Expected: "jpeg"
+Received: "png"
+
+ ❯ src/persona/reference-fixtures.test.ts:57:27
+     55|       const meta = await sharp(Buffer.from(bytes)).metadata();
+     56|       // JPEG (T5.19 fix): un PNG de ~6 MB daba `file_download_error` …
+     57|       expect(meta.format).toBe('jpeg');
+       |                           ^
+     58|       const longEdge = Math.max(meta.width, meta.height);
+     59|       expect(
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/5]⎯
+
+ FAIL  |core:unit| src/persona/reference-fixtures.test.ts > normalizeReferenceImage: hace una reference DESCARGABLE por N7c (T5.19 fix del FAIL de VERIFY) > recodifica una foto PNG grande a un JPEG bajo el techo, preservando dimensiones y entropía
+AssertionError: expected 144713 to be greater than 1048576
+ ❯ src/persona/reference-fixtures.test.ts:90:31
+     88|     const bigPng = new Uint8Array(await sharp(Buffer.from(fixtureBytes…
+     89|     // Precondición: el PNG grande efectivamente SUPERA el techo (si n…
+     90|     expect(bigPng.byteLength).toBeGreaterThan(REFERENCE_MAX_BYTES);
+       |                               ^
+     91|
+     92|     const normalized = await normalizeReferenceImage(bigPng);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/5]⎯
+
+ FAIL  |core:unit| src/persona/reference-fixtures.test.ts > normalizeReferenceImage: hace una reference DESCARGABLE por N7c (T5.19 fix del FAIL de VERIFY) > rama «shrink logra caer bajo el techo»: una foto enorme se reduce a JPEG <techo, aún ≥2K
+AssertionError: expected 69620 to be greater than 1048576
+ ❯ src/persona/reference-fixtures.test.ts:127:35
+    125|       await sharp(Buffer.from(huge)).jpeg({ quality: 85, mozjpeg: true…
+    126|     );
+    127|     expect(nativeJpeg.byteLength).toBeGreaterThan(REFERENCE_MAX_BYTES);
+       |                                   ^
+    128|
+    129|     const normalized = await normalizeReferenceImage(huge);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/5]⎯
+
+ FAIL  |core:unit| src/persona/reference-fixtures.test.ts > normalizeReferenceImage: hace una reference DESCARGABLE por N7c (T5.19 fix del FAIL de VERIFY) > es idempotente sobre un JPEG ya normalizado: 2ª pasada = mismas dims, misma entropía, sin encoger
+AssertionError: expected 1.460254769491712 to be greater than 5
+ ❯ src/persona/reference-fixtures.test.ts:213:20
+    211|     const eTwice = await referenceImageEntropy(twice.bytes);
+    212|     expect(Math.abs(eTwice - eOnce)).toBeLessThan(0.05);
+    213|     expect(eTwice).toBeGreaterThan(REFERENCE_PHOTO_ENTROPY_FLOOR);
+       |                    ^
+    214|     // Sigue bajo el techo.
+    215|     expect(twice.bytes.byteLength).toBeLessThan(REFERENCE_MAX_BYTES);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/5]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  5 failed | 5 passed (10)
+   Start at  19:45:25
+   Duration  7.16s (transform 46ms, setup 17ms, import 93ms, tests 6.97s, environment 0ms)
+
+undefined
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/core:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/persona/reference-fixtures.test.ts
+
+ RUN  v4.1.10 /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/db
+
+stdout | test/integration/persona-seed.test.ts > el seed REAL materializa FOTOS para la persona batch-capable (T5.19, Test B) > cada reference_image de una persona batch-capable es una FOTO (supera el floor de entropía)
+seed: persona «Maya» ← foto IA «maya-frontal-headshot.jpg» 2202×2752 px (personas/01KYQFPX4152HNQGVQKRA9EZ1Y/01KYQFPX8WEHAXDNPDYD5D5PN0.jpg)
+
+stdout | test/integration/persona-seed.test.ts > el seed REAL materializa FOTOS para la persona batch-capable (T5.19, Test B) > cada reference_image de una persona batch-capable es una FOTO (supera el floor de entropía)
+seed: persona «Maya» ← foto IA «maya-three-quarter-portrait.jpg» 2202×2752 px (personas/01KYQFPX4152HNQGVQKRA9EZ1Y/01KYQFPXDS20W0Y28XKFRPRK45.jpg)
+
+stdout | test/integration/persona-seed.test.ts > el seed REAL materializa FOTOS para la persona batch-capable (T5.19, Test B) > cada reference_image de una persona batch-capable es una FOTO (supera el floor de entropía)
+seed: persona «Maya» ← foto IA «maya-full-body.jpg» 2202×2752 px (personas/01KYQFPX4152HNQGVQKRA9EZ1Y/01KYQFPXJNXZYTFVZRANMD596Q.jpg)
+
+stdout | test/integration/persona-seed.test.ts > el seed REAL materializa FOTOS para la persona batch-capable (T5.19, Test B) > cada reference_image de una persona batch-capable es una FOTO (supera el floor de entropía)
+seed: persona «Lucía (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQFPXJS3FXWRCBHWDSS98GS/01KYQFPXNZRT0AHDPAX8RVS5QA.jpg)
+
+stdout | test/integration/persona-seed.test.ts > el seed REAL materializa FOTOS para la persona batch-capable (T5.19, Test B) > cada reference_image de una persona batch-capable es una FOTO (supera el floor de entropía)
+seed: persona «Lucía (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQFPXJS3FXWRCBHWDSS98GS/01KYQFPXS7C05Q93R8WQ3V684A.jpg)
+
+stdout | test/integration/persona-seed.test.ts > el seed REAL materializa FOTOS para la persona batch-capable (T5.19, Test B) > cada reference_image de una persona batch-capable es una FOTO (supera el floor de entropía)
+seed: persona «Marcus (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQFPXSAGT6M2SWVFRVEQ0HJ/01KYQFPXWFYNMR0KRSFXP761C4.jpg)
+
+stdout | test/integration/persona-seed.test.ts > el seed REAL materializa FOTOS para la persona batch-capable (T5.19, Test B) > cada reference_image de una persona batch-capable es una FOTO (supera el floor de entropía)
+seed: persona «Marcus (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQFPXSAGT6M2SWVFRVEQ0HJ/01KYQFPXZPVH9FKYD16G2JQ1ZS.jpg)
+
+stdout | test/integration/persona-seed.test.ts > el seed REAL materializa FOTOS para la persona batch-capable (T5.19, Test B) > cada reference_image de una persona batch-capable es una FOTO (supera el floor de entropía)
+seed: persona «Nerea (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQFPXZVMQJXZ8NCY1M880G0/01KYQFPY33MYG26TF4434KX5FZ.jpg)
+
+stdout | test/integration/persona-seed.test.ts > el seed REAL materializa FOTOS para la persona batch-capable (T5.19, Test B) > cada reference_image de una persona batch-capable es una FOTO (supera el floor de entropía)
+seed: persona «Nerea (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQFPXZVMQJXZ8NCY1M880G0/01KYQFPY69PMTDPBGM7ABJJA3Y.jpg)
+
+stdout | test/integration/persona-seed.test.ts > el seed REAL materializa FOTOS para la persona batch-capable (T5.19, Test B) > cada reference_image de una persona batch-capable es una FOTO (supera el floor de entropía)
+seed: persona «Carmen (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQFPY6DNQNSMPH6DWFAQD6W/01KYQFPY9JC51E4JS4R36E1S84.jpg)
+
+stdout | test/integration/persona-seed.test.ts > el seed REAL materializa FOTOS para la persona batch-capable (T5.19, Test B) > cada reference_image de una persona batch-capable es una FOTO (supera el floor de entropía)
+seed: persona «Carmen (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQFPY6DNQNSMPH6DWFAQD6W/01KYQFPYCV5PRMGJ6ZH0KQR518.jpg)
+
+stdout | test/integration/persona-seed.test.ts > el seed REAL materializa FOTOS para la persona batch-capable (T5.19, Test B) > cada reference_image de una persona batch-capable es una FOTO (supera el floor de entropía)
+seed: persona «Alex (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQFPYCZ6256ZQKEPH16EKNB/01KYQFPYG4EH3CFX2X8NXTVX49.jpg)
+
+stdout | test/integration/persona-seed.test.ts > el seed REAL materializa FOTOS para la persona batch-capable (T5.19, Test B) > cada reference_image de una persona batch-capable es una FOTO (supera el floor de entropía)
+seed: persona «Alex (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQFPYCZ6256ZQKEPH16EKNB/01KYQFPYKDHM8CF5V8TJQSSMYB.jpg)
+
+stdout | test/integration/persona-seed.test.ts > el seed REAL materializa FOTOS para la persona batch-capable (T5.19, Test B) > cada reference_image de una persona batch-capable es una FOTO (supera el floor de entropía)
+seed: persona «Rosa (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQFPYKGWDY0CXXHWNN03W2A/01KYQFPYPPYJ5NQYBNA2QTWN7D.jpg)
+
+stdout | test/integration/persona-seed.test.ts > el seed REAL materializa FOTOS para la persona batch-capable (T5.19, Test B) > cada reference_image de una persona batch-capable es una FOTO (supera el floor de entropía)
+seed: persona «Rosa (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQFPYKGWDY0CXXHWNN03W2A/01KYQFPYSY36T87SB7PJX5487R.jpg)
+
+stdout | test/integration/persona-seed.test.ts > el seed REAL materializa FOTOS para la persona batch-capable (T5.19, Test B) > cada reference_image de una persona batch-capable es una FOTO (supera el floor de entropía)
+seed: persona «Priya (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQFPYT12TGGWGQ9AYSMANN5/01KYQFPYX8M60PHPEZDTA18A7P.jpg)
+
+stdout | test/integration/persona-seed.test.ts > el seed REAL materializa FOTOS para la persona batch-capable (T5.19, Test B) > cada reference_image de una persona batch-capable es una FOTO (supera el floor de entropía)
+seed: persona «Priya (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQFPYT12TGGWGQ9AYSMANN5/01KYQFPZ0HV9FRS29627M6ZGEW.jpg)
+
+stdout | test/integration/persona-seed.test.ts > el seed REAL materializa FOTOS para la persona batch-capable (T5.19, Test B) > cada reference_image de una persona batch-capable es una FOTO (supera el floor de entropía)
+seed: persona «David (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQFPZ0MVM8NBZKRNQ58CA31/01KYQFPZ3TT7M1ZYPQC879G45R.jpg)
+
+stdout | test/integration/persona-seed.test.ts > el seed REAL materializa FOTOS para la persona batch-capable (T5.19, Test B) > cada reference_image de una persona batch-capable es una FOTO (supera el floor de entropía)
+seed: persona «David (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQFPZ0MVM8NBZKRNQ58CA31/01KYQFPZ74HYPFC6J5RK8HWRHX.jpg)
+
+stdout | test/integration/persona-seed.test.ts > el seed REAL materializa FOTOS para la persona batch-capable (T5.19, Test B) > cada reference_image de una persona batch-capable es una FOTO (supera el floor de entropía)
+seed: persona «Chloe (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQFPZ78SB1XRAHHDS6NWHQK/01KYQFPZAEXD2GGDTZR2QVJ88Y.jpg)
+
+stdout | test/integration/persona-seed.test.ts > el seed REAL materializa FOTOS para la persona batch-capable (T5.19, Test B) > cada reference_image de una persona batch-capable es una FOTO (supera el floor de entropía)
+seed: persona «Chloe (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQFPZ78SB1XRAHHDS6NWHQK/01KYQFPZDQ8J0X40BM1SP1XF7C.jpg)
+
+stdout | test/integration/persona-seed.test.ts > el seed REAL materializa FOTOS para la persona batch-capable (T5.19, Test B) > cada reference_image de una persona batch-capable es una FOTO (supera el floor de entropía)
+seed: persona «Kenji (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQFPZDTBTRHNREJFFH07PRX/01KYQFPZH0N40H5AYFM08SCXD0.jpg)
+
+stdout | test/integration/persona-seed.test.ts > el seed REAL materializa FOTOS para la persona batch-capable (T5.19, Test B) > cada reference_image de una persona batch-capable es una FOTO (supera el floor de entropía)
+seed: persona «Kenji (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYQFPZDTBTRHNREJFFH07PRX/01KYQFPZM6QEBS4Y2XQ8M0EZVK.jpg)
+
+ ❯ |db:integration| test/integration/persona-seed.test.ts (5 tests | 1 failed) 9235ms
+     × cada reference_image de una persona batch-capable es una FOTO (supera el floor de entropía) 2617ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |db:integration| test/integration/persona-seed.test.ts > el seed REAL materializa FOTOS para la persona batch-capable (T5.19, Test B) > cada reference_image de una persona batch-capable es una FOTO (supera el floor de entropía)
+AssertionError: «Maya» batch-capable pero su reference «personas/01KYQFPX4152HNQGVQKRA9EZ1Y/01KYQFPX8WEHAXDNPDYD5D5PN0.jpg» tiene entropía 1.460 < floor 5: es un placeholder abstracto, N7c la animaría como sujeto alucinado: expected 1.4602638409228348 to be greater than 5
+ ❯ test/integration/persona-seed.test.ts:285:11
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 4 passed (5)
+   Start at  19:45:33
+   Duration  11.93s (transform 242ms, setup 7ms, import 818ms, tests 9.23s, environment 0ms)
+
+undefined
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/db:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run --config vitest.config.integration.ts test/integration/persona-seed.test.ts

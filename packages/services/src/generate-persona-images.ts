@@ -41,7 +41,11 @@ import {
 import { newUlid } from '@ugc/core/contracts';
 import { ModelCostSchema } from '@ugc/core/gallery';
 import { buildPersonaPortraitPrompt, REFERENCE_FRAMINGS } from '@ugc/core/persona';
-import { validateReferenceImage } from '@ugc/core/persona/server';
+import {
+  NORMALIZED_REFERENCE_MIME,
+  normalizeReferenceImage,
+  validateReferenceImage,
+} from '@ugc/core/persona/server';
 import type { Logger, StorageAdapter } from '@ugc/core';
 import {
   addReferenceImage,
@@ -319,7 +323,11 @@ async function generateFraming(
     // Cabeza común (submit→poll→download). Parser TOLERANTE: NB2/edit REAL emite `width:null, height:null`
     // (nulls que el parser estricto rechaza); aquí NO facturamos por megapíxel y releemos las dims DEL
     // FICHERO abajo (`validateReferenceImage`), así que solo exigimos la URL descargable.
-    const { output, bytes, mime, statusPayload } = await submitPollDownload(fal, db, {
+    const {
+      output,
+      bytes: rawBytes,
+      statusPayload,
+    } = await submitPollDownload(fal, db, {
       generationId: gen.id,
       endpoint: args.nb2Profile.falEndpoint,
       prompt: args.framing.prompt,
@@ -327,15 +335,24 @@ async function generateFraming(
       extract: extractImageUrlOutput,
     });
 
-    // DEFENSA ≥2K (§11): el MISMO guard que el upload manual/seed, leyendo dimensiones DEL FICHERO. Si NB2
-    // devolviera <2048, lanza — nunca se persiste una referencia que la UI rechazaría.
-    const dims = await validateReferenceImage(bytes);
+    // DEFENSA ≥2K (§11) — SOBRE LOS BYTES CRUDOS: el MISMO guard que el upload manual/seed, leyendo el LADO
+    // LARGO DEL FICHERO. Si NB2 devolviera <2048, lanza — nunca se persiste una referencia inválida. Va ANTES
+    // de normalizar; el guard mira max(w,h), invariante a que la normalización luego transponga W/H.
+    await validateReferenceImage(rawBytes);
 
-    // Guardar el fichero en NUESTRO storage (fuera de la tx: I/O de red).
+    // NORMALIZAR para que N7c pueda DESCARGARLA (T5.19, fix del FAIL de VERIFY): NB2 devuelve PNGs de ~6 MB
+    // que fal/OmniHuman NO puede descargar (`file_download_error`, 422) — este es el origen EXACTO de los
+    // bytes que la 1ª entrega commiteó. Aplica orientación EXIF, recodifica a JPEG y reduce hacia 2K si hace
+    // falta. Mismo invariante que el seed y el upload por CRUD: ninguna reference se persiste inconsumible.
+    // Devuelve las dims REALES de salida — se persisten ESAS en la fila `asset`, no las del crudo.
+    const normalized = await normalizeReferenceImage(rawBytes);
+
+    // Guardar el fichero NORMALIZADO en NUESTRO storage (fuera de la tx: I/O de red).
     const assetId = newUlid();
-    const ext = mime.includes('jpeg') ? 'jpg' : 'png';
-    const storageKey = `personas/${args.personaId}/${assetId}.${ext}`;
-    const put = await storage.put(storageKey, bytes, { mime });
+    const storageKey = `personas/${args.personaId}/${assetId}.jpg`;
+    const put = await storage.put(storageKey, normalized.bytes, {
+      mime: NORMALIZED_REFERENCE_MIME,
+    });
 
     // COSTE del encuadre (NB2 factura por IMAGEN, no por megapíxel).
     const cost = falPerImageCostOf({
@@ -353,11 +370,11 @@ async function generateFraming(
         id: assetId,
         kind: 'reference_image',
         storageKey,
-        mime,
+        mime: NORMALIZED_REFERENCE_MIME,
         bytes: put.bytes,
         checksum: put.checksum,
-        width: dims.width,
-        height: dims.height,
+        width: normalized.width,
+        height: normalized.height,
         generationId: gen.id,
       });
       await recordCost(tx, {
@@ -383,8 +400,8 @@ async function generateFraming(
         generationId: gen.id,
         assetId,
         framingId: args.framing.id,
-        width: dims.width,
-        height: dims.height,
+        width: normalized.width,
+        height: normalized.height,
         costCents: cost.cents,
       },
       'reference-image IA de persona generada, validada ≥2K y añadida',
@@ -392,8 +409,8 @@ async function generateFraming(
     return {
       assetId,
       framingId: args.framing.id,
-      width: dims.width,
-      height: dims.height,
+      width: normalized.width,
+      height: normalized.height,
       costCents: cost.cents,
     };
   } catch (err) {

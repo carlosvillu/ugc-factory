@@ -1,0 +1,5 @@
+test:e2e:phases = playwright f1-brief + f2-scripts + f4-generation (3 spec files, 4 test cases)
+--- passing tests ---
+✓  4 [chromium] › e2e/phases/f4-generation.spec.ts:95:3 › F4 · journey de generación: CP3 aprobado → sub-DAG N6→N7a-e por variante en el canvas › el canvas expande N7 por variante, expone resolvedPrompt/coste/previews y recupera un sub-step con retry granular @f4 @phase 
+--- summary ---
+  4 passed (1.6m)

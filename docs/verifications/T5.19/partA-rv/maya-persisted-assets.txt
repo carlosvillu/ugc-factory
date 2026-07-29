@@ -1,0 +1,7 @@
+             id             |    mime    | bytes  | width | height |                            storage_key                             
+----------------------------+------------+--------+-------+--------+--------------------------------------------------------------------
+ 01KYQFG2BB3YWKB24F4FK8W2Y9 | image/jpeg | 305541 |       |        | personas/01KYQFG24TAX9PWYK5PC2KKB85/01KYQFG2BB3YWKB24F4FK8W2Y9.jpg
+ 01KYQFG2HXHZEPYQMYSPEC7E0H | image/jpeg | 290262 |       |        | personas/01KYQFG24TAX9PWYK5PC2KKB85/01KYQFG2HXHZEPYQMYSPEC7E0H.jpg
+ 01KYQFG2QJP1Y4DF3P98KH12KE | image/jpeg | 193634 |       |        | personas/01KYQFG24TAX9PWYK5PC2KKB85/01KYQFG2QJP1Y4DF3P98KH12KE.jpg
+(3 rows)
+

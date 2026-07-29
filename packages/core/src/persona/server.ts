@@ -17,7 +17,22 @@
 // El guard ≥2K (§11 identity lock): LEE las dimensiones del fichero con sharp. Un caller no puede
 // mentirle diciendo «mide 2048». Lo aplican el endpoint de upload y el seed — el mismo camino.
 export { validateReferenceImage } from './validate-reference-image';
-// Las 2 personas placeholder del seed + el generador de sus imágenes de referencia sintéticas
-// (PNGs ≥2K REALES; decisión del usuario 2026-07-12: él sube sus caras reales por el CRUD).
-export { PERSONA_SEEDS, type PersonaSeed } from './seed-data';
-export { makeSyntheticReferenceImage } from './reference-image';
+// Las personas del seed + el predicado que deriva quién es batch-capable (T5.19: quién DEBE tener fotos).
+export { PERSONA_SEEDS, isSeedBatchCapable, type PersonaSeed } from './seed-data';
+// El generador de PNGs sintéticos ≥2K con sharp (placeholders abstractos; las 10 personas de ejemplo) +
+// el normalizador que hace una reference DESCARGABLE por N7c (JPEG q85, T5.19 fix del FAIL de VERIFY).
+export {
+  makeSyntheticReferenceImage,
+  normalizeReferenceImage,
+  NORMALIZED_REFERENCE_MIME,
+  type NormalizedReferenceImage,
+} from './reference-image';
+// T5.19: carga de las FOTOS IA commiteadas (fixtures) para la persona batch-capable + la métrica de
+// entropía con la que el gate exige que una reference sea una foto (no un placeholder abstracto) + el techo
+// de tamaño que la hace descargable por N7c.
+export {
+  loadReferenceFixture,
+  referenceImageEntropy,
+  REFERENCE_PHOTO_ENTROPY_FLOOR,
+  REFERENCE_MAX_BYTES,
+} from './reference-fixtures';

@@ -1,0 +1,7 @@
+Lucía (placeholder)  entropy=1.410 floor=5 => PLACEHOLDER (fail) [personas/01KYQ8J1J4J0C14D5X6262GV9...]
+Lucía (placeholder)  entropy=1.410 floor=5 => PLACEHOLDER (fail) [personas/01KYQ8J1J4J0C14D5X6262GV9...]
+Maya                 entropy=7.142 floor=5 => PHOTO (pass) [personas/01KYQ8J1G50ZJK5M6XX52HRRC...]
+Maya                 entropy=6.928 floor=5 => PHOTO (pass) [personas/01KYQ8J1G50ZJK5M6XX52HRRC...]
+Maya                 entropy=6.443 floor=5 => PHOTO (pass) [personas/01KYQ8J1G50ZJK5M6XX52HRRC...]
+
+MAYA VERDICT: ALL references PHOTOS above floor => GO for N7c spend

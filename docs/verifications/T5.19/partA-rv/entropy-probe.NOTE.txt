@@ -1,0 +1,11 @@
+La medida de entropia (entropy-measured.txt) se obtuvo con un probe temporal identico a este,
+colocado en packages/core/src/persona/__rv_probe.ts y ejecutado DESDE packages/core (donde sharp
+resuelve). Se borro tras la verificacion (no deja rastro en el arbol de producto). Reproducir:
+
+  # en packages/core/, con ASSETS_DIR apuntando al almacen del seed de cero:
+  ASSETS_DIR=/tmp/ugc-t519rv-assets pnpm exec tsx <probe> \
+    personas/<mayaId>/<assetId>.jpg   # para cada reference persistida de Maya
+
+  El probe carga los bytes del fichero, mide sharp().stats().entropy via
+  referenceImageEntropy() y compara con REFERENCE_PHOTO_ENTROPY_FLOOR (5.0) y
+  REFERENCE_MAX_BYTES (1 MiB), ambos de packages/core/src/persona/reference-fixtures.ts.

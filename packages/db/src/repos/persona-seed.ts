@@ -4,20 +4,27 @@
 // `StorageAdapter` (los ficheros). Es un caso de uso compuesto —persona + assets + ficheros—,
 // y el sitio natural es aquí (db es quien ya cablea el StorageAdapter local, adapters/).
 //
-// LA DECISIÓN DE ALCANCE DEL USUARIO (2026-07-12) EN UNA FRASE: las 2 personas del seed son
+// LA DECISIÓN DE ALCANCE DEL USUARIO (2026-07-12) EN UNA FRASE: las personas de EJEMPLO del seed son
 // PLACEHOLDERS con imágenes SINTÉTICAS ≥2K; el usuario subirá sus caras reales por el propio
 // CRUD de `/personas`, sin tocar código. Consecuencias que este fichero implementa:
 //
-//   · las imágenes se generan con `makeSyntheticReferenceImage` (sharp, PNG real de 2048 px de
-//     lado largo) y pasan por `validateReferenceImage` — el MISMO guard que el endpoint de
-//     upload. El seed NO tiene una puerta trasera: si el umbral ≥2K subiera, el seed fallaría.
+//   · las imágenes de una persona PLACEHOLDER se generan con `makeSyntheticReferenceImage` (sharp,
+//     PNG abstracto de ≥2K) y pasan por `validateReferenceImage` — el MISMO guard que el endpoint
+//     de upload. El seed NO tiene una puerta trasera: si el umbral ≥2K subiera, el seed fallaría.
 //     (Principio 9 de la skill testing: el arnés no puede ser más cómodo que la realidad.)
+//   · ⚠ T5.19 — una persona BATCH-CAPABLE (la que declara `referenceFixtures`, hoy solo Maya) NO recibe
+//     el dibujo abstracto: carga FOTOS IA reales commiteadas como fixtures. Su reference llega a N7c
+//     (avatar), y un placeholder abstracto ahí producía un sujeto alucinado. Las fotos pasan el MISMO
+//     `validateReferenceImage` ≥2K. Las placeholder SIGUEN con sharp: su path no cambia (no rompe T5.15).
 //   · IDEMPOTENTE de verdad: la persona se upsertea por su clave natural (el nombre) y sus
 //     imágenes SOLO se generan si la persona es NUEVA. Re-sembrar no duplica assets ni pisa las
 //     imágenes reales que el usuario haya subido — que es justo lo que el usuario va a hacer.
 //   · $0: cero llamadas a fal/Anthropic. La generación IA de referencias es F4.
 import {
+  loadReferenceFixture,
   makeSyntheticReferenceImage,
+  normalizeReferenceImage,
+  NORMALIZED_REFERENCE_MIME,
   validateReferenceImage,
   type PersonaSeed,
 } from '@ugc/core/persona/server';
@@ -71,7 +78,9 @@ export async function seedPersonas(
   let imagesFailed = 0;
 
   for (const seed of seeds) {
-    const { referenceImageCount, ...body } = seed;
+    // `referenceImageCount`/`referenceFixtures` son metadatos de SEMBRADO, no columnas de `persona`:
+    // se sacan del `body` que va a `upsertPersonaByName`.
+    const { referenceImageCount, referenceFixtures, ...body } = seed;
     const { persona: row, created } = await upsertPersonaByName(db, body, {
       onConflict: opts.onConflict,
     });
@@ -89,22 +98,39 @@ export async function seedPersonas(
     // `onImageError` el error se propaga (fail-fast de `pnpm seed`).
     try {
       for (let i = 0; i < referenceImageCount; i++) {
-        // 1) El fichero: un PNG sintético de verdad, de 2048 px de lado largo.
-        const bytes = await makeSyntheticReferenceImage(row.name.length + i);
+        // 1) El fichero. Una persona BATCH-CAPABLE (declara `referenceFixtures`, T5.19) carga una FOTO IA
+        //    commiteada (JPEG); una placeholder dibuja un PNG abstracto con sharp.
+        const fixtureName = referenceFixtures?.[i];
+        const rawBytes =
+          fixtureName !== undefined
+            ? await loadReferenceFixture(fixtureName)
+            : await makeSyntheticReferenceImage(row.name.length + i);
+        const source = fixtureName !== undefined ? `foto IA «${fixtureName}»` : 'imagen sintética';
 
-        // 2) EL MISMO GUARD QUE EL NAVEGADOR: lee las dimensiones DEL FICHERO y exige ≥2K. El
-        //    seed no se lo salta — si el PNG generado fuese pequeño, `pnpm seed` reventaría aquí.
-        const dims = await validateReferenceImage(bytes);
+        // 2) EL MISMO GUARD QUE EL NAVEGADOR: lee el LADO LARGO DEL FICHERO y exige ≥2K, sobre los bytes
+        //    CRUDOS. El seed no se lo salta — si la imagen fuese pequeña o no decodificable, revienta aquí.
+        //    El guard mira max(w,h), invariante a que la normalización luego transponga W/H por orientación.
+        await validateReferenceImage(rawBytes);
 
-        // 3) Al almacén + a la tabla `asset`, exactamente como hace el endpoint de upload.
+        // 3) NORMALIZAR para que N7c pueda DESCARGARLA (T5.19, fix del FAIL de VERIFY): aplica orientación
+        //    EXIF, recodifica a JPEG y — si hiciera falta — reduce hacia 2K para caer bajo el techo. Es el
+        //    MISMO paso que el upload por CRUD y la generación IA — un invariante único: NINGUNA reference se
+        //    persiste con bytes que fal no pueda descargar. Sobre un fixture ya-JPEG sin tag de orientación es
+        //    IDEMPOTENTE (mismas dims y entropía; el re-encode de mozjpeg NO garantiza bytes idénticos).
+        //    Devuelve las dims REALES de salida — se persisten ESAS.
+        const normalized = await normalizeReferenceImage(rawBytes);
+
+        // 4) Al almacén + a la tabla `asset`, exactamente como hace el endpoint de upload (mime JPEG).
         const assetId = newUlid();
-        const storageKey = `personas/${row.id}/${assetId}.png`;
-        const put = await storage.put(storageKey, bytes, { mime: 'image/png' });
+        const storageKey = `personas/${row.id}/${assetId}.jpg`;
+        const put = await storage.put(storageKey, normalized.bytes, {
+          mime: NORMALIZED_REFERENCE_MIME,
+        });
         await createAsset(db, {
           id: assetId,
           kind: 'reference_image',
           storageKey,
-          mime: 'image/png',
+          mime: NORMALIZED_REFERENCE_MIME,
           bytes: put.bytes,
           checksum: put.checksum,
         });
@@ -113,7 +139,7 @@ export async function seedPersonas(
 
         // Traza mínima: el usuario ve en el log que las imágenes son de verdad ≥2K.
         console.log(
-          `seed: persona «${row.name}» ← imagen sintética ${String(dims.width)}×${String(dims.height)} px (${storageKey})`,
+          `seed: persona «${row.name}» ← ${source} ${String(normalized.width)}×${String(normalized.height)} px (${storageKey})`,
         );
       }
     } catch (err) {

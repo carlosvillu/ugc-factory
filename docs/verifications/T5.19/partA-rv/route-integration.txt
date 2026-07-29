@@ -1,0 +1,21 @@
+ ✓ |web:integration| test/integration/api/personas.test.ts > CRUD de /api/personas (T2.0) > sin sesión ⇒ 401 antes de tocar nada 16ms
+ ✓ |web:integration| test/integration/api/personas.test.ts > CRUD de /api/personas (T2.0) > POST crea la persona con su voice_map es/en (con PROVEEDOR) y GET la devuelve igual 49ms
+ ✓ |web:integration| test/integration/api/personas.test.ts > CRUD de /api/personas (T2.0) > POST con un voice_map de forma inválida (voiceId sin provider) ⇒ 400 validation_error 5ms
+ ✓ |web:integration| test/integration/api/personas.test.ts > CRUD de /api/personas (T2.0) > POST con un nombre que ya existe ⇒ 400 anclado al campo `name` (no un 500) 8ms
+ ✓ |web:integration| test/integration/api/personas.test.ts > CRUD de /api/personas (T2.0) > PATCH edita parcialmente (y no toca lo que no viene) 16ms
+ ✓ |web:integration| test/integration/api/personas.test.ts > CRUD de /api/personas (T2.0) > PATCH con un body vacío ⇒ 200 no-op (no un 500) 8ms
+ ✓ |web:integration| test/integration/api/personas.test.ts > CRUD de /api/personas (T2.0) > PATCH con un body con SOLO claves desconocidas (Zod las descarta ⇒ {}) ⇒ 200 no-op (no un 500) 7ms
+ ✓ |web:integration| test/integration/api/personas.test.ts > CRUD de /api/personas (T2.0) > GET/PATCH/DELETE de una persona inexistente ⇒ 404 5ms
+ ✓ |web:integration| test/integration/api/personas.test.ts > CRUD de /api/personas (T2.0) > DELETE borra la persona, sus filas asset y sus FICHEROS del almacén 120ms
+ ✓ |web:integration| test/integration/api/personas.test.ts > upload de imágenes de referencia: EL GUARD ≥2K (§11 identity lock) > una imagen con el lado largo ≥2K se ACEPTA: 201, fila asset, fichero, y la persona la lista 110ms
+ ✓ |web:integration| test/integration/api/personas.test.ts > upload de imágenes de referencia: EL GUARD ≥2K (§11 identity lock) > una foto en retrato (EXIF Orientation=6) se guarda ORIENTADA: la respuesta devuelve dims transpuestas 312ms
+ ✓ |web:integration| test/integration/api/personas.test.ts > upload de imágenes de referencia: EL GUARD ≥2K (§11 identity lock) > una imagen <2K es RECHAZADA con un mensaje claro, y NO deja ni fila ni fichero 13ms
+ ✓ |web:integration| test/integration/api/personas.test.ts > upload de imágenes de referencia: EL GUARD ≥2K (§11 identity lock) > un fichero que NO es una imagen ⇒ 400 (no un 500) 8ms
+ ✓ |web:integration| test/integration/api/personas.test.ts > upload de imágenes de referencia: EL GUARD ≥2K (§11 identity lock) > mime fuera de la allowlist ⇒ 400 sin llegar a decodificar 6ms
+ ✓ |web:integration| test/integration/api/personas.test.ts > upload de imágenes de referencia: EL GUARD ≥2K (§11 identity lock) > dos imágenes ≥2K se acumulan EN ORDEN (§11: 2–3 encuadres del mismo sujeto) 208ms
+ ✓ |web:integration| test/integration/api/personas.test.ts > upload de imágenes de referencia: EL GUARD ≥2K (§11 identity lock) > DELETE de una imagen la quita de la persona y borra su fichero 115ms
+ ✓ |web:integration| test/integration/api/personas.test.ts > GET /api/personas/candidates?avatar_hint= (§11: N4 sugiere personas compatibles) > devuelve la persona CORRECTA para un avatar_hint compatible 9ms
+ ✓ |web:integration| test/integration/api/personas.test.ts > GET /api/personas/candidates?avatar_hint= (§11: N4 sugiere personas compatibles) > devuelve NINGUNA para un avatar_hint incompatible 6ms
+ ✓ |web:integration| test/integration/api/personas.test.ts > GET /api/personas/candidates?avatar_hint= (§11: N4 sugiere personas compatibles) > sin avatar_hint ⇒ 400 (pedir candidatas «para nada» no significa nada) 4ms
+ Test Files  1 passed (1)
+      Tests  19 passed (19)

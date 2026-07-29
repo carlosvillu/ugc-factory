@@ -1,0 +1,8 @@
+[24MP] input PNG bytes=72131563 (>1MiB? true)
+[24MP] normalized: returned dims=2048x1365 | file dims=2048x1365 fmt=jpeg
+        bytes=881154 <=1MiB? true | longEdge=2048 >=2K? true | entropy=5.819 >=floor? true
+        returned-dims == file-dims? true
+
+[EXIF6] input JPEG stored 2752x2048 with Orientation=6
+[EXIF6] normalized: returned dims=1524x2048 | file dims=1524x2048 orientation-tag=undefined
+        transposed to portrait (2048x2752)? false | returned==file? true

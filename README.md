@@ -5,7 +5,7 @@
 **Herramienta personal, mono-usuario y self-hosted.** No es un SaaS: no tiene billing, ni multi-tenancy, ni onboarding. Es la máquina de anuncios de un único operador técnico, y ese recorte es deliberado — permite invertir toda la complejidad en lo que de verdad importa.
 
 > [!IMPORTANT]
-> **Estado: en construcción (72 de 107 tareas, ~67 %).** Hoy el sistema **analiza productos, planifica lotes de anuncios, escribe sus guiones (aprobables en CP3), compila prompts auditables desde su galería facetada de templates y genera los assets de media en fal.ai** — una variante completa su sub-DAG N7 (product shots, voz, avatar, b-roll, música) con coste real por sub-step visible en el canvas. **Lo que aún no hace: componer esos assets en el vídeo final** (F5, FFmpeg: concat, mezcla de audio con ducking, subtítulos karaoke, C2PA), publicarlos y leer sus métricas. Detalle honesto en [Estado del proyecto](#estado-del-proyecto).
+> **Estado: en construcción (107 de 129 tareas, ~83 %).** Hoy el sistema **analiza productos, planifica lotes de anuncios, escribe sus guiones (aprobables en CP3), compila prompts auditables desde su galería facetada de templates, genera los assets de media en fal.ai y los compone en el vídeo final 9:16** — una variante recorre su sub-DAG N7 (product shots, voz, avatar, b-roll, música) y se ensambla con FFmpeg (concat, mezcla de audio con ducking, subtítulos karaoke palabra a palabra) firmada con C2PA y con QA automático, todo con coste real por sub-step visible en el canvas. Un máster real end-to-end está compuesto y firmado. **Lo que aún no hace: publicar en TikTok/Instagram y leer sus métricas** (F6–F7). _(Matiz honesto de F5: el pipeline compone másters reales, pero la matriz completa de ≥6 variantes en una sola tanda no se ha ejercido de extremo a extremo por presupuesto de generación — ver [Estado del proyecto](#estado-del-proyecto) y la tarea T5.9-full.)_ Detalle honesto en [Estado del proyecto](#estado-del-proyecto).
 
 ---
 
@@ -149,7 +149,8 @@ flowchart TD
     style CP2 fill:#8b6914,color:#fff
     style CP3 fill:#8b6914,color:#fff
     style CP4 fill:#8b6914,color:#fff
-    style N8 fill:#6b2d5c,color:#fff
+    style N10 fill:#6b2d5c,color:#fff
+    style N11 fill:#6b2d5c,color:#fff
 ```
 
 Los nodos en **amarillo** son los checkpoints: el pipeline se congela y espera. Los **morados** son los que aún no están construidos.
@@ -170,7 +171,7 @@ El desarrollo va por fases, tarea a tarea, con verificación observable en cada 
 
 <!-- STATUS-TABLE:BEGIN — generado por `pnpm readme:status`, no editar a mano -->
 
-**106 de 129 tareas cerradas (82 %).**
+**107 de 129 tareas cerradas (83 %).**
 
 | Fase                                                  | Qué entrega                                                                         | Estado         |
 | ----------------------------------------------------- | ----------------------------------------------------------------------------------- | -------------- |
@@ -183,7 +184,7 @@ El desarrollo va por fases, tarea a tarea, con verificación observable en cada 
 | **F2b** · Deuda destapada por la verificación de T2.3 | Deuda destapada por la verificación de T2.3 (acordada con el usuario el 2026-07-14) | ✅ Completa    |
 | **F3** · Galería de prompts y compilador              | Templates facetados → prompts auditables                                            | ✅ Completa    |
 | **F4** · Generación fal.ai                            | Los assets de una variante, generados de verdad en fal.ai                           | ✅ Completa    |
-| **F5** · Composición, QA y export                     | El anuncio 9:16 completo, con subtítulos, C2PA y QA                                 | 🔨 31/32       |
+| **F5** · Composición, QA y export                     | El anuncio 9:16 completo, con subtítulos, C2PA y QA                                 | ✅ Completa    |
 | **F6** · Publicación                                  | Publicar en TikTok/IG y crear el ad draft                                           | ⬜ No empezada |
 | **F7** · Medición y flywheel                          | Métricas por variante + kill/scale + scoring                                        | ⬜ No empezada |
 | **F8** · Operación y extensiones                      | Backups, retención, observabilidad, MCP                                             | ⬜ No empezada |

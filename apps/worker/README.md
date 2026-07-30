@@ -39,7 +39,7 @@ Un registro `node_key → StepExecutor` (`executors/index.ts`):
 - **`generation.ts`** + **`generate-voice.ts`** / **`generate-avatar.ts`** / **`generate-broll.ts`** / **`generate-music.ts`** — el sub-DAG N7 (§7.2): `N7a` product shots (`ai_packshot`, flux-2), `N7b` voz (TTS + ASR con word timestamps), `N7c` avatar, `N7d` b-roll (i2v), `N7e` música (ace-step). Cáscaras finas sobre [`@ugc/services`](../../packages/services); cada una **paga fal de verdad** (lee `FAL_KEY` del entorno, submitea, pollea, descarga el asset a nuestro storage y registra el `cost_entry`). Dedup por content-hash (§9.6) para no re-pagar generaciones idénticas; los executors N7c/N7d derivan sus punteros cross-node del output de su dep de la MISMA variante (aislamiento por grafo).
 - **`demo.ts`** — una única implementación parametrizada (`sleepMs`, `failRate`, `hang`) registrada bajo varios `node_key`. Es el andamiaje que permite ejercitar el orquestador —retries, backoff, timeouts, checkpoints, cancelación— **sin gastar un céntimo en APIs reales**.
 
-Los executors de composición (FFmpeg) aún no existen: son la fase F5.
+- **`compose-variant.ts`** / **`qa-verdict.ts`** — `N8` composición (FFmpeg: normalización canónica, concat, mezcla de audio con ducking, subtítulos ASS karaoke, pase final y firma C2PA) y `N9` QA automático (ffprobe, LUFS, safe zones). Corren en la imagen de worker con ffmpeg/c2patool reales; N8 ensambla la `CompositionSpec` de la variante y persiste el máster con linaje transitivo a los N7 raw, N9 lee el `qa_report` y pausa en **CP4**. La fase F5 (composición y export) los construyó.
 
 ## El sweeper
 

@@ -10,13 +10,13 @@
 
 | Fase | Nombre | Entrega observable al cerrar la fase | Estado |
 |---|---|---|---|
-| F0 | Fundaciones | Un DAG de demo corre en el canvas en el VPS con checkpoints, SSE, credenciales y gasto registrado | ☐ |
-| FD | Design system | `/design-system` muestra tokens y ~26 componentes fieles a Claude Design (dark/light, 4 acentos), lint de adherencia activo y skill frontend actualizada — se ejecuta tras T0.1, antes de continuar F0 | ☐ |
-| F1 | Análisis | URL real (o texto libre) → ProductBrief editable aprobado en CP1 | ☐ |
+| F0 | Fundaciones | Un DAG de demo corre en el canvas en el VPS con checkpoints, SSE, credenciales y gasto registrado | ✅ |
+| FD | Design system | `/design-system` muestra tokens y ~26 componentes fieles a Claude Design (dark/light, 4 acentos), lint de adherencia activo y skill frontend actualizada — se ejecuta tras T0.1, antes de continuar F0 | ✅ |
+| F1 | Análisis | URL real (o texto libre) → ProductBrief editable aprobado en CP1 | ✅ |
 | F2 | Estrategia y guiones (incluye Personas v1 y recetas) | Brief → matriz con coste estimado → guiones aprobados en CP3 | ✅ |
-| F3 | Galería y compilador | Templates facetados + compilador que produce `resolvedPrompt` auditables | ☐ |
-| F4 | Generación fal | Todos los assets de una variante generados de verdad vía fal.ai | ☐ |
-| F5 | Composición y export | Anuncio completo 9:16 con captions karaoke, C2PA y QA descargable | ☐ |
+| F3 | Galería y compilador | Templates facetados + compilador que produce `resolvedPrompt` auditables | ✅ |
+| F4 | Generación fal | Todos los assets de una variante generados de verdad vía fal.ai | ✅ |
+| F5 | Composición y export | Anuncio completo 9:16 con captions karaoke, C2PA y QA descargable | ✅ *(cerrada por decisión del usuario 2026-07-30: la matriz ≥6 variantes COMPUESTA no se ejerció por presupuesto — retenida íntegra en T5.9-full ⛔; ver T5.9)* |
 | F6 | Publicación | Variante publicada en TikTok/IG y ad draft creado desde la herramienta | ☐ |
 | F7 | Medición y flywheel | Métricas por variante en el dashboard + kill/scale + scoring realimentado | ☐ |
 | F8 | Operación y extensiones | Backups, retención, presets por plataforma, observabilidad, MCP (backlog) | ☐ |
@@ -852,7 +852,8 @@ Decisiones del usuario (2026-07-07): la fase se ejecuta tras T0.1 y **antes** de
 - **Verificación**: arrancar un stack A MANO (`apps/web/scripts/e2e-stack.ts`, para que Playwright lo REUSE) y correr `test:e2e:phases` ≥5 veces consecutivas contra ESE MISMO stack vivo → `f4-generation` VERDE las 5. **Control negativo**: revertir el fix → la corrida 2 sobre el mismo stack vuelve a ROJO en `:199` (línea-base en el dossier de T5.21). ⚠ Un stack FRESCO por corrida OCULTA el bug (f4 pasa con o sin fix) — el escenario que muerde es el stack REUSADO/warm.
 - **Para instrumentar el worker en modo reuse** (gotcha del diagnóstico): Playwright antepone `[WebServer]` SOLO al stack que él gestiona; con `reuseExistingServer` no captura el stdout del stack arrancado a mano. Redirigir el stdout del propio `e2e-stack.ts` (`tsx scripts/e2e-stack.ts > stack.log 2>&1`, cwd=`apps/web`) para ver `generation_dedup_hit`.
 
-#### T5.9 · E2E de la fase — SPLIT en el techo de gasto (criterios 22.1 parcial, 22.2, 22.8)
+#### T5.9 · E2E de la fase — SPLIT en el techo de gasto (criterios 22.1 parcial, 22.2, 22.8) [x] 2026-07-30 — CERRADA POR DECISIÓN DEL USUARIO, ver docs/verifications/T5.9/report.md
+- **CIERRE (2026-07-30, decisión del usuario, regla 6)**: el usuario decidió **dar F5 por cerrada** sabiendo que solo falta gastar más ($35–150 incierto, fuera del techo ~$7,43) para ejercer la matriz COMPLETA. NO es un PASS de 22.1 a plena fuerza. Lo verificado: (a)-máster+C2PA real (`019f9fac-51cc`, 26/07), (a)-expresabilidad de matriz ($0), (c')/22.8 voces (PASS, deuda de acento cerrada por T5.26), captions/karaoke (T5.4), journey mockeado `f5-export` verde. Lo NO verificado (cerrado por decisión, no por prueba): la matriz ≥6 variantes COMPUESTA (el run del 26/07 la ejecutó y FALLÓ 0/6, `report-2026-07-26-FAIL-phase-a.md`) y la generación real de (b). Ambas se RETIENEN íntegras en **T5.9-full (⛔)** para que el README público no mienta. Anotado en PRD §22.1.
 - **RE-ESCALA (2026-07-30, decisión del usuario, regla 6)**: el usuario eligió re-diseñar la vara para que quepa en el saldo real (**$7,62**, confirmado 2026-07-30, ver [[techo-gasto-fal-hard]]) en vez de dejar T5.9 bloqueada. **NO se debilita 22.1 en silencio**: T5.9 cierra sobre lo VERIFICABLE en el techo; la vara original de 22.1 (≥6 variantes 2áng×3hooks) se PRESERVA íntegra en el nuevo **T5.9-full** (abajo), bloqueada-por-presupuesto. Anotado en PRD §22.1 (split, no rebaja).
 - **RESULTADO del run de gasto (2026-07-30, autorización usuario $3, ABORT DURO $3)** — ver `docs/verifications/T5.9/rescoped-2026-07-30/`. **NO se marca `[x]`: cierre PARCIAL por cláusula.** Coste real **$0,07** de $3 (2 TTS + 2 ASR; ledger `cost_entry` Δ7¢); techo $7,62 → **~$7,55**. Cero 403 (FAL_KEY sembrada en `app_setting`).
   - **(c')/22.8 SATISFECHA** ✅ (juicio humano del usuario 2026-07-30): 2 voiceovers N7b vía el resolver de PRODUCCIÓN (`resolveVoiceTriple`), es→Sarah `EXAVITQu4vr4xnSDxMaL` / en→Rachel del `voice_map` de Maya; assets **`tts_audio`** (no `voiceover` — el brief se equivocó de nombre, el código emite `tts_audio`) `completed` con word_timestamps NOT NULL (15,3s/17,4s). Control negativo MUERDE (idioma no mapeado → `PermanentStepError`, mismatch provider↔endpoint, voice_map vacío). **Matiz honesto**: la «correspondencia con el voice_map» está probada contra código de producción; la «naturalidad» se juzgó sobre narración escrita por el VERIFIER (0 filas `ad_script` en la BD re-sembrada). El usuario aceptó **con acento en es anotado como deuda** (ver T5.26 abajo). **Deuda T5.26 CERRADA 2026-07-30** (PASS, `d676828`): la voz `es` de Maya ya es de origen español (Afrodita `6Pd8chnUWvPJasJAi15C`), el acento queda resuelto para futuras variantes.

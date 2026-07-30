@@ -1,0 +1,19 @@
+fal secret seeded into scratch DB: false
+fal key loaded (len 69 ) | DB: postgres://ugc:ugc@localhost:55432/ugc_t526
+Maya voice_map (from re-seeded DB): {"en":{"label":"ElevenLabs · Rachel","voiceId":"Rachel","provider":"elevenlabs"},"es":{"label":"ElevenLabs · Afrodita","voiceId":"6Pd8chnUWvPJasJAi15C","provider":"elevenlabs"}}
+
+RESOLVED (production resolveVoiceTriple):
+  es -> {"ttsEndpoint":"fal-ai/elevenlabs/tts/eleven-v3","provider":"elevenlabs","voice":"6Pd8chnUWvPJasJAi15C"}
+✓ ASSERT OK: resolveVoiceTriple(premium, Maya.voice_map, 'es').voice === '6Pd8chnUWvPJasJAi15C' (Afrodita)
+
+=== N7b voiceover [es] via runGenerateAudio ===
+  ttsInputs: {"voice":"6Pd8chnUWvPJasJAi15C","language_code":"es"} | endpoint: fal-ai/elevenlabs/tts/eleven-v3
+  projected TTS ~= ceil(239/1000 * 10c) = 3c
+  N7b done [es]:
+    generation: 01KYSW3M8PRD8NKT4H0B0TG4D8 | fal_request_id: 019fb3c1-d376-7243-9ec7-c4cb601281f7
+    audio asset: 01KYSW3ZMRYWPVAJRSXWTNRS3W | dur 15.539 s | words 43
+    ttsCost 2 c | asrCost 1 c | reused false
+
+TOTAL fal spend (this script): 3c = $0.03
+AUDIO_ASSET_ID=01KYSW3ZMRYWPVAJRSXWTNRS3W
+DONE

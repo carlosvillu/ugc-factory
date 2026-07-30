@@ -1,0 +1,40 @@
+=== generation state ===
+             id             |  status   |            fal_request_id            
+----------------------------+-----------+--------------------------------------
+ 01KYSW3M8PRD8NKT4H0B0TG4D8 | completed | 019fb3c1-d376-7243-9ec7-c4cb601281f7
+(1 row)
+
+=== asset tts_audio + word_timestamps NOT NULL + duration ===
+             id             |   kind    |    mime    | duration_s | has_timestamps | ts_type 
+----------------------------+-----------+------------+------------+----------------+---------
+ 01KYSW3ZMRYWPVAJRSXWTNRS3W | tts_audio | audio/mpeg |     15.539 | t              | object
+(1 row)
+
+=== word_timestamps sample (first entry) ===
+ 
+
+=== cost_entry (ledger) ===
+ERROR:  column "created_at" does not exist
+LINE 1: SELECT provider, amount_cents, created_at FROM cost_entry OR...
+                                       ^
+=== word_timestamps keys + first word ===
+ text
+ words
+ language_code
+ language_probability
+
+ {                     +| 85
+     "end": 0.5,       +| 
+     "text": "Llevo",  +| 
+     "type": "word",   +| 
+     "start": 0.119,   +| 
+     "speaker_id": null+| 
+ }                      | 
+
+=== cost_entry rows ===
+ provider | amount_cents 
+----------+--------------
+ fal      |            2
+ fal      |            1
+(2 rows)
+

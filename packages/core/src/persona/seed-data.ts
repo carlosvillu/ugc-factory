@@ -314,10 +314,11 @@ const KENJI: PersonaSeed = {
 // persona que hace que el seed sea funcional de fábrica. Su personalidad NO abre con el aviso
 // administrativo del placeholder: no se pide al usuario que la borre. Es dato de catálogo real.
 //
-// ⚠ REPO PÚBLICO — LOS voiceId NO SON SECRETOS: `Rachel` (en) y `EXAVITQu4vr4xnSDxMaL` (Sarah, es) son
+// ⚠ REPO PÚBLICO — LOS voiceId NO SON SECRETOS: `Rachel` (en) y `6Pd8chnUWvPJasJAi15C` (Afrodita, es) son
 // IDENTIFICADORES PÚBLICOS del catálogo de ElevenLabs, no credenciales — no dan acceso a nada sin una
 // API key aparte (esa vive solo en `.env`/`app_setting`, nunca en el árbol). Ambos ya están validados
-// contra fal REAL por verifiers anteriores (fal los acepta). El endpoint TTS del tier premium es
+// contra fal REAL (fal los acepta): `Rachel` por verifiers anteriores, `6Pd8chnUWvPJasJAi15C` (Afrodita)
+// por el run de shortlist de T5.26 (2026-07-30, cero 422, `reused=false`). El endpoint TTS del tier premium es
 // `fal-ai/elevenlabs/tts/eleven-v3` (library/seed-data.ts) → mismo proveedor `elevenlabs`, así que
 // `resolveVoiceTriple` acepta este voice_map y N7b resuelve para es y en.
 /** La persona COMPLETA del seed: NO-placeholder, con imágenes de referencia Y voces reales de fal. Es la
@@ -336,8 +337,11 @@ const MAYA: PersonaSeed = {
   wardrobeNotes: 'Camiseta lisa de tono neutro y pelo suelto; mismo look en todos los CUTs.',
   voiceMap: {
     // voiceId REALES de ElevenLabs que fal acepta (validados contra fal real por verifiers anteriores):
-    // Sarah para es, Rachel para en. NO son placeholders → N7b resuelve sin 422.
-    es: { provider: 'elevenlabs', voiceId: 'EXAVITQu4vr4xnSDxMaL', label: 'ElevenLabs · Sarah' },
+    // Afrodita (origen español, España peninsular) para es, Rachel para en. NO son placeholders → N7b
+    // resuelve sin 422. Afrodita reemplaza a Sarah `EXAVITQu4vr4xnSDxMaL` (T5.26): Sarah es multilingüe de
+    // origen INGLÉS y el voiceover es sonaba con acento; Afrodita es de origen español (elegida por juicio
+    // humano del usuario 2026-07-30 en un A/B de 3 candidatas, validada contra fal real, cero 422).
+    es: { provider: 'elevenlabs', voiceId: '6Pd8chnUWvPJasJAi15C', label: 'ElevenLabs · Afrodita' },
     en: { provider: 'elevenlabs', voiceId: 'Rachel', label: 'ElevenLabs · Rachel' },
   },
   referenceImageCount: 3,

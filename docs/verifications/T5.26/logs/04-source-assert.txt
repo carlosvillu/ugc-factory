@@ -1,0 +1,4 @@
+=== SOURCE assertion (clause 1 pt 1): PERSONA_SEEDS Maya ===
+Maya.voiceMap.es = {"provider":"elevenlabs","voiceId":"6Pd8chnUWvPJasJAi15C","label":"ElevenLabs · Afrodita"}
+Maya.voiceMap.en = {"provider":"elevenlabs","voiceId":"Rachel","label":"ElevenLabs · Rachel"}
+SOURCE ASSERT OK

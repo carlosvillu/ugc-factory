@@ -1,0 +1,17 @@
+=== SELECT voice_map FROM persona WHERE name='Maya' (scratch ugc_t526, re-sembrada de cero) ===
+ name |                jsonb_pretty                
+------+--------------------------------------------
+ Maya | {                                         +
+      |     "en": {                               +
+      |         "label": "ElevenLabs · Rachel",   +
+      |         "voiceId": "Rachel",              +
+      |         "provider": "elevenlabs"          +
+      |     },                                    +
+      |     "es": {                               +
+      |         "label": "ElevenLabs · Afrodita", +
+      |         "voiceId": "6Pd8chnUWvPJasJAi15C",+
+      |         "provider": "elevenlabs"          +
+      |     }                                     +
+      | }
+(1 row)
+

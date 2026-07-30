@@ -1,0 +1,27 @@
+fal key loaded (len 69 )
+Maya voice_map: {"en":{"label":"ElevenLabs · Rachel","voiceId":"Rachel","provider":"elevenlabs"},"es":{"label":"ElevenLabs · Sarah","voiceId":"EXAVITQu4vr4xnSDxMaL","provider":"elevenlabs"}}
+
+RESOLVED (production resolveVoiceTriple):
+  es -> {"ttsEndpoint":"fal-ai/elevenlabs/tts/eleven-v3","provider":"elevenlabs","voice":"EXAVITQu4vr4xnSDxMaL"}
+  en -> {"ttsEndpoint":"fal-ai/elevenlabs/tts/eleven-v3","provider":"elevenlabs","voice":"Rachel"}
+
+=== N7b voiceover [es] ===
+  ttsInputs: {"voice":"EXAVITQu4vr4xnSDxMaL","language_code":"es"} | endpoint: fal-ai/elevenlabs/tts/eleven-v3
+  projected TTS ~= ceil(239/1000 * 10c) = 3c
+  N7b done [es]:
+    generation: 01KYSPQWD85C9S3KDPW2ABKNWT | fal_request_id: 019fb36b-f315-7a30-b78b-9b8e6b18b308
+    audio asset: 01KYSPRD3C0WZ483EAHRE55R1J | dur 15.319 s | words 43
+    ttsCost 2 c | asrCost 1 c | reused false
+    accumulated fal spend: 3c
+
+=== N7b voiceover [en] ===
+  ttsInputs: {"voice":"Rachel","language_code":"en"} | endpoint: fal-ai/elevenlabs/tts/eleven-v3
+  projected TTS ~= ceil(271/1000 * 10c) = 3c
+  N7b done [en]:
+    generation: 01KYSPRD41J6WZNFYJ6VCFMSVC | fal_request_id: 019fb36c-34d8-7691-b7d1-6bc425a02952
+    audio asset: 01KYSPRWD5W77H7AADD5QFHKX7 | dur 17.419 s | words 45
+    ttsCost 3 c | asrCost 1 c | reused false
+    accumulated fal spend: 7c
+
+TOTAL fal spend (this script): 7c = $0.07
+DONE

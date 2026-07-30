@@ -1,0 +1,90 @@
+id|jsonb_pretty
+01KYSPRD3C0WZ483EAHRE55R1J|[
+    {
+        "end": 0.299,
+        "text": "Llevo",
+        "type": "word",
+        "start": 0.099,
+        "speaker_id": null
+    },
+    {
+        "end": 0.359,
+        "text": " ",
+        "type": "spacing",
+        "start": 0.299,
+        "speaker_id": null
+    },
+    {
+        "end": 0.779,
+        "text": "semanas",
+        "type": "word",
+        "start": 0.359,
+        "speaker_id": null
+    },
+    {
+        "end": 0.839,
+        "text": " ",
+        "type": "spacing",
+        "start": 0.779,
+        "speaker_id": null
+    },
+    {
+        "end": 1.199,
+        "text": "probando",
+        "type": "word",
+        "start": 0.839,
+        "speaker_id": null
+    },
+    {
+        "end": 1.239,
+        "text": " ",
+        "type": "spacing",
+        "start": 1.199,
+        "speaker_id": null
+    }
+]
+01KYSPRWD5W77H7AADD5QFHKX7|[
+    {
+        "end": 0.199,
+        "text": "I",
+        "type": "word",
+        "start": 0.119,
+        "speaker_id": null
+    },
+    {
+        "end": 0.219,
+        "text": " ",
+        "type": "spacing",
+        "start": 0.199,
+        "speaker_id": null
+    },
+    {
+        "end": 0.299,
+        "text": "have",
+        "type": "word",
+        "start": 0.219,
+        "speaker_id": null
+    },
+    {
+        "end": 0.339,
+        "text": " ",
+        "type": "spacing",
+        "start": 0.299,
+        "speaker_id": null
+    },
+    {
+        "end": 0.479,
+        "text": "been",
+        "type": "word",
+        "start": 0.34,
+        "speaker_id": null
+    },
+    {
+        "end": 0.479,
+        "text": " ",
+        "type": "spacing",
+        "start": 0.479,
+        "speaker_id": null
+    }
+]
+(2 rows)

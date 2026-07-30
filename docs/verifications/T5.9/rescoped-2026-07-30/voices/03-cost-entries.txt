@@ -1,0 +1,4 @@
+ERROR:  column ce.created_at does not exist
+LINE 2: ... g.status, ce.amount_cents, ce.quantity, ce.unit, ce.created...
+                                                             ^
+HINT:  Perhaps you meant to reference the column "g.created_at".

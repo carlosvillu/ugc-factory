@@ -1,0 +1,27 @@
+-[ RECORD 1 ]-------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+asset_id            | 01KYSPRD3C0WZ483EAHRE55R1J
+kind                | tts_audio
+mime                | audio/mpeg
+bytes               | 246222
+duration_s          | 15.319
+has_word_timestamps | t
+gen_id              | 01KYSPQWD85C9S3KDPW2ABKNWT
+status              | completed
+fal_request_id      | 019fb36b-f315-7a30-b78b-9b8e6b18b308
+resolved_prompt     | Llevo semanas probando esta crema hidratante y de verdad ha cambiado mi piel. Se absorbe al instante, no deja sensación grasa y por la mañana noto la cara mucho más suave. Si buscas algo sencillo que funcione, esta es la que yo recomiendo.
+voice_input         | EXAVITQu4vr4xnSDxMaL
+language_code       | es
+-[ RECORD 2 ]-------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+asset_id            | 01KYSPRWD5W77H7AADD5QFHKX7
+kind                | tts_audio
+mime                | audio/mpeg
+bytes               | 279659
+duration_s          | 17.419
+has_word_timestamps | t
+gen_id              | 01KYSPRD41J6WZNFYJ6VCFMSVC
+status              | completed
+fal_request_id      | 019fb36c-34d8-7691-b7d1-6bc425a02952
+resolved_prompt     | I have been testing this moisturizing cream for a few weeks and it genuinely transformed my skin. It absorbs instantly, never feels greasy, and every morning my face looks noticeably smoother. If you want something simple that actually works, this is the one I recommend.
+voice_input         | Rachel
+language_code       | en
+

@@ -1,0 +1,8 @@
+=== POSITIVE control (must resolve) ===
+[Maya es] NO THROW (resolved {"ttsEndpoint":"fal-ai/elevenlabs/tts/eleven-v3","provider":"elevenlabs","voice":"EXAVITQu4vr4xnSDxMaL"})
+[Maya en] NO THROW (resolved {"ttsEndpoint":"fal-ai/elevenlabs/tts/eleven-v3","provider":"elevenlabs","voice":"Rachel"})
+
+=== NEGATIVE control (must THROW) ===
+[Maya fr (unmapped)] THROW PermanentStepError: resolveVoiceTriple: la Persona no tiene voz en el voice_map para el idioma 'fr'
+[kokoro voice on eleven-v3 endpoint (es)] THROW PermanentStepError: resolveVoiceStep: triple de voz incoherente — proveedor 'kokoro' con endpoint 'fal-ai/elevenlabs/tts/eleven-v3' (se esperaba un endpoint 'fal-ai/kokoro…'). El voice_map y el recipe del tier deben coincidir en proveedor; una voz de un proveedor NO vale para el endpoint de otro.
+[empty voice_map (es)] THROW PermanentStepError: resolveVoiceTriple: la Persona no tiene voz en el voice_map para el idioma 'es'

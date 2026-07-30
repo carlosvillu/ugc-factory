@@ -969,6 +969,7 @@ Decisiones del usuario (2026-07-07): la fase se ejecuta tras T0.1 y **antes** de
 #### T6.2 · Checklist de publicación + CP5 + música propia
 - **Depende de**: T5.7
 - **Entrega**: checklist interactivo por plataforma generado del bundle (§15.4: toggle AIGC —con aviso de reset al duplicar campañas—, música según `audio_source`, Spark si aplica) + CP5 opcional; upload de pista propia licenciada (`audio_source=own_license`, asset `music_bed` seleccionable en la matriz).
+- **Coste estimado**: $0 (añadido 2026-07-30, regla 6). Superficie de UI + API + upload de asset; sin generación fal/Anthropic. El master con la música propia se produce vía composición FFmpeg (N8, ya existente), no genera. Playwright contra fakes.
 - **Playwright permanente**: `apps/web/e2e/publishing-checklist.spec.ts` cubre reglas Spark/AIGC por `audio_source`, upload y selección de música propia y pausa/reanudación de CP5 en modo degradado manual.
 - **Verificación**: el checklist de una variante con `audio_source=native_trending` **bloquea** la opción Spark con explicación; el de una con bed IA la permite; subir una pista propia y usarla en un lote produce el master con esa música y `own_license` persistido; con CP5 activado, el flujo de publicación (en el modo degradado manual de esta tarea) se pausa en el checkpoint y al confirmar se reanuda.
 

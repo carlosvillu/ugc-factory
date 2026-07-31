@@ -1,0 +1,9 @@
+
+Running 2 tests using 1 worker
+
+  ✓  1 [setup] › e2e/auth.setup.ts:10:1 › login y persistir sesión (861ms)
+seed: persona «Nora T62b Music» ← imagen sintética 1638×2048 px (personas/01KYVMXCBGHKZPJVZ8VNYAAVE1/01KYVMXCEVA77QATTGGCAK89SQ.jpg)
+  ✓  2 [chromium] › e2e/phases/f6-own-license-music.spec.ts:95:3 › T6.2b · música propia (own_license) › subir una pista propia y atarla a una variante: el máster se compone con esa música, sin N7e, own_license persistido @f6 (8.7s)
+
+  2 passed (13.1s)
+F6_EXIT=0

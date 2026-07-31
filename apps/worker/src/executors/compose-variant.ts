@@ -152,9 +152,17 @@ export function makeN8Executor(deps: ComposeVariantExecutorDeps): StepExecutor {
     const resolvedDeps = ctx.deps ?? [];
 
     // 1. ENSAMBLAR el spec desde los outputs de las deps N7 (por schema). El spec apunta a los clips CRUDOS.
+    //    El bed PROPIO (T6.2b, `own_license`) se lee de la fila `ad_variant` (verdad ACTUAL, no de un snapshot
+    //    del plan que se quedaría rancio si el bed se ató/cambió tras crear el run) — misma vía que
+    //    `variantMaxDurationS`. Presente ⇒ sustituye al bed IA de N7e en `music.asset`; ausente ⇒ null (N7e).
     const rawSpec = await assembleCompositionSpec(
       { db: deps.db },
-      { variantId, deps: resolvedDeps, variantMaxDurationS: variant.durationTarget },
+      {
+        variantId,
+        deps: resolvedDeps,
+        variantMaxDurationS: variant.durationTarget,
+        ownMusicBedAssetId: variant.ownMusicBedAssetId,
+      },
     );
 
     // La dep N7b (voiceover) trae la duración MEDIDA de cada voz (`N7bClipRef.durationSeconds`), que es la

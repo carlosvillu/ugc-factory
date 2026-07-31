@@ -14,7 +14,7 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from
 import { PermanentStepError } from '@ugc/core/orchestrator';
 import { RAW_GALLERY_SEED, validateGallerySeed } from '@ugc/core/gallery';
 import { createDbPool, makeLocalStorageAdapter, seedGallery } from '@ugc/db';
-import { adBatch, adVariant, productBrief, project, urlAnalysis } from '@ugc/db/schema';
+import { adBatch, adVariant, asset, productBrief, project, urlAnalysis } from '@ugc/db/schema';
 import {
   createTestDatabase,
   http,
@@ -194,6 +194,49 @@ describe('N7e executor (T4.9): bed musical IA', () => {
         [variantId],
       );
       expect(rows[0]?.audio_source).toBe('ai_bed');
+    } finally {
+      await pool.end();
+    }
+  });
+
+  it('T6.2b: si la variante tiene bed PROPIO, N7e NO pisa audio_source=own_license con ai_bed', async () => {
+    // Caso de coexistencia (el bed propio se ató DESPUÉS de arrancar el run, con N7e ya encolado): N7e genera
+    // igual un bed IA, pero N8 lo IGNORA (el bed propio gana en el ensamblador). La procedencia debe seguir
+    // diciendo `own_license` — si N7e la pisara con `ai_bed`, la fila MENTIRÍA sobre el máster (que lleva la
+    // música del usuario). Se afirma que audio_source PERMANECE own_license tras correr N7e.
+    const { db, pool } = createDbPool(tdb.connectionString);
+    try {
+      const variantId = await seedVariant();
+      // Crear un asset music_bed y atarlo a la variante con audio_source=own_license (lo que hace el endpoint).
+      const [bed] = await tdb.db
+        .insert(asset)
+        .values({
+          kind: 'music_bed',
+          storageKey: `music/${variantId}.mp3`,
+          mime: 'audio/mpeg',
+          bytes: 4096,
+          checksum: 'f'.repeat(64),
+        })
+        .returning();
+      await tdb.pool.query(
+        `UPDATE ad_variant SET own_music_bed_asset_id = $1, audio_source = 'own_license' WHERE id = $2`,
+        [bed!.id, variantId],
+      );
+
+      happyMusic();
+      await makeExecutor(db)({
+        config: { musicEndpoint: MUSIC_ENDPOINT, mood: 'upbeat', durationSeconds: 30 },
+        variantId,
+        collectOutput: noopCollect,
+        deps: [],
+      });
+
+      const { rows } = await tdb.pool.query<{ audio_source: string | null }>(
+        'SELECT audio_source FROM ad_variant WHERE id = $1',
+        [variantId],
+      );
+      // NO pisado: el bed propio manda la procedencia.
+      expect(rows[0]?.audio_source).toBe('own_license');
     } finally {
       await pool.end();
     }

@@ -138,6 +138,8 @@ const ULID: Record<string, string> = {
   'broll-C': '01JCCCCCCCCCCCCCCCCCCCCCCC',
   'cta-A': '01JEEEEEEEEEEEEEEEEEEEEEEA',
   'bed-1': '01JDDDDDDDDDDDDDDDDDDDDDD1',
+  // Bed musical PROPIO del usuario (T6.2b, `own_license`).
+  'own-bed': '01JFFFFFFFFFFFFFFFFFFFFFFF',
 };
 const u = (alias: string): string => ULID[alias] ?? alias;
 
@@ -457,6 +459,78 @@ describe('assembleCompositionSpec (T5.5d)', () => {
   });
 
   it('sin dep N7e: music es null', async () => {
+    getScriptById.mockResolvedValue({ id: 'script-1', scenes: [scene('hook', 'hook')] });
+    getAsset.mockResolvedValue({ wordTimestamps: null });
+    const spec = await assembleCompositionSpec(
+      { db: fakeDb },
+      {
+        variantId: 'v1',
+        variantMaxDurationS: 30,
+        deps: [
+          n7cOutput('vid-avatar'),
+          n7bOutput([{ sceneIndex: 0, assetId: 'vo-0', durationSeconds: 2 }]),
+        ],
+      },
+    );
+    expect(spec.music).toBeNull();
+  });
+
+  // ── BED MUSICAL PROPIO (T6.2b, §14 `own_license`) ─────────────────────────────────────────────────────
+  it('bed PROPIO (ownMusicBedAssetId): music.asset es el asset SUBIDO, sin dep N7e', async () => {
+    // Camino normal de own_license: N7e NO corrió (el builder omitió n7eConfig) → no hay dep N7e. El bed
+    // llega por `ownMusicBedAssetId` (que el N8 executor lee de la fila ad_variant). El máster se compone con
+    // ESA música y los mismos parámetros de mezcla (volumen en rango, ducking) que el bed IA.
+    getScriptById.mockResolvedValue({
+      id: 'script-1',
+      scenes: [scene('hook', 'hook'), scene('body', 'body')],
+    });
+    getAsset.mockResolvedValue({ wordTimestamps: null });
+
+    const spec = await assembleCompositionSpec(
+      { db: fakeDb },
+      {
+        variantId: 'v1',
+        variantMaxDurationS: 30,
+        ownMusicBedAssetId: u('own-bed'),
+        deps: [
+          n7cOutput('vid-avatar'),
+          n7bOutput([
+            { sceneIndex: 0, assetId: 'vo-0', durationSeconds: 2 },
+            { sceneIndex: 1, assetId: 'vo-1', durationSeconds: 3 },
+          ]),
+          n7dOutput([{ bodySceneIndex: 0, clipIndex: 0, assetId: 'broll-A' }]),
+        ],
+      },
+    );
+    expect(spec.music?.asset).toBe(u('own-bed')); // la pista del usuario, no un bed de N7e
+    expect(spec.music?.volume).toBeGreaterThanOrEqual(0.2);
+    expect(spec.music?.volume).toBeLessThanOrEqual(0.3);
+    expect(spec.music?.ducking).toBe(true); // mismo grafo de ducking que el bed IA (agnóstico al origen)
+  });
+
+  it('bed PROPIO GANA al de N7e cuando coexisten (sustitución, no error)', async () => {
+    // Caso de borde (regen/retry): la variante tiene AMBOS un bed propio y una dep N7e. La pista licenciada
+    // del usuario manda — es una sustitución deliberada, no un throw.
+    getScriptById.mockResolvedValue({ id: 'script-1', scenes: [scene('hook', 'hook')] });
+    getAsset.mockResolvedValue({ wordTimestamps: null });
+
+    const spec = await assembleCompositionSpec(
+      { db: fakeDb },
+      {
+        variantId: 'v1',
+        variantMaxDurationS: 30,
+        ownMusicBedAssetId: u('own-bed'),
+        deps: [
+          n7cOutput('vid-avatar'),
+          n7bOutput([{ sceneIndex: 0, assetId: 'vo-0', durationSeconds: 2 }]),
+          n7eOutput('bed-1'), // el bed IA existe, pero el propio gana
+        ],
+      },
+    );
+    expect(spec.music?.asset).toBe(u('own-bed'));
+  });
+
+  it('sin bed propio y sin dep N7e: music es null (comportamiento normal intacto)', async () => {
     getScriptById.mockResolvedValue({ id: 'script-1', scenes: [scene('hook', 'hook')] });
     getAsset.mockResolvedValue({ wordTimestamps: null });
     const spec = await assembleCompositionSpec(

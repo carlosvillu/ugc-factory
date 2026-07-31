@@ -16,7 +16,7 @@ import { N7eConfigSchema, PermanentStepError } from '@ugc/core/orchestrator';
 import type { StepExecutor } from '@ugc/core/orchestrator';
 import { isMusicModelKind } from '@ugc/core/gallery';
 import type { N7eOutput } from '@ugc/core/contracts';
-import { getModelProfileByEndpoint, setVariantAudioSource } from '@ugc/db';
+import { getModelProfileByEndpoint, getVariant, setVariantAudioSource } from '@ugc/db';
 import { runGenerateMusic } from '@ugc/services';
 
 import type { GenerationExecutorDeps } from './generation';
@@ -84,13 +84,22 @@ export function makeN7eExecutor(deps: GenerationExecutorDeps): StepExecutor {
     // presente, de `step_run.variant_id`); stepless (smoke sin variante) se omite. TRAS el bed: la
     // procedencia solo es cierta con el asset ya creado. Idempotente (un retry reescribe el mismo valor).
     if (ctx.variantId != null && ctx.variantId !== '') {
-      const marked = await setVariantAudioSource(deps.db, ctx.variantId, 'ai_bed');
-      if (!marked) {
+      // T6.2b · COHERENCIA CON EL BED PROPIO: normalmente N7e NO corre si la variante tiene bed propio (el
+      // builder omite `n7eConfig`). Pero si el bed propio se ATÓ DESPUÉS de arrancar el run (N7e ya estaba
+      // encolado), N7e generaría igual un bed IA — y N8 lo IGNORA (`ownMusicBedAssetId` gana en el
+      // ensamblador). En ese caso NO se debe pisar `audio_source='own_license'` con `'ai_bed'`: el máster
+      // lleva la música del usuario, así que la procedencia debe seguir diciendo `own_license` (si no, la fila
+      // MENTIRÍA sobre el máster). Se consulta la variante y solo se marca `ai_bed` si NO tiene bed propio.
+      const variant = await getVariant(deps.db, ctx.variantId);
+      if (variant === undefined) {
         // La variante del step no existe: cableado roto (un `variant_id` que no apunta a ninguna fila).
         // Permanente (reintentar no la crea); el bed ya se generó, pero la variante no se pudo marcar.
         throw new PermanentStepError(
-          `N7e: la variante ${ctx.variantId} del step no existe; no se pudo marcar audio_source='ai_bed'`,
+          `N7e: la variante ${ctx.variantId} del step no existe; no se pudo marcar audio_source`,
         );
+      }
+      if (variant.ownMusicBedAssetId === null) {
+        await setVariantAudioSource(deps.db, ctx.variantId, 'ai_bed');
       }
     }
 

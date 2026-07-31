@@ -33,7 +33,7 @@ import {
   withDomainTransaction,
   type Db,
 } from '@ugc/db';
-import { createAsset } from '@ugc/db';
+import { createAsset, getVariant, setVariantOwnMusicBed } from '@ugc/db';
 import { persona, productBrief, project, urlAnalysis } from '@ugc/db/schema';
 import { RAW_GALLERY_SEED, validateGallerySeed } from '@ugc/core/gallery';
 import {
@@ -348,6 +348,32 @@ describe('CP4 · regenerateVariantCta (T5.8, CU4): clon + run regen, atomicidad,
       [cloneScript!.variantId],
     );
     expect(rows[0]?.status).toBe('scripted');
+  });
+
+  it('T6.2b: un regen de una variante own_license CONSERVA el bed propio en el clon (no re-genera IA)', async () => {
+    // Sin esto, regenerar el CTA de una variante con música licenciada re-generaría un bed IA en silencio.
+    // El clon debe heredar el puntero al asset music_bed Y `audio_source='own_license'`.
+    const { variantId } = await seedScriptedVariant(tdb.db, 'premium');
+    const bed = await createAsset(tdb.db, {
+      kind: 'music_bed',
+      storageKey: `music/${newUlid()}.mp3`,
+      mime: 'audio/mpeg',
+      bytes: 4096,
+      checksum: 'cafef00dcafef00d',
+    });
+    await setVariantOwnMusicBed(tdb.db, variantId, bed.id);
+
+    await regenInTx(n9Output(variantId), 'Compra ahora con música propia.');
+
+    // Localiza el clon: la variante NUEVA del mismo lote (la que no es el origen).
+    const { rows } = await tdb.pool.query<{ id: string }>(
+      'SELECT id FROM ad_variant WHERE id != $1 ORDER BY id DESC LIMIT 1',
+      [variantId],
+    );
+    const cloneId = rows[0]!.id;
+    const clone = await getVariant(tdb.db, cloneId);
+    expect(clone?.ownMusicBedAssetId).toBe(bed.id); // el clon apunta a la MISMA pista licenciada
+    expect(clone?.audioSource).toBe('own_license'); // procedencia conservada
   });
 
   it('ATOMICIDAD (restricción 3): si algo FALLA tras clonar+crear el run, NO queda clon (rollback)', async () => {

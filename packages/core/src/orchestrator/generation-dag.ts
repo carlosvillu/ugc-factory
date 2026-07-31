@@ -89,6 +89,14 @@ export interface VariantGenerationPlan {
   n7fConfig?: unknown;
   /** Config de N7e (bed musical), o `undefined` para omitir. */
   n7eConfig?: unknown;
+  /** BED MUSICAL PROPIO (T6.2b, §14 `own_license`): el `asset.id` (kind `music_bed`) que el usuario subió
+   *  y ató a esta variante. Cuando está presente, `buildVariantGenerationPlan` OMITE `n7eConfig` (no se
+   *  genera bed IA) y este asset se compone como `music.asset` en N8. Es una DECLARACIÓN DE INTENCIÓN del
+   *  plan: N8 lee el asset del bed propio de la fila `ad_variant` (verdad SIEMPRE actual, no de un snapshot
+   *  del plan que se quedaría rancio si el bed se ata/cambia después de crear el run), no de este campo —
+   *  como `variantMaxDurationS`. El campo sirve para RAZONAR sobre el plan (y los tests lo asertan: bed
+   *  propio ⇒ `n7eConfig` ausente). `undefined` = sin bed propio (la variante usa el bed IA de N7e). */
+  providedMusicBedAssetId?: string;
   /** Config de N8 (composición; CONSUME los N7 de vídeo/voz/bed presentes), o `undefined` para omitir.
    *  N8 no paga fal (compone lo que N7 generó) → $0 runtime. */
   n8Config?: unknown;

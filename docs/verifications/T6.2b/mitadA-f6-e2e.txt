@@ -1,0 +1,25 @@
+[WebServer] /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/docker-modem@5.0.7/node_modules/docker-modem/lib/modem.js:389
+[WebServer]       var msg = new Error(
+[WebServer]                 ^
+[WebServer] 
+[WebServer] Error: (HTTP code 500) server error - error while creating mount source path '/Users/carlosvillu/.colima/default/docker.sock': mkdir /Users/carlosvillu/.colima/default/docker.sock: operation not supported 
+[WebServer]     at /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/docker-modem@5.0.7/node_modules/docker-modem/lib/modem.js:389:17
+[WebServer]     at getCause (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/docker-modem@5.0.7/node_modules/docker-modem/lib/modem.js:424:7)
+[WebServer]     at Modem.buildPayload (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/docker-modem@5.0.7/node_modules/docker-modem/lib/modem.js:385:5)
+[WebServer]     at IncomingMessage.<anonymous> (/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/node_modules/.pnpm/docker-modem@5.0.7/node_modules/docker-modem/lib/modem.js:353:16)
+[WebServer]     at IncomingMessage.emit (node:events:530:35)
+[WebServer]     at endReadableNT (node:internal/streams/readable:1698:12)
+[WebServer]     at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+[WebServer]   reason: 'server error',
+[WebServer]   statusCode: 500,
+[WebServer]   json: {
+[WebServer]     message: "error while creating mount source path '/Users/carlosvillu/.colima/default/docker.sock': mkdir /Users/carlosvillu/.colima/default/docker.sock: operation not supported"
+[WebServer]   }
+[WebServer] }
+[WebServer] 
+[WebServer] Node.js v22.18.0
+Error: Process from config.webServer was not able to start. Exit code: 1
+
+F6_EXIT=1
+F6_EXIT=1
+F6_EXIT=1

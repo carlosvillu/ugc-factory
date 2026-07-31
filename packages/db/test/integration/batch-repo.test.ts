@@ -31,6 +31,7 @@ import { planBatch } from '@ugc/core/strategy';
 import {
   adBatch,
   adVariant,
+  asset,
   hookLine,
   persona,
   productBrief,
@@ -40,8 +41,11 @@ import {
 import {
   createBatchWithVariants,
   findBatchesByBrief,
+  getVariant,
   listBatchVariants,
+  setVariantOwnMusicBed,
 } from '../../src/repos/batch.repo';
+import { createAsset } from '../../src/repos/asset.repo';
 import { getRecipe, listHookLines, seedLibrary } from '../../src/repos/library.repo';
 
 let tdb: TestDatabase;
@@ -327,5 +331,64 @@ describe('createBatchWithVariants (CP2, T2.3)', () => {
     ).rejects.toThrow(/no existe en la BD/);
 
     expect(await tdb.db.select().from(adBatch)).toHaveLength(before.length);
+  });
+});
+
+describe('setVariantOwnMusicBed (T6.2b · own_license)', () => {
+  /** Un asset `music_bed` real (una pista subida por el usuario). */
+  async function makeMusicBedAsset() {
+    return createAsset(tdb.db, {
+      kind: 'music_bed',
+      storageKey: `music/${crypto.randomUUID()}.mp3`,
+      mime: 'audio/mpeg',
+      bytes: 4096,
+      checksum: crypto.randomUUID().replaceAll('-', ''),
+    });
+  }
+
+  it('ATAR: escribe el puntero own_music_bed_asset_id Y audio_source=own_license en una sola UPDATE', async () => {
+    const { variants } = await createBatch();
+    const variant = variants[0]!;
+    const bed = await makeMusicBedAsset();
+
+    const ok = await setVariantOwnMusicBed(tdb.db, variant.id, bed.id);
+    expect(ok).toBe(true);
+
+    const after = await getVariant(tdb.db, variant.id);
+    expect(after?.ownMusicBedAssetId).toBe(bed.id);
+    expect(after?.audioSource).toBe('own_license');
+  });
+
+  it('DESATAR (assetId null): puntero y audio_source vuelven a NULL', async () => {
+    const { variants } = await createBatch();
+    const variant = variants[0]!;
+    const bed = await makeMusicBedAsset();
+    await setVariantOwnMusicBed(tdb.db, variant.id, bed.id);
+
+    const ok = await setVariantOwnMusicBed(tdb.db, variant.id, null);
+    expect(ok).toBe(true);
+
+    const after = await getVariant(tdb.db, variant.id);
+    expect(after?.ownMusicBedAssetId).toBeNull();
+    expect(after?.audioSource).toBeNull();
+  });
+
+  it('variante inexistente → devuelve false (no crea nada)', async () => {
+    const bed = await makeMusicBedAsset();
+    const ok = await setVariantOwnMusicBed(tdb.db, crypto.randomUUID(), bed.id);
+    expect(ok).toBe(false);
+  });
+
+  it('ON DELETE set null: borrar el asset del bed pone el puntero a NULL (no borra la variante)', async () => {
+    const { variants } = await createBatch();
+    const variant = variants[0]!;
+    const bed = await makeMusicBedAsset();
+    await setVariantOwnMusicBed(tdb.db, variant.id, bed.id);
+
+    await tdb.db.delete(asset).where(eq(asset.id, bed.id));
+
+    const after = await getVariant(tdb.db, variant.id);
+    expect(after).toBeDefined(); // la variante sigue existiendo
+    expect(after?.ownMusicBedAssetId).toBeNull(); // FK set null
   });
 });

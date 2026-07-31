@@ -151,6 +151,14 @@ export const adVariant = pgTable(
     // §7.2 N7e: de dónde viene el audio de fondo de la variante (bed IA / licencia propia / nativo).
     // NULLABLE: lo escribe N7e cuando genera el bed (Pase 2 de T4.11); una variante sin bed lo deja NULL.
     audioSource: audioSource('audio_source'),
+    // Bed musical PROPIO (T6.2b, §14 `own_license`): FK NULLABLE al asset `kind='music_bed'` que el
+    // usuario subió y eligió como bed de ESTA variante. Cuando está presente, N7e NO genera bed (el
+    // builder omite `n7eConfig`) y N8 usa este asset como `music.asset` — y `audio_source='own_license'`.
+    // NULL = sin bed propio (la variante usa el bed IA de N7e, comportamiento normal). `set null`: borrar
+    // el asset de música no borra la variante (mismo criterio que master/thumbnail).
+    ownMusicBedAssetId: text('own_music_bed_asset_id').references(() => asset.id, {
+      onDelete: 'set null',
+    }),
     // Assets finales (F5). `set null`: borrar el asset no borra la variante.
     masterAssetId: text('master_asset_id').references(() => asset.id, { onDelete: 'set null' }),
     thumbnailAssetId: text('thumbnail_asset_id').references(() => asset.id, {

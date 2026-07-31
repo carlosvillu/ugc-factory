@@ -67,6 +67,14 @@ export interface AssembleCompositionSpecInput {
   deps: readonly { outputRefs: unknown }[];
   /** El TECHO de duración de la variante (`ad_variant.duration_target`), para `output.maxDurationS`. */
   variantMaxDurationS: number;
+  /** BED MUSICAL PROPIO (T6.2b, §14 `own_license`): el `asset.id` (kind `music_bed`) que el usuario subió y
+   *  ató a esta variante (`ad_variant.own_music_bed_asset_id`). Cuando está presente, SUSTITUYE al bed de
+   *  N7e como `music.asset` — N7e no habrá corrido (el builder omitió `n7eConfig`), así que normalmente no
+   *  hay dep N7e; pero si por regen/retry coexistieran, el bed PROPIO GANA (sustitución, no error). El N8
+   *  executor lo lee de la fila `ad_variant` y lo pasa aquí (misma vía que `variantMaxDurationS`).
+   *  `null` = sin bed propio (la variante usa el bed IA de N7e si existe) — mismo tipo que la columna nullable,
+   *  para que el executor pase el valor de la fila directo sin un spread condicional. */
+  ownMusicBedAssetId?: string | null;
 }
 
 /** El volumen del bed musical bajo la voz (§9.7: 0,2–0,3). Se elige el MÍNIMO del rango canónico (0,2) —
@@ -90,7 +98,7 @@ export async function assembleCompositionSpec(
   input: AssembleCompositionSpecInput,
 ): Promise<CompositionSpec> {
   const { db } = deps;
-  const { variantId, deps: resolvedDeps, variantMaxDurationS } = input;
+  const { variantId, deps: resolvedDeps, variantMaxDurationS, ownMusicBedAssetId } = input;
 
   // 1. DISCRIMINAR las deps N7 por SCHEMA (constraint 1). `findDepBySchema` lanza si 2+ validan el mismo.
   const n7b = findDepBySchema<N7bOutput>(resolvedDeps, N7bOutputSchema, 'N7b (voiceover)');
@@ -211,11 +219,19 @@ export async function assembleCompositionSpec(
     );
   }
 
+  // EL ASSET DEL BED (§14): el bed PROPIO (T6.2b, `own_license`) GANA al de N7e — es una SUSTITUCIÓN, no un
+  // error. Normalmente solo uno de los dos existe (con bed propio el builder omite N7e), pero si coexistieran
+  // por regen/retry, la pista licenciada del usuario manda. Un MP3/WAV de usuario y el WAV de ace-step
+  // llegan IGUAL a `music.asset`: el grafo de ducking de N8 (`buildDuckingGraph`) antepone
+  // `aformat=channel_layouts=stereo` a CUALQUIER bed antes del `sidechaincompress`, así que la normalización
+  // de canal es agnóstica al origen (verificado leyendo `compose-master.ts`, T5.8a). Los MISMOS parámetros de
+  // mezcla (volumen, ducking, fade) aplican a ambos: la única diferencia es el asset y `audio_source`.
+  const bedAssetId = ownMusicBedAssetId ?? n7e?.assetId;
   const spec: CompositionSpec = {
     segments,
     music:
-      n7e !== undefined
-        ? { asset: n7e.assetId, volume: MUSIC_VOLUME, ducking: true, fadeOutS: 1 }
+      bedAssetId !== undefined
+        ? { asset: bedAssetId, volume: MUSIC_VOLUME, ducking: true, fadeOutS: 1 }
         : null,
     output: { width: 1080, height: 1920, fps: 30, maxDurationS: variantMaxDurationS },
   };

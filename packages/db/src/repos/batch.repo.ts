@@ -317,6 +317,12 @@ export async function cloneVariantForRegen(
       durationTarget: source.durationTarget,
       platformTargets: source.platformTargets,
       filenameCode,
+      // Bed musical PROPIO (T6.2b): un clon de regen de una variante `own_license` DEBE conservar la pista
+      // licenciada del usuario — si no, el regen re-generaría un bed IA en silencio (el bug que el brief
+      // señala). Se DERIVA el par {puntero, audio_source} del puntero de origen vía el invariante único
+      // (`ownBedFields`), NO se copia `audio_source` a pelo: eso arrastraría `'ai_bed'` de una variante que
+      // N7e re-marcará igualmente. Sin bed propio → puntero NULL y `audio_source` NULL.
+      ...ownBedFields(source.ownMusicBedAssetId),
       // `scripted`: el clon arranca listo para generar (como las variantes que CP3 deja `scripted`). NO se
       // copia master/qa/score — el clon aún no tiene máster (lo produce N8 del run de regen).
       status: 'scripted' as const,
@@ -369,6 +375,54 @@ export async function setVariantAudioSource(
   const updated = await db
     .update(adVariant)
     .set({ audioSource })
+    .where(eq(adVariant.id, variantId))
+    .returning({ id: adVariant.id });
+  return updated.length > 0;
+}
+
+/**
+ * EL INVARIANTE de bed propio (T6.2b): puntero `own_music_bed_asset_id` non-null ⟺ `audio_source='own_license'`;
+ * NULL ⟺ NULL (la variante vuelve al bed IA). Los dos campos SIEMPRE se mueven juntos — este helper es su
+ * única fuente, para que ningún escritor futuro (clon de regen, bulk, import) pueda re-derivar la regla y
+ * dejar los campos divergentes.
+ */
+function ownBedFields(assetId: string | null): {
+  ownMusicBedAssetId: string | null;
+  audioSource: 'own_license' | null;
+} {
+  return {
+    ownMusicBedAssetId: assetId,
+    audioSource: assetId !== null ? 'own_license' : null,
+  };
+}
+
+/**
+ * Ata (o desata) un bed musical PROPIO a una variante (T6.2b, §14 `own_license`). Escribe EN UNA SOLA
+ * UPDATE el puntero `own_music_bed_asset_id` Y `audio_source`, para que no puedan divergir:
+ *   · `assetId` no-null → puntero = ese asset, `audio_source='own_license'` (el usuario eligió su pista).
+ *   · `assetId = null`   → puntero = NULL, `audio_source = NULL` (se desata; la variante vuelve al bed IA).
+ *
+ * A DIFERENCIA de N7e (`setVariantAudioSource(..., 'ai_bed')`, que marca la procedencia DESPUÉS de generar
+ * el bed porque solo entonces es cierta), aquí la procedencia es cierta AL ATAR: el asset del usuario YA
+ * existe (se subió), así que puntero y `audio_source` se escriben juntos, no en dos momentos.
+ *
+ * ⚠ ESCRITOR MECÁNICO, sin precondiciones de estado: el camino `assetId = null` pone `audio_source=NULL`
+ * INCONDICIONALMENTE. Es correcto SOLO cuando el caller ya verificó que la variante tenía bed propio; sobre
+ * una variante `ai_bed`/`native_trending` borraría una procedencia REAL. Esa guarda (desatar solo si había
+ * bed propio; rechazar si el máster ya está compuesto) vive en el endpoint, no aquí — misma frontera que la
+ * validación de `kind`.
+ *
+ * Devuelve `true` si la variante existía. NO valida que `assetId` sea `kind='music_bed'`: esa comprobación
+ * de frontera vive en el endpoint (antes de llamar aquí), donde se puede devolver un 400 accionable.
+ */
+export async function setVariantOwnMusicBed(
+  db: Db,
+  variantId: string,
+  assetId: string | null,
+): Promise<boolean> {
+  const updated = await db
+    .update(adVariant)
+    .set(ownBedFields(assetId))
     .where(eq(adVariant.id, variantId))
     .returning({ id: adVariant.id });
   return updated.length > 0;

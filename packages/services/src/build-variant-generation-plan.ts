@@ -178,13 +178,25 @@ export async function buildVariantGenerationPlan(
     }
   }
 
-  // N7e · BED MUSICAL: un bed por variante (§14). Endpoint constante (ace-step, no sale del recipe).
-  await assertEndpointResolvable(db, MUSIC_ENDPOINT, 'N7e (music)');
-  plan.n7eConfig = {
-    musicEndpoint: MUSIC_ENDPOINT,
-    mood: DEFAULT_MUSIC_MOOD,
-    durationSeconds: variant.durationTarget,
-  };
+  // N7e · BED MUSICAL: un bed por variante (§14). DOS caminos según la procedencia del bed:
+  //
+  //  · BED PROPIO (T6.2b, `own_license`): la variante tiene un asset `music_bed` subido y atado
+  //    (`ownMusicBedAssetId`). NO se genera bed IA — se SALTA `n7eConfig` (⇒ el DAG no emite el nodo N7e,
+  //    generation-dag.ts) Y el `assertEndpointResolvable` del endpoint de música: no tiene sentido exigir
+  //    que ace-step resuelva si no se va a generar música. El asset propio se declara en el plan
+  //    (`providedMusicBedAssetId`) para razonar sobre él; N8 lo lee de la fila `ad_variant` (verdad actual)
+  //    y lo compone como `music.asset`.
+  //  · BED IA (normal): endpoint constante (ace-step, no sale del recipe), money-gate + `n7eConfig`.
+  if (variant.ownMusicBedAssetId !== null) {
+    plan.providedMusicBedAssetId = variant.ownMusicBedAssetId;
+  } else {
+    await assertEndpointResolvable(db, MUSIC_ENDPOINT, 'N7e (music)');
+    plan.n7eConfig = {
+      musicEndpoint: MUSIC_ENDPOINT,
+      mood: DEFAULT_MUSIC_MOOD,
+      durationSeconds: variant.durationTarget,
+    };
+  }
 
   return plan;
 }

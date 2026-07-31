@@ -23,9 +23,13 @@ function sessionCookieHeader(): string {
 let tdb: TestDatabase;
 let storageRoot: string;
 
-function callUpload(file: File | null, opts: { authed?: boolean } = {}): Promise<Response> {
+function callUpload(
+  file: File | null,
+  opts: { authed?: boolean; kind?: string } = {},
+): Promise<Response> {
   const form = new FormData();
   if (file) form.append('file', file);
+  if (opts.kind !== undefined) form.append('kind', opts.kind);
   const headers: Record<string, string> = {};
   if (opts.authed !== false) headers.cookie = sessionCookieHeader();
   // NO se fija content-type: `new Request` lo deriva del FormData (boundary correcto).
@@ -33,6 +37,10 @@ function callUpload(file: File | null, opts: { authed?: boolean } = {}): Promise
 }
 
 function pngFile(name: string, bytes: Uint8Array, mime = 'image/png'): File {
+  return new File([bytes as BlobPart], name, { type: mime });
+}
+
+function audioFile(name: string, bytes: Uint8Array, mime = 'audio/mpeg'): File {
   return new File([bytes as BlobPart], name, { type: mime });
 }
 
@@ -103,6 +111,62 @@ describe('POST /api/assets (upload de imagen, T1.6)', () => {
     const res = await callUpload(null);
     expect(res.status).toBe(400);
     expect(((await res.json()) as { code: string }).code).toBe('validation_error');
+  });
+
+  // ── T6.2b · upload de AUDIO (kind=music_bed) ──────────────────────────────────────────────────────────
+  it('kind=music_bed con audio (mp3) ⇒ 201, fila asset music_bed, storage_key en music/', async () => {
+    const bytes = new Uint8Array([1, 2, 3, 4, 5, 6, 7]);
+    const res = await callUpload(audioFile('bed.mp3', bytes, 'audio/mpeg'), { kind: 'music_bed' });
+    expect(res.status).toBe(201);
+    const body = (await res.json()) as { id: string; url: string };
+
+    const row = await getAsset(tdb.db, body.id);
+    expect(row!.kind).toBe('music_bed');
+    expect(row!.mime).toBe('audio/mpeg');
+    expect(row!.storageKey).toContain('music/');
+    expect(row!.checksum).toBe(createHash('sha256').update(bytes).digest('hex'));
+  });
+
+  it('kind=music_bed con WAV ⇒ 201 (el bed de ace-step ya es WAV; misma normalización de canal en N8)', async () => {
+    const res = await callUpload(audioFile('bed.wav', new Uint8Array([1, 2]), 'audio/wav'), {
+      kind: 'music_bed',
+    });
+    expect(res.status).toBe(201);
+    const row = await getAsset(tdb.db, ((await res.json()) as { id: string }).id);
+    expect(row!.kind).toBe('music_bed');
+  });
+
+  it('kind=music_bed con una IMAGEN ⇒ 400 (audio no admite image/png), cero filas', async () => {
+    const res = await callUpload(pngFile('ref.png', new Uint8Array([1, 2]), 'image/png'), {
+      kind: 'music_bed',
+    });
+    expect(res.status).toBe(400);
+    expect(((await res.json()) as { code: string }).code).toBe('validation_error');
+    const { rows } = await tdb.pool.query<{ n: number }>('SELECT count(*)::int AS n FROM asset');
+    expect(rows[0]!.n).toBe(0);
+  });
+
+  it('kind=reference_image con AUDIO ⇒ 400 (la allowlist de imagen no admite audio/mpeg)', async () => {
+    const res = await callUpload(audioFile('bed.mp3', new Uint8Array([1, 2]), 'audio/mpeg'), {
+      kind: 'reference_image',
+    });
+    expect(res.status).toBe(400);
+    expect(((await res.json()) as { code: string }).code).toBe('validation_error');
+  });
+
+  it('kind fuera de la allowlist (final_video) ⇒ 400 (nunca crea un kind del pipeline)', async () => {
+    const res = await callUpload(pngFile('ref.png', new Uint8Array([1, 2]), 'image/png'), {
+      kind: 'final_video',
+    });
+    expect(res.status).toBe(400);
+    expect(((await res.json()) as { code: string }).code).toBe('validation_error');
+  });
+
+  it('kind ausente ⇒ default reference_image (contrato T1.6 intacto: callers sin kind no cambian)', async () => {
+    const res = await callUpload(pngFile('ref.png', new Uint8Array([1, 2, 3])));
+    expect(res.status).toBe(201);
+    const row = await getAsset(tdb.db, ((await res.json()) as { id: string }).id);
+    expect(row!.kind).toBe('reference_image');
   });
 
   it('Content-Length por encima del cap del body ⇒ 413 SIN bufferizar el body (seguridad)', async () => {

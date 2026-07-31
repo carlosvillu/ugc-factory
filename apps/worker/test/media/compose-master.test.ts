@@ -397,6 +397,64 @@ describe.skipIf(!mediaToolsAvailable)('ducking con bed channel_layout=unknown (T
     expect(rmsBefore - rmsDuring).toBeGreaterThanOrEqual(6);
   });
 
+  // ── T6.2b · BED PROPIO MP3 del usuario pasa la MISMA normalización de canal (agnóstica al origen) ────────
+  test('T6.2b: un bed MP3 de usuario compone un máster válido con ducking (misma normalización que el WAV IA)', async () => {
+    // El footgun de T6.2b: el `aformat=channel_layouts=stereo` de `buildDuckingGraph` (T5.8a) se aplica a
+    // CUALQUIER bed que llegue como `music.asset`, sea el WAV de ace-step o un MP3 subido por el usuario. Este
+    // test lo demuestra con ffmpeg REAL: un MP3 genuino (libmp3lame) como bed produce un MP4 válido con audio
+    // AAC — no revienta el sidechaincompress. Es la prueba de que la ruta own_license es composable sin código
+    // de normalización específico para MP3.
+    const storage = makeMediaTestStorage(workDir);
+    const keyToId = new Map<string, string>();
+
+    // Un MP3 genuino de usuario (libmp3lame), no un m4a: es el formato típico de una pista licenciada.
+    const userMp3 = p('t62b-user-bed.mp3');
+    await run('ffmpeg', [
+      '-y',
+      '-f',
+      'lavfi',
+      '-i',
+      'sine=frequency=180:duration=10',
+      '-c:a',
+      'libmp3lame',
+      '-b:a',
+      '128k',
+      userMp3,
+    ]);
+    // Precondición: es MP3 de verdad.
+    const mp3Probe = await ffprobeJson(userMp3);
+    expect(mp3Probe.streams.find((s) => s.codec_type === 'audio')?.codec_name).toBe('mp3');
+
+    const segments: CompositionSpec['segments'] = [];
+    for (const [i, type] of (['hook', 'body', 'cta'] as const).entries()) {
+      const v = await makeNormalizedSegment(p(`t62b-mv-${String(i)}.mp4`), 3);
+      const a = await makeTestAudio({ out: p(`t62b-ma-${String(i)}.m4a`), seconds: 3, freq: 440 });
+      const videoAsset = await seedAsset(storage, keyToId, v, `t62b-mv/${String(i)}.mp4`);
+      const voAudio = await seedAsset(storage, keyToId, a, `t62b-ma/${String(i)}.m4a`);
+      segments.push({ type, videoAssets: [videoAsset], voAudio });
+    }
+    const bedAsset = await seedAsset(storage, keyToId, userMp3, 't62b/user-bed.mp3');
+
+    const spec: CompositionSpec = {
+      segments,
+      // ducking activo: el disparador del sidechaincompress que exige channel_layout definido.
+      music: { asset: bedAsset, volume: 0.25, ducking: true, fadeOutS: 1 },
+      output: { width: 1080, height: 1920, fps: 30, maxDurationS: 9 },
+    };
+    const { bytes, mime } = await composeMaster(
+      { storage, resolveAssetKey: (id) => keyToId.get(id) ?? NEG_ULID },
+      spec,
+    );
+    expect(mime).toBe('video/mp4');
+    const masterPath = p('t62b-master.mp4');
+    await writeFile(masterPath, bytes);
+
+    // MP4 válido con la música del USUARIO: perfil de vídeo intacto (~9 s) + audio AAC mezclado.
+    await assertVideoProfile(masterPath, { durationS: 9, durationToleranceS: 0.5 });
+    const probe = await ffprobeJson(masterPath);
+    expect(probe.streams.find((s) => s.codec_type === 'audio')?.codec_name).toBe('aac');
+  });
+
   test('composeMaster produce un MP4 válido con voz + bed real de T4.9 (ducking activo)', async () => {
     // El caso de PRODUCCIÓN completo (antes: ComposeError): un máster con el bed real `unknown` y ducking on.
     const storage = makeMediaTestStorage(workDir);

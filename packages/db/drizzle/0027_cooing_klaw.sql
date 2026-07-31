@@ -1,0 +1,2 @@
+ALTER TABLE "ad_variant" ADD COLUMN "own_music_bed_asset_id" text;--> statement-breakpoint
+ALTER TABLE "ad_variant" ADD CONSTRAINT "ad_variant_own_music_bed_asset_id_asset_id_fk" FOREIGN KEY ("own_music_bed_asset_id") REFERENCES "public"."asset"("id") ON DELETE set null ON UPDATE no action;

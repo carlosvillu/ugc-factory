@@ -246,6 +246,7 @@ export {
   listLibraryVariants,
   getVariantLineage,
   setVariantAudioSource,
+  setVariantOwnMusicBed,
   setVariantQaVerdict,
   type CreatedBatch,
   type VariantLineage,

@@ -90,7 +90,8 @@ const DEFAULT_SEED_SCENES = [
 async function seedVariant(
   tier: 'test' | 'premium',
   scenes: typeof DEFAULT_SEED_SCENES = DEFAULT_SEED_SCENES,
-): Promise<{ variantId: string; personaId: string; briefId: string }> {
+  opts: { ownMusicBed?: boolean } = {},
+): Promise<{ variantId: string; personaId: string; briefId: string; ownBedAssetId?: string }> {
   const project = await createProject(tdb.db, makeProject());
   const [ua] = await tdb.db
     .insert(urlAnalysis)
@@ -139,6 +140,20 @@ async function seedVariant(
     platforms: ['tiktok'],
     languages: ['es'],
   });
+  // Bed musical PROPIO (T6.2b): opcionalmente crea un asset kind=music_bed y lo ata a la variante. La
+  // variante con bed propio NO debe emitir n7eConfig al construir el plan.
+  let ownBedAssetId: string | undefined;
+  if (opts.ownMusicBed === true) {
+    const ownBed = await createAsset(tdb.db, {
+      kind: 'music_bed',
+      storageKey: `music/${newUlid()}.mp3`,
+      mime: 'audio/mpeg',
+      bytes: 4096,
+      checksum: 'cafef00d',
+    });
+    ownBedAssetId = ownBed.id;
+  }
+
   const variantId = newUlid();
   await tdb.db.insert(adVariant).values({
     id: variantId,
@@ -151,6 +166,9 @@ async function seedVariant(
     platformTargets: ['tiktok'],
     filenameCode: `demo-${variantId.slice(-6).toLowerCase()}-es-30s`,
     status: 'scripted',
+    ...(ownBedAssetId !== undefined
+      ? { ownMusicBedAssetId: ownBedAssetId, audioSource: 'own_license' as const }
+      : {}),
   });
   await createScriptsForBatch(tdb.db, {
     stepRunId: newUlid(),
@@ -175,7 +193,7 @@ async function seedVariant(
     ],
   });
 
-  return { variantId, personaId: persona.id, briefId: brief!.id };
+  return { variantId, personaId: persona.id, briefId: brief!.id, ownBedAssetId };
 }
 
 describe('buildVariantGenerationPlan (T4.11 pass 2b-ii)', () => {
@@ -287,6 +305,39 @@ describe('buildVariantGenerationPlan (T4.11 pass 2b-ii)', () => {
     // Si premium tampoco resolviera, el test de arriba pasaría por la razón equivocada. Aquí se confirma
     // que el gate SOLO muerde en el tier con etiqueta, no siempre.
     await expect(buildVariantGenerationPlan({ db: tdb.db }, { variantId })).resolves.toBeDefined();
+  });
+
+  // ── BED MUSICAL PROPIO (T6.2b, §14 `own_license`) ─────────────────────────────────────────────────────
+  it('BED PROPIO (own_license): el plan OMITE n7eConfig y declara providedMusicBedAssetId', async () => {
+    // La aserción clave del CONTROL NEGATIVO de T6.2b: una variante con bed propio NO emite N7e. Se pinea el
+    // SALTO (`n7eConfig` ausente) — no solo el asset resultante — porque con «el bed propio gana» en el
+    // ensamblador, revertir el salto dejaría el máster correcto y este test se quedaría verde por accidente.
+    const { variantId, ownBedAssetId } = await seedVariant('premium', DEFAULT_SEED_SCENES, {
+      ownMusicBed: true,
+    });
+
+    const plan = await buildVariantGenerationPlan({ db: tdb.db }, { variantId });
+
+    // N7e NO se genera: el bed lo pone el usuario.
+    expect(plan.n7eConfig).toBeUndefined();
+    // El plan DECLARA el bed propio (entrega 3): apunta al asset subido.
+    expect(plan.providedMusicBedAssetId).toBe(ownBedAssetId);
+    // Control: el resto del sub-DAG de generación sigue intacto (solo cae N7e).
+    expect(plan.n7bConfig).toBeDefined();
+    expect(plan.n7cConfig).toBeDefined();
+    expect(plan.n7dConfig).toBeDefined();
+  });
+
+  it('BED PROPIO en tier con broll ETIQUETA (test): SALTA también el money-gate de música (no lanza por N7e)', async () => {
+    // El bed propio salta TANTO n7eConfig como el assertEndpointResolvable del endpoint de música: exigir que
+    // ace-step resuelva no tiene sentido si no se genera música. Aun así el broll-etiqueta de tier test SIGUE
+    // lanzando (su money-gate es independiente) — así se prueba que el salto de N7e es específico, no un
+    // apagado global de los gates. Se afirma que el mensaje NO es por música.
+    const { variantId } = await seedVariant('test', DEFAULT_SEED_SCENES, { ownMusicBed: true });
+
+    await expect(buildVariantGenerationPlan({ db: tdb.db }, { variantId })).rejects.toThrow(
+      /N7d \(b-roll\)/,
+    );
   });
 
   it('variante inexistente → PermanentStepError', async () => {

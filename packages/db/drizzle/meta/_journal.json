@@ -183,6 +183,13 @@
       "when": 1784817898170,
       "tag": "0025_easy_titanium_man",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1785475118302,
+      "tag": "0026_free_whirlwind",
+      "breakpoints": true
     }
   ]
 }

@@ -13,12 +13,15 @@ import {
   LibraryListSchema,
   ProjectListSchema,
   ProjectSchema,
+  PublishingStateSchema,
   VariantLineageSchema,
   type BatchConfig,
   type CheckpointDecision,
   type CreateProject,
   type ErrorEnvelope,
   type LibraryVariantSummary,
+  type PublishFlowAction,
+  type PublishingState,
   type UpdateProject,
   type VariantLineageResponse,
 } from '@ugc/core/contracts';
@@ -433,6 +436,33 @@ export const libraryActions = {
 };
 
 export type { LibraryVariantSummary, VariantLineageResponse };
+
+// ── Publicación `/library` (T6.2, §15.4/§preámbulo F6) ────────────────────────────────────────────────────
+// El estado de publicación de una variante aprobada (checklist marcable + elegibilidad Spark + CP5), el
+// marcado de un ítem, y las operaciones de CP5 (activar/desactivar el checkpoint; iniciar/confirmar/reabrir
+// el flujo). Todas responden el MISMO `PublishingState` para que la UI no re-consulte tras cada mutación.
+export const publishingActions = {
+  /** El estado de publicación completo de una variante aprobada. */
+  get: (variantId: string) =>
+    api.get(`/api/variants/${variantId}/publishing`, PublishingStateSchema),
+  /** Marca/desmarca UN ítem del checklist. Devuelve el estado resultante. */
+  markItem: (variantId: string, itemId: string, done: boolean) =>
+    api.patch(`/api/variants/${variantId}/publishing`, PublishingStateSchema, { itemId, done }),
+  /** Activa/desactiva el checkpoint CP5. */
+  toggleCp5: (variantId: string, enabled: boolean) =>
+    api.post(`/api/variants/${variantId}/publishing/cp5`, PublishingStateSchema, {
+      op: 'toggle',
+      enabled,
+    }),
+  /** Mueve el flujo de publicación (start pausa con CP5 on; confirm reanuda; reopen reinicia). */
+  flow: (variantId: string, action: PublishFlowAction) =>
+    api.post(`/api/variants/${variantId}/publishing/cp5`, PublishingStateSchema, {
+      op: 'flow',
+      action,
+    }),
+};
+
+export type { PublishingState };
 
 export const runActions = {
   getRun: (runId: string) => api.get(`/api/runs/${runId}`, RunResponseSchema),

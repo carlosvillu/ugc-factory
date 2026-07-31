@@ -248,6 +248,7 @@ export {
   setVariantAudioSource,
   setVariantQaVerdict,
   type CreatedBatch,
+  type VariantLineage,
 } from './repos/batch.repo';
 // `finalizeVariantMaster` (T5.5, persistencia del pase final): sale al barrel en T5.5d, que ESTRENA su
 // consumidor de runtime fuera del paquete — el executor N8 persiste con él el máster+thumbnail+update de
@@ -273,6 +274,16 @@ export {
 // makeAdVariant/makeAdScript de @ugc/test-utils (los tests de constraints los insertan). `AdScriptRow`
 // (T2.6): la fila `ad_script` tal cual, que consumen el efecto de CP3 y el listado del panel.
 export type { NewAdBatch, NewAdVariant, NewAdScript, AdScriptRow } from './schema/batch';
+// PUBLICACIÓN (T6.2, §15.4/§preámbulo F6): lee/escribe el estado de publicación de una variante aprobada —
+// el marcado del checklist §15.4 y el estado del checkpoint CP5. Trabajo NUEVO de F6 (el bundle emitía los
+// pasos; marcarlos «hechos» no se persistía). Lo consume la capa API de `/library`. Ver `publishing.repo.ts`.
+export {
+  getPublishingState,
+  markChecklistItem,
+  setCp5Enabled,
+  setPublishFlowState,
+  type PublishingRow,
+} from './repos/publishing.repo';
 // Librería de PERSONAS (T2.0): el CRUD que consume `/api/personas` en web, la gestión de sus
 // imágenes de referencia y la lista que alimenta el endpoint de candidatas (la REGLA de
 // matching por `avatar_hint` es pura y vive en `@ugc/core/persona`; db solo lee).

@@ -298,6 +298,29 @@ export {
   type ComplianceChecklistItem,
   type ExportBundleMetadata,
 } from './export-bundle';
+// Contratos de PUBLICACIÓN (T6.2, §15.4/§14/§preámbulo F6): checklist marcable + elegibilidad Spark + CP5.
+export {
+  SparkEligibilitySchema,
+  SPARK_BLOCK_REASON,
+  sparkEligibility,
+  PublishFlowStateSchema,
+  PublishFlowActionSchema,
+  nextPublishState,
+  PublishingChecklistItemSchema,
+  PublishingStateSchema,
+  ChecklistMarksSchema,
+  buildPublishingState,
+  MarkChecklistItemSchema,
+  Cp5OpSchema,
+  type SparkEligibility,
+  type PublishFlowState,
+  type PublishFlowAction,
+  type PublishingChecklistItem,
+  type PublishingState,
+  type ChecklistMarks,
+  type MarkChecklistItemBody,
+  type Cp5Op,
+} from './publishing';
 // Contratos de la API de `/library` (T5.7): la lista de variantes aprobadas + el linaje de una (panel 4c).
 export {
   LibraryVariantSummarySchema,

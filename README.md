@@ -171,7 +171,7 @@ El desarrollo va por fases, tarea a tarea, con verificación observable en cada 
 
 <!-- STATUS-TABLE:BEGIN — generado por `pnpm readme:status`, no editar a mano -->
 
-**107 de 130 tareas cerradas (82 %).**
+**108 de 130 tareas cerradas (83 %).**
 
 | Fase                                                  | Qué entrega                                                                         | Estado         |
 | ----------------------------------------------------- | ----------------------------------------------------------------------------------- | -------------- |
@@ -185,7 +185,7 @@ El desarrollo va por fases, tarea a tarea, con verificación observable en cada 
 | **F3** · Galería de prompts y compilador              | Templates facetados → prompts auditables                                            | ✅ Completa    |
 | **F4** · Generación fal.ai                            | Los assets de una variante, generados de verdad en fal.ai                           | ✅ Completa    |
 | **F5** · Composición, QA y export                     | El anuncio 9:16 completo, con subtítulos, C2PA y QA                                 | ✅ Completa    |
-| **F6** · Publicación                                  | Publicar en TikTok/IG y crear el ad draft                                           | ⬜ No empezada |
+| **F6** · Publicación                                  | Publicar en TikTok/IG y crear el ad draft                                           | 🔨 1/8         |
 | **F7** · Medición y flywheel                          | Métricas por variante + kill/scale + scoring                                        | ⬜ No empezada |
 | **F8** · Operación y extensiones                      | Backups, retención, observabilidad, MCP                                             | ⬜ No empezada |
 

@@ -1,0 +1,175 @@
+[WebServer] seed: persona «Maya» ← foto IA «maya-frontal-headshot.jpg» 1536×2752 px (personas/01KYVEQVEDG8T61BAS7Z49XR16/01KYVEQVMYXEHBTQN66X16C6SJ.jpg)
+[WebServer] seed: persona «Maya» ← foto IA «maya-three-quarter-portrait.jpg» 1536×2752 px (personas/01KYVEQVEDG8T61BAS7Z49XR16/01KYVEQVVFHQ8R4EEANCB4WG0D.jpg)
+[WebServer] seed: persona «Maya» ← foto IA «maya-full-body.jpg» 1536×2752 px (personas/01KYVEQVEDG8T61BAS7Z49XR16/01KYVEQW10XFMGG9BBZJP4JFN4.jpg)
+[WebServer] seed: persona «Lucía (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYVEQW15K7KSCMJJ0MHNZTYN/01KYVEQW4MSBVBWN5WKVPZ6T2B.jpg)
+[WebServer] seed: persona «Lucía (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYVEQW15K7KSCMJJ0MHNZTYN/01KYVEQW7W03YQ5RNWE5DGQ321.jpg)
+[WebServer] seed: persona «Marcus (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYVEQW81KZEFMJAQCGW68WE2/01KYVEQWB68FR93YZGJFND528A.jpg)
+[WebServer] seed: persona «Marcus (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYVEQW81KZEFMJAQCGW68WE2/01KYVEQWEE7NDG4PFHSFQ5B4CG.jpg)
+[WebServer] seed: persona «Nerea (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYVEQWEJEKZSY7BWF19WRSR3/01KYVEQWHT5TRCTPSR1V4M40M7.jpg)
+[WebServer] seed: persona «Nerea (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYVEQWEJEKZSY7BWF19WRSR3/01KYVEQWN0EY9ZZ77Y688SNB61.jpg)
+[WebServer] seed: persona «Carmen (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYVEQWN5725FVP5HB8AM3TJQ/01KYVEQWRBAZRC142EATD5VGPY.jpg)
+[WebServer] seed: persona «Carmen (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYVEQWN5725FVP5HB8AM3TJQ/01KYVEQWVMS5M6HD30JQEFYFRY.jpg)
+[WebServer] seed: persona «Alex (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYVEQWVRXNZWPA7KDME7RF58/01KYVEQWYYFMRAADTXY8A0D58J.jpg)
+[WebServer] seed: persona «Alex (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYVEQWVRXNZWPA7KDME7RF58/01KYVEQX26S3AHH7QSM07C787M.jpg)
+[WebServer] seed: persona «Rosa (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYVEQX2A7QBPCN5FKKWZFZZK/01KYVEQX5GGYMMN5Q70EQEX6BB.jpg)
+[WebServer] seed: persona «Rosa (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYVEQX2A7QBPCN5FKKWZFZZK/01KYVEQX8QQCH8VZNW5XCKAKSN.jpg)
+[WebServer] seed: persona «Priya (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYVEQX8WXGQ0J5FRW5K1XX6N/01KYVEQXC16EATDWZ93W4FSZTY.jpg)
+[WebServer] seed: persona «Priya (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYVEQX8WXGQ0J5FRW5K1XX6N/01KYVEQXF9287NYMC4ATPKJMAC.jpg)
+[WebServer] seed: persona «David (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYVEQXFE3FWEA7GQ5AM842W5/01KYVEQXJMD14F70R1K88DZBEQ.jpg)
+[WebServer] seed: persona «David (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYVEQXFE3FWEA7GQ5AM842W5/01KYVEQXNXZ8HHJ9PQ53Y2JHGV.jpg)
+[WebServer] seed: persona «Chloe (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYVEQXP1SE876GGBKGX6J5V8/01KYVEQXS5HBPHYT25DHN2G9N7.jpg)
+[WebServer] seed: persona «Chloe (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYVEQXP1SE876GGBKGX6J5V8/01KYVEQXWJ0ZY7AJS5MBVF46RK.jpg)
+[WebServer] seed: persona «Kenji (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYVEQXWP8D4RKKVPZ8EGTHNF/01KYVEQXZWVN65Z1K0G4EA4MKB.jpg)
+[WebServer] seed: persona «Kenji (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYVEQXWP8D4RKKVPZ8EGTHNF/01KYVEQY344ZNP6TM7JRQ6JTT2.jpg)
+[WebServer] [e2e-stack] next build (modo producción)…
+[WebServer] ▲ Next.js 16.2.10 (Turbopack)
+[WebServer] 
+[WebServer]   Creating an optimized production build ...
+[WebServer] ✓ Compiled successfully in 5.6s
+[WebServer]   Running TypeScript ...
+[WebServer]   Finished TypeScript in 8.0s ...
+[WebServer]   Collecting page data using 9 workers ...
+[WebServer]   Generating static pages using 9 workers (0/4) ...
+[WebServer]   Generating static pages using 9 workers (1/4) 
+[WebServer]   Generating static pages using 9 workers (2/4) 
+[WebServer]   Generating static pages using 9 workers (3/4) 
+[WebServer] ✓ Generating static pages using 9 workers (4/4) in 90ms
+[WebServer]   Finalizing page optimization ...
+[WebServer] 
+[WebServer] Route (app)
+[WebServer] ┌ ƒ /
+[WebServer] ├ ƒ /_not-found
+[WebServer] ├ ƒ /analyses/[id]
+[WebServer] ├ ƒ /analyses/new
+[WebServer] ├ ƒ /api/analyses
+[WebServer] ├ ƒ /api/assets
+[WebServer] ├ ƒ /api/assets/[id]/download
+[WebServer] ├ ƒ /api/batches/[id]/scripts
+[WebServer] ├ ƒ /api/batches/estimate
+[WebServer] ├ ƒ /api/briefs/[id]
+[WebServer] ├ ƒ /api/dashboard
+[WebServer] ├ ƒ /api/health
+[WebServer] ├ ƒ /api/library
+[WebServer] ├ ƒ /api/login
+[WebServer] ├ ƒ /api/personas
+[WebServer] ├ ƒ /api/personas/[id]
+[WebServer] ├ ƒ /api/personas/[id]/reference-images
+[WebServer] ├ ƒ /api/personas/[id]/reference-images/[assetId]
+[WebServer] ├ ƒ /api/personas/[id]/reference-images/generate
+[WebServer] ├ ƒ /api/personas/[id]/voice-preview
+[WebServer] ├ ƒ /api/personas/candidates
+[WebServer] ├ ƒ /api/projects
+[WebServer] ├ ƒ /api/projects/[id]
+[WebServer] ├ ƒ /api/runs
+[WebServer] ├ ƒ /api/runs/[id]
+[WebServer] ├ ƒ /api/runs/[id]/cancel
+[WebServer] ├ ƒ /api/runs/[id]/events
+[WebServer] ├ ƒ /api/settings
+[WebServer] ├ ƒ /api/spend
+[WebServer] ├ ƒ /api/steps/[id]
+[WebServer] ├ ƒ /api/steps/[id]/approve
+[WebServer] ├ ƒ /api/steps/[id]/edit
+[WebServer] ├ ƒ /api/steps/[id]/regenerate
+[WebServer] ├ ƒ /api/steps/[id]/reject
+[WebServer] ├ ƒ /api/steps/[id]/retry
+[WebServer] ├ ƒ /api/steps/[id]/skip
+[WebServer] ├ ƒ /api/templates
+[WebServer] ├ ƒ /api/templates/[id]
+[WebServer] ├ ƒ /api/templates/[id]/status
+[WebServer] ├ ƒ /api/templates/[id]/test
+[WebServer] ├ ƒ /api/templates/[id]/thumbnail
+[WebServer] ├ ƒ /api/thumbnails
+[WebServer] ├ ƒ /api/variants/[id]
+[WebServer] ├ ƒ /api/variants/[id]/bundle
+[WebServer] ├ ƒ /api/variants/[id]/lineage
+[WebServer] ├ ƒ /api/variants/[id]/publishing
+[WebServer] ├ ƒ /api/variants/[id]/publishing/cp5
+[WebServer] ├ ƒ /api/webhooks/fal
+[WebServer] ├ ƒ /design-system
+[WebServer] ├ ƒ /gallery
+[WebServer] ├ ƒ /library
+[WebServer] ├ ƒ /login
+[WebServer] ├ ƒ /personas
+[WebServer] ├ ƒ /projects
+[WebServer] ├ ƒ /projects/[id]
+[WebServer] ├ ƒ /runs
+[WebServer] ├ ƒ /runs/[id]
+[WebServer] ├ ƒ /settings
+[WebServer] └ ƒ /spend
+[WebServer] 
+[WebServer] 
+[WebServer] ƒ Proxy (Middleware)
+[WebServer] 
+[WebServer] ƒ  (Dynamic)  server-rendered on demand
+[WebServer] 
+[WebServer] ▲ Next.js 16.2.10
+[WebServer] - Local:         http://localhost:3100
+[WebServer] - Network:       http://192.168.1.132:3100
+[WebServer] ✓ Ready in 126ms
+[WebServer] {"level":30,"time":1785480361662,"pid":98688,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","msg":"running startup migrations"}
+[WebServer] {"level":30,"time":1785480361696,"pid":98688,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","msg":"startup migrations applied"}
+[WebServer] {"level":30,"time":1785480361741,"pid":98688,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","seeded":true,"msg":"auth.password_hash sembrado (first boot)"}
+[WebServer] {"level":30,"time":1785480361751,"pid":98688,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","msg":"sembrando datos de referencia (T3.9)"}
+[WebServer] {"level":30,"time":1785480361773,"pid":98688,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","hookLines":80,"ctaLines":30,"recipes":3,"msg":"librería sembrada o ya presente (insert-only)"}
+[WebServer] {"level":30,"time":1785480361806,"pid":98688,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","templates":56,"guardPacks":10,"modelProfiles":18,"msg":"galería sembrada o ya presente (insert-only)"}
+[WebServer] {"level":30,"time":1785480361835,"pid":98688,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","personas":11,"imagesCreated":0,"imagesFailed":0,"msg":"personas sembradas o ya presentes"}
+[WebServer] {"level":30,"time":1785480362221,"pid":98699,"hostname":"MBP-de-Carlos","name":"worker","intervalMs":5000,"generationReconcile":true,"msg":"sweeper arrancado"}
+[WebServer] {"level":30,"time":1785480362221,"pid":98699,"hostname":"MBP-de-Carlos","name":"worker","queue":"demo.noop","msg":"pg-boss arrancado: colas y consumers listos"}
+[WebServer] {"level":30,"time":1785480362221,"pid":98699,"hostname":"MBP-de-Carlos","name":"worker","health":{"ok":true,"db":true},"msg":"worker ready"}
+[WebServer] {"level":30,"time":1785480361835,"pid":98688,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","msg":"datos de referencia sembrados (T3.9)"}
+
+Running 2 tests using 1 worker
+
+  ✓  1 [setup] › e2e/auth.setup.ts:10:1 › login y persistir sesión (640ms)
+  ✘  2 [chromium] › e2e/publishing-checklist.spec.ts:152:3 › checklist de publicación + CP5 /library (T6.2) › CP5: con el checkpoint ACTIVADO el flujo se PAUSA y al confirmar se reanuda (15.9s)
+
+
+  1) [chromium] › e2e/publishing-checklist.spec.ts:152:3 › checklist de publicación + CP5 /library (T6.2) › CP5: con el checkpoint ACTIVADO el flujo se PAUSA y al confirmar se reanuda 
+
+    Error: expect(locator).toHaveAttribute(expected) failed
+
+    Locator:  locator('[data-slot="cp5-flow"]')
+    Expected: "waiting_confirmation"
+    Received: "confirmed"
+    Timeout:  15000ms
+
+    Call log:
+      - Expect "toHaveAttribute" with timeout 15000ms
+      - waiting for locator('[data-slot="cp5-flow"]')
+        34 × locator resolved to <div data-slot="cp5-flow" data-flow-state="confirmed" class="rounded-md border border-border bg-surface p-3">…</div>
+           - unexpected value "confirmed"
+
+
+      173 |     // INICIAR el flujo → con CP5 on, SE PAUSA en waiting_confirmation (NO llega a confirmed).
+      174 |     await page.locator('[data-slot="cp5-start"]').click();
+    > 175 |     await expect(flow).toHaveAttribute('data-flow-state', 'waiting_confirmation', {
+          |                        ^
+      176 |       timeout: 15_000,
+      177 |     });
+      178 |     // El botón de confirmar aparece (el flujo está DETENIDO esperando confirmación).
+        at /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/web/e2e/publishing-checklist.spec.ts:175:24
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/publishing-checklist-check-71ac7-A-y-al-confirmar-se-reanuda-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/publishing-checklist-check-71ac7-A-y-al-confirmar-se-reanuda-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/publishing-checklist-check-71ac7-A-y-al-confirmar-se-reanuda-chromium/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/publishing-checklist-check-71ac7-A-y-al-confirmar-se-reanuda-chromium/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace test-results/publishing-checklist-check-71ac7-A-y-al-confirmar-se-reanuda-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  1 failed
+    [chromium] › e2e/publishing-checklist.spec.ts:152:3 › checklist de publicación + CP5 /library (T6.2) › CP5: con el checkpoint ACTIVADO el flujo se PAUSA y al confirmar se reanuda 
+  1 passed (41.7s)
+undefined
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/web:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: playwright test publishing-checklist.spec.ts -g el flujo se PAUSA

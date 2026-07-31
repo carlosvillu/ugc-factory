@@ -9,3 +9,4 @@ export * from './pipeline';
 export * from './generation';
 export * from './gallery';
 export * from './batch';
+export * from './publishing';

@@ -26,6 +26,7 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { Select } from '@/components/ui/select';
 import { Tabs } from '@/components/ui/tabs';
 import { SafeZoneFrame, type SafeZonePreset } from '@/components/ui/safe-zone-overlay';
+import { PublishingPanel } from '@/components/library/publishing-panel';
 
 const PRESET_TABS: { label: string; preset: SafeZonePreset }[] = [
   { label: 'Universal', preset: 'universal' },
@@ -458,6 +459,10 @@ function VariantDetail({ summary }: { summary: LibraryVariantSummary }) {
             </Alert>
           ) : null}
         </div>
+
+        {/* PUBLICACIÓN (T6.2, §15.4/§preámbulo F6): checklist marcable + opción Spark + CP5 (modo degradado
+            manual). Vive bajo la descarga del bundle — misma superficie de la variante aprobada. */}
+        <PublishingPanel variantId={summary.id} />
       </div>
     </div>
   );

@@ -1029,11 +1029,18 @@ Decisiones del usuario (2026-07-07): la fase se ejecuta tras T0.1 y **antes** de
 - **Playwright permanente**: `apps/web/e2e/ad-drafts.spec.ts` usa TikTok/Meta fake y cubre creación de ambos borradores, creative correcto, estados/IDs visibles y el fallback de checklist para el flag AIGC según capability fixture.
 - **Verificación**: el borrador aparece en TikTok Ads Manager y en Meta Ads Manager vinculado al vídeo correcto; el resultado de la verificación del flag AIGC queda documentado.
 
-#### T6.6 · Trending Sound Advisor
+#### T6.6 · Trending Sound Advisor [x] 2026-07-31 — PASS de la Verificación re-scopeada (catálogo fake); lectura viva retenida en T6.6b ⛔, ver docs/verifications/T6.6/ ($0)
+- **SPLIT (2026-07-31, regla 6, cambio de alcance menor)**: la lectura de datos VIVOS de TikTok Creative Center (Popular Music) requiere una sesión de TikTok autenticada — la lista está tras login/SPA, NO es una web pública anónima (verificado empíricamente por el implementer: la fuente da 404 sin sesión). Esa sesión es **T6.1** (⚠, apps de developer), no cerrada. ⇒ la cláusula «sonidos trending **reales**» de la Verificación NO es satisfacible por código de T6.6 hoy. Se DIVIDE (patrón T5.9, cierre-sin-laundering): **T6.6** cierra sobre el observable del catálogo FAKE (toda la sustancia del sistema: filtro comercial, mood, selección, guía, coherencia Spark, export headroom); la lectura VIVA se retiene íntegra en **T6.6b (⛔, dep T6.1)** para que la portada pública no mienta.
 - **Depende de**: T6.2
-- **Entrega**: lectura de TikTok Creative Center (Popular Music) con filtro de disponibilidad comercial; sugerencias por mood; guía in-app del flujo "añadir sonido nativo al publicar" (restricción de cuentas Business documentada, §14); export con music headroom; **deuda `[verificar]`**: limitaciones de música en cuentas Business de Instagram.
+- **Entrega**: lectura de TikTok Creative Center (Popular Music) con filtro de disponibilidad comercial (cliente en core, molde Firecrawl, `baseUrl` overridable → fake en test); sugerencias por mood; guía in-app del flujo "añadir sonido nativo al publicar" (restricción de cuentas Business documentada, §14); export con music headroom; escritura de `audio_source='native_trending'` (writer nuevo); **deuda `[verificar]`**: limitaciones de música en cuentas Business de Instagram (resultado anotado en PRD §14/§13.3).
 - **Playwright permanente**: `apps/web/e2e/sound-advisor.spec.ts` usa catálogo fake y cubre filtros comerciales, sugerencias por mood, selección, guía y bloqueo coherente de Spark para sonido no-CML.
-- **Verificación**: para una variante destino orgánico, el Advisor lista sonidos trending reales con su flag comercial; elegir uno no-CML marca `audio_source=native_trending` y el checklist bloquea Spark (coherencia con T6.2).
+- **Verificación (re-scopeada al catálogo fake)**: para una variante destino orgánico, el Advisor lista los sonidos del catálogo (fake in-test) con su flag comercial derivado del dato (`if_cml`); elegir uno no-CML marca `audio_source=native_trending` y el checklist bloquea Spark (coherencia con T6.2). Cuando la fuente no responde (producción sin T6.1), `sourceOk=false` se propaga y la UI avisa (no muestra una lista vacía indistinguible de un filtro sin resultados). La lectura de sonidos REALES vivos se verifica en T6.6b.
+
+#### T6.6b · Advisor: lectura VIVA de Creative Center ⛔
+- **Retenida de T6.6 (2026-07-31)**: la mitad de la Verificación de T6.6 que exige datos REALES y no es satisfacible sin sesión de TikTok autenticada.
+- **Depende de**: T6.6, T6.1 *(sesión de TikTok autenticada — apps de developer, ⚠)*
+- **Entrega**: cablear el cliente del Creative Center a la fuente VIVA con la sesión de T6.1; el `baseUrl` deja de apuntar al fake.
+- **Verificación**: para una variante destino orgánico, el Advisor lista sonidos trending **REALES** de Creative Center con su flag comercial real; elegir uno no-CML marca `audio_source=native_trending` y el checklist bloquea Spark.
 
 #### T6.7 · Flujo Spark documentado
 - **Depende de**: T6.3

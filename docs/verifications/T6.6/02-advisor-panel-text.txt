@@ -1,0 +1,13 @@
+TRENDING SOUND ADVISOR (§14)
+
+Destino orgánico: se muestran todos los trending, con su flag comercial.
+
+⚠
+No se pudo leer TikTok Creative Center (Popular Music) ahora mismo. La lista de sonidos trending requiere una sesión de TikTok conectada; hasta entonces no hay catálogo que mostrar. Vuelve a intentarlo o añade el sonido manualmente en la app al publicar.
+CÓMO AÑADIR EL SONIDO NATIVO AL PUBLICAR
+Descarga el máster SIN bed (con headroom de audio) de esta variante.
+Súbelo a TikTok desde la app, en el editor.
+Añade el sonido trending elegido con el botón «Sonidos» del editor nativo.
+Activa el disclosure AIGC antes de publicar (obligatorio, §15.4).
+⚠
+Restricción de cuentas Business (§14): los trending sounds no-CML solo están disponibles en cuentas personales/creator. En cuentas Business —las que usa la publicación por API— el selector se limita a la Commercial Music Library, así que un sonido no-CML solo puede añadirse publicando MANUALMENTE desde una cuenta personal/creator. Además, un post con sonido trending no-CML NO puede promocionarse después (Spark queda bloqueado).

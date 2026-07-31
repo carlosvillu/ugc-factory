@@ -12,13 +12,14 @@
 //
 // El estado vive en un solo objeto `PublishingState` que cada mutación DEVUELVE completo (la UI no
 // re-consulta): marcar un ítem, togglear CP5 o mover el flujo re-setean el estado con la respuesta.
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { ApiError, publishingActions, type PublishingState } from '@/lib/api-client';
 import { Alert } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Switch } from '@/components/ui/switch';
+import { SoundAdvisor } from '@/components/library/sound-advisor';
 
 const PLATFORM_LABEL: Record<string, string> = {
   all: 'Ambas',
@@ -37,6 +38,21 @@ export function PublishingPanel({ variantId }: { variantId: string }) {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+
+  // RECARGA el estado de publicación desde el servidor. Lo llama el Sound Advisor tras elegir un sonido nativo:
+  // al marcar `audio_source='native_trending'`, `sparkEligibility` bloquea Spark, y recargar re-deriva el
+  // estado → el badge de Spark pasa a BLOQUEADO en vivo (coherencia T6.2 observable). Un fallo en la recarga se
+  // surfacea sin romper el estado actual.
+  const reload = useCallback(() => {
+    publishingActions
+      .get(variantId)
+      .then(setState)
+      .catch((e: unknown) => {
+        setActionError(
+          e instanceof ApiError ? e.message : 'No se pudo recargar el estado de publicación.',
+        );
+      });
+  }, [variantId]);
 
   useEffect(() => {
     let cancelled = false;
@@ -150,6 +166,13 @@ export function PublishingPanel({ variantId }: { variantId: string }) {
             </Alert>
           </div>
         ) : null}
+      </div>
+
+      {/* TRENDING SOUND ADVISOR (§14 pt 1-2): lista sonidos trending con filtro comercial + sugerencias por
+          mood + guía del flujo nativo. Elegir un no-CML marca native_trending → recarga el estado (Spark se
+          bloquea en vivo). */}
+      <div data-slot="sound-advisor-section">
+        <SoundAdvisor variantId={variantId} onSelected={reload} />
       </div>
 
       {/* CP5 · el checkpoint OPCIONAL del flujo de publicación en modo degradado manual (§preámbulo F6). */}

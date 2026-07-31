@@ -35,6 +35,11 @@ import {
   type PersonaPatch,
 } from '@ugc/core/persona';
 import {
+  TrendingSoundListSchema,
+  SelectNativeSoundResultSchema,
+  type TrendingSound,
+} from '@ugc/core/publishing';
+import {
   TemplateDetailSchema,
   TemplateEditResultSchema,
   TemplateListSchema,
@@ -463,6 +468,22 @@ export const publishingActions = {
 };
 
 export type { PublishingState };
+
+// ── Trending Sound Advisor `/library` (T6.6, §14 pt 1-2) ────────────────────────────────────────────────────
+// Lista los trending sounds de Creative Center (con el filtro comercial según destino) y elige uno nativo
+// (→ `audio_source='native_trending'`, que bloquea Spark, coherencia con T6.2).
+export const soundAdvisorActions = {
+  /** Los trending sounds de la variante (filtrados por su destino: paid/Spark ⇒ solo CML). */
+  list: (variantId: string) =>
+    api.get(`/api/variants/${variantId}/native-sound`, TrendingSoundListSchema),
+  /** Elige un sonido nativo/trending → marca `audio_source='native_trending'`. */
+  select: (variantId: string, soundId: string) =>
+    api.post(`/api/variants/${variantId}/native-sound`, SelectNativeSoundResultSchema, {
+      soundId,
+    }),
+};
+
+export type { TrendingSound };
 
 export const runActions = {
   getRun: (runId: string) => api.get(`/api/runs/${runId}`, RunResponseSchema),

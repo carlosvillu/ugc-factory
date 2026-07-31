@@ -13,6 +13,7 @@
     "./library": "./src/library/index.ts",
     "./orchestrator": "./src/orchestrator/index.ts",
     "./persona": "./src/persona/index.ts",
+    "./publishing": "./src/publishing/index.ts",
     "./observability": "./src/observability/index.ts",
     "./generation": "./src/generation/index.ts",
     "./scripting": "./src/scripting/index.ts",

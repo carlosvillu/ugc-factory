@@ -429,6 +429,33 @@ export async function setVariantOwnMusicBed(
 }
 
 /**
+ * MARCA `audio_source='native_trending'` en una variante (T6.6, §14 pt 1): el usuario eligió un sonido
+ * nativo/trending del Trending Sound Advisor. La pista NO se compone (se añade nativa en la app al publicar,
+ * §12: «se marca en publicación») — este writer solo persiste la PROCEDENCIA, que hace que `sparkEligibility`
+ * bloquee Spark (coherencia con T6.2, §14 pt 2).
+ *
+ * INVARIANTE (T6.2b, `ownBedFields`): puntero `own_music_bed_asset_id` non-null ⟺ `audio_source='own_license'`.
+ * Elegir un sonido nativo por tanto DEBE limpiar el puntero de bed propio en la MISMA UPDATE — si no, la fila
+ * quedaría con puntero non-null Y `audio_source='native_trending'`, rompiendo la biconditional (y N8 seguiría
+ * componiendo el bed propio, contradiciendo «no se compone»). Es una SUSTITUCIÓN de procedencia: el sonido
+ * nativo gana al bed propio previo.
+ *
+ * ⚠ ESCRITOR MECÁNICO, sin precondiciones de estado (como `setVariantOwnMusicBed`): NO valida que la variante
+ * esté aprobada ni compuesta. Esa guarda (aprobada + máster ya existe, para que N7e no pueda pisar la marca
+ * después) vive en el ENDPOINT, donde se devuelve un 409 accionable.
+ *
+ * Devuelve `true` si la variante existía.
+ */
+export async function setVariantNativeTrending(db: Db, variantId: string): Promise<boolean> {
+  const updated = await db
+    .update(adVariant)
+    .set({ audioSource: 'native_trending', ownMusicBedAssetId: null })
+    .where(eq(adVariant.id, variantId))
+    .returning({ id: adVariant.id });
+  return updated.length > 0;
+}
+
+/**
  * Los lotes de un brief (T2.3: la Verificación pregunta «¿qué lote creó este checkpoint?», y la
  * pantalla del lote de F2/F5 los listará). Orden estable por id (ULID ⇒ cronológico).
  *

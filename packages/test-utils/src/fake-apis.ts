@@ -25,6 +25,7 @@ import {
   FIRECRAWL_INTERNAL_FAQ,
   JINA_MARKDOWN,
 } from './fixtures/firecrawl';
+import { CREATIVE_CENTER_POPULAR_MUSIC } from './fixtures/creative-center';
 import type { ProductBrief } from '@ugc/core/contracts';
 import {
   anthropicMessageResponse,
@@ -589,6 +590,8 @@ export interface FakeExternalApis {
   anthropicBaseUrl: string;
   /** Base URL del fal falso (para `FAL_BASE_URL`, T4.6): web reescribe `queue.fal.run` aquí. */
   falBaseUrl: string;
+  /** Base URL del Creative Center falso (para `CREATIVE_CENTER_BASE_URL`, T6.6): el Advisor lee aquí. */
+  creativeCenterBaseUrl: string;
   /** Para el shutdown del stack. */
   close: () => Promise<void>;
 }
@@ -755,6 +758,17 @@ export async function startFakeExternalApis(): Promise<FakeExternalApis> {
         },
         400,
       );
+      return;
+    }
+
+    // ── TikTok Creative Center · Popular Music (T6.6, §14) ──────────────────────
+    // El cliente pide `${creativeCenterBaseUrl}/popular_trend/sound/list?...`; con la base apuntando al fake,
+    // la request llega a `/popular_trend/sound/list`. Sirve el catálogo REAL-SHAPE (con `if_cml` por sonido).
+    // NO se re-filtra aquí por `commercialMusic`: el cliente re-filtra por el flag de cada item (defensa en
+    // profundidad, §14 pt 2) — servir el catálogo completo es lo más honesto (la fuente real puede no filtrar
+    // perfecto), y ejercita justo ese re-filtrado del cliente.
+    if (req.method === 'GET' && url.pathname === '/popular_trend/sound/list') {
+      json(CREATIVE_CENTER_POPULAR_MUSIC);
       return;
     }
 
@@ -968,6 +982,7 @@ export async function startFakeExternalApis(): Promise<FakeExternalApis> {
     jinaBaseUrl: base,
     anthropicBaseUrl: base,
     falBaseUrl: base,
+    creativeCenterBaseUrl: base,
     close: () =>
       new Promise<void>((resolve) => {
         server.close(() => {

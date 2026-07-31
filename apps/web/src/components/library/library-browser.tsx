@@ -280,7 +280,13 @@ function VariantDetail({ summary }: { summary: LibraryVariantSummary }) {
     };
   }, [summary.id]);
 
-  const dualExport = lineage?.batch.destination === 'both';
+  // La versión SIN bed se ofrece cuando el destino es `both` (dual paid+orgánico, T5.7) O cuando la variante
+  // usa un sonido NATIVO/TRENDING (§14 pt 1): un `native_trending` NO lleva bed quemado — su export es el
+  // máster CON HEADROOM de audio (voz a −14 LUFS sin música), para que el sonido nativo se superponga en la
+  // app al publicar. Sin esto, una variante orgánica `native_trending` (destino != 'both') no podría descargar
+  // su versión con headroom — exactamente al revés de lo que §14 pt 1 pide.
+  const nativeTrending = lineage?.variant.audioSource === 'native_trending';
+  const dualExport = lineage?.batch.destination === 'both' || nativeTrending;
 
   // Descarga MIRANDO EL STATUS: pide el bundle, y solo si llega 200 dispara la descarga desde el blob
   // (object-URL + `<a download>` efímero + revoke). Un no-200 (409 alcanzable) sube como `ApiError` y se
@@ -449,7 +455,9 @@ function VariantDetail({ summary }: { summary: LibraryVariantSummary }) {
                 data-audio="no_bed"
                 className="inline-flex items-center rounded-md border border-border-2 bg-surface-3 px-4 py-2 text-mono font-medium text-text transition-colors hover:border-border-strong focus-visible:ring-3 focus-visible:ring-ring focus-visible:outline-none disabled:opacity-60"
               >
-                ↓ Sin bed (paid)
+                {/* Para native_trending el sin-bed ES el export con HEADROOM (§14 pt 1): voz a −14 LUFS sin
+                    música quemada, para superponer el sonido nativo al publicar. */}
+                ↓ {nativeTrending ? 'Con headroom (sonido nativo)' : 'Sin bed (paid)'}
               </button>
             ) : null}
           </div>

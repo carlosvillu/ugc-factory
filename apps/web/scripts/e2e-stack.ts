@@ -139,6 +139,10 @@ const env: NodeJS.ProcessEnv = {
   // JAMÁS gasta dinero. Fijado INCONDICIONALMENTE (mismo criterio que el resto): un shell con la URL
   // real de fal no debe filtrar una llamada de pago.
   FAL_BASE_URL: fakeApis.falBaseUrl,
+  // Creative Center (T6.6): el Trending Sound Advisor lee el catálogo de Popular Music aquí — la base URL de
+  // producción (`ads.tiktok.com`) se sustituye por el fake, así la suite NUNCA pega a TikTok real. Fijado
+  // incondicionalmente (mismo criterio que el resto de *_BASE_URL).
+  CREATIVE_CENTER_BASE_URL: fakeApis.creativeCenterBaseUrl,
   // FAL_KEY ya NO se fija en el env del worker: los executors N7 y el sweeper la DESCIFRAN de `secret.fal`
   // (sembrada arriba, línea 86) igual que web — una sola fuente de verdad. Que el sub-DAG de generación
   // del E2E arranque con la key SOLO en la BD (sin `FAL_KEY` en el entorno) es la PRUEBA POSITIVA de que

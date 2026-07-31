@@ -1,0 +1,174 @@
+[WebServer] seed: persona «Maya» ← foto IA «maya-frontal-headshot.jpg» 1536×2752 px (personas/01KYVX2W34YKKWX9H4GQTZ3JJV/01KYVX2W9R0M8DD28DJEM2Z0VT.jpg)
+[WebServer] seed: persona «Maya» ← foto IA «maya-three-quarter-portrait.jpg» 1536×2752 px (personas/01KYVX2W34YKKWX9H4GQTZ3JJV/01KYVX2WG9QZ0P0WETAMPCBZSX.jpg)
+[WebServer] seed: persona «Maya» ← foto IA «maya-full-body.jpg» 1536×2752 px (personas/01KYVX2W34YKKWX9H4GQTZ3JJV/01KYVX2WNZH50JPHX7J4HE4KT3.jpg)
+[WebServer] seed: persona «Lucía (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYVX2WP3XGW820PM5MRNK95J/01KYVX2WSRV7ZCB0QP4A2GT1V4.jpg)
+[WebServer] seed: persona «Lucía (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYVX2WP3XGW820PM5MRNK95J/01KYVX2WX5W6D43YFKXZP5B38P.jpg)
+[WebServer] seed: persona «Marcus (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYVX2WXC2NMA4G6DY88C21WB/01KYVX2X0J2XBY69P1KMSXW6RD.jpg)
+[WebServer] seed: persona «Marcus (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYVX2WXC2NMA4G6DY88C21WB/01KYVX2X3YW12J9G0J5ZH14BXX.jpg)
+[WebServer] seed: persona «Nerea (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYVX2X42MW2BNYYEZE489BXC/01KYVX2X77HXF59HK8MRFHED8Y.jpg)
+[WebServer] seed: persona «Nerea (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYVX2X42MW2BNYYEZE489BXC/01KYVX2XAF34MJPAXPJWKQ3RZ7.jpg)
+[WebServer] seed: persona «Carmen (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYVX2XAMYRPP1YQ5WK2KBXFF/01KYVX2XDSXH948G9TVPVP3AXV.jpg)
+[WebServer] seed: persona «Carmen (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYVX2XAMYRPP1YQ5WK2KBXFF/01KYVX2XH5NEW6N8VNEZ1PEH2H.jpg)
+[WebServer] seed: persona «Alex (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYVX2XH9AXS5KVPF0DP3T4PH/01KYVX2XMFKTJ438SR162895PC.jpg)
+[WebServer] seed: persona «Alex (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYVX2XH9AXS5KVPF0DP3T4PH/01KYVX2XQQYKZG5SST51PDVN2B.jpg)
+[WebServer] seed: persona «Rosa (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYVX2XQWDG6NYXRAS8NS983S/01KYVX2XV4QKVKZ831FVRJRS4H.jpg)
+[WebServer] seed: persona «Rosa (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYVX2XQWDG6NYXRAS8NS983S/01KYVX2XYDQ18GAXN9VZK3VSQ8.jpg)
+[WebServer] seed: persona «Priya (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYVX2XYH8K2G96J8EW2DM8RB/01KYVX2Y1SWAXH2ZSKS41YA946.jpg)
+[WebServer] seed: persona «Priya (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYVX2XYH8K2G96J8EW2DM8RB/01KYVX2Y52DRXJNXW25C8EK3HJ.jpg)
+[WebServer] seed: persona «David (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYVX2Y56HK8KVWENPE91VDSH/01KYVX2Y8B4EN7D4YKYHNY75WS.jpg)
+[WebServer] seed: persona «David (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYVX2Y56HK8KVWENPE91VDSH/01KYVX2YBMAXZ8MQ9CR5A3J1KB.jpg)
+[WebServer] seed: persona «Chloe (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYVX2YBSH8N7F42BVSDHVK5W/01KYVX2YEYK294M1DPY2294G1R.jpg)
+[WebServer] seed: persona «Chloe (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYVX2YBSH8N7F42BVSDHVK5W/01KYVX2YJ4GF2KDB08TA6BENCQ.jpg)
+[WebServer] seed: persona «Kenji (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYVX2YJ9HP04NS9MCM09XGQG/01KYVX2YNF2S6FR6E4HWTCKK54.jpg)
+[WebServer] seed: persona «Kenji (placeholder)» ← imagen sintética 1638×2048 px (personas/01KYVX2YJ9HP04NS9MCM09XGQG/01KYVX2YRQDNCXV6KZE469S1XG.jpg)
+[WebServer] [e2e-stack] next build (modo producción)…
+[WebServer] ▲ Next.js 16.2.10 (Turbopack)
+[WebServer] 
+[WebServer]   Creating an optimized production build ...
+[WebServer] ✓ Compiled successfully in 5.7s
+[WebServer]   Running TypeScript ...
+[WebServer]   Finished TypeScript in 7.9s ...
+[WebServer]   Collecting page data using 9 workers ...
+[WebServer]   Generating static pages using 9 workers (0/4) ...
+[WebServer]   Generating static pages using 9 workers (1/4) 
+[WebServer]   Generating static pages using 9 workers (2/4) 
+[WebServer]   Generating static pages using 9 workers (3/4) 
+[WebServer] ✓ Generating static pages using 9 workers (4/4) in 103ms
+[WebServer]   Finalizing page optimization ...
+[WebServer] 
+[WebServer] Route (app)
+[WebServer] ┌ ƒ /
+[WebServer] ├ ƒ /_not-found
+[WebServer] ├ ƒ /analyses/[id]
+[WebServer] ├ ƒ /analyses/new
+[WebServer] ├ ƒ /api/analyses
+[WebServer] ├ ƒ /api/assets
+[WebServer] ├ ƒ /api/assets/[id]/download
+[WebServer] ├ ƒ /api/batches/[id]/scripts
+[WebServer] ├ ƒ /api/batches/estimate
+[WebServer] ├ ƒ /api/briefs/[id]
+[WebServer] ├ ƒ /api/dashboard
+[WebServer] ├ ƒ /api/health
+[WebServer] ├ ƒ /api/library
+[WebServer] ├ ƒ /api/login
+[WebServer] ├ ƒ /api/personas
+[WebServer] ├ ƒ /api/personas/[id]
+[WebServer] ├ ƒ /api/personas/[id]/reference-images
+[WebServer] ├ ƒ /api/personas/[id]/reference-images/[assetId]
+[WebServer] ├ ƒ /api/personas/[id]/reference-images/generate
+[WebServer] ├ ƒ /api/personas/[id]/voice-preview
+[WebServer] ├ ƒ /api/personas/candidates
+[WebServer] ├ ƒ /api/projects
+[WebServer] ├ ƒ /api/projects/[id]
+[WebServer] ├ ƒ /api/runs
+[WebServer] ├ ƒ /api/runs/[id]
+[WebServer] ├ ƒ /api/runs/[id]/cancel
+[WebServer] ├ ƒ /api/runs/[id]/events
+[WebServer] ├ ƒ /api/settings
+[WebServer] ├ ƒ /api/spend
+[WebServer] ├ ƒ /api/steps/[id]
+[WebServer] ├ ƒ /api/steps/[id]/approve
+[WebServer] ├ ƒ /api/steps/[id]/edit
+[WebServer] ├ ƒ /api/steps/[id]/regenerate
+[WebServer] ├ ƒ /api/steps/[id]/reject
+[WebServer] ├ ƒ /api/steps/[id]/retry
+[WebServer] ├ ƒ /api/steps/[id]/skip
+[WebServer] ├ ƒ /api/templates
+[WebServer] ├ ƒ /api/templates/[id]
+[WebServer] ├ ƒ /api/templates/[id]/status
+[WebServer] ├ ƒ /api/templates/[id]/test
+[WebServer] ├ ƒ /api/templates/[id]/thumbnail
+[WebServer] ├ ƒ /api/thumbnails
+[WebServer] ├ ƒ /api/variants/[id]
+[WebServer] ├ ƒ /api/variants/[id]/bundle
+[WebServer] ├ ƒ /api/variants/[id]/lineage
+[WebServer] ├ ƒ /api/variants/[id]/music-bed
+[WebServer] ├ ƒ /api/variants/[id]/native-sound
+[WebServer] ├ ƒ /api/variants/[id]/publishing
+[WebServer] ├ ƒ /api/variants/[id]/publishing/cp5
+[WebServer] ├ ƒ /api/webhooks/fal
+[WebServer] ├ ƒ /design-system
+[WebServer] ├ ƒ /gallery
+[WebServer] ├ ƒ /library
+[WebServer] ├ ƒ /login
+[WebServer] ├ ƒ /personas
+[WebServer] ├ ƒ /projects
+[WebServer] ├ ƒ /projects/[id]
+[WebServer] ├ ƒ /runs
+[WebServer] ├ ƒ /runs/[id]
+[WebServer] ├ ƒ /settings
+[WebServer] └ ƒ /spend
+[WebServer] 
+[WebServer] 
+[WebServer] ƒ Proxy (Middleware)
+[WebServer] 
+[WebServer] ƒ  (Dynamic)  server-rendered on demand
+[WebServer] 
+[WebServer] ▲ Next.js 16.2.10
+[WebServer] - Local:         http://localhost:3100
+[WebServer] - Network:       http://192.168.1.132:3100
+[WebServer] ✓ Ready in 126ms
+[WebServer] {"level":30,"time":1785495403064,"pid":25743,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","msg":"running startup migrations"}
+[WebServer] {"level":30,"time":1785495403108,"pid":25743,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","msg":"startup migrations applied"}
+[WebServer] {"level":30,"time":1785495403162,"pid":25743,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","seeded":true,"msg":"auth.password_hash sembrado (first boot)"}
+[WebServer] {"level":30,"time":1785495403172,"pid":25743,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","msg":"sembrando datos de referencia (T3.9)"}
+[WebServer] {"level":30,"time":1785495403196,"pid":25743,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","hookLines":80,"ctaLines":30,"recipes":3,"msg":"librería sembrada o ya presente (insert-only)"}
+[WebServer] {"level":30,"time":1785495403231,"pid":25743,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","templates":56,"guardPacks":10,"modelProfiles":18,"msg":"galería sembrada o ya presente (insert-only)"}
+[WebServer] {"level":30,"time":1785495403266,"pid":25743,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","personas":11,"imagesCreated":0,"imagesFailed":0,"msg":"personas sembradas o ya presentes"}
+[WebServer] {"level":30,"time":1785495403266,"pid":25743,"hostname":"MBP-de-Carlos","name":"web","phase":"startup","msg":"datos de referencia sembrados (T3.9)"}
+[WebServer] {"level":30,"time":1785495403685,"pid":25754,"hostname":"MBP-de-Carlos","name":"worker","intervalMs":5000,"generationReconcile":true,"msg":"sweeper arrancado"}
+[WebServer] {"level":30,"time":1785495403685,"pid":25754,"hostname":"MBP-de-Carlos","name":"worker","queue":"demo.noop","msg":"pg-boss arrancado: colas y consumers listos"}
+[WebServer] {"level":30,"time":1785495403685,"pid":25754,"hostname":"MBP-de-Carlos","name":"worker","health":{"ok":true,"db":true},"msg":"worker ready"}
+
+Running 2 tests using 1 worker
+
+  ✓  1 [setup] › e2e/auth.setup.ts:10:1 › login y persistir sesión (791ms)
+  ✘  2 [chromium] › e2e/sound-advisor.spec.ts:228:3 › Trending Sound Advisor /library (T6.6) › SELECCIÓN + COHERENCIA T6.2 (control negativo): elegir un no-CML marca native_trending y BLOQUEA Spark @f6 (16.0s)
+
+
+  1) [chromium] › e2e/sound-advisor.spec.ts:228:3 › Trending Sound Advisor /library (T6.6) › SELECCIÓN + COHERENCIA T6.2 (control negativo): elegir un no-CML marca native_trending y BLOQUEA Spark @f6 
+
+    Error: expect(locator).toHaveAttribute(expected) failed
+
+    Locator:  locator('[data-slot="spark-option"]')
+    Expected: "false"
+    Received: "true"
+    Timeout:  15000ms
+
+    Call log:
+      - Expect "toHaveAttribute" with timeout 15000ms
+      - waiting for locator('[data-slot="spark-option"]')
+        34 × locator resolved to <button type="button" data-allowed="true" aria-disabled="false" data-slot="spark-option" class="inline-flex shrink-0 items-center justify-center gap-2 font-sans whitespace-nowrap outline-none transition-colors focus-visible:ring-3 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-60 disabled:bg-surface-3 disabled:text-text-4 disabled:border-border cursor-pointer bg-accent text-text-on-accent border border-accent font-semibold hover:bg-accent-hover hover:border-accent-hover focus-vis…>Generar Spark code</button>
+           - unexpected value "true"
+
+
+      253 |
+      254 |     // DESPUÉS: audio_source=native_trending → Spark se BLOQUEA en vivo (recarga del PublishingState).
+    > 255 |     await expect(spark).toHaveAttribute('data-allowed', 'false', { timeout: 15_000 });
+          |                         ^
+      256 |     await expect(spark).toBeDisabled();
+      257 |     await expect(page.locator('[data-slot="spark-blocked-reason"]')).toBeVisible();
+      258 |     await expect(page.locator('[data-slot="spark-blocked-reason"]')).toContainText(
+        at /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/web/e2e/sound-advisor.spec.ts:255:25
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/sound-advisor-Trending-Sou-01589-ve-trending-y-BLOQUEA-Spark-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/sound-advisor-Trending-Sou-01589-ve-trending-y-BLOQUEA-Spark-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/sound-advisor-Trending-Sou-01589-ve-trending-y-BLOQUEA-Spark-chromium/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/sound-advisor-Trending-Sou-01589-ve-trending-y-BLOQUEA-Spark-chromium/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace test-results/sound-advisor-Trending-Sou-01589-ve-trending-y-BLOQUEA-Spark-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  1 failed
+    [chromium] › e2e/sound-advisor.spec.ts:228:3 › Trending Sound Advisor /library (T6.6) › SELECCIÓN + COHERENCIA T6.2 (control negativo): elegir un no-CML marca native_trending y BLOQUEA Spark @f6 
+  1 passed (42.1s)

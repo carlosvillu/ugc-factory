@@ -217,6 +217,47 @@ describe('makeN6Executor (costura stepless: fuentes por dep, sin BD)', () => {
       expect(body.resolvedBeats.length).toBeGreaterThan(0);
     });
 
+    it('una escena body/cta que NO compila → PermanentStepError ruidoso (no se traga ni cae a un prompt vacío)', async () => {
+      // RAMA DEFENSIVA de `compileScenePrompts` (deuda heredada de T5b.1b-i, verifier T5b.1b-i): si la
+      // compilación POR ESCENA fallara (`!ok`), el executor DEBE lanzar PermanentStepError nombrando la
+      // escena — nunca tragarlo, porque en T5b.1b-ii una entrada ausente se volvería DEFAULT_BROLL_PROMPT
+      // en la generación de PAGO en silencio (§ testing 9: nunca esconder un fallo). El compile de variante
+      // entera pasa `ok` (mismo body); solo la llamada CON `scene` se fuerza a fallar, que es justo la rama.
+      const { compilePrompt: realCompile } =
+        await vi.importActual<typeof import('@ugc/core/gallery')>('@ugc/core/gallery');
+      const spy = vi
+        .spyOn(await import('@ugc/core/gallery'), 'compilePrompt')
+        .mockImplementation(
+          (input: Parameters<typeof realCompile>[0]): ReturnType<typeof realCompile> =>
+            // 'scene' presente = la llamada por-escena → forzamos el fallo de esa rama; sin scene (variante
+            // entera) delegamos al motor real para que el executor llegue a compilar las escenas.
+            'scene' in input && input.scene !== undefined
+              ? {
+                  ok: false,
+                  issues: [
+                    {
+                      code: 'unresolved_slot',
+                      slot: 'forced',
+                      source: 'test',
+                      message: 'forced fail',
+                    },
+                  ],
+                }
+              : realCompile(input),
+        );
+      try {
+        const { ctx } = makeCtx({
+          deps: [
+            { stepId: 's1', nodeKey: 'N6-sources', status: 'succeeded', outputRefs: n6Sources },
+          ],
+        });
+        await expect(makeN6Executor()(ctx)).rejects.toThrow(PermanentStepError);
+        await expect(makeN6Executor()(ctx)).rejects.toThrow(/la escena \d+ \(body\).*no compila/);
+      } finally {
+        spy.mockRestore();
+      }
+    });
+
     it('CONTROL NEGATIVO: guion sin escenas body/cta → scenePrompts vacío, output no rompe', async () => {
       // Un guion de una sola escena hook: no hay body ni cta que compilar → array vacío (observable,
       // no ausente). El resto del output sigue intacto.

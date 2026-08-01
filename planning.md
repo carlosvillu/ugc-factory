@@ -985,6 +985,44 @@ Decisiones del usuario (2026-07-07): la fase se ejecuta tras T0.1 y **antes** de
 
 ---
 
+## F5b — Deuda destapada por la auditoría seed-vs-runtime (acordada con el usuario el 2026-08-01)
+
+> Sale de una auditoría disparada por el usuario al notar que `/gallery` muestra templates que el motor de generación ignora. Se auscultaron los **9 catálogos** que el boot pre-carga (`apps/web/src/instrumentation.ts`): **6 están CONECTADOS** (persona, recipe, hook_line, model_profile, secrets, budget, password — el runtime lee la tabla, verificado con cita). El problema **NO es generalizado**: está concentrado en el eje **galería/prompt**. Evidencia completa y por-catálogo en `docs/audits/seed-vs-runtime-2026-08-01.md`.
+>
+> **Dos capas de desconexión, la primera más grave que la que se buscaba:**
+> 1. **N7 (nodos de PAGO) ignoran el `resolvedPrompt` que N6 compila.** El DAG cablea `dependsOn:[n6Key]` con el comentario «los N7 consumen su resolvedPrompt», pero ninguno lo lee: N7a usa `buildPackshotPrompt(brief)` (`generation.ts:272`), N7d ni manda `prompt` → cae en `DEFAULT_BROLL_PROMPT='A cinematic product b-roll shot.'` (`generate-broll.ts:154-179`). **Verificado a mano.** El motor N6 (con sus guard packs y slots resueltos) es **arquitectura muerta en el camino de gasto**: cada dólar a fal usa un prompt distinto y más simple. Afecta a la **calidad de la generación**, no solo a una promesa de UI.
+> 2. **N6 compila contra el JSON bundleado, no contra la tabla.** `compile-prompt.ts:76-80` usa `RAW_GALLERY_SEED` (los `.json` del build), ignorando `prompt_template`/`guard_pack` que `/gallery` sí edita. Hoy NO muerde (tabla = JSON, nadie editó — seed `onConflictDoNothing` congeló la tabla en el primer boot ~14 jul); es divergencia **latente** que se activa en cuanto alguien edita un template esperando que cambie la generación.
+>
+> **Lo que la auditoría descartó (para no planificar de más):** «personas no usables en prod» **NO es desconexión** — la fila persona se lee y usa (voice_map incluido, `build-variant-generation-plan.ts:96`); lo que falta es el **asset de retrato real** (identity-lock F4, cuesta fal): las placeholder nacen con un PNG sintético de `sharp`. Remedio = generar retratos, no recablear. Aparte, `cta_line` es tabla huérfana total (se siembra, nadie la lee) — deuda inerte, sin UI que mienta.
+>
+> **Orden vinculante**: T5b.1 (N7→N6) es **prerequisito** de T5b.2 (N6→tabla) — reconectar N6 a la tabla no sirve de nada mientras N7 siga descartando el output de N6. Alcance MAYOR (toca el camino de compilación del orquestador): por eso es fase de deuda acordada, no improvisación.
+
+#### T5b.1 · Los nodos de pago (N7*) descartan el prompt que el motor N6 compila
+- **Depende de**: T4.4 (N7a packshot), T4.7 (N7d b-roll) y demás executors N7 ya existen; T3.x (el motor N6/compilePrompt ya compila y persiste el `resolvedPrompt`)
+- **Origen**: auditoría 2026-08-01 (`docs/audits/seed-vs-runtime-2026-08-01.md`, hallazgo #1). Verificado a mano: `generation.ts:272`, `generate-broll.ts:154-179`.
+- **Problema**: el DAG declara que los N7 dependen del `resolvedPrompt` de N6, pero cada N7 construye su propio prompt (más pobre) o cae en un default fijo. El trabajo de N6 (slots resueltos + guard packs) no llega a fal. Los guard packs — el mecanismo que bloquea claims prohibidas y anti-estilos — **no se aplican a la generación de pago**.
+- **Entrega**:
+  1. Cada N7 que hoy fabrica su prompt (N7a/N7c/N7d/N7e/N7f) **consume el `resolvedPrompt` de su dependencia N6** (vía `findDepBySchema`/`output_refs`, el canal que el DAG ya cablea). Enumerar los N7 uno a uno; ninguno debe quedar con prompt propio silencioso.
+  2. Donde un N7 legítimamente necesite un prompt distinto del compilado (p. ej. un default cuando N6 no aplica a ese nodo), que sea **explícito y documentado**, no un descarte accidental del output de N6.
+  3. **Control negativo** (regla del testing, principio 9): un test que, al romper el cableado N6→N7, se ponga ROJO — hoy nadie ha visto fallar esa dependencia porque nadie la consume.
+- **Coste estimado**: ~$0 la implementación; la **verificación de calidad** puede requerir 1 generación real acotada para comparar prompt-de-N6 vs prompt-actual en el output. Presupuestar contra el techo fal (~$7, sin recargas) antes de gastar — parada de gasto si la comprobación necesita más de 1 variante.
+- **Verificación**: para una variante que llega a N7, el prompt REAL enviado a fal (capturado del payload, no del fixture) **contiene** el `resolvedPrompt` que N6 compiló para esa variante (slots resueltos + guard packs), no `buildPackshotPrompt(brief)` ni `DEFAULT_BROLL_PROMPT`. Control negativo: desconectar el cableado → el test lo detecta.
+
+#### T5b.2 · El motor N6 compila contra el JSON bundleado e ignora la tabla que la galería edita
+- **Depende de**: T5b.1 (sin que N7 consuma N6, reconectar N6→tabla no cambia nada de lo que se genera)
+- **Origen**: auditoría 2026-08-01 (hallazgo #2). El usuario detectó el síntoma en `/gallery`. Verificado: `compile-prompt.ts:76-80` lee `RAW_GALLERY_SEED`, no `prompt_template`.
+- **Problema**: `/gallery` permite editar templates y guard packs (`createTemplateVersion`, `PATCH /api/templates/:id`) y persiste en tabla, pero N6 compila contra el snapshot JSON del build. Editar un template — o su `guard_pack_keys` — no tiene efecto en la generación. La máquina de estados `draft→review→published` (§10.1/§10.2) no gobierna nada del pipeline real.
+- **Decisiones de producto a tomar EN la tarea (anotar en PRD §10, regla 3)**:
+  1. **¿Qué versión compila N6?** ¿El `head` de la tabla, o la última `published`? Esta es la decisión que hace que `draft→review→published` **signifique algo**. (Recomendación a discutir: compilar `published`, de modo que curar un template sea el acto que lo pone en producción — coherente con la regla §10.2 de que no se publica sin thumbnail.)
+  2. **Validación de frontera**: hoy N6 recibe el catálogo ya pasado por Zod (`validateGallerySeed`); un catálogo roto es `PermanentStepError`. Leyendo de la tabla, contenido editado por el usuario entra **sin ese guard** → replicar la validación Zod en el read path, o N6 puede compilar basura editable.
+  3. **Golden tests anclados al seed**: `compile-prompt.golden.test.ts` fija prompts compilados contra el JSON. Decidir si el canon sigue siendo el seed (y la tabla se valida contra él) o pasa a ser la tabla.
+- **Entrega**:
+  1. N6 lee el catálogo (templates + guard packs) de la **tabla** (con la validación de frontera del punto 2 replicada), no de `RAW_GALLERY_SEED`. El JSON queda como **fuente de siembra** del boot, no como fuente de compilación.
+  2. `guard_pack_keys` editables en la ficha del template **se aplican** en la compilación (hoy `guard-lookup.ts` resuelve por `scope`, ignorando las keys guardadas).
+  3. Coherencia de la máquina de estados: la UI no promete una edición que no surte efecto; o compila lo editado, o se marca explícitamente el desfase.
+- **Coste estimado**: ~$0 (compilación es pura, sin red); verificación con 1 generación real opcional solo si se quiere ver el efecto end-to-end. Presupuestar contra el techo fal antes de gastar.
+- **Verificación**: editar el `body` (o un `guard_pack_keys`) de un template por la UI → una compilación posterior de una variante que usa ese template **refleja el cambio** (el prompt de N6 cambia acorde). Control negativo: un template roto guardado en la tabla → N6 lo rechaza con el mismo `schema_invalid`/error que hoy da el JSON, no compila basura.
+
 ## F6 — Publicación
 
 > Toda capacidad de F6 tiene modo degradado manual (export + checklist + guía) para no bloquear si las apps de developer están en revisión (§13.3).

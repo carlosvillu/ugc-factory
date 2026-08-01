@@ -145,8 +145,13 @@ function variantNodes(plan: VariantGenerationPlan): RunNodeInput[] {
   const k = GENERATION_NODE_KEYS;
   const nodes: RunNodeInput[] = [];
 
-  // N6 · COMPILADOR DE PROMPTS (determinista, $0): raíz del sub-DAG de la variante. Los N7 dependen de
-  // él (consumen su `resolvedPrompt` de sus deps).
+  // N6 · COMPILADOR DE PROMPTS (determinista, $0): raíz del sub-DAG de la variante. La arista
+  // `dependsOn:[n6Key]` que cada N7 lleva abajo es ORDEN/TOPOLOGÍA, NO consumo de dato: hoy NINGÚN N7 lee
+  // el `resolvedPrompt` de N6 de sus deps (no hay ningún lector por-schema del N6Output en el repo). Su
+  // `resolvedPrompt` alimenta SOLO la UI de auditoría del canvas (T4.11: `run-canvas/step-assets.ts`). Los
+  // prompts a fal salen de otras fuentes por nodo — ver el desglose NO-APLICA en `n7Node` abajo. DEUDA
+  // (T5b.1b): N7d/N7f (b-roll/CTA i2v) DEBERÍAN recibir el prompt de ESCENA compilado por N6 (con su guard
+  // pack); hoy caen a `DEFAULT_BROLL_PROMPT` y los guard packs no llegan a la generación de pago.
   const n6Key = localKey(k.n6, variantId);
   nodes.push({
     key: n6Key,
@@ -158,6 +163,15 @@ function variantNodes(plan: VariantGenerationPlan): RunNodeInput[] {
 
   // Helper para un sub-step N7: `key` local única, `node_key` limpio, `variantId`, `maxRetries` holgado
   // (la carrera-perdedora de dedup), y sus `dependsOn` (siempre N6 + los productores de sus inputs).
+  //
+  // DE DÓNDE SALE EL PROMPT A FAL DE CADA N7 (inventario 2026-08-01; ninguno consume el `resolvedPrompt` de
+  // N6 hoy — la arista N6 es solo orden). 4 de 6 NO APLICA por naturaleza; solo N7d/N7f son adaptables:
+  //   N7a packshot   → `buildPackshotPrompt(brief)`     · NO APLICA: es imagen de PRODUCTO, no guión de persona.
+  //   N7b voz/TTS    → `scene.narration` del `ad_script` · YA CORRECTO: su fuente canónica es la narración de la escena.
+  //   N7c avatar     → `cfg.prompt` opcional → `'.'`     · NO APLICA: lo determinan imagen (N7a) + audio (N7b); prompt cosmético.
+  //   N7e música     → `cfg.mood` crudo                  · NO APLICA: bed pedido por mood/duración, no por guión.
+  //   N7d b-roll     → `DEFAULT_BROLL_PROMPT`            · ADAPTABLE (deuda T5b.1b): DEBERÍA usar el prompt de la ESCENA de body.
+  //   N7f CTA        → `DEFAULT_BROLL_PROMPT` (mismo i2v) · ADAPTABLE (deuda T5b.1b): ídem con el texto de la escena `cta`.
   const n7Node = (
     nodeKey: string,
     config: unknown,

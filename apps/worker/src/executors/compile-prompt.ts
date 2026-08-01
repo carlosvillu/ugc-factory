@@ -4,11 +4,19 @@
 // dinero se gasta en N7. Molde de N4 (strategy.ts): cáscara fina que conecta el orquestador con el
 // MOTOR PURO de `@ugc/core/gallery` (`compilePrompt`) y devuelve el resultado por `output_refs`.
 //
+// QUIÉN LO CONSUME HOY: SOLO la UI de auditoría del canvas (T4.11: `run-canvas/step-assets.ts` lee el
+// `resolvedPrompt`/`resolvedBeats` del `output_refs`). NINGÚN N7 lo lee de sus deps — no existe ningún
+// lector por-schema del N6Output en el repo. La arista `dependsOn:[n6Key]` que los N7 llevan en el DAG es
+// orden/topología, no consumo. DEUDA (T5b.1b): N7d/N7f (b-roll/CTA i2v) DEBERÍAN recibir el prompt de
+// ESCENA que este motor ya sabe compilar (`compilePrompt({ scene })`, ver abajo), para que su guard pack
+// llegue a la generación de pago; hoy caen a `DEFAULT_BROLL_PROMPT`.
+//
 // EL MOTOR VIVE EN CORE. La compilación (selección de template, interpolación §10.4, guard packs §9.5,
 // fidelity guard + anti-estilo, validación de resolución) vive COMPLETA en `@ugc/core/gallery`
 // (`compilePrompt`) y se testea con golden files. Este executor es la cáscara fina: valida su config,
 // RESUELVE las fuentes y llama al motor. No persiste en `generation` (esa fila la crea N7 al submitear,
-// §9.6): el `resolvedPrompt` viaja por `output_refs` y N7 lo consume de sus deps.
+// §9.6): el `resolvedPrompt` viaja por `output_refs`, hoy solo hacia la UI de auditoría del canvas (ver
+// cabecera) — no hacia N7.
 //
 // DE DÓNDE SACA SUS FUENTES (dos orígenes, precedencia dep-first — ver el docstring de `makeN6Executor`):
 // en el DAG de generación (post-CP3) N6 es la RAÍZ (sin dep productora) y ENSAMBLA el `N6Sources` de la

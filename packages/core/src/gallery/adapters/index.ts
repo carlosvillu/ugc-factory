@@ -1,7 +1,8 @@
 // API pública de los MODEL ADAPTERS (T3.6). Los consume N7 (F4/T4.11) al construir cada
-// generación: `resolveCompileInput`+`compilePrompt` (N6) producen el prompt canónico, `planGeneration`
-// (§7.5) trocea las escenas contra `maxDuration`, y `adaptToPayload` transforma cada clip al dialecto
-// del endpoint según `model_profile.promptAdapter`.
+// generación: `planGeneration` (§7.5) trocea las escenas contra `maxDuration`, y `adaptToPayload`
+// transforma cada clip al dialecto del endpoint según `model_profile.promptAdapter`. NOTA (auditoría
+// 2026-08-01): aunque `compilePrompt` (N6) produce EL prompt canónico, HOY N7 NO se lo pasa a estos
+// adapters — usa `buildPackshotPrompt(brief)` (N7a) o `DEFAULT_BROLL_PROMPT` (N7d/N7f); deuda T5b.1b.
 export { avatarAdapter, i2vAdapter, seedanceAdapter, imageEditAdapter } from './families';
 
 export { adaptToPayload, ADAPTER_FAMILIES, type AdapterFamily } from './select-adapter';

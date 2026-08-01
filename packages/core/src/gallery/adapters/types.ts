@@ -1,9 +1,12 @@
 // TIPOS COMPARTIDOS de los MODEL ADAPTERS (T3.6). Un adapter es una función PURA
 // `(prompt canónico + assets + model_profile) → payload del endpoint fal`, determinista, sin red,
 // sin BD, sin gasto. NO es un nodo del DAG ni un executor: es una LIBRERÍA que N7 (F4/T4.11)
-// llamará al construir cada generación. El compilador N6 (T3.5) produce el prompt canónico
-// (`CompiledPrompt.resolvedPrompt`); estos adapters lo transforman al dialecto de cada familia de
-// modelos, respetando `capabilities` del `ModelProfile`.
+// llamará al construir cada generación. El compilador N6 (T3.5) produce UN prompt canónico
+// (`CompiledPrompt.resolvedPrompt`) que estos adapters SABEN transformar al dialecto de cada familia de
+// modelos, respetando `capabilities` del `ModelProfile`. OJO (auditoría 2026-08-01): pese al nombre del
+// campo `resolvedPrompt`, el prompt que N7 pasa HOY a estos adapters NO sale de N6 — N7a usa
+// `buildPackshotPrompt(brief)` (`generation.ts:272,379`) y N7d/N7f caen a `DEFAULT_BROLL_PROMPT`. El
+// adapter es agnóstico a la procedencia; el cableado del prompt de escena de N6 es deuda T5b.1b.
 //
 // PATRÓN DE RETORNO: como todo el módulo gallery (compile-prompt, seed-validator), un adapter NO
 // LANZA. Devuelve `{ ok: true, payload } | { ok: false, issues }`. Un aspect fuera de
@@ -12,10 +15,12 @@
 import type { ModelProfileSeed } from '../contracts';
 
 /** El prompt canónico model-agnostic + los datos que el adapter necesita para el payload. Es la
- *  ENTRADA explícita de todo adapter: el `resolvedPrompt` de N6 más los assets resueltos (URLs de
- *  fal storage, ya subidos por T4.1 en producción) y el objetivo de aspect/duración de la variante. */
+ *  ENTRADA explícita de todo adapter: el `resolvedPrompt` de la variante más los assets resueltos (URLs
+ *  de fal storage, ya subidos por T4.1 en producción) y el objetivo de aspect/duración de la variante. */
 export interface AdapterInput {
-  /** El prompt canónico ensamblado por N6 (`CompiledPrompt.resolvedPrompt`). */
+  /** El prompt canónico que el adapter transforma. El TIPO que N6 emite (`CompiledPrompt.resolvedPrompt`)
+   *  encaja aquí, pero HOY el caller NO lo llena con N6: N7a pasa `buildPackshotPrompt(brief)` y N7d/N7f
+   *  `DEFAULT_BROLL_PROMPT` (auditoría 2026-08-01). Cablear el prompt de escena de N6 es deuda T5b.1b. */
   resolvedPrompt: string;
   /** El perfil del modelo destino (del catálogo sembrado): capabilities, endpoint, coste. */
   profile: ModelProfileSeed;

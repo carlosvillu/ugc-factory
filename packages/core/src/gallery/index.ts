@@ -139,8 +139,9 @@ export {
 export { DEMO_BEAUTY_BRIEF, DEMO_PERSONA, DEMO_SCRIPT } from './compile-fixtures';
 
 // ── LOS MODEL ADAPTERS (T3.6) ────────────────────────────────────────────────────
-// Librería PURA que N7 (F4/T4.11) llama: transforma el prompt canónico de N6 + assets al payload
-// del endpoint fal según `model_profile.promptAdapter`, y trocea escenas > maxDuration (§7.5).
+// Librería PURA que N7 (F4/T4.11) llama: transforma el prompt canónico de la variante + assets al payload
+// del endpoint fal según `model_profile.promptAdapter`, y trocea escenas > maxDuration (§7.5). (El prompt
+// que N7 le pasa HOY no sale de N6 — ver el docstring de `AdapterInput.resolvedPrompt`; deuda T5b.1b.)
 export {
   adaptToPayload,
   ADAPTER_FAMILIES,

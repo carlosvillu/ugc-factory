@@ -164,7 +164,9 @@ export type N5Output = z.infer<typeof N5OutputSchema>;
 // equivocado. Ese es el punto de máximo riesgo de dinero de F4 (§9.6).
 
 /** N6 · COMPILADOR DE PROMPTS ($0): el `resolvedPrompt` de la variante + su procedencia de catálogo.
- *  Los N7 lo consumen de sus deps y lo persisten al submitear (la fila `generation` la crea N7, no N6). */
+ *  HOY este output lo consume SOLO la UI de auditoría del canvas (T4.11); NINGÚN N7 lo lee de sus deps
+ *  (no hay ningún lector por-schema de este N6Output en el repo). DEUDA T5b.1b: N7d/N7f (i2v) deberían recibir su prompt de
+ *  escena. La fila `generation` la crea N7 al submitear (no N6), pero desde su propio config, no de aquí. */
 export const N6OutputSchema = z.object({
   node: z.literal('N6'),
   variantId: z.string(),

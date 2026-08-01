@@ -56,8 +56,10 @@ import { uploadInputCached } from './generate';
 import { resolveProductionDedup } from './generation-dedup';
 import { NOOP_LOGGER } from './noop-logger';
 
-/** Prompt por defecto si el caller no suministra uno (ambos endpoints lo requieren `min(1)`). En
- *  producción SIEMPRE llega el prompt canónico de N6; este default es solo un guard del smoke. */
+/** Prompt por defecto si el caller no suministra uno (ambos endpoints lo requieren `min(1)`). HOY
+ *  producción SIEMPRE cae a este default: el executor de N7d/N7f NO pasa `prompt` (el config schema no
+ *  tiene campo para transportarlo). DEUDA T5b.1b: cablear el prompt de ESCENA de N6 aquí para que su guard
+ *  pack de compliance llegue a fal; hasta entonces la generación de pago se hace con este string genérico. */
 const DEFAULT_BROLL_PROMPT = 'A cinematic product b-roll shot.';
 
 export interface GenerateBrollDeps {
@@ -84,7 +86,9 @@ export interface GenerateBrollInput {
    *  `falEndpoint`/`cost`/`kind` se leen de BD. `kind` decide la ruta (`i2v` → image_url; `r2v` →
    *  image_urls[]). */
   brollModelProfileId: string;
-  /** El prompt canónico de N6 (la escena a materializar). OPCIONAL: default en el servicio. */
+  /** El prompt de ESCENA que N6 compilaría (`compilePrompt({ scene })`). OPCIONAL: default en el servicio.
+   *  HOY el executor NUNCA lo pasa (deuda T5b.1b) → siempre `DEFAULT_BROLL_PROMPT`. El servicio ya lo
+   *  acepta; T5b.1b solo tiene que derivarlo y pasarlo. */
   prompt?: string;
   /** Los `asset` de IMAGEN de entrada (kind `keyframe`/`reference_image`/`product_image`): se suben a
    *  fal → `image_url` (i2v: se usa el PRIMERO) / `image_urls[]` (r2v: hasta `capabilities.refImages`).

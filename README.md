@@ -171,23 +171,24 @@ El desarrollo va por fases, tarea a tarea, con verificación observable en cada 
 
 <!-- STATUS-TABLE:BEGIN — generado por `pnpm readme:status`, no editar a mano -->
 
-**110 de 131 tareas cerradas (84 %).**
+**111 de 134 tareas cerradas (83 %).**
 
-| Fase                                                  | Qué entrega                                                                         | Estado         |
-| ----------------------------------------------------- | ----------------------------------------------------------------------------------- | -------------- |
-| **F0** · Fundaciones                                  | Orquestador DAG, auth, storage, colas, SSE, canvas, ledger de gasto                 | ✅ Completa    |
-| **FD** · Design system                                | Design system: ~26 primitivas, dark/light, 4 acentos                                | ✅ Completa    |
-| **F1** · Análisis                                     | URL/texto → ProductBrief editable y aprobable en CP1                                | ✅ Completa    |
-| **F1b** · Deuda de cierre de F1                       | Deuda de cierre de F1                                                               | ✅ Completa    |
-| **F1c** · Deuda del primer uso real                   | Deuda del primer uso real                                                           | ✅ Completa    |
-| **F2** · Estrategia y guiones                         | Matriz con coste estimado → guiones aprobados                                       | ✅ Completa    |
-| **F2b** · Deuda destapada por la verificación de T2.3 | Deuda destapada por la verificación de T2.3 (acordada con el usuario el 2026-07-14) | ✅ Completa    |
-| **F3** · Galería de prompts y compilador              | Templates facetados → prompts auditables                                            | ✅ Completa    |
-| **F4** · Generación fal.ai                            | Los assets de una variante, generados de verdad en fal.ai                           | ✅ Completa    |
-| **F5** · Composición, QA y export                     | El anuncio 9:16 completo, con subtítulos, C2PA y QA                                 | ✅ Completa    |
-| **F6** · Publicación                                  | Publicar en TikTok/IG y crear el ad draft                                           | 🔨 3/9         |
-| **F7** · Medición y flywheel                          | Métricas por variante + kill/scale + scoring                                        | ⬜ No empezada |
-| **F8** · Operación y extensiones                      | Backups, retención, observabilidad, MCP                                             | ⬜ No empezada |
+| Fase                                                       | Qué entrega                                                                              | Estado         |
+| ---------------------------------------------------------- | ---------------------------------------------------------------------------------------- | -------------- |
+| **F0** · Fundaciones                                       | Orquestador DAG, auth, storage, colas, SSE, canvas, ledger de gasto                      | ✅ Completa    |
+| **FD** · Design system                                     | Design system: ~26 primitivas, dark/light, 4 acentos                                     | ✅ Completa    |
+| **F1** · Análisis                                          | URL/texto → ProductBrief editable y aprobable en CP1                                     | ✅ Completa    |
+| **F1b** · Deuda de cierre de F1                            | Deuda de cierre de F1                                                                    | ✅ Completa    |
+| **F1c** · Deuda del primer uso real                        | Deuda del primer uso real                                                                | ✅ Completa    |
+| **F2** · Estrategia y guiones                              | Matriz con coste estimado → guiones aprobados                                            | ✅ Completa    |
+| **F2b** · Deuda destapada por la verificación de T2.3      | Deuda destapada por la verificación de T2.3 (acordada con el usuario el 2026-07-14)      | ✅ Completa    |
+| **F3** · Galería de prompts y compilador                   | Templates facetados → prompts auditables                                                 | ✅ Completa    |
+| **F4** · Generación fal.ai                                 | Los assets de una variante, generados de verdad en fal.ai                                | ✅ Completa    |
+| **F5** · Composición, QA y export                          | El anuncio 9:16 completo, con subtítulos, C2PA y QA                                      | ✅ Completa    |
+| **F5b** · Deuda destapada por la auditoría seed-vs-runtime | Deuda destapada por la auditoría seed-vs-runtime (acordada con el usuario el 2026-08-01) | 🔨 1/3         |
+| **F6** · Publicación                                       | Publicar en TikTok/IG y crear el ad draft                                                | 🔨 3/9         |
+| **F7** · Medición y flywheel                               | Métricas por variante + kill/scale + scoring                                             | ⬜ No empezada |
+| **F8** · Operación y extensiones                           | Backups, retención, observabilidad, MCP                                                  | ⬜ No empezada |
 
 <!-- STATUS-TABLE:END -->
 

@@ -4,19 +4,21 @@
 // dinero se gasta en N7. Molde de N4 (strategy.ts): cáscara fina que conecta el orquestador con el
 // MOTOR PURO de `@ugc/core/gallery` (`compilePrompt`) y devuelve el resultado por `output_refs`.
 //
-// QUIÉN LO CONSUME HOY: SOLO la UI de auditoría del canvas (T4.11: `run-canvas/step-assets.ts` lee el
-// `resolvedPrompt`/`resolvedBeats` del `output_refs`). NINGÚN N7 lo lee de sus deps — no existe ningún
-// lector por-schema del N6Output en el repo. La arista `dependsOn:[n6Key]` que los N7 llevan en el DAG es
-// orden/topología, no consumo. DEUDA (T5b.1b): N7d/N7f (b-roll/CTA i2v) DEBERÍAN recibir el prompt de
-// ESCENA que este motor ya sabe compilar (`compilePrompt({ scene })`, ver abajo), para que su guard pack
-// llegue a la generación de pago; hoy caen a `DEFAULT_BROLL_PROMPT`.
+// QUIÉN LO CONSUME HOY: el `resolvedPrompt`/`resolvedBeats` de la variante entera lo lee la UI de
+// auditoría del canvas (T4.11: `run-canvas/step-assets.ts` del `output_refs`). T5b.1b-i AÑADE al output
+// `scenePrompts`: un prompt compilado por escena `body`/`cta` (con `compilePrompt({ scene })`, ver
+// `compileScenePrompts` abajo) con su guard pack §9.5. WINDOWING PARCIAL (verdad explícita para
+// T5b.1b-ii): la ventana temporal `[t, t+seconds)` de la escena SOLO acota `resolvedBeats` y el bloque
+// `Beats:` del prompt; la PROSA del template `body` es GLOBAL y sigue narrando el hook/cta de otras
+// escenas. NINGÚN N7 lo lee AÚN — cablear ese consumo en N7d/N7f (b-roll/CTA i2v), hoy caídos a
+// `DEFAULT_BROLL_PROMPT`, es la DEUDA que queda para T5b.1b-ii. La arista `dependsOn:[n6Key]` es orden.
 //
 // EL MOTOR VIVE EN CORE. La compilación (selección de template, interpolación §10.4, guard packs §9.5,
 // fidelity guard + anti-estilo, validación de resolución) vive COMPLETA en `@ugc/core/gallery`
 // (`compilePrompt`) y se testea con golden files. Este executor es la cáscara fina: valida su config,
 // RESUELVE las fuentes y llama al motor. No persiste en `generation` (esa fila la crea N7 al submitear,
-// §9.6): el `resolvedPrompt` viaja por `output_refs`, hoy solo hacia la UI de auditoría del canvas (ver
-// cabecera) — no hacia N7.
+// §9.6): el `resolvedPrompt` de variante y los `scenePrompts` viajan por `output_refs` (el primero al
+// canvas de auditoría; los segundos los leerá N7d/N7f en T5b.1b-ii) — este executor no toca generación.
 //
 // DE DÓNDE SACA SUS FUENTES (dos orígenes, precedencia dep-first — ver el docstring de `makeN6Executor`):
 // en el DAG de generación (post-CP3) N6 es la RAÍZ (sin dep productora) y ENSAMBLA el `N6Sources` de la
@@ -29,6 +31,7 @@ import {
   PermanentStepError,
   type StepExecutor,
 } from '@ugc/core/orchestrator';
+import type { N6ScenePrompt } from '@ugc/core/contracts';
 import {
   compilePrompt,
   resolveCompileInput,
@@ -36,6 +39,7 @@ import {
   RAW_GALLERY_SEED,
   type CompileDegradation,
   type CompileInput,
+  type CompileIssue,
 } from '@ugc/core/gallery';
 import { assembleN6Sources } from '@ugc/services';
 import type { Logger } from '@ugc/core';
@@ -140,9 +144,18 @@ export function makeN6Executor(deps: N6ExecutorDeps = {}): StepExecutor {
       // Un slot irresoluble es un desajuste de datos (variante sin guion, persona sin setting…): un
       // fallo DURO y accionable (nombra slot + fuente), no reintentable. Mejor reventar ruidoso que
       // enviar a un modelo de PAGO un prompt con `{slot}` sin resolver.
-      const detail = result.issues.map((i) => `{${i.slot ?? '?'}}←${i.source ?? '?'}`).join(', ');
-      throw new PermanentStepError(`N6: prompt con slots sin resolver: ${detail}`);
+      throw new PermanentStepError(
+        `N6: prompt con slots sin resolver: ${formatCompileIssues(result.issues)}`,
+      );
     }
+
+    // T5b.1b-i · UN prompt POR ESCENA `body`/`cta`. N7d/N7f (i2v de b-roll y CTA) generan 1 clip por
+    // ESCENA, así que además del `resolvedPrompt` de la variante entera (arriba, para el canvas)
+    // compilamos con `compilePrompt({ scene })` cada escena `body`/`cta` — el motor filtra los beats a
+    // la ventana `[scene.t, scene.t+scene.seconds)` y emite su guard pack. El `sceneIndex` es el índice
+    // ABSOLUTO en `script.scenes`, el mismo keying que `segmentSceneIndices` da a N7d/N7f (T5b.1b-ii).
+    // NO toca generación: N7 aún no lee este array, así que el `content_hash` del dedup NO cambia.
+    const scenePrompts = compileScenePrompts(compileInput, variantId);
 
     collectOutput({
       node: 'N6',
@@ -151,10 +164,68 @@ export function makeN6Executor(deps: N6ExecutorDeps = {}): StepExecutor {
       guardPackKeysUsed: result.result.guardPackKeysUsed,
       resolvedPrompt: result.result.resolvedPrompt,
       resolvedBeats: result.result.resolvedBeats,
+      // RETROCOMPATIBLE: se AÑADE al output; los campos de arriba mantienen su forma. SIEMPRE presente
+      // (incluido `[]` cuando el guion no tiene escenas body/cta), para que el control negativo sea
+      // observable en el step_run en vez de ausente.
+      scenePrompts,
       // Presente SOLO cuando hubo degradación (T5.12): deja rastro auditable en el step_run.
       ...(degraded !== undefined ? { degradedFacet: degraded } : {}),
     });
   };
+}
+
+/**
+ * T5b.1b-i · Compila UN prompt por escena de segmento `body`/`cta` del guion de la variante. El motor
+ * (`compilePrompt({ scene })`) filtra los BEATS a la ventana temporal de la escena y emite su guard
+ * pack (§9.5); esta función solo itera las escenas relevantes y arma el array del output de N6.
+ *
+ * WINDOWING PARCIAL: la ventana `[t, t+seconds)` SOLO acota `resolvedBeats` y el bloque `Beats:` del
+ * prompt. La PROSA del template `body` es GLOBAL (menciona el hook/cta de otras escenas como "cómo se
+ * ve" del clip), así que el prompt de una escena `body` puede contener la línea del hook en prosa —
+ * quien cablee el modelo de pago en T5b.1b-ii debe saberlo. Cuando la ventana no cruza NINGÚN beat del
+ * grid del template, `resolvedBeats: []` y `noBeatsOverlap: true` lo dejan auditable.
+ *
+ * `sceneIndex` es el índice ABSOLUTO en `script.scenes` (coincide con `segmentSceneIndices`, el keying
+ * que N7d/N7f usan). Si no hay guion o no hay escenas `body`/`cta` → `[]` (control negativo).
+ *
+ * NO lanza salvo bug de datos: la compilación por escena usa el MISMO body y un SUBCONJUNTO de los beats
+ * de la variante entera, que YA compiló `ok` arriba, así que no puede fallar por un slot nuevo. Si aun
+ * así fallara, es un `PermanentStepError` ruidoso — una entrada ausente se volvería `DEFAULT_BROLL_PROMPT`
+ * en la generación de pago de T5b.1b-ii, y eso hay que verlo, no tragarlo en silencio.
+ */
+function compileScenePrompts(compileInput: CompileInput, variantId: string): N6ScenePrompt[] {
+  const scenes = compileInput.sources.script?.scenes ?? [];
+  const scenePrompts: N6ScenePrompt[] = [];
+  for (const [sceneIndex, scene] of scenes.entries()) {
+    if (scene.segment !== 'body' && scene.segment !== 'cta') continue;
+    const sceneResult = compilePrompt({ ...compileInput, scene });
+    if (!sceneResult.ok) {
+      throw new PermanentStepError(
+        `N6: la escena ${String(sceneIndex)} (${scene.segment}) de la variante ${variantId} no compila: ${formatCompileIssues(sceneResult.issues)}`,
+      );
+    }
+    scenePrompts.push({
+      sceneIndex,
+      segment: scene.segment,
+      t: scene.t,
+      seconds: scene.seconds,
+      resolvedPrompt: sceneResult.result.resolvedPrompt,
+      resolvedBeats: sceneResult.result.resolvedBeats,
+      guardPackKeysUsed: sceneResult.result.guardPackKeysUsed,
+      // SEÑAL AUDITABLE: la ventana temporal de la escena no cruzó ningún beat del grid (estático) del
+      // template — p.ej. una escena en t>duración del template. El prompt sale sin sección `Beats:` con
+      // `ok:true`; sin este flag sería indistinguible de una escena normal. T5b.1b-ii lo usa para no
+      // mandar a fal un prompt sin beats en silencio (§ testing: nunca esconder un fallo).
+      noBeatsOverlap: sceneResult.result.resolvedBeats.length === 0,
+    });
+  }
+  return scenePrompts;
+}
+
+/** Formatea los `CompileIssue` de un fallo de compilación (`{slot}←fuente`, unidos por coma) para el
+ *  mensaje del `PermanentStepError` — mismo formato para el fallo de variante entera y el por escena. */
+function formatCompileIssues(issues: CompileIssue[]): string {
+  return issues.map((i) => `{${i.slot ?? '?'}}←${i.source ?? '?'}`).join(', ');
 }
 
 /**

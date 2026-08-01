@@ -1,0 +1,69 @@
+
+ RUN  v4.1.10 /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/worker
+
+ ❯ |worker:unit| src/executors/compile-prompt.test.ts (13 tests | 3 failed) 49ms
+       × con guion body+cta → un scenePrompt por escena, con su índice ABSOLUTO y sus beats por solape 6ms
+       × escena cuya ventana NO solapa el grid del template → noBeatsOverlap:true, resolvedBeats:[], output no rompe 3ms
+       × el output completo valida contra N6OutputSchema (el array es parte del contrato, no un campo suelto) 3ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |worker:unit| src/executors/compile-prompt.test.ts > makeN6Executor (costura stepless: fuentes por dep, sin BD) > T5b.1b-i · scenePrompts (un prompt por escena body/cta) > con guion body+cta → un scenePrompt por escena, con su índice ABSOLUTO y sus beats por solape
+AssertionError: expected [] to have a length of 2 but got +0
+
+- Expected
++ Received
+
+- 2
++ 0
+
+ ❯ src/executors/compile-prompt.test.ts:160:32
+    158|
+    159|       // DEMO_SCRIPT: escena 0 hook, 1 body, 2 cta → 2 scenePrompts (b…
+    160|       expect(out.scenePrompts).toHaveLength(2);
+       |                                ^
+    161|       expect(out.scenePrompts.map((s) => s.segment)).toEqual(['body', …
+    162|       // sceneIndex es el índice ABSOLUTO en script.scenes (el mismo k…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  |worker:unit| src/executors/compile-prompt.test.ts > makeN6Executor (costura stepless: fuentes por dep, sin BD) > T5b.1b-i · scenePrompts (un prompt por escena body/cta) > escena cuya ventana NO solapa el grid del template → noBeatsOverlap:true, resolvedBeats:[], output no rompe
+TypeError: Cannot read properties of undefined (reading 'noBeatsOverlap')
+ ❯ src/executors/compile-prompt.test.ts:209:18
+    207|       expect(out.node).toBe('N6');
+    208|       const cta = out.scenePrompts.find((s) => s.segment === 'cta')!;
+    209|       expect(cta.noBeatsOverlap).toBe(true);
+       |                  ^
+    210|       expect(cta.resolvedBeats).toEqual([]);
+    211|       // El prompt sale igualmente (ok:true) pero SIN sección `Beats:`.
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  |worker:unit| src/executors/compile-prompt.test.ts > makeN6Executor (costura stepless: fuentes por dep, sin BD) > T5b.1b-i · scenePrompts (un prompt por escena body/cta) > el output completo valida contra N6OutputSchema (el array es parte del contrato, no un campo suelto)
+AssertionError: expected [] to have a length of 2 but got +0
+
+- Expected
++ Received
+
+- 2
++ 0
+
+ ❯ src/executors/compile-prompt.test.ts:264:35
+    262|       // (está declarado en el contrato). `parse` lanza si el output n…
+    263|       const parsed = N6OutputSchema.parse(outputs[0]);
+    264|       expect(parsed.scenePrompts).toHaveLength(2);
+       |                                   ^
+    265|     });
+    266|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed | 10 passed (13)
+   Start at  19:35:16
+   Duration  1.53s (transform 792ms, setup 15ms, import 1.38s, tests 49ms, environment 0ms)
+
+undefined
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/worker:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/executors/compile-prompt.test.ts

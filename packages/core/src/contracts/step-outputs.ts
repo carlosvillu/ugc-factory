@@ -163,10 +163,45 @@ export type N5Output = z.infer<typeof N5OutputSchema>;
 // `audioAssetId`/keyframe de OTRA variante pasaría inadvertida quemando dinero de vídeo en el asset
 // equivocado. Ese es el punto de máximo riesgo de dinero de F4 (§9.6).
 
+/** T5b.1b-i · UN prompt POR ESCENA de segmento `body`/`cta`. N6 compila la variante ENTERA
+ *  (`resolvedPrompt`, arriba) Y, además, una vez por cada escena `body`/`cta` del guion pasando
+ *  `compilePrompt({ scene })` — así cada entrada trae los beats que solapan la ventana temporal de SU
+ *  escena y su guard pack (§9.5). El consumidor de este array es T5b.1b-ii: N7d/N7f (i2v de b-roll y
+ *  CTA) lo leerán para mandar a fal el prompt de ESCENA (con su compliance) en vez de `DEFAULT_BROLL_PROMPT`.
+ *  `sceneIndex` es el índice ABSOLUTO en `script.scenes` (el mismo keying que `segmentSceneIndices`
+ *  produce para N7d/N7f); `t`/`seconds`/`segment` acompañan para que el consumidor pueda mapear su
+ *  escena bajo cualquier keying. NO cambia el `content_hash` (N7 aún no lo lee — eso es T5b.1b-ii). */
+export const N6ScenePromptSchema = z.object({
+  /** Índice ABSOLUTO de la escena en `script.scenes` (coincide con `segmentSceneIndices`). */
+  sceneIndex: z.number().int().nonnegative(),
+  segment: z.enum(['body', 'cta']),
+  /** Instante de inicio de la escena en segundos (auditoría / mapeo alternativo). */
+  t: z.number().nonnegative(),
+  /** Duración de la escena en segundos. */
+  seconds: z.number().positive(),
+  /** El prompt compilado para ESTA escena. WINDOWING PARCIAL (importa para T5b.1b-ii): SOLO
+   *  `resolvedBeats` y el bloque estructurado `Beats:` del prompt están acotados a la ventana temporal
+   *  `[t, t+seconds)`. La PROSA del template `body` es GLOBAL: sigue narrando el hook y el cta de otras
+   *  escenas como "cómo se ve" del clip. Es decir, el prompt de una escena `body` puede mencionar la
+   *  línea del hook en prosa; lo que la ventana acota es qué beats aparecen en `Beats:`/`resolvedBeats`. */
+  resolvedPrompt: z.string(),
+  resolvedBeats: z.array(z.unknown()),
+  /** Las keys de guard pack inyectadas en la escena (§9.5), en orden. */
+  guardPackKeysUsed: z.array(z.string()),
+  /** T5b.1b-i · SEÑAL AUDITABLE de que la ventana `[t, t+seconds)` de esta escena NO solapó NINGÚN
+   *  beat del grid (estático) del template — p.ej. una escena cta en t=25s contra un template de 22s
+   *  (el timing lo deriva el LLM, el grid del template es fijo, y nada los cruza). Cuando es `true`,
+   *  `resolvedBeats` es `[]` y el prompt sale SIN sección `Beats:` con `ok:true` — indistinguible de
+   *  una escena normal si no fuera por este flag. Deja rastro en `step_run.output_refs` para que
+   *  T5b.1b-ii pueda decidir un default explícito en vez de mandar a fal un prompt sin beats en silencio. */
+  noBeatsOverlap: z.boolean(),
+});
+export type N6ScenePrompt = z.infer<typeof N6ScenePromptSchema>;
+
 /** N6 · COMPILADOR DE PROMPTS ($0): el `resolvedPrompt` de la variante + su procedencia de catálogo.
- *  HOY este output lo consume SOLO la UI de auditoría del canvas (T4.11); NINGÚN N7 lo lee de sus deps
- *  (no hay ningún lector por-schema de este N6Output en el repo). DEUDA T5b.1b: N7d/N7f (i2v) deberían recibir su prompt de
- *  escena. La fila `generation` la crea N7 al submitear (no N6), pero desde su propio config, no de aquí. */
+ *  HOY el `resolvedPrompt` de variante lo consume la UI de auditoría del canvas (T4.11); el array
+ *  `scenePrompts` (T5b.1b-i) lo consumirá N7d/N7f en T5b.1b-ii. La fila `generation` la crea N7 al
+ *  submitear (no N6), pero desde su propio config, no de aquí. */
 export const N6OutputSchema = z.object({
   node: z.literal('N6'),
   variantId: z.string(),
@@ -174,6 +209,11 @@ export const N6OutputSchema = z.object({
   guardPackKeysUsed: z.array(z.string()),
   resolvedPrompt: z.string(),
   resolvedBeats: z.array(z.unknown()),
+  /** T5b.1b-i · un prompt por escena `body`/`cta` del guion (retrocompatible: se AÑADE, no reemplaza
+   *  `resolvedPrompt`/`resolvedBeats`). `.optional()` para no romper el `safeParse` de filas
+   *  `step_run.output_refs` históricas sin este campo; el executor SIEMPRE lo emite (incluido `[]`
+   *  cuando el guion no tiene escenas `body`/`cta` — control negativo observable). */
+  scenePrompts: z.array(N6ScenePromptSchema).optional(),
   /** T5.12 · presente SOLO cuando la selección de template tuvo que DEGRADAR una faceta porque la
    *  `product.category` del brief es texto libre del LLM que ningún template reconoce. Declarado en el
    *  contrato (no como campo suelto) para que el rastro de la degradación sea AUDITABLE y no lo

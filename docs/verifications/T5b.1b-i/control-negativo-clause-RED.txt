@@ -1,0 +1,36 @@
+
+ RUN  v4.1.10 /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/worker
+
+ ❯ |worker:unit| src/executors/compile-prompt.test.ts (13 tests | 1 failed) 48ms
+       × CONTROL NEGATIVO: guion sin escenas body/cta → scenePrompts vacío, output no rompe 4ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |worker:unit| src/executors/compile-prompt.test.ts > makeN6Executor (costura stepless: fuentes por dep, sin BD) > T5b.1b-i · scenePrompts (un prompt por escena body/cta) > CONTROL NEGATIVO: guion sin escenas body/cta → scenePrompts vacío, output no rompe
+AssertionError: expected undefined to deeply equal []
+
+- Expected:
+[]
+
++ Received:
+undefined
+
+ ❯ src/executors/compile-prompt.test.ts:238:32
+    236|       };
+    237|       expect(out.node).toBe('N6');
+    238|       expect(out.scenePrompts).toEqual([]);
+       |                                ^
+    239|       // El resolvedPrompt de la variante entera sigue emitiéndose.
+    240|       expect(out.resolvedPrompt.length).toBeGreaterThan(0);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 12 passed (13)
+   Start at  19:47:04
+   Duration  1.55s (transform 814ms, setup 18ms, import 1.39s, tests 48ms, environment 0ms)
+
+undefined
+/Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/worker:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/executors/compile-prompt.test.ts

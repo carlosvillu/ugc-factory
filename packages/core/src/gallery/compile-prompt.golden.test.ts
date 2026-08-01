@@ -50,4 +50,20 @@ describe('compilePrompt — golden files (carácter a carácter)', () => {
     if (!res.ok) throw new Error(`compilación falló: ${JSON.stringify(res.issues)}`);
     await expectGolden(res.result.resolvedPrompt, golden(name));
   });
+
+  // T5b.1b-i · el prompt de la ESCENA `body` (la que N7d genera como b-roll i2v). Fija carácter a
+  // carácter que la ventana temporal de la escena filtra los beats a los que solapan `[t, t+seconds)`
+  // y que su guard pack §9.5 sigue estando. Golden separado del de la variante entera: si un cambio en
+  // el filtrado por escena mueve el prompt de b-roll (dinero de pago en T5b.1b-ii), rompe AQUÍ.
+  it('golden por escena body — grwm-beauty/tiktok', async () => {
+    const bodyScene = DEMO_SCRIPT.scenes.find((s) => s.segment === 'body')!;
+    const res = compilePrompt({
+      template: bySlug('grwm-beauty-pain-point'),
+      sources,
+      guardPacks,
+      scene: bodyScene,
+    });
+    if (!res.ok) throw new Error(`compilación por escena falló: ${JSON.stringify(res.issues)}`);
+    await expectGolden(res.result.resolvedPrompt, golden('grwm-beauty-tiktok-scene-body'));
+  });
 });

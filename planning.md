@@ -17,6 +17,7 @@
 | F3 | Galería y compilador | Templates facetados + compilador que produce `resolvedPrompt` auditables | ✅ |
 | F4 | Generación fal | Todos los assets de una variante generados de verdad vía fal.ai | ✅ |
 | F5 | Composición y export | Anuncio completo 9:16 con captions karaoke, C2PA y QA descargable | ✅ *(cerrada por decisión del usuario 2026-07-30: la matriz ≥6 variantes COMPUESTA no se ejerció por presupuesto — retenida íntegra en T5.9-full ⛔; ver T5.9)* |
+| F5c | Deuda del primer uso real en prod | El usuario aprueba CP3 en su tier por defecto y OBTIENE un vídeo real, con el grafo enganchado y la galería publicada — el producto funciona «de verdad» de punta a punta | ☐ *(abierta 2026-08-13 tras el primer uso real: los 7 lotes se paraban en `scripted`, 0 vídeos; ver F5c)* |
 | F6 | Publicación | Variante publicada en TikTok/IG y ad draft creado desde la herramienta | ☐ |
 | F7 | Medición y flywheel | Métricas por variante en el dashboard + kill/scale + scoring realimentado | ☐ |
 | F8 | Operación y extensiones | Backups, retención, presets por plataforma, observabilidad, MCP (backlog) | ☐ |
@@ -1070,6 +1071,72 @@ Decisiones del usuario (2026-07-07): la fase se ejecuta tras T0.1 y **antes** de
   3. Coherencia de la máquina de estados: la UI no promete una edición que no surte efecto; o compila lo editado, o se marca explícitamente el desfase.
 - **Coste estimado**: ~$0 (compilación es pura, sin red); verificación con 1 generación real opcional solo si se quiere ver el efecto end-to-end. Presupuestar contra el techo fal antes de gastar.
 - **Verificación**: editar el `body` (o un `guard_pack_keys`) de un template por la UI → una compilación posterior de una variante que usa ese template **refleja el cambio** (el prompt de N6 cambia acorde). Control negativo: un template roto guardado en la tabla → N6 lo rechaza con el mismo `schema_invalid`/error que hoy da el JSON, no compila basura.
+
+## F5c — Deuda del PRIMER USO REAL EN PRODUCCIÓN (acordada con el usuario el 2026-08-13)
+
+> **Origen**: el usuario desplegó el producto en prod (`ugc.carlosvillu.dev`) y lo usó de verdad con una URL real de Amazon (VEGER 30000mAh). Descubrió que **el pipeline se para en `scripted` y NUNCA genera un vídeo**: 7 lotes reales, 0 vídeos. Parada del bucle + investigación dirigida (3 subagentes Explore, evidencia `file:line`, 2026-08-13). Los tres «fallos» que reportó resultaron ser **tres cosas independientes**, y varias premisas suyas eran falsas — anotadas abajo para no repetir el diagnóstico.
+>
+> **Dato duro que ancla el diagnóstico** (`SELECT tier FROM ad_batch` en la BD de prod, 2026-08-13): los **7 lotes son tier `test`**; ninguno `premium`. El lote de hoy (`01KZX72W09…`) tiene 2 variantes, ambas `scripted`. Por eso nunca se generó vídeo — ver Fallo 3.
+>
+> **Premisas del usuario que la investigación DESMINTIÓ (no re-investigar):**
+> - «La narración es placeholder» → **FALSO**. `scene.narration` es texto real de un LLM Anthropic (`script-writer.ts:466`). El `"Narración de la escena N (hook)…"` que vio es una etiqueta `sr-only` de accesibilidad (`scripts-panel.tsx:398-399`), no el contenido.
+> - «Las personas placeholder rompen la generación» → **FALSO**. Las 10 personas no-Maya tienen 2 imágenes SINTÉTICAS cada una (`persona-seed.ts:107`, `sharp`); NO lanzan `PersonaWithoutReferenceImageError` (solo salta con CERO imágenes, `build-variant-generation-plan.ts:137-148`). El defecto es **estético** (sujeto alucinado feo por animar un PNG abstracto), no un bloqueo. Camino barato a caras reales: subir fotos propias en el CRUD `/personas` ($0 fal).
+> - «No existe el botón de generar» → **FALSO**. El arranque de generación está acoplado a aprobar CP3 (`script-checkpoint.ts:269-275`), por diseño. Lo que falla es el gate de tier (Fallo 3) + que la UI no navega al run de generación (Fallo 2).
+> - «El canvas está roto / el render falla» → **FALSO**. El canvas pinta fielmente el run que le toca. La pipeline N1→N7 son **3 `pipeline_run` separados por diseño** (análisis N1-N4 / lote = un solo nodo N5 / generación N6-N9). El «nodo suelto» es el run de lote de un único nodo N5, dibujado correctamente (`batch-dag.ts:5-10`, `steps-to-graph.ts:203-213`). Ver Fallo 2.
+>
+> **Decisiones del usuario tomadas el 2026-08-13 (con los números de gasto delante), vinculantes para esta fase:**
+> - **Fallo 3 → opción (a)**: cablear un endpoint i2v real en `test`/`standard` para que TODOS los tiers generen vídeo de verdad. Implica gasto fal por lote aprobado.
+> - **Templates → opción (b)**: publicar los 56 templates por la vía OFICIAL (generar sus 56 miniaturas con FLUX.2, coste fal), NO por el atajo SQL. El usuario da por buenos los contenidos («100% producción pre-edit»), pero NO se elude el guard de aplicación ni se dejan tarjetas sin miniatura.
+> - **Fallo 2 → opción (rediseño mayor)**: grafo único N1→N7 continuo. El usuario quiere el grafo «bien enganchado de verdad», no solo navegación. Es un rediseño del orquestador — la tarea lo trata como tal.
+> - **Gasto**: el usuario recargó **$10 en fal por iniciativa propia** para poder «hacerlo de verdad» (saldo ≈ $14). Coste real medido F5 ≈ **$2,9–3,7/variante** de vídeo → un lote de 2 variantes ≈ $6–7,4. Los 56 thumbnails ≈ $0,67. Cabe, pero NO es infinito: cada tarea de gasto proyecta y arma abort duro (regla de trabajo 5), y se pide el saldo real antes de gastar. Ver [[techo-gasto-fal-hard]].
+>
+> **Orden vinculante** (por dependencia real y por «señal visible primero»): las tres de $0 (T5c.1, T5c.2, T5c.3) arrancan YA y no necesitan saldo; luego las de gasto (T5c.4 vídeo, T5c.5 thumbnails); el grafo único (T5c.6) es independiente y opinable, va cuando el usuario quiera. Ninguna tarea de esta fase toca F6 (publicación) — F6 sigue bloqueada en T6.1 (OAuth ⚠).
+
+#### T5c.1 · Aprobar CP3 debe NAVEGAR al run de generación (hoy descarta el `nextRunId`)
+- **Depende de**: nada ($0, solo frontend)
+- **Origen**: investigación 2026-08-13, Fallo 2/3. `scripts-panel.tsx:144-151` llama a `runActions.approve(...)` pero **descarta la respuesta** — no lee `nextRunId` ni navega — mientras CP2 (`matrix-panel.tsx:291-294`) y CP4 (`qa-panel.tsx:294-296`) sí hacen `router.push('/runs/${nextRunId}')`. Resultado: tras aprobar guiones el usuario se queda mirando el run de N5 (ya muerto) y la generación (si arranca) corre invisible en otra URL. Es la mitad del síntoma «no pasa nada al aprobar».
+- **Entrega**: `scripts-panel.tsx` lee el `nextRunId` de la respuesta de `approve` y, si viene, navega al run de generación — mismo patrón que CP2/CP4. Si NO viene `nextRunId` (gate de tier no listo, ver T5c.2), NO navega (no hay run) y deja que T5c.2 muestre el aviso.
+- **Coste estimado**: $0.
+- **Verificación observable**: aprobar CP3 en un tier que genera → el navegador aterriza en `/runs/<run-generación>` mostrando N6→N7. Coherencia: los tres paneles de checkpoint (CP2/CP3/CP4) navegan igual al aprobar. Test e2e/unit del panel que fije que se consume `nextRunId`.
+
+#### T5c.2 · El stop silencioso al aprobar CP3 debe ser VISIBLE (hoy 200 mudo)
+- **Depende de**: nada ($0)
+- **Origen**: investigación 2026-08-13, Fallo 3. Cuando `isTierGenerationReady` da `false` (`build-variant-generation-plan.ts:221-236`), `approveScriptsForStep` hace un early-return silencioso (`script-checkpoint.ts:255-257`): commitea `scripted`, no crea run, devuelve 200 sin `nextRunId` y **sin ningún mensaje**. El usuario aprueba y «no pasa nada», invisible. Aunque T5c.4 cablee el endpoint, este defecto (aprobar sin feedback) es independiente y debe arreglarse igual.
+- **Entrega**: cuando la aprobación de CP3 commitea `scripted` SIN arrancar generación, la respuesta lo comunica (campo explícito tipo `generationSkipped` + motivo) y el panel CP3 muestra un aviso claro («Guiones aprobados. Este lote no puede generar vídeo: el tier `<tier>` no tiene endpoint de b-roll. …»). No es un error (la aprobación es válida), es un estado informado.
+- **Coste estimado**: $0.
+- **Verificación observable**: aprobar CP3 en un tier SIN endpoint de generación → la variante queda `scripted` **y** la UI muestra el aviso nombrando el tier y el motivo (no un 200 mudo). Control: en un tier que SÍ genera, no aparece el aviso y navega (T5c.1).
+
+#### T5c.3 · Poblar `pipeline_run.batchId` (la columna existe pero nunca se escribe)
+- **Depende de**: nada ($0)
+- **Origen**: investigación 2026-08-13, Fallo 2 (raíz de modelo de datos). `pipeline_run.batchId` es un ULID nullable sin FK (`schema/pipeline.ts:59-61`) y `createRun` **nunca lo escribe** (`create-run.ts:95-102`): solo mete `projectId`, `autopilot`, `kind`. El vínculo lote↔run vive solo dentro de `step_run.config`. Consecuencia: los 3 runs de un lote (análisis/N5/generación) **no comparten clave consultable a nivel de run** → imposible reconstruir la cadena. Poblarla es prerequisito de T5c.6 (grafo único) y de cualquier navegación entre runs hermanos.
+- **Entrega**: `createRun` escribe `batchId` cuando el run pertenece a un lote (runs de lote N5 y de generación N6-N9). Backfill de los runs existentes en prod donde el `batchId` sea derivable de `step_run.config` (o dejar constancia de que los viejos quedan sin correlación y solo los nuevos la tienen). Evaluar si conviene además un `parentRunId` para el linaje análisis→N5→generación (decisión a anotar en la tarea).
+- **Coste estimado**: $0.
+- **Verificación observable**: crear un lote nuevo end-to-end → los `pipeline_run` de su N5 y de su generación tienen el mismo `batchId` no nulo, consultable con un `SELECT`. Control: un run de análisis (pre-lote) mantiene su semántica actual.
+
+#### T5c.4 · Obtener el PRIMER vídeo real: hacer `premium` alcanzable/consciente (NO encarecer el tier `test`) ⚠ GASTO
+- **Depende de**: T5c.1, T5c.2 (el arranque debe ser visible y navegable ANTES de gastar), T5c.3 recomendable
+- **Origen**: investigación 2026-08-13, Fallo 3 (causa raíz). `seed-data.ts:609,624` dejan el `broll` de `test`/`standard` como etiqueta `[endpoint pendiente F4]`; solo `premium` (`:638`) tiene endpoint fal vivo (`fal-ai/veo3.1/image-to-video`). Por eso `isTierGenerationReady` da `false` en test/standard y NINGÚN lote del usuario (los 7 son tier `test`) generó jamás.
+- **REFORMULADA 2026-08-13 (advisor + comprobación de código)**: la decisión inicial del usuario fue «cablear i2v en test/standard». **Comprobado que eso sería un error**: el tier `test` es EL tier por defecto (el que se usa sin pensar — los 7 lotes lo son). Cablearle un i2v de Veo ($0,20/s → ~$6-7,4/lote de 2 variantes) convierte el tier barato en uno que gasta en CADA aprobación, y rompe la premisa del money-guard/CP2 (diseñados asumiendo `test`=barato). **Y no hace falta**: el tier se ELIGE en la UI (`<select id="tier-select">`, `matrix-panel.tsx:569`, actualiza el coste al vuelo) y **`premium` YA genera hoy**. El usuario nunca generó no porque falte cablear nada, sino porque el default es `test` y nada le avisó de que `test` no genera (eso lo arregla T5c.2). → El arreglo correcto NO toca `seed-data.ts`: es hacer que elegir `premium` en CP2 sea consciente (coste + aviso de que test/standard no generan).
+- **⚠ GASTO fal por lote premium aprobado.** Coste real medido F5 ≈ $2,9–3,7/variante → lote de 2 variantes ≈ $6–7,4. Saldo ≈ $14. **Proyectar el coste exacto del lote de prueba ANTES de gastar, abort duro, pedir saldo real al usuario** (regla 5, [[techo-gasto-fal-hard]]).
+- **Entrega**: el usuario puede, desde CP2, elegir `premium` de forma informada (el selector ya existe; T5c.2 añade el aviso de que test/standard no generan) y aprobar CP3 de un lote `premium` arranca la generación real. NO se modifica `seed-data.ts` para encarecer test/standard. **Decisión de producto abierta EN la tarea**: ¿cambiar el tier por defecto de `test` a `premium`? (implica que el default gasta — probablemente NO; mejor default `test` + aviso claro). Anotar en PRD §13.1 (regla 3). Si tras esto el usuario AÚN quiere que test/standard generen, es un cambio de alcance mayor → volver a preguntar con la consecuencia explícita («tu tier por defecto pasa a gastar $6-7/lote»).
+- **Coste estimado**: código $0; VERIFICACIÓN con un lote `premium` real ≈ $6–7,4 (proyectar antes). Cap = estimado ×3, parar si se supera.
+- **Verificación observable**: elegir `premium` en CP2 → aprobar CP3 → arranca el run de generación N6→N7, y al terminar hay **al menos un vídeo real** en la galería (el primer vídeo end-to-end real del proyecto). Evidencia: el asset de vídeo + el coste real medido. Control de gasto: el ledger coincide (±25%) con la proyección.
+
+#### T5c.5 · Publicar los 56 templates de la galería por la vía oficial (generar sus miniaturas) ⚠ GASTO
+- **Depende de**: nada técnico; conviene tras T5c.4 para no competir por saldo en el mismo momento
+- **Origen**: petición del usuario 2026-08-13 («todos los prompts aprobados, 100% producción pre-edit; yo no me los voy a leer, los doy por buenos»). Los 56 templates del seed están todos en `status: draft` sin thumbnail (`gallery-seed/prompt-templates.json`). El usuario eligió la opción (b): **vía oficial**, no el atajo SQL (que eludiría el guard `gallery.repo.ts:345-353` y dejaría tarjetas sin miniatura).
+- **⚠ GASTO fal**: 56 thumbnails FLUX.2 a 1,2c/MP (`model-profiles.json:132-137`) ≈ **$0,67** a ~1MP c/u. Hay script bulk (`apps/web/scripts/publish-template-thumbnails.ts:57`) y dedup (re-generar no cambiado = $0). Barato, pero se proyecta igual.
+- **Entrega**: generar la miniatura de los 56 templates y transicionarlos a `published` por la vía oficial (`generateTemplateThumbnail` → `PATCH /api/templates/:id/status`), respetando el guard de thumbnail. Anotar cómo evitar que un `pnpm seed:gallery` posterior los revierta a `draft` (el `onConflictDoUpdate` incluye `status` — `gallery-seed.repo.ts:126`): decidir si el seed pasa a sembrar `published` o si el estado vivo se protege.
+- **Coste estimado**: ≈ $0,67 (proyectar contra el saldo antes de gastar).
+- **Verificación observable**: `/gallery` muestra los 56 templates en `published`, cada uno con su miniatura visible. Control: el guard sigue vivo (intentar publicar un template sin thumbnail sigue dando 400). Persistencia: un redeploy no los revierte.
+
+#### T5c.6 · Grafo único N1→N7 continuo (rediseño del orquestador — el «grafo bien enganchado») ⚠ REDISEÑO
+- **Depende de**: T5c.3 (correlación de runs poblada). Es la tarea más grande y opinable de la fase.
+- **Origen**: petición del usuario 2026-08-13, Fallo 2, opción (rediseño mayor). Hoy la pipeline son 3 `pipeline_run` separados por diseño (análisis / N5 / generación); el usuario quiere verla como UN grafo continuo N1→N7, no saltar entre runs de un nodo. Esto NO es un bug de render: es un cambio deliberado de cómo se modela y se navega la ejecución.
+- **⚠ ALCANCE**: es rediseño del orquestador + canvas, no un arreglo puntual. Antes de implementar, la tarea debe **diseñarse explícitamente** (subagente code-architect o Plan): ¿se fusionan los 3 runs en uno con todos los nodos N1→N9?, ¿o se mantiene el modelo de 3 runs y el canvas los UNE visualmente vía `batchId`/`parentRunId` (más barato, menos riesgo)? Presentar el diseño al usuario antes de codificar (posible sub-split, regla 6). El menor riesgo (unir visualmente sin fusionar el modelo) puede satisfacer «bien enganchado» sin tocar el orquestador — evaluarlo primero.
+- **Entrega** (a concretar tras el diseño): el canvas presenta la ejecución de un lote como un grafo continuo/encadenado de principio a fin; navegar de un checkpoint al siguiente no deja al usuario ante un «nodo suelto sin contexto». Como mínimo, la cabecera del canvas (`run-shell.tsx:230`) da contexto de cadena (de qué lote viene, enlaces a runs hermanos).
+- **Coste estimado**: $0 fal; esfuerzo alto. Presupuestar en tiempo, no en fal.
+- **Verificación observable**: recorrer un lote de principio a fin (análisis → CP2 → guiones → CP3 → generación) sin encontrarse nunca un nodo aislado sin grafo; en cada punto se ve/enlaza la cadena completa. A concretar con el diseño aprobado.
 
 ## F6 — Publicación
 

@@ -1,0 +1,100 @@
+
+ RUN  v4.1.10 /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/web
+
+(node:70473) DeprecationWarning: Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:70472) DeprecationWarning: Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+ × |web:integration| test/integration/server/regen-checkpoint.test.ts > CP4 · regenerateVariantCta (T5.8, CU4): clon + run regen, atomicidad, tier-gate > clona la variante con el CTA nuevo y arranca un pipeline_run kind=regen con su sub-DAG encolado 178ms
+   → expected null to be '01KZXRFQM3CR23K7SG9WSWWF97' // Object.is equality
+ ✓ |web:integration| test/integration/server/regen-checkpoint.test.ts > CP4 · regenerateVariantCta (T5.8, CU4): clon + run regen, atomicidad, tier-gate > EL CTA SE APLICA al clon y el hook/body quedan IDÉNTICOS al origen (base de la dedup) 88ms
+ × |web:integration| test/integration/server/scripts-checkpoint.test.ts > CP2 → N5 · atomicidad (T2.6): aprobar CP2 crea el lote Y arranca el run de N5 en UNA tx > crea el ad_batch + sus variantes Y un pipeline_run NUEVO con el step N5 encolado 132ms
+   → expected null to be '01KZXRFQPVV3KD2GRWYGG08J7Y' // Object.is equality
+ ✓ |web:integration| test/integration/server/scripts-checkpoint.test.ts > CP2 → N5 · atomicidad (T2.6): aprobar CP2 crea el lote Y arranca el run de N5 en UNA tx > si algo FALLA tras crear el lote+run, NADA persiste (rollback de la tx entera) 66ms
+ ✓ |web:integration| test/integration/server/regen-checkpoint.test.ts > CP4 · regenerateVariantCta (T5.8, CU4): clon + run regen, atomicidad, tier-gate > T6.2b: un regen de una variante own_license CONSERVA el bed propio en el clon (no re-genera IA) 87ms
+ ✓ |web:integration| test/integration/server/regen-checkpoint.test.ts > CP4 · regenerateVariantCta (T5.8, CU4): clon + run regen, atomicidad, tier-gate > ATOMICIDAD (restricción 3): si algo FALLA tras clonar+crear el run, NO queda clon (rollback) 98ms
+ × |web:integration| test/integration/server/scripts-checkpoint.test.ts > CP3 · approveScriptsForStep (T2.6): veredictos, v2 solo si edita, bloqueo server-side > edita UNA variante y aprueba TODAS: exactamente una v2 edited_by_user, todas scripted 108ms
+   → expected null to be '01KZXRFQV3KRSG3S0RMTR3152V' // Object.is equality
+ ✓ |web:integration| test/integration/server/scripts-checkpoint.test.ts > CP3 · approveScriptsForStep (T2.6): veredictos, v2 solo si edita, bloqueo server-side > T5.8b · el run de generación del flujo NORMAL emite la cola de composición N8 (máster) + N9 (CP4) 98ms
+ ✓ |web:integration| test/integration/server/regen-checkpoint.test.ts > CP4 · regenerateVariantCta (T5.8, CU4): clon + run regen, atomicidad, tier-gate > TIER NO GENERATION-READY (restricción 1): regenerar en tier-test lanza validation_error SIN clonar 40ms
+ ✓ |web:integration| test/integration/server/regen-checkpoint.test.ts > CP4 · regenerateVariantCta (T5.8, CU4): clon + run regen, atomicidad, tier-gate > un output_refs que NO es N9 → validation_error (no arranca run sobre una variante equivocada) 13ms
+ ✓ |web:integration| test/integration/server/regen-checkpoint.test.ts > CP4 · regenerateVariantCta (T5.8, CU4): clon + run regen, atomicidad, tier-gate > un CTA vacío → validation_error (nada que regenerar) 43ms
+ ✓ |web:integration| test/integration/server/scripts-checkpoint.test.ts > CP3 · approveScriptsForStep (T2.6): veredictos, v2 solo si edita, bloqueo server-side > mandar `editedScript` IDÉNTICO al vigente NO crea v2 (aprobar no es editar) 64ms
+ ✓ |web:integration| test/integration/server/regen-checkpoint.test.ts > CP4 · spawnRegenForStep — idempotencia bajo concurrencia (T5.8, bug de dinero) > dos regeneraciones SOLAPADAS sobre el mismo N9 → EXACTAMENTE un run kind=regen (la 2ª obtiene 409) 90ms
+ ✓ |web:integration| test/integration/server/scripts-checkpoint.test.ts > CP3 · approveScriptsForStep (T2.6): veredictos, v2 solo si edita, bloqueo server-side > BLOQUEO SERVER-SIDE: `approved:true` sobre un guion con flag bloqueante NO lo pasa a scripted 67ms
+ ✓ |web:integration| test/integration/server/scripts-checkpoint.test.ts > CP3 · approveScriptsForStep (T2.6): veredictos, v2 solo si edita, bloqueo server-side > BLOQUEO SERVER-SIDE por RE-LINT: un `editedScript` que INTRODUCE un claim prohibido no se aprueba 107ms
+ ✓ |web:integration| test/integration/server/scripts-checkpoint.test.ts > CP3 · approveScriptsForStep (T2.6): veredictos, v2 solo si edita, bloqueo server-side > control POSITIVO: editar un guion RESOLVIENDO el flag lo deja pasar a scripted 86ms
+ ✓ |web:integration| test/integration/server/regen-checkpoint.test.ts > CP4 · spawnRegenForStep — idempotencia bajo concurrencia (T5.8, bug de dinero) > un 2º regen SECUENCIAL sobre un N9 ya usado → 409 invalid_transition (no un 2º run) 117ms
+ ✓ |web:integration| test/integration/server/scripts-checkpoint.test.ts > CP3 · approveScriptsForStep (T2.6): veredictos, v2 solo si edita, bloqueo server-side > no-op si la decisión no es `scripts` (un artefacto N5 sin decisión de guiones) 31ms
+ ✓ |web:integration| test/integration/server/scripts-checkpoint.test.ts > CP3 · approveScriptsForStep (T2.6): veredictos, v2 solo si edita, bloqueo server-side > MONEY-SAFETY: un tier no generation-ready (b-roll etiqueta) aprueba los guiones SIN crear ningún run 53ms
+ ✓ |web:integration| test/integration/server/scripts-checkpoint.test.ts > CP3 · approveScriptsForStep (T2.6): veredictos, v2 solo si edita, bloqueo server-side > ATOMICIDAD en tier ready: un fallo REAL del plan (persona sin imagen) LANZA y hace rollback de los veredictos 61ms
+ ✓ |web:integration| test/integration/server/scripts-checkpoint.test.ts > CP3 · approveScriptsForStep (T2.6): veredictos, v2 solo si edita, bloqueo server-side > T5.11 MONEY-SAFETY: un lote con menos guiones que variantes se RECHAZA y no arranca ningún run 34ms
+ ✓ |web:integration| test/integration/server/scripts-checkpoint.test.ts > CP3 · approveScriptsForStep (T2.6): veredictos, v2 solo si edita, bloqueo server-side > T5.14: confirmar con 0 aprobadas se RECHAZA (validation_error) sin consumir el checkpoint ni transicionar nada 36ms
+ ✓ |web:integration| test/integration/server/scripts-checkpoint.test.ts > CP3 · approveScriptsForStep (T2.6): veredictos, v2 solo si edita, bloqueo server-side > T5.14: aprobar SOLO variantes con flag bloqueante (0 quedarían scripted) también se RECHAZA — mismo error irreversible 47ms
+ ✓ |web:integration| test/integration/server/scripts-checkpoint.test.ts > CP3 · approveScriptsForStep (T2.6): veredictos, v2 solo si edita, bloqueo server-side > T5.14 control POSITIVO: aprobar AL MENOS UNA sigue confirmando (el guard no encierra el camino feliz) 61ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |web:integration| test/integration/server/regen-checkpoint.test.ts > CP4 · regenerateVariantCta (T5.8, CU4): clon + run regen, atomicidad, tier-gate > clona la variante con el CTA nuevo y arranca un pipeline_run kind=regen con su sub-DAG encolado
+AssertionError: expected null to be '01KZXRFQM3CR23K7SG9WSWWF97' // Object.is equality
+
+- Expected:
+"01KZXRFQM3CR23K7SG9WSWWF97"
+
++ Received:
+null
+
+ ❯ test/integration/server/regen-checkpoint.test.ts:294:32
+    292|     const regenRun = runs.find((r) => r.id === result.nextRunId);
+    293|     expect(regenRun?.kind).toBe('regen');
+    294|     expect(regenRun?.batch_id).toBe(batchId);
+       |                                ^
+    295|     // Linaje REAL (el que el E2E y el worker usan): el variant_id de …
+    296|     const { rows: n8variant } = await tdb.pool.query<{ variant_id: str…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  |web:integration| test/integration/server/scripts-checkpoint.test.ts > CP2 → N5 · atomicidad (T2.6): aprobar CP2 crea el lote Y arranca el run de N5 en UNA tx > crea el ad_batch + sus variantes Y un pipeline_run NUEVO con el step N5 encolado
+AssertionError: expected null to be '01KZXRFQPVV3KD2GRWYGG08J7Y' // Object.is equality
+
+- Expected:
+"01KZXRFQPVV3KD2GRWYGG08J7Y"
+
++ Received:
+null
+
+ ❯ test/integration/server/scripts-checkpoint.test.ts:177:31
+    175|     );
+    176|     expect(runs).toHaveLength(1);
+    177|     expect(runs[0]?.batch_id).toBe(result!.batch.batch.id);
+       |                               ^
+    178|     const { rows: steps } = await tdb.pool.query<{ node_key: string; s…
+    179|       'SELECT node_key, status FROM step_run WHERE run_id = $1',
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  |web:integration| test/integration/server/scripts-checkpoint.test.ts > CP3 · approveScriptsForStep (T2.6): veredictos, v2 solo si edita, bloqueo server-side > edita UNA variante y aprueba TODAS: exactamente una v2 edited_by_user, todas scripted
+AssertionError: expected null to be '01KZXRFQV3KRSG3S0RMTR3152V' // Object.is equality
+
+- Expected:
+"01KZXRFQV3KRSG3S0RMTR3152V"
+
++ Received:
+null
+
+ ❯ test/integration/server/scripts-checkpoint.test.ts:424:33
+    422|       [result.nextRunId],
+    423|     );
+    424|     expect(genRun[0]?.batch_id).toBe(batchId);
+       |                                 ^
+    425|   });
+    426|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  2 failed (2)
+      Tests  3 failed | 21 passed (24)
+   Start at  16:30:06
+   Duration  7.95s (transform 3.03s, setup 52ms, import 6.73s, tests 2.75s, environment 0ms)
+

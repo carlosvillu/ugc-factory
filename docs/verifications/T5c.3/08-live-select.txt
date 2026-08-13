@@ -1,0 +1,20 @@
+Lazy loading nvm node npm ...
+=== La Verificación literal: SELECT de batch_id por run, con los node_keys que lo tipan ===
+
+{"id":"01KZXRJQ2C9Z407ZMQ730G0348","kind":"full","batch_id":null,"node_keys":"N1,N2,N3,N4"}
+{"id":"01KZXRJT0GZ2FBW8WAPBXXSBXE","kind":"full","batch_id":"01KZXRJT06P0W8P9PY4CN7CZMS","node_keys":"N5"}
+{"id":"01KZXRJV1CR4DC7CETN6JRCJM5","kind":"full","batch_id":"01KZXRJT06P0W8P9PY4CN7CZMS","node_keys":"N6,N7a,N7b,N7c,N7d,N7e,N7f,N8,N9"}
+
+=== Clasificación por tipo de run (según sus node_keys) ===
+ANÁLISIS (N1-N4): [ { batch_id: null } ]
+N5 (lote)       : [ { batch_id: '01KZXRJT06P0W8P9PY4CN7CZMS' } ]
+GENERACIÓN (N6+): [ { batch_id: '01KZXRJT06P0W8P9PY4CN7CZMS' } ]
+
+=== Aserciones de la Verificación ===
+(control) análisis → batch_id NULL: true
+N5 → batch_id NO NULL             : true [ '01KZXRJT06P0W8P9PY4CN7CZMS' ]
+generación → batch_id NO NULL     : true [ '01KZXRJT06P0W8P9PY4CN7CZMS' ]
+N5 y generación comparten batch_id: true
+
+=== Cross-check: batch_id del run de generación == ad_variant.batch_id de sus steps ===
+gen run 01KZXRJV1CR4DC7CETN6JRCJM5 pipeline_run.batch_id= 01KZXRJT06P0W8P9PY4CN7CZMS | ad_variant.batch_id= [ '01KZXRJT06P0W8P9PY4CN7CZMS' ]

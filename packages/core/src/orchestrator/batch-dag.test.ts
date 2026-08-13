@@ -34,6 +34,16 @@ describe('batchRunDefinition', () => {
     expect(() => AnalysisN5ConfigSchema.parse(n5)).not.toThrow();
   });
 
+  it('el `batchId` viaja también a NIVEL DE RUN (T5c.3): pobla `pipeline_run.batch_id`', () => {
+    // Sin esto, el run de N5 y el de generación del mismo lote no comparten clave consultable a nivel de
+    // run — imposible reconstruir la cadena análisis→N5→generación (prerequisito del grafo único T5c.6).
+    const def = batchRunDefinition('proj_01', 'bat_01');
+    expect(def.batchId).toBe('bat_01');
+    // Y el schema lo acepta a nivel de run.
+    const parsed = RunDefinitionSchema.parse(def);
+    expect(parsed.batchId).toBe('bat_01');
+  });
+
   it('N5 es el CHECKPOINT de CP3', () => {
     // Sin `isCheckpoint`, N5 escribiría los guiones y el run pasaría directo a `succeeded` sin abrir
     // el editor: no habría CP3 que revisar ni aprobar, y las variantes nunca llegarían a `scripted`.

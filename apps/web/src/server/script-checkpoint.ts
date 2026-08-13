@@ -284,9 +284,12 @@ async function applyDecidedVerdicts(
   // `createRun` inserta el `pipeline_run` de generación + su sub-DAG N6→N7a-e POR VARIANTE y encola los
   // roots (N6), todo dentro del `withTransaction` del scope de dominio (savepoint sobre la tx de la
   // aprobación de CP3). Si lanza, `applyScriptVerdicts` de arriba se deshace con el rollback externo.
+  // T5c.3: el run de generación pertenece al lote `batchId` → se puebla `pipeline_run.batch_id` a nivel de
+  // run, correlacionándolo con el run de N5 del MISMO lote (grafo único, T5c.6). El `batchId` está en scope
+  // (es el lote cuyos guiones se aprueban).
   const { runId } = await createRun(
     { withTransaction },
-    generationRunDefinition(batch.projectId, plans),
+    generationRunDefinition(batch.projectId, plans, { batchId }),
   );
 
   return { nextRunId: runId };

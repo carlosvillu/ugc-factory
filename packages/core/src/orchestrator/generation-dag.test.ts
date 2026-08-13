@@ -233,9 +233,28 @@ describe('generationRunDefinition', () => {
   it('con opts (T5.8): el run lleva kind=regen (lo distingue en la run-list)', () => {
     const def = generationRunDefinition('p', [fullVariant('v1')], { kind: 'regen' });
     expect(def.kind).toBe('regen');
-    // La identidad de variante viaja POR-NODO (no a nivel de run): cada N6/N7/N8/N9 la lleva. El linaje al
-    // lote se alcanza vía `step_run.variant_id → ad_variant.batch_id` (no `pipeline_run.batch_id`).
+    // La identidad de variante viaja POR-NODO (no a nivel de run): cada N6/N7/N8/N9 la lleva.
     expect(byKey(def.nodes, `${K.n6}__v1`)?.variantId).toBe('v1');
+    expect(validateDag(def)).toBeNull();
+  });
+
+  // ── LINAJE AL LOTE (T5c.3): `batchId` a nivel de run pobla `pipeline_run.batch_id` ───────────────────
+  it('sin opts.batchId, el run NO fija batch_id (costura stepless: tests sin lote)', () => {
+    const def = generationRunDefinition('p', [fullVariant('v1')]);
+    expect(def.batchId).toBeUndefined();
+  });
+
+  it('con opts.batchId (T5c.3): el run lleva batchId → correlaciona con el run de N5 del mismo lote', () => {
+    // Sin esto, el run de generación y el de N5 del mismo lote no comparten clave consultable a nivel de
+    // run (prerequisito del grafo único T5c.6). Va a nivel de RUN, además del variantId por-nodo.
+    // `kind` y `batchId` son campos independientes en opts (el regen pasa AMBOS): se comprueban en un
+    // solo caso porque los dos spreads son disjuntos — una conjunción no ejercita ninguna interacción.
+    const def = generationRunDefinition('p', [fullVariant('v1')], {
+      kind: 'regen',
+      batchId: 'bat_42',
+    });
+    expect(def.batchId).toBe('bat_42');
+    expect(def.kind).toBe('regen');
     expect(validateDag(def)).toBeNull();
   });
 });

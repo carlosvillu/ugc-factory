@@ -1,0 +1,15 @@
+ apps/web/src/server/regen-checkpoint.ts            |  10 +-
+ apps/web/src/server/script-checkpoint.ts           |   5 +-
+ .../integration/server/regen-checkpoint.test.ts    |   6 +-
+ .../integration/server/scripts-checkpoint.test.ts  |  17 +++-
+ docs/dev-loop/journal.md                           |   6 ++
+ packages/core/src/orchestrator/batch-dag.test.ts   |  10 ++
+ packages/core/src/orchestrator/batch-dag.ts        |   4 +
+ packages/core/src/orchestrator/create-run.ts       |   5 +
+ .../core/src/orchestrator/generation-dag.test.ts   |  23 ++++-
+ packages/core/src/orchestrator/generation-dag.ts   |  16 +++-
+ packages/core/src/orchestrator/ports.ts            |  14 ++-
+ packages/core/src/orchestrator/run-definition.ts   | Bin 9386 -> 10290 bytes
+ packages/db/src/adapters/run-store.ts              |   7 +-
+ .../db/test/integration/create-run-batchid.test.ts | 102 +++++++++++++++++++++
+ 14 files changed, 203 insertions(+), 22 deletions(-)

@@ -295,6 +295,10 @@ export function batchRunDefinition(projectId: string, batchId: string): RunDefin
   return {
     projectId,
     autopilot: false,
+    // §12 (T5c.3): el run de LOTE pertenece al lote `batchId` — se puebla `pipeline_run.batch_id` a nivel
+    // de run (además del `config.batchId` de N5). Correlaciona este run de N5 con el de generación del mismo
+    // lote (grafo único, T5c.6). El `batchId` ya existe cuando se llama (el lote lo acuñó CP2).
+    batchId,
     nodes: [
       {
         key: 'N5',

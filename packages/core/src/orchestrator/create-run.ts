@@ -100,6 +100,11 @@ export async function createRun(
       // regeneración parcial (T5.8) lo trae ('regen'). La identidad de variante NO es run-level (vive en
       // `step_run.variant_id`, ya fijado por nodo en `generationRunDefinition`).
       ...(def.kind !== undefined ? { kind: def.kind } : {}),
+      // §12: `batch_id` de la definición (T5c.3). Omitido ⇒ el store no fija la columna (NULL: run de
+      // análisis, definido antes de que exista el lote). Lo traen el run de LOTE (N5, batchRunDefinition) y
+      // el de GENERACIÓN (N6-N9, generationRunDefinition), ambos con el `batchId` ya acuñado — correlaciona
+      // a nivel de run los hermanos del mismo lote (prerequisito del grafo único T5c.6).
+      ...(def.batchId !== undefined ? { batchId: def.batchId } : {}),
     });
     await runs.insertSteps(stepRows);
 

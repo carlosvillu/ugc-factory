@@ -167,12 +167,14 @@ describe('CP2 → N5 · atomicidad (T2.6): aprobar CP2 crea el lote Y arranca el
     const variants = await listBatchVariants(tdb.db, result!.batch.batch.id);
     expect(variants.length).toBeGreaterThan(0);
 
-    // Un pipeline_run NUEVO (el de N5), con un step N5 encolado.
-    const { rows: runs } = await tdb.pool.query<{ id: string }>(
-      'SELECT id FROM pipeline_run WHERE id = $1',
+    // Un pipeline_run NUEVO (el de N5), con un step N5 encolado. T5c.3: su `batch_id` a nivel de run
+    // apunta al lote recién creado (correlación consultable, prerequisito del grafo único T5c.6).
+    const { rows: runs } = await tdb.pool.query<{ id: string; batch_id: string | null }>(
+      'SELECT id, batch_id FROM pipeline_run WHERE id = $1',
       [nextRunId],
     );
     expect(runs).toHaveLength(1);
+    expect(runs[0]?.batch_id).toBe(result!.batch.batch.id);
     const { rows: steps } = await tdb.pool.query<{ node_key: string; status: string }>(
       'SELECT node_key, status FROM step_run WHERE run_id = $1',
       [nextRunId],
@@ -388,7 +390,7 @@ describe('CP3 · approveScriptsForStep (T2.6): veredictos, v2 solo si edita, blo
   // de dominio de producción). Los tests de BLOQUEO/no-op mantienen tier-test: sus variantes no pasan a
   // `scripted`, no se construye ningún plan, y ADEMÁS se asserta que NO arrancó ningún run.
   it('edita UNA variante y aprueba TODAS: exactamente una v2 edited_by_user, todas scripted', async () => {
-    const { output, variantIds } = await seedScriptedBatch(tdb.db, 2, [[], []], 'premium');
+    const { output, variantIds, batchId } = await seedScriptedBatch(tdb.db, 2, [[], []], 'premium');
 
     const result = await approveInTx(output, {
       kind: 'scripts',
@@ -413,6 +415,13 @@ describe('CP3 · approveScriptsForStep (T2.6): veredictos, v2 solo si edita, blo
     // T4.11: aprobar arrancó el run de generación N6→N7 (patrón `nextRunId` de CP2).
     expect(result.nextRunId).toBeTruthy();
     expect(await pipelineRunCount()).toBe(1);
+    // T5c.3: el run de generación lleva el `batch_id` del lote a nivel de run → correlacionable con el
+    // run de N5 del MISMO lote por SELECT (prerequisito del grafo único T5c.6).
+    const { rows: genRun } = await tdb.pool.query<{ batch_id: string | null }>(
+      'SELECT batch_id FROM pipeline_run WHERE id = $1',
+      [result.nextRunId],
+    );
+    expect(genRun[0]?.batch_id).toBe(batchId);
   });
 
   it('T5.8b · el run de generación del flujo NORMAL emite la cola de composición N8 (máster) + N9 (CP4)', async () => {

@@ -16,9 +16,12 @@ export function makeRunStore(db: Db): RunStore {
         projectId: run.projectId,
         autopilot: run.autopilot,
         // §12: `kind` — solo se fija si core lo trae (omitido ⇒ Drizzle no toca la columna: default 'full').
-        // La regeneración parcial (T5.8) lo trae ('regen'). `pipeline_run.batch_id` NO se puebla aquí: nadie
-        // lo lee (el linaje al lote se alcanza vía `step_run.variant_id → ad_variant.batch_id`).
+        // La regeneración parcial (T5.8) lo trae ('regen').
         ...(run.kind !== undefined ? { kind: run.kind } : {}),
+        // §12: `batch_id` — el lote del run (T5c.3). Mismo patrón que `kind`: omitido ⇒ Drizzle no toca la
+        // columna (NULL: run de análisis, sin lote); los de LOTE (N5) y GENERACIÓN (N6-N9) lo traen. Rationale
+        // canónico en `NewRunRow.batchId` (ports.ts).
+        ...(run.batchId !== undefined ? { batchId: run.batchId } : {}),
       });
     },
     async insertSteps(steps: NewStepRow[]): Promise<void> {

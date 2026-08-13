@@ -329,10 +329,16 @@ export interface NewRunRow {
   // T5.8) arranca su run con `kind='regen'` para que el linaje del run sea visible sin adivinarlo por
   // heurística. Opaco para core: el store lo mapea a la columna nativa; el enum lo valida la BD.
   kind?: 'full' | 'partial' | 'regen';
-  // NOTA (T5.8): `pipeline_run.batch_id` existe en el schema pero NADIE lo lee (ni run-list ni worker); el
-  // linaje del run al lote se alcanza vía `step_run.variant_id → ad_variant.batch_id`. Por eso el run de
-  // regen NO puebla esa columna (poblarla SOLO para regens sería media-columna sin lector = trampa de
-  // observabilidad). La IDENTIDAD DE VARIANTE del run vive en `step_run.variant_id` (por-nodo), no aquí.
+  // §12: `pipeline_run.batch_id` — el lote al que pertenece el run (T5c.3). SITIO CANÓNICO del rationale;
+  // los demás sitios que lo propagan solo apuntan aquí. `undefined` ⇒ el store NO fija la columna (queda
+  // NULL): no hay lote conocido al DEFINIR el run. Ese es el caso del run de ANÁLISIS, que se construye
+  // ANTES de que exista el `ad_batch` (el lote nace al aprobar CP2). Lo FIJAN el run de LOTE (N5) y el de
+  // GENERACIÓN (N6-N9), ambos arrancados con el `batchId` ya acuñado (§batch-checkpoint/script-checkpoint/
+  // regen). Lector que justifica poblarla: la reconstrucción de la cadena análisis→N5→generación a nivel de
+  // run (Verificación de T5c.3 vía SELECT; prerequisito del grafo único T5c.6) — antes ese vínculo vivía
+  // SOLO en `step_run.config`/`ad_variant.batch_id`, no consultable a nivel de run. La IDENTIDAD DE VARIANTE
+  // sigue en `step_run.variant_id` (por-nodo); `batch_id` es identidad de LOTE, a nivel de run.
+  batchId?: string;
 }
 export interface NewStepRow {
   id: string;

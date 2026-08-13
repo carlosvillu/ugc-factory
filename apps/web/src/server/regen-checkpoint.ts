@@ -242,11 +242,15 @@ export async function regenerateVariantCta(
   const genPlan: VariantGenerationPlan = withComposition(n7Plan);
 
   // 3. Arrancar el run de generación `kind='regen'` del clon (sub-DAG N6→N7a-e→N8→N9), atómico con el clon.
-  //    La identidad de variante viaja por-nodo (`step_run.variant_id`); el linaje al lote se alcanza vía
-  //    esa columna → `ad_variant.batch_id` (no se puebla `pipeline_run.batch_id`, sin lector hoy).
+  //    La identidad de variante viaja por-nodo (`step_run.variant_id`). T5c.3: ADEMÁS se puebla
+  //    `pipeline_run.batch_id` con el lote (`variant.batchId`) para correlacionar este run de regen con los
+  //    demás runs del mismo lote a nivel de run (grafo único, T5c.6).
   const { runId } = await createRun(
     { withTransaction },
-    generationRunDefinition(batch.projectId, [genPlan], { kind: 'regen' }),
+    generationRunDefinition(batch.projectId, [genPlan], {
+      kind: 'regen',
+      batchId: variant.batchId,
+    }),
   );
 
   return { nextRunId: runId };

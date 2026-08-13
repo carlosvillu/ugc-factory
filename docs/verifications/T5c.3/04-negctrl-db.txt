@@ -1,0 +1,76 @@
+
+ RUN  v4.1.10 /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/packages/db
+
+ × |db:integration| test/integration/create-run-batchid.test.ts > createRun → pipeline_run.batch_id (T5c.3) > run de LOTE (batchRunDefinition): batch_id queda poblado con el ULID del lote 70ms
+   → expected null to be 'bat_lote_01' // Object.is equality
+ × |db:integration| test/integration/create-run-batchid.test.ts > createRun → pipeline_run.batch_id (T5c.3) > run de GENERACIÓN (generationRunDefinition + opts.batchId): batch_id poblado 33ms
+   → expected null to be 'bat_lote_01' // Object.is equality
+ ✓ |db:integration| test/integration/create-run-batchid.test.ts > createRun → pipeline_run.batch_id (T5c.3) > CONTROL: run de ANÁLISIS (def SIN batchId) → batch_id NULL (semántica actual intacta) 25ms
+ × |db:integration| test/integration/create-run-batchid.test.ts > createRun → pipeline_run.batch_id (T5c.3) > los runs HERMANOS del MISMO lote comparten batch_id (N5 + generación) — grafo único T5c.6 32ms
+   → expected +0 to be 2 // Object.is equality
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |db:integration| test/integration/create-run-batchid.test.ts > createRun → pipeline_run.batch_id (T5c.3) > run de LOTE (batchRunDefinition): batch_id queda poblado con el ULID del lote
+AssertionError: expected null to be 'bat_lote_01' // Object.is equality
+
+- Expected:
+"bat_lote_01"
+
++ Received:
+null
+
+ ❯ test/integration/create-run-batchid.test.ts:57:36
+     55|     const projectId = await seedProject();
+     56|     const { runId } = await createRun(deps(), batchRunDefinition(proje…
+     57|     expect(await batchIdOf(runId)).toBe('bat_lote_01');
+       |                                    ^
+     58|   });
+     59|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  |db:integration| test/integration/create-run-batchid.test.ts > createRun → pipeline_run.batch_id (T5c.3) > run de GENERACIÓN (generationRunDefinition + opts.batchId): batch_id poblado
+AssertionError: expected null to be 'bat_lote_01' // Object.is equality
+
+- Expected:
+"bat_lote_01"
+
++ Received:
+null
+
+ ❯ test/integration/create-run-batchid.test.ts:66:36
+     64|       generationRunDefinition(projectId, [minimalVariantPlan('v1')], {…
+     65|     );
+     66|     expect(await batchIdOf(runId)).toBe('bat_lote_01');
+       |                                    ^
+     67|   });
+     68|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  |db:integration| test/integration/create-run-batchid.test.ts > createRun → pipeline_run.batch_id (T5c.3) > los runs HERMANOS del MISMO lote comparten batch_id (N5 + generación) — grafo único T5c.6
+AssertionError: expected +0 to be 2 // Object.is equality
+
+- Expected
++ Received
+
+- 2
++ 0
+
+ ❯ test/integration/create-run-batchid.test.ts:98:24
+     96|       [batchId],
+     97|     );
+     98|     expect(rows[0]!.n).toBe(2);
+       |                        ^
+     99|     expect(await batchIdOf(n5.runId)).toBe(batchId);
+    100|     expect(await batchIdOf(gen.runId)).toBe(batchId);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed | 1 passed (4)
+   Start at  16:29:48
+   Duration  5.49s (transform 901ms, setup 24ms, import 2.30s, tests 347ms, environment 0ms)
+

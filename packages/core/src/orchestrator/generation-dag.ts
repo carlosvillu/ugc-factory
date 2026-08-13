@@ -296,14 +296,22 @@ export function generationRunDefinition(
     // §12: `kind` del run. La generación normal de CP3 (T4.11) lo OMITE → run 'full' (default de la
     // columna). La REGENERACIÓN PARCIAL (CU4, T5.8) pasa `kind:'regen'` para que la run-list lo distinga
     // (ese campo SÍ tiene lector). La IDENTIDAD de variante viaja por-nodo (`variantId` de cada
-    // N6/N7/N8/N9), no a nivel de run; el linaje al lote es alcanzable vía `step_run.variant_id →
-    // ad_variant.batch_id` (no se puebla `pipeline_run.batch_id`: media-columna sin lector = ruido).
+    // N6/N7/N8/N9), no a nivel de run.
     ...(opts.kind !== undefined ? { kind: opts.kind } : {}),
+    // §12 (T5c.3): `batch_id` del run — el lote de todas estas variantes. Se puebla a nivel de run
+    // (además del `ad_variant.batch_id` por variante) para correlacionar este run de generación con el de
+    // N5 del MISMO lote (grafo único, T5c.6). Lo pasa el caller (CP3-approve / regen), que ya tiene el
+    // `batchId` en scope. OMITIDO ⇒ columna NULL (no debería ocurrir en producción: todo run de generación
+    // nace de un lote; se deja opcional para no romper callers/tests stepless que no lo suministran).
+    ...(opts.batchId !== undefined ? { batchId: opts.batchId } : {}),
   };
 }
 
-/** Opciones de linaje del run de generación (T5.8). La generación normal no las usa (run 'full'); la
- *  regeneración parcial fija `kind:'regen'` (lo distingue en la run-list). */
+/** Opciones de linaje del run de generación (T5.8/T5c.3). `kind`: la generación normal no lo usa (run
+ *  'full'); la regeneración parcial fija `kind:'regen'` (lo distingue en la run-list). `batchId` (T5c.3):
+ *  el lote del run — el caller lo suministra desde su scope para poblar `pipeline_run.batch_id` y
+ *  correlacionar el run con el de N5 del mismo lote (prerequisito del grafo único T5c.6). */
 export interface GenerationRunOptions {
   kind?: 'full' | 'partial' | 'regen';
+  batchId?: string;
 }

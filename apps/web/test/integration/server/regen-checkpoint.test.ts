@@ -285,11 +285,13 @@ describe('CP4 · regenerateVariantCta (T5.8, CU4): clon + run regen, atomicidad,
     // Hay una variante MÁS (el clon) que la original.
     expect(await variantCount()).toBe(2);
 
-    // El run es kind='regen' (lo distingue en la run-list). NO se puebla `pipeline_run.batch_id` (sin lector):
-    // el linaje al lote se alcanza vía `step_run.variant_id → ad_variant.batch_id` — se asserta ESE camino.
+    // El run es kind='regen' (lo distingue en la run-list). T5c.3: AHORA se puebla `pipeline_run.batch_id`
+    // a nivel de run con el lote de la variante — la correlación run↔lote es consultable con un SELECT
+    // (prerequisito del grafo único T5c.6), sin depender ya de rastrear `step_run.variant_id`.
     const runs = await pipelineRunRows();
     const regenRun = runs.find((r) => r.id === result.nextRunId);
     expect(regenRun?.kind).toBe('regen');
+    expect(regenRun?.batch_id).toBe(batchId);
     // Linaje REAL (el que el E2E y el worker usan): el variant_id de un step del run → su batch_id de lote.
     const { rows: n8variant } = await tdb.pool.query<{ variant_id: string | null }>(
       `SELECT variant_id FROM step_run WHERE run_id = $1 AND node_key = 'N8' LIMIT 1`,

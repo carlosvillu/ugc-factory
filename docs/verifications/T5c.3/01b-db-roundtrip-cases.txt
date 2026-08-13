@@ -1,0 +1,4 @@
+ ✓ |db:integration| test/integration/create-run-batchid.test.ts > createRun → pipeline_run.batch_id (T5c.3) > run de LOTE (batchRunDefinition): batch_id queda poblado con el ULID del lote 59ms
+ ✓ |db:integration| test/integration/create-run-batchid.test.ts > createRun → pipeline_run.batch_id (T5c.3) > run de GENERACIÓN (generationRunDefinition + opts.batchId): batch_id poblado 24ms
+ ✓ |db:integration| test/integration/create-run-batchid.test.ts > createRun → pipeline_run.batch_id (T5c.3) > CONTROL: run de ANÁLISIS (def SIN batchId) → batch_id NULL (semántica actual intacta) 30ms
+ ✓ |db:integration| test/integration/create-run-batchid.test.ts > createRun → pipeline_run.batch_id (T5c.3) > los runs HERMANOS del MISMO lote comparten batch_id (N5 + generación) — grafo único T5c.6 37ms

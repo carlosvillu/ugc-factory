@@ -1,0 +1,37 @@
+
+ RUN  v4.1.10 /Users/carlosvillu/Developer/__GARBAGE__/UGC_Ads/apps/web
+
+(node:70407) DeprecationWarning: Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:70406) DeprecationWarning: Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+ ✓ |web:integration| test/integration/server/scripts-checkpoint.test.ts > CP2 → N5 · atomicidad (T2.6): aprobar CP2 crea el lote Y arranca el run de N5 en UNA tx > crea el ad_batch + sus variantes Y un pipeline_run NUEVO con el step N5 encolado 108ms
+ ✓ |web:integration| test/integration/server/scripts-checkpoint.test.ts > CP2 → N5 · atomicidad (T2.6): aprobar CP2 crea el lote Y arranca el run de N5 en UNA tx > si algo FALLA tras crear el lote+run, NADA persiste (rollback de la tx entera) 66ms
+ ✓ |web:integration| test/integration/server/regen-checkpoint.test.ts > CP4 · regenerateVariantCta (T5.8, CU4): clon + run regen, atomicidad, tier-gate > clona la variante con el CTA nuevo y arranca un pipeline_run kind=regen con su sub-DAG encolado 154ms
+ ✓ |web:integration| test/integration/server/regen-checkpoint.test.ts > CP4 · regenerateVariantCta (T5.8, CU4): clon + run regen, atomicidad, tier-gate > EL CTA SE APLICA al clon y el hook/body quedan IDÉNTICOS al origen (base de la dedup) 86ms
+ ✓ |web:integration| test/integration/server/regen-checkpoint.test.ts > CP4 · regenerateVariantCta (T5.8, CU4): clon + run regen, atomicidad, tier-gate > T6.2b: un regen de una variante own_license CONSERVA el bed propio en el clon (no re-genera IA) 97ms
+ ✓ |web:integration| test/integration/server/scripts-checkpoint.test.ts > CP3 · approveScriptsForStep (T2.6): veredictos, v2 solo si edita, bloqueo server-side > edita UNA variante y aprueba TODAS: exactamente una v2 edited_by_user, todas scripted 116ms
+ ✓ |web:integration| test/integration/server/scripts-checkpoint.test.ts > CP3 · approveScriptsForStep (T2.6): veredictos, v2 solo si edita, bloqueo server-side > T5.8b · el run de generación del flujo NORMAL emite la cola de composición N8 (máster) + N9 (CP4) 78ms
+ ✓ |web:integration| test/integration/server/regen-checkpoint.test.ts > CP4 · regenerateVariantCta (T5.8, CU4): clon + run regen, atomicidad, tier-gate > ATOMICIDAD (restricción 3): si algo FALLA tras clonar+crear el run, NO queda clon (rollback) 80ms
+ ✓ |web:integration| test/integration/server/scripts-checkpoint.test.ts > CP3 · approveScriptsForStep (T2.6): veredictos, v2 solo si edita, bloqueo server-side > mandar `editedScript` IDÉNTICO al vigente NO crea v2 (aprobar no es editar) 70ms
+ ✓ |web:integration| test/integration/server/regen-checkpoint.test.ts > CP4 · regenerateVariantCta (T5.8, CU4): clon + run regen, atomicidad, tier-gate > TIER NO GENERATION-READY (restricción 1): regenerar en tier-test lanza validation_error SIN clonar 40ms
+ ✓ |web:integration| test/integration/server/regen-checkpoint.test.ts > CP4 · regenerateVariantCta (T5.8, CU4): clon + run regen, atomicidad, tier-gate > un output_refs que NO es N9 → validation_error (no arranca run sobre una variante equivocada) 13ms
+ ✓ |web:integration| test/integration/server/regen-checkpoint.test.ts > CP4 · regenerateVariantCta (T5.8, CU4): clon + run regen, atomicidad, tier-gate > un CTA vacío → validation_error (nada que regenerar) 42ms
+ ✓ |web:integration| test/integration/server/scripts-checkpoint.test.ts > CP3 · approveScriptsForStep (T2.6): veredictos, v2 solo si edita, bloqueo server-side > BLOQUEO SERVER-SIDE: `approved:true` sobre un guion con flag bloqueante NO lo pasa a scripted 61ms
+ ✓ |web:integration| test/integration/server/regen-checkpoint.test.ts > CP4 · spawnRegenForStep — idempotencia bajo concurrencia (T5.8, bug de dinero) > dos regeneraciones SOLAPADAS sobre el mismo N9 → EXACTAMENTE un run kind=regen (la 2ª obtiene 409) 93ms
+ ✓ |web:integration| test/integration/server/scripts-checkpoint.test.ts > CP3 · approveScriptsForStep (T2.6): veredictos, v2 solo si edita, bloqueo server-side > BLOQUEO SERVER-SIDE por RE-LINT: un `editedScript` que INTRODUCE un claim prohibido no se aprueba 102ms
+ ✓ |web:integration| test/integration/server/scripts-checkpoint.test.ts > CP3 · approveScriptsForStep (T2.6): veredictos, v2 solo si edita, bloqueo server-side > control POSITIVO: editar un guion RESOLVIENDO el flag lo deja pasar a scripted 79ms
+ ✓ |web:integration| test/integration/server/regen-checkpoint.test.ts > CP4 · spawnRegenForStep — idempotencia bajo concurrencia (T5.8, bug de dinero) > un 2º regen SECUENCIAL sobre un N9 ya usado → 409 invalid_transition (no un 2º run) 112ms
+ ✓ |web:integration| test/integration/server/scripts-checkpoint.test.ts > CP3 · approveScriptsForStep (T2.6): veredictos, v2 solo si edita, bloqueo server-side > no-op si la decisión no es `scripts` (un artefacto N5 sin decisión de guiones) 35ms
+ ✓ |web:integration| test/integration/server/scripts-checkpoint.test.ts > CP3 · approveScriptsForStep (T2.6): veredictos, v2 solo si edita, bloqueo server-side > MONEY-SAFETY: un tier no generation-ready (b-roll etiqueta) aprueba los guiones SIN crear ningún run 51ms
+ ✓ |web:integration| test/integration/server/scripts-checkpoint.test.ts > CP3 · approveScriptsForStep (T2.6): veredictos, v2 solo si edita, bloqueo server-side > ATOMICIDAD en tier ready: un fallo REAL del plan (persona sin imagen) LANZA y hace rollback de los veredictos 63ms
+ ✓ |web:integration| test/integration/server/scripts-checkpoint.test.ts > CP3 · approveScriptsForStep (T2.6): veredictos, v2 solo si edita, bloqueo server-side > T5.11 MONEY-SAFETY: un lote con menos guiones que variantes se RECHAZA y no arranca ningún run 46ms
+ ✓ |web:integration| test/integration/server/scripts-checkpoint.test.ts > CP3 · approveScriptsForStep (T2.6): veredictos, v2 solo si edita, bloqueo server-side > T5.14: confirmar con 0 aprobadas se RECHAZA (validation_error) sin consumir el checkpoint ni transicionar nada 34ms
+ ✓ |web:integration| test/integration/server/scripts-checkpoint.test.ts > CP3 · approveScriptsForStep (T2.6): veredictos, v2 solo si edita, bloqueo server-side > T5.14: aprobar SOLO variantes con flag bloqueante (0 quedarían scripted) también se RECHAZA — mismo error irreversible 33ms
+ ✓ |web:integration| test/integration/server/scripts-checkpoint.test.ts > CP3 · approveScriptsForStep (T2.6): veredictos, v2 solo si edita, bloqueo server-side > T5.14 control POSITIVO: aprobar AL MENOS UNA sigue confirmando (el guard no encierra el camino feliz) 61ms
+
+ Test Files  2 passed (2)
+      Tests  24 passed (24)
+   Start at  16:29:12
+   Duration  7.63s (transform 2.96s, setup 50ms, import 6.50s, tests 2.51s, environment 0ms)
+

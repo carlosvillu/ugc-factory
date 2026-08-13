@@ -1,0 +1,11 @@
+ node_key | provider |  unit   | qty | cents 
+----------+----------+---------+-----+-------
+ N7a      | fal      | images  |   2 |     2
+ N7b      | fal      | chars   | 131 |     2
+ N7b      | fal      | seconds |   9 |     0
+ N7c      | fal      | seconds |   4 |    58
+ N7d      | fal      | seconds |   6 |   120
+ N7e      | fal      | seconds |  12 |     0
+ N7f      | fal      | seconds |   4 |    80
+(7 rows)
+

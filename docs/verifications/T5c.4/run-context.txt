@@ -81,3 +81,72 @@ DESBLOQUEO (necesita mano del usuario — pkill/DB-write me estan denegados):
 
 AL REINTENTAR (sin re-gastar): re-confirmar TODO desde cero: orphan-check --strict, pgboss queue,
   1 solo worker, probe fal, ANTES de cualquier gasto. Stack fue matado a medias (pkill denegado).
+
+# ============================================================
+# REINTENTO 2026-08-13 (desbloqueado por el bucle con OK usuario)
+# ============================================================
+DESBLOQUEO: el bucle reinicio pnpm dev -> instrumentation re-sembro auth.password_hash desde .env.
+  Login verificado por el bucle: POST /api/login (ugc-factory-dev) = 200. Worker pids 23685/23697.
+PRE-CHECK REINTENTO (todo re-confirmado por mi): app_setting 4 keys (hash+3 secretos);
+  cost_entry 13/52c; SOLO pids 23685/23697; pgboss 0 no-terminal; 0 steps queued/running;
+  health {ok,db}; orphan --strict EXIT1 solo por los 2 workers intencionales (0 huerfanos).
+FRONTERA: CERO mutaciones de BD. Denegacion -> reportar y parar (SendMessage a main).
+
+ANALYSIS_RUN_ID: 01KZYD4PG6HV45Z53JAZCJDG7W (URL CeraVe moisturizing-cream, idioma es)
+INTAKE_SUBMIT: 22:31:34
+
+# --- CP2 CONFIGURADO 22:36:46 ---
+CP2: 1 variante | premium | hook_test(12s) | 1 angulo (La rutina simple) | Maya FIJADA | es
+COSTE_UI_COGS_TOTAL: $3.60-$5.20 (estimador COGS, sobreestima; high-end 5.20 < 5.25 abort OK)
+  Desglose UI: hook $1.20-1.73 | body $1.80-2.60 | cta $0.60-0.87
+PROYECCION_ENDPOINT_MIA: ~$2.85-3.75 (dentro de $2.7-4.2). El abort DURO ($5.25) es sobre LEDGER real.
+DECISION: variantCount=1 OK, UI high-end 5.20 < 5.25 OK -> PROCEDER a aprobar CP3.
+COST_BASELINE_PRE_CP3: 14 entries / 70c (analysis firecrawl+anthropic 18c; fal=0).
+
+N5_SCRIPTS_RUN_ID: 01KZYDF8D6V8AQVW6WXR05G6P6 (CP2 confirmado -> N5 running)
+BATCH_ID: 01KZYDF8CM6Q8EAXCEGZGGKG1A
+CP2_CONFIRM_TS: 22:37:09
+
+# --- CP3 PRE-SPEND 22:38:08 ---
+SCRIPT: 1 ad_script (Maya, es, 3 escenas real narration). Checkbox aprobado (1/1). H3 evitado.
+COST_BASELINE_PRE_CP3: 14 entries / 70c (analysis; fal=0). Todo fal NUEVO = entries por encima.
+ABORT_LEDGER: $5.25 acumulado del lote. Monitor de ledger armado.
+CP3_APPROVE_TS: 22:38:34
+
+GENERATION_RUN_ID: 01KZYDJ6YF89DFRC652NRJ26CJ (kind=full, batch 01KZYDF8CM6Q8EAXCEGZGGKG1A)
+FAL_BASELINE_CORRECTION: habia 20 filas fal pre-existentes (56c, artefactos viejos del seed).
+  -> El coste de ESTE run se mide por join cost_entry->step_run->run_id=01KZYDJ6YF89DFRC652NRJ26CJ (NO por sum global).
+MONITOR: b2rjimu2o (run_fal por join; abort 525c).
+RECOVERY: si stall, NO re-aprobar CP3. Comprobar step_run+cost_entry de 01KZYDJ6YF89DFRC652NRJ26CJ, re-adjuntar polling.
+
+# ============================================================
+# CIERRE 2026-08-13 — FAIL (bug de producto N7f) · coste $2.62
+# ============================================================
+GENERATION_RUN_ID: 01KZYDJ6YF89DFRC652NRJ26CJ (kind=full, batch 01KZYDF8CM6Q8EAXCEGZGGKG1A)
+COSTE_REAL_RUN: 262c = $2.62 (por join cost_entry->step_run->run_id):
+  N7a keyframes 2c | N7b TTS 2c | N7c avatar 58c (4s@16c/s) | N7d body i2v 120c (6s@20c/s)
+  N7e music 0c | N7f cta i2v 80c (4s@20c/s, COBRADO aunque el finalizer fallo)
+COSTE_CLAUSE: PASS. $2.62 dentro de +-25% de proyeccion 2.7-4.2 (banda low-end 2.025-3.375).
+ABORT (5.25): NUNCA alcanzado. Sin retry storm (N7f retry=0/80, permanent).
+
+RESULTADO: N6,N7a,N7b,N7c,N7d,N7e SUCCEEDED; N7f FAILED (bug); N8 (compose) AWAITING_DEPS bloqueado.
+  -> ad_variant 01KZYDF8CYF0TFJMAQN29X8WS6 status=scripted, master_asset_id=NULL.
+  -> NO hay video terminado en /library. FAIL de la Verificacion literal (video end-to-end).
+  PERO: se generaron CLIPS REALES Veo i2v: N7d body 6s h264 720x1280 (ffprobe OK);
+  N7c avatar 3.72s h264+aac 1088x1920; N7f cta produjo un mp4 real (557KB) que el finalizer rechazo.
+
+BUG N7f (finding, para el implementer): finalizeSingleCallPerSecondGeneration lanzo
+  'completed pero sin asset cta_clip (invariante roto)'. Causa: la generacion de N7f (cta)
+  quedo con un asset kind='broll_clip' (creado por una via) mientras la llamada que fallo
+  buscaba kind='cta_clip'. DOS finalizadores con assetKind DISTINTO sobre la MISMA generacion:
+  el sweeper (sweeper.ts:139 resolveKind por model_profile -> N7d y N7f comparten veo3.1 i2v ->
+  ambos 'broll_clip') vs el executor de N7f (generate-broll.ts:158 con assetKind='cta_clip').
+  Es la deuda ANUNCIADA en generate-broll.ts:16-18 (sweeper kind-aware). Reproducible.
+
+UNVERIFIED CERRADO: fal-ai/veo3.1/image-to-video CONFIRMADO EN VIVO.
+  Payload req: {prompt, duration:'Ns', image_url, resolution:'720p', aspect_ratio:'9:16', generate_audio:false}
+  Payload resp: {video:{url,file_name,file_size,content_type}}
+  Precio 20c/s confirmado 2x: N7d 6s=120c, N7f 4s=80c. (Decidir flip 'unverified':false = planning.)
+
+ESTADO FINAL: run TERMINALMENTE atascado (N8/N9 awaiting_deps, pgboss 0 jobs). NO lo cancelo
+  (frontera de esta ronda = entorno es del bucle). Reportado a main. NO re-aprobar CP3 (lote GASTADO).

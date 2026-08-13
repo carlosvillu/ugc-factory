@@ -1,0 +1,13 @@
+ node_key |    kind     |    mime    |  bytes  | duration_s 
+----------+-------------+------------+---------+------------
+ N7a      | keyframe    | image/png  |  498370 |           
+ N7a      | keyframe    | image/png  |  466905 |           
+ N7b      | tts_audio   | audio/mpeg |   59395 |      3.679
+ N7b      | tts_audio   | audio/mpeg |   58141 |      3.559
+ N7b      | tts_audio   | audio/mpeg |   19689 |        1.1
+ N7c      | avatar_clip | video/mp4  | 3761800 |      3.631
+ N7d      | broll_clip  | video/mp4  |  864524 |          6
+ N7e      | music_bed   | audio/wav  | 2313538 |         12
+ N7f      | broll_clip  | video/mp4  |  557302 |          4
+(9 rows)
+

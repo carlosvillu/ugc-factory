@@ -109,9 +109,16 @@ describe('UrlIntakeForm (intake por URL)', () => {
   });
 
   test('un 500 re-habilita el botón y muestra el error (recuperable, no atascado)', async () => {
+    // El handler no resuelve hasta que el test lo libere: así el estado de loading
+    // está garantizado presente cuando lo afirmamos, sin correr contra un setTimeout
+    // (que bajo la carga del gate completo se resolvía antes del assert → flaky).
+    let release!: () => void;
+    const responded = new Promise<void>((r) => {
+      release = r;
+    });
     server.use(
       http.post('*/api/runs', async () => {
-        await new Promise((r) => setTimeout(r, 40)); // ventana para ver el loading
+        await responded;
         return HttpResponse.json({ code: 'internal', message: 'boom' }, { status: 500 });
       }),
     );
@@ -121,7 +128,11 @@ describe('UrlIntakeForm (intake por URL)', () => {
     await user.type(screen.getByRole('textbox', { name: /url del producto/i }), URL_OK);
     await user.click(screen.getByRole('button', { name: /analizar/i }));
 
+    // Con la respuesta aún en vuelo, el botón está en su estado transitorio "Analizando…".
     expect(await screen.findByRole('button', { name: /analizando/i })).toBeDisabled();
+
+    // Liberamos la respuesta 500 y comprobamos la recuperación (error visible, botón usable).
+    release();
     expect(await screen.findByRole('alert')).toHaveTextContent(/boom/i);
     expect(screen.getByRole('button', { name: /analizar/i })).toBeEnabled();
     expect(push).not.toHaveBeenCalled();

@@ -21,6 +21,7 @@
 //      segmento). `hook`/`cta`/`fullText`/timing NO se editan: los deriva el servidor
 //      (`rebuildEditedScript`). Exponerlos como campos aparte invitaría a que divergieran del texto.
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import type { AdScript, BatchScript, GuardrailFlag } from '@ugc/core/contracts';
 import { ApiError, batchActions, runActions } from '@/lib/api-client';
 import { Alert } from '@/components/ui/alert';
@@ -60,6 +61,7 @@ const SEGMENT_LABEL: Record<'hook' | 'body' | 'cta', string> = {
 };
 
 export function ScriptsPanel({ stepId, batchId }: ScriptsPanelProps) {
+  const router = useRouter();
   // El estado por variante. `null` = aún cargando (o falló la carga: el panel pide los guiones al
   // montar, como matrix-panel pide las personas). No se escribe estado síncrono al entrar.
   const [variants, setVariants] = useState<VariantState[] | null>(null);
@@ -130,8 +132,17 @@ export function ScriptsPanel({ stepId, batchId }: ScriptsPanelProps) {
   }
 
   /** Envía los veredictos: `editedScript` SOLO para las variantes tocadas (el servidor no-opea sobre
-   *  un guion idéntico igualmente, pero mandarlo solo cuando cambió es más honesto). El estado nuevo
-   *  del step llega por SSE ⇒ este panel se desmonta solo (sin optimistic update, canvas.md §5). */
+   *  un guion idéntico igualmente, pero mandarlo solo cuando cambió es más honesto).
+   *
+   * NAVEGACIÓN AL RUN DE GENERACIÓN (T5c.1, mismo patrón que CP2→CP3 en `matrix-panel` y CP4 en
+   * `qa-panel`): aprobar CP3 en un tier que genera arranca, en la misma tx, el run de generación
+   * (N6→N7) — un run DISTINTO de este (el de N5). El servidor devuelve su `nextRunId`, y sin navegar
+   * a él la generación correría INVISIBLE en otra URL mientras el usuario se queda mirando el run de
+   * N5 (ya muerto). Por eso, en cuanto la aprobación responde con el id, se empuja a esa página.
+   *
+   * Si NO viene `nextRunId` (tier no listo para generar: T5c.2), NO se navega —no hay run— y el step
+   * deja `waiting_approval` por SSE ⇒ este panel se desmonta solo (sin optimistic update, canvas.md
+   * §5). El guard `!== undefined` cubre ese caso: sin id, no hay push. */
   async function onSubmit(blocked: boolean) {
     if (variants === null) return;
     // Cinturón: ni un submit programático (Enter en un form, un click sintético) cuela un lote
@@ -141,7 +152,7 @@ export function ScriptsPanel({ stepId, batchId }: ScriptsPanelProps) {
     setSubmitting(true);
     setSubmitError(null);
     try {
-      await runActions.approve(stepId, {
+      const { nextRunId } = await runActions.approve(stepId, {
         kind: 'scripts',
         verdicts: variants.map((v) => ({
           variantId: v.meta.variantId,
@@ -149,7 +160,14 @@ export function ScriptsPanel({ stepId, batchId }: ScriptsPanelProps) {
           ...(v.edited && { editedScript: v.script }),
         })),
       });
-      // El step deja `waiting_approval` por SSE ⇒ el panel se desmonta. No hay estado que mantener.
+      if (nextRunId !== undefined) {
+        // Tier que genera: se navega al run de generación (ahí vive N6→N7). `submitting` NO se baja
+        // en el camino feliz: este panel se está desmontando (cambio de ruta) y bajarlo re-pintaría
+        // un botón habilitado por un instante justo antes de irse.
+        router.push(`/runs/${nextRunId}`);
+        return;
+      }
+      // Sin `nextRunId` (tier no listo, T5c.2): no hay run al que ir; el desmontaje lo hace el SSE.
     } catch (e) {
       setSubmitError(e instanceof ApiError ? e.message : 'No se pudieron guardar los guiones');
       setSubmitting(false);

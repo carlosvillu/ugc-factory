@@ -1092,12 +1092,12 @@ Decisiones del usuario (2026-07-07): la fase se ejecuta tras T0.1 y **antes** de
 >
 > **Orden vinculante** (por dependencia real y por «señal visible primero»): las tres de $0 (T5c.1, T5c.2, T5c.3) arrancan YA y no necesitan saldo; luego las de gasto (T5c.4 vídeo, T5c.5 thumbnails); el grafo único (T5c.6) es independiente y opinable, va cuando el usuario quiera. Ninguna tarea de esta fase toca F6 (publicación) — F6 sigue bloqueada en T6.1 (OAuth ⚠).
 
-#### T5c.1 · Aprobar CP3 debe NAVEGAR al run de generación (hoy descarta el `nextRunId`)
+#### T5c.1 · Aprobar CP3 debe NAVEGAR al run de generación (hoy descarta el `nextRunId`) [x] 2026-08-13 — PASS, ver docs/verifications/T5c.1/
 - **Depende de**: nada ($0, solo frontend)
 - **Origen**: investigación 2026-08-13, Fallo 2/3. `scripts-panel.tsx:144-151` llama a `runActions.approve(...)` pero **descarta la respuesta** — no lee `nextRunId` ni navega — mientras CP2 (`matrix-panel.tsx:291-294`) y CP4 (`qa-panel.tsx:294-296`) sí hacen `router.push('/runs/${nextRunId}')`. Resultado: tras aprobar guiones el usuario se queda mirando el run de N5 (ya muerto) y la generación (si arranca) corre invisible en otra URL. Es la mitad del síntoma «no pasa nada al aprobar».
 - **Entrega**: `scripts-panel.tsx` lee el `nextRunId` de la respuesta de `approve` y, si viene, navega al run de generación — mismo patrón que CP2/CP4. Si NO viene `nextRunId` (gate de tier no listo, ver T5c.2), NO navega (no hay run) y deja que T5c.2 muestre el aviso.
 - **Coste estimado**: $0.
-- **Verificación observable**: aprobar CP3 en un tier que genera → el navegador aterriza en `/runs/<run-generación>` mostrando N6→N7. Coherencia: los tres paneles de checkpoint (CP2/CP3/CP4) navegan igual al aprobar. Test e2e/unit del panel que fije que se consume `nextRunId`.
+- **Verificación observable**: aprobar CP3 en un tier que genera → el navegador aterriza en `/runs/<run-generación>` mostrando N6→N7. Coherencia (corregida 2026-08-13, regla 6): el patrón es **navegar al aprobar CUANDO la aprobación arranca un run**. CP2-approve navega (arranca N5) y CP3-approve navega (arranca la generación, tier-ready); CP4-**approve** NO navega y es correcto (no arranca run — su `router.push` está en el path de **regenerar**, no en el de aprobar). El enunciado original «los tres paneles navegan igual al aprobar» era falso: lo confirmó el inventario de T5c.1 (`qa-panel.tsx:272` approve descarta la respuesta; el push es `qa-panel.tsx:294-296`, path regenerate). Test e2e/unit del panel que fije que se consume `nextRunId`.
 
 #### T5c.2 · El stop silencioso al aprobar CP3 debe ser VISIBLE (hoy 200 mudo)
 - **Depende de**: nada ($0)

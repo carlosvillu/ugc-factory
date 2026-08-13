@@ -8,7 +8,7 @@
 import { cleanup, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
-import { afterEach, describe, expect, test } from 'vitest';
+import { afterEach, describe, expect, test, vi } from 'vitest';
 import { server, useHttpMocks } from '@ugc/test-utils';
 import {
   computeSceneTiming,
@@ -20,6 +20,12 @@ import {
 import type { AdScript, AdSegment, BatchScript, GuardrailFlag } from '@ugc/core/contracts';
 
 import { ScriptsPanel } from './scripts-panel';
+
+// CP3 navega al run de GENERACIÓN tras aprobar en un tier que genera (T5c.1): `scripts-panel` usa
+// `useRouter().push`, igual que `matrix-panel` (CP2) y `qa-panel` (CP4). En jsdom no hay App Router
+// montado, así que se mockea `next/navigation` (mismo patrón que los tests del intake y de CP2).
+const push = vi.fn();
+vi.mock('next/navigation', () => ({ useRouter: () => ({ push }) }));
 
 const STEP_ID = '01J000000000000000000STEP0';
 const BATCH_ID = '01J00000000000000000BATCH0';
@@ -277,5 +283,58 @@ describe('ScriptsPanel (CP3)', () => {
     expect(
       screen.queryByText(/Aprueba al menos una variante para confirmar/),
     ).not.toBeInTheDocument();
+  });
+
+  // ── T5c.1 · NAVEGAR AL RUN DE GENERACIÓN AL APROBAR ──────────────────────────────────────────────
+  // El defecto REAL (investigación 2026-08-13, Fallo 2/3): `onSubmit` descartaba el retorno de
+  // `approve`, así que aprobar CP3 en un tier que genera dejaba al usuario mirando el run de N5 (ya
+  // muerto) mientras la generación corría INVISIBLE en `/runs/<otra>`. CP2 y CP4 sí navegaban. Ahora
+  // CP3 consume el `nextRunId` y navega igual — y sin él (tier no listo, T5c.2) NO navega.
+  test('T5c.1: aprobar en un tier que GENERA navega al run de generación (nextRunId)', async () => {
+    const user = userEvent.setup();
+    push.mockClear();
+    server.use(
+      // La aprobación arranca el run de generación (N6→N7) y devuelve su id: la app debe navegar a
+      // él. Sin esto, la generación correría en otra URL que el usuario nunca vería.
+      http.post('*/api/steps/*/approve', () =>
+        HttpResponse.json({ ok: true, nextRunId: '01J000000000000000GENRUN0' }),
+      ),
+    );
+    render(<ScriptsPanel stepId={STEP_ID} batchId={BATCH_ID} />);
+
+    // Aprobar la variante limpia y confirmar (lote completo, 1 aprobada ⇒ camino feliz).
+    const cleanCard = await screen.findByRole('region', { name: /acme-hook01-es-12s/ });
+    await user.click(within(cleanCard).getByRole('checkbox', { name: 'Aprobar esta variante' }));
+    await user.click(screen.getByRole('button', { name: 'Confirmar guiones' }));
+
+    await waitFor(() => {
+      expect(push).toHaveBeenCalledWith('/runs/01J000000000000000GENRUN0');
+    });
+  });
+
+  test('T5c.1: aprobar en un tier que NO genera (sin nextRunId) NO navega — deja el desmontaje por SSE', async () => {
+    const user = userEvent.setup();
+    push.mockClear();
+    let approveCalled = false;
+    server.use(
+      // Tier no listo para generar (T5c.2): la aprobación consume el checkpoint pero NO arranca run,
+      // así que la respuesta no trae `nextRunId`. No hay run al que ir ⇒ no se navega.
+      http.post('*/api/steps/*/approve', () => {
+        approveCalled = true;
+        return HttpResponse.json({ ok: true });
+      }),
+    );
+    render(<ScriptsPanel stepId={STEP_ID} batchId={BATCH_ID} />);
+
+    const cleanCard = await screen.findByRole('region', { name: /acme-hook01-es-12s/ });
+    await user.click(within(cleanCard).getByRole('checkbox', { name: 'Aprobar esta variante' }));
+    await user.click(screen.getByRole('button', { name: 'Confirmar guiones' }));
+
+    // La aprobación se disparó, pero sin `nextRunId` en la respuesta NO hubo navegación: no hay run
+    // al que ir. El desmontaje lo hace el SSE (que no existe en jsdom), como en el resto del panel.
+    await waitFor(() => {
+      expect(approveCalled).toBe(true);
+    });
+    expect(push).not.toHaveBeenCalled();
   });
 });

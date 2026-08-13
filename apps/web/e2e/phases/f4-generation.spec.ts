@@ -170,21 +170,36 @@ test.describe('F4 · journey de generación: CP3 aprobado → sub-DAG N6→N7a-e
         .getByRole('button', { name: /confirmar guiones/i })
         .click();
 
-      // El confirm crea el run de generación en su tx (buildVariantGenerationPlan incluido): si algo ahí
-      // revienta (p. ej. una persona sin imagen de referencia por la rotación de N4), el panel pinta
-      // `scripts-error` y N5 NUNCA sale de `waiting_approval`. Sin este guard, ese 500 se enmascararía en
-      // el timeout de 30 s del `waitCanvasStatus` de N5 — se afirma su AUSENCIA para que el fallo salga
-      // en el ORIGEN, con el mensaje real.
-      await expect(cp3(page).locator('[data-slot="scripts-error"]')).toHaveCount(0);
-
-      // Aprobar CP3 crea el RUN DE GENERACIÓN en la MISMA tx que los veredictos, PERO la app NO navega a
-      // él (el usuario se queda en el run de N5, que queda `succeeded`). El run de generación se localiza
-      // por la BD: es el run cuyos `step_run.variant_id` son las variantes del lote (N6 los lleva). Se
-      // sondea hasta que exista (la creación es síncrona con la aprobación, pero se da margen).
-      await waitCanvasStatus(page, 'N5', 'succeeded', 30_000);
+      // Aprobar CP3 crea el RUN DE GENERACIÓN en la MISMA tx que los veredictos y la app NAVEGA a él
+      // (T5c.1: mismo patrón `nextRunId` que CP2→CP3). El run se localiza por la BD (es el run cuyos
+      // `step_run.variant_id` son las variantes del lote, N6 los lleva) ANTES de asertar la URL: es la
+      // ruta destino. `createRun` y la transición N5→`succeeded` commitean atómicamente
+      // (`script-checkpoint.ts:274`) ⇒ que el run exista YA implica que N5 quedó `succeeded`.
       const generationRunId = await waitForGenerationRun(batchId ?? '', 30_000);
       expect(generationRunId, 'CP3 debe haber creado el run de generación').not.toBe('');
       const generationRunPath = `/runs/${generationRunId}`;
+
+      // El poll cumple DOBLE función: asertar el aterrizaje en el run de generación Y mantener vivo el
+      // guard del 500 de la tx (antes `scripts-error` + `waitCanvasStatus(N5)`). Si la tx de CP3
+      // revienta, NO hay `nextRunId`, NO se navega y CP3 pinta `scripts-error`: el poll devuelve ese
+      // texto (que nunca casa con `generationRunPath`) ⇒ el fallo sale en el ORIGEN con el mensaje
+      // real en vez de enmascararse en un timeout opaco aguas abajo.
+      await expect
+        .poll(
+          async () => {
+            const err = cp3(page).locator('[data-slot="scripts-error"]');
+            if ((await err.count()) > 0) return `scripts-error: ${await err.innerText()}`;
+            return new URL(page.url()).pathname;
+          },
+          {
+            timeout: 30_000,
+            intervals: [250],
+            message:
+              'aprobar CP3 en premium debe NAVEGAR al run de generación (T5c.1); si en su lugar aparece ' +
+              'scripts-error, la tx de CP3 reventó (¿persona sin imagen de referencia por la rotación de N4?)',
+          },
+        )
+        .toBe(generationRunPath);
 
       // ── 4. El run de generación existe con su sub-DAG N6→N7 POR VARIANTE, contra la BD ──
       // Un N6 por variante + N7a-e por variante (§7.2). Se leen las filas `step_run` del run: cada una
@@ -340,8 +355,10 @@ test.describe('F4 · journey de generación: CP3 aprobado → sub-DAG N6→N7a-e
       }
 
       // ── 8. El canvas muestra el sub-DAG por variante con su contenido rico (CP4 ya drenado) ──────
-      // Recargar para partir de un snapshot limpio con los N9 ya resueltos (el store refleja el drenado).
-      await page.goto(generationRunPath);
+      // Recarga para partir de un snapshot limpio con los N9 ya resueltos (el store refleja el
+      // drenado); seguimos en `generationRunPath` desde la auto-navegación de CP3 (T5c.1), así que un
+      // `reload` basta. La guarda del drenado de abajo depende de ese snapshot fresco.
+      await page.reload();
       // GUARDA DEL DRENADO: el `QaPanel` YA NO está en el DOM → el slot lo ocupa el `StepPanel`. Sin esto,
       // un drenado que fallara en silencio daría el MISMO `toBeVisible` opaco aguas abajo; aquí falla con
       // la causa real («CP4 sigue abierto») antes de tocar ningún nodo.

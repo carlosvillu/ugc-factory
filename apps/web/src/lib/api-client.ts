@@ -165,9 +165,11 @@ const OkSchema = z.object({ ok: z.literal(true) }).loose();
 
 /** La respuesta de `POST /api/steps/:id/approve` (T2.6): `ok` + un `nextRunId` OPCIONAL. Es un
  *  schema aparte de `OkSchema` a propósito: `OkSchema` es `.loose()`, así que `nextRunId` llegaría
- *  en el JSON pero NO en el TIPO inferido (`loose` no lo declara) — y el cliente que navega a CP3 lo
- *  perdería en compilación. Aprobar CP2 arranca el run de N5 y devuelve su id aquí; el resto de
- *  checkpoints (CP1, CP3, aprobar sin efecto) lo ven `undefined`. */
+ *  en el JSON pero NO en el TIPO inferido (`loose` no lo declara) — y el cliente que navega al run
+ *  siguiente lo perdería en compilación. Lo devuelven las aprobaciones que arrancan un run nuevo en
+ *  la misma tx: CP2 arranca el run de N5 (ScriptWriter) y CP3 con tier ready arranca el run de
+ *  generación (N6→N7, desde T4.11). Lo ven `undefined`: CP1, CP3 con tier NO listo (no hay run que
+ *  arrancar) y cualquier aprobación sin efecto. */
 const ApproveResponseSchema = z.object({
   ok: z.literal(true),
   nextRunId: z.string().optional(),
@@ -517,8 +519,8 @@ export const runActions = {
   approve: (stepId: string, decision?: CheckpointDecision) =>
     api.post(
       `/api/steps/${stepId}/approve`,
-      // `ApproveResponseSchema` (no `OkSchema`): aprobar CP2 devuelve el `nextRunId` del run de N5,
-      // y `OkSchema.loose()` lo dejaría fuera del TIPO. Los demás checkpoints lo ven `undefined`.
+      // `ApproveResponseSchema` (no `OkSchema`): `loose()` dejaría `nextRunId` fuera del TIPO — quién
+      // lo recibe y quién no, en el docstring de `ApproveResponseSchema` arriba.
       ApproveResponseSchema,
       decision === undefined ? {} : { decision },
     ),

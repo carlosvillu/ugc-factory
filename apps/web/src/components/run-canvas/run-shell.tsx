@@ -5,6 +5,7 @@
 // cabecera leen del store con selectores. Compone la vista cockpit del mockup 1b:
 // cabecera con id/estado + toggle autopilot + KPIs, grafo (canvas) y el inspector.
 import { useState } from 'react';
+import { Alert } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { useRunEvents } from '@/hooks/use-run-events';
@@ -147,6 +148,9 @@ export function RunHeader({ runId }: { runId: string }) {
   const autopilot = useRunStore((s) => s.autopilot);
   const setAutopilot = useRunStore((s) => s.setAutopilot);
   const steps = useRunStore((s) => s.steps);
+  // T5c.2: el aviso de tier-no-genera, leído del store (el porqué vive-aquí-y-no-en-el-panel está en
+  // `run-store`). `null` = sin aviso.
+  const generationSkipped = useRunStore((s) => s.generationSkipped);
 
   const [pending, setPending] = useState(false);
   const [cancelError, setCancelError] = useState<string | null>(null);
@@ -271,6 +275,16 @@ export function RunHeader({ runId }: { runId: string }) {
         <Kpi label="Coste estimado" value={formatCost(costEstimated)} muted />
         <Kpi label="Pasos" value={String(total)} />
       </div>
+      {/* T5c.2: el stop INFORMADO de CP3 en un tier que no genera. No es un error (los guiones se
+          aprobaron): es un `Alert tone="info"`. NO afirma qué endpoint falta —`isTierGenerationReady`
+          es un booleano puro que no lo sabe—: solo que el tier no tiene todos sus endpoints listos. */}
+      {generationSkipped !== null ? (
+        <Alert tone="info" className="mt-3" data-slot="generation-skipped">
+          Guiones aprobados. Este lote no puede generar vídeo todavía: el tier{' '}
+          <span className="font-mono font-semibold">{generationSkipped.tier}</span> no tiene
+          configurados todos sus endpoints de generación.
+        </Alert>
+      ) : null}
     </header>
   );
 }

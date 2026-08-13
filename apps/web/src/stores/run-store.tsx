@@ -13,7 +13,7 @@ import { createContext, use, useState, type ReactNode } from 'react';
 import { useStore } from 'zustand';
 import { createStore } from 'zustand/vanilla';
 import type { RunSnapshot, StepChangedEvent, StepSnapshot } from '@ugc/core/orchestrator';
-import type { RunResponse } from '@/lib/api-client';
+import type { GenerationSkipped, RunResponse } from '@/lib/api-client';
 import { applyRunEvent, indexSteps } from './apply-event';
 
 // El objeto run del store es la respuesta REST del cliente (`RunResponse`): las
@@ -28,6 +28,12 @@ interface RunState {
   selectedStepId: string | null; // step abierto en el panel lateral
   autopilot: boolean; // toggle de cabecera; seed desde run.autopilot
   expandedVariants: ReadonlySet<string>; // grupos N7 expandidos en el canvas
+  // T5c.2: el aviso TRANSITORIO «aprobaste CP3 pero este tier no genera vídeo todavía». Vive en el
+  // store (no en el estado local del panel CP3) porque al aprobar, N5 pasa a `succeeded` por SSE y el
+  // panel se DESMONTA — un aviso en su `useState` moriría con él. `RunHeader` (siempre montado) lo lee
+  // y lo pinta. Se guarda tal como llega de la respuesta de approve (`{ reason, tier }`). `null` = sin
+  // aviso. No sobrevive a un reload (durabilidad = T5c.2b): basta para hacer visible el stop tras aprobar.
+  generationSkipped: GenerationSkipped | null;
 }
 
 interface RunActions {
@@ -36,6 +42,7 @@ interface RunActions {
   selectStep: (stepId: string | null) => void;
   setAutopilot: (on: boolean) => void; // solo estado local; el PATCH va por api-client
   toggleVariantExpanded: (variantId: string) => void; // expandir/colapsar grupo N7
+  setGenerationSkipped: (v: GenerationSkipped | null) => void; // T5c.2: el aviso de tier-no-genera
 }
 
 export type RunStore = RunState & RunActions;
@@ -54,6 +61,7 @@ const createRunStore = (initial: RunStoreInitial) =>
     selectedStepId: null,
     autopilot: initial.run.autopilot,
     expandedVariants: new Set<string>(),
+    generationSkipped: null,
     applySnapshot: (snapshot) => {
       set((s) =>
         applyRunEvent(s, { event: 'snapshot', runId: snapshot.runId, steps: snapshot.steps }),
@@ -75,6 +83,9 @@ const createRunStore = (initial: RunStoreInitial) =>
         else next.add(variantId);
         return { expandedVariants: next };
       });
+    },
+    setGenerationSkipped: (generationSkipped) => {
+      set({ generationSkipped });
     },
   }));
 

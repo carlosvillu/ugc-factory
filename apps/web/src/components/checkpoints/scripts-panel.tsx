@@ -24,6 +24,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { AdScript, BatchScript, GuardrailFlag } from '@ugc/core/contracts';
 import { ApiError, batchActions, runActions } from '@/lib/api-client';
+import { useRunStore } from '@/stores/run-store';
 import { Alert } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -62,6 +63,9 @@ const SEGMENT_LABEL: Record<'hook' | 'body' | 'cta', string> = {
 
 export function ScriptsPanel({ stepId, batchId }: ScriptsPanelProps) {
   const router = useRouter();
+  // T5c.2: se deposita en el run store (no en un `useState` local, que moriría al desmontarse el panel);
+  // el porqué está en `run-store`.
+  const setGenerationSkipped = useRunStore((s) => s.setGenerationSkipped);
   // El estado por variante. `null` = aún cargando (o falló la carga: el panel pide los guiones al
   // montar, como matrix-panel pide las personas). No se escribe estado síncrono al entrar.
   const [variants, setVariants] = useState<VariantState[] | null>(null);
@@ -152,7 +156,7 @@ export function ScriptsPanel({ stepId, batchId }: ScriptsPanelProps) {
     setSubmitting(true);
     setSubmitError(null);
     try {
-      const { nextRunId } = await runActions.approve(stepId, {
+      const { nextRunId, generationSkipped } = await runActions.approve(stepId, {
         kind: 'scripts',
         verdicts: variants.map((v) => ({
           variantId: v.meta.variantId,
@@ -167,7 +171,10 @@ export function ScriptsPanel({ stepId, batchId }: ScriptsPanelProps) {
         router.push(`/runs/${nextRunId}`);
         return;
       }
-      // Sin `nextRunId` (tier no listo, T5c.2): no hay run al que ir; el desmontaje lo hace el SSE.
+      // Sin `nextRunId` (tier no listo, T5c.2): no hay run al que ir; el desmontaje lo hace el SSE. Si el
+      // servidor señaló `generationSkipped`, se deposita en el run store (que sobrevive al desmontaje; ver
+      // `run-store`) para que `RunHeader` lo pinte — sin esto la aprobación sería un 200 mudo.
+      setGenerationSkipped(generationSkipped ?? null);
     } catch (e) {
       setSubmitError(e instanceof ApiError ? e.message : 'No se pudieron guardar los guiones');
       setSubmitting(false);

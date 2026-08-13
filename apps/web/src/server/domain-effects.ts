@@ -34,13 +34,20 @@ import type { WithTransaction } from '@ugc/core/orchestrator';
 import type { Db } from '@ugc/db';
 import { approveBriefForStep } from './brief-checkpoint';
 import { createBatchForStep } from './batch-checkpoint';
-import { approveScriptsForStep } from './script-checkpoint';
+import { approveScriptsForStep, type GenerationSkipped } from './script-checkpoint';
+
+export type { GenerationSkipped };
 import { applyQaVerdict } from './qa-checkpoint';
 
-/** El resultado de un efecto de dominio. Hoy solo CP2 aporta algo: el `nextRunId` del run de N5 que
- *  su aprobación arranca (T2.6) — el cliente lo usa para navegar a CP3. El resto no devuelve nada. */
+/** El resultado de un efecto de dominio:
+ *  - `nextRunId` (T2.6): CP2 arranca el run de N5 y CP3 con tier ready el de generación — el cliente lo
+ *    usa para navegar al run siguiente.
+ *  - `generationSkipped` (T5c.2): SOLO CP3 lo aporta, al aprobar en un tier que aún NO genera vídeo. El
+ *    route handler lo pasa a la respuesta para que la UI haga VISIBLE el stop (antes: 200 mudo). El tipo
+ *    es el de `ScriptsCheckpointResult` — CP3 pasa su resultado directo (ver abajo). */
 export interface DomainEffectResult {
   nextRunId?: string;
+  generationSkipped?: GenerationSkipped;
 }
 
 /**

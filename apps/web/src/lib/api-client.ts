@@ -163,17 +163,27 @@ const jsonInit = (body: unknown, method: string): RequestInit => ({
 // respuesta sin `ok` es un contrato roto).
 const OkSchema = z.object({ ok: z.literal(true) }).loose();
 
-/** La respuesta de `POST /api/steps/:id/approve` (T2.6): `ok` + un `nextRunId` OPCIONAL. Es un
- *  schema aparte de `OkSchema` a propósito: `OkSchema` es `.loose()`, así que `nextRunId` llegaría
- *  en el JSON pero NO en el TIPO inferido (`loose` no lo declara) — y el cliente que navega al run
- *  siguiente lo perdería en compilación. Lo devuelven las aprobaciones que arrancan un run nuevo en
- *  la misma tx: CP2 arranca el run de N5 (ScriptWriter) y CP3 con tier ready arranca el run de
- *  generación (N6→N7, desde T4.11). Lo ven `undefined`: CP1, CP3 con tier NO listo (no hay run que
- *  arrancar) y cualquier aprobación sin efecto. */
+/** La respuesta de `POST /api/steps/:id/approve` (T2.6): `ok` + dos campos OPCIONALES. Es un schema
+ *  aparte de `OkSchema` a propósito: `OkSchema` es `.loose()`, así que los campos llegarían en el JSON
+ *  pero NO en el TIPO inferido (`loose` no los declara) — y el cliente los perdería en compilación.
+ *  - `nextRunId`: lo devuelven las aprobaciones que arrancan un run nuevo en la misma tx: CP2 arranca el
+ *    run de N5 (ScriptWriter) y CP3 con tier ready arranca el de generación (N6→N7, desde T4.11). Lo ven
+ *    `undefined`: CP1 y cualquier aprobación sin efecto.
+ *  - `generationSkipped` (T5c.2): lo devuelve SOLO CP3 al aprobar en un tier que aún NO genera vídeo —
+ *    las variantes quedan `scripted` pero no hay run que arrancar. Antes la mera ausencia de `nextRunId`
+ *    cubría este caso (200 mudo, invisible); ahora el campo lo hace EXPLÍCITO para que la UI pinte el
+ *    aviso. `reason` es un discriminante (deja sitio a futuros motivos); `tier` es el que el aviso nombra. */
 const ApproveResponseSchema = z.object({
   ok: z.literal(true),
   nextRunId: z.string().optional(),
+  generationSkipped: z.object({ reason: z.literal('tier_not_ready'), tier: z.string() }).optional(),
 });
+
+/** El aviso de tier-no-genera de la respuesta de `/approve` (T5c.2). Derivado del schema wire para que el
+ *  store del run y `RunHeader` compartan el shape sin redeclararlo. */
+export type GenerationSkipped = NonNullable<
+  z.infer<typeof ApproveResponseSchema>['generationSkipped']
+>;
 
 /** La respuesta de `POST /api/steps/:id/regenerate` (T5.8, CU4): `ok` + el `nextRunId` del run de
  *  regeneración `kind='regen'` que se arrancó (SIEMPRE presente en éxito — regenerar arranca un run). El

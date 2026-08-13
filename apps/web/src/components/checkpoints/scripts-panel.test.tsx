@@ -8,6 +8,7 @@
 import { cleanup, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
+import type { ReactNode } from 'react';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 import { server, useHttpMocks } from '@ugc/test-utils';
 import {
@@ -18,8 +19,11 @@ import {
   totalWords,
 } from '@ugc/core/scripting';
 import type { AdScript, AdSegment, BatchScript, GuardrailFlag } from '@ugc/core/contracts';
+import type { RunResponse } from '@/lib/api-client';
+import { RunStoreProvider } from '@/stores/run-store';
 
 import { ScriptsPanel } from './scripts-panel';
+import { RunHeader } from '@/components/run-canvas/run-shell';
 
 // CP3 navega al run de GENERACIÓN tras aprobar en un tier que genera (T5c.1): `scripts-panel` usa
 // `useRouter().push`, igual que `matrix-panel` (CP2) y `qa-panel` (CP4). En jsdom no hay App Router
@@ -117,9 +121,44 @@ useHttpMocks(scriptsHandler([CLEAN, BLOCKED]));
 
 afterEach(cleanup);
 
+/** El objeto run mínimo para sembrar el store. `ScriptsPanel` solo se monta DENTRO del run shell (que
+ *  provee `RunStoreProvider`, `runs/[id]/page.tsx`): desde T5c.2 el panel lee `setGenerationSkipped`
+ *  del store, así que el test tiene que envolverlo igual que producción. `steps: []` — el panel no los
+ *  usa (pide sus guiones por REST). Los campos son los que `RunResponse` exige; ninguno importa aquí. */
+function makeRun(): RunResponse {
+  return {
+    id: 'run_cp3',
+    projectId: 'proj_01',
+    kind: 'full',
+    autopilot: false,
+    status: 'running',
+    startedAt: null,
+    finishedAt: null,
+    totalCostEstimated: null,
+    totalCostActual: null,
+    costActualCents: 0,
+  };
+}
+
+/** Monta `ScriptsPanel` bajo `RunStoreProvider` (como producción). `withHeader` monta también
+ *  `RunHeader` en el MISMO provider para poder afirmar, en un solo test, la cadena completa
+ *  panel → store → UI (T5c.2): el aviso lo pinta la cabecera, que sobrevive al desmontaje del panel. */
+function renderPanel(opts: { withHeader?: boolean } = {}) {
+  const run = makeRun();
+  function Wrapper({ children }: { children: ReactNode }) {
+    return (
+      <RunStoreProvider initial={{ run, steps: [] }}>
+        {opts.withHeader ? <RunHeader runId={run.id} /> : null}
+        {children}
+      </RunStoreProvider>
+    );
+  }
+  return render(<ScriptsPanel stepId={STEP_ID} batchId={BATCH_ID} />, { wrapper: Wrapper });
+}
+
 describe('ScriptsPanel (CP3)', () => {
   test('carga los guiones del lote y pinta una tarjeta por variante', async () => {
-    render(<ScriptsPanel stepId={STEP_ID} batchId={BATCH_ID} />);
+    renderPanel();
 
     await waitFor(() => {
       expect(screen.getByText('acme-hook01-es-12s')).toBeInTheDocument();
@@ -130,7 +169,7 @@ describe('ScriptsPanel (CP3)', () => {
 
   test('el flag BLOQUEANTE se pinta y su aprobar está DESHABILITADO hasta editar', async () => {
     server.use(scriptsHandler([BLOCKED]));
-    render(<ScriptsPanel stepId={STEP_ID} batchId={BATCH_ID} />);
+    renderPanel();
 
     const card = await screen.findByRole('region', { name: /acme-hook02-es-12s/ });
     // El flag es visible (Alert `danger`, no HTML crudo) con su fragmento y su sugerencia. Se mira el
@@ -153,7 +192,7 @@ describe('ScriptsPanel (CP3)', () => {
   test('EDITAR una variante bloqueada re-habilita su aprobar (el servidor es el guard)', async () => {
     const user = userEvent.setup();
     server.use(scriptsHandler([BLOCKED]));
-    render(<ScriptsPanel stepId={STEP_ID} batchId={BATCH_ID} />);
+    renderPanel();
 
     const card = await screen.findByRole('region', { name: /acme-hook02-es-12s/ });
     const approve = within(card).getByRole('checkbox', { name: 'Aprobar esta variante' });
@@ -179,7 +218,7 @@ describe('ScriptsPanel (CP3)', () => {
         return HttpResponse.json({ ok: true });
       }),
     );
-    render(<ScriptsPanel stepId={STEP_ID} batchId={BATCH_ID} />);
+    renderPanel();
 
     const blockedCard = await screen.findByRole('region', { name: /acme-hook02-es-12s/ });
     // Editar SOLO la bloqueada; la limpia se aprueba sin tocar.
@@ -219,7 +258,7 @@ describe('ScriptsPanel (CP3)', () => {
   test('T5.11: un lote truncado muestra el recuento REAL y NO deja aprobar', async () => {
     // 1 guion de 2 esperados: exactamente lo que deja un `api_error` a mitad de N5.
     server.use(scriptsHandler([CLEAN], 2));
-    render(<ScriptsPanel stepId={STEP_ID} batchId={BATCH_ID} />);
+    renderPanel();
 
     await screen.findByRole('region', { name: /acme-hook01-es-12s/ });
 
@@ -237,7 +276,7 @@ describe('ScriptsPanel (CP3)', () => {
   });
 
   test('T5.11: el lote COMPLETO sigue aprobándose (el guard no encierra el camino feliz)', async () => {
-    render(<ScriptsPanel stepId={STEP_ID} batchId={BATCH_ID} />);
+    renderPanel();
 
     await screen.findByRole('region', { name: /acme-hook01-es-12s/ });
     expect(document.querySelector('[data-slot="scripts-partial"]')).toBeNull();
@@ -252,7 +291,7 @@ describe('ScriptsPanel (CP3)', () => {
   // sistema lo sabía— pero el botón estaba HABILITADO. Ahora queda INERTE con 0 aprobadas (espejo del
   // lote truncado), con el motivo a la vista. El servidor lo rechaza igual (validation_error).
   test('T5.14: con 0 aprobadas el botón «Confirmar» está DESHABILITADO, con el motivo a la vista', async () => {
-    render(<ScriptsPanel stepId={STEP_ID} batchId={BATCH_ID} />);
+    renderPanel();
 
     await screen.findByRole('region', { name: /acme-hook01-es-12s/ });
     // Lote completo, ninguna aprobada de entrada.
@@ -264,7 +303,7 @@ describe('ScriptsPanel (CP3)', () => {
 
   test('T5.14 control negativo: aprobar UNA variante re-habilita «Confirmar» y quita el aviso', async () => {
     const user = userEvent.setup();
-    render(<ScriptsPanel stepId={STEP_ID} batchId={BATCH_ID} />);
+    renderPanel();
 
     const cleanCard = await screen.findByRole('region', { name: /acme-hook01-es-12s/ });
     const confirm = screen.getByRole('button', { name: 'Confirmar guiones' });
@@ -300,7 +339,7 @@ describe('ScriptsPanel (CP3)', () => {
         HttpResponse.json({ ok: true, nextRunId: '01J000000000000000GENRUN0' }),
       ),
     );
-    render(<ScriptsPanel stepId={STEP_ID} batchId={BATCH_ID} />);
+    const { container } = renderPanel({ withHeader: true });
 
     // Aprobar la variante limpia y confirmar (lote completo, 1 aprobada ⇒ camino feliz).
     const cleanCard = await screen.findByRole('region', { name: /acme-hook01-es-12s/ });
@@ -310,6 +349,10 @@ describe('ScriptsPanel (CP3)', () => {
     await waitFor(() => {
       expect(push).toHaveBeenCalledWith('/runs/01J000000000000000GENRUN0');
     });
+    // CONTROL de T5c.2 (planning:1108 «en un tier que SÍ genera, no aparece el aviso»): el camino con
+    // `nextRunId` NO deposita `generationSkipped` en el store, así que la cabecera no pinta el aviso.
+    // Guarda contra mover el `setGenerationSkipped` por encima del early-return del `nextRunId`.
+    expect(container.querySelector('[data-slot="generation-skipped"]')).toBeNull();
   });
 
   test('T5c.1: aprobar en un tier que NO genera (sin nextRunId) NO navega — deja el desmontaje por SSE', async () => {
@@ -324,7 +367,7 @@ describe('ScriptsPanel (CP3)', () => {
         return HttpResponse.json({ ok: true });
       }),
     );
-    render(<ScriptsPanel stepId={STEP_ID} batchId={BATCH_ID} />);
+    renderPanel();
 
     const cleanCard = await screen.findByRole('region', { name: /acme-hook01-es-12s/ });
     await user.click(within(cleanCard).getByRole('checkbox', { name: 'Aprobar esta variante' }));
@@ -335,6 +378,44 @@ describe('ScriptsPanel (CP3)', () => {
     await waitFor(() => {
       expect(approveCalled).toBe(true);
     });
+    expect(push).not.toHaveBeenCalled();
+  });
+
+  // ── T5c.2 · EL STOP DE TIER-NO-GENERA ES VISIBLE (antes: 200 mudo) ──────────────────────────────
+  // El defecto (investigación 2026-08-13, Fallo 3): aprobar CP3 en un tier que aún no genera vídeo
+  // commiteaba `scripted`, no arrancaba run y devolvía 200 SIN mensaje — el usuario aprobaba y «no
+  // pasaba nada». Ahora la respuesta trae `generationSkipped`; el panel lo sube al RUN STORE y
+  // `RunHeader` (que sobrevive al desmontaje del panel) pinta el aviso. Este test cubre la CADENA
+  // panel → store → UI en un solo render (por eso monta también la cabecera): asertar solo «la acción
+  // se llamó» pasaría aunque el campo del store estuviera mal nombrado.
+  test('T5c.2: aprobar en un tier que NO genera pinta el aviso en la cabecera (nombra el tier)', async () => {
+    const user = userEvent.setup();
+    push.mockClear();
+    server.use(
+      http.post('*/api/steps/*/approve', () =>
+        HttpResponse.json({
+          ok: true,
+          generationSkipped: { reason: 'tier_not_ready', tier: 'test' },
+        }),
+      ),
+    );
+    const { container } = renderPanel({ withHeader: true });
+    const skippedAlert = () => container.querySelector('[data-slot="generation-skipped"]');
+
+    // Al montar, la cabecera NO muestra el aviso (el store arranca en `null`).
+    expect(skippedAlert()).toBeNull();
+
+    const cleanCard = await screen.findByRole('region', { name: /acme-hook01-es-12s/ });
+    await user.click(within(cleanCard).getByRole('checkbox', { name: 'Aprobar esta variante' }));
+    await user.click(screen.getByRole('button', { name: 'Confirmar guiones' }));
+
+    // Tras aprobar, el aviso aparece en la cabecera nombrando el tier — no un 200 mudo. No se navega
+    // (no hay run de generación) y `RunHeader` lo pinta porque el panel subió el aviso al store.
+    await waitFor(() => {
+      expect(skippedAlert()).not.toBeNull();
+    });
+    expect(skippedAlert()).toHaveTextContent(/no puede generar vídeo todavía/i);
+    expect(skippedAlert()).toHaveTextContent('test');
     expect(push).not.toHaveBeenCalled();
   });
 });

@@ -357,7 +357,7 @@ async function scriptVersions(
 async function approveInTx(
   output: N5Output,
   decision: Parameters<typeof approveScriptsForStep>[3],
-): Promise<{ nextRunId?: string }> {
+): Promise<{ nextRunId?: string; generationSkipped?: { reason: 'tier_not_ready'; tier: string } }> {
   return withDomainTransaction(tdb.db, boss, makeTestLogger(), ({ db, withTransaction }) =>
     approveScriptsForStep(db, withTransaction, output, decision),
   );
@@ -607,6 +607,9 @@ describe('CP3 · approveScriptsForStep (T2.6): veredictos, v2 solo si edita, blo
     // ...pero CERO runs: el money-gate sigue vivo (ningún gasto en un tier que no puede generar).
     expect(result.nextRunId).toBeUndefined();
     expect(await pipelineRunCount()).toBe(0);
+    // T5c.2: el stop ya NO es mudo. El resultado señala EXPLÍCITAMENTE que la generación se saltó por
+    // tier-no-listo, nombrando el tier — es lo que viaja hasta la UI para hacer visible el stop.
+    expect(result.generationSkipped).toEqual({ reason: 'tier_not_ready', tier: 'test' });
   });
 
   // ── NEGATIVE CONTROL del desacople: en un tier SÍ generation-ready, un fallo REAL del plan SIGUE ─────

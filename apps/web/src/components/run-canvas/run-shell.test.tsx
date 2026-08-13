@@ -17,12 +17,12 @@
 // Estos tests reproducen el escenario EXACTO del bug (step `failed` con `cost_actual` NULL + un
 // cargo real en el ledger) y exigen ver el dinero. CONTROL NEGATIVO comprobado al escribirlos:
 // devolviendo la línea al `reduce` sobre los steps, el primer test se pone ROJO ($0.00 ≠ $0.13).
-import { render, within } from '@testing-library/react';
-import type { ReactNode } from 'react';
+import { render, waitFor, within } from '@testing-library/react';
+import { useEffect, type ReactNode } from 'react';
 import { describe, expect, test } from 'vitest';
 import type { StepSnapshot } from '@ugc/core/orchestrator';
 import type { RunResponse } from '@/lib/api-client';
-import { RunStoreProvider } from '@/stores/run-store';
+import { RunStoreProvider, useRunStore } from '@/stores/run-store';
 import { RunHeader } from './run-shell';
 
 function makeRun(overrides: Partial<RunResponse> = {}): RunResponse {
@@ -118,5 +118,49 @@ describe('RunHeader · «Coste real» (T1.17 — bug de dinero)', () => {
     ]);
     expect(kpi('Coste estimado')).toContain('$0.35');
     expect(kpi('Coste real')).toContain('$0.13'); // el real, del ledger
+  });
+});
+
+// ── T5c.2 · EL AVISO DE «TIER NO GENERA VÍDEO» LO PINTA LA CABECERA ─────────────────────────────────
+// Al aprobar CP3 en un tier que aún no genera vídeo, el panel CP3 se DESMONTA (N5 → succeeded por SSE),
+// así que el aviso NO puede vivir en su estado local: vive en el run store y `RunHeader` —que sobrevive—
+// lo pinta. Estos tests aíslan justo esa responsabilidad de la cabecera (leer el store → pintar el
+// Alert), sin montar el canvas ni el SSE. `Seeder` deposita el aviso en el store con la acción real.
+describe('RunHeader · aviso «tier no genera vídeo» (T5c.2)', () => {
+  /** Deposita `generationSkipped` en el store al montar (la MISMA acción que usa el panel CP3). */
+  function Seeder({ tier }: { tier: string | null }) {
+    const setGenerationSkipped = useRunStore((s) => s.setGenerationSkipped);
+    useEffect(() => {
+      setGenerationSkipped(tier === null ? null : { reason: 'tier_not_ready', tier });
+    }, [setGenerationSkipped, tier]);
+    return null;
+  }
+
+  function renderWithSkipped(tier: string | null) {
+    const run = makeRun();
+    function Wrapper({ children }: { children: ReactNode }) {
+      return (
+        <RunStoreProvider initial={{ run, steps: [] }}>
+          <Seeder tier={tier} />
+          {children}
+        </RunStoreProvider>
+      );
+    }
+    const { container } = render(<RunHeader runId={run.id} />, { wrapper: Wrapper });
+    return () => container.querySelector('[data-slot="generation-skipped"]');
+  }
+
+  test('con el store sembrado, pinta el aviso nombrando el tier', async () => {
+    const skipped = renderWithSkipped('test');
+    await waitFor(() => {
+      expect(skipped()).not.toBeNull();
+    });
+    expect(skipped()).toHaveTextContent(/no puede generar vídeo todavía/i);
+    expect(skipped()).toHaveTextContent('test');
+  });
+
+  test('sin aviso en el store (null), NO pinta nada', () => {
+    const skipped = renderWithSkipped(null);
+    expect(skipped()).toBeNull();
   });
 });

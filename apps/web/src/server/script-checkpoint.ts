@@ -80,14 +80,23 @@ function isRealEdit(rebuilt: AdScript, currentScenes: readonly { narration: stri
   return narrationFingerprint(rebuilt.scenes) !== narrationFingerprint(currentScenes);
 }
 
-/** El resultado de aprobar CP3: el id del RUN DE GENERACIÓN N6→N7→N8→N9 arrancado en la MISMA tx para las
- *  variantes `scripted` (con la cola de composición de T5.8b: N8 máster+C2PA → N9 CP4), o `undefined` si
- *  CP3 no aprobó ninguna (nada que generar) O si el tier aún no es generation-ready (b-roll pendiente-F4 →
- *  las variantes quedan `scripted` sin arrancar run). Viaja hasta la respuesta de `/approve` para que el
- *  cliente navegue al canvas de generación (patrón del `nextRunId` de CP2); su ausencia significa
- *  «aprobado, sin run de generación que mostrar». */
+/** «La aprobación de CP3 commiteó `scripted` pero el tier aún NO es generation-ready (b-roll
+ *  pendiente-F4), así que no se arrancó ningún run.» Viaja hasta la respuesta de `/approve` para que el
+ *  cliente haga VISIBLE ese stop (T5c.2) — antes (T5c.1) la mera ausencia de `nextRunId` significaba DOS
+ *  cosas a la vez («nada que generar» y «tier no listo») y el usuario veía un 200 mudo. `reason` es un
+ *  discriminante con sitio a futuros motivos; `tier` es el que el aviso nombra. */
+export interface GenerationSkipped {
+  reason: 'tier_not_ready';
+  tier: string;
+}
+
+/** El resultado de aprobar CP3. `nextRunId`: el id del RUN DE GENERACIÓN N6→N7→N8→N9 arrancado en la
+ *  MISMA tx para las variantes `scripted` (patrón del `nextRunId` de CP2); el cliente navega a él.
+ *  `generationSkipped`: ver arriba. Ambos ausentes ⇒ «aprobado, sin run que mostrar y sin nada que
+ *  avisar» (aditivos e independientes; un caller que no espera uno lo ve `undefined` y lo ignora). */
 export interface ScriptsCheckpointResult {
   nextRunId?: string;
+  generationSkipped?: GenerationSkipped;
 }
 
 /**
@@ -253,7 +262,10 @@ async function applyDecidedVerdicts(
   // estado genérico). Con el tier listo, cualquier throw de `buildVariantGenerationPlan` SIGUE siendo un
   // bug ruidoso que aborta la aprobación — money-safety intacta para los tiers que SÍ generan.
   if (!(await isTierGenerationReady(db, batch.tier))) {
-    return {};
+    // No es un error: la aprobación es VÁLIDA (los guiones quedan `scripted`). Es un stop INFORMADO —
+    // el tier no puede generar vídeo todavía— y debe ser VISIBLE (T5c.2): antes se devolvía `{}` y el
+    // usuario aprobaba «sin que pasara nada» (200 mudo). El campo lo comunica hasta la UI.
+    return { generationSkipped: { reason: 'tier_not_ready', tier: batch.tier } };
   }
 
   // Un `VariantGenerationPlan` por variante `scripted` (lee recipe×tier + voice_map + guion de la BD —

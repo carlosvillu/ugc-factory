@@ -119,6 +119,18 @@ test.describe('F2 · journey de guiones: URL → CP1 → CP2 → CP3 → variant
       // ── 6. EL RUN AVANZA: N5 deja el checkpoint y queda `succeeded` (por SSE, sin recargar) ──
       await waitCanvasStatus(page, 'N5', 'succeeded', 30_000);
 
+      // ── 6b. EL STOP DE TIER-NO-GENERA ES VISIBLE (T5c.2) ────────────────────────────────────
+      // Este journey corre en el tier por defecto (`test`), cuyo b-roll es aún etiqueta pendiente-F4:
+      // aprobar CP3 commitea `scripted` pero NO arranca generación. Antes eso era un 200 MUDO (el
+      // usuario aprobaba y «no pasaba nada»). Ahora la cabecera del run —que sobrevive al desmontaje
+      // del panel CP3 por SSE— pinta un aviso informativo nombrando el tier. Esta es la parte del fix
+      // que el test unit del panel NO puede cubrir (mockea el SSE, justo el mecanismo del desmontaje).
+      const skipped = page.locator('[data-slot="generation-skipped"]');
+      await expect(skipped).toBeVisible({ timeout: 30_000 });
+      // El aviso REAL (no solo que aparezca la palabra «test» en algún sitio): el motivo + el tier.
+      await expect(skipped).toContainText(/no puede generar vídeo todavía/);
+      await expect(skipped).toContainText('test');
+
       // ── 7. LAS VARIANTES QUEDARON `scripted`, CONTRA LA BD ──────────────────────────────
       // Las variantes del lote de ESTE run: TODAS `scripted` (la Verificación pide ver las filas).
       const variants = await queryStack<{ status: string }>(

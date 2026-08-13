@@ -31,7 +31,7 @@ import { CheckpointDecisionSchema, UlidSchema } from '@ugc/core/contracts';
 import { approveStep } from '@ugc/core/orchestrator';
 import { findStep, withDomainTransaction } from '@ugc/db';
 import { withRoute, getBoss, getDb, getRequestLogger } from '@/server';
-import { applyDomainEffect } from '@/server/domain-effects';
+import { applyDomainEffect, type GenerationSkipped } from '@/server/domain-effects';
 import { persistCheckpointDecision } from '@/server/checkpoint-decision';
 import { withAuth } from '@/server/with-auth';
 import { toCheckpointError } from '../checkpoint-errors';
@@ -74,6 +74,9 @@ export const POST = withAuth(
       const boss = await getBoss();
 
       let nextRunId: string | undefined;
+      // T5c.2: presente SOLO cuando CP3 aprobó en un tier que aún NO genera vídeo — el stop informado
+      // que la UI hace visible (antes era un 200 mudo). Se captura como `nextRunId`, en scope de función.
+      let generationSkipped: GenerationSkipped | undefined;
       try {
         await withDomainTransaction(
           db,
@@ -97,6 +100,7 @@ export const POST = withAuth(
               body.decision,
             );
             nextRunId = effect.nextRunId;
+            generationSkipped = effect.generationSkipped;
             // No-op si el body no trajo decisión. Dentro de la tx ⇒ si la transición hubiera
             // fallado (409: el step ya no está en `waiting_approval`), no queda fila de decisión.
             await persistCheckpointDecision(tx, params.id, body.decision);
@@ -107,12 +111,23 @@ export const POST = withAuth(
       }
 
       getRequestLogger().info(
-        { step_id: params.id, decision_kind: body.decision?.kind, next_run_id: nextRunId },
+        {
+          step_id: params.id,
+          decision_kind: body.decision?.kind,
+          next_run_id: nextRunId,
+          generation_skipped: generationSkipped?.reason,
+        },
         'checkpoint aprobado',
       );
       // `nextRunId` (T2.6): presente SOLO cuando la aprobación de CP2 arrancó el run de N5. Aditivo:
       // los callers que no lo esperan (CP1, CP3, aprobar sin efecto) lo ven `undefined` y lo ignoran.
-      return Response.json({ ok: true, ...(nextRunId !== undefined && { nextRunId }) });
+      // `generationSkipped` (T5c.2): presente SOLO cuando CP3 aprobó en un tier que aún no genera —
+      // mismo spread aditivo; los demás callers lo ven `undefined`.
+      return Response.json({
+        ok: true,
+        ...(nextRunId !== undefined && { nextRunId }),
+        ...(generationSkipped !== undefined && { generationSkipped }),
+      });
     },
     { params: ParamsSchema, body: BodySchema },
   ),

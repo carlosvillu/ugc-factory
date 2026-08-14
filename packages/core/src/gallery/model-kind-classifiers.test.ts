@@ -5,6 +5,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   ModelKindSchema,
+  brollVideoAssetKindForNodeKey,
   isAvatarModelKind,
   isBrollModelKind,
   isVideoModelKind,
@@ -69,4 +70,26 @@ describe('clasificadores de model_kind (T4.11)', () => {
     expect(ALL_KINDS.filter(isMusicModelKind)).toEqual(['music']);
     expect(isVideoModelKind('music')).toBe(false);
   });
+});
+
+// T5c.7 (MONEY-PATH): N7d y N7f comparten el `model_kind='i2v'` pero fijan `assetKind` DISTINTO. El
+// `model_kind` NO los discrimina; el `node_key` SÍ. Este mapa es la fuente de verdad que la ruta
+// RECONCILE de finalize-download consume para no colisionar los finalizadores.
+describe('brollVideoAssetKindForNodeKey — discrimina N7d (broll) de N7f (cta) por node_key (T5c.7)', () => {
+  it('N7d → broll_clip (body b-roll)', () => {
+    expect(brollVideoAssetKindForNodeKey('N7d')).toBe('broll_clip');
+  });
+
+  it('N7f → cta_clip (el nodo que rompió con dinero real: NO debe salir broll_clip)', () => {
+    expect(brollVideoAssetKindForNodeKey('N7f')).toBe('cta_clip');
+  });
+
+  // TOTAL, sin `??` fallback: un node_key que NO produce vídeo b-roll → null (el caller lo hace
+  // PermanentStepError). Un fallback silencioso a broll_clip aquí ES el bug de T5c.7.
+  it.each(['N7c', 'N7a', 'N8', 'N0', '', 'i2v'])(
+    'node_key %j desconocido → null (no broll_clip)',
+    (nk) => {
+      expect(brollVideoAssetKindForNodeKey(nk)).toBeNull();
+    },
+  );
 });

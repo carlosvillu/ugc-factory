@@ -180,6 +180,27 @@ export function videoAssetKindForModelKind(kind: ModelKind): 'avatar_clip' | 'br
   return null;
 }
 
+/**
+ * Deriva el `assetKind` de vídeo B-ROLL a partir del `node_key` del step (T5c.7, MONEY-PATH). N7d y N7f
+ * comparten el endpoint i2v (mismo `model_profile.kind='i2v'`) pero fijan `assetKind` DISTINTO en su
+ * executor — `broll_clip` (`generate-broll.ts`) vs `cta_clip` (`generate-cta.ts`). En la ruta RECONCILE
+ * (sweeper/webhook → `output.download` → finalize-download) el `assetKind` se RE-DERIVA; hacerlo por
+ * `model_profile.kind` sale SIEMPRE `broll_clip` para ambos → colisión de finalizadores (el de N7f busca
+ * su `cta_clip`, no lo halla, lanza «completed pero sin asset cta_clip»). Este mapa es la fuente de verdad
+ * correcta: el `node_key`.
+ *
+ * Lookup TOTAL sobre `{N7d, N7f}`: cualquier otro `node_key` (vacío/desconocido) devuelve `null` para que
+ * el CALLER lo convierta en un throw RUIDOSO — NUNCA un `??` fallback a `broll_clip` (ese fallback
+ * silencioso ES el bug que T5c.7 arregla). El `null`-y-el-caller-lanza (en vez de lanzar aquí) es
+ * deliberado: core NO importa `@ugc/core/orchestrator` (donde vive `PermanentStepError`), así que el mapa
+ * puro vive aquí (unit-testable, sin BD) y el throw tipado lo hace el finalizer.
+ */
+export function brollVideoAssetKindForNodeKey(nodeKey: string): 'broll_clip' | 'cta_clip' | null {
+  if (nodeKey === 'N7d') return 'broll_clip';
+  if (nodeKey === 'N7f') return 'cta_clip';
+  return null;
+}
+
 /** El `kind` que N7e (bed musical IA, T4.9) sabe generar: `music` (ace-step, text-to-music por tags).
  *  El servicio y el smoke de música comparten esta frontera (cada uno con su propio error tipado),
  *  igual que `isBrollModelKind` para N7d. */

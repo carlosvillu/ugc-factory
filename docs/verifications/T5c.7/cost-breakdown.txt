@@ -1,0 +1,19 @@
+=== COST BY NODE (generation run) ===
+node_key	provider	cents
+N7a	fal	2
+N7b	fal	2
+N7c	fal	98
+N7d	fal	120
+N7f	fal	80
+(5 rows)
+
+=== COST BY RUN (whole new batch) ===
+run_id	provider	cents
+01KZZSR51AJARNR1740GB3CC4B	anthropic	23
+01KZZSR51AJARNR1740GB3CC4B	firecrawl	0
+01KZZT2RGG8NDN8R8J8XE630MW	anthropic	3
+01KZZT65C77PB5BNP6AHA0QE60	fal	302
+(4 rows)
+
+=== TOTAL NEW-BATCH COST (cents) ===
+328

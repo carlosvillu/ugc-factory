@@ -1,0 +1,27 @@
+ ❯ |services:integration| test/integration/finalize-download.test.ts (16 tests | 4 failed) 834ms
+     × N7f (CTA) → crea asset cta_clip, NO broll_clip (el nodo que rompió con dinero real) 55ms
+     × N7f REDELIVERY (rama alreadyFinalized): una N7f ya completed con su cta_clip → NO-OP gracioso, NO «invariante roto» 40ms
+     × stepRunId === null en ruta de vídeo b-roll → PermanentStepError RUIDOSO (nunca cae a broll_clip) 30ms
+     × node_key desconocido (p.ej. N7c) en ruta de vídeo b-roll → PermanentStepError (no fallback silencioso) 30ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  |services:integration| test/integration/finalize-download.test.ts > finalizeGenerationByKind — ruta de vídeo b-roll kind-aware por node_key (T5c.7) > N7f (CTA) → crea asset cta_clip, NO broll_clip (el nodo que rompió con dinero real)
+AssertionError: expected 'broll_clip' to be 'cta_clip' // Object.is equality
+Expected: "cta_clip"
+Received: "broll_clip"
+    347|     // este test ROJO: asset broll_clip en vez de cta_clip).
+    348|     expect(asset?.kind).toBe('cta_clip');
+    350|     expect(await getAssetByGenerationKind(tdb.db, gen.id, 'cta_clip'))…
+ FAIL  |services:integration| test/integration/finalize-download.test.ts > finalizeGenerationByKind — ruta de vídeo b-roll kind-aware por node_key (T5c.7) > N7f REDELIVERY (rama alreadyFinalized): una N7f ya completed con su cta_clip → NO-OP gracioso, NO «invariante roto»
+AssertionError: expected 'broll_clip' to be 'cta_clip' // Object.is equality
+Expected: "cta_clip"
+Received: "broll_clip"
+    379|     // No-op gracioso: devuelve el MISMO asset cta_clip, sin lanzar.
+ FAIL  |services:integration| test/integration/finalize-download.test.ts > finalizeGenerationByKind — ruta de vídeo b-roll kind-aware por node_key (T5c.7) > stepRunId === null en ruta de vídeo b-roll → PermanentStepError RUIDOSO (nunca cae a broll_clip)
+    412|     ).rejects.toBeInstanceOf(PermanentStepError);
+    413|     expect(await getAssetByGenerationKind(tdb.db, gen.id, 'broll_clip'…
+    414|     expect(await getAssetByGenerationKind(tdb.db, gen.id, 'cta_clip'))…
+ FAIL  |services:integration| test/integration/finalize-download.test.ts > finalizeGenerationByKind — ruta de vídeo b-roll kind-aware por node_key (T5c.7) > node_key desconocido (p.ej. N7c) en ruta de vídeo b-roll → PermanentStepError (no fallback silencioso)
+    429|     ).rejects.toBeInstanceOf(PermanentStepError);
+    430|     expect(await getAssetByGenerationKind(tdb.db, gen.id, 'broll_clip'…
+ Test Files  1 failed (1)
+      Tests  4 failed | 12 passed (16)

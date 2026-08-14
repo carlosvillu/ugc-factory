@@ -8,8 +8,14 @@
 // Este módulo RUTA por el `kind` REAL de la generación (resuelto desde `model_profile.kind`) al
 // finalizer correcto, SIN fundir semánticas (cada kind tiene su unidad de coste):
 //   · image/utility               → `finalizeGeneration` (imagen, `keyframe`, coste por `images`).
-//   · avatar/lipsync/t2v/i2v/r2v  → finalizer de VÍDEO (`avatar_clip`/`broll_clip`, coste por segundo)
-//                                    vía el helper compartido `finalizeSingleCallPerSecondGeneration`.
+//   · avatar/lipsync              → finalizer de VÍDEO (`avatar_clip`, coste por segundo) vía el helper
+//                                    compartido `finalizeSingleCallPerSecondGeneration`.
+//   · t2v/i2v/r2v                 → finalizer de VÍDEO, pero el `assetKind` (`broll_clip` de N7d vs
+//                                    `cta_clip` de N7f) NO se deriva del `model_kind` (N7d y N7f comparten
+//                                    el endpoint i2v → mismo kind): se resuelve por el `node_key` del step
+//                                    (`generation.stepRunId` → `step_run.node_key`, T5c.7). `stepRunId`
+//                                    null o un node_key inesperado → `PermanentStepError` (NUNCA un
+//                                    fallback silencioso a `broll_clip`).
 //   · music                       → finalizer de MÚSICA (`music_bed`, coste por segundo).
 //   · tts                         → NO se puede liquidar por esta vía: un voiceover necesita la CADENA
 //                                    TTS→ASR (2ª llamada fal) para sellar `word_timestamps` — el
@@ -25,10 +31,16 @@
 // mandó a fal (facturar/persistir otro número desincronizaría el ledger).
 import { newUlid } from '@ugc/core/contracts';
 import { extractAudioOutput, extractVideoOutput } from '@ugc/core/generation';
-import { videoAssetKindForModelKind } from '@ugc/core/gallery';
+import { brollVideoAssetKindForNodeKey, videoAssetKindForModelKind } from '@ugc/core/gallery';
 import { PermanentStepError } from '@ugc/core/orchestrator';
 import type { Logger, StorageAdapter } from '@ugc/core';
-import { getModelProfile, type DbClient, type Generation, type ModelProfile } from '@ugc/db';
+import {
+  findStep,
+  getModelProfile,
+  type DbClient,
+  type Generation,
+  type ModelProfile,
+} from '@ugc/db';
 
 import { falMusicCostOf, falVideoCostOf } from './fal-pricing';
 import {
@@ -91,11 +103,24 @@ export async function finalizeGenerationByKind(
     return { assetId: res.assetId, costCents: res.costCents };
   }
 
-  // avatar/lipsync → `avatar_clip`; t2v/i2v/r2v → `broll_clip`. La derivación vive en el clasificador
-  // compartido `videoAssetKindForModelKind` (@ugc/core/gallery): un solo punto de verdad con el sweeper.
+  // avatar/lipsync → `avatar_clip`; t2v/i2v/r2v → `broll_clip` (clasificador compartido
+  // `videoAssetKindForModelKind`, @ugc/core/gallery). PERO `broll_clip` es AMBIGUO por `model_kind`
+  // (T5c.7, MONEY-PATH): N7d (body b-roll → `broll_clip`) y N7f (CTA → `cta_clip`) COMPARTEN el endpoint
+  // i2v `fal-ai/veo3.1/image-to-video` → mismo `model_profile.kind='i2v'`. Derivar el `assetKind` por
+  // `model_kind` sale SIEMPRE `broll_clip` para ambos → el finalizador de N7f (que busca `cta_clip`) no
+  // halla su asset y lanza «completed pero sin asset cta_clip». La fuente de verdad correcta es el
+  // `node_key` del step que lo lanzó (`generation.stepRunId` → `step_run.node_key`), que coincide con lo
+  // que el executor FIJÓ (`assetKind:'cta_clip'` en generate-cta.ts). `avatar_clip` NO tiene esta
+  // ambigüedad (un solo nodo N7c lo produce) → se deja como está.
   const videoAssetKind = videoAssetKindForModelKind(kind);
   if (videoAssetKind !== null) {
-    const res = await finalizeVideoDownload(deps, { ...args, profile, assetKind: videoAssetKind });
+    // `avatar_clip` (N7c único) es directo; `broll_clip` es AMBIGUO por `model_kind` y se desambigua por
+    // `node_key` (ver el bloque de arriba). Ambas ramas comparten el mismo cuerpo — solo cambia el kind.
+    const assetKind =
+      videoAssetKind === 'broll_clip'
+        ? await resolveBrollVideoAssetKind(db, generation)
+        : videoAssetKind;
+    const res = await finalizeVideoDownload(deps, { ...args, profile, assetKind });
     return { assetId: res.assetId, costCents: res.generation.costActual ?? 0 };
   }
 
@@ -172,12 +197,55 @@ async function downloadOutputToStorage(
   return { put, storageKey, mime };
 }
 
+/**
+ * Resuelve el `assetKind` de un vídeo de la familia B-ROLL (`model_kind` t2v/i2v/r2v) por el `node_key`
+ * del step que lo lanzó (T5c.7, MONEY-PATH). N7d y N7f comparten el `model_kind='i2v'` pero fijan
+ * `assetKind` DISTINTO (`broll_clip` vs `cta_clip`): la ÚNICA verdad que los discrimina en la ruta
+ * RECONCILE es el `step_run.node_key`, leído por `generation.stepRunId`.
+ *
+ * FALLA RUIDOSO (`PermanentStepError`, que `output.download` absorbe como no-op sin reintentar) en los
+ * dos ESTADOS IMPOSIBLES de la ruta de vídeo b-roll — NUNCA cae a `broll_clip` (ese fallback silencioso
+ * ES el bug):
+ *   · `stepRunId === null`: en la ruta N7d/N7f el executor SIEMPRE pasa `stepId` → `stepRunId` nunca es
+ *     null aquí (la regeneración reusa el mismo sub-DAG). Un null es un cableado roto, no un default.
+ *   · `node_key` fuera de {N7d, N7f}: un vídeo b-roll solo lo emiten esos dos nodos. Otro `node_key`
+ *     (o un step inexistente) es una inconsistencia de datos que reintentar la descarga no arregla.
+ */
+async function resolveBrollVideoAssetKind(
+  db: DbClient,
+  generation: Generation,
+): Promise<'broll_clip' | 'cta_clip'> {
+  if (generation.stepRunId === null) {
+    throw new PermanentStepError(
+      `finalizeGenerationByKind: la generación de vídeo b-roll ${generation.id} no tiene step_run_id; ` +
+        'imposible discriminar N7d (broll_clip) de N7f (cta_clip) por el node_key — cableado roto ' +
+        '(en la ruta de vídeo el executor SIEMPRE pasa stepId). NO se asume broll_clip.',
+    );
+  }
+  const step = await findStep(db, generation.stepRunId);
+  if (step === undefined) {
+    throw new PermanentStepError(
+      `finalizeGenerationByKind: la generación de vídeo b-roll ${generation.id} referencia el step ` +
+        `${generation.stepRunId}, que no existe; imposible derivar el assetKind por node_key`,
+    );
+  }
+  const assetKind = brollVideoAssetKindForNodeKey(step.nodeKey);
+  if (assetKind === null) {
+    throw new PermanentStepError(
+      `finalizeGenerationByKind: la generación de vídeo b-roll ${generation.id} viene del node_key ` +
+        `'${step.nodeKey}' (step ${generation.stepRunId}), que no produce vídeo b-roll (esperado N7d o ` +
+        'N7f); NO se asume broll_clip (fallback silencioso = el bug de T5c.7).',
+    );
+  }
+  return assetKind;
+}
+
 async function finalizeVideoDownload(
   deps: FinalizeDownloadDeps,
   args: {
     generation: Generation;
     profile: ModelProfile;
-    assetKind: 'avatar_clip' | 'broll_clip';
+    assetKind: 'avatar_clip' | 'broll_clip' | 'cta_clip';
     output: unknown;
     statusPayload: unknown;
   },

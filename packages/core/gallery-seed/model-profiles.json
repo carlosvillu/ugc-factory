@@ -161,8 +161,8 @@
       "resolutions": ["720p", "1080p", "4k"]
     },
     "promptAdapter": "i2v",
-    "unverified": true,
-    "notes": "B-roll N7d ruta i2v DESDE KEYFRAME (Veo 3.1 image-to-video, §7.5). Schema verificado 2026-07-17 vs fal openapi `endpoint_id=fal-ai/veo3.1/image-to-video`: input `{prompt(req), image_url(req, start frame = keyframe de N7a), aspect_ratio(auto|16:9|9:16, def auto), duration(4s|6s|8s, def 8s), resolution(720p|1080p|4k, def 720p), generate_audio(def true → N7d lo pone FALSE: b-roll SILENCIOSO, la voz es de N7b; y $0,20/s sin audio vs $0,40/s con), negative_prompt, seed, auto_fix, safety_tolerance}`. Output `{video:{url,...}}` SIN `duration` (la duración del clip = el enum enviado). BYPASS del adapter i2v (emite `duration_seconds`/`enable_audio` que Veo rechaza). `maxDuration:8` = max(durations) para que el troceo §7.5 caiga siempre en el enum. `unverified` hasta el smoke live del verifier (T4.8)."
+    "unverified": false,
+    "notes": "B-roll N7d/N7f ruta i2v DESDE KEYFRAME (Veo 3.1 image-to-video, §7.5). Schema verificado 2026-07-17 vs fal openapi `endpoint_id=fal-ai/veo3.1/image-to-video`: input `{prompt(req), image_url(req, start frame = keyframe de N7a), aspect_ratio(auto|16:9|9:16, def auto), duration(4s|6s|8s, def 8s), resolution(720p|1080p|4k, def 720p), generate_audio(def true → N7d lo pone FALSE: b-roll SILENCIOSO, la voz es de N7b; y $0,20/s sin audio vs $0,40/s con), negative_prompt, seed, auto_fix, safety_tolerance}`. Output `{video:{url,...}}` SIN `duration` (la duración del clip = el enum enviado). BYPASS del adapter i2v (emite `duration_seconds`/`enable_audio` que Veo rechaza). `maxDuration:8` = max(durations) para que el troceo §7.5 caiga siempre en el enum. VERIFICADO EN VIVO 2026-08-13 (T5c.4, primer run de gasto real: payload y precio 20¢/s confirmados) → `unverified:false` (T5c.7, cierre del `[verificar]` §13.1)."
   },
   {
     "falEndpoint": "fal-ai/veo3.1/reference-to-video",

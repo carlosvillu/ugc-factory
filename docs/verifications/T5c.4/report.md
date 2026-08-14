@@ -1,7 +1,9 @@
 # Verificación T5c.4 — Obtener el PRIMER vídeo real (premium alcanzable/consciente) ⚠ GASTO
 
+> **RESOLUCIÓN FINAL 2026-08-14 — PASS (vía T5c.7).** Este report documenta el intento del 2026-08-13 que dio **FAIL** por un bug de producto en N7f (CTA i2v). Ese bug era el bloqueante real → se abrió **T5c.7** (fix `finalize-download` kind-aware). Al arreglarlo, la Verificación de T5c.7 (un lote premium de 1 variante) **produjo el PRIMER vídeo real end-to-end** del proyecto: máster `01KZZTFHE0KEWB7KGYNEFJJFKQ` (1080×1920 H.264+AAC 12,5s) reproduciéndose en `/library`, coste real $3,28. **La evidencia del vídeo terminado vive en `docs/verifications/T5c.7/`** (capturas `08`/`09`/`10`, `master.mp4`, `cost-breakdown.txt`). El código de T5c.4 era $0 (decisión de producto «default tier sigue `test`» en PRD §13.1 + el aviso lo hizo T5c.2); lo único pendiente era la Verificación de gasto, cumplida por T5c.7. Lo de abajo es el registro histórico del intento fallido — NO se reescribe (evidencia del camino real).
+
 - **Tarea**: T5c.4 · Obtener el PRIMER vídeo real end-to-end (`planning.md:1118`)
-- **Fecha**: 2026-08-13
+- **Fecha**: 2026-08-13 (intento FAIL) · resuelto 2026-08-14 vía T5c.7
 - **Ejecutor**: verifier (contexto fresco) · agent-browser 0.27.x · sesión `t5c.4`
 - **Sistema**: commit `9299671` (rama `feat/t5b1b-i-n6-per-scene`) · docker-compose.dev Postgres 16 PERSISTENTE (`:55432`) + `pnpm dev` (web :3000 + worker, fal REAL vía `app_setting.secret.fal`) + seeds (persona=17, model_profile=18, recipe=3). Login re-sembrado por el bucle (con OK del usuario) tras el bloqueo de la ronda anterior.
 

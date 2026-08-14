@@ -1,0 +1,3 @@
+Lazy loading nvm node npm ...
+check-orphan-workers: 0 contenedores postgres:16 huérfanos ✓
+check-orphan-workers: sin workers vivos ✓

@@ -1,0 +1,590 @@
+diff --git a/docs/dev-loop/journal.md b/docs/dev-loop/journal.md
+index 7a213a5..9442c26 100644
+--- a/docs/dev-loop/journal.md
++++ b/docs/dev-loop/journal.md
+@@ -3527,3 +3527,12 @@ T5.8 es el primer código que conduce un N8 vivo hasta el mux del máster (su op
+ - **Run `01KZYDJ6YF89DFRC652NRJ26CJ`**: terminalmente atascado (N6-N7e succeeded, N7f failed, N8/N9 awaiting_deps; pgboss 0 jobs no-terminales → NO gastará más). NO lo cancelo — es evidencia del bug y no gasta. Lote GASTADO → NO re-aprobar CP3; reintentar tras arreglar N7f exige análisis NUEVO.
+ - **PARADA — corrección de framing (2026-08-13)**: NO es circuit-breaker. El breaker dispara con «2 FAIL del verifier en la misma tarea» y existe para frenar reintentos CIEGOS. Aquí: el 1er FAIL fue un bloqueo de ENTORNO (login 401 — el verifier nunca llegó a CP2, no evaluó la tarea); el 2º reveló un bug con causa raíz + fix nombrado (T5c.7) — lo OPUESTO al thrashing. No estamos reintentando a ciegas, hay una tarea nueva concreta. **La parada real es por ⚠ GASTO**: la Verificación de T5c.7 reintenta el vídeo real → necesita autorización de gasto FRESCA del usuario. T5c.4 NO se cierra — queda BLOQUEADA por T5c.7.
+ - **Incidente de frontera de la ronda anterior QUEDÓ RESUELTO**: reinicié el stack con OK explícito del usuario (no rodeo), hash re-sembrado, login HTTP 200. Esta ronda el verifier NO tocó BD (solo SELECTs), confirmado.
++
++## 2026-08-13 · ⏳ T5c.7 iniciada — sweeper kind-aware (bug de dinero de N7f)
++- Usuario autorizó: arreglar N7f Y reintentar el vídeo real (abort $5,25 heredado, dedup puede abaratar).
++- Fix: el sweeper/reconcile/output-download deben resolver `assetKind` de forma kind-aware (por nodo/step, no por `model_profile`), para que N7d→`broll_clip` y N7f→`cta_clip` aunque compartan `veo3.1/image-to-video`. Cubrir tanto la ruta fresca como el REUSE (dedup §9.6) de la N7f `completed`-pero-rota del run atascado.
++- **PUNTERO CORREGIDO (Explore de contexto fresco + verificación propia, 2026-08-14)**: el punto NO es `sweeper.ts:139` (eso resuelve solo el DEADLINE binario `image|video`). El defecto ÚNICO es **`packages/services/src/finalize-download.ts:96` → `videoAssetKindForModelKind(profile.kind)`** (`packages/core/src/gallery/contracts.ts:177-181`): mapea i2v→`broll_clip` SIN distinguir N7d de N7f (ambos i2v). Fuente de verdad correcta = `step_run.node_key` (N7d vs N7f) vía `generation.stepRunId`, leyendo el step por id (`steps.repo.findStep`).
++- **CHECK 1 (¿H6 max_retries=80 es agujero de $64?): NO.** El retry de `LoserRaceError` NO re-submitea a fal — `resolveProductionDedup` (`generation-dedup.ts:101-116`): la fila envenenada N7f `completed` satisface el índice único parcial → `insertProductionGenerationIfAbsent` DO NOTHING → re-lookup con `cta_clip` sigue `undefined` (el asset es `broll_clip`) → `LoserRaceError` SIN pasar del INSERT → BUCLE de CPU, cero fal. H6 es **deuda de journal** (CPU quemada), no crítico. El re-kinding de la fila corta el bucle.
++- **CHECK 2 (¿`stepRunId===null` reachable en flujo legítimo?): NO para vídeo.** Los executors N7d/N7f (`generate-broll.ts:172`, `generate-cta.ts:165`) SIEMPRE pasan `stepId` del step encolado; regen (`regen-checkpoint.ts`) reusa el mismo sub-DAG N6→N7 con su step. `stepRunId` nullable existe para generaciones que no pasan por executor de step (no vídeo). → **fail-loud en `stepRunId===null` es seguro**, no convierte ningún path en crash.
++- **FILA ENVENENADA: exactamente 1** (query de detección corrida por el bucle contra dev DB, no un subagente): asset `01KZYDM84ZDBJWPP4GZN076EV2` kind `broll_clip`, gen `01KZYDJW35MYXW4YSQJFCBFT2R` completed, node_key N7f. N7d correcto (broll_clip). Prod = 0 filas (los 7 lotes reales eran tier `test`, se pararon en `scripted`, nunca llegaron a N7f). → remediación = TEST con fixture + UPDATE one-off del bucle sobre esa única fila dev; NO script/migration de prod (no hay nada que reparar allí). RE-KINDING a `cta_clip` (preserva reuse), no failed.
++- **MATIZ DE COSTE (a corregir con el usuario al pedir gasto)**: el reintento exige análisis NUEVO → nuevo `content_hash` en TODOS los nodos → dedup 0 hits → re-paga completo (~$2,6-4,2). El re-kinding NO abarata este reintento (es correctez, corta futuros bucles). La proyección «casi $0 por dedup» NO aplica.
+diff --git a/packages/core/gallery-seed/model-profiles.json b/packages/core/gallery-seed/model-profiles.json
+index 2de2084..5bf4ef5 100644
+--- a/packages/core/gallery-seed/model-profiles.json
++++ b/packages/core/gallery-seed/model-profiles.json
+@@ -161,8 +161,8 @@
+       "resolutions": ["720p", "1080p", "4k"]
+     },
+     "promptAdapter": "i2v",
+-    "unverified": true,
+-    "notes": "B-roll N7d ruta i2v DESDE KEYFRAME (Veo 3.1 image-to-video, §7.5). Schema verificado 2026-07-17 vs fal openapi `endpoint_id=fal-ai/veo3.1/image-to-video`: input `{prompt(req), image_url(req, start frame = keyframe de N7a), aspect_ratio(auto|16:9|9:16, def auto), duration(4s|6s|8s, def 8s), resolution(720p|1080p|4k, def 720p), generate_audio(def true → N7d lo pone FALSE: b-roll SILENCIOSO, la voz es de N7b; y $0,20/s sin audio vs $0,40/s con), negative_prompt, seed, auto_fix, safety_tolerance}`. Output `{video:{url,...}}` SIN `duration` (la duración del clip = el enum enviado). BYPASS del adapter i2v (emite `duration_seconds`/`enable_audio` que Veo rechaza). `maxDuration:8` = max(durations) para que el troceo §7.5 caiga siempre en el enum. `unverified` hasta el smoke live del verifier (T4.8)."
++    "unverified": false,
++    "notes": "B-roll N7d/N7f ruta i2v DESDE KEYFRAME (Veo 3.1 image-to-video, §7.5). Schema verificado 2026-07-17 vs fal openapi `endpoint_id=fal-ai/veo3.1/image-to-video`: input `{prompt(req), image_url(req, start frame = keyframe de N7a), aspect_ratio(auto|16:9|9:16, def auto), duration(4s|6s|8s, def 8s), resolution(720p|1080p|4k, def 720p), generate_audio(def true → N7d lo pone FALSE: b-roll SILENCIOSO, la voz es de N7b; y $0,20/s sin audio vs $0,40/s con), negative_prompt, seed, auto_fix, safety_tolerance}`. Output `{video:{url,...}}` SIN `duration` (la duración del clip = el enum enviado). BYPASS del adapter i2v (emite `duration_seconds`/`enable_audio` que Veo rechaza). `maxDuration:8` = max(durations) para que el troceo §7.5 caiga siempre en el enum. VERIFICADO EN VIVO 2026-08-13 (T5c.4, primer run de gasto real: payload y precio 20¢/s confirmados) → `unverified:false` (T5c.7, cierre del `[verificar]` §13.1)."
+   },
+   {
+     "falEndpoint": "fal-ai/veo3.1/reference-to-video",
+diff --git a/packages/core/src/gallery/contracts.ts b/packages/core/src/gallery/contracts.ts
+index 25a3bcf..16d5a13 100644
+--- a/packages/core/src/gallery/contracts.ts
++++ b/packages/core/src/gallery/contracts.ts
+@@ -180,6 +180,27 @@ export function videoAssetKindForModelKind(kind: ModelKind): 'avatar_clip' | 'br
+   return null;
+ }
+ 
++/**
++ * Deriva el `assetKind` de vídeo B-ROLL a partir del `node_key` del step (T5c.7, MONEY-PATH). N7d y N7f
++ * comparten el endpoint i2v (mismo `model_profile.kind='i2v'`) pero fijan `assetKind` DISTINTO en su
++ * executor — `broll_clip` (`generate-broll.ts`) vs `cta_clip` (`generate-cta.ts`). En la ruta RECONCILE
++ * (sweeper/webhook → `output.download` → finalize-download) el `assetKind` se RE-DERIVA; hacerlo por
++ * `model_profile.kind` sale SIEMPRE `broll_clip` para ambos → colisión de finalizadores (el de N7f busca
++ * su `cta_clip`, no lo halla, lanza «completed pero sin asset cta_clip»). Este mapa es la fuente de verdad
++ * correcta: el `node_key`.
++ *
++ * Lookup TOTAL sobre `{N7d, N7f}`: cualquier otro `node_key` (vacío/desconocido) devuelve `null` para que
++ * el CALLER lo convierta en un throw RUIDOSO — NUNCA un `??` fallback a `broll_clip` (ese fallback
++ * silencioso ES el bug que T5c.7 arregla). El `null`-y-el-caller-lanza (en vez de lanzar aquí) es
++ * deliberado: core NO importa `@ugc/core/orchestrator` (donde vive `PermanentStepError`), así que el mapa
++ * puro vive aquí (unit-testable, sin BD) y el throw tipado lo hace el finalizer.
++ */
++export function brollVideoAssetKindForNodeKey(nodeKey: string): 'broll_clip' | 'cta_clip' | null {
++  if (nodeKey === 'N7d') return 'broll_clip';
++  if (nodeKey === 'N7f') return 'cta_clip';
++  return null;
++}
++
+ /** El `kind` que N7e (bed musical IA, T4.9) sabe generar: `music` (ace-step, text-to-music por tags).
+  *  El servicio y el smoke de música comparten esta frontera (cada uno con su propio error tipado),
+  *  igual que `isBrollModelKind` para N7d. */
+diff --git a/packages/core/src/gallery/index.ts b/packages/core/src/gallery/index.ts
+index d6179d9..3bfda3a 100644
+--- a/packages/core/src/gallery/index.ts
++++ b/packages/core/src/gallery/index.ts
+@@ -36,6 +36,7 @@ export {
+   isAvatarModelKind,
+   isVideoModelKind,
+   videoAssetKindForModelKind,
++  brollVideoAssetKindForNodeKey,
+   isMusicModelKind,
+   type PromptKind,
+   type PromptStatus,
+diff --git a/packages/core/src/gallery/model-kind-classifiers.test.ts b/packages/core/src/gallery/model-kind-classifiers.test.ts
+index 4888807..600bb1f 100644
+--- a/packages/core/src/gallery/model-kind-classifiers.test.ts
++++ b/packages/core/src/gallery/model-kind-classifiers.test.ts
+@@ -5,6 +5,7 @@
+ import { describe, expect, it } from 'vitest';
+ import {
+   ModelKindSchema,
++  brollVideoAssetKindForNodeKey,
+   isAvatarModelKind,
+   isBrollModelKind,
+   isVideoModelKind,
+@@ -70,3 +71,25 @@ describe('clasificadores de model_kind (T4.11)', () => {
+     expect(isVideoModelKind('music')).toBe(false);
+   });
+ });
++
++// T5c.7 (MONEY-PATH): N7d y N7f comparten el `model_kind='i2v'` pero fijan `assetKind` DISTINTO. El
++// `model_kind` NO los discrimina; el `node_key` SÍ. Este mapa es la fuente de verdad que la ruta
++// RECONCILE de finalize-download consume para no colisionar los finalizadores.
++describe('brollVideoAssetKindForNodeKey — discrimina N7d (broll) de N7f (cta) por node_key (T5c.7)', () => {
++  it('N7d → broll_clip (body b-roll)', () => {
++    expect(brollVideoAssetKindForNodeKey('N7d')).toBe('broll_clip');
++  });
++
++  it('N7f → cta_clip (el nodo que rompió con dinero real: NO debe salir broll_clip)', () => {
++    expect(brollVideoAssetKindForNodeKey('N7f')).toBe('cta_clip');
++  });
++
++  // TOTAL, sin `??` fallback: un node_key que NO produce vídeo b-roll → null (el caller lo hace
++  // PermanentStepError). Un fallback silencioso a broll_clip aquí ES el bug de T5c.7.
++  it.each(['N7c', 'N7a', 'N8', 'N0', '', 'i2v'])(
++    'node_key %j desconocido → null (no broll_clip)',
++    (nk) => {
++      expect(brollVideoAssetKindForNodeKey(nk)).toBeNull();
++    },
++  );
++});
+diff --git a/packages/services/src/finalize-download.ts b/packages/services/src/finalize-download.ts
+index d89134a..c46c777 100644
+--- a/packages/services/src/finalize-download.ts
++++ b/packages/services/src/finalize-download.ts
+@@ -8,8 +8,14 @@
+ // Este módulo RUTA por el `kind` REAL de la generación (resuelto desde `model_profile.kind`) al
+ // finalizer correcto, SIN fundir semánticas (cada kind tiene su unidad de coste):
+ //   · image/utility               → `finalizeGeneration` (imagen, `keyframe`, coste por `images`).
+-//   · avatar/lipsync/t2v/i2v/r2v  → finalizer de VÍDEO (`avatar_clip`/`broll_clip`, coste por segundo)
+-//                                    vía el helper compartido `finalizeSingleCallPerSecondGeneration`.
++//   · avatar/lipsync              → finalizer de VÍDEO (`avatar_clip`, coste por segundo) vía el helper
++//                                    compartido `finalizeSingleCallPerSecondGeneration`.
++//   · t2v/i2v/r2v                 → finalizer de VÍDEO, pero el `assetKind` (`broll_clip` de N7d vs
++//                                    `cta_clip` de N7f) NO se deriva del `model_kind` (N7d y N7f comparten
++//                                    el endpoint i2v → mismo kind): se resuelve por el `node_key` del step
++//                                    (`generation.stepRunId` → `step_run.node_key`, T5c.7). `stepRunId`
++//                                    null o un node_key inesperado → `PermanentStepError` (NUNCA un
++//                                    fallback silencioso a `broll_clip`).
+ //   · music                       → finalizer de MÚSICA (`music_bed`, coste por segundo).
+ //   · tts                         → NO se puede liquidar por esta vía: un voiceover necesita la CADENA
+ //                                    TTS→ASR (2ª llamada fal) para sellar `word_timestamps` — el
+@@ -25,10 +31,16 @@
+ // mandó a fal (facturar/persistir otro número desincronizaría el ledger).
+ import { newUlid } from '@ugc/core/contracts';
+ import { extractAudioOutput, extractVideoOutput } from '@ugc/core/generation';
+-import { videoAssetKindForModelKind } from '@ugc/core/gallery';
++import { brollVideoAssetKindForNodeKey, videoAssetKindForModelKind } from '@ugc/core/gallery';
+ import { PermanentStepError } from '@ugc/core/orchestrator';
+ import type { Logger, StorageAdapter } from '@ugc/core';
+-import { getModelProfile, type DbClient, type Generation, type ModelProfile } from '@ugc/db';
++import {
++  findStep,
++  getModelProfile,
++  type DbClient,
++  type Generation,
++  type ModelProfile,
++} from '@ugc/db';
+ 
+ import { falMusicCostOf, falVideoCostOf } from './fal-pricing';
+ import {
+@@ -91,11 +103,24 @@ export async function finalizeGenerationByKind(
+     return { assetId: res.assetId, costCents: res.costCents };
+   }
+ 
+-  // avatar/lipsync → `avatar_clip`; t2v/i2v/r2v → `broll_clip`. La derivación vive en el clasificador
+-  // compartido `videoAssetKindForModelKind` (@ugc/core/gallery): un solo punto de verdad con el sweeper.
++  // avatar/lipsync → `avatar_clip`; t2v/i2v/r2v → `broll_clip` (clasificador compartido
++  // `videoAssetKindForModelKind`, @ugc/core/gallery). PERO `broll_clip` es AMBIGUO por `model_kind`
++  // (T5c.7, MONEY-PATH): N7d (body b-roll → `broll_clip`) y N7f (CTA → `cta_clip`) COMPARTEN el endpoint
++  // i2v `fal-ai/veo3.1/image-to-video` → mismo `model_profile.kind='i2v'`. Derivar el `assetKind` por
++  // `model_kind` sale SIEMPRE `broll_clip` para ambos → el finalizador de N7f (que busca `cta_clip`) no
++  // halla su asset y lanza «completed pero sin asset cta_clip». La fuente de verdad correcta es el
++  // `node_key` del step que lo lanzó (`generation.stepRunId` → `step_run.node_key`), que coincide con lo
++  // que el executor FIJÓ (`assetKind:'cta_clip'` en generate-cta.ts). `avatar_clip` NO tiene esta
++  // ambigüedad (un solo nodo N7c lo produce) → se deja como está.
+   const videoAssetKind = videoAssetKindForModelKind(kind);
+   if (videoAssetKind !== null) {
+-    const res = await finalizeVideoDownload(deps, { ...args, profile, assetKind: videoAssetKind });
++    // `avatar_clip` (N7c único) es directo; `broll_clip` es AMBIGUO por `model_kind` y se desambigua por
++    // `node_key` (ver el bloque de arriba). Ambas ramas comparten el mismo cuerpo — solo cambia el kind.
++    const assetKind =
++      videoAssetKind === 'broll_clip'
++        ? await resolveBrollVideoAssetKind(db, generation)
++        : videoAssetKind;
++    const res = await finalizeVideoDownload(deps, { ...args, profile, assetKind });
+     return { assetId: res.assetId, costCents: res.generation.costActual ?? 0 };
+   }
+ 
+@@ -172,12 +197,55 @@ async function downloadOutputToStorage(
+   return { put, storageKey, mime };
+ }
+ 
++/**
++ * Resuelve el `assetKind` de un vídeo de la familia B-ROLL (`model_kind` t2v/i2v/r2v) por el `node_key`
++ * del step que lo lanzó (T5c.7, MONEY-PATH). N7d y N7f comparten el `model_kind='i2v'` pero fijan
++ * `assetKind` DISTINTO (`broll_clip` vs `cta_clip`): la ÚNICA verdad que los discrimina en la ruta
++ * RECONCILE es el `step_run.node_key`, leído por `generation.stepRunId`.
++ *
++ * FALLA RUIDOSO (`PermanentStepError`, que `output.download` absorbe como no-op sin reintentar) en los
++ * dos ESTADOS IMPOSIBLES de la ruta de vídeo b-roll — NUNCA cae a `broll_clip` (ese fallback silencioso
++ * ES el bug):
++ *   · `stepRunId === null`: en la ruta N7d/N7f el executor SIEMPRE pasa `stepId` → `stepRunId` nunca es
++ *     null aquí (la regeneración reusa el mismo sub-DAG). Un null es un cableado roto, no un default.
++ *   · `node_key` fuera de {N7d, N7f}: un vídeo b-roll solo lo emiten esos dos nodos. Otro `node_key`
++ *     (o un step inexistente) es una inconsistencia de datos que reintentar la descarga no arregla.
++ */
++async function resolveBrollVideoAssetKind(
++  db: DbClient,
++  generation: Generation,
++): Promise<'broll_clip' | 'cta_clip'> {
++  if (generation.stepRunId === null) {
++    throw new PermanentStepError(
++      `finalizeGenerationByKind: la generación de vídeo b-roll ${generation.id} no tiene step_run_id; ` +
++        'imposible discriminar N7d (broll_clip) de N7f (cta_clip) por el node_key — cableado roto ' +
++        '(en la ruta de vídeo el executor SIEMPRE pasa stepId). NO se asume broll_clip.',
++    );
++  }
++  const step = await findStep(db, generation.stepRunId);
++  if (step === undefined) {
++    throw new PermanentStepError(
++      `finalizeGenerationByKind: la generación de vídeo b-roll ${generation.id} referencia el step ` +
++        `${generation.stepRunId}, que no existe; imposible derivar el assetKind por node_key`,
++    );
++  }
++  const assetKind = brollVideoAssetKindForNodeKey(step.nodeKey);
++  if (assetKind === null) {
++    throw new PermanentStepError(
++      `finalizeGenerationByKind: la generación de vídeo b-roll ${generation.id} viene del node_key ` +
++        `'${step.nodeKey}' (step ${generation.stepRunId}), que no produce vídeo b-roll (esperado N7d o ` +
++        'N7f); NO se asume broll_clip (fallback silencioso = el bug de T5c.7).',
++    );
++  }
++  return assetKind;
++}
++
+ async function finalizeVideoDownload(
+   deps: FinalizeDownloadDeps,
+   args: {
+     generation: Generation;
+     profile: ModelProfile;
+-    assetKind: 'avatar_clip' | 'broll_clip';
++    assetKind: 'avatar_clip' | 'broll_clip' | 'cta_clip';
+     output: unknown;
+     statusPayload: unknown;
+   },
+diff --git a/packages/services/test/integration/finalize-download.test.ts b/packages/services/test/integration/finalize-download.test.ts
+index 1a1db68..1f174b6 100644
+--- a/packages/services/test/integration/finalize-download.test.ts
++++ b/packages/services/test/integration/finalize-download.test.ts
+@@ -16,6 +16,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+ import { makeLogger } from '@ugc/core/observability';
+ import { PermanentStepError } from '@ugc/core/orchestrator';
+ import {
++  createAsset,
+   createGeneration,
+   getAsset,
+   getAssetByGenerationKind,
+@@ -23,14 +24,24 @@ import {
+   getModelProfileByEndpoint,
+   makeLocalStorageAdapter,
+   seedGallery,
++  updateGeneration,
+   type ModelProfile,
+ } from '@ugc/db';
++import { pipelineRun, project, stepRun } from '@ugc/db/schema';
+ import { RAW_GALLERY_SEED, validateGallerySeed } from '@ugc/core/gallery';
+-import { createTestDatabase, makeGeneration, type TestDatabase } from '@ugc/test-utils';
++import { LoserRaceError } from '@ugc/core/generation';
++import {
++  createTestDatabase,
++  makeGeneration,
++  makePipelineRun,
++  makeStepRun,
++  type TestDatabase,
++} from '@ugc/test-utils';
+ import type { StorageAdapter } from '@ugc/core';
+ import type { OutputDownloader } from '../../src/finalize-generation';
+ 
+ import { finalizeGenerationByKind } from '../../src/finalize-download';
++import { resolveProductionDedup } from '../../src/generation-dedup';
+ 
+ // Un output payload por familia, en la forma que el modelo REAL emite (barrera anti-finalizer-de-imagen:
+ // ninguno trae `images[]`).
+@@ -93,7 +104,9 @@ beforeAll(async () => {
+ });
+ 
+ beforeEach(async () => {
+-  await tdb.pool.query('TRUNCATE TABLE generation, asset, cost_entry CASCADE');
++  await tdb.pool.query(
++    'TRUNCATE TABLE generation, asset, cost_entry, step_run, pipeline_run, project CASCADE',
++  );
+ });
+ 
+ afterAll(async () => {
+@@ -110,6 +123,42 @@ async function seedGen(key: string, inputs: Record<string, unknown> = {}) {
+   );
+ }
+ 
++/** Siembra project→pipeline_run→step_run con un `node_key` (N7d o N7f) y devuelve el `stepId`. Es la
++ *  cadena mínima que la ruta RECONCILE de vídeo b-roll consulta para discriminar el `assetKind` (T5c.7):
++ *  `generation.stepRunId` → `step_run.node_key`. */
++async function seedStep(nodeKey: string): Promise<string> {
++  const [proj] = await tdb.db
++    .insert(project)
++    .values({ name: `p-${nodeKey}-${Math.random().toString(36).slice(2)}` })
++    .returning({ id: project.id });
++  const run = makePipelineRun({ projectId: proj!.id, status: 'running' });
++  await tdb.db.insert(pipelineRun).values(run);
++  const step = makeStepRun({ runId: run.id!, nodeKey, status: 'running' });
++  await tdb.db.insert(stepRun).values(step);
++  return step.id!;
++}
++
++/** Siembra una generación de VÍDEO b-roll (`i2v`, perfil `video`) `submitted` con su `stepRunId` — la
++ *  forma en que el executor de N7d/N7f la deja antes de colgarse (SIEMPRE con stepId). `inputs.duration`
++ *  ("8s") recupera la duración que Veo no emite. `contentHash` overridable para las pruebas de dedup. */
++async function seedVideoGen(args: {
++  stepRunId: string | null;
++  duration?: string;
++  contentHash?: string;
++  status?: 'submitted' | 'completed';
++}) {
++  return createGeneration(
++    tdb.db,
++    makeGeneration({
++      modelProfileId: profiles.video!.id,
++      inputs: { duration: args.duration ?? '8s' },
++      status: args.status ?? 'submitted',
++      stepRunId: args.stepRunId,
++      ...(args.contentHash !== undefined ? { contentHash: args.contentHash } : {}),
++    }),
++  );
++}
++
+ function deps() {
+   return {
+     db: tdb.db,
+@@ -146,7 +195,10 @@ describe('finalizeGenerationByKind — dispatch kind-aware (T4.11 money point)',
+ 
+   it('VIDEO i2v (b-roll) → crea asset broll_clip con coste por SEGUNDO (duración recuperada de inputs)', async () => {
+     // Veo NO emite `duration` en el output → se recupera del `inputs.duration` PERSISTIDO ("8s").
+-    const gen = await seedGen('video', { duration: '8s' });
++    // T5c.7: la ruta de vídeo b-roll deriva el assetKind por el node_key del step (N7d → broll_clip), así
++    // que la generación DEBE venir de un step N7d — como en producción (el executor SIEMPRE pasa stepId).
++    const stepId = await seedStep('N7d');
++    const gen = await seedVideoGen({ stepRunId: stepId, duration: '8s' });
+     const res = await finalizeGenerationByKind(deps(), {
+       generation: gen,
+       output: { video: { url: VIDEO_URL, content_type: 'video/mp4' } }, // SIN duration en el output
+@@ -273,3 +325,231 @@ describe('finalizeGenerationByKind — dispatch kind-aware (T4.11 money point)',
+     expect(await getAssetByGenerationKind(tdb.db, gen.id, 'music_bed')).toBeUndefined();
+   });
+ });
++
++// ── T5c.7 (MONEY-PATH): la ruta RECONCILE de vídeo b-roll discrimina N7d/N7f por node_key ──────────
++// N7d (body) y N7f (CTA) comparten el endpoint i2v `fal-ai/veo3.1/image-to-video` → mismo
++// `model_profile.kind='i2v'`. El bug (reproducido con $2,62 reales en T5c.4): la finalización re-derivaba
++// el `assetKind` por `model_kind` → SIEMPRE `broll_clip` → el finalizador de N7f no hallaba su `cta_clip`
++// → «completed pero sin asset cta_clip (invariante roto)» → N8 varado → sin vídeo. El fix deriva el
++// `assetKind` por el `node_key` del step (`generation.stepRunId` → `step_run.node_key`).
++describe('finalizeGenerationByKind — ruta de vídeo b-roll kind-aware por node_key (T5c.7)', () => {
++  it('N7f (CTA) → crea asset cta_clip, NO broll_clip (el nodo que rompió con dinero real)', async () => {
++    const stepId = await seedStep('N7f');
++    const gen = await seedVideoGen({ stepRunId: stepId });
++    const res = await finalizeGenerationByKind(deps(), {
++      generation: gen,
++      output: { video: { url: VIDEO_URL, content_type: 'video/mp4' } }, // Veo NO emite duration
++      statusPayload: { status: 'OK' },
++    });
++    const asset = await getAsset(tdb.db, res.assetId!);
++    // LA ASERCIÓN CLAVE: cta_clip, no broll_clip. Con el bug (derivar por model_kind) saldría broll_clip
++    // y este assert fallaría → es el CONTROL NEGATIVO (revertir el fix a `videoAssetKindForModelKind` deja
++    // este test ROJO: asset broll_clip en vez de cta_clip).
++    expect(asset?.kind).toBe('cta_clip');
++    expect(asset?.durationS).toBe(8);
++    expect(await getAssetByGenerationKind(tdb.db, gen.id, 'cta_clip')).toBeDefined();
++    // NO se creó el asset equivocado (broll_clip) ni un keyframe.
++    expect(await getAssetByGenerationKind(tdb.db, gen.id, 'broll_clip')).toBeUndefined();
++    expect(await getAssetByGenerationKind(tdb.db, gen.id, 'keyframe')).toBeUndefined();
++    expect((await getGeneration(tdb.db, gen.id))?.status).toBe('completed');
++  });
++
++  it('N7f REDELIVERY (rama alreadyFinalized): una N7f ya completed con su cta_clip → NO-OP gracioso, NO «invariante roto»', async () => {
++    // EL PUNTO EXACTO DE T5c.4 (`finalize-single-call-per-second.ts:113-123`): una segunda finalización
++    // de la MISMA N7f (redelivery de pg-boss / segundo finalizador concurrente) toma la rama
++    // `alreadyFinalized` y busca el asset por `assetKind`. Con el bug (derivar por model_kind) buscaría
++    // `broll_clip`, no hallaría el `cta_clip` existente y lanzaría «completed pero sin asset cta_clip
++    // (invariante roto)» — el error LITERAL que mató el run con $2,62 reales. El fix pasa el `cta_clip`
++    // correcto por node_key → halla su asset → no-op sin lanzar ni re-crear ni re-cobrar.
++    const stepId = await seedStep('N7f');
++    // Primera finalización: crea la fila completed + su asset cta_clip.
++    const gen = await seedVideoGen({ stepRunId: stepId });
++    const first = await finalizeGenerationByKind(deps(), {
++      generation: gen,
++      output: { video: { url: VIDEO_URL, content_type: 'video/mp4' } },
++      statusPayload: { status: 'OK' },
++    });
++    // Segunda finalización (redelivery): la fila ya está completed → rama alreadyFinalized.
++    const reFetched = (await getGeneration(tdb.db, gen.id))!;
++    const second = await finalizeGenerationByKind(deps(), {
++      generation: reFetched,
++      output: { video: { url: VIDEO_URL, content_type: 'video/mp4' } },
++      statusPayload: { status: 'OK' },
++    });
++    // No-op gracioso: devuelve el MISMO asset cta_clip, sin lanzar.
++    expect(second.assetId).toBe(first.assetId);
++    expect((await getAsset(tdb.db, second.assetId!))?.kind).toBe('cta_clip');
++    // No se duplicó el cost_entry (una sola liquidación bajo lock).
++    const costRows = await tdb.db.query.costEntry.findMany({
++      where: (c, { eq: e }) => e(c.generationId, gen.id),
++    });
++    expect(costRows).toHaveLength(1);
++  });
++
++  it('N7d (body) → SIGUE dando broll_clip (no se rompe el caso que funcionaba) pese a compartir endpoint', async () => {
++    const stepId = await seedStep('N7d');
++    const gen = await seedVideoGen({ stepRunId: stepId });
++    const res = await finalizeGenerationByKind(deps(), {
++      generation: gen,
++      output: { video: { url: VIDEO_URL, content_type: 'video/mp4' } },
++      statusPayload: { status: 'OK' },
++    });
++    const asset = await getAsset(tdb.db, res.assetId!);
++    expect(asset?.kind).toBe('broll_clip');
++    expect(await getAssetByGenerationKind(tdb.db, gen.id, 'cta_clip')).toBeUndefined();
++  });
++
++  it('stepRunId === null en ruta de vídeo b-roll → PermanentStepError RUIDOSO (nunca cae a broll_clip)', async () => {
++    // ESTADO IMPOSIBLE: el executor de N7d/N7f SIEMPRE pasa stepId. Un null es cableado roto → se lanza
++    // (el fallback silencioso a broll_clip ES el bug). No se corrompe: ni asset, ni completed.
++    const gen = await seedVideoGen({ stepRunId: null });
++    await expect(
++      finalizeGenerationByKind(deps(), {
++        generation: gen,
++        output: { video: { url: VIDEO_URL, content_type: 'video/mp4' } },
++        statusPayload: { status: 'OK' },
++      }),
++    ).rejects.toBeInstanceOf(PermanentStepError);
++    expect(await getAssetByGenerationKind(tdb.db, gen.id, 'broll_clip')).toBeUndefined();
++    expect(await getAssetByGenerationKind(tdb.db, gen.id, 'cta_clip')).toBeUndefined();
++    expect((await getGeneration(tdb.db, gen.id))?.status).toBe('submitted');
++  });
++
++  it('node_key desconocido (p.ej. N7c) en ruta de vídeo b-roll → PermanentStepError (no fallback silencioso)', async () => {
++    // Un step cuyo node_key no es N7d ni N7f no produce vídeo b-roll: derivar broll_clip por defecto
++    // enmascararía la inconsistencia. Se lanza ruidoso.
++    const stepId = await seedStep('N7c');
++    const gen = await seedVideoGen({ stepRunId: stepId });
++    await expect(
++      finalizeGenerationByKind(deps(), {
++        generation: gen,
++        output: { video: { url: VIDEO_URL, content_type: 'video/mp4' } },
++        statusPayload: { status: 'OK' },
++      }),
++    ).rejects.toBeInstanceOf(PermanentStepError);
++    expect(await getAssetByGenerationKind(tdb.db, gen.id, 'broll_clip')).toBeUndefined();
++  });
++});
++
++// ── T5c.7 Parte 2+3: la ruta REUSE/dedup (§9.6) y la remediación de la FILA ENVENENADA ────────────
++// El dedup recibe el `assetKind` como PARÁMETRO (no lo deriva): quien lo llama debe pasar `cta_clip`
++// para N7f. Una fila N7f `completed` cuyo asset quedó `broll_clip` (el envenenamiento que dejó el bug)
++// hace que un dedup posterior con `cta_clip` dé `undefined` → la fila `completed` satisface el índice
++// parcial de producción → el INSERT choca → re-lookup undefined → `LoserRaceError` EN BUCLE (nunca
++// autocura). La remediación (re-kinding el asset a `cta_clip`) restaura el reuse a $0.
++describe('resolveProductionDedup — reuse de N7f y remediación de la fila envenenada (T5c.7 §9.6)', () => {
++  const BODY = 'video/mp4';
++
++  /** Fabrica una generación de vídeo `completed` con su asset del `assetKind` dado y un `content_hash`
++   *  compartido — la forma en que N7f dejó su fila (bien o envenenada). */
++  async function seedCompletedVideoWithAsset(args: {
++    contentHash: string;
++    assetKind: 'broll_clip' | 'cta_clip';
++    stepRunId: string;
++  }): Promise<{ generationId: string; assetId: string }> {
++    const gen = await seedVideoGen({
++      stepRunId: args.stepRunId,
++      contentHash: args.contentHash,
++      status: 'submitted',
++    });
++    await updateGeneration(tdb.db, gen.id, { status: 'completed', completedAt: new Date() });
++    const created = await createAsset(tdb.db, {
++      kind: args.assetKind,
++      storageKey: `generations/${gen.id}/clip.mp4`,
++      mime: BODY,
++      bytes: 4,
++      checksum: 'deadbeef',
++      durationS: 8,
++      generationId: gen.id,
++    });
++    return { generationId: gen.id, assetId: created.id };
++  }
++
++  /** El shape mínimo de `insertValues` que `resolveProductionDedup` necesita para el INSERT-if-absent. */
++  function insertValues(contentHash: string, stepRunId: string) {
++    return makeGeneration({
++      modelProfileId: profiles.video!.id,
++      contentHash,
++      status: 'submitting',
++      inputs: { duration: '8s' },
++      stepRunId,
++    });
++  }
++
++  /** Estrecha una `DedupResolution` a su rama `{ reused }` (o falla con un mensaje claro) — narrowing FUERA
++   *  del assert para no meter `expect` en un condicional (regla lint `vitest/no-conditional-expect`). */
++  function expectReused(res: Awaited<ReturnType<typeof resolveProductionDedup>>) {
++    if (!('reused' in res)) {
++      throw new Error(
++        'se esperaba un dedup hit ({ reused }) pero se creó una fila submitting nueva',
++      );
++    }
++    return res.reused;
++  }
++
++  it('FAST-HIT: una N7f completed con su asset cta_clip correcto → dedup con cta_clip la reutiliza (0 submits)', async () => {
++    const stepId = await seedStep('N7f');
++    const hash = 'a'.repeat(64);
++    const { generationId, assetId } = await seedCompletedVideoWithAsset({
++      contentHash: hash,
++      assetKind: 'cta_clip',
++      stepRunId: stepId,
++    });
++    const res = await resolveProductionDedup(tdb.db, {
++      contentHash: hash,
++      assetKind: 'cta_clip',
++      insertValues: insertValues(hash, stepId),
++      serviceLabel: 'runGenerateBroll',
++      assetLabel: 'un clip de CTA',
++    });
++    const reused = expectReused(res);
++    expect(reused.generation.id).toBe(generationId);
++    expect(reused.assetId).toBe(assetId);
++    // No insertó una fila `submitting` nueva: solo existe la `completed` reutilizada.
++    const gens = await tdb.db.query.generation.findMany({
++      where: (g, { eq: e }) => e(g.contentHash, hash),
++    });
++    expect(gens).toHaveLength(1);
++  });
++
++  it('FILA ENVENENADA: N7f completed con asset broll_clip → dedup con cta_clip lanza LoserRaceError EN BUCLE (nunca autocura)', async () => {
++    // El estado exacto que dejó el bug de T5c.4: la fila N7f está `completed` (satisface el índice parcial
++    // de producción) pero su asset quedó `broll_clip` en vez de `cta_clip`.
++    const stepId = await seedStep('N7f');
++    const hash = 'b'.repeat(64);
++    await seedCompletedVideoWithAsset({
++      contentHash: hash,
++      assetKind: 'broll_clip', // ← ENVENENADO
++      stepRunId: stepId,
++    });
++
++    // Un dedup con el kind CORRECTO (cta_clip) no halla el asset → INSERT choca contra el índice parcial
++    // (ya hay una fila completed con ese hash) → re-lookup undefined → LoserRaceError. Y REPETIR el dedup
++    // da LO MISMO: la fila envenenada nunca se autocura, el bucle de retry quema CPU para siempre.
++    const attempt = () =>
++      resolveProductionDedup(tdb.db, {
++        contentHash: hash,
++        assetKind: 'cta_clip',
++        insertValues: insertValues(hash, stepId),
++        serviceLabel: 'runGenerateBroll',
++        assetLabel: 'un clip de CTA',
++      });
++    await expect(attempt()).rejects.toBeInstanceOf(LoserRaceError);
++    await expect(attempt()).rejects.toBeInstanceOf(LoserRaceError); // sigue rojo: no autocura
++
++    // REMEDIACIÓN: re-kinding del asset envenenado a cta_clip (preserva el reuse $0 vs marcar failed y
++    // re-pagar). Es EXACTAMENTE el UPDATE one-off que el bucle corre contra la única fila dev (no un
++    // script de prod: en prod hay 0 filas envenenadas). Tras remediar, el MISMO dedup pasa a FAST-HIT.
++    const poisonedGenId = (
++      await tdb.db.query.generation.findMany({
++        where: (g, { eq: e }) => e(g.contentHash, hash),
++      })
++    )[0]!.id;
++    await tdb.pool.query(
++      `UPDATE asset SET kind = 'cta_clip' WHERE generation_id = $1 AND kind = 'broll_clip'`,
++      [poisonedGenId],
++    );
++    const healed = expectReused(await attempt());
++    expect(healed.asset.kind).toBe('cta_clip');
++  });
++});
+diff --git a/planning.md b/planning.md
+index 1fbe201..4a420d4 100644
+--- a/planning.md
++++ b/planning.md
+@@ -1146,8 +1146,8 @@ Decisiones del usuario (2026-07-07): la fase se ejecuta tras T0.1 y **antes** de
+ #### T5c.7 · El sweeper NO es kind-aware: N7f (CTA i2v) explota → NO hay vídeo end-to-end 🐛 BUG DE DINERO
+ - **Depende de**: nada técnico ($0 código; la Verificación reintenta el vídeo real de T5c.4 → hereda su ⚠ GASTO). Es el BLOQUEANTE real de «el primer vídeo end-to-end»: T5c.4 no puede cerrar sin esto.
+ - **Origen**: T5c.4 (2026-08-13, primer run de gasto real, $2,62). El flujo corrió entero con fal REAL salvo **N7f (clip de CTA i2v)**, que falló con `finalizeSingleCallPerSecondGeneration: completed pero sin asset cta_clip (invariante roto)` → N8 (compose, depende de N7f) `awaiting_deps` para siempre → variante `scripted`, master NULL → nada en `/library`.
+-- **Causa raíz (por evidencia, reproducida con dinero real)**: **DOS finalizadores con `assetKind` distinto sobre la MISMA generación de N7f**. El **sweeper** (`apps/worker/src/.../sweeper.ts:139`, `resolveKind: (row) => kindByProfile.get(row.modelProfileId) ?? 'image'`) resuelve el kind por `model_profile`; N7d (b-roll) y N7f (CTA) **comparten el endpoint `fal-ai/veo3.1/image-to-video`** → ambos resuelven a `broll_clip`. Pero el executor de N7f (`generate-broll.ts:158`) crea el asset con `assetKind='cta_clip'`. El finalizador que gana la carrera pone `broll_clip`; el que llega tarde busca `cta_clip`, no lo encuentra y lanza el invariante roto. **Es la DEUDA LITERALMENTE ANUNCIADA en `apps/worker/src/executors/generate-broll.ts:16-18`**: «T4.11 debe hacer el sweeper/`output.download` kind-aware ANTES de cablearlo — una generación de VÍDEO recogida por la vía de imagen del sweeper explotaría». Nunca se hizo; T5c.4 la reprodujo con fal real.
+-- **Entrega**: el sweeper/`output.download`/reconcile resuelven el `assetKind` de forma **kind-aware** (por el nodo/step, no solo por `model_profile`), de modo que N7d→`broll_clip` y N7f→`cta_clip` aunque compartan endpoint. Que ambos finalizadores (sweeper y executor) converjan al MISMO kind para la misma generación. Revisar los marcadores en `output-download.ts` + `reconcile.ts` que la deuda de `generate-broll.ts:16-18` nombra.
++- **Causa raíz (por evidencia, reproducida con dinero real; puntero CORREGIDO 2026-08-13 tras Explore de contexto fresco)**: el punto NO es `sweeper.ts:139` (eso resuelve solo el DEADLINE binario `image|video`, no el asset kind). El punto ÚNICO es **`packages/services/src/finalize-download.ts:96` → `videoAssetKindForModelKind(kind)`** (`packages/core/src/gallery/contracts.ts:177-181`), que devuelve `broll_clip` **incondicionalmente** para todo i2v/t2v/r2v. N7d (body) y N7f (CTA) comparten `fal-ai/veo3.1/image-to-video` → mismo `model_profile.kind='i2v'` → ambos `broll_clip`. Pero el executor de N7f (`executors/generate-cta.ts:156`, vía el servicio compartido `generate-broll.ts:158`) crea el asset con `cta_clip`. En la ruta RECONCILE (sweeper/webhook → `output-download.ts:95` → `finalize-download.ts`) el kind se re-deriva y sale mal; el finalizador que gana crea `broll_clip`, el tardío busca `cta_clip` (`finalize-single-call-per-second.ts:118`), no lo halla → lanza `completed pero sin asset cta_clip (invariante roto)` (`:164`). **Fuente de verdad correcta del kind**: `step_run.node_key` (N7d vs N7f) vía `generation.stepRunId` (nullable → si null, FALLAR ruidoso, NUNCA caer a `broll_clip` — ese fallback silencioso ES el bug).
++- **Entrega (3 partes)**: (1) **ruta fresca**: `finalize-download.ts:96` resuelve el `assetKind` de vídeo por el step/`node_key` (coincidiendo con lo que fijó el executor), no por `model_profile.kind`; `stepRunId===null` falla ruidoso. (2) **ruta reuse/dedup §9.6**: al arreglar (1) el kind de reconcile pasa a `cta_clip` y la rama `alreadyFinalized` (`finalize-single-call-per-second.ts:113-123`) encuentra su asset y deja de lanzar — verificar que la ruta de reuse (`generation-dedup.ts:44-53`) NO re-hereda el bug. (3) **remediar la FILA ENVENENADA** del run atascado (una generación N7f `completed` cuyo asset quedó `broll_clip`): sin esto, un dedup contra ella con `cta_clip` da `undefined` → la fila `completed` satisface el índice parcial de producción → `LoserRaceError` en BUCLE (nunca autocura). **Preferir RE-KINDING a `cta_clip` (preserva el reuse $0) sobre marcar failed/cancelled (re-pagaría ~$0,80)** — decisión de coste. La remediación va como CÓDIGO CON TEST (fixture de fila envenenada → la ruta reuse halla su `cta_clip` o re-submitea limpio), NO SQL ad-hoc; el bucle corre la query de detección/one-off contra la dev DB, no un subagente. NOTA: los marcadores de deuda de `generate-broll.ts:16-18` sobre `output-download.ts`+`reconcile.ts` describen deuda YA SALDADA por T4.11 (reconcile solo hace deadline; output-download ya delega kind-aware) — el defecto residual es solo `finalize-download.ts:96`.
+ - **Rareza asociada (deuda H6 de T5.9 en ruta de dinero — arreglar aquí)**: N7f tiene `max_retries=80` sobre un step de 20¢/s; solo `permanent:true` evitó un bucle de facturación. Un fallo NO-permanente ahí facturaría hasta 80×. Bajar el tope de reintentos de los N7 de vídeo a un valor sano, o garantizar que los fallos de finalize son `permanent`.
+ - **`[verificar]` heredado**: al arreglar N7f, cerrar el flip `"unverified": false` de `fal-ai/veo3.1/image-to-video` en el seed (`model-profiles.json:164`) — T5c.4 ya confirmó en vivo su payload y precio 20¢/s (anotar en PRD §13.1, regla 3).
+ - **Coste estimado**: código $0. Verificación: reintentar el vídeo real. **Coste del reintento = DATA-DEPENDENT por el dedup §9.6**: las generaciones N7a-N7f del run atascado están TODAS `completed` con `content_hash` (incl. las caras: N7c avatar 58c, N7d body 120c, N7f 80c ≈ $2,58 de los $2,62). Si el análisis nuevo re-deriva el MISMO brief/persona/scripts → mismos hashes → el dedup las reusa a **$0** y solo se re-paga lo que cambie (potencialmente casi nada, ~$0,80 o menos). Si el análisis nuevo cambia prompts → hashes distintos → hasta ~$2,7–4,2 (envelope de T5c.4). **El verifier MIDE el coste real y lo compara**; abort $5,25 sin cambios. **Requiere análisis NUEVO** (el lote de T5c.4 está atascado — NO re-aprobar su CP3). OJO: verificar que el fix kind-aware no rompe el REUSE de la N7f `completed`-pero-rota (un dedup hit de una generación cuya finalización falló podría re-heredar el bug — el fix debe cubrir tanto la ruta fresca como la de reuse).

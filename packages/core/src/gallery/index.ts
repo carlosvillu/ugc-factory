@@ -36,6 +36,7 @@ export {
   isAvatarModelKind,
   isVideoModelKind,
   videoAssetKindForModelKind,
+  brollVideoAssetKindForNodeKey,
   isMusicModelKind,
   type PromptKind,
   type PromptStatus,

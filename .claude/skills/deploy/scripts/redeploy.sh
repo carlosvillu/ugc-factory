@@ -37,9 +37,10 @@ if [ "$MODE" = "--git" ]; then
 else
   # --delete mantiene el remoto idéntico al local (ficheros borrados aquí
   # desaparecen allí). Se excluye lo que NO debe viajar: dependencias y builds
-  # (se reconstruyen dentro de la imagen), el .git, y CRÍTICAMENTE el .env —
-  # los secretos de producción viven SOLO en el VPS y un rsync los machacaría
-  # con los de desarrollo.
+  # (se reconstruyen dentro de la imagen), el .git, y CRÍTICAMENTE el .env y
+  # secrets/ — los secretos de producción (env + clave/cert C2PA) viven SOLO en
+  # el VPS y un rsync con --delete los machacaría/borraría. secrets/ no existe en
+  # el árbol local (gitignored); sin este exclude, --delete lo borraría del VPS.
   rsync -az --delete \
     --exclude '.git' \
     --exclude 'node_modules' \
@@ -47,6 +48,7 @@ else
     --exclude 'dist' \
     --exclude '.env' \
     --exclude '.env.*' \
+    --exclude 'secrets' \
     --exclude 'test-results' \
     --exclude 'playwright-report' \
     ./ "$VPS:$REMOTE_DIR/"
@@ -63,6 +65,17 @@ sha=$SHA$DIRTY
 at=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 by=$(git config user.email 2>/dev/null || echo desconocido)
 EOF
+
+# ── Permisos de la clave de firma C2PA (T5c.9, mordió el 2026-08-15) ──────────
+# La clave vive SOLO en el VPS (excluida del rsync), así que su modo/owner no
+# viajan con el código. El worker corre como uid=1000(node) y monta secrets/c2pa
+# read-only: si la clave quedó 600 propiedad de OTRO UID (p.ej. al generarla o
+# restaurarla como el usuario del host, uid 1001), c2patool muere en phase:"sign"
+# con «Reading private key … Permission denied (os error 13)» y NINGÚN vídeo llega
+# a /library — un fallo que se LEE como «falta la clave» pero es de permisos.
+# Normalizarlo aquí (host, cada deploy) hace el fix self-healing y quita el chmod
+# manual. Guardado con `[ -f ]`: no-op si no hay clave.
+ssh "$VPS" "[ -f $REMOTE_DIR/secrets/c2pa/es256_private.key ] && chmod 644 $REMOTE_DIR/secrets/c2pa/*.key $REMOTE_DIR/secrets/c2pa/*.pem || true"
 
 step "2/4 · Reconstruyendo imágenes y levantando servicios"
 # --build reconstruye; up -d recrea solo lo que cambió. Los jobs en curso

@@ -126,9 +126,29 @@ services:
       APP_MASTER_KEY: ${APP_MASTER_KEY:?APP_MASTER_KEY missing in .env}
       ASSETS_DIR: /data/assets
       LOG_LEVEL: ${LOG_LEVEL:-info}
+      # Firma C2PA del máster (N8). El DEFAULT del código apunta a las fixtures de
+      # TEST del repo (packages/services/test/fixtures/c2pa), que NO existen en la
+      # imagen de prod Y cuya ruta escapa de /app ⇒ N8 murió con «c2patool código 1»
+      # (T5c.9, 1er uso real 2026-08-15). La clave+cert REALES de producción viven
+      # SOLO en el VPS (secrets/c2pa, gitignored + excluida del rsync; el repo es
+      # público AGPL-3.0) y se montan read-only abajo. Mismo perfil ES256 que exige
+      # c2patool v0.9.12 (leaf CA:FALSE + emailProtection, firmado por una CA propia).
+      #
+      # PERMISOS (mordió el 2026-08-15, T5c.9): este contenedor corre como
+      # uid=1000(node). La clave privada DEBE ser legible por ese UID, o c2patool
+      # falla en phase:"sign" con «Reading private key … Permission denied (os error
+      # 13)» — un error que se LEE como «falta la clave» pero es de permisos. Si la
+      # clave se genera/restaura como 600 propiedad de otro UID (p.ej. developer=1001
+      # del host), N8 entra en bucle de reintentos y ningún vídeo llega a /library.
+      # Requisito: `chmod 644 secrets/c2pa/es256_private.key` (o chown 1000 / grupo).
+      C2PA_PRIVATE_KEY_PATH: /secrets/c2pa/es256_private.key
+      C2PA_SIGN_CERT_PATH: /secrets/c2pa/es256_certs.pem
     volumes:
       # §18: el worker es quien ESCRIBE los assets (rw).
       - ugc-assets:/data/assets
+      # Secretos de firma C2PA, read-only. La carpeta vive solo en el VPS (nunca
+      # committeada, excluida del rsync de redeploy.sh para que --delete no la borre).
+      - ./secrets/c2pa:/secrets/c2pa:ro
     depends_on:
       postgres:
         condition: service_healthy

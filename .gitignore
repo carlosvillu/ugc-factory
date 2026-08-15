@@ -17,6 +17,11 @@ apps/web/next-env.d.ts
 .env.local
 .env.*.local
 
+# secretos de producción que viven SOLO en el VPS (clave+cert de firma C2PA, N8).
+# El repo es público AGPL-3.0: NADA aquí. El bind mount de docker-compose.prod.yml
+# los monta desde secrets/ en el VPS; redeploy.sh los excluye del rsync.
+secrets/
+
 # datos y artefactos de runtime
 /data/
 playwright-report/

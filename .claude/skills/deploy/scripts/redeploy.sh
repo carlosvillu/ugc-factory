@@ -75,6 +75,18 @@ EOF
 # a /library — un fallo que se LEE como «falta la clave» pero es de permisos.
 # Normalizarlo aquí (host, cada deploy) hace el fix self-healing y quita el chmod
 # manual. Guardado con `[ -f ]`: no-op si no hay clave.
+#
+# POR QUÉ 644 Y NO 600 (una clave privada world-readable NO es lo ortodoxo): el
+# ideal sería `chown 1000:1000 + chmod 600` (lectura SOLO para el worker). Pero
+# el owner de la clave es uid 1001, que ES el propio usuario SSH: POSIX prohíbe a
+# un no-root hacer `chown` a otro UID, no hay grupo compartido para un 640, y este
+# script NO tiene sudo (ver la skill deploy). 644 es la única opción sin root. Es
+# defendible porque el VPS es MONO-USUARIO self-hosted y la clave existe solo aquí.
+# Si quieres endurecerlo, hazlo TÚ una vez con root:
+#   sudo chown 1000:1000 ~/projects/ugc-factory/secrets/c2pa/es256_private.key
+#   sudo chmod 600       ~/projects/ugc-factory/secrets/c2pa/es256_private.key
+# …pero OJO: entonces esta línea de `chmod 644` lo AFLOJARÍA de nuevo en cada
+# deploy → habría que quitarla o condicionarla en ese escenario.
 ssh "$VPS" "[ -f $REMOTE_DIR/secrets/c2pa/es256_private.key ] && chmod 644 $REMOTE_DIR/secrets/c2pa/*.key $REMOTE_DIR/secrets/c2pa/*.pem || true"
 
 step "2/4 · Reconstruyendo imágenes y levantando servicios"
